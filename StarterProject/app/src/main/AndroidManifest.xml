@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.clevertap.starter" >
+
+    <!-- CleverTap permissions -->
+
+    <!-- Required to retrieve a unique identifier for the device, see note below -->
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <!-- Required to allow the app to send events -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- Recommended so that we can be smart about when to send the data -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- Recommended so that we can get the user's primary e-mail address -->
+    <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
+    <!-- Recommended so that we can get the user's location -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- Recommended -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+
+    <!--Note: The READ_PHONE_STATE permission is optional, but recommended. This is required to read the
+    IMEI number of the device to identify the user. If this permission is not requested, the CleverTap SDK
+    will use its own identifier. -->
+
+    <!-- CleverTap Push Notification Permissions -->
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE"/>
+
+    <permission
+        android:name="com.clevertap.starter.permission.C2D_MESSAGE"
+        android:protectionLevel="signature"/>
+
+    <uses-permission android:name="com.clevertap.starter.permission.C2D_MESSAGE"/>
+
+    <!-- Setup the CleverTap lifecycle callback, important!, add android:name here -->
+    <application
+        android:name="com.clevertap.android.sdk.Application"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme" >
+
+
+        <!-- CleverTap Account Info -->
+        <meta-data
+            android:name="CLEVERTAP_ACCOUNT_ID"
+            android:value="Insert Your CleverTap Account ID HERE"/>;
+        <meta-data
+            android:name="CLEVERTAP_TOKEN"
+            android:value="Insert Your CleverTap Account Token"/>
+
+        <!-- Push Notifications, replace 12345678910 with your GCM sender id -->
+        <meta-data
+            android:name="GCM_SENDER_ID"
+            android:value="id:12345678910"/>
+
+        <receiver
+            android:name="com.clevertap.android.sdk.GcmBroadcastReceiver"
+            android:permission="com.google.android.c2dm.permission.SEND">
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
+                <action android:name="com.google.android.c2dm.intent.REGISTRATION"/>
+
+                <category android:name="com.clevertap.starter"/>
+            </intent-filter>
+        </receiver>
+
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version"/>
+
+        <!-- CleverTap In-app notifications -->
+        <activity
+            android:name="com.clevertap.android.sdk.InAppNotificationActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:configChanges="orientation|keyboardHidden"/>
+
+        <!-- specify activities where In-app notifications should not be shown -->
+        <!-- pretend there is a SplashActivity in this project -->
+        <meta-data
+            android:name="CLEVERTAP_INAPP_EXCLUDE"
+            android:value="SplashActivity"/>
+
+
+        <receiver
+            android:name="com.clevertap.android.sdk.InstallReferrerBroadcastReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.android.vending.INSTALL_REFERRER"/>
+            </intent-filter>
+        </receiver>
+
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>
