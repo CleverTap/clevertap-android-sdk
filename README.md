@@ -57,7 +57,7 @@ For more information check out our [website](http://www.clevertap.com "CleverTap
           // handle appropriately
         }
 
-    The CleverTapMetaDataNotFoundException is thrown when you haven't specified your CleverTap Account ID and/or the Account Token in your AndroidManifest.xml. The CleverTapPermissionsNotSatisfiedException is thrown when you haven't requested the required permissions in your AndroidManifest.xml
+    CleverTapMetaDataNotFoundException is thrown when you haven't specified your CleverTap Account ID and/or the Account Token in your AndroidManifest.xml. CleverTapPermissionsNotSatisfied is thrown when you haven't requested the required permissions in your AndroidManifest.xml
 
 6.  Checkout the Full Documentation
 
