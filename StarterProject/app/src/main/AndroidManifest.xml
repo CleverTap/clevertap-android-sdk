@@ -42,7 +42,7 @@
         <!-- CleverTap Account Info -->
         <meta-data
             android:name="CLEVERTAP_ACCOUNT_ID"
-            android:value="Insert Your CleverTap Account ID HERE"/>;
+            android:value="Insert Your CleverTap Account ID"/>;
         <meta-data
             android:name="CLEVERTAP_TOKEN"
             android:value="Insert Your CleverTap Account Token"/>
