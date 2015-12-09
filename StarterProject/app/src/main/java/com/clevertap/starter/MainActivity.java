@@ -5,12 +5,13 @@ import android.os.Bundle;
 import android.util.Log;
 
 import com.clevertap.android.sdk.CleverTapAPI;
+import com.clevertap.android.sdk.SyncListener;
 import com.clevertap.android.sdk.exceptions.CleverTapMetaDataNotFoundException;
 import com.clevertap.android.sdk.exceptions.CleverTapPermissionsNotSatisfied;
 
-// import java.util.HashMap;
+import org.json.JSONObject;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements SyncListener {
 
     private CleverTapAPI ct = null;
 
@@ -28,6 +29,7 @@ public class MainActivity extends Activity {
             ct = CleverTapAPI.getInstance(getApplicationContext());
 
             ct.enablePersonalization();  // optional
+            ct.setSyncListener(this); // optional
 
         } catch (CleverTapMetaDataNotFoundException e) {
             // handle appropriately
@@ -72,4 +74,8 @@ public class MainActivity extends Activity {
         //ct.event.push("Video played");
     }
 
+    // SyncListener
+    public void profileDataUpdated(JSONObject updates) {
+        Log.d("PR_UPDATES", updates.toString());
+    }
 }

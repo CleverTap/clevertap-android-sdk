@@ -5,17 +5,17 @@
     <!-- CleverTap permissions -->
 
     <!-- Required to retrieve a unique identifier for the device, see note below -->
-    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <!-- Required to allow the app to send events -->
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.INTERNET" />
     <!-- Recommended so that we can be smart about when to send the data -->
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <!-- Recommended so that we can get the user's primary e-mail address -->
-    <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
     <!-- Recommended so that we can get the user's location -->
-    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <!-- Recommended -->
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <!--Note: The READ_PHONE_STATE permission is optional, but recommended. This is required to read the
     IMEI number of the device to identify the user. If this permission is not requested, the CleverTap SDK
