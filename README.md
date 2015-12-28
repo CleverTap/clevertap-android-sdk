@@ -6,7 +6,7 @@ The CleverTap Android SDK for App Personalization and Engagement
 
 CleverTap is the next generation app engagement platform. It enables marketers to identify, engage and retain users and provides developers with unprecedented code-level access to build dynamic app experiences for multiple user groups. CleverTap includes out-of-the-box prescriptive campaigns, omni-channel messaging, uninstall data and the industry's largest FREE messaging tier.
 
-For more information check out our [website](https://clevertap.com "CleverTap") and [documentation](http://support.wizrocket.com "CleverTap Technical Documentation").
+For more information check out our [website](https://clevertap.com "CleverTap") and [documentation](http://support.clevertap.com "CleverTap Technical Documentation").
 
 ## Getting Started
 
@@ -16,7 +16,27 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
 
 2.  Install the SDK
 
+    ### Manual Install
+
     Copy the included CleverTapAndroidSDK.jar file to your projects libs directory. Add this JAR file as a dependency for your Android app project.
+
+    ### Android Studio / Gradle
+
+    We publish the sdk to jcenter and mavenCentral as an `aar` file. Just declare it as dependency in your `build.gradle` file.
+
+        dependencies {
+            compile 'com.clevertap.android:clevertap-android-sdk:2.0.4'
+        }
+
+    Then add the Google Play Services and Android Support Library v4 depencies to your `build.gradle` file.     
+
+        dependencies {
+            compile 'com.clevertap.android:clevertap-android-sdk:2.0.4'
+            compile 'com.google.android.gms:play-services:8.3.0'
+            compile 'com.android.support:support-v4:23.1.1'
+        }
+
+    Once you've updated your `build.gradle` file, make sure you have specified jcenter() or mavenCentral() as a repository in your `build.gradle` and then sync your project in Tools -> Android -> Sync Project With Gradle Files.
 
 3. Add Your CleverTap Account Credentials
 

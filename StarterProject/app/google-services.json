@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_id": "clevertap-starter",
+    "project_number": "71487246235",
+    "name": "clevertap-starter"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:71487246235:android:420d103c72fde46f",
+        "client_id": "android:com.clevertap.starter",
+        "client_type": 1,
+        "android_client_info": {
+          "package_name": "com.clevertap.starter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "cloud_messaging_service": {
+          "status": 2,
+          "apns_config": []
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "google_signin_service": {
+          "status": 1
+        },
+        "ads_service": {
+          "status": 1
+        }
+      }
+    }
+  ],
+  "client_info": [],
+  "ARTIFACT_VERSION": "1"
+}
