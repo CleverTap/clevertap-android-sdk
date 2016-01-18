@@ -28,13 +28,32 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
             compile 'com.clevertap.android:clevertap-android-sdk:2.0.5'
         }
 
-    Then add the Google Play Services and Android Support Library v4 depencies to your `build.gradle` file.     
+    Then add the Google Play Services and Android Support Library v4 depencies to your Module `build.gradle` file.     
 
         dependencies {
             compile 'com.clevertap.android:clevertap-android-sdk:2.0.5'
-            compile 'com.google.android.gms:play-services:8.3.0'
+            compile 'com.google.android.gms:play-services:8.4.0'
             compile 'com.android.support:support-v4:23.1.1'
         }
+
+    Also be sure to include the play-services classpath in your Project level `build.gradle` file:
+
+       // Top-level build file where you can add configuration options common to all sub-projects/modules.
+
+        buildscript {
+            repositories {
+                jcenter()
+
+
+            }
+            dependencies {
+                classpath 'com.android.tools.build:gradle:2.0.0-alpha3'
+                classpath 'com.google.gms:google-services:2.0.0-alpha3'
+
+                // NOTE: Do not place your application dependencies here; they belong
+                // in the individual module build.gradle files
+            }
+        } 
 
     Once you've updated your `build.gradle` file, make sure you have specified jcenter() or mavenCentral() as a repository in your `build.gradle` and then sync your project in Tools -> Android -> Sync Project With Gradle Files.
 
