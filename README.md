@@ -39,7 +39,8 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
     Also be sure to include the play-services classpath in your Project level `build.gradle` file:
 
 
-       // Top-level build file where you can add configuration options common to all sub-projects/modules.
+       // Top-level build file where you can add configuration options common to all sub-projects/modules.  
+
         buildscript {
             repositories {
                 jcenter()
