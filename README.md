@@ -36,7 +36,7 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
             compile 'com.android.support:support-v4:23.1.1'
         }
 
-    Also be sure to include the play-services classpath in your Project level `build.gradle` file:
+    Also be sure to include the google-services classpath in your Project level `build.gradle` file:
 
 
        // Top-level build file where you can add configuration options common to all sub-projects/modules.  
