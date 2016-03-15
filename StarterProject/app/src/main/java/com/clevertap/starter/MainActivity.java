@@ -9,6 +9,9 @@ import com.clevertap.android.sdk.SyncListener;
 import com.clevertap.android.sdk.exceptions.CleverTapMetaDataNotFoundException;
 import com.clevertap.android.sdk.exceptions.CleverTapPermissionsNotSatisfied;
 
+import java.util.Date;
+import java.util.HashMap;
+
 import org.json.JSONObject;
 
 public class MainActivity extends Activity implements SyncListener {
@@ -58,8 +61,7 @@ public class MainActivity extends Activity implements SyncListener {
         profileUpdate.put("Name", "Jack Montana"); // String
         profileUpdate.put("Identity", "6541182"); // String or number
         profileUpdate.put("Email", "jack@gmail.com"); // Email address of the user
-        profileUpdate.put("Phone", 4155551234); // Phone(without the country
-        code)
+        profileUpdate.put("Phone", "4155551234"); // Phone(without the countrycode)
         profileUpdate.put("Gender", "M"); // Can be either M or F
         profileUpdate.put("Employed", "Y"); // Can be either Y or N
         profileUpdate.put("DOB", new Date()); // set the Date object to the appropriate value first
@@ -70,12 +72,20 @@ public class MainActivity extends Activity implements SyncListener {
         ct.profile.push(profileUpdate);
         */
 
+
         // create CleverTap event for a User Action
         //ct.event.push("Video played");
+
+        //String email = (String ) ct.profile.getProperty("Email");
+        //Log.d("EMAIL", email);
     }
 
     // SyncListener
     public void profileDataUpdated(JSONObject updates) {
         Log.d("PR_UPDATES", updates.toString());
+    }
+
+    public void profileDidInitialize(String cleverTapID) {
+        Log.d("CLEVERTAP_ID", cleverTapID);
     }
 }
