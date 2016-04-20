@@ -25,13 +25,13 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
     We publish the sdk to jcenter and mavenCentral as an `aar` file. Just declare it as dependency in your `build.gradle` file.
 
         dependencies {
-            compile 'com.clevertap.android:clevertap-android-sdk:2.0.10'
+            compile 'com.clevertap.android:clevertap-android-sdk:2.0.11'
         }
 
     Then add the below Google Play Services libraries and Android Support Library v4 as dependencies to your Module `build.gradle` file.     
 
         dependencies {
-            compile 'com.clevertap.android:clevertap-android-sdk:2.0.10'
+            compile 'com.clevertap.android:clevertap-android-sdk:2.0.11'
             compile 'com.android.support:support-v4:23.1.1+'
             compile 'com.google.android.gms:play-services-base:8.4.0+'
             compile 'com.google.android.gms:play-services-basement:8.4.0+'

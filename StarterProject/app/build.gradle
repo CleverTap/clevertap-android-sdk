@@ -22,7 +22,7 @@ android {
 }
 
 dependencies {
-    compile 'com.clevertap.android:clevertap-android-sdk:2.0.10'
+    compile 'com.clevertap.android:clevertap-android-sdk:2.0.11'
     //compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.google.android.gms:play-services-base:8.4.0'
     compile 'com.google.android.gms:play-services-ads:8.4.0'
