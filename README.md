@@ -15,48 +15,48 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
     [Sign up](https://clevertap.com/sign-up) for a free account.  
 
 2.  Install the SDK
+### Android Studio / Gradle     
+        
+    We publish the sdk to jcenter and mavenCentral as an `aar` file. Just declare it as dependency in your `build.gradle` file.     
+        
+        dependencies {      
+            compile 'com.clevertap.android:clevertap-android-sdk:2.2.0'     
+        }       
+        
+   Then add the below Google Play Services libraries and Android Support Library v4 as dependencies to your Module `build.gradle` file.                 
+        
+        dependencies {      
+            compile 'com.clevertap.android:clevertap-android-sdk:2.2.0'     
+            compile 'com.android.support:support-v4:23.4.0+'        
+            compile 'com.google.android.gms:play-services-gcm:9.0.2+'       
+        }       
+        
+    Also be sure to include the google-services classpath in your Project level `build.gradle` file:        
+        
+        
+        // Top-level build file where you can add configuration options common to all sub-projects/modules.         
+        
+        buildscript {       
+            repositories {      
+                jcenter()       
+        
+        
+            }       
+            dependencies {      
+                classpath 'com.android.tools.build:gradle:2.1.2'        
+                classpath 'com.google.gms:google-services:3.0.0'        
+        
+                // NOTE: Do not place your application dependencies here; they belong       
+                // in the individual module build.gradle files      
+            }       
+        }       
+        
+    Once you've updated your `build.gradle` file, make sure you have specified jcenter() or mavenCentral() as a repository in your `build.gradle` and then sync your project in Tools -> Android -> Sync Project With Gradle Files.     
+ 
 
     ### Manual Install
 
     Copy the included CleverTapAndroidSDK.jar file to your projects libs directory. Add this JAR file as a dependency for your Android app project.
-
-    ### Android Studio / Gradle
-
-    We publish the sdk to jcenter and mavenCentral as an `aar` file. Just declare it as dependency in your `build.gradle` file.
-
-        dependencies {
-            compile 'com.clevertap.android:clevertap-android-sdk:2.2.0'
-        }
-
-    Then add the below Google Play Services libraries and Android Support Library v4 as dependencies to your Module `build.gradle` file.     
-
-        dependencies {
-            compile 'com.clevertap.android:clevertap-android-sdk:2.2.0'
-            compile 'com.android.support:support-v4:23.4.0+'
-            compile 'com.google.android.gms:play-services-gcm:9.0.2+'
-        }
-
-    Also be sure to include the google-services classpath in your Project level `build.gradle` file:  
-
-
-       // Top-level build file where you can add configuration options common to all sub-projects/modules.  
-
-        buildscript {
-            repositories {
-                jcenter()
-
-
-            }
-            dependencies {
-                classpath 'com.android.tools.build:gradle:2.1.2'
-                classpath 'com.google.gms:google-services:3.0.0'
-
-                // NOTE: Do not place your application dependencies here; they belong
-                // in the individual module build.gradle files
-            }
-        } 
-
-    Once you've updated your `build.gradle` file, make sure you have specified jcenter() or mavenCentral() as a repository in your `build.gradle` and then sync your project in Tools -> Android -> Sync Project With Gradle Files.
 
 3. Add Your CleverTap Account Credentials
 
