@@ -29,7 +29,7 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
             compile 'com.clevertap.android:clevertap-android-sdk:3.0.0'     
             compile 'com.android.support:support-v4:23.4.0+'        
             compile 'com.google.android.gms:play-services-gcm:9.0.2+' // if using GCM, omit if using FCM       
-            compile 'com.google.firebase:firebase-messaging:9.0.2' // if using FCM, omit if using GCM
+            compile 'com.google.firebase:firebase-messaging:9.0.2+' // if using FCM, omit if using GCM
         }       
         
     Also be sure to include the google-services classpath in your Project level `build.gradle` file:        
