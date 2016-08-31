@@ -20,15 +20,16 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
     We publish the sdk to jcenter and mavenCentral as an `aar` file. Just declare it as dependency in your `build.gradle` file.     
         
         dependencies {      
-            compile 'com.clevertap.android:clevertap-android-sdk:2.2.0'     
+            compile 'com.clevertap.android:clevertap-android-sdk:3.0.0'     
         }       
         
-   Then add the below Google Play Services libraries and Android Support Library v4 as dependencies to your Module `build.gradle` file.                 
+   Then add the below Google Play Services (or Firebase Messaging, depending on if you use GCM or FCM) libraries and Android Support Library v4 as dependencies to your Module `build.gradle` file.                 
         
         dependencies {      
-            compile 'com.clevertap.android:clevertap-android-sdk:2.2.0'     
+            compile 'com.clevertap.android:clevertap-android-sdk:3.0.0'     
             compile 'com.android.support:support-v4:23.4.0+'        
-            compile 'com.google.android.gms:play-services-gcm:9.0.2+'       
+            compile 'com.google.android.gms:play-services-gcm:9.0.2+' // if using GCM, omit if using FCM       
+            compile 'com.google.firebase:firebase-messaging:9.0.2' // if using FCM, omit if using GCM
         }       
         
     Also be sure to include the google-services classpath in your Project level `build.gradle` file:        
@@ -51,6 +52,10 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
             }       
         }       
         
+    If using FCM, please add your FCM generated google-services.json file to your project and add the following to the end of your build.gradle:
+
+        apply plugin: 'com.google.gms.google-services'
+
     Once you've updated your `build.gradle` file, make sure you have specified jcenter() or mavenCentral() as a repository in your `build.gradle` and then sync your project in Tools -> Android -> Sync Project With Gradle Files.     
  
 

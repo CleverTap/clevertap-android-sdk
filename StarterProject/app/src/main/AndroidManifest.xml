@@ -9,7 +9,9 @@
     <!-- Recommended so that we can be smart about when to send the data -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     
-    <!-- CleverTap Push Notification Permissions -->
+    <!-- CleverTap GCM Push Notification Permissions, if using FCM omit these -->
+    <!-- start GCM -->
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE"/>
 
     <permission
@@ -17,6 +19,7 @@
         android:protectionLevel="signature"/>
 
     <uses-permission android:name="com.clevertap.starter.permission.C2D_MESSAGE"/>
+    <!-- end GCM -->
 
     <!-- Setup the CleverTap lifecycle callback, important!, add android:name here -->
     <application
@@ -35,25 +38,61 @@
             android:name="CLEVERTAP_TOKEN"
             android:value="Insert Your CleverTap Account Token"/>
 
-        <!-- Push Notifications, replace 12345678910 with your GCM sender id -->
+        <!-- GCM Push Notifications, replace 12345678910 with your GCM sender id, omit if using FCM -->
+        <!-- start GCM -->
+        <meta-data
+            android:name="com.google.android.gms.version"
+            android:value="@integer/google_play_services_version"/>
+
         <meta-data
             android:name="GCM_SENDER_ID"
             android:value="id:12345678910"/>
 
         <receiver
-            android:name="com.clevertap.android.sdk.GcmBroadcastReceiver"
-            android:permission="com.google.android.c2dm.permission.SEND">
+            android:name="com.google.android.gms.gcm.GcmReceiver"
+            android:exported="true"
+            android:permission="com.google.android.c2dm.permission.SEND" >
             <intent-filter>
-                <action android:name="com.google.android.c2dm.intent.RECEIVE"/>
-                <action android:name="com.google.android.c2dm.intent.REGISTRATION"/>
-
-                <category android:name="com.clevertap.starter"/>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+                <action android:name="com.google.android.c2dm.intent.REGISTRATION" />
+                <category android:name="com.clevertap.adidemo" />
             </intent-filter>
         </receiver>
 
-        <meta-data
-            android:name="com.google.android.gms.version"
-            android:value="@integer/google_play_services_version"/>
+        <service
+            android:name="com.clevertap.android.sdk.GcmMessageListenerService"
+            android:exported="false" >
+            <intent-filter>
+                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+            </intent-filter>
+        </service>
+
+        <service android:name="com.clevertap.android.sdk.GcmTokenListenerService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.android.gms.iid.InstanceID"/>
+            </intent-filter>
+        </service>
+        <!-- end GCM -->
+
+        <!-- Alternatively for FCM Push Notifications, remove GCM values above and uncomment FCM values below -->
+        <!-- start FCM -->
+
+        <!-- <service
+            android:name="com.clevertap.android.sdk.FcmTokenListenerService">
+            <intent-filter>
+                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
+            </intent-filter>
+        </service>
+
+        <service
+            android:name="com.clevertap.android.sdk.FcmMessageListenerService">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service> -->
+
+        <!-- end FCM -->
 
         <!-- CleverTap In-app notifications -->
         <activity
