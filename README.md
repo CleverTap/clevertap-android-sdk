@@ -20,16 +20,16 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
     We publish the sdk to jcenter and mavenCentral as an `aar` file. Just declare it as dependency in your `build.gradle` file.     
         
         dependencies {      
-            compile 'com.clevertap.android:clevertap-android-sdk:3.1.4'     
+            compile 'com.clevertap.android:clevertap-android-sdk:3.1.6'     
         }       
         
    Then add the below Google Play Services (or Firebase Messaging, depending on if you use GCM or FCM) libraries and Android Support Library v4 as dependencies to your Module `build.gradle` file.                 
         
         dependencies {      
-            compile 'com.clevertap.android:clevertap-android-sdk:3.1.4'     
-            compile 'com.android.support:support-v4:23.4.0+'        
-            compile 'com.google.android.gms:play-services-gcm:9.0.2+' // if using GCM, omit if using FCM       
-            compile 'com.google.firebase:firebase-messaging:9.0.2+' // if using FCM, omit if using GCM
+            compile 'com.clevertap.android:clevertap-android-sdk:3.1.6'     
+            compile 'com.android.support:support-v4:26.0.1'
+            compile 'com.google.firebase:firebase-messaging:11.2.2'
+            compile 'com.google.android.gms:play-services-base:11.2.2'
         }       
         
     Also be sure to include the google-services classpath in your Project level `build.gradle` file:        
@@ -40,11 +40,14 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
         buildscript {       
             repositories {      
                 jcenter()       
+                maven {
+                    url "https://maven.google.com"
+                }
         
         
             }       
             dependencies {      
-                classpath 'com.android.tools.build:gradle:2.1.2'        
+                classpath 'com.android.tools.build:gradle:2.3.3' 
                 classpath 'com.google.gms:google-services:3.0.0'        
         
                 // NOTE: Do not place your application dependencies here; they belong       
@@ -52,7 +55,7 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
             }       
         }       
         
-    If using FCM, please add your FCM generated google-services.json file to your project and add the following to the end of your build.gradle:
+    Add your FCM generated google-services.json file to your project and add the following to the end of your build.gradle:
 
         apply plugin: 'com.google.gms.google-services'
 
