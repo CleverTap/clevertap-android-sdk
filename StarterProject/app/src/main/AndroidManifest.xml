@@ -115,6 +115,13 @@
             </intent-filter>
         </receiver>
 
+        <!--Uncomment if you are manually calling CleverTap to render push notifications-->
+        <!--<receiver-->
+            <!--android:name="com.clevertap.android.sdk.CTPushNotificationReceiver"-->
+            <!--android:exported="false"-->
+            <!--android:enabled="true">-->
+        <!--</receiver>-->
+
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name" >
