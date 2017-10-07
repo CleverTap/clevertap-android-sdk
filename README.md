@@ -20,13 +20,13 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
     We publish the sdk to jcenter and mavenCentral as an `aar` file. Just declare it as dependency in your `build.gradle` file.     
         
         dependencies {      
-            compile 'com.clevertap.android:clevertap-android-sdk:3.1.6'     
+            compile 'com.clevertap.android:clevertap-android-sdk:3.1.7'     
         }       
         
    Then add the below Google Play Services (or Firebase Messaging, depending on if you use GCM or FCM) libraries and Android Support Library v4 as dependencies to your Module `build.gradle` file.                 
         
         dependencies {      
-            compile 'com.clevertap.android:clevertap-android-sdk:3.1.6'     
+            compile 'com.clevertap.android:clevertap-android-sdk:3.1.7'     
             compile 'com.android.support:support-v4:26.0.1'
             compile 'com.google.firebase:firebase-messaging:11.2.2'
             compile 'com.google.android.gms:play-services-base:11.2.2'
