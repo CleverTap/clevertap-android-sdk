@@ -1,4 +1,3 @@
-[![CleverTap Logo](http://staging.support.wizrocket.com.s3-website-eu-west-1.amazonaws.com/images/CleverTap_logo.png)](http:www.clevertap.com)
 
 # CleverTap Android SDK  
 
