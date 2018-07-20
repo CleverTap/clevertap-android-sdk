@@ -5,7 +5,7 @@ The CleverTap Android SDK for App Personalization and Engagement
 
 CleverTap is the next generation app engagement platform. It enables marketers to identify, engage and retain users and provides developers with unprecedented code-level access to build dynamic app experiences for multiple user groups. CleverTap includes out-of-the-box prescriptive campaigns, omni-channel messaging, uninstall data and the industry's largest FREE messaging tier.
 
-For more information check out our [website](https://clevertap.com "CleverTap") and [documentation](http://support.clevertap.com "CleverTap Technical Documentation").
+For more information check out our [website](https://clevertap.com "CleverTap") and [documentation](https://developer.clevertap.com/docs/ "CleverTap Technical Documentation").
 
 ## Getting Started
 
@@ -108,7 +108,7 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
 
 6.  Checkout the Full Documentation
 
-    Please see our [full documentation here](https://support.clevertap.com/integration/android-sdk/) for more information on permissions, as well as configuration for Push Notifications, In-app messages, install referrer tracking and app personalization.
+    Please see our [full documentation here](https://developer.clevertap.com/docs/android) for more information on permissions, as well as configuration for Push Notifications, In-app messages, install referrer tracking and app personalization.
 
 ## Example Usage
 Checkout the example StarterProject.
