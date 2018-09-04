@@ -1,9 +1,8 @@
+# CleverTap Android SDK
 
-# CleverTap Android SDK  
+The CleverTap Android SDK for Mobile Customer Engagement and Analytics solutions 
 
-The CleverTap Android SDK for App Personalization and Engagement  
-
-CleverTap is the next generation app engagement platform. It enables marketers to identify, engage and retain users and provides developers with unprecedented code-level access to build dynamic app experiences for multiple user groups. CleverTap includes out-of-the-box prescriptive campaigns, omni-channel messaging, uninstall data and the industry's largest FREE messaging tier.
+CleverTap brings together real-time user insights, an advanced segmentation engine, and easy-to-use marketing tools in one mobile marketing platform — giving your team the power to create amazing experiences that deepen customer relationships. Our intelligent mobile marketing platform provides the insights you need to keep users engaged and drive long-term retention and growth.
 
 For more information check out our [website](https://clevertap.com "CleverTap") and [documentation](https://developer.clevertap.com/docs/ "CleverTap Technical Documentation").
 
@@ -14,102 +13,128 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
     [Sign up](https://clevertap.com/sign-up) for a free account.  
 
 2.  Install the SDK
-### Android Studio / Gradle     
-        
-    We publish the sdk to jcenter and mavenCentral as an `aar` file. Just declare it as dependency in your `build.gradle` file.     
-        
-        dependencies {      
-            compile 'com.clevertap.android:clevertap-android-sdk:3.1.10'     
-        }       
-        
-   Then add the below Google Play Services (or Firebase Messaging, depending on if you use GCM or FCM) libraries and Android Support Library v4 as dependencies to your Module `build.gradle` file.                 
-        
-        dependencies {      
-            compile 'com.clevertap.android:clevertap-android-sdk:3.1.10'     
-            compile 'com.android.support:support-v4:26.0.1'
-            compile 'com.google.firebase:firebase-messaging:11.2.2'
-            compile 'com.google.android.gms:play-services-base:11.2.2'
-        }       
-        
-    Also be sure to include the google-services classpath in your Project level `build.gradle` file:        
-        
-        
-        // Top-level build file where you can add configuration options common to all sub-projects/modules.         
-        
-        buildscript {       
-            repositories {      
-                jcenter()       
-                maven {
-                    url "https://maven.google.com"
-                }
-        
-        
-            }       
-            dependencies {      
-                classpath 'com.android.tools.build:gradle:2.3.3' 
-                classpath 'com.google.gms:google-services:3.0.0'        
-        
-                // NOTE: Do not place your application dependencies here; they belong       
-                // in the individual module build.gradle files      
-            }       
-        }       
-        
-    Add your FCM generated google-services.json file to your project and add the following to the end of your build.gradle:
+    ### Android Studio / Gradle
 
-        apply plugin: 'com.google.gms.google-services'
+    We publish the SDK to `jcenter` and `mavenCentral` as an `AAR` file. Just declare it as dependency in your `build.gradle` file.
 
-    Once you've updated your `build.gradle` file, make sure you have specified jcenter() or mavenCentral() as a repository in your `build.gradle` and then sync your project in Tools -> Android -> Sync Project With Gradle Files.     
- 
+    ```markdown
+    dependencies {      
+         implementation 'com.clevertap.android:clevertap-android-sdk:3.2.0'     
+    }
+    ```
 
-    ### Manual Install
+    Alternatively, you can download and add the AAR file included in this repo in your Module libs directory and tell gradle to install it like this:
 
-    Copy the included CleverTapAndroidSDK.jar file to your projects libs directory. Add this JAR file as a dependency for your Android app project.
+    ```markdown
+    dependencies {      
+        implementation (name: 'clevertap-android-sdk-3.2.0', ext: 'aar') 
+    }
+    ```
+
+    Then add the Firebase Messaging library and Android Support Library v4 as dependencies to your Module `build.gradle` file.
+
+     ```markdown
+     dependencies {      
+         implementation 'com.clevertap.android:clevertap-android-sdk:3.2.0'     
+         implementation 'com.android.support:support-v4:27.1.1'
+         implementation 'com.google.firebase:firebase-messaging:17.3.0'
+         implementation 'com.google.android.gms:play-services-ads:15.0.1' // Required only if you enable Google ADID collection in the SDK (turned off by default).
+     }
+    ```
+
+    Also be sure to include the `google-services` classpath in your Project level `build.gradle` file:
+
+    ```markdown
+    // Top-level build file where you can add configuration options common to all sub-projects/modules.         
+        
+    buildscript {       
+         repositories {      
+             google()
+             jcenter()       
+
+             // if you are including the aar file manually in your Module libs directory add this:
+             flatDir {
+                dirs 'libs'
+            }
+        
+         }       
+         dependencies {      
+             classpath 'com.android.tools.build:gradle:3.1.4' 
+             classpath 'com.google.gms:google-services:4.0.0'        
+        
+             // NOTE: Do not place your application dependencies here; they belong       
+             // in the individual module build.gradle files      
+         }       
+    }
+    ```
+
+    Add your FCM generated `google-services.json` file to your project and add the following to the end of your `build.gradle`:
+
+    `apply plugin: 'com.google.gms.google-services'`
+
+    Once you've updated your module `build.gradle` file, make sure you have specified `jcenter()` and `google()` as a repositories in your project `build.gradle` and then sync your project in File -> Sync Project with Gradle Files.
 
 3. Add Your CleverTap Account Credentials
-
-    add the following inside the `<application></application>` tags of your AndroidManifest.xml:  
     
-        <meta-data  
-            android:name="CLEVERTAP_ACCOUNT_ID"  
-            android:value="Your CleverTap Account ID"/>  
-        <meta-data  
-            android:name="CLEVERTAP_TOKEN"  
-            android:value="Your CleverTap Account Token"/>
+   Add the following inside the `<application></application>` tags of your AndroidManifest.xml:
+   
+   ```xml
+   <meta-data  
+        android:name="CLEVERTAP_ACCOUNT_ID"  
+        android:value="Your CleverTap Account ID"/>  
+   <meta-data  
+        android:name="CLEVERTAP_TOKEN"  
+        android:value="Your CleverTap Account Token"/>
+   ```
 
-    Replace "Your CleverTap Account ID" and "Your CleverTap Account Token" with actual values from your CleverTap [Dashboard](https://dashboard.clevertap.com) -> Settings -> Integration -> Account ID, SDK's.
+   Replace "Your CleverTap Account ID" and "Your CleverTap Account Token" with actual values from your CleverTap [Dashboard](https://dashboard.clevertap.com) -> Settings -> Integration -> Account ID, SDK's.
 
-4.  Setup the Lifecycle Callback - **IMPORTANT**
+4. Setup the Lifecycle Callback - **IMPORTANT**
 
-    Add the "android:name" property to the `<application>` tag:
-
-        <application
-            android:label="@string/app_name"
-            android:icon="@drawable/ic_launcher"
-            android:name="com.clevertap.android.sdk.Application">
-
-    Note: If you've already got a custom Application class, call `ActivityLifecycleCallback.register(this);` before `super.onCreate()` in your custom Application class.
-
-    Note: The above step is extremely important and enables CleverTap to track notification opens, display in-app notifications, track deep links, and other important user behavior.
-
+    Add the "android:name" property to the `<application>` tag in your AndroidManifest.xml:
+    
+    ```xml
+    <application
+        android:label="@string/app_name"
+        android:icon="@drawable/ic_launcher"
+        android:name="com.clevertap.android.sdk.Application">
+    ```
+    
+    **Note:** If you've already got a custom Application class, call `ActivityLifecycleCallback.register(this);` before `super.onCreate()` in your custom Application class.
+    
+    **Note:** The above step is extremely important and enables CleverTap to track notification opens, display in-app notifications, track deep links, and other important user behavior.
+    
 5.  Initialize the Library
 
-    The instance returned by `CleverTapAPI.getInstance()` is the same on every call.  In the onCreate() of your main activity:
+    By default the library creates a shared default instance based on the Account ID and Account Token included in your AndroidManifest.xml.   To access this default shared singleton instance in your code call `CleverTapAPI.getDefaultInstance(context)`.
 
-        CleverTapAPI ct;
-        try {
-          ct = CleverTapAPI.getInstance(getApplicationContext());
-        } catch (CleverTapMetaDataNotFoundException e) {
-          // handle appropriately
-        } catch (CleverTapPermissionsNotSatisfied e) {
-          // handle appropriately
-        }
+     ```java
+    CleverTapAPI clevertap = CleverTapAPI.getDefaultInstance(getApplicationContext());
+    ```
+    **Note :** `CleverTapAPI.getInstance(getApplicationContext())` has been deprecated in this release
+    
+    **Creating multiple instances of the SDK**
+    
+    Starting with version 3.2.0 of the SDK, you can create additional CleverTap instances to send data to multiple CleverTap accounts from your app.  To create an additional instance:
+    
+    * Create a CleverTapInstanceConfig object. This object can be created and configured as follows:
+    
+    ```java
+    CleverTapInstanceConfig clevertapAdditionalInstanceConfig =  CleverTapInstanceConfig.createInstance(context, "ADDITIONAL_CLEVERTAP_ACCOUNT_ID", "ADDITIONAL_CLEVERTAP_ACCOUNT_TOKEN");
+    clevertapAdditionalInstanceConfig.setDebugLevel(CleverTapAPI.LogLevel.DEBUG); // default is CleverTapAPI.LogLevel.INFO
+    clevertapAdditionalInstanceConfig.setAnalyticsOnly(true); // disables the user engagement features of the instance, default is false
+    clevertapAdditionalInstanceConfig.useGoogleAdId(true); // enables the collection of the Google ADID by the instance, default is false
+    ```
 
-    CleverTapMetaDataNotFoundException is thrown when you haven't specified your CleverTap Account ID and/or the Account Token in your AndroidManifest.xml. CleverTapPermissionsNotSatisfied is thrown when you haven't requested the required permissions in your AndroidManifest.xml
+    * Then to create and subsequently access the additional CleverTap instance, call CleverTapAPI.instanceWithConfig with the CleverTapInstanceConfig object you created. 
 
-6.  Checkout the Full Documentation
+    ```java
+    CleverTapAPI clevertapAdditionalInstance = CleverTapAPI.instanceWithConfig(clevertapAdditionalInstanceConfig);
+    ```
 
-    Please see our [full documentation here](https://developer.clevertap.com/docs/android) for more information on permissions, as well as configuration for Push Notifications, In-app messages, install referrer tracking and app personalization.
+    **Note:**  All configuration to the CleverTapInstanceConfig object must be done prior to calling CleverTapAPI.instanceWithConfig.  Subsequent changes to the CleverTapInstanceConfig object will have no effect on the additional CleverTap instance created.
+    
+## Example Usage   
+See the [usage examples here](https://github.com/CleverTap/sdk-android-source/blob/3.2.0/EXAMPLES.md). Also, see the [example project](https://github.com/CleverTap/sdk-android-source/tree/3.2.0/AndroidStarter), included with this repo. 
 
-## Example Usage
-Checkout the example StarterProject.
-
+See our [full documentation here](https://developer.clevertap.com/docs/android) for more information on Events and Profile Tracking, Push Notifications, In-App messages, Install Referrer tracking and app personalization.
