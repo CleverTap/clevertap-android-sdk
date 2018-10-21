@@ -93,7 +93,6 @@ public class Constants {
     static final String INAPP_ID_IN_PAYLOAD = "ti";
     static final int LOCATION_PING_INTERVAL_IN_SECONDS = 10;
 
-
     /**
      * Profile command constants.
      */

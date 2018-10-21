@@ -124,6 +124,8 @@ class InAppFCManager {
     }
 
     private String getInAppID(CTInAppNotification inapp) {
+        if(inapp.getId() == null) return null;
+
         if (!inapp.getId().isEmpty()) {
             try {
                 return inapp.getId();

@@ -4,10 +4,20 @@ enum CTInAppType {
 
     CTInAppTypeHTML("html"),
     CTInAppTypeCoverHTML("coverHtml"),
-    CTInAppTypeInterstitialHTML("interstitialHtmlL"),
+    CTInAppTypeInterstitialHTML("interstitialHtml"),
     CTInAppTypeHeaderHTML("headerHtml"),
     CTInAppTypeFooterHTML("footerHtml"),
-    CTInAppTypeHalfInterstitialHTML("halfInterstitialHtml");
+    CTInAppTypeHalfInterstitialHTML("halfInterstitialHtml"),
+    CTInAppTypeCover("cover"),
+    CTInAppTypeInterstitial("interstitial"),
+    CTInAppTypeHalfInterstitial("half-interstitial"),
+    CTInAppTypeHeader("header-template"),
+    CTInAppTypeFooter("footer-template"),
+    CTInAppTypeAlert("alert-template"),
+    CTInAppTypeRating("rating"),
+    CTInAppTypeCoverImageOnly("cover-image"),
+    CTInAppTypeInterstitialImageOnly("interstitial-image"),
+    CTInAppTypeHalfInterstitialImageOnly("half-interstitial-image");
 
 
     private final String inAppType;
@@ -25,7 +35,7 @@ enum CTInAppType {
             case "coverHtml" : {
                 return CTInAppTypeCoverHTML;
             }
-            case "interstitialHtmlL" : {
+            case "interstitialHtml" : {
                 return CTInAppTypeInterstitialHTML;
             }
             case "headerHtml" : {
@@ -36,6 +46,36 @@ enum CTInAppType {
             }
             case "halfInterstitialHtml" : {
                 return CTInAppTypeHalfInterstitialHTML;
+            }
+            case "half-interstitial" : {
+                return CTInAppTypeHalfInterstitial;
+            }
+            case "interstitial" : {
+                return CTInAppTypeInterstitial;
+            }
+            case "cover" : {
+                return CTInAppTypeCover;
+            }
+            case "header-template" : {
+                return CTInAppTypeHeader;
+            }
+            case "footer-template" : {
+                return CTInAppTypeFooter;
+            }
+            case "alert-template" : {
+                return CTInAppTypeAlert;
+            }
+            case "rating" : {
+                return CTInAppTypeRating;
+            }
+            case "cover-image" : {
+                return CTInAppTypeCoverImageOnly;
+            }
+            case "interstitial-image" : {
+                return CTInAppTypeInterstitialImageOnly;
+            }
+            case "half-interstitial-image" : {
+                return CTInAppTypeHalfInterstitialImageOnly;
             }
             default: return null;
         }

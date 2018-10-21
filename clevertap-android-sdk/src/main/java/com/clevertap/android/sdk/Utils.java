@@ -14,12 +14,15 @@ import android.telephony.TelephonyManager;
 
 import org.json.JSONObject;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Iterator;
+
+import javax.net.ssl.HttpsURLConnection;
 
 final class Utils {
     static long getMemoryConsumption() {
@@ -133,7 +136,7 @@ final class Utils {
         }
     }
 
-    private static Bitmap drawableToBitmap(Drawable drawable)
+    static Bitmap drawableToBitmap(Drawable drawable)
             throws NullPointerException {
         if (drawable instanceof BitmapDrawable) {
             return ((BitmapDrawable) drawable).getBitmap();
@@ -168,6 +171,37 @@ final class Utils {
             Logger.v("Couldn't download the notification icon. URL was: " + srcUrl);
             return null;
         } finally {
+            try {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            } catch (Throwable t) {
+                Logger.v("Couldn't close connection!", t);
+            }
+        }
+    }
+
+    static byte[] getByteArrayFromImageURL(String srcUrl){
+        srcUrl = srcUrl.replace("///", "/");
+        srcUrl = srcUrl.replace("//", "/");
+        srcUrl = srcUrl.replace("http:/", "http://");
+        srcUrl = srcUrl.replace("https:/", "https://");
+        HttpsURLConnection connection = null;
+        try{
+            URL url = new URL(srcUrl);
+            connection = (HttpsURLConnection) url.openConnection();
+            InputStream is = connection.getInputStream();
+            byte [] buffer = new byte[8192];
+            int bytesRead;
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            while((bytesRead = is.read(buffer)) != -1){
+                baos.write(buffer,0,bytesRead);
+            }
+            return baos.toByteArray();
+        }catch (IOException e){
+            Logger.v("Error processing image bytes from url: "+ srcUrl);
+            return null;
+        }finally {
             try {
                 if (connection != null) {
                     connection.disconnect();

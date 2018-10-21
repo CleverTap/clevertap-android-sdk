@@ -2,6 +2,7 @@ package com.clevertap.android.sdk;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.FragmentTransaction;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -10,6 +11,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -68,7 +70,7 @@ import static android.content.Context.NOTIFICATION_SERVICE;
  * <h1>CleverTapAPI</h1>
  * This is the main CleverTapAPI class that manages the SDK instances
  */
-public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationListener {
+public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationListener,InAppNotificationActivity.InAppActivityListener, CTInAppBaseFragment.InAppListener {
 
     public enum LogLevel{
         OFF(-1),
@@ -102,6 +104,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private static ArrayList<CTInAppNotification> pendingNotifications = new ArrayList<>();
     private Runnable pendingInappRunnable = null;
     private static CTInAppNotification currentlyDisplayingInApp = null;
+
     private static WeakReference<Activity> currentActivity;
     private static int initialAppEnteredForegroundTime = 0;
     private static SSLContext sslContext;
@@ -320,10 +323,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (instances == null) {
             CleverTapAPI.createInstanceIfAvailable(activity, null);
         }
+
+        CleverTapAPI.setAppForeground(true);
+
         if (instances == null) {
             Logger.v("Instances is null in onActivityResumed!");
             return;
         }
+
         String currentActivityName = getCurrentActivityName();
         setCurrentActivity(activity);
         if (currentActivityName == null || !currentActivityName.equals(activity.getLocalClassName())) {
@@ -1243,7 +1250,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     //Session
     private void lazyCreateSession(Context context) {
         if (!inCurrentSession()) {
+            pushAppLaunchedEvent();
             createSession(context);
+            pushInitialEventsAsync();
         }
     }
 
@@ -2284,6 +2293,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 return;
             }
 
+            checkPendingNotifications(context, config);  // see if we have any pending notifications
+
             JSONArray inapps = new JSONArray(getStringFromPrefs(Constants.PREFS_INAPP_KEY, "[]"));
             if (inapps.length() < 1) {
                 return;
@@ -2297,7 +2308,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             JSONArray inappsUpdated = new JSONArray();
             for (int i = 0; i < inapps.length(); i++) {
                 if (i==0) continue;
-
                 inappsUpdated.put(inapps.get(i));
             }
             SharedPreferences.Editor editor = prefs.edit().putString(storageKeyWithSuffix(Constants.PREFS_INAPP_KEY), inappsUpdated.toString());
@@ -2404,42 +2414,77 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //InApp
     private static void inAppDidDismiss(Context context, CleverTapInstanceConfig config, CTInAppNotification inAppNotification){
-        if(currentlyDisplayingInApp.getCampaignId().equals(inAppNotification.getCampaignId())) {
+        Logger.v(config.getAccountId(), "Running inAppDidDismiss");
+        if(currentlyDisplayingInApp != null && (currentlyDisplayingInApp.getCampaignId().equals(inAppNotification.getCampaignId()))) {
             currentlyDisplayingInApp = null;
-            if (pendingNotifications != null && !pendingNotifications.isEmpty()) {
-                showInApp(context, pendingNotifications.get(0), config);
-                Logger.v(config.getAccountId(), "Showing next In-App");
+            checkPendingNotifications(context, config);
+        }
+    }
+
+    private static void checkPendingNotifications(final Context context, final CleverTapInstanceConfig config) {
+        Logger.v(config.getAccountId(), "checking Pending Notifications");
+        if (pendingNotifications != null && !pendingNotifications.isEmpty()) {
+            try {
+                final CTInAppNotification notification = pendingNotifications.get(0);
                 pendingNotifications.remove(0);
+                Handler mainHandler = new Handler(context.getMainLooper());
+                mainHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        showInApp(context, notification , config);
+                    }
+                });
+            } catch (Throwable t) {
+                // no-op
             }
         }
     }
 
     //InApp
-    private static void showInApp(Context context,CTInAppNotification inAppNotification, CleverTapInstanceConfig config){
+    private static void showInApp(Context context, final CTInAppNotification inAppNotification, CleverTapInstanceConfig config){
 
-        if(currentlyDisplayingInApp!=null){
+        Logger.v(config.getAccountId(), "Attempting to show next In-App");
+
+        if (!appForeground) {
+            pendingNotifications.add(inAppNotification);
+            Logger.v(config.getAccountId(),"Not in foreground, queueing this In App");
+            return;
+        }
+
+        if(currentlyDisplayingInApp != null){
             pendingNotifications.add(inAppNotification);
             Logger.v(config.getAccountId(),"In App already displaying, queueing this In App");
             return;
         }
 
         currentlyDisplayingInApp = inAppNotification;
-        Logger.d("Displaying In-App: "+inAppNotification.getJsonDescription());
-        switch(inAppNotification.getInAppType()){
+
+        CTInAppBaseFragment inAppFragment = null;
+        CTInAppType type = inAppNotification.getInAppType();
+        switch(type){
             case CTInAppTypeCoverHTML:
             case CTInAppTypeInterstitialHTML:
             case CTInAppTypeHalfInterstitialHTML:
+            case CTInAppTypeCover:
+            case CTInAppTypeHalfInterstitial:
+            case CTInAppTypeInterstitial:
+            case CTInAppTypeAlert:
+            case CTInAppTypeRating:
+            case CTInAppTypeInterstitialImageOnly:
+            case CTInAppTypeHalfInterstitialImageOnly:
+            case CTInAppTypeCoverImageOnly:
+
                 Intent intent = new Intent(context,InAppNotificationActivity.class);
                 intent.putExtra("inApp",inAppNotification);
                 intent.putExtra("config",config);
                 try {
-
                     Activity currentActivity = getCurrentActivity();
                     if (currentActivity == null) {
                         throw new IllegalStateException("Current activity reference not found");
                     }
-                    Logger.v(config.getAccountId(),"calling InAppActivity " + inAppNotification.getCampaignId());
+                    config.getLogger().verbose(config.getAccountId(),"calling InAppActivity for notification: " + inAppNotification.getJsonDescription());
                     currentActivity.startActivity(intent);
+                    Logger.d("Displaying In-App: "+inAppNotification.getJsonDescription());
 
                 } catch (Throwable t) {
                     Logger.v("Please verify the integration of your app." +
@@ -2447,26 +2492,39 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 }
                 break;
             case CTInAppTypeFooterHTML:
-            case CTInAppTypeHeaderHTML:
-                try {
-                    Activity currentActivity = getCurrentActivity();
-                    if (currentActivity != null) {
-                        FragmentTransaction fragmentTransaction = currentActivity.getFragmentManager().beginTransaction();
-                        InAppFragment inAppFragment = new InAppFragment();
-                        Bundle bundle = new Bundle();
-                        bundle.putParcelable("inApp",inAppNotification);
-                        bundle.putParcelable("config",config);
-                        inAppFragment.setArguments(bundle);
-                        fragmentTransaction.setCustomAnimations(android.R.animator.fade_in,android.R.animator.fade_out);
-                        fragmentTransaction.add(android.R.id.content,inAppFragment);
-                        Logger.v(config.getAccountId(),"calling InAppFragment " + inAppNotification.getCampaignId());
-                        fragmentTransaction.commitAllowingStateLoss();
-                    }
-                } catch(Throwable e) {
-                    Logger.v(config.getAccountId(),"Fragment not able to render",e);
-                }
+                inAppFragment = new CTInAppHtmlFooterFragment();
                 break;
-            default: Logger.d(config.getAccountId(),"No InApp Type found.");
+            case CTInAppTypeHeaderHTML:
+                inAppFragment = new CTInAppHtmlHeaderFragment();
+                break;
+            case CTInAppTypeFooter:
+                inAppFragment = new CTInAppNativeFooterFragment();
+                break;
+            case CTInAppTypeHeader:
+                inAppFragment = new CTInAppNativeHeaderFragment();
+                break;
+            default:
+                Logger.d(config.getAccountId(),"Unknown InApp Type found: " + type);
+                currentlyDisplayingInApp = null;
+                return;
+        }
+
+        if (inAppFragment != null) {
+            Logger.d("Displaying In-App: "+inAppNotification.getJsonDescription());
+            try {
+                FragmentTransaction fragmentTransaction = getCurrentActivity().getFragmentManager().beginTransaction();
+                Bundle bundle = new Bundle();
+                bundle.putParcelable("inApp",inAppNotification);
+                bundle.putParcelable("config",config);
+                inAppFragment.setArguments(bundle);
+                fragmentTransaction.setCustomAnimations(android.R.animator.fade_in,android.R.animator.fade_out);
+                fragmentTransaction.add(android.R.id.content,inAppFragment);
+                Logger.v(config.getAccountId(),"calling InAppFragment " + inAppNotification.getCampaignId());
+                fragmentTransaction.commit();
+
+            } catch (Throwable t) {
+                Logger.v(config.getAccountId(),"Fragment not able to render", t);
+            }
         }
     }
 
@@ -4529,11 +4587,19 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //InApp
-    void notificationDidDismiss(Context context, CTInAppNotification inAppNotification, Bundle formData) {
-        if (inAppNotification == null) {
-            getConfigLogger().verbose(getAccountId(),"notificationDidDismiss called with null inAppNotification");
-            return;
-        }
+    @Override
+    public void inAppNotificationDidShow(Context context, CTInAppNotification inAppNotification, Bundle formData) {
+        pushInAppNotificationStateEvent(false, inAppNotification, formData);
+    }
+
+    @Override
+    public void inAppNotificationDidClick(Context context, CTInAppNotification inAppNotification, Bundle formData) {
+        pushInAppNotificationStateEvent(true, inAppNotification, formData);
+    }
+
+    @Override
+    public void inAppNotificationDidDismiss(final Context context, final CTInAppNotification inAppNotification, Bundle formData){
+        inAppNotification.didDismiss();
         inAppFCManager.didDismiss(inAppNotification);
         getConfigLogger().verbose(getAccountId(),"InApp Dismissed: " +inAppNotification.getCampaignId());
         try {
@@ -4541,7 +4607,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             if (listener != null) {
                 final HashMap<String, Object> notifKVS;
 
-                if (inAppNotification.getCustomExtras()!=null) {
+                if (inAppNotification.getCustomExtras() != null) {
                     //noinspection ConstantConditions
                     notifKVS = Utils.convertJSONObjectToHashMap(inAppNotification.getCustomExtras());
                 } else {
@@ -4560,8 +4626,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             getConfigLogger().verbose(getAccountId(),"Failed to call the in-app notification listener", t);
         }
 
-        inAppDidDismiss(context,getConfig(),inAppNotification);
-        _showNotificationIfAvailable(context);
+        // Fire the next one, if any
+        runOnNotificationQueue(new Runnable() {
+            @Override
+            public void run() {
+                inAppDidDismiss(context,getConfig(),inAppNotification);
+                _showNotificationIfAvailable(context);
+            }
+        });
     }
 
     //InApp
