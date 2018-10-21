@@ -1,5 +1,9 @@
 ## CHANGE LOG
 
+### Version 3.2.1 (October 22, 2018)
+* Adds support for Native InApp Notifications
+* Bug fixes and performance improvements
+
 ### Version 3.2.0 (September 04, 2018)
 * Adds support to create multiple instances of CleverTap Android SDK
 * Deprecated `CleverTapException`, `CleverTapMetaDataNotFoundException`, `CleverTapPermissionsNotSatisfied` and `InvalidEventNameException`

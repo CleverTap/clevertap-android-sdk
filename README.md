@@ -19,7 +19,7 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
 
     ```markdown
     dependencies {      
-         implementation 'com.clevertap.android:clevertap-android-sdk:3.2.0'     
+         implementation 'com.clevertap.android:clevertap-android-sdk:3.2.1'     
     }
     ```
 
@@ -27,7 +27,7 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
 
     ```markdown
     dependencies {      
-        implementation (name: 'clevertap-android-sdk-3.2.0', ext: 'aar') 
+        implementation (name: 'clevertap-android-sdk-3.2.1', ext: 'aar') 
     }
     ```
 
@@ -35,7 +35,7 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
 
      ```markdown
      dependencies {      
-         implementation 'com.clevertap.android:clevertap-android-sdk:3.2.0'     
+         implementation 'com.clevertap.android:clevertap-android-sdk:3.2.1'     
          implementation 'com.android.support:support-v4:27.1.1'
          implementation 'com.google.firebase:firebase-messaging:17.3.0'
          implementation 'com.google.android.gms:play-services-ads:15.0.1' // Required only if you enable Google ADID collection in the SDK (turned off by default).
@@ -71,6 +71,14 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
     Add your FCM generated `google-services.json` file to your project and add the following to the end of your `build.gradle`:
 
     `apply plugin: 'com.google.gms.google-services'`
+    
+    Interstitial InApp Notification templates support Audio and Video with the help of ExoPlayer. To enable Audio/Video in your Interstitial InApp Notifications, add the following dependencies in your `build.gradle` file :
+    
+    ```markdown
+    implementation 'com.google.android.exoplayer:exoplayer:2.8.4'
+    implementation 'com.google.android.exoplayer:exoplayer-hls:2.8.4'
+    implementation 'com.google.android.exoplayer:exoplayer-ui:2.8.4'
+    ```  
 
     Once you've updated your module `build.gradle` file, make sure you have specified `jcenter()` and `google()` as a repositories in your project `build.gradle` and then sync your project in File -> Sync Project with Gradle Files.
 
