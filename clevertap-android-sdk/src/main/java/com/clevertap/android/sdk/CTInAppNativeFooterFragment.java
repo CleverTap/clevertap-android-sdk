@@ -51,7 +51,6 @@ public class CTInAppNativeFooterFragment extends CTInAppBasePartialNativeFragmen
             imageView.setVisibility(View.GONE);
         }
 
-
         TextView textView1 = linearLayout2.findViewById(R.id.footer_title);
         textView1.setText(inAppNotification.getTitle());
         textView1.setTextColor(Color.parseColor(inAppNotification.getTitleColor()));

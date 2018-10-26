@@ -12,6 +12,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.UUID;
 
 class CTInAppNotification implements Parcelable {
 
@@ -55,6 +56,8 @@ class CTInAppNotification implements Parcelable {
     private JSONObject actionExtras;
     CTInAppNotificationListener listener;
 
+    private boolean isTablet;
+
 
     CTInAppNotification(){}
 
@@ -68,14 +71,10 @@ class CTInAppNotification implements Parcelable {
 
             this.type = jsonObject.has("type") ? jsonObject.getString("type") : null;
 
-            if(this.type !=null ) {
-                if(this.type.equals("custom-html")) {
-                    legacyConfigureWithJson(jsonObject);
-                }else {
-                    configureWithJson(jsonObject);
-                }
-            }else{
+            if(this.type ==null || this.type.equals("custom-html")){
                 legacyConfigureWithJson(jsonObject);
+            }else{
+                configureWithJson(jsonObject);
             }
 
         } catch (JSONException e) {
@@ -138,9 +137,14 @@ class CTInAppNotification implements Parcelable {
 
     private void configureWithJson(JSONObject jsonObject){
         try {
+            this.id = jsonObject.has(Constants.INAPP_ID_IN_PAYLOAD) ? jsonObject.getString(Constants.INAPP_ID_IN_PAYLOAD) : "";
             this.campaignId = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject.getString(Constants.NOTIFICATION_ID_TAG) : "";
             this.type = jsonObject.getString("type");
+            this.excludeFromCaps = jsonObject.has("efc") && jsonObject.getInt("efc") == 1;
+            this.totalLifetimeCount = jsonObject.has("tlc") ? jsonObject.getInt("tlc") : -1;
+            this.totalDailyCount = jsonObject.has("tdc") ? jsonObject.getInt("tdc") : -1;
             this.inAppType = CTInAppType.fromString(this.type);
+            this.isTablet = jsonObject.has("tablet") ? jsonObject.getBoolean("tablet") : false;
             this.backgroundColor = jsonObject.has("bg") ? jsonObject.getString("bg") : "";
             JSONObject titleObject = jsonObject.has("title") ? jsonObject.getJSONObject("title") : null;
             if(titleObject != null) {
@@ -160,7 +164,11 @@ class CTInAppNotification implements Parcelable {
                 if(!mediaUrl.isEmpty()){
                     if(this.contentType.startsWith("image")){
                         this.imageUrl = mediaUrl;
-                        this._imageCacheKey = media.has("key") ? media.getString("key") : "";
+                        if(media.has("key")){
+                            this._imageCacheKey = UUID.randomUUID().toString() + media.getString("key");
+                        }else {
+                            this._imageCacheKey = UUID.randomUUID().toString();
+                        }
                     } else {
                         this.mediaUrl = mediaUrl;
                     }
@@ -175,6 +183,29 @@ class CTInAppNotification implements Parcelable {
                         this.buttonCount++;
                     }
                 }
+            }
+            switch(this.inAppType){
+                case CTInAppTypeFooter:
+                case CTInAppTypeHeader:
+                    if(mediaIsGIF() || mediaIsAudio() || mediaIsVideo()){
+                        this.imageUrl = null;
+                        Logger.d("Unable to download to media. Wrong media type for template");
+                    }
+                    break;
+                case CTInAppTypeCover:
+                case CTInAppTypeHalfInterstitial:
+                    if(mediaIsGIF() || mediaIsAudio() || mediaIsVideo()){
+                        this.imageUrl = null;
+                        Logger.d("Unable to download to media. Wrong media type for template");
+                    }
+                    break;
+                case CTInAppTypeCoverImageOnly:
+                case CTInAppTypeHalfInterstitialImageOnly:
+                case CTInAppTypeInterstitialImageOnly:
+                    if(mediaIsGIF() || mediaIsAudio() || mediaIsVideo() || !mediaIsImage()){
+                        this.error = "Wrong media type for template";
+                    }
+                    break;
             }
         }catch (JSONException e){
             this.error = "Invalid JSON"+e.getLocalizedMessage();
@@ -433,6 +464,10 @@ class CTInAppNotification implements Parcelable {
         return backgroundColor;
     }
 
+    boolean isTablet() {
+        return isTablet;
+    }
+
     ArrayList<CTInAppNotificationButton> getButtons() {
         return buttons;
     }
@@ -534,6 +569,7 @@ class CTInAppNotification implements Parcelable {
             }
             hideCloseButton = in.readByte() != 0x00;
             buttonCount = in.readInt();
+            isTablet = in.readByte() != 0x00;
 
         }catch (JSONException e){
             // no-op
@@ -594,6 +630,7 @@ class CTInAppNotification implements Parcelable {
         dest.writeTypedList(buttons);
         dest.writeByte((byte) (hideCloseButton ? 0x01 : 0x00));
         dest.writeInt(buttonCount);
+        dest.writeByte((byte) (isTablet ? 0x01 : 0x00));
 
     }
 
@@ -687,7 +724,10 @@ class CTInAppNotification implements Parcelable {
 
         static Bitmap getBitmap(String key) {
             synchronized (ImageCache.class) {
-                return mMemoryCache == null ? null : mMemoryCache.get(key);
+                if(key!=null)
+                    return mMemoryCache == null ? null : mMemoryCache.get(key);
+                else
+                    return null;
             }
         }
 

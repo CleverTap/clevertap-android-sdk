@@ -3,15 +3,16 @@
     android:id="@+id/inapp_interstitial_image_frame_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen">
+    android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"
+    android:layout_gravity="center">
 
 
     <RelativeLayout
         android:id="@+id/interstitial_image_relative_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginRight="30dp"
-        android:layout_marginLeft="30dp"
+        android:layout_marginRight="45dp"
+        android:layout_marginLeft="45dp"
         android:layout_marginBottom="60dp"
         android:layout_marginTop="60dp"
         >
@@ -22,7 +23,7 @@
             android:layout_height="match_parent"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
-            android:scaleType="fitXY"
+            android:scaleType="centerCrop"
             android:visibility="visible"/>
 
     </RelativeLayout>
@@ -30,8 +31,8 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_gravity="top|end"
-        android:layout_marginRight="15dp"
+        android:layout_marginRight="30dp"
         android:layout_marginTop="45dp"
         android:adjustViewBounds="true"
-        android:layout_marginEnd="15dp" />
+        android:layout_marginEnd="30dp" />
 </FrameLayout>

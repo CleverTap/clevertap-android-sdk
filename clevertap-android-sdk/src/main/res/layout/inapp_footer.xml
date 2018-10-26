@@ -59,13 +59,15 @@
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:textSize="14sp"/>
+                android:textSize="14sp"
+                android:visibility="gone"/>
             <Button
                 android:id="@+id/footer_button_2"
                 android:layout_weight="1"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:textSize="14sp"/>
+                android:textSize="14sp"
+                android:visibility="gone"/>
         </LinearLayout>
     </RelativeLayout>
 </FrameLayout>

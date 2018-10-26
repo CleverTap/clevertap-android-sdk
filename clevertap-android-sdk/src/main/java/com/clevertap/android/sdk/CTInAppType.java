@@ -14,7 +14,6 @@ enum CTInAppType {
     CTInAppTypeHeader("header-template"),
     CTInAppTypeFooter("footer-template"),
     CTInAppTypeAlert("alert-template"),
-    CTInAppTypeRating("rating"),
     CTInAppTypeCoverImageOnly("cover-image"),
     CTInAppTypeInterstitialImageOnly("interstitial-image"),
     CTInAppTypeHalfInterstitialImageOnly("half-interstitial-image");
@@ -64,9 +63,6 @@ enum CTInAppType {
             }
             case "alert-template" : {
                 return CTInAppTypeAlert;
-            }
-            case "rating" : {
-                return CTInAppTypeRating;
             }
             case "cover-image" : {
                 return CTInAppTypeCoverImageOnly;

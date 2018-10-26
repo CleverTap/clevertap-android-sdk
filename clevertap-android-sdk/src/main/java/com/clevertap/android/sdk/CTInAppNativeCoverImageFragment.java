@@ -21,9 +21,11 @@ public class CTInAppNativeCoverImageFragment extends CTInAppBaseFullFragment {
 
         RelativeLayout relativeLayout = fl.findViewById(R.id.cover_image_relative_layout);
         ImageView imageView = relativeLayout.findViewById(R.id.cover_image);
-        imageView.setImageBitmap(inAppNotification.getImage());
-        imageView.setTag(0);
-        imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
+        if(inAppNotification.getImage()!=null) {
+            imageView.setImageBitmap(inAppNotification.getImage());
+            imageView.setTag(0);
+            imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
+        }
 
         CloseImageView closeImageView = fl.findViewById(199272);
 

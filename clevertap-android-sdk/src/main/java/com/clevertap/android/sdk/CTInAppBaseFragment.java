@@ -4,7 +4,9 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.util.TypedValue;
@@ -57,6 +59,8 @@ public abstract class CTInAppBaseFragment extends Fragment {
         inAppNotification = bundle.getParcelable("inApp");
         config = bundle.getParcelable("config");
         generateListener();
+        if (Build.VERSION.SDK_INT != Build.VERSION_CODES.O)
+            parent.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
 
     @Override

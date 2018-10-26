@@ -1,7 +1,8 @@
 ## CHANGE LOG
 
-### Version 3.2.1 (October 22, 2018)
+### Version 3.3.0 (October 26, 2018)
 * Adds support for Native InApp Notifications
+* `CleverTapAPI.CHARGED` event now supports upto 50 items
 * Bug fixes and performance improvements
 
 ### Version 3.2.0 (September 04, 2018)

@@ -63,7 +63,7 @@
                 android:layout_width="264dp"
                 android:layout_height="42dp"
                 android:textSize="20sp"
-                android:visibility="visible" />
+                android:visibility="invisible" />
 
             <Button
                 android:id="@+id/cover_button2"
@@ -71,7 +71,7 @@
                 android:layout_height="42dp"
                 android:textSize="20sp"
                 android:layout_marginTop="20dp"
-                android:visibility="visible" />
+                android:visibility="invisible" />
         </LinearLayout>
     </RelativeLayout>
     <com.clevertap.android.sdk.CloseImageView

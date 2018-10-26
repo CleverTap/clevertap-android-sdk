@@ -11,9 +11,11 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.content.ContextCompat;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
@@ -50,6 +52,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     private ViewGroup.LayoutParams videoFramelayoutParams,playerViewLayoutParams,imageViewLayoutParams;
     private static long mediaPosition = 0;
     private FrameLayout videoFrameLayout;
+    private int layoutHeight = 0;
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @Nullable
@@ -58,11 +61,50 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
 
 
         ArrayList<Button> inAppButtons = new ArrayList<>();
-        View inAppView = inflater.inflate(R.layout.inapp_interstitial, container, false);
 
-        FrameLayout fl  = inAppView.findViewById(R.id.inapp_interstitial_frame_layout);
+        View inAppView;
+        if(inAppNotification.isTablet() && isTablet()) {
+            inAppView = inflater.inflate(R.layout.tab_inapp_interstitial, container, false);
+        }else{
+            inAppView = inflater.inflate(R.layout.inapp_interstitial, container, false);
+        }
+
+        final FrameLayout fl  = inAppView.findViewById(R.id.inapp_interstitial_frame_layout);
+
+        final CloseImageView closeImageView = fl.findViewById(199272);
 
         relativeLayout = fl.findViewById(R.id.interstitial_relative_layout);
+        relativeLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                RelativeLayout relativeLayout1 = fl.findViewById(R.id.interstitial_relative_layout);
+                FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1.getLayoutParams();
+                if(inAppNotification.isTablet() && isTablet()){
+                    layoutHeight = layoutParams.height = (int)(relativeLayout1.getMeasuredWidth() * 1.78f);
+                }else {
+                    if(isTablet()) {
+                        layoutParams.setMargins(85,60,85,0);
+                        layoutParams.width = (int) (relativeLayout1.getMeasuredWidth())-85;
+                        layoutHeight = layoutParams.height = (int) (layoutParams.width * 1.78f);
+                        relativeLayout1.setLayoutParams(layoutParams);
+                        FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(closeImageView.getWidth(),closeImageView.getHeight());
+                        closeLp.gravity = Gravity.TOP|Gravity.END;
+                        closeLp.setMargins(0,40,65,0);
+                        closeImageView.setLayoutParams(closeLp);
+                    }
+                    else {
+                        layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 1.78f);
+                        relativeLayout1.setLayoutParams(layoutParams);
+                    }
+                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                    relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                }else{
+                    relativeLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                }
+            }
+        });
+
         relativeLayout.setBackgroundColor(Color.parseColor(inAppNotification.getBackgroundColor()));
 
         LinearLayout linearLayout = relativeLayout.findViewById(R.id.interstitial_linear_layout);
@@ -119,20 +161,18 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         ArrayList<CTInAppNotificationButton> buttons = inAppNotification.getButtons();
         if(buttons.size() ==1){
             mainButton.setVisibility(View.INVISIBLE);
-            setupInAppButton(secondaryButton,buttons.get(0),inAppNotification,0);
+            setupInAppButton(secondaryButton,buttons.get(0),0);
         }
         else if (buttons != null && !buttons.isEmpty()) {
             for(int i=0; i < buttons.size(); i++) {
                 if (i >= 2) continue; // only show 2 buttons
                 CTInAppNotificationButton inAppNotificationButton = buttons.get(i);
                 Button button = inAppButtons.get(i);
-                setupInAppButton(button,inAppNotificationButton,inAppNotification,i);
+                setupInAppButton(button,inAppNotificationButton,i);
             }
         }
 
         fl.setBackgroundDrawable(new ColorDrawable(0xBB000000));
-
-       CloseImageView closeImageView = fl.findViewById(199272);
 
        closeImageView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -168,7 +208,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         playerView.setShowBuffering(true);
         playerView.setUseArtwork(true);
         playerView.setControllerAutoShow(false);
-        Drawable artwork = getActivity().getBaseContext().getResources().getDrawable(R.drawable.ct_headphones);
+        Drawable artwork = getActivity().getBaseContext().getResources().getDrawable(R.drawable.ct_audio);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             playerView.setDefaultArtwork(Utils.drawableToBitmap(artwork));
         }else{

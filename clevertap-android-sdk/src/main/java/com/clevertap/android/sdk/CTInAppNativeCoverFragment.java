@@ -38,13 +38,11 @@ public class CTInAppNativeCoverFragment extends CTInAppBaseFullNativeFragment {
         Button secondaryButton = linearLayout.findViewById(R.id.cover_button2);
         inAppButtons.add(secondaryButton);
 
-
         Bitmap image = inAppNotification.getImage();
         if (image != null) {
             ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
             imageView.setImageBitmap(inAppNotification.getImage());
         }
-
 
         TextView textView1 = relativeLayout.findViewById(R.id.cover_title);
         textView1.setText(inAppNotification.getTitle());
@@ -58,14 +56,14 @@ public class CTInAppNativeCoverFragment extends CTInAppBaseFullNativeFragment {
         ArrayList<CTInAppNotificationButton> buttons = inAppNotification.getButtons();
         if(buttons.size() ==1){
             mainButton.setVisibility(View.INVISIBLE);
-            setupInAppButton(secondaryButton,buttons.get(0),inAppNotification,0);
+            setupInAppButton(secondaryButton,buttons.get(0),0);
         }
         else if (buttons != null && !buttons.isEmpty()) {
             for(int i=0; i < buttons.size(); i++) {
                 if (i >= 2) continue; // only show 2 buttons
                 CTInAppNotificationButton inAppNotificationButton = buttons.get(i);
                 Button button = inAppButtons.get(i);
-                setupInAppButton(button,inAppNotificationButton,inAppNotification,i);
+                setupInAppButton(button,inAppNotificationButton,i);
             }
         }
 
@@ -83,7 +81,6 @@ public class CTInAppNativeCoverFragment extends CTInAppBaseFullNativeFragment {
             closeImageView.setVisibility(View.GONE);
         else
             closeImageView.setVisibility(View.VISIBLE);
-
 
         return inAppView;
     }

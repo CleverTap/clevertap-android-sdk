@@ -4,6 +4,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -116,69 +117,37 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                 viewFragment = new CTInAppNativeHalfInterstitialImageFragment();
                 break;
             }
-            case CTInAppTypeAlert:
+            case CTInAppTypeAlert: {
                 AlertDialog alertDialog = null;
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-                    alertDialog = new AlertDialog.Builder(InAppNotificationActivity.this,android.R.style.Theme_Material_Light_Dialog_Alert)
-                            .setCancelable(false)
-                            .setTitle(inAppNotification.getTitle())
-                            .setMessage(inAppNotification.getMessage())
-                            .setPositiveButton(inAppNotification.getButtons().get(0).getText(), new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    Bundle data = new Bundle();
-                                    data.putString(Constants.NOTIFICATION_ID_TAG,inAppNotification.getCampaignId());
-                                    data.putString("wzrk_c2a",inAppNotification.getButtons().get(0).getText());
-                                    didClick(data);
-                                    String actionUrl = inAppNotification.getButtons().get(0).getActionUrl();
-                                    if (actionUrl != null) {
-                                        fireUrlThroughIntent(actionUrl, data);
-                                        return;
+                if(inAppNotification.getButtons().size()>0) {
+                    if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
+                        alertDialog = new AlertDialog.Builder(InAppNotificationActivity.this, android.R.style.Theme_Material_Light_Dialog_Alert)
+                                .setCancelable(false)
+                                .setTitle(inAppNotification.getTitle())
+                                .setMessage(inAppNotification.getMessage())
+                                .setPositiveButton(inAppNotification.getButtons().get(0).getText(), new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        Bundle data = new Bundle();
+                                        data.putString(Constants.NOTIFICATION_ID_TAG, inAppNotification.getCampaignId());
+                                        data.putString("wzrk_c2a", inAppNotification.getButtons().get(0).getText());
+                                        didClick(data);
+                                        String actionUrl = inAppNotification.getButtons().get(0).getActionUrl();
+                                        if (actionUrl != null) {
+                                            fireUrlThroughIntent(actionUrl, data);
+                                            return;
+                                        }
+                                        didDismiss(data);
                                     }
-                                    didDismiss(data);
-                                }
-                            })
-                            .setNegativeButton(inAppNotification.getButtons().get(1).getText(), new DialogInterface.OnClickListener() {
+                                })
+                                .create();
+                        if (inAppNotification.getButtons().size() == 2) {
+                            alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, inAppNotification.getButtons().get(1).getText(), new DialogInterface.OnClickListener() {
                                 @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
+                                public void onClick(DialogInterface dialog, int which) {
                                     Bundle data = new Bundle();
-                                    data.putString(Constants.NOTIFICATION_ID_TAG,inAppNotification.getCampaignId());
-                                    data.putString("wzrk_c2a",inAppNotification.getButtons().get(1).getText());
-                                    didClick(data);
-                                    String actionUrl = inAppNotification.getButtons().get(1).getActionUrl();
-                                    if (actionUrl != null) {
-                                        fireUrlThroughIntent(actionUrl, data);
-                                        return;
-                                    }
-                                    didDismiss(data);
-                                }
-                            }).create();
-                }else{
-                    alertDialog = new AlertDialog.Builder(InAppNotificationActivity.this)
-                            .setCancelable(false)
-                            .setTitle(inAppNotification.getTitle())
-                            .setMessage(inAppNotification.getMessage())
-                            .setPositiveButton(inAppNotification.getButtons().get(0).getText(), new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    Bundle data = new Bundle();
-                                    data.putString(Constants.NOTIFICATION_ID_TAG,inAppNotification.getCampaignId());
-                                    data.putString("wzrk_c2a",inAppNotification.getButtons().get(0).getText());
-                                    didClick(data);
-                                    String actionUrl = inAppNotification.getButtons().get(0).getActionUrl();
-                                    if (actionUrl != null) {
-                                        fireUrlThroughIntent(actionUrl, data);
-                                        return;
-                                    }
-                                    didDismiss(data);
-                                }
-                            })
-                            .setNegativeButton(inAppNotification.getButtons().get(1).getText(), new DialogInterface.OnClickListener() {
-                                @Override
-                                public void onClick(DialogInterface dialogInterface, int i) {
-                                    Bundle data = new Bundle();
-                                    data.putString(Constants.NOTIFICATION_ID_TAG,inAppNotification.getCampaignId());
-                                    data.putString("wzrk_c2a",inAppNotification.getButtons().get(1).getText());
+                                    data.putString(Constants.NOTIFICATION_ID_TAG, inAppNotification.getCampaignId());
+                                    data.putString("wzrk_c2a", inAppNotification.getButtons().get(1).getText());
                                     didClick(data);
                                     String actionUrl = inAppNotification.getButtons().get(1).getActionUrl();
                                     if (actionUrl != null) {
@@ -187,31 +156,67 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                     }
                                     didDismiss(data);
                                 }
-                            }).create();
-                }
-                //By default, we will allow 2 button alerts and set a third button if it is configured
-                if(inAppNotification.getButtons().size()>2) {
-                    alertDialog.setButton(DialogInterface.BUTTON_NEUTRAL, inAppNotification.getButtons().get(2).getText(), new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialogInterface, int i) {
-                            Bundle data = new Bundle();
-                            data.putString(Constants.NOTIFICATION_ID_TAG,inAppNotification.getCampaignId());
-                            data.putString("wzrk_c2a",inAppNotification.getButtons().get(2).getText());
-                            didClick(data);
-                            String actionUrl = inAppNotification.getButtons().get(2).getActionUrl();
-                            if (actionUrl != null) {
-                                fireUrlThroughIntent(actionUrl, data);
-                                return;
-                            }
-                            didDismiss(data);
+                            });
                         }
-                    });
+                    } else {
+                        alertDialog = new AlertDialog.Builder(InAppNotificationActivity.this)
+                                .setCancelable(false)
+                                .setTitle(inAppNotification.getTitle())
+                                .setMessage(inAppNotification.getMessage())
+                                .setPositiveButton(inAppNotification.getButtons().get(0).getText(), new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialogInterface, int i) {
+                                        Bundle data = new Bundle();
+                                        data.putString(Constants.NOTIFICATION_ID_TAG, inAppNotification.getCampaignId());
+                                        data.putString("wzrk_c2a", inAppNotification.getButtons().get(0).getText());
+                                        didClick(data);
+                                        String actionUrl = inAppNotification.getButtons().get(0).getActionUrl();
+                                        if (actionUrl != null) {
+                                            fireUrlThroughIntent(actionUrl, data);
+                                            return;
+                                        }
+                                        didDismiss(data);
+                                    }
+                                }).create();
+                        if (inAppNotification.getButtons().size() == 2) {
+                            alertDialog.setButton(DialogInterface.BUTTON_NEGATIVE, inAppNotification.getButtons().get(1).getText(), new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    Bundle data = new Bundle();
+                                    data.putString(Constants.NOTIFICATION_ID_TAG, inAppNotification.getCampaignId());
+                                    data.putString("wzrk_c2a", inAppNotification.getButtons().get(1).getText());
+                                    didClick(data);
+                                    String actionUrl = inAppNotification.getButtons().get(1).getActionUrl();
+                                    if (actionUrl != null) {
+                                        fireUrlThroughIntent(actionUrl, data);
+                                        return;
+                                    }
+                                    didDismiss(data);
+                                }
+                            });
+                        }
+                    }
+                    //By default, we will allow 2 button alerts and set a third button if it is configured
+                    if (inAppNotification.getButtons().size() > 2) {
+                        alertDialog.setButton(DialogInterface.BUTTON_NEUTRAL, inAppNotification.getButtons().get(2).getText(), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                Bundle data = new Bundle();
+                                data.putString(Constants.NOTIFICATION_ID_TAG, inAppNotification.getCampaignId());
+                                data.putString("wzrk_c2a", inAppNotification.getButtons().get(2).getText());
+                                didClick(data);
+                                String actionUrl = inAppNotification.getButtons().get(2).getActionUrl();
+                                if (actionUrl != null) {
+                                    fireUrlThroughIntent(actionUrl, data);
+                                    return;
+                                }
+                                didDismiss(data);
+                            }
+                        });
+                    }
                 }
                 alertDialog.show();
                 didShow(null);
-                break;
-            case CTInAppTypeRating: {
-                viewFragment = new CTInAppRatingFragment();
                 break;
             }
             default: {

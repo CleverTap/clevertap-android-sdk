@@ -3,7 +3,8 @@
     android:id="@+id/inapp_interstitial_frame_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen">
+    android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"
+    android:layout_gravity="center">
 
 
     <RelativeLayout
@@ -11,8 +12,8 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="60dp"
-        android:layout_marginLeft="30dp"
-        android:layout_marginRight="30dp"
+        android:layout_marginLeft="45dp"
+        android:layout_marginRight="45dp"
         android:layout_marginBottom="60dp"
         >
 
@@ -62,6 +63,7 @@
                 android:layout_marginTop="6dp"
                 android:scaleType="fitXY"
                 android:visibility="visible"
+                android:background="@android:color/transparent"
             />
             <ImageView
                 android:layout_width="20dp"
@@ -92,12 +94,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/interstitial_message"
-            android:layout_marginTop="8dp"
-            android:layout_centerHorizontal="true"
             android:layout_alignParentBottom="true"
-            android:layout_marginBottom="30dp"
+            android:layout_centerHorizontal="true"
             android:orientation="vertical"
             android:gravity="bottom"
+            android:layout_marginBottom="30dp"
             android:visibility="visible">
 
             <Button
@@ -121,8 +122,8 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_gravity="top|end"
-        android:layout_marginRight="15dp"
+        android:layout_marginRight="30dp"
         android:layout_marginTop="45dp"
         android:adjustViewBounds="true"
-        android:layout_marginEnd="15dp" />
+        android:layout_marginEnd="30dp" />
 </FrameLayout>

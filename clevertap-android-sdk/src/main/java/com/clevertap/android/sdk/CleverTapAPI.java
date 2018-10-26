@@ -2469,7 +2469,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             case CTInAppTypeHalfInterstitial:
             case CTInAppTypeInterstitial:
             case CTInAppTypeAlert:
-            case CTInAppTypeRating:
             case CTInAppTypeInterstitialImageOnly:
             case CTInAppTypeHalfInterstitialImageOnly:
             case CTInAppTypeCoverImageOnly:
@@ -3960,11 +3959,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             return;
         }
 
-        if (items.size() > 15) {
+        if (items.size() > 50) {
             ValidationResult error = new ValidationResult();
             error.setErrorCode(522);
-            error.setErrorDesc("Charged event contained more than 15 items.");
-            getConfigLogger().debug(getAccountId(),"Charged event contained more than 15 items.");
+            error.setErrorDesc("Charged event contained more than 50 items.");
+            getConfigLogger().debug(getAccountId(),"Charged event contained more than 50 items.");
             pushValidationResult(error);
         }
 
