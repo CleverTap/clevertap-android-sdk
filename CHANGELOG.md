@@ -1,5 +1,8 @@
 ## CHANGE LOG
 
+### Version 3.3.1 (October 31, 2018)
+* Fixes the issue for developers who override `InAppNotificationListener` methods
+
 ### Version 3.3.0 (October 26, 2018)
 * Adds support for Native InApp Notifications
 * Bug fixes and performance improvements

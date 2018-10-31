@@ -2396,7 +2396,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (listener != null) {
             final HashMap<String, Object> kvs;
 
-            kvs = Utils.convertJSONObjectToHashMap(inAppNotification.getCustomExtras());
+            if(inAppNotification.getCustomExtras()!=null) {
+                kvs = Utils.convertJSONObjectToHashMap(inAppNotification.getCustomExtras());
+            }else{
+                kvs = new HashMap<>();
+            }
 
             goFromListener = listener.beforeShow(kvs);
         } else {
