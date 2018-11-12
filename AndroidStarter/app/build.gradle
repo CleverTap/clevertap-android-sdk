@@ -11,8 +11,12 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
-        release {
+        debug {
             minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        release {
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -25,9 +29,13 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    implementation (name: 'clevertap-android-sdk-3.3.1', ext: 'aar') //CleverTap Android SDK, make sure the AAR file is in the libs folder
+    implementation (name: 'clevertap-android-sdk-3.3.2', ext: 'aar') //CleverTap Android SDK, make sure the AAR file is in the libs folder
     implementation 'com.google.firebase:firebase-messaging:17.3.0' //Needed for FCM
     implementation 'com.google.android.gms:play-services-ads:15.0.1' //Needed to use Google Ad Ids
+    //ExoPlayer Libraries for Audio/Video InApp Notifications
+    implementation 'com.google.android.exoplayer:exoplayer:2.8.4'
+    implementation 'com.google.android.exoplayer:exoplayer-hls:2.8.4'
+    implementation 'com.google.android.exoplayer:exoplayer-ui:2.8.4'
 }
 
 apply plugin: 'com.google.gms.google-services'
