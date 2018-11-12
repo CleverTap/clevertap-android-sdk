@@ -11,6 +11,8 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.content.ContextCompat;
+import android.util.DisplayMetrics;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -204,17 +206,50 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     private void prepareMedia(){
         videoFrameLayout = relativeLayout.findViewById(R.id.video_frame);
         videoFrameLayout.setVisibility(View.VISIBLE);
-        playerView = videoFrameLayout.findViewById(R.id.videoPlayer);
+
+        playerView = new PlayerView(getActivity().getBaseContext());
+        fullScreenIcon = new ImageView(getActivity().getBaseContext());
+        fullScreenIcon.setImageDrawable(getActivity().getBaseContext().getResources().getDrawable(R.drawable.ic_fullscreen_expand));
+        if(inAppNotification.isTablet() && isTablet()) {
+
+            int playerWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 408, getResources().getDisplayMetrics());
+            int playerHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 229, getResources().getDisplayMetrics());
+
+            playerView.setLayoutParams(new FrameLayout.LayoutParams(playerWidth, playerHeight));
+            int iconWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
+            int iconHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(iconWidth,iconHeight);
+            layoutParams.gravity = Gravity.END;
+            int iconTop = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics());
+            int iconRight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics());
+            layoutParams.setMargins(0,iconTop,iconRight,0);
+            fullScreenIcon.setLayoutParams(layoutParams);
+        }
+        else {
+            int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 240, getResources().getDisplayMetrics());
+            int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 134, getResources().getDisplayMetrics());
+
+            playerView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
+            int iconWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics());
+            int iconHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics());
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(iconWidth,iconHeight);
+            layoutParams.gravity = Gravity.END;
+            int iconTop = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics());
+            int iconRight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics());
+            layoutParams.setMargins(0,iconTop,iconRight,0);
+            fullScreenIcon.setLayoutParams(layoutParams);
+        }
         playerView.setShowBuffering(true);
         playerView.setUseArtwork(true);
         playerView.setControllerAutoShow(false);
+        videoFrameLayout.addView(playerView);
+        videoFrameLayout.addView(fullScreenIcon);
         Drawable artwork = getActivity().getBaseContext().getResources().getDrawable(R.drawable.ct_audio);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             playerView.setDefaultArtwork(Utils.drawableToBitmap(artwork));
         }else{
             playerView.setDefaultArtwork(Utils.drawableToBitmap(artwork));
         }
-        fullScreenIcon = videoFrameLayout.findViewById(R.id.fullScreen);
 
         // 1. Create a default TrackSelector
         BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();

@@ -63,7 +63,7 @@
                 android:layout_width="324dp"
                 android:layout_height="40dp"
                 android:textSize="16sp"
-                android:visibility="visible" />
+                android:visibility="invisible" />
 
             <Button
                 android:id="@+id/half_interstitial_button2"
@@ -71,7 +71,7 @@
                 android:layout_height="40dp"
                 android:textSize="16sp"
                 android:layout_marginTop="12dp"
-                android:visibility="visible" />
+                android:visibility="invisible" />
         </LinearLayout>
     </RelativeLayout>
     <com.clevertap.android.sdk.CloseImageView

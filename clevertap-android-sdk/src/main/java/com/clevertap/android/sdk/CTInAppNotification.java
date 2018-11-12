@@ -254,9 +254,9 @@ class CTInAppNotification implements Parcelable {
                 Logger.d("ExoPlayer library files are missing!!!");
                 Logger.d("Please add ExoPlayer dependencies to render In-App notifications playing audio/video. For more information checkout CleverTap documentation.");
                 if(className!=null)
-                    this.error = "Error finding ExoPlayer"+className.getName();
+                    this.error = "ExoPlayer classes not found "+className.getName();
                 else
-                    this.error = "Error finding ExoPlayer";
+                    this.error = "ExoPlayer classes not found";
             }
             listener.notificationReady(this);
         }else {

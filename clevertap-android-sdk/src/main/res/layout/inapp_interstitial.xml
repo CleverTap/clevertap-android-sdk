@@ -56,25 +56,6 @@
             android:id="@+id/video_frame"
             android:layout_below="@id/interstitial_title"
             android:layout_centerHorizontal="true">
-            <com.google.android.exoplayer2.ui.PlayerView
-                android:id="@+id/videoPlayer"
-                android:layout_width="240dp"
-                android:layout_height="134dp"
-                android:layout_marginTop="6dp"
-                android:scaleType="fitXY"
-                android:visibility="visible"
-                android:background="@android:color/transparent"
-            />
-            <ImageView
-                android:layout_width="20dp"
-                android:layout_height="20dp"
-                android:layout_gravity="end"
-                android:layout_marginTop="8dp"
-                android:layout_marginRight="2dp"
-                android:adjustViewBounds="true"
-                android:src="@drawable/ic_fullscreen_expand"
-                android:id="@+id/fullScreen"
-                android:layout_marginEnd="2dp" />
         </FrameLayout>
 
         <TextView
