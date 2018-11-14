@@ -1,0 +1,35 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/inapp_half_interstitial_image_frame_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"
+    >
+
+    <RelativeLayout
+        android:id="@+id/half_interstitial_image_relative_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="240dp"
+        android:layout_marginRight="60dp"
+        android:layout_marginBottom="240dp"
+        android:layout_marginLeft="60dp">
+
+        <ImageView
+            android:id="@+id/half_interstitial_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:scaleType="centerCrop" />
+
+    </RelativeLayout>
+    <com.clevertap.android.sdk.CloseImageView
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="top|end"
+        android:layout_marginRight="40dp"
+        android:layout_marginTop="220dp"
+        android:adjustViewBounds="true"
+        android:layout_marginEnd="40dp" />
+</FrameLayout>

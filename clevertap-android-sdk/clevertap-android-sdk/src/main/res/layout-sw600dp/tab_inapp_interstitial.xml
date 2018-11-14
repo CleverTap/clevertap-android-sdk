@@ -1,0 +1,111 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/inapp_interstitial_frame_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"
+    android:layout_gravity="center">
+
+
+    <RelativeLayout
+        android:id="@+id/interstitial_relative_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="60dp"
+        android:layout_marginLeft="85dp"
+        android:layout_marginRight="85dp"
+        android:layout_marginBottom="60dp"
+        >
+
+        <TextView
+            android:id="@+id/interstitial_title"
+            android:layout_width="240dp"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="36dp"
+            android:gravity="center"
+            android:textStyle="bold"
+            android:textColor="@android:color/black"
+            android:textSize="22sp"
+            android:maxLines="1"
+            />
+
+        <ImageView
+            android:id="@+id/backgroundImage"
+            android:layout_width="408dp"
+            android:layout_height="229dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="6dp"
+            android:scaleType="centerCrop"
+            android:layout_below="@+id/interstitial_title"
+            android:visibility="invisible"/>
+
+        <com.clevertap.android.sdk.GifImageView
+            android:id="@+id/gifImage"
+            android:layout_width="408dp"
+            android:layout_height="229dp"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="6dp"
+            android:scaleType="centerCrop"
+            android:layout_below="@+id/interstitial_title"
+            android:visibility="gone"/>
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            android:id="@+id/video_frame"
+            android:layout_below="@id/interstitial_title"
+            android:layout_centerHorizontal="true">
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/interstitial_message"
+            android:layout_width="240dp"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="24dp"
+            android:layout_below="@+id/backgroundImage"
+            android:gravity="center"
+            android:textSize="18sp"
+            android:maxLines="3"
+            android:textColor="@android:color/black"
+            />
+
+        <LinearLayout
+            android:id="@+id/interstitial_linear_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_below="@id/interstitial_message"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="30dp"
+            android:gravity="bottom"
+            android:orientation="vertical"
+            android:visibility="visible">
+
+            <Button
+                android:id="@+id/interstitial_button1"
+                android:layout_width="308dp"
+                android:layout_height="42dp"
+                android:textSize="16sp"
+                android:visibility="invisible" />
+
+            <Button
+                android:id="@+id/interstitial_button2"
+                android:layout_width="308dp"
+                android:layout_height="42dp"
+                android:layout_marginTop="14dp"
+                android:textSize="16sp"
+                android:visibility="invisible" />
+        </LinearLayout>
+    </RelativeLayout>
+    <com.clevertap.android.sdk.CloseImageView
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="top|end"
+        android:layout_marginRight="65dp"
+        android:layout_marginTop="40dp"
+        android:adjustViewBounds="true"
+        android:layout_marginEnd="65dp" />
+</FrameLayout>

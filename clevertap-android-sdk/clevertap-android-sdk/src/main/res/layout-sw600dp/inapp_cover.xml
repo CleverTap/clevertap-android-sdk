@@ -1,0 +1,85 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/inapp_cover_frame_layout"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen"
+    >
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:id="@+id/cover_relative_layout"
+        >
+        <ImageView
+            android:id="@+id/backgroundImage"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentTop="true"
+            android:scaleType="centerCrop"
+            android:layout_alignParentLeft="true" />
+
+        <TextView
+            android:id="@+id/cover_title"
+            android:layout_width="262dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:maxLines="2"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/black"
+            android:layout_marginTop="54dp"
+            android:layout_centerHorizontal="true"
+            />
+
+        <TextView
+            android:id="@+id/cover_message"
+            android:layout_width="262dp"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textSize="18sp"
+            android:layout_below="@+id/cover_title"
+            android:layout_marginTop="80dp"
+            android:textColor="@android:color/black"
+            android:layout_centerHorizontal="true"
+            />
+
+        <LinearLayout
+            android:id="@+id/cover_linear_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="bottom"
+            android:orientation="vertical"
+            android:visibility="visible"
+            android:layout_below="@+id/cover_message"
+            android:layout_marginTop="60dp"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="54dp"
+            >
+
+            <Button
+                android:id="@+id/cover_button1"
+                android:layout_width="464dp"
+                android:layout_height="42dp"
+                android:textSize="20sp"
+                android:visibility="invisible" />
+
+            <Button
+                android:id="@+id/cover_button2"
+                android:layout_width="464dp"
+                android:layout_height="42dp"
+                android:textSize="20sp"
+                android:layout_marginTop="20dp"
+                android:visibility="invisible" />
+        </LinearLayout>
+    </RelativeLayout>
+    <com.clevertap.android.sdk.CloseImageView
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="top|end"
+        android:layout_marginRight="12dp"
+        android:layout_marginTop="12dp"
+        android:adjustViewBounds="true"
+        android:layout_marginEnd="12dp" />
+</FrameLayout>
