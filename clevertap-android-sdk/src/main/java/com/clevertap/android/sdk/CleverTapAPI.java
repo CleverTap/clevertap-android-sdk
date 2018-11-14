@@ -86,6 +86,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         public int intValue() { return value; }
     }
 
+    private enum EventGroup {
+
+        REGULAR("/a1"),
+        PUSH_NOTIFICATION_VIEWED("/a450");
+
+        private final String httpResource;
+        EventGroup(String httpResource) { this.httpResource = httpResource; }
+    }
+
     /**
      * @deprecated Use {@link #pushChargedEvent(HashMap chargeDetails, ArrayList items)}
      */
@@ -139,6 +148,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private ExecutorService es;
     private ExecutorService ns;
     private Runnable commsRunnable = null;
+    private Runnable pushNotificationViewedRunnable = null;
     private Validator validator;
     private final Object optOutFlagLock = new Object();
     private boolean currentUserOptedOut = false;
@@ -1297,7 +1307,18 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (isMuted()) {
             return;
         }
-        processEvent(context, event, eventType);
+        try {
+            if(event.has("evtName")) {
+                if (event.getString("evtName").equals(Constants.NOTIFICATION_VIEWED_EVENT_NAME))
+                    processPushNotificationViewedEvent(context, event, eventType);
+                else
+                    processEvent(context, event, eventType);
+            }else{
+                processEvent(context, event, eventType);
+            }
+        }catch (JSONException e){
+            getConfigLogger().verbose(getAccountId(),"Couldn't parse event JSON : " + e.getLocalizedMessage());
+        }
     }
 
     //Util
@@ -1358,6 +1379,26 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
             } catch (Throwable e) {
                 getConfigLogger().verbose(getAccountId(), "Failed to queue event: " + event.toString(), e);
+            }
+        }
+    }
+
+    private void processPushNotificationViewedEvent(final Context context, final JSONObject event, final int eventType){
+        synchronized (eventLock){
+            try{
+                int session = getCurrentSession();
+                event.put("s",session);
+                event.put("type","event");
+                event.put("ep", System.currentTimeMillis() / 1000);
+                // Report any pending validation error
+                ValidationResult vr = popValidationResult();
+                if (vr != null) {
+                    event.put(Constants.ERROR_KEY, getErrorObject(vr));
+                }
+                queuePushNotificationViewedEventToDB(context,event,eventType);
+                schedulePushNotificationViewedQueueFlush(context);
+            }catch (Throwable t){
+                getConfigLogger().verbose(getAccountId(),"Failed to queue notification viewed event: "+ event.toString(),t);
             }
         }
     }
@@ -1471,10 +1512,17 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //Event
     private void queueEventToDB(final Context context, final JSONObject event, final int type) {
+        DBAdapter.Table table = (type == Constants.PROFILE_EVENT) ? DBAdapter.Table.PROFILE_EVENTS : DBAdapter.Table.EVENTS;
+        queueEventInternal(context,event,table);
+    }
+
+    private void queuePushNotificationViewedEventToDB(final Context context, final JSONObject event, final int eventType){
+        queueEventInternal(context,event,DBAdapter.Table.PUSH_NOTIFICATION_VIEWED);
+    }
+
+    private void queueEventInternal(final Context context, final JSONObject event, DBAdapter.Table table) {
         synchronized (eventLock) {
             DBAdapter adapter = loadDBAdapter(context);
-            DBAdapter.Table table = (type == Constants.PROFILE_EVENT) ? DBAdapter.Table.PROFILE_EVENTS : DBAdapter.Table.EVENTS;
-
             int returnCode = adapter.storeObject(event, table);
 
             if (returnCode > 0) {
@@ -1490,6 +1538,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             dbAdapter = new DBAdapter(context,this.config);
             dbAdapter.cleanupStaleEvents(DBAdapter.Table.EVENTS);
             dbAdapter.cleanupStaleEvents(DBAdapter.Table.PROFILE_EVENTS);
+            dbAdapter.cleanupStaleEvents(DBAdapter.Table.PUSH_NOTIFICATION_VIEWED);
+            dbAdapter.cleanUpPushNotifications();
         }
         return dbAdapter;
     }
@@ -1508,7 +1558,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             commsRunnable = new Runnable() {
                 @Override
                 public void run() {
-                    flushQueueAsync(context);
+                    flushQueueAsync(context,EventGroup.REGULAR);
                 }
             };
         // Cancel any outstanding send runnables, and issue a new delayed one
@@ -1518,16 +1568,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         getConfigLogger().verbose(getAccountId(), "Scheduling delayed queue flush on main event loop");
     }
 
-    private void flushQueueAsync(final Context context) {
+    private void flushQueueAsync(final Context context, final EventGroup eventGroup) {
         postAsyncSafely("CommsManager#flushQueueAsync", new Runnable() {
             @Override
             public void run() {
-                flushQueueSync(context);
+                flushQueueSync(context,eventGroup);
             }
         });
     }
 
-    private void flushQueueSync(final Context context) {
+    private void flushQueueSync(final Context context, final EventGroup eventGroup) {
         if (!isNetworkOnline(context)) {
             getConfigLogger().verbose(getAccountId(), "Network connectivity unavailable. Will retry later");
             return;
@@ -1541,16 +1591,29 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (needsHandshakeForDomain()) {
             mResponseFailureCount = 0;
             setDomain(context, null);
-            performHandshakeForDomain(context, new Runnable() {
+            performHandshakeForDomain(context, eventGroup, new Runnable() {
                 @Override
                 public void run() {
-                    flushDBQueue(context);
+                    flushDBQueue(context,eventGroup);
                 }
             });
         } else {
-            flushDBQueue(context);
+            flushDBQueue(context,eventGroup);
         }
     }
+
+    private void schedulePushNotificationViewedQueueFlush(final Context context){
+        if (pushNotificationViewedRunnable == null)
+            pushNotificationViewedRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    flushQueueAsync(context,EventGroup.PUSH_NOTIFICATION_VIEWED);
+                }
+            };
+        getHandlerUsingMainLooper().removeCallbacks(pushNotificationViewedRunnable);
+        getHandlerUsingMainLooper().post(pushNotificationViewedRunnable);
+    }
+
 
     //Util
     private boolean isNetworkOnline(Context context) {
@@ -1594,12 +1657,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         StorageHelper.putString(context, storageKeyWithSuffix(Constants.KEY_DOMAIN_NAME), domainName);
     }
 
-    private void performHandshakeForDomain(final Context context, final Runnable handshakeSuccessCallback) {
+    private void performHandshakeForDomain(final Context context, final EventGroup eventGroup, final Runnable handshakeSuccessCallback) {
         if (isMuted()) {
             return;
         }
 
-        final String endpoint = getEndpoint(true);
+        final String endpoint = getEndpoint(true, eventGroup);
         if (endpoint == null) {
             getConfigLogger().verbose(getAccountId(), "Unable to perform handshake, endpoint is null");
         }
@@ -1635,8 +1698,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
-    private String getEndpoint(final boolean defaultToHandshakeURL) {
-        String domain = getDomain(defaultToHandshakeURL);
+    private String getEndpoint(final boolean defaultToHandshakeURL, final EventGroup eventGroup) {
+        String domain = getDomain(defaultToHandshakeURL,eventGroup);
         if (domain == null) {
             getConfigLogger().verbose(getAccountId(), "Unable to configure endpoint, domain is null");
             return null;
@@ -1703,7 +1766,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return  sslSocketFactory;
     }
 
-    private String getDomain(boolean defaultToHandshakeURL) {
+    private String getDomain(boolean defaultToHandshakeURL, EventGroup eventGroup) {
         String domain = getDomainFromPrefsOrMetadata();
 
         final boolean emptyDomain = domain == null || domain.trim().length() == 0;
@@ -1714,7 +1777,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (emptyDomain) {
             domain = Constants.PRIMARY_DOMAIN + "/hello";
         } else {
-            domain += "/a1";
+            domain += eventGroup.httpResource;
         }
 
         return domain;
@@ -1772,11 +1835,17 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     private void clearQueues(final Context context) {
         synchronized (eventLock) {
+
             DBAdapter adapter = loadDBAdapter(context);
             DBAdapter.Table tableName = DBAdapter.Table.EVENTS;
+
             adapter.removeEvents(tableName);
             tableName = DBAdapter.Table.PROFILE_EVENTS;
             adapter.removeEvents(tableName);
+
+            tableName = DBAdapter.Table.PUSH_NOTIFICATION_VIEWED;
+            adapter.removeEvents(tableName);
+
             clearUserContext(context);
         }
     }
@@ -1827,15 +1896,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         StorageHelper.putInt(context, storageKeyWithSuffix(Constants.KEY_LAST_TS), 0);
     }
 
-    //Event
-    private void flushDBQueue(final Context context) {
+    private void flushDBQueue(final Context context, final EventGroup eventGroup){
         getConfigLogger().verbose(getAccountId(), "Somebody has invoked me to send the queue to CleverTap servers");
 
         QueueCursor cursor;
         QueueCursor previousCursor = null;
         boolean loadMore = true;
+
         while (loadMore) {
-            cursor = getQueuedEvents(context, 50, previousCursor);
+
+            cursor = getQueuedEvents(context, eventGroup,50, previousCursor);
 
             if (cursor == null || cursor.isEmpty()) {
                 getConfigLogger().verbose(getAccountId(), "No events in the queue, bailing");
@@ -1850,38 +1920,26 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 break;
             }
 
-            loadMore = sendQueue(context, queue);
+            loadMore = sendQueue(context,eventGroup, queue);
         }
     }
 
     @SuppressWarnings("SameParameterValue")
-    private QueueCursor getQueuedEvents(final Context context, final int batchSize, final QueueCursor previousCursor) {
-        return getQueuedDBEvents(context, batchSize, previousCursor);
+    private QueueCursor getQueuedEvents(final Context context, EventGroup eventGroup, final int batchSize, final QueueCursor previousCursor) {
+        if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED){
+            return getPushNotificationViewedQueuedEvents(context,batchSize,previousCursor);
+        }else{
+            return getQueuedDBEvents(context, batchSize, previousCursor);
+        }
     }
 
     private QueueCursor getQueuedDBEvents(final Context context, final int batchSize, final QueueCursor previousCursor) {
 
-        synchronized (eventLock) {
-            DBAdapter adapter = loadDBAdapter(context);
-            DBAdapter.Table tableName = (previousCursor != null) ? previousCursor.getTableName() : DBAdapter.Table.EVENTS;
+        synchronized (eventLock){
+            QueueCursor newCursor = getQueueCursor(context,DBAdapter.Table.EVENTS,batchSize,previousCursor);
 
-            // if previousCursor that means the batch represented by the previous cursor was processed so remove those from the db
-            if (previousCursor != null) {
-                adapter.cleanupEventsFromLastId(previousCursor.getLastId(), previousCursor.getTableName());
-            }
-
-            // grab the new batch
-            QueueCursor newCursor = new QueueCursor();
-            newCursor.setTableName(tableName);
-            JSONObject queuedDBEvents = adapter.fetchEvents(tableName, batchSize);
-            newCursor = updateCursorForDBObject(queuedDBEvents, newCursor);
-
-            // if we have no events then try and fetch profile events
-            if (newCursor.isEmpty() && tableName.equals(DBAdapter.Table.EVENTS)) {
-                tableName = DBAdapter.Table.PROFILE_EVENTS;
-                newCursor.setTableName(tableName);
-                queuedDBEvents = adapter.fetchEvents(tableName, batchSize);
-                newCursor = updateCursorForDBObject(queuedDBEvents, newCursor);
+            if ( newCursor.isEmpty() && newCursor.getTableName().equals(DBAdapter.Table.EVENTS)){
+                newCursor = getQueueCursor(context,DBAdapter.Table.PROFILE_EVENTS,batchSize,null);
             }
 
             return newCursor.isEmpty() ? null : newCursor;
@@ -1908,10 +1966,34 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return cursor;
     }
 
+    private QueueCursor getQueueCursor(final Context context, DBAdapter.Table table, final int batchSize, final QueueCursor previousCursor){
+        synchronized (eventLock) {
+            DBAdapter adapter = loadDBAdapter(context);
+            DBAdapter.Table tableName = (previousCursor != null) ? previousCursor.getTableName() : table;
+
+            // if previousCursor that means the batch represented by the previous cursor was processed so remove those from the db
+            if (previousCursor != null) {
+                adapter.cleanupEventsFromLastId(previousCursor.getLastId(), previousCursor.getTableName());
+            }
+
+            // grab the new batch
+            QueueCursor newCursor = new QueueCursor();
+            newCursor.setTableName(tableName);
+            JSONObject queuedDBEvents = adapter.fetchEvents(tableName, batchSize);
+            newCursor = updateCursorForDBObject(queuedDBEvents, newCursor);
+
+            return newCursor;
+        }
+    }
+
+    private QueueCursor getPushNotificationViewedQueuedEvents(final Context context, final int batchSize, final QueueCursor previousCursor){
+        return getQueueCursor(context, DBAdapter.Table.PUSH_NOTIFICATION_VIEWED,batchSize,previousCursor);
+    }
+
     /**
      * @return true if the network request succeeded. Anything non 200 results in a false.
      */
-    private boolean sendQueue(final Context context, final JSONArray queue) {
+    private boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue) {
 
         if (queue == null || queue.length() <= 0) return false;
 
@@ -1922,7 +2004,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         HttpsURLConnection conn = null;
         try {
-            final String endpoint = getEndpoint(false);
+            final String endpoint = getEndpoint(false,eventGroup);
 
             // This is just a safety check, which would only arise
             // if upstream didn't adhere to the protocol (sent nothing during the initial handshake)
@@ -2107,6 +2189,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         try {
             getConfigLogger().verbose(getAccountId(), "Trying to process response: " + responseStr);
+            if(responseStr.equals("NotificationRenderServlet response")){
+                return;
+            }
             JSONObject response = new JSONObject(responseStr);
             try {
                 if(!this.config.isAnalyticsOnly())
@@ -2196,6 +2281,18 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 inAppFCManager.processResponse(context, response);
             } catch (Throwable t) {
                 // Ignore
+            }
+
+            try{
+                if(response.has("wzrk_push")){
+                    final JSONArray pushNotifications = response.getJSONArray("wzrk_push");
+                    if(pushNotifications.length()>0){
+                        getConfigLogger().verbose(getAccountId(), "Handling Push payload locally");
+                        handlePushNotificationsInResponse(pushNotifications);
+                    }
+                }
+            }catch (Throwable t){
+                //Ignore
             }
 
         } catch (Throwable t) {
@@ -4394,7 +4491,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         forcePushDeviceToken(false);
 
                         // try and flush and then reset the queues
-                        flushQueueSync(context);
+                        flushQueueSync(context,EventGroup.REGULAR);
                         clearQueues(context);
 
                         // clear out the old data
@@ -4490,7 +4587,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @SuppressWarnings("unused")
     public void flush() {
-        flushQueueAsync(context);
+        flushQueueAsync(context,EventGroup.REGULAR);
     }
 
     //Push
@@ -4724,6 +4821,64 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //PN
+    private void handlePushNotificationsInResponse(JSONArray pushNotifications){
+        try {
+            for (int i = 0; i < pushNotifications.length(); i++) {
+                Bundle pushBundle = new Bundle();
+                JSONObject pushObject = pushNotifications.getJSONObject(i);
+                if(pushObject.has("wzrk_acct_id"))
+                    pushBundle.putString("wzrk_acct_id",pushObject.getString("wzrk_acct_id"));
+                if(pushObject.has("wzrk_acts"))
+                    pushBundle.putString("wzrk_acts",pushObject.getJSONArray("wzrk_acts").toString());
+                if(pushObject.has("nm"))
+                    pushBundle.putString("nm",pushObject.getString("nm"));
+                if(pushObject.has("nt"))
+                    pushBundle.putString("nt",pushObject.getString("nt"));
+                if(pushObject.has("wzrk_bp"))
+                    pushBundle.putString("wzrk_bp",pushObject.getString("wzrk_bp"));
+                if(pushObject.has("pr"))
+                    pushBundle.putString("pr",pushObject.getString("pr"));
+                if(pushObject.has("wzrk_pivot"))
+                    pushBundle.putString("wzrk_pivot",pushObject.getString("wzrk_pivot"));
+                if(pushObject.has("wzrk_sound"))
+                    pushBundle.putString("wzrk_sound",pushObject.getString("wzrk_sound"));
+                if(pushObject.has("wzrk_cid"))
+                    pushBundle.putString("wzrk_cid",pushObject.getString("wzrk_cid"));
+                if(pushObject.has("wzrk_bc"))
+                    pushBundle.putString("wzrk_bc",pushObject.getString("wzrk_bc"));
+                if(pushObject.has("wzrk_bi"))
+                    pushBundle.putString("wzrk_bi",pushObject.getString("wzrk_bi"));
+                if(pushObject.has("wzrk_id"))
+                    pushBundle.putString("wzrk_id",pushObject.getString("wzrk_id"));
+                if(pushObject.has("wzrk_pn"))
+                    pushBundle.putString("wzrk_pn",pushObject.getString("wzrk_pn"));
+                if(pushObject.has("ico"))
+                    pushBundle.putString("ico",pushObject.getString("ico"));
+                if(pushObject.has("wzrk_ck"))
+                    pushBundle.putString("wzrk_ck",pushObject.getString("wzrk_ck"));
+                if(pushObject.has("wzrk_dl"))
+                    pushBundle.putString("wzrk_dl",pushObject.getString("wzrk_dl"));
+                if(pushObject.has("wzrk_pid"))
+                    pushBundle.putString("wzrk_pid",pushObject.getString("wzrk_pid"));
+                if(pushObject.has("wzrk_rnv"))
+                    pushBundle.putString("wzrk_rnv",pushObject.getString("wzrk_rnv"));
+                if(pushObject.has("wzrk_ttl"))
+                    pushBundle.putString("wzrk_ttl",pushObject.getString("wzrk_ttl"));
+                Iterator iterator = pushObject.keys();
+                while(iterator.hasNext()){
+                    String key = iterator.next().toString();
+                    pushBundle.putString(key,pushObject.getString(key));
+                }
+                if(!pushBundle.isEmpty() && !dbAdapter.doesPushNotificationIdExist(pushObject.getString("wzrk_pid"))){
+                    createNotification(context,pushBundle);
+                }else{
+                    getConfigLogger().verbose(getAccountId(),"Push Notification already shown, ignoring local notification :"+pushObject.getString("wzrk_pid"));
+                }
+            }
+        }catch (JSONException e){
+            getConfigLogger().verbose(getAccountId(),"Error parsing push notification JSON");
+        }
+    }
     /**
      * Checks whether this notification is from CleverTap.
      *
@@ -5120,6 +5275,13 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         if (notificationManager != null) {
             notificationManager.notify(notificationId, n);
+            //if(extras.getString("wzrk_rnv","false").equals("true")) {
+                pushNotificationViewedEvent(extras);
+            //}
+            long ttl = extras.getLong("wzrk_ttl",Constants.DEFAULT_PUSH_TTL);
+            String wzrk_pid = extras.getString("wzrk_pid");
+            DBAdapter dbAdapter = loadDBAdapter(context);
+            dbAdapter.storePushNotificationId(wzrk_pid,ttl);
         }
 
     }

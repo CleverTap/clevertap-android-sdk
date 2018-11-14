@@ -18,7 +18,9 @@ public class DBAdapter {
     public enum Table {
         EVENTS("events"),
         PROFILE_EVENTS("profileEvents"),
-        USER_PROFILES("userProfiles");
+        USER_PROFILES("userProfiles"),
+        PUSH_NOTIFICATIONS("pushNotifications"),
+        PUSH_NOTIFICATION_VIEWED("notificationViewed");
 
         Table(String name) {
             tableName = name;
@@ -33,6 +35,8 @@ public class DBAdapter {
 
     private static final String KEY_DATA = "data";
     private static final String KEY_CREATED_AT = "created_at";
+    private static final long DATA_EXPIRATION = 1000 * 60 * 60 * 24 * 5;
+    private static final long MAX_PUSH_TTL = 1000 * 60 * 60 * 24 * 30L;//TODO agree on value
 
     private static final int DB_UPDATE_ERROR = -1;
     private static final int DB_OUT_OF_MEMORY_ERROR = -2;
@@ -40,7 +44,7 @@ public class DBAdapter {
     public static final int DB_UNDEFINED_CODE = -3;
 
     private static final String DATABASE_NAME = "clevertap";
-    private static final int DATABASE_VERSION = 1;
+    private static final int DATABASE_VERSION = 2;
 
     private static final String CREATE_EVENTS_TABLE =
             "CREATE TABLE " + Table.EVENTS.getName() + " (_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -63,6 +67,17 @@ public class DBAdapter {
     private static final String PROFILE_EVENTS_TIME_INDEX =
             "CREATE INDEX IF NOT EXISTS time_idx ON " + Table.PROFILE_EVENTS.getName() +
                     " (" + KEY_CREATED_AT + ");";
+
+    private static final String CREATE_PUSH_NOTIFICATIONS_TABLE =
+            "CREATE TABLE " + Table.PUSH_NOTIFICATIONS.getName() + " (_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    KEY_DATA + " STRING NOT NULL, " +
+                    KEY_CREATED_AT + " INTEGER NOT NULL);";
+
+    private static final String CREATE_NOTIFICATION_VIEWED_TABLE =
+            "CREATE TABLE " + Table.PUSH_NOTIFICATION_VIEWED.getName() + " (_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    KEY_DATA + " STRING NOT NULL, " +
+                    KEY_CREATED_AT + " INTEGER NOT NULL);";
+
 
 
     private final DatabaseHelper dbHelper;
@@ -89,6 +104,8 @@ public class DBAdapter {
             db.execSQL(CREATE_EVENTS_TABLE);
             db.execSQL(CREATE_PROFILE_EVENTS_TABLE);
             db.execSQL(CREATE_USER_PROFILES_TABLE);
+            db.execSQL(CREATE_PUSH_NOTIFICATIONS_TABLE);
+            db.execSQL(CREATE_NOTIFICATION_VIEWED_TABLE);
 
             db.execSQL(EVENTS_TIME_INDEX);
             db.execSQL(PROFILE_EVENTS_TIME_INDEX);
@@ -103,11 +120,16 @@ public class DBAdapter {
             db.execSQL("DROP TABLE IF EXISTS " + Table.EVENTS.getName());
             db.execSQL("DROP TABLE IF EXISTS " + Table.PROFILE_EVENTS.getName());
             db.execSQL("DROP TABLE IF EXISTS " + Table.USER_PROFILES.getName());
+            db.execSQL("DROP TABLE IF EXISTS " + Table.PUSH_NOTIFICATIONS.getName());
+            db.execSQL("DROP TABLE IF EXISTS " + Table.PUSH_NOTIFICATION_VIEWED.getName());
             db.execSQL(CREATE_EVENTS_TABLE);
             db.execSQL(CREATE_PROFILE_EVENTS_TABLE);
             db.execSQL(CREATE_USER_PROFILES_TABLE);
+            db.execSQL(CREATE_PUSH_NOTIFICATIONS_TABLE);
+            db.execSQL(CREATE_NOTIFICATION_VIEWED_TABLE);
             db.execSQL(EVENTS_TIME_INDEX);
             db.execSQL(PROFILE_EVENTS_TIME_INDEX);
+
         }
 
         boolean belowMemThreshold() {
@@ -315,9 +337,17 @@ public class DBAdapter {
      * @param table the table to remove events
      */
     public void cleanupStaleEvents(Table table) {
+        cleanInternal(table, DATA_EXPIRATION);
+    }
 
-        long DATA_EXPIRATION = 1000 * 60 * 60 * 24 * 5;
-        final long time = System.currentTimeMillis() - DATA_EXPIRATION;
+
+    public void cleanUpPushNotifications(){
+        cleanInternal(Table.PUSH_NOTIFICATIONS,0);//Expiry time is stored in PUSH_NOTIFICATIONS table
+    }
+
+    private void cleanInternal(Table table, long expiration){
+
+        final long time = System.currentTimeMillis() - expiration;
         final String tName = table.getName();
 
         try {
@@ -329,8 +359,8 @@ public class DBAdapter {
         } finally {
             dbHelper.close();
         }
-    }
 
+    }
     private void deleteDB() {
         dbHelper.deleteDatabase();
     }
@@ -386,6 +416,73 @@ public class DBAdapter {
         }
 
         return null;
+    }
+
+
+    /**
+     * Adds a String representing to the DB.
+     *
+     * @param id the String value of Push Notification Id
+     * @return the number of rows in the table, or DB_OUT_OF_MEMORY_ERROR/DB_UPDATE_ERROR
+     */
+    public void storePushNotificationId(String id, long ttl) {
+
+        if (id == null) return ;
+
+        if (!this.belowMemThreshold()) {
+            getConfigLogger().verbose("There is not enough space left on the device to store data, data discarded");
+            return ;
+        }
+        final String tableName = Table.PUSH_NOTIFICATIONS.getName();
+
+
+        if(ttl <= 0) {
+           ttl = Constants.DEFAULT_PUSH_TTL;
+        }
+        else if(ttl > MAX_PUSH_TTL){
+            ttl = MAX_PUSH_TTL;
+        }
+
+        try {
+            final SQLiteDatabase db = dbHelper.getWritableDatabase();
+            final ContentValues cv = new ContentValues();
+            cv.put(KEY_DATA, id);
+            cv.put(KEY_CREATED_AT, System.currentTimeMillis() + ttl);
+            db.insert(tableName, null, cv);
+        } catch (final SQLiteException e) {
+            getConfigLogger().verbose("Error adding data to table " + tableName + " Recreating DB");
+            dbHelper.deleteDatabase();
+        } finally {
+            dbHelper.close();
+        }
+
+    }
+
+    private String fetchPushNotificationId(String id){
+        final String tName = Table.PUSH_NOTIFICATIONS.getName();
+        Cursor cursor = null;
+        String pushId = "";
+
+        try{
+            final SQLiteDatabase db = dbHelper.getReadableDatabase();
+            cursor = db.rawQuery("SELECT * FROM " + tName +
+                    " WHERE " + KEY_DATA + " = ?" , new String[]{id});
+            if(cursor!=null && cursor.moveToFirst()){
+                pushId = cursor.getString(cursor.getColumnIndex(KEY_DATA));
+            }
+        }catch (final SQLiteException e) {
+            getConfigLogger().verbose("Could not fetch records out of database " + tName + ".", e);
+        } finally {
+            dbHelper.close();
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return pushId;
+    }
+
+    public boolean doesPushNotificationIdExist(String id){
+        return id.equals(fetchPushNotificationId(id));
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
