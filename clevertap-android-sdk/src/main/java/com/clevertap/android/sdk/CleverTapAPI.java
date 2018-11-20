@@ -15,6 +15,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.location.Location;
 import android.location.LocationManager;
@@ -34,6 +35,8 @@ import android.support.v4.app.NotificationCompat;
 
 import com.clevertap.android.sdk.exceptions.CleverTapMetaDataNotFoundException;
 import com.clevertap.android.sdk.exceptions.CleverTapPermissionsNotSatisfied;
+import com.clevertap.android.sdk.inbox.InboxController;
+import com.clevertap.android.sdk.inbox.InboxUpdateListener;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 import com.google.android.gms.plus.model.people.Person;
@@ -70,7 +73,7 @@ import static android.content.Context.NOTIFICATION_SERVICE;
  * <h1>CleverTapAPI</h1>
  * This is the main CleverTapAPI class that manages the SDK instances
  */
-public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationListener,InAppNotificationActivity.InAppActivityListener, CTInAppBaseFragment.InAppListener {
+public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationListener,InAppNotificationActivity.InAppActivityListener, CTInAppBaseFragment.InAppListener, InboxUpdateListener {
 
     public enum LogLevel{
         OFF(-1),
@@ -158,6 +161,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private long NOTIFICATION_THREAD_ID = 0;
     private final Boolean eventLock = true;
     private boolean offline = false;
+    private InboxController inboxController;
 
     @Deprecated
     public final EventHandler event;
@@ -2198,10 +2202,55 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 // Ignore
             }
 
+            //TODO
+            //Handle notification inbox
+            try{
+                getConfigLogger().verbose("Processing inbox messages...");
+                processInboxResponse(response,context);
+            }catch (Throwable t){
+                getConfigLogger().verbose("Notification inbox exception: "+ t.getLocalizedMessage());
+            }
+
         } catch (Throwable t) {
             mResponseFailureCount++;
             getConfigLogger().verbose(getAccountId(), "Problem process send queue response", t);
         }
+    }
+
+    //NotificationInbox
+    private void processInboxResponse(final JSONObject response, final Context context){
+        try{
+            getConfigLogger().verbose(getAccountId(),"Inbox: Processing response");
+            if (!response.has("inbox_notifs")) {
+                getConfigLogger().verbose(getAccountId(),"Inbox: Response JSON object doesn't contain the inbox key, bailing");
+                return;
+            }
+
+            if(getConfig().isAnalyticsOnly()){
+                getConfigLogger().verbose(getAccountId(),"CleverTap instance is configured to analytics only, not processing inbox messages");
+                return;
+            }
+
+            if(this.inboxController==null) {
+                this.inboxController = InboxController.initWithAccountId(getAccountId(), getCleverTapID(), loadDBAdapter(context));
+                if (this.inboxController != null && inboxController.isInitialized()) {
+                    this.inboxController.listener = new WeakReference<>(this).get();
+                    JSONArray inboxMessages = response.getJSONArray("inbox_notifs");
+                    this.inboxController.updateMessages(inboxMessages);
+                }
+            }
+
+
+
+
+        }catch (Throwable t){
+            Logger.v("InboxResponse: Failed to parse response", t);
+        }
+    }
+
+    @Override
+    public void inboxMessagesDidUpdate() {
+
     }
 
     //InApp
