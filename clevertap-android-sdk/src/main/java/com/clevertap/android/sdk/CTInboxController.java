@@ -147,7 +147,7 @@ class CTInboxController {
         }
     }
 
-    private void notifyInitialized(){
+    void notifyInitialized(){
         if(listener!=null){
             listener.inboxDidInitialize();
         }
@@ -156,6 +156,8 @@ class CTInboxController {
     private boolean updateUserMessages(JSONArray inboxMessages){
         userDAO.setNewMessages(inboxMessages);
         boolean haveUpdates = false;
+        ArrayList<CTMessageDAO> messageDAOArrayList = new ArrayList<>();
+        ArrayList<CTMessageDAO> updateMessageList = new ArrayList<>();
         for(int i=0;i<inboxMessages.length();i++){
             try {
                 JSONObject inboxMessage = inboxMessages.getJSONObject(i);
@@ -164,20 +166,30 @@ class CTInboxController {
                     return false;
                 }
 
-                //TODO Duplicating logic
-
                 CTMessageDAO messageDAO = CTMessageDAO.initWithJSON(inboxMessage, userDAO.getUserId());
-                ArrayList<CTMessageDAO> messageDAOArrayList = new ArrayList<>();
-                if(messageDAO!=null) {
-                    messageDAOArrayList.add(messageDAO);
+
+                if(messageDAO != null) {
+                    if (getMessageForId(inboxMessage.getString("id")).equals(inboxMessage)) {
+                        Logger.d("Notification Inbox Message already present, updating values");
+                        updateMessageList.add(messageDAO);
+                    }else{
+                        messageDAOArrayList.add(messageDAO);
+                    }
                 }
-                if(messageDAOArrayList.size()>0){
-                    this.dbAdapter.storeMessagesForUser(messageDAOArrayList);
-                    haveUpdates = true;
-                }
+
             }catch (JSONException e){
                 Logger.d("Unable to update notification inbox messages - "+e.getLocalizedMessage());
             }
+        }
+
+        if(messageDAOArrayList.size()>0){
+            this.dbAdapter.storeMessagesForUser(messageDAOArrayList);
+            haveUpdates = true;
+        }
+
+        if(updateMessageList.size()>0){
+            this.dbAdapter.updateMessagesForUser(updateMessageList);
+            haveUpdates = true;
         }
         return haveUpdates;
     }

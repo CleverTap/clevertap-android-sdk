@@ -2227,13 +2227,13 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 return;
             }
 
-            if(this.ctInboxController ==null) {
+            if(this.ctInboxController == null) {
                 this.ctInboxController = CTInboxController.initWithAccountId(getAccountId(), getCleverTapID(), loadDBAdapter(context));
                 if (this.ctInboxController != null && ctInboxController.isInitialized()) {
                     if(this.ctInboxController.listener == null) {
                         this.ctInboxController.listener = new WeakReference<>(this).get();
                     }
-                    this.ctInboxController.listener.inboxDidInitialize();
+                    this.ctInboxController.notifyInitialized();
                     JSONArray inboxMessages = response.getJSONArray("inbox_notifs");
                     this.ctInboxController.updateMessages(inboxMessages);
                 }
@@ -2255,6 +2255,31 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         //TODO
         getConfigLogger().debug(getAccountId(),"Notification Inbox initialized");
     }
+
+    /**
+     * This method sets the InAppNotificationListener
+     * @param notificationInboxListener An {@link CTNotificationInboxListener} object
+     */
+    @SuppressWarnings({"unused", "WeakerAccess"})
+    public void setCTNotificationInboxListener(CTNotificationInboxListener notificationInboxListener) {
+        if(this.ctInboxController != null) {
+            this.ctInboxController.listener = notificationInboxListener;
+        }
+    }
+
+    /**
+     * Returns the InAppNotificationListener object
+     * @return An {@link CTNotificationInboxListener} object
+     */
+    @SuppressWarnings({"unused", "WeakerAccess"})
+    public CTNotificationInboxListener getCTNotificationInboxListener() {
+        if(this.ctInboxController != null){
+            return this.ctInboxController.listener;
+        }else{
+            return null;
+        }
+    }
+
 
     //InApp
     private void processInAppResponse(final JSONObject response, final Context context) {

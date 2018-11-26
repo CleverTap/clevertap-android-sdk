@@ -518,6 +518,47 @@ public class DBAdapter {
         return count;
     }
 
+    int updateMessagesForUser(ArrayList<CTMessageDAO> inboxMessages){
+        if (!this.belowMemThreshold()) {
+            Logger.v("There is not enough space left on the device to store data, data discarded");
+            return DB_OUT_OF_MEMORY_ERROR;
+        }
+
+        Cursor cursor = null;
+        int count = DB_UPDATE_ERROR;
+
+        try {
+            final SQLiteDatabase db = dbHelper.getWritableDatabase();
+            for(CTMessageDAO messageDAO : inboxMessages) {
+                final ContentValues cv = new ContentValues();
+                cv.put(ID, messageDAO.getId());
+                cv.put(KEY_DATA, messageDAO.getJsonData().toString());
+                cv.put(IS_READ, messageDAO.isRead());
+                cv.put(EXPIRES, messageDAO.getExpires());
+                cv.put(KEY_CREATED_AT,messageDAO.getDate());
+                cv.put(MESSAGE_USER,messageDAO.getUserId());
+                db.update(Table.INBOX_MESSAGES.getName(), cv,ID + " = ?",new String[]{messageDAO.getId()});
+            }
+            cursor = db.rawQuery("SELECT COUNT(*) FROM " + Table.INBOX_MESSAGES.getName(), null);
+            cursor.moveToFirst();
+            count = cursor.getInt(0);
+        } catch (final SQLiteException e) {
+            getConfigLogger().verbose("Error adding data to table " + Table.INBOX_MESSAGES.getName() + " Recreating DB");
+
+            if (cursor != null) {
+                cursor.close();
+                cursor = null;
+            }
+            dbHelper.deleteDatabase();
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+            dbHelper.close();
+        }
+        return count;
+    }
+
     CTMessageDAO getMessageForId(String messageId){
         if (messageId == null) return null;
 
