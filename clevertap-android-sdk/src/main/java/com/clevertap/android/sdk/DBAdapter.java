@@ -1,16 +1,12 @@
 package com.clevertap.android.sdk;
 
 import android.annotation.SuppressLint;
-import android.app.ActionBar;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
-
-import com.clevertap.android.sdk.inbox.CTMessageDAO;
-import com.clevertap.android.sdk.inbox.CTUserDAO;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -443,7 +439,7 @@ public class DBAdapter {
         }
     }
 
-    public int storeInboxUser(CTUserDAO userDAO){
+    int storeInboxUser(CTUserDAO userDAO){
         if (!this.belowMemThreshold()) {
             Logger.v("There is not enough space left on the device to store data, data discarded");
             return DB_OUT_OF_MEMORY_ERROR;
@@ -481,7 +477,7 @@ public class DBAdapter {
 
     }
 
-    public int storeMessagesForUser(ArrayList<CTMessageDAO> inboxMessages){
+    int storeMessagesForUser(ArrayList<CTMessageDAO> inboxMessages){
         if (!this.belowMemThreshold()) {
             Logger.v("There is not enough space left on the device to store data, data discarded");
             return DB_OUT_OF_MEMORY_ERROR;
@@ -522,11 +518,11 @@ public class DBAdapter {
         return count;
     }
 
-    public CTMessageDAO getMessageForId(String messageId){
+    CTMessageDAO getMessageForId(String messageId){
         if (messageId == null) return null;
 
         final String tName = Table.INBOX_MESSAGES.getName();
-        CTMessageDAO messageDAO = null;
+        CTMessageDAO messageDAO = new CTMessageDAO();
         Cursor cursor = null;
 
         try {
@@ -558,7 +554,7 @@ public class DBAdapter {
         return messageDAO;
     }
 
-    public boolean deleteMessageForId(String messageId){
+    boolean deleteMessageForId(String messageId){
         if(messageId == null) return false;
 
         final String tName = Table.INBOX_MESSAGES.getName();
@@ -576,7 +572,7 @@ public class DBAdapter {
         }
     }
 
-    public boolean markReadMessageForId(String messageId){
+    boolean markReadMessageForId(String messageId){
         if(messageId == null) return false;
 
         final String tName = Table.INBOX_MESSAGES.getName();
@@ -595,21 +591,95 @@ public class DBAdapter {
         }
     }
 
-    public int getUnreadCount(){
+    int getUnreadCount(){
         final String tName = Table.INBOX_MESSAGES.getName();
         Cursor cursor = null;
-        int count = 0;
+        int count = -1;
         try{
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
             cursor= db.rawQuery("SELECT COUNT(*) FROM "+tName+" WHERE "+IS_READ+" = '" + 0 + "' ", null);
-            cursor.moveToFirst();
-            count= cursor.getInt(0);
-            cursor.close();
+            if(cursor!=null) {
+                cursor.moveToFirst();
+                count = cursor.getInt(0);
+                cursor.close();
+            }
             return count;
         }catch (final SQLiteException e){
             getConfigLogger().verbose("Error counting records from " + tName + ". Recreating DB.", e);
             deleteDB();
-            return -1;
+            return count;
+        }finally {
+            dbHelper.close();
+        }
+    }
+
+    ArrayList<CTMessageDAO> getMessages(){
+        final String tName = Table.INBOX_MESSAGES.getName();
+        Cursor cursor = null;
+        ArrayList<CTMessageDAO> messageDAOArrayList = new ArrayList<>();
+        try{
+            final SQLiteDatabase db = dbHelper.getWritableDatabase();
+            cursor= db.rawQuery("SELECT * FROM "+tName+" WHERE "+IS_READ+" = '" + 0 + "' ", null);
+            if(cursor != null) {
+                while(cursor.moveToNext()){
+                    CTMessageDAO ctMessageDAO = new CTMessageDAO();
+                    ctMessageDAO.setId(cursor.getString(cursor.getColumnIndex(ID)));
+                    ctMessageDAO.setJsonData(new JSONObject(cursor.getString(cursor.getColumnIndex(KEY_DATA))));
+                    ctMessageDAO.setDate(cursor.getInt(cursor.getColumnIndex(KEY_CREATED_AT)));
+                    ctMessageDAO.setExpires(cursor.getInt(cursor.getColumnIndex(EXPIRES)));
+                    ctMessageDAO.setRead(cursor.getInt(cursor.getColumnIndex(IS_READ)));
+                    ctMessageDAO.setUserId(cursor.getString(cursor.getColumnIndex(MESSAGE_USER)));
+                    messageDAOArrayList.add(ctMessageDAO);
+                }
+                cursor.close();
+            }
+            return messageDAOArrayList;
+        }catch (final SQLiteException e){
+            getConfigLogger().verbose("Error retrieving records from " + tName + ". Recreating DB.", e);
+            deleteDB();
+            return null;
+        } catch (JSONException e) {
+            e.printStackTrace();
+            getConfigLogger().verbose("Error retrieving records from " + tName + ". Recreating DB.", e);
+            deleteDB();
+            return null;
+        } finally {
+            dbHelper.close();
+        }
+    }
+
+    ArrayList<CTMessageDAO> getUnreadMessages(){
+        final String tName = Table.INBOX_MESSAGES.getName();
+        Cursor cursor = null;
+        ArrayList<CTMessageDAO> messageDAOArrayList = new ArrayList<>();
+        try{
+            final SQLiteDatabase db = dbHelper.getWritableDatabase();
+            cursor = db.rawQuery("SELECT * FROM "+tName, null);
+            if(cursor != null) {
+                while(cursor.moveToNext()){
+                    CTMessageDAO ctMessageDAO = new CTMessageDAO();
+                    ctMessageDAO.setId(cursor.getString(cursor.getColumnIndex(ID)));
+                    ctMessageDAO.setJsonData(new JSONObject(cursor.getString(cursor.getColumnIndex(KEY_DATA))));
+                    ctMessageDAO.setDate(cursor.getInt(cursor.getColumnIndex(KEY_CREATED_AT)));
+                    ctMessageDAO.setExpires(cursor.getInt(cursor.getColumnIndex(EXPIRES)));
+                    ctMessageDAO.setRead(cursor.getInt(cursor.getColumnIndex(IS_READ)));
+                    ctMessageDAO.setUserId(cursor.getString(cursor.getColumnIndex(MESSAGE_USER)));
+                    messageDAOArrayList.add(ctMessageDAO);
+                }
+                cursor.close();
+            }
+            return messageDAOArrayList;
+        }catch (final SQLiteException e){
+            getConfigLogger().verbose("Error retrieving records from " + tName + ". Recreating DB.", e);
+            deleteDB();
+            return null;
+        } catch (JSONException e) {
+            e.printStackTrace();
+            getConfigLogger().verbose("Error retrieving records from " + tName + ". Recreating DB.", e);
+            deleteDB();
+            return null;
+        } finally {
+            dbHelper.close();
         }
     }
 }

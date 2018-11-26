@@ -2,7 +2,6 @@ package com.clevertap.android.sdk;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.FragmentTransaction;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -11,12 +10,11 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
 import android.media.AudioAttributes;
@@ -35,8 +33,6 @@ import android.support.v4.app.NotificationCompat;
 
 import com.clevertap.android.sdk.exceptions.CleverTapMetaDataNotFoundException;
 import com.clevertap.android.sdk.exceptions.CleverTapPermissionsNotSatisfied;
-import com.clevertap.android.sdk.inbox.InboxController;
-import com.clevertap.android.sdk.inbox.InboxUpdateListener;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 import com.google.android.gms.plus.model.people.Person;
@@ -73,7 +69,7 @@ import static android.content.Context.NOTIFICATION_SERVICE;
  * <h1>CleverTapAPI</h1>
  * This is the main CleverTapAPI class that manages the SDK instances
  */
-public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationListener,InAppNotificationActivity.InAppActivityListener, CTInAppBaseFragment.InAppListener, InboxUpdateListener {
+public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationListener,InAppNotificationActivity.InAppActivityListener, CTInAppBaseFragment.InAppListener, CTNotificationInboxListener {
 
     public enum LogLevel{
         OFF(-1),
@@ -161,7 +157,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private long NOTIFICATION_THREAD_ID = 0;
     private final Boolean eventLock = true;
     private boolean offline = false;
-    private InboxController inboxController;
+    private CTInboxController ctInboxController;
 
     @Deprecated
     public final EventHandler event;
@@ -2231,26 +2227,33 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 return;
             }
 
-            if(this.inboxController==null) {
-                this.inboxController = InboxController.initWithAccountId(getAccountId(), getCleverTapID(), loadDBAdapter(context));
-                if (this.inboxController != null && inboxController.isInitialized()) {
-                    this.inboxController.listener = new WeakReference<>(this).get();
+            if(this.ctInboxController ==null) {
+                this.ctInboxController = CTInboxController.initWithAccountId(getAccountId(), getCleverTapID(), loadDBAdapter(context));
+                if (this.ctInboxController != null && ctInboxController.isInitialized()) {
+                    if(this.ctInboxController.listener == null) {
+                        this.ctInboxController.listener = new WeakReference<>(this).get();
+                    }
+                    this.ctInboxController.listener.inboxDidInitialize();
                     JSONArray inboxMessages = response.getJSONArray("inbox_notifs");
-                    this.inboxController.updateMessages(inboxMessages);
+                    this.ctInboxController.updateMessages(inboxMessages);
                 }
             }
 
-
-
-
         }catch (Throwable t){
-            Logger.v("InboxResponse: Failed to parse response", t);
+            getConfigLogger().verbose(getAccountId(),"InboxResponse: Failed to parse response", t);
         }
     }
 
     @Override
     public void inboxMessagesDidUpdate() {
+        //TODO
+        getConfigLogger().debug(getAccountId(),"Notification Inbox updated");
+    }
 
+    @Override
+    public void inboxDidInitialize() {
+        //TODO
+        getConfigLogger().debug(getAccountId(),"Notification Inbox initialized");
     }
 
     //InApp
@@ -5726,4 +5729,137 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             return null;
         }
     }
+
+    //Notification Inbox public APIs
+    public void initializeInbox(){
+        postAsyncSafely("initializeInbox", new Runnable() {
+            @Override
+            public void run() {
+                if(getConfig().isAnalyticsOnly()){
+                    getConfigLogger().debug(getAccountId(),"Instance is analytics only, not initializing Notification Inbox");
+                }
+
+                if(ctInboxController != null){
+                    getConfigLogger().debug(getAccountId(),"Notification Inbox initialized");
+                }else{
+                    ctInboxController = CTInboxController.initWithAccountId(getAccountId(),getAccountId(),loadDBAdapter(context));
+                }
+            }
+        });
+
+    }
+
+    public int getInboxMessageCount(){
+       return ctInboxController.count();
+    }
+
+    public int getInboxMessageUnreadCount(){
+        return ctInboxController.unreadCount();
+    }
+
+    public CTInboxMessage getInboxMessageForId(String messageId){
+        if(isInboxInitialized()) {
+            JSONObject messageJson = ctInboxController.getMessageForId(messageId);
+            return new CTInboxMessage().initWithJSON(messageJson);
+        }else{
+            return new CTInboxMessage();
+        }
+    }
+
+    public void deleteInboxMessage(CTInboxMessage message){
+        if(isInboxInitialized())
+            ctInboxController.deleteMessageWithId(message.getMessageId());
+    }
+
+    public void markReadInboxMessage(CTInboxMessage message){
+        if(isInboxInitialized())
+            ctInboxController.markReadForMessageWithId(message.getMessageId());
+    }
+
+    public ArrayList<CTInboxMessage> getUnreadInboxMessages(){
+        ArrayList<CTInboxMessage> inboxMessageArrayList = new ArrayList<>();
+        if(isInboxInitialized()){
+            ArrayList<CTMessageDAO> messageDAOArrayList = ctInboxController.getUnreadMessages();
+            for(CTMessageDAO messageDAO : messageDAOArrayList){
+                inboxMessageArrayList.add(new CTInboxMessage().initWithJSON(messageDAO.toJSON()));
+            }
+        }
+        return  inboxMessageArrayList;
+    }
+
+    public ArrayList<CTInboxMessage> getAllInboxMessages(){
+        ArrayList<CTInboxMessage> inboxMessageArrayList = new ArrayList<>();
+        if(isInboxInitialized()){
+            ArrayList<CTMessageDAO> messageDAOArrayList = ctInboxController.getMessages();
+            for(CTMessageDAO messageDAO : messageDAOArrayList){
+                inboxMessageArrayList.add(new CTInboxMessage().initWithJSON(messageDAO.toJSON()));
+            }
+        }
+        return  inboxMessageArrayList;
+    }
+
+    public void createNotificationInboxActivity(CTInboxStyleConfig styleConfig){
+        Intent intent = new Intent(context,CTNotificationInboxActivity.class);
+        intent.putExtra("styleConfig",styleConfig);
+        intent.putExtra("config",config);
+        try {
+            Activity currentActivity = getCurrentActivity();
+            if (currentActivity == null) {
+                throw new IllegalStateException("Current activity reference not found");
+            }
+            currentActivity.startActivity(intent);
+            Logger.d("Displaying Notification Inbox");
+
+        } catch (Throwable t) {
+            Logger.v("Please verify the integration of your app." +
+                    " It is not setup to support Notification Inbox yet.", t);
+        }
+    }
+
+    public void createNotificationInboxActivity(){
+        CTInboxStyleConfig styleConfig = new CTInboxStyleConfig();
+        styleConfig.setTitleColor(Integer.toString(Color.BLACK));
+        styleConfig.setBodyColor(Integer.toString(Color.BLACK));
+        styleConfig.setLayoutColor(Integer.toString(Color.WHITE));
+        styleConfig.setCtaColor(Integer.toString(Color.BLUE));
+        ArrayList<CTInboxMessage> inboxMessageArrayList = getAllInboxMessages();
+        Intent intent = new Intent(context,CTNotificationInboxActivity.class);
+        intent.putExtra("styleConfig",styleConfig);
+        intent.putExtra("config",config);
+        intent.putExtra("messageList",inboxMessageArrayList);
+        try {
+            Activity currentActivity = getCurrentActivity();
+            if (currentActivity == null) {
+                throw new IllegalStateException("Current activity reference not found");
+            }
+            currentActivity.startActivity(intent);
+            currentActivity.overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
+            Logger.d("Displaying Notification Inbox");
+
+        } catch (Throwable t) {
+            Logger.v("Please verify the integration of your app." +
+                    " It is not setup to support Notification Inbox yet.", t);
+        }
+    }
+
+    //Notification Inbox Private APIs
+    private void resetInbox(){
+        this.ctInboxController = CTInboxController.initWithAccountId(getAccountId(),getCleverTapID(),loadDBAdapter(context));
+        if (this.ctInboxController != null && ctInboxController.isInitialized()) {
+            this.ctInboxController.listener = new WeakReference<>(this).get();
+        }
+    }
+
+    private boolean isInboxInitialized(){
+        if(getConfig().isAnalyticsOnly()){
+            getConfigLogger().debug(getAccountId(),"Instance is analytics only, not initializing Notification Inbox");
+            return false;
+        }
+        if(this.ctInboxController != null){
+            return this.ctInboxController.isInitialized();
+        }else {
+            return false;
+        }
+    }
+
 }
