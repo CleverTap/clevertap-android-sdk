@@ -45,6 +45,8 @@ class CTUserDAO {
         this.newMessages = newMessages;
     }
 
+    CTUserDAO(){}
+
     CTUserDAO(String accountId, String guid, String userId){
         this.accountId = accountId;
         this.guid = guid;

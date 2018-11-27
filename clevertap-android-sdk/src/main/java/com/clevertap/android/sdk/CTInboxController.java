@@ -26,7 +26,14 @@ class CTInboxController {
         this.userId = this.accountId + this.guid;
         this.dbAdapter = adapter;
         this.userDAO = new CTUserDAO(this.accountId,this.guid,this.userId);
-        int returnCode = this.dbAdapter.storeInboxUser(this.userDAO);
+        CTUserDAO dbUser = this.dbAdapter.getUserFromDB(this.userId);
+        if(dbUser.getUserId() !=  null){
+            if(!dbUser.getUserId().equals(this.userId)){
+                this.dbAdapter.storeInboxUser(this.userDAO);
+            }
+        }else{
+            this.dbAdapter.storeInboxUser(this.userDAO);
+        }
     }
 
     static CTInboxController initWithAccountId(String accountId, String guid, DBAdapter adapter){
@@ -174,6 +181,7 @@ class CTInboxController {
                         updateMessageList.add(messageDAO);
                     }else{
                         messageDAOArrayList.add(messageDAO);
+                        Logger.d("Notification Inbox Message not present, adding values");
                     }
                 }
 
@@ -185,11 +193,13 @@ class CTInboxController {
         if(messageDAOArrayList.size()>0){
             this.dbAdapter.storeMessagesForUser(messageDAOArrayList);
             haveUpdates = true;
+            Logger.d("Notification Inbox messages added");
         }
 
         if(updateMessageList.size()>0){
             this.dbAdapter.updateMessagesForUser(updateMessageList);
             haveUpdates = true;
+            Logger.d("Notification Inbox messages updated");
         }
         return haveUpdates;
     }

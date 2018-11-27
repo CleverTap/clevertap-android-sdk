@@ -80,11 +80,11 @@ class CTMessageDAO {
     static CTMessageDAO initWithJSON(JSONObject inboxMessage, String userId){
         try {
             String id = inboxMessage.has("id") ? inboxMessage.getString("id") : null;
-            int date = inboxMessage.has("epoch") ? inboxMessage.getInt("epoch") : -1;
+            int date = inboxMessage.has("date") ? inboxMessage.getInt("date") : -1;
             int expires = inboxMessage.has("ttl") ? inboxMessage.getInt("ttl") : -1;
             return new CTMessageDAO(id, inboxMessage, false,date,expires,userId);
         }catch (JSONException e){
-            Logger.d("Unable to parse Notification inbox message to CTMessageDao -"+e.getLocalizedMessage());
+            Logger.d("Unable to parse Notification inbox message to CTMessageDao - "+e.getLocalizedMessage());
             return null;
         }
     }
@@ -96,7 +96,7 @@ class CTMessageDAO {
             jsonObject.put("json",this.jsonData);
             jsonObject.put("read",this.read);
             jsonObject.put("date",this.date);
-            jsonObject.put("expires",this.expires);
+            jsonObject.put("ttl",this.expires);
             return jsonObject;
         } catch (JSONException e) {
             Logger.v("Unable to convert CTMessageDao to JSON - "+e.getLocalizedMessage());

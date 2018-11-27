@@ -221,6 +221,18 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
         });
         Logger.i("CleverTap SDK initialized with accountId: "+ config.getAccountId() + " accountToken: " + config.getAccountId() + " accountRegion: " + config.getAccountRegion());
+
+//        //TODO Remove after testing
+        postAsyncSafely("stub", new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    manualInboxUpdate();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
     }
 
     // only call async
@@ -2257,7 +2269,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
-     * This method sets the InAppNotificationListener
+     * This method sets the CTNotificationInboxListener
      * @param notificationInboxListener An {@link CTNotificationInboxListener} object
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
@@ -2268,7 +2280,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
-     * Returns the InAppNotificationListener object
+     * Returns the CTNotificationInboxListener object
      * @return An {@link CTNotificationInboxListener} object
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
@@ -2277,6 +2289,31 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             return this.ctInboxController.listener;
         }else{
             return null;
+        }
+    }
+
+    //TODO Remove after testing
+    public void manualInboxUpdate() throws JSONException {
+        if(this.ctInboxController == null) {
+            this.ctInboxController = CTInboxController.initWithAccountId(getAccountId(), getCleverTapID(), loadDBAdapter(context));
+            if (this.ctInboxController != null && ctInboxController.isInitialized()) {
+                if(this.ctInboxController.listener == null) {
+                    this.ctInboxController.listener = new WeakReference<>(this).get();
+                }
+                this.ctInboxController.notifyInitialized();
+                JSONObject msg1 = new JSONObject();
+                msg1.put("id","1");
+                msg1.put("date",12);
+                msg1.put("ttl",1);
+                JSONObject msg2 = new JSONObject();
+                msg2.put("id","2");
+                msg2.put("date",12);
+                msg2.put("ttl",1);
+                JSONArray inboxMessages = new JSONArray();
+                inboxMessages.put(msg2);
+                inboxMessages.put(msg1);
+                this.ctInboxController.updateMessages(inboxMessages);
+            }
         }
     }
 

@@ -2,10 +2,11 @@ package com.clevertap.android.sdk;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.support.v4.app.FragmentActivity;
 
 import java.lang.ref.WeakReference;
 
-public class CTNotificationInboxActivity extends Activity {
+public class CTNotificationInboxActivity extends FragmentActivity {
     interface InboxActivityListener{
         void messageDidShow();
         void messageDidClick();
@@ -27,8 +28,7 @@ public class CTNotificationInboxActivity extends Activity {
             // no-op
         }
         if (listener == null) {
-            //config.getLogger().verbose(config.getAccountId(),"InboxActivityListener is null for notification " ));
-            //TODO Logging
+            config.getLogger().verbose(config.getAccountId(),"InboxActivityListener is null for notification inbox " );
         }
         return listener;
     }

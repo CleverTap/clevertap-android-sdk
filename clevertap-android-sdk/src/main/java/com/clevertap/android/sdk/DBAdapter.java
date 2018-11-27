@@ -72,7 +72,7 @@ public class DBAdapter {
                     KEY_DATA + " STRING NOT NULL);";
 
     private static final String CREATE_INBOX_USER_TABLE =
-            "CREATE TABLE " + Table.INBOX_USER.getName() + " ("+ USER_ID + "TEXT PRIMARY KEY," +
+            "CREATE TABLE " + Table.INBOX_USER.getName() + " ("+ USER_ID + " TEXT PRIMARY KEY," +
                     ACCOUNT_ID + " TEXT NOT NULL, " +
                     GUID + " TEXT NOT NULL);";
 
@@ -119,6 +119,7 @@ public class DBAdapter {
             db.execSQL(CREATE_PROFILE_EVENTS_TABLE);
             db.execSQL(CREATE_USER_PROFILES_TABLE);
             db.execSQL(CREATE_INBOX_USER_TABLE);
+            Logger.v(CREATE_INBOX_USER_TABLE);
             db.execSQL(CREATE_INBOX_MESSAGES_TABLE);
 
             db.execSQL(EVENTS_TIME_INDEX);
@@ -477,6 +478,35 @@ public class DBAdapter {
 
     }
 
+    CTUserDAO getUserFromDB(String userId){
+        if (userId == null) return null;
+
+        final String tName = Table.INBOX_USER.getName();
+        CTUserDAO userDAO = new CTUserDAO();
+        Cursor cursor = null;
+
+        try {
+            final SQLiteDatabase db = dbHelper.getReadableDatabase();
+
+            cursor = db.rawQuery("SELECT * FROM " + tName + " WHERE "+USER_ID+" = ?", new String[]{userId});
+
+            if (cursor != null && cursor.moveToFirst()) {
+                userDAO.setUserId(userId);
+                userDAO.setGuid(cursor.getString(cursor.getColumnIndex(GUID)));
+                userDAO.setAccountId(cursor.getString(cursor.getColumnIndex(ACCOUNT_ID)));
+            }
+        } catch (final SQLiteException e) {
+            getConfigLogger().verbose("Could not fetch records out of database " + tName + ".", e);
+        } finally {
+            dbHelper.close();
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        return userDAO;
+    }
+
     int storeMessagesForUser(ArrayList<CTMessageDAO> inboxMessages){
         if (!this.belowMemThreshold()) {
             Logger.v("There is not enough space left on the device to store data, data discarded");
@@ -531,7 +561,6 @@ public class DBAdapter {
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
             for(CTMessageDAO messageDAO : inboxMessages) {
                 final ContentValues cv = new ContentValues();
-                cv.put(ID, messageDAO.getId());
                 cv.put(KEY_DATA, messageDAO.getJsonData().toString());
                 cv.put(IS_READ, messageDAO.isRead());
                 cv.put(EXPIRES, messageDAO.getExpires());
