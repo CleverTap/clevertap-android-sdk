@@ -440,60 +440,81 @@ public class DBAdapter {
         }
     }
 
-    int storeInboxUser(CTUserDAO userDAO){
-        if (!this.belowMemThreshold()) {
-            Logger.v("There is not enough space left on the device to store data, data discarded");
-            return DB_OUT_OF_MEMORY_ERROR;
-        }
+//    int storeInboxUser(CTUserDAO userDAO){
+//        if (!this.belowMemThreshold()) {
+//            Logger.v("There is not enough space left on the device to store data, data discarded");
+//            return DB_OUT_OF_MEMORY_ERROR;
+//        }
+//
+//        Cursor cursor = null;
+//        int count = DB_UPDATE_ERROR;
+//
+//        try {
+//            final SQLiteDatabase db = dbHelper.getWritableDatabase();
+//
+//            final ContentValues cv = new ContentValues();
+//            cv.put(USER_ID,userDAO.getUserId());
+//            cv.put(ACCOUNT_ID,userDAO.getAccountId());
+//            cv.put(GUID,userDAO.getGuid());
+//            db.insert(Table.INBOX_USER.getName(), null, cv);
+//            cursor = db.rawQuery("SELECT COUNT(*) FROM " + Table.INBOX_USER.getName(), null);
+//            cursor.moveToFirst();
+//            count = cursor.getInt(0);
+//        } catch (final SQLiteException e) {
+//            getConfigLogger().verbose("Error adding data to table " + Table.INBOX_USER.getName() + " Recreating DB");
+//
+//            if (cursor != null) {
+//                cursor.close();
+//                cursor = null;
+//            }
+//            dbHelper.deleteDatabase();
+//        } finally {
+//            if (cursor != null) {
+//                cursor.close();
+//            }
+//            dbHelper.close();
+//        }
+//        return count;
+//
+//    }
 
+    CTUserDAO fetchOrCreateUser(String userId, String accountId, String guid){
+        if (userId == null) return null;
+
+        final String tName = Table.INBOX_USER.getName();
+        CTUserDAO userDAO = null;
         Cursor cursor = null;
-        int count = DB_UPDATE_ERROR;
+        int count = 0;
 
         try {
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
 
-            final ContentValues cv = new ContentValues();
-            cv.put(USER_ID,userDAO.getUserId());
-            cv.put(ACCOUNT_ID,userDAO.getAccountId());
-            cv.put(GUID,userDAO.getGuid());
-            db.insert(Table.INBOX_USER.getName(), null, cv);
-            cursor = db.rawQuery("SELECT COUNT(*) FROM " + Table.INBOX_USER.getName(), null);
-            cursor.moveToFirst();
-            count = cursor.getInt(0);
-        } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error adding data to table " + Table.INBOX_USER.getName() + " Recreating DB");
-
-            if (cursor != null) {
-                cursor.close();
-                cursor = null;
-            }
-            dbHelper.deleteDatabase();
-        } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
-            dbHelper.close();
-        }
-        return count;
-
-    }
-
-    CTUserDAO getUserFromDB(String userId){
-        if (userId == null) return null;
-
-        final String tName = Table.INBOX_USER.getName();
-        CTUserDAO userDAO = new CTUserDAO();
-        Cursor cursor = null;
-
-        try {
-            final SQLiteDatabase db = dbHelper.getReadableDatabase();
-
             cursor = db.rawQuery("SELECT * FROM " + tName + " WHERE "+USER_ID+" = ?", new String[]{userId});
 
             if (cursor != null && cursor.moveToFirst()) {
+                userDAO = new CTUserDAO();
                 userDAO.setUserId(userId);
                 userDAO.setGuid(cursor.getString(cursor.getColumnIndex(GUID)));
                 userDAO.setAccountId(cursor.getString(cursor.getColumnIndex(ACCOUNT_ID)));
+            }
+
+            if(userDAO == null){
+                try {
+                    final ContentValues cv = new ContentValues();
+                    cv.put(USER_ID,userId);
+                    cv.put(ACCOUNT_ID,accountId);
+                    cv.put(GUID,guid);
+                    db.insert(Table.INBOX_USER.getName(), null, cv);
+                } catch (final SQLiteException e) {
+                    getConfigLogger().verbose("Error adding data to table " + Table.INBOX_USER.getName() + " Recreating DB");
+                    dbHelper.deleteDatabase();
+                } finally {
+                    dbHelper.close();
+                }
+                userDAO = new CTUserDAO();
+                userDAO.setUserId(userId);
+                userDAO.setAccountId(accountId);
+                userDAO.setGuid(guid);
             }
         } catch (final SQLiteException e) {
             getConfigLogger().verbose("Could not fetch records out of database " + tName + ".", e);
@@ -683,13 +704,13 @@ public class DBAdapter {
         }
     }
 
-    ArrayList<CTMessageDAO> getMessages(){
+    ArrayList<CTMessageDAO> getMessages(String userId){
         final String tName = Table.INBOX_MESSAGES.getName();
         Cursor cursor = null;
         ArrayList<CTMessageDAO> messageDAOArrayList = new ArrayList<>();
         try{
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
-            cursor= db.rawQuery("SELECT * FROM "+tName+" WHERE "+IS_READ+" = '" + 0 + "' ", null);
+            cursor= db.rawQuery("SELECT * FROM "+tName+" WHERE " + MESSAGE_USER+ " = ? ", new String[]{userId});
             if(cursor != null) {
                 while(cursor.moveToNext()){
                     CTMessageDAO ctMessageDAO = new CTMessageDAO();
@@ -718,13 +739,13 @@ public class DBAdapter {
         }
     }
 
-    ArrayList<CTMessageDAO> getUnreadMessages(){
+    ArrayList<CTMessageDAO> getUnreadMessages(String userId){
         final String tName = Table.INBOX_MESSAGES.getName();
         Cursor cursor = null;
         ArrayList<CTMessageDAO> messageDAOArrayList = new ArrayList<>();
         try{
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
-            cursor = db.rawQuery("SELECT * FROM "+tName, null);
+            cursor = db.rawQuery("SELECT * FROM "+tName+" WHERE "+IS_READ+" = ? AND" + MESSAGE_USER+ " = ? ", new String[]{"0",userId});
             if(cursor != null) {
                 while(cursor.moveToNext()){
                     CTMessageDAO ctMessageDAO = new CTMessageDAO();

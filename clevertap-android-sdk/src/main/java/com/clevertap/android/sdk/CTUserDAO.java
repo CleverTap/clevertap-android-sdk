@@ -11,7 +11,6 @@ class CTUserDAO {
     private String accountId;
     private String guid;
     private JSONArray newMessages;
-    private DBAdapter dbAdapter;
 
     String getUserId() {
         return userId;

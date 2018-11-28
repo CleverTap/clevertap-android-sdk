@@ -158,6 +158,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private final Boolean eventLock = true;
     private boolean offline = false;
     private CTInboxController ctInboxController;
+    private final Object inboxControllerLock = new Object();
 
     @Deprecated
     public final EventHandler event;
@@ -222,7 +223,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         });
         Logger.i("CleverTap SDK initialized with accountId: "+ config.getAccountId() + " accountToken: " + config.getAccountId() + " accountRegion: " + config.getAccountRegion());
 
-//        //TODO Remove after testing
+        //TODO Remove after testing
         postAsyncSafely("stub", new Runnable() {
             @Override
             public void run() {
@@ -2238,16 +2239,17 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 getConfigLogger().verbose(getAccountId(),"CleverTap instance is configured to analytics only, not processing inbox messages");
                 return;
             }
-
-            if(this.ctInboxController == null) {
-                this.ctInboxController = CTInboxController.initWithAccountId(getAccountId(), getCleverTapID(), loadDBAdapter(context));
-                if (this.ctInboxController != null && ctInboxController.isInitialized()) {
-                    if(this.ctInboxController.listener == null) {
-                        this.ctInboxController.listener = new WeakReference<>(this).get();
+            synchronized (inboxControllerLock) {
+                if (this.ctInboxController == null) {
+                    this.ctInboxController = CTInboxController.initWithAccountId(getAccountId(), getCleverTapID(), loadDBAdapter(context));
+                    if (this.ctInboxController != null && ctInboxController.isInitialized()) {
+                        if (this.ctInboxController.listener == null) {
+                            this.ctInboxController.listener = new WeakReference<>(this).get();
+                        }
+                        this.ctInboxController.notifyInitialized();
+                        JSONArray inboxMessages = response.getJSONArray("inbox_notifs");
+                        this.ctInboxController.updateMessages(inboxMessages);
                     }
-                    this.ctInboxController.notifyInitialized();
-                    JSONArray inboxMessages = response.getJSONArray("inbox_notifs");
-                    this.ctInboxController.updateMessages(inboxMessages);
                 }
             }
 
@@ -2274,8 +2276,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void setCTNotificationInboxListener(CTNotificationInboxListener notificationInboxListener) {
-        if(this.ctInboxController != null) {
-            this.ctInboxController.listener = notificationInboxListener;
+        synchronized (inboxControllerLock) {
+            if (this.ctInboxController != null) {
+                this.ctInboxController.listener = notificationInboxListener;
+            }
         }
     }
 
@@ -2285,34 +2289,38 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public CTNotificationInboxListener getCTNotificationInboxListener() {
-        if(this.ctInboxController != null){
-            return this.ctInboxController.listener;
-        }else{
-            return null;
+        synchronized (inboxControllerLock) {
+            if (this.ctInboxController != null) {
+                return this.ctInboxController.listener;
+            } else {
+                return null;
+            }
         }
     }
 
     //TODO Remove after testing
     public void manualInboxUpdate() throws JSONException {
-        if(this.ctInboxController == null) {
-            this.ctInboxController = CTInboxController.initWithAccountId(getAccountId(), getCleverTapID(), loadDBAdapter(context));
-            if (this.ctInboxController != null && ctInboxController.isInitialized()) {
-                if(this.ctInboxController.listener == null) {
-                    this.ctInboxController.listener = new WeakReference<>(this).get();
+        synchronized (inboxControllerLock) {
+            if (this.ctInboxController == null) {
+                this.ctInboxController = CTInboxController.initWithAccountId(getAccountId(), getCleverTapID(), loadDBAdapter(context));
+                if (this.ctInboxController != null && ctInboxController.isInitialized()) {
+                    if (this.ctInboxController.listener == null) {
+                        this.ctInboxController.listener = new WeakReference<>(this).get();
+                    }
+                    this.ctInboxController.notifyInitialized();
+                    JSONObject msg1 = new JSONObject();
+                    msg1.put("id", "1");
+                    msg1.put("date", 12);
+                    msg1.put("ttl", 1);
+                    JSONObject msg2 = new JSONObject();
+                    msg2.put("id", "2");
+                    msg2.put("date", 12);
+                    msg2.put("ttl", 1);
+                    JSONArray inboxMessages = new JSONArray();
+                    inboxMessages.put(msg2);
+                    inboxMessages.put(msg1);
+                    this.ctInboxController.updateMessages(inboxMessages);
                 }
-                this.ctInboxController.notifyInitialized();
-                JSONObject msg1 = new JSONObject();
-                msg1.put("id","1");
-                msg1.put("date",12);
-                msg1.put("ttl",1);
-                JSONObject msg2 = new JSONObject();
-                msg2.put("id","2");
-                msg2.put("date",12);
-                msg2.put("ttl",1);
-                JSONArray inboxMessages = new JSONArray();
-                inboxMessages.put(msg2);
-                inboxMessages.put(msg1);
-                this.ctInboxController.updateMessages(inboxMessages);
             }
         }
     }
@@ -4532,6 +4540,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         synchronized (processingUserLoginLock) {
                             processingUserLoginIdentifier = null;
                         }
+                        resetInbox();
                     } catch (Throwable t) {
                         getConfigLogger().verbose(getAccountId(), "Reset Profile error", t);
                     }
@@ -5800,11 +5809,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 if(getConfig().isAnalyticsOnly()){
                     getConfigLogger().debug(getAccountId(),"Instance is analytics only, not initializing Notification Inbox");
                 }
-
-                if(ctInboxController != null){
-                    getConfigLogger().debug(getAccountId(),"Notification Inbox initialized");
-                }else{
-                    ctInboxController = CTInboxController.initWithAccountId(getAccountId(),getAccountId(),loadDBAdapter(context));
+                synchronized (inboxControllerLock) {
+                    if (ctInboxController != null) {
+                        getConfigLogger().debug(getAccountId(), "Notification Inbox initialized");
+                    } else {
+                        ctInboxController = CTInboxController.initWithAccountId(getAccountId(), getAccountId(), loadDBAdapter(context));
+                    }
                 }
             }
         });
@@ -5812,52 +5822,102 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     public int getInboxMessageCount(){
-       return ctInboxController.count();
+       if(isInboxInitialized()) {
+           synchronized (inboxControllerLock) {
+               return ctInboxController.count();
+           }
+       }else{
+           getConfigLogger().debug(getAccountId(),"Notification Inbox not initialized");
+           return -1;
+       }
+
     }
 
     public int getInboxMessageUnreadCount(){
-        return ctInboxController.unreadCount();
+        if(isInboxInitialized()) {
+            synchronized (inboxControllerLock) {
+                return ctInboxController.unreadCount();
+            }
+        }else{
+            getConfigLogger().debug(getAccountId(),"Notification Inbox not initialized");
+            return -1;
+        }
+
     }
 
     public CTInboxMessage getInboxMessageForId(String messageId){
         if(isInboxInitialized()) {
-            JSONObject messageJson = ctInboxController.getMessageForId(messageId);
-            return new CTInboxMessage().initWithJSON(messageJson);
+            synchronized (inboxControllerLock) {
+                JSONObject messageJson = ctInboxController.getMessageForId(messageId);
+                return new CTInboxMessage().initWithJSON(messageJson);
+            }
         }else{
-            return new CTInboxMessage();
+            getConfigLogger().debug(getAccountId(),"Notification Inbox not initialized");
+            return null;
         }
     }
 
-    public void deleteInboxMessage(CTInboxMessage message){
-        if(isInboxInitialized())
-            ctInboxController.deleteMessageWithId(message.getMessageId());
+    public void deleteInboxMessage(final CTInboxMessage message){
+        postAsyncSafely("deleteInboxMessage", new Runnable() {
+            @Override
+            public void run() {
+                if (isInboxInitialized()) {
+                    synchronized (inboxControllerLock) {
+                        ctInboxController.deleteMessageWithId(message.getMessageId());
+                    }
+                } else {
+                    getConfigLogger().debug(getAccountId(), "Notification Inbox not initialized");
+                }
+            }});
     }
 
-    public void markReadInboxMessage(CTInboxMessage message){
-        if(isInboxInitialized())
-            ctInboxController.markReadForMessageWithId(message.getMessageId());
+    public void markReadInboxMessage(final CTInboxMessage message){
+        postAsyncSafely("markReadInboxMessage", new Runnable() {
+            @Override
+            public void run() {
+                if(isInboxInitialized()){
+                    synchronized (inboxControllerLock) {
+                        ctInboxController.markReadForMessageWithId(message.getMessageId());
+                    }
+                }else{
+                    getConfigLogger().debug(getAccountId(),"Notification Inbox not initialized");
+                }
+            }
+        });
     }
 
     public ArrayList<CTInboxMessage> getUnreadInboxMessages(){
         ArrayList<CTInboxMessage> inboxMessageArrayList = new ArrayList<>();
         if(isInboxInitialized()){
-            ArrayList<CTMessageDAO> messageDAOArrayList = ctInboxController.getUnreadMessages();
-            for(CTMessageDAO messageDAO : messageDAOArrayList){
-                inboxMessageArrayList.add(new CTInboxMessage().initWithJSON(messageDAO.toJSON()));
+            synchronized (inboxControllerLock) {
+                ArrayList<CTMessageDAO> messageDAOArrayList = ctInboxController.getUnreadMessages();
+                for (CTMessageDAO messageDAO : messageDAOArrayList) {
+                    inboxMessageArrayList.add(new CTInboxMessage().initWithJSON(messageDAO.toJSON()));
+                }
+                return inboxMessageArrayList;
             }
+        }else{
+            getConfigLogger().debug(getAccountId(),"Notification Inbox not initialized");
+            return null;
         }
-        return  inboxMessageArrayList;
+
     }
 
     public ArrayList<CTInboxMessage> getAllInboxMessages(){
         ArrayList<CTInboxMessage> inboxMessageArrayList = new ArrayList<>();
         if(isInboxInitialized()){
-            ArrayList<CTMessageDAO> messageDAOArrayList = ctInboxController.getMessages();
-            for(CTMessageDAO messageDAO : messageDAOArrayList){
-                inboxMessageArrayList.add(new CTInboxMessage().initWithJSON(messageDAO.toJSON()));
+            synchronized (inboxControllerLock) {
+                ArrayList<CTMessageDAO> messageDAOArrayList = ctInboxController.getMessages();
+                for (CTMessageDAO messageDAO : messageDAOArrayList) {
+                    inboxMessageArrayList.add(new CTInboxMessage().initWithJSON(messageDAO.toJSON()));
+                }
+                return inboxMessageArrayList;
             }
+        }else{
+            getConfigLogger().debug(getAccountId(),"Notification Inbox not initialized");
+            return null;
         }
-        return  inboxMessageArrayList;
+
     }
 
     public void createNotificationInboxActivity(CTInboxStyleConfig styleConfig){
@@ -5906,9 +5966,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //Notification Inbox Private APIs
     private void resetInbox(){
-        this.ctInboxController = CTInboxController.initWithAccountId(getAccountId(),getCleverTapID(),loadDBAdapter(context));
-        if (this.ctInboxController != null && ctInboxController.isInitialized()) {
-            this.ctInboxController.listener = new WeakReference<>(this).get();
+        synchronized (inboxControllerLock) {
+            this.ctInboxController = CTInboxController.initWithAccountId(getAccountId(), getCleverTapID(), loadDBAdapter(context));
+            if (this.ctInboxController != null && ctInboxController.isInitialized()) {
+                this.ctInboxController.listener = new WeakReference<>(this).get();
+            }
         }
     }
 
@@ -5917,10 +5979,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             getConfigLogger().debug(getAccountId(),"Instance is analytics only, not initializing Notification Inbox");
             return false;
         }
-        if(this.ctInboxController != null){
-            return this.ctInboxController.isInitialized();
-        }else {
-            return false;
+        synchronized (inboxControllerLock) {
+            if (this.ctInboxController != null) {
+                return this.ctInboxController.isInitialized();
+            } else {
+                return false;
+            }
         }
     }
 

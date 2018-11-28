@@ -11,7 +11,7 @@ class CTInboxController {
     private boolean initialized;
     private int count;
     private int unreadCount;
-    private HashMap messages,unreadMessages;
+    private ArrayList<CTMessageDAO> messages,unreadMessages;
     private String accountId;
     private String guid;
     private String userId;
@@ -22,18 +22,14 @@ class CTInboxController {
     private CTInboxController(String accountId, String guid, DBAdapter adapter){
         this.accountId = accountId;
         this.guid = guid;
-        this.initialized = true;
         this.userId = this.accountId + this.guid;
         this.dbAdapter = adapter;
-        this.userDAO = new CTUserDAO(this.accountId,this.guid,this.userId);
-        CTUserDAO dbUser = this.dbAdapter.getUserFromDB(this.userId);
-        if(dbUser.getUserId() !=  null){
-            if(!dbUser.getUserId().equals(this.userId)){
-                this.dbAdapter.storeInboxUser(this.userDAO);
-            }
-        }else{
-            this.dbAdapter.storeInboxUser(this.userDAO);
-        }
+        this.userDAO = this.dbAdapter.fetchOrCreateUser(this.userId,this.accountId,this.guid);
+        this.messages = this.dbAdapter.getMessages(this.userId);
+        this.unreadMessages = this.dbAdapter.getUnreadMessages(this.userId);
+        this.count = this.messages.size();
+        this.unreadCount = this.unreadMessages.size();
+        this.initialized = true;
     }
 
     static CTInboxController initWithAccountId(String accountId, String guid, DBAdapter adapter){
@@ -75,8 +71,13 @@ class CTInboxController {
 
     JSONObject getMessageForId(String messageId){
         if(this.isInitialized()) {
-            CTMessageDAO messageDAO = this.dbAdapter.getMessageForId(messageId);
-            return messageDAO.toJSON();
+            for(CTMessageDAO messageDAO : messages){
+                if(messageDAO.getId().equals(messageId)){
+                    return messageDAO.toJSON();
+                }
+            }
+            Logger.d("Inbox Message for message id - "+messageId+" doesn't exist");
+            return null;
         }
         else {
             return null;
@@ -88,24 +89,16 @@ class CTInboxController {
     }
 
     int count(){
-        if(this.isInitialized()){
-            return userDAO.getNewMessages().length();
-        }else{
-            return -1;
-        }
+        return count;
     }
 
     int unreadCount(){
-        if(this.isInitialized()){
-            return this.dbAdapter.getUnreadCount();
-        }else{
-            return -1;
-        }
+        return unreadCount;
     }
 
     ArrayList<CTMessageDAO> getMessages(){
         if(this.isInitialized()){
-            return this.dbAdapter.getMessages();
+            return messages;
         }else{
             return null;
         }
@@ -113,7 +106,7 @@ class CTInboxController {
 
     ArrayList<CTMessageDAO> getUnreadMessages(){
         if(this.isInitialized()){
-            return this.dbAdapter.getUnreadMessages();
+            return unreadMessages;
         }else{
             return null;
         }
@@ -121,27 +114,6 @@ class CTInboxController {
 
     boolean isInitialized() {
         return initialized;
-    }
-
-    public int getCount() {
-        return count;
-    }
-
-    public int getUnreadCount() {
-        return unreadCount;
-    }
-
-
-    String getAccountId() {
-        return accountId;
-    }
-
-    String getGuid() {
-        return guid;
-    }
-
-    String getUserId() {
-        return userId;
     }
 
     CTNotificationInboxListener getListener() {
@@ -176,7 +148,7 @@ class CTInboxController {
                 CTMessageDAO messageDAO = CTMessageDAO.initWithJSON(inboxMessage, userDAO.getUserId());
 
                 if(messageDAO != null) {
-                    if (getMessageForId(inboxMessage.getString("id")).equals(inboxMessage)) {
+                    if (getMessageForId(inboxMessage.getString("id"))!=null && getMessageForId(inboxMessage.getString("id")).equals(inboxMessage)) {
                         Logger.d("Notification Inbox Message already present, updating values");
                         updateMessageList.add(messageDAO);
                     }else{
@@ -201,6 +173,12 @@ class CTInboxController {
             haveUpdates = true;
             Logger.d("Notification Inbox messages updated");
         }
+
+        this.messages = this.dbAdapter.getMessages(this.userId);
+        this.unreadMessages = this.dbAdapter.getUnreadMessages(this.userId);
+        this.count = messages.size();
+        this.unreadCount = unreadMessages.size();
+
         return haveUpdates;
     }
 }
