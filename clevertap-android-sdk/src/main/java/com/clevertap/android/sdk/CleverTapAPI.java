@@ -5071,6 +5071,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     Intent actionLaunchIntent;
                     if (sendToCTIntentService) {
                         actionLaunchIntent = new Intent(CTNotificationIntentService.MAIN_ACTION);
+                        actionLaunchIntent.setPackage(context.getPackageName());
                         actionLaunchIntent.putExtra("ct_type", CTNotificationIntentService.TYPE_BUTTON_CLICK);
                         if (!dl.isEmpty()) {
                             actionLaunchIntent.putExtra("dl", dl);
