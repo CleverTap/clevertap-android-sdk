@@ -1,5 +1,8 @@
 ## CHANGE LOG
 
+### Version 3.3.3 (November 28, 2018)
+* Fixes the bug which caused CTA buttons to not open the mentioned deeplink
+
 ### Version 3.3.2 (November 12, 2018)
 * Fixes the app crash issue for Interstitial InApp notification template when not using ExoPlayer
 * Fixes the bug empty buttons in Half Interstitial InApp notification template when no buttons are provided

@@ -29,7 +29,7 @@ ext {
     siteUrl = 'https://github.com/CleverTap/clevertap-android-sdk'
     gitUrl = 'https://github.com/CleverTap/clevertap-android-sdk.git'
 
-    libraryVersion = '3.3.2'
+    libraryVersion = '3.3.3'
 
     developerId = 'clevertap'
     developerName = 'CleverTap'
@@ -57,11 +57,11 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField "String", "SDK_VERSION_STRING", '"!SDK-VERSION-STRING!:com.clevertap.android:clevertap-android-sdk:3.3.2.0"'
+            buildConfigField "String", "SDK_VERSION_STRING", '"!SDK-VERSION-STRING!:com.clevertap.android:clevertap-android-sdk:3.3.3.0"'
         }
 
         release {
-            buildConfigField "String", "SDK_VERSION_STRING", '"!SDK-VERSION-STRING!:com.clevertap.android:clevertap-android-sdk:3.3.2.0"'
+            buildConfigField "String", "SDK_VERSION_STRING", '"!SDK-VERSION-STRING!:com.clevertap.android:clevertap-android-sdk:3.3.3.0"'
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
