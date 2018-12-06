@@ -47,6 +47,7 @@ public class DBAdapter {
     private static final String ID = "id";
     private static final String IS_READ = "isRead";
     private static final String EXPIRES = "expires";
+    private static final String TAGS = "tags";
     private static final String MESSAGE_USER = "messageUser";
 
     private static final int DB_UPDATE_ERROR = -1;
@@ -79,6 +80,7 @@ public class DBAdapter {
     private static final String CREATE_INBOX_MESSAGES_TABLE =
             "CREATE TABLE " + Table.INBOX_MESSAGES.getName() + " (" + ID + " TEXT NOT NULL," +
                     KEY_DATA + " TEXT NOT NULL, " +
+                    TAGS + " TEXT NOT NULL, " +
                     IS_READ + " INTEGER NOT NULL DEFAULT 0, " +
                     EXPIRES + " INTEGER NOT NULL, " +
                     KEY_CREATED_AT + " INTEGER NOT NULL, " +
@@ -440,44 +442,13 @@ public class DBAdapter {
         }
     }
 
-//    int storeInboxUser(CTUserDAO userDAO){
-//        if (!this.belowMemThreshold()) {
-//            Logger.v("There is not enough space left on the device to store data, data discarded");
-//            return DB_OUT_OF_MEMORY_ERROR;
-//        }
-//
-//        Cursor cursor = null;
-//        int count = DB_UPDATE_ERROR;
-//
-//        try {
-//            final SQLiteDatabase db = dbHelper.getWritableDatabase();
-//
-//            final ContentValues cv = new ContentValues();
-//            cv.put(USER_ID,userDAO.getUserId());
-//            cv.put(ACCOUNT_ID,userDAO.getAccountId());
-//            cv.put(GUID,userDAO.getGuid());
-//            db.insert(Table.INBOX_USER.getName(), null, cv);
-//            cursor = db.rawQuery("SELECT COUNT(*) FROM " + Table.INBOX_USER.getName(), null);
-//            cursor.moveToFirst();
-//            count = cursor.getInt(0);
-//        } catch (final SQLiteException e) {
-//            getConfigLogger().verbose("Error adding data to table " + Table.INBOX_USER.getName() + " Recreating DB");
-//
-//            if (cursor != null) {
-//                cursor.close();
-//                cursor = null;
-//            }
-//            dbHelper.deleteDatabase();
-//        } finally {
-//            if (cursor != null) {
-//                cursor.close();
-//            }
-//            dbHelper.close();
-//        }
-//        return count;
-//
-//    }
-
+    /**
+     * fetches or creates a user with given parameters
+     * @param userId String userId
+     * @param accountId String accountId
+     * @param guid String guid
+     * @return Object of type {@link CTUserDAO}
+     */
     CTUserDAO fetchOrCreateUser(String userId, String accountId, String guid){
         if (userId == null) return null;
 
@@ -528,6 +499,11 @@ public class DBAdapter {
         return userDAO;
     }
 
+    /**
+     * Stores a list of inbox messages
+     * @param inboxMessages ArrayList of type {@link CTMessageDAO}
+     * @return int
+     */
     int storeMessagesForUser(ArrayList<CTMessageDAO> inboxMessages){
         if (!this.belowMemThreshold()) {
             Logger.v("There is not enough space left on the device to store data, data discarded");
@@ -543,6 +519,7 @@ public class DBAdapter {
                 final ContentValues cv = new ContentValues();
                 cv.put(ID, messageDAO.getId());
                 cv.put(KEY_DATA, messageDAO.getJsonData().toString());
+                cv.put(TAGS, messageDAO.getTags());
                 cv.put(IS_READ, messageDAO.isRead());
                 cv.put(EXPIRES, messageDAO.getExpires());
                 cv.put(KEY_CREATED_AT,messageDAO.getDate());
@@ -569,6 +546,11 @@ public class DBAdapter {
         return count;
     }
 
+    /**
+     * Updates a list on inbox messages
+     * @param inboxMessages ArrayList of {@link CTMessageDAO}
+     * @return int
+     */
     int updateMessagesForUser(ArrayList<CTMessageDAO> inboxMessages){
         if (!this.belowMemThreshold()) {
             Logger.v("There is not enough space left on the device to store data, data discarded");
@@ -584,6 +566,7 @@ public class DBAdapter {
                 final ContentValues cv = new ContentValues();
                 cv.put(KEY_DATA, messageDAO.getJsonData().toString());
                 cv.put(IS_READ, messageDAO.isRead());
+                cv.put(TAGS,messageDAO.getTags());
                 cv.put(EXPIRES, messageDAO.getExpires());
                 cv.put(KEY_CREATED_AT,messageDAO.getDate());
                 cv.put(MESSAGE_USER,messageDAO.getUserId());
@@ -609,6 +592,11 @@ public class DBAdapter {
         return count;
     }
 
+    /**
+     * Returns inbox message for given messageId
+     * @param messageId String messageId
+     * @return CTMessageDAO object
+     */
     CTMessageDAO getMessageForId(String messageId){
         if (messageId == null) return null;
 
@@ -629,6 +617,7 @@ public class DBAdapter {
                     messageDAO.setJsonData(new JSONObject(cursor.getString(cursor.getColumnIndex(KEY_DATA))));
                     messageDAO.setRead(cursor.getInt(cursor.getColumnIndex(IS_READ)));
                     messageDAO.setUserId(cursor.getString(cursor.getColumnIndex(MESSAGE_USER)));
+                    messageDAO.setTags(cursor.getString(cursor.getColumnIndex(TAGS)));
                 } catch (final JSONException e) {
                     // Ignore
                 }
@@ -645,6 +634,11 @@ public class DBAdapter {
         return messageDAO;
     }
 
+    /**
+     * Deletes the inbox message for given messageId
+     * @param messageId String messageId
+     * @return boolean value based on success of operation
+     */
     boolean deleteMessageForId(String messageId){
         if(messageId == null) return false;
 
@@ -663,6 +657,11 @@ public class DBAdapter {
         }
     }
 
+    /**
+     * Marks inbox message as read for given messageId
+     * @param messageId String messageId
+     * @return boolean value depending on success of operation
+     */
     boolean markReadMessageForId(String messageId){
         if(messageId == null) return false;
 
@@ -704,6 +703,11 @@ public class DBAdapter {
         }
     }
 
+    /**
+     * Retrieves list of inbox messages based on given userId
+     * @param userId String userid
+     * @return ArrayList of {@link CTMessageDAO}
+     */
     ArrayList<CTMessageDAO> getMessages(String userId){
         final String tName = Table.INBOX_MESSAGES.getName();
         Cursor cursor = null;
@@ -720,6 +724,7 @@ public class DBAdapter {
                     ctMessageDAO.setExpires(cursor.getInt(cursor.getColumnIndex(EXPIRES)));
                     ctMessageDAO.setRead(cursor.getInt(cursor.getColumnIndex(IS_READ)));
                     ctMessageDAO.setUserId(cursor.getString(cursor.getColumnIndex(MESSAGE_USER)));
+                    ctMessageDAO.setTags(cursor.getString(cursor.getColumnIndex(TAGS)));
                     messageDAOArrayList.add(ctMessageDAO);
                 }
                 cursor.close();
@@ -739,13 +744,18 @@ public class DBAdapter {
         }
     }
 
+    /**
+     * Retrieves list of unread inbox messages based on given userId
+     * @param userId String userId
+     * @return ArrayList of {@link CTMessageDAO}
+     */
     ArrayList<CTMessageDAO> getUnreadMessages(String userId){
         final String tName = Table.INBOX_MESSAGES.getName();
         Cursor cursor = null;
         ArrayList<CTMessageDAO> messageDAOArrayList = new ArrayList<>();
         try{
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
-            cursor = db.rawQuery("SELECT * FROM "+tName+" WHERE "+IS_READ+" = ? AND" + MESSAGE_USER+ " = ? ", new String[]{"0",userId});
+            cursor = db.rawQuery("SELECT * FROM "+tName+" WHERE "+IS_READ+" = ? AND " + MESSAGE_USER+ " = ? ", new String[]{"0",userId});
             if(cursor != null) {
                 while(cursor.moveToNext()){
                     CTMessageDAO ctMessageDAO = new CTMessageDAO();
@@ -755,6 +765,7 @@ public class DBAdapter {
                     ctMessageDAO.setExpires(cursor.getInt(cursor.getColumnIndex(EXPIRES)));
                     ctMessageDAO.setRead(cursor.getInt(cursor.getColumnIndex(IS_READ)));
                     ctMessageDAO.setUserId(cursor.getString(cursor.getColumnIndex(MESSAGE_USER)));
+                    ctMessageDAO.setTags(cursor.getString(cursor.getColumnIndex(TAGS)));
                     messageDAOArrayList.add(ctMessageDAO);
                 }
                 cursor.close();

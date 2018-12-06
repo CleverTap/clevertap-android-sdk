@@ -9,14 +9,38 @@ public class CTInboxStyleConfig implements Parcelable {
     private String bodyColor;
     private String ctaColor;
     private String layoutColor;
+    private String navBarColor;
+    private String navBarTitle;
+    private String navBarTitleColor;
+    private String inboxBackgroundColor;
+    private String firstTab;
+    private String secondTab;
+    private boolean usingTabs;//TODO Use string array for tab names to use internally
+    private String backButtonColor;
+    private String selectedTabColor;
+    private String unselectedTabColor;
+    private String selectedTabIndicatorColor;
+    private String tabBackgroundColor;
 
-    public CTInboxStyleConfig(){}
+    CTInboxStyleConfig(){};
 
-    private CTInboxStyleConfig(Parcel in) {
+    protected CTInboxStyleConfig(Parcel in) {
         titleColor = in.readString();
         bodyColor = in.readString();
         ctaColor = in.readString();
         layoutColor = in.readString();
+        navBarColor = in.readString();
+        navBarTitle = in.readString();
+        navBarTitleColor = in.readString();
+        inboxBackgroundColor = in.readString();
+        firstTab = in.readString();
+        secondTab = in.readString();
+        usingTabs = in.readByte() != 0x00;
+        backButtonColor = in.readString();
+        selectedTabColor = in.readString();
+        unselectedTabColor = in.readString();
+        selectedTabIndicatorColor = in.readString();
+        tabBackgroundColor = in.readString();
     }
 
     @Override
@@ -30,6 +54,18 @@ public class CTInboxStyleConfig implements Parcelable {
         dest.writeString(bodyColor);
         dest.writeString(ctaColor);
         dest.writeString(layoutColor);
+        dest.writeString(navBarColor);
+        dest.writeString(navBarTitle);
+        dest.writeString(navBarTitleColor);
+        dest.writeString(inboxBackgroundColor);
+        dest.writeString(firstTab);
+        dest.writeString(secondTab);
+        dest.writeByte((byte) (usingTabs ? 0x01 : 0x00));
+        dest.writeString(backButtonColor);
+        dest.writeString(selectedTabColor);
+        dest.writeString(unselectedTabColor);
+        dest.writeString(selectedTabIndicatorColor);
+        dest.writeString(tabBackgroundColor);
     }
 
     @SuppressWarnings("unused")
@@ -45,35 +81,131 @@ public class CTInboxStyleConfig implements Parcelable {
         }
     };
 
-    public String getTitleColor() {
+    String getTitleColor() {
         return titleColor;
     }
 
-    public String getBodyColor() {
-        return bodyColor;
-    }
-
-    public String getCtaColor() {
-        return ctaColor;
-    }
-
-    public String getLayoutColor() {
-        return layoutColor;
-    }
-
-    public void setTitleColor(String titleColor) {
+    void setTitleColor(String titleColor) {
         this.titleColor = titleColor;
     }
 
-    public void setBodyColor(String bodyColor) {
+    String getBodyColor() {
+        return bodyColor;
+    }
+
+    void setBodyColor(String bodyColor) {
         this.bodyColor = bodyColor;
     }
 
-    public void setCtaColor(String ctaColor) {
+    String getCtaColor() {
+        return ctaColor;
+    }
+
+    void setCtaColor(String ctaColor) {
         this.ctaColor = ctaColor;
     }
 
-    public void setLayoutColor(String layoutColor) {
+    String getLayoutColor() {
+        return layoutColor;
+    }
+
+    void setLayoutColor(String layoutColor) {
         this.layoutColor = layoutColor;
+    }
+
+    public String getNavBarColor() {
+        return navBarColor;
+    }
+
+    public void setNavBarColor(String navBarColor) {
+        this.navBarColor = navBarColor;
+    }
+
+    public String getNavBarTitle() {
+        return navBarTitle;
+    }
+
+    public void setNavBarTitle(String navBarTitle) {
+        this.navBarTitle = navBarTitle;
+    }
+
+    public String getNavBarTitleColor() {
+        return navBarTitleColor;
+    }
+
+    public void setNavBarTitleColor(String navBarTitleColor) {
+        this.navBarTitleColor = navBarTitleColor;
+    }
+
+    public String getInboxBackgroundColor() {
+        return inboxBackgroundColor;
+    }
+
+    public void setInboxBackgroundColor(String inboxBackgroundColor) {
+        this.inboxBackgroundColor = inboxBackgroundColor;
+    }
+
+    public String getFirstTab() {
+        return firstTab;
+    }
+
+    public void setFirstTab(String firstTab) {
+        this.firstTab = firstTab;
+    }
+
+    public String getSecondTab() {
+        return secondTab;
+    }
+
+    public void setSecondTab(String secondTab) {
+        this.secondTab = secondTab;
+    }
+
+    public boolean isUsingTabs() {
+        return usingTabs;
+    }
+
+    public void setUsingTabs(boolean usingTabs) {
+        this.usingTabs = usingTabs;
+    }
+
+    public String getBackButtonColor() {
+        return backButtonColor;
+    }
+
+    public void setBackButtonColor(String backButtonColor) {
+        this.backButtonColor = backButtonColor;
+    }
+
+    public String getSelectedTabColor() {
+        return selectedTabColor;
+    }
+
+    public void setSelectedTabColor(String selectedTabColor) {
+        this.selectedTabColor = selectedTabColor;
+    }
+
+    public String getUnselectedTabColor() {
+        return unselectedTabColor;
+    }
+
+    public void setUnselectedTabColor(String unselectedTabColor) {
+        this.unselectedTabColor = unselectedTabColor;
+    }
+
+    public String getSelectedTabIndicatorColor() {
+        return selectedTabIndicatorColor;
+    }
+
+    public void setSelectedTabIndicatorColor(String selectedTabIndicatorColor) {
+        this.selectedTabIndicatorColor = selectedTabIndicatorColor;
+    }
+
+    public String getTabBackgroundColor() {
+        return tabBackgroundColor;
+    }
+
+    public void setTabBackgroundColor(String tabBackgroundColor) {
+        this.tabBackgroundColor = tabBackgroundColor;
     }
 }

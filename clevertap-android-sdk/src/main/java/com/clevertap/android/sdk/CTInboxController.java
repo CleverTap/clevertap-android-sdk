@@ -7,6 +7,9 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+/**
+ * Controller class which handles Users and Messages for the Notification Inbox
+ */
 class CTInboxController {
     private boolean initialized;
     private int count;

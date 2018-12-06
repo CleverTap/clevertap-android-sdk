@@ -3,10 +3,17 @@ package com.clevertap.android.sdk;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.List;
 
+
+/**
+ * Public facing model class for type of InboxMessage
+ */
 public class CTInboxMessage implements Parcelable {
     private String title;
     private String body;
@@ -18,21 +25,39 @@ public class CTInboxMessage implements Parcelable {
     private JSONObject data;
     private JSONObject customData;
     private boolean isRead;
-    private String type;
+    private CTInboxMessageType type;
+    private List<String> tags = new ArrayList<>();
+    private String bgColor;
+    private ArrayList<CTInboxMessageContent> inboxMessageContents = new ArrayList<>();
 
-    public CTInboxMessage initWithJSON(JSONObject jsonObject){
+
+    CTInboxMessage initWithJSON(JSONObject jsonObject){
         this.data = jsonObject;
         try {
             this.messageId = jsonObject.has("id") ? jsonObject.getString("id") : "";
-            this.title = jsonObject.has("title") ? jsonObject.getString("title") : "";
-            this.body = jsonObject.has("body") ? jsonObject.getString("body") : "";
-            this.imageUrl = jsonObject.has("imageUrl") ? jsonObject.getString("imageUrl") : "";
-            this.actionUrl = jsonObject.has("actionUrl") ? jsonObject.getString("actionUrl") : "";
             this.date = jsonObject.has("date") ? jsonObject.getInt("date") : -1;
-            this.expires = jsonObject.has("expires") ? jsonObject.getInt("expires") : -1;
+            this.expires = jsonObject.has("ttl") ? jsonObject.getInt("ttl") : -1;
             this.isRead = jsonObject.has("isRead") && jsonObject.getBoolean("isRead");
+            JSONArray tagsArray = jsonObject.has("tags") ? jsonObject.getJSONArray("tags") : null;
+            if(tagsArray != null){
+                for(int i=0; i< tagsArray.length(); i++){
+                    this.tags.add(tagsArray.getString(i));
+                }
+            }
+            JSONObject cellObject = jsonObject.has("cell") ? jsonObject.getJSONObject("cell") : null;
+            if(cellObject != null){
+                this.type = cellObject.has("type") ? CTInboxMessageType.fromString(cellObject.getString("type")) : CTInboxMessageType.fromString("");
+                this.bgColor = cellObject.has("bg") ? cellObject.getString("bg") : "";
+                JSONArray contentArray = cellObject.has("content") ? cellObject.getJSONArray("content") : null;
+                if(contentArray != null){
+                    for(int i=0 ; i<contentArray.length(); i++){
+                        CTInboxMessageContent ctInboxMessageContent = new CTInboxMessageContent().initWithJSON(contentArray.getJSONObject(i));
+                        this.inboxMessageContents.add(ctInboxMessageContent);
+                    }
+                }
+            }
         } catch (JSONException e) {
-            e.printStackTrace();
+            Logger.v("Unable to init CTInboxMessage with JSON - "+e.getLocalizedMessage());
         }
 
         return this;
@@ -52,7 +77,20 @@ public class CTInboxMessage implements Parcelable {
             data = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
             customData = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
             isRead = in.readByte() != 0x00;
-            type = in.readString();
+            type = (CTInboxMessageType) in.readValue(CTInboxMessageType.class.getClassLoader());
+            if (in.readByte() == 0x01) {
+                tags = new ArrayList<String>();
+                in.readList(tags, String.class.getClassLoader());
+            } else {
+                tags = null;
+            }
+            bgColor = in.readString();
+            if (in.readByte() == 0x01) {
+                inboxMessageContents = new ArrayList<CTInboxMessageContent>();
+                in.readList(inboxMessageContents, CTInboxMessageContent.class.getClassLoader());
+            } else {
+                inboxMessageContents = null;
+            }
         }catch (JSONException e){
            Logger.v("Unable to parse CTInboxMessage from parcel - "+e.getLocalizedMessage());
         }
@@ -85,7 +123,20 @@ public class CTInboxMessage implements Parcelable {
             dest.writeString(customData.toString());
         }
         dest.writeByte((byte) (isRead ? 0x01 : 0x00));
-        dest.writeString(type);
+        dest.writeValue(type);
+        if (tags == null) {
+            dest.writeByte((byte) (0x00));
+        } else {
+            dest.writeByte((byte) (0x01));
+            dest.writeList(tags);
+        }
+        dest.writeString(bgColor);
+        if (inboxMessageContents == null) {
+            dest.writeByte((byte) (0x00));
+        } else {
+            dest.writeByte((byte) (0x01));
+            dest.writeList(inboxMessageContents);
+        }
     }
 
     @SuppressWarnings("unused")
@@ -141,7 +192,19 @@ public class CTInboxMessage implements Parcelable {
         return isRead;
     }
 
-    public String getType() {
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public String getBgColor() {
+        return bgColor;
+    }
+
+    public ArrayList<CTInboxMessageContent> getInboxMessageContents() {
+        return inboxMessageContents;
+    }
+
+    public CTInboxMessageType getType() {
         return type;
     }
 

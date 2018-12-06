@@ -6,6 +6,9 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+/**
+ * User Data Access Object class for interfacing with Database
+ */
 class CTUserDAO {
     private String userId;
     private String accountId;

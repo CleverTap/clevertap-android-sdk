@@ -42,6 +42,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.net.URL;
@@ -69,7 +70,7 @@ import static android.content.Context.NOTIFICATION_SERVICE;
  * <h1>CleverTapAPI</h1>
  * This is the main CleverTapAPI class that manages the SDK instances
  */
-public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationListener,InAppNotificationActivity.InAppActivityListener, CTInAppBaseFragment.InAppListener, CTNotificationInboxListener {
+public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationListener,InAppNotificationActivity.InAppActivityListener, CTInAppBaseFragment.InAppListener, CTNotificationInboxListener, CTNotificationInboxActivity.InboxActivityListener {
 
     public enum LogLevel{
         OFF(-1),
@@ -228,7 +229,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             @Override
             public void run() {
                 try {
-                    manualInboxUpdate();
+                    manualInboxUpdate(context);
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
@@ -2299,7 +2300,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //TODO Remove after testing
-    public void manualInboxUpdate() throws JSONException {
+    public void manualInboxUpdate(Context context) throws JSONException {
         synchronized (inboxControllerLock) {
             if (this.ctInboxController == null) {
                 this.ctInboxController = CTInboxController.initWithAccountId(getAccountId(), getCleverTapID(), loadDBAdapter(context));
@@ -2308,21 +2309,29 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         this.ctInboxController.listener = new WeakReference<>(this).get();
                     }
                     this.ctInboxController.notifyInitialized();
-                    JSONObject msg1 = new JSONObject();
-                    msg1.put("id", "1");
-                    msg1.put("date", 12);
-                    msg1.put("ttl", 1);
-                    JSONObject msg2 = new JSONObject();
-                    msg2.put("id", "2");
-                    msg2.put("date", 12);
-                    msg2.put("ttl", 1);
+                    JSONObject jsonObject = new JSONObject(loadJSONFromAsset(context));
                     JSONArray inboxMessages = new JSONArray();
-                    inboxMessages.put(msg2);
-                    inboxMessages.put(msg1);
+                    inboxMessages.put(jsonObject);
                     this.ctInboxController.updateMessages(inboxMessages);
                 }
             }
         }
+    }
+
+    String loadJSONFromAsset(Context context) {
+        String json = null;
+        try {
+            InputStream is = context.getAssets().open("inbox.json");
+            int size = is.available();
+            byte[] buffer = new byte[size];
+            is.read(buffer);
+            is.close();
+            json = new String(buffer, "UTF-8");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return null;
+        }
+        return json;
     }
 
 
@@ -5013,17 +5022,24 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 if (bpMap == null)
                     throw new Exception("Failed to fetch big picture!");
 
-                style = new NotificationCompat.BigPictureStyle()
-                        .setSummaryText(notifMessage)
-                        .bigPicture(bpMap);
+                if(extras.containsKey("wzrk_nms")){
+                    String summaryText = extras.getString("wzrk_nms");
+                    style = new NotificationCompat.BigPictureStyle()
+                            .setSummaryText(summaryText)
+                            .bigPicture(bpMap);
+                }else {
+                    style = new NotificationCompat.BigPictureStyle()
+                            .setSummaryText(notifMessage)
+                            .bigPicture(bpMap);
+                }
             } catch (Throwable t) {
-                style = new NotificationCompat.BigTextStyle()
-                        .bigText(notifMessage);
+                    style = new NotificationCompat.BigTextStyle()
+                            .bigText(notifMessage);
                 getConfigLogger().verbose(getAccountId(), "Falling back to big text notification, couldn't fetch big picture", t);
             }
         } else {
-            style = new NotificationCompat.BigTextStyle()
-                    .bigText(notifMessage);
+                style = new NotificationCompat.BigTextStyle()
+                        .bigText(notifMessage);
         }
 
         int smallIcon;
@@ -5110,8 +5126,17 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     // no-op
                 }
             }
+            if(extras.containsKey("wzrk_st")){
+                nb.setSubText(extras.getString("wzrk_st"));
+            }
         } else {
             nb = new NotificationCompat.Builder(context);
+        }
+
+        if(extras.containsKey("wzrk_clr")){
+            int color = Color.parseColor(extras.getString("wzrk_clr"));
+            nb.setColor(color);
+            nb.setColorized(true);
         }
 
         nb.setContentTitle(notifTitle)
@@ -5813,7 +5838,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     if (ctInboxController != null) {
                         getConfigLogger().debug(getAccountId(), "Notification Inbox initialized");
                     } else {
-                        ctInboxController = CTInboxController.initWithAccountId(getAccountId(), getAccountId(), loadDBAdapter(context));
+                        ctInboxController = CTInboxController.initWithAccountId(getAccountId(), getCleverTapID(), loadDBAdapter(context));
+                        //TODO Add listeners
                     }
                 }
             }
@@ -5939,11 +5965,24 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     public void createNotificationInboxActivity(){
+
         CTInboxStyleConfig styleConfig = new CTInboxStyleConfig();
-        styleConfig.setTitleColor(Integer.toString(Color.BLACK));
-        styleConfig.setBodyColor(Integer.toString(Color.BLACK));
-        styleConfig.setLayoutColor(Integer.toString(Color.WHITE));
-        styleConfig.setCtaColor(Integer.toString(Color.BLUE));
+        styleConfig.setTitleColor("#000000");
+        styleConfig.setBodyColor("#000000");
+        styleConfig.setLayoutColor("#FFFFFF");
+        styleConfig.setCtaColor("#0000FF");
+        styleConfig.setUsingTabs(true);
+        styleConfig.setFirstTab("Promotions");
+        //styleConfig.setSecondTab("New Year Offers");
+        styleConfig.setInboxBackgroundColor("#C2C2C2");
+        styleConfig.setNavBarColor("#FF0000");
+        styleConfig.setNavBarTitle("Notification Inbox");
+        styleConfig.setNavBarTitleColor("#000000");
+        styleConfig.setBackButtonColor("#000000");
+        styleConfig.setSelectedTabColor("#8080FA");
+        styleConfig.setUnselectedTabColor("#3434F8");
+        styleConfig.setSelectedTabIndicatorColor("#F85734");
+        styleConfig.setTabBackgroundColor("#FBC145");
         ArrayList<CTInboxMessage> inboxMessageArrayList = getAllInboxMessages();
         Intent intent = new Intent(context,CTNotificationInboxActivity.class);
         intent.putExtra("styleConfig",styleConfig);
@@ -5986,6 +6025,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 return false;
             }
         }
+    }
+
+    @Override
+    public void messageDidShow() {
+
+    }
+
+    @Override
+    public void messageDidClick() {
+
     }
 
 }

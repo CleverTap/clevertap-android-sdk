@@ -1,8 +1,18 @@
 package com.clevertap.android.sdk;
 
+import android.text.TextUtils;
+
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+
+/**
+ * Message Data Access Object class interfacing with Database
+ */
 class CTMessageDAO {
     private String id;
     private JSONObject jsonData;
@@ -10,6 +20,7 @@ class CTMessageDAO {
     private int date;
     private int expires;
     private String userId;
+    private List<String> tags = new ArrayList<>();
 
     String getId() {
         return id;
@@ -66,15 +77,35 @@ class CTMessageDAO {
         this.userId = userId;
     }
 
+    String getTags() {
+        return TextUtils.join(",",tags);
+    }
+
+    void setTags(String tags) {
+        String[] tagsArray = tags.split(",");
+        this.tags.addAll(Arrays.asList(tagsArray));
+
+    }
+
     CTMessageDAO(){}
 
-    private CTMessageDAO(String id, JSONObject jsonData, boolean read, int date, int expires, String userId){
+    private CTMessageDAO(String id, JSONObject jsonData, boolean read, int date, int expires, String userId, JSONArray jsonArray){
         this.id = id;
         this.jsonData = jsonData;
         this.read = read;
         this.date = date;
         this.expires = expires;
         this.userId = userId;
+        if(jsonArray != null){
+            for(int i =0; i< jsonArray.length(); i++)
+            {
+                try {
+                    this.tags.add(jsonArray.getString(i));
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     static CTMessageDAO initWithJSON(JSONObject inboxMessage, String userId){
@@ -82,7 +113,9 @@ class CTMessageDAO {
             String id = inboxMessage.has("id") ? inboxMessage.getString("id") : null;
             int date = inboxMessage.has("date") ? inboxMessage.getInt("date") : -1;
             int expires = inboxMessage.has("ttl") ? inboxMessage.getInt("ttl") : -1;
-            return new CTMessageDAO(id, inboxMessage, false,date,expires,userId);
+            JSONObject cellObject = inboxMessage.has("cell") ? inboxMessage.getJSONObject("cell") : null;
+            JSONArray jsonArray = inboxMessage.has("tags") ? inboxMessage.getJSONArray("tags") : null;
+            return new CTMessageDAO(id, cellObject, false,date,expires,userId, jsonArray);
         }catch (JSONException e){
             Logger.d("Unable to parse Notification inbox message to CTMessageDao - "+e.getLocalizedMessage());
             return null;
@@ -93,10 +126,15 @@ class CTMessageDAO {
         JSONObject jsonObject = new JSONObject();
         try {
             jsonObject.put("id",this.id);
-            jsonObject.put("json",this.jsonData);
-            jsonObject.put("read",this.read);
+            jsonObject.put("cell",this.jsonData);
+            jsonObject.put("isRead",this.read);
             jsonObject.put("date",this.date);
             jsonObject.put("ttl",this.expires);
+            JSONArray jsonArray = new JSONArray();
+            for(int i=0; i<this.tags.size(); i++){
+                jsonArray.put(tags.get(i));
+            }
+            jsonObject.put("tags",jsonArray);
             return jsonObject;
         } catch (JSONException e) {
             Logger.v("Unable to convert CTMessageDao to JSON - "+e.getLocalizedMessage());
