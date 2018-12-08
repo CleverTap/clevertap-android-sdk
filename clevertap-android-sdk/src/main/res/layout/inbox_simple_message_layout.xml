@@ -4,10 +4,16 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:id="@+id/simple_message_relative_layout">
+    <FrameLayout
+        android:id="@+id/simple_message_frame_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+    </FrameLayout>
     <ImageView
         android:id="@+id/media_image"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:visibility="gone"/>
     <RelativeLayout
         android:id="@+id/body_relative_layout"
         android:layout_width="match_parent"

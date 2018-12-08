@@ -11,13 +11,13 @@ import android.widget.TextView;
 
 class CTCarouselMessageViewHolder extends RecyclerView.ViewHolder {
 
-    ViewPager imageViewPager;
+    CTCarouselViewPager imageViewPager;
     LinearLayout sliderDots;
     TextView title,message,timestamp, carouselTimestamp;
     ImageView readDot;
     Button cta1,cta2,cta3;
 
-    public CTCarouselMessageViewHolder(@NonNull View itemView) {
+    CTCarouselMessageViewHolder(@NonNull View itemView) {
         super(itemView);
 
         imageViewPager = itemView.findViewById(R.id.image_carousel_viewpager);

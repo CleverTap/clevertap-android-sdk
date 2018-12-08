@@ -14,8 +14,10 @@
             android:id="@+id/image_icon"
             android:layout_width="68dp"
             android:layout_height="68dp"
-            android:layout_marginLeft="10dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginLeft="5dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
+            android:layout_marginRight="5dp"
             android:layout_gravity="center"
             android:scaleType="fitCenter"
             android:layout_marginStart="20dp" />
@@ -53,8 +55,9 @@
         android:id="@+id/media_image"
         android:layout_below="@+id/body_relative_layout"
         android:layout_width="match_parent"
-        android:layout_height="160dp" />
+        android:layout_height="wrap_content" />
     <LinearLayout
+        android:id="@+id/timestamp_linear_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_below="@+id/media_image"
@@ -79,4 +82,57 @@
             android:layout_marginRight="20dp"
             android:layout_marginEnd="20dp" />
     </LinearLayout>
+    <View
+        android:id="@+id/div_view"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_below="@+id/timestamp_linear_layout"
+        android:background="@android:color/darker_gray"/>
+    <LinearLayout
+        android:id="@+id/cta_linear_layout"
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_below="@id/div_view"
+        android:orientation="horizontal"
+        android:weightSum="6"
+        android:background="@android:color/white">
+        <Button
+            android:id="@+id/cta_button_1"
+            android:layout_weight="2"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:textSize="14sp"
+            android:padding="2dp"
+            android:text="CTA1"
+            android:textColor="@android:color/holo_blue_light"
+            android:visibility="visible"
+            android:background="@android:color/white"/>
+        <Button
+            android:id="@+id/cta_button_2"
+            android:layout_weight="2"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:textSize="14sp"
+            android:padding="2dp"
+            android:visibility="gone"
+            android:text="CTA2"
+            android:textColor="@android:color/holo_blue_light"
+            android:background="@android:color/white"/>
+        <Button
+            android:id="@+id/cta_button_3"
+            android:layout_weight="2"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:textSize="14sp"
+            android:padding="2dp"
+            android:visibility="gone"
+            android:text="CTA3"
+            android:textColor="@android:color/holo_blue_light"
+            android:background="@android:color/white"/>
+    </LinearLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_below="@+id/cta_linear_layout"
+        android:background="@android:color/darker_gray"/>
 </RelativeLayout>

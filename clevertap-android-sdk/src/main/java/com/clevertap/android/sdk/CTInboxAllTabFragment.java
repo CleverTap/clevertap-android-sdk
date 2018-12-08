@@ -20,7 +20,7 @@ public class CTInboxAllTabFragment extends CTInboxTabBaseFragment {
         View allView = inflater.inflate(R.layout.inbox_all_tab,container,false);
         recyclerView = allView.findViewById(R.id.all_tab_recycler_view);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList);
+        inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, getActivity());
         recyclerView.setAdapter(inboxMessageAdapter);
         return allView;
     }

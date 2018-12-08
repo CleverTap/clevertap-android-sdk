@@ -211,4 +211,12 @@ public class CTInboxMessage implements Parcelable {
     public static Creator<CTInboxMessage> getCREATOR() {
         return CREATOR;
     }
+
+    public ArrayList<String> getCarouselImages(){
+        ArrayList<String> carouselImages = new ArrayList<>();
+        for(CTInboxMessageContent ctInboxMessageContent: getInboxMessageContents()){
+            carouselImages.add(ctInboxMessageContent.getMedia());
+        }
+        return carouselImages;
+    }
 }
