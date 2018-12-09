@@ -6,6 +6,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:scaleType="fitXY"
+        android:src="@drawable/ct_audio"
         android:adjustViewBounds="true"
         android:id="@+id/imageView" />
 </LinearLayout>

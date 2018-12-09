@@ -64,14 +64,35 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
         switch (this.inboxMessages.get(i).getType()){
             case SimpleMessage :
                 view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.inbox_simple_message_layout,viewGroup,false);
-                return new CTSimpleMessageViewHolder(view);
+                CTSimpleMessageViewHolder ctSimpleMessageViewHolder = new CTSimpleMessageViewHolder(view);
+                return ctSimpleMessageViewHolder;
             case IconMessage:
                 view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.inbox_icon_message_layout,viewGroup,false);
-                return new CTIconMessageViewHolder(view);
+                CTIconMessageViewHolder ctIconMessageViewHolder = new CTIconMessageViewHolder(view);
+                return ctIconMessageViewHolder;
             case CarouselMessage:
             case CarouselImageMessage:
                 view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.inbox_carousel_layout,viewGroup,false);
-                return new CTCarouselMessageViewHolder(view);
+                CTCarouselMessageViewHolder ctCarouselMessageViewHolder = new CTCarouselMessageViewHolder(view);
+                LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) ctCarouselMessageViewHolder.imageViewPager.getLayoutParams();
+                inboxMessage = this.inboxMessages.get(i);
+                CTCarouselViewPagerAdapter carouselViewPagerAdapter = new CTCarouselViewPagerAdapter(context,inboxMessage.getCarouselImages(),layoutParams);
+                ctCarouselMessageViewHolder.imageViewPager.setAdapter(carouselViewPagerAdapter);
+                dotsCount = carouselViewPagerAdapter.getCount();
+                dots = new ImageView[dotsCount];
+                for(int k=0;k<dotsCount;k++){
+                    dots[k] = new ImageView(context);
+                    dots[k].setVisibility(View.VISIBLE);
+                    dots[k].setImageDrawable(context.getApplicationContext().getResources().getDrawable(R.drawable.unselected_dot));
+                    LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+                    params.setMargins(8, 0, 8, 0);
+                    params.gravity = Gravity.CENTER;
+                    ctCarouselMessageViewHolder.sliderDots.addView(dots[k],params);
+                }
+                dots[0].setImageDrawable(context.getApplicationContext().getResources().getDrawable(R.drawable.selected_dot));
+                CarouselPageChangeListener carouselPageChangeListener = new CarouselPageChangeListener(ctCarouselMessageViewHolder);
+                ctCarouselMessageViewHolder.imageViewPager.addOnPageChangeListener(carouselPageChangeListener);
+                return ctCarouselMessageViewHolder;
         }
         return null;
     }
@@ -242,10 +263,68 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                             //TODO logging
                         }
                     }
-                    LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) ((CTCarouselMessageViewHolder)viewHolder).imageViewPager.getLayoutParams();
-                    CTCarouselViewPagerAdapter carouselViewPagerAdapter = new CTCarouselViewPagerAdapter(context,inboxMessage.getCarouselImages(),layoutParams);
-                    ((CTCarouselMessageViewHolder)viewHolder).imageViewPager.setAdapter(carouselViewPagerAdapter);
-                    dotsCount = carouselViewPagerAdapter.getCount();
+                    ((CTCarouselMessageViewHolder)viewHolder).carouselTimestamp.setVisibility(View.GONE);
+                    ((CTCarouselMessageViewHolder)viewHolder).carouselReadDot.setVisibility(View.GONE);
+
+                    break;
+                case CarouselImageMessage:
+
+                    ((CTCarouselMessageViewHolder)viewHolder).title.setVisibility(View.GONE);
+                    ((CTCarouselMessageViewHolder)viewHolder).message.setVisibility(View.GONE);
+                    @SuppressLint("SimpleDateFormat") SimpleDateFormat carouselImageSdf = new SimpleDateFormat("dd/MMM");
+                    String carouselImageMessagetimestamp = carouselImageSdf.format(new Date(inboxMessage.getDate()));
+                    ((CTCarouselMessageViewHolder)viewHolder).carouselTimestamp.setText(carouselImageMessagetimestamp);
+                    if(inboxMessage.isRead()){
+                        ((CTCarouselMessageViewHolder)viewHolder).carouselReadDot.setVisibility(View.GONE);
+                    }else{
+                        ((CTCarouselMessageViewHolder)viewHolder).carouselReadDot.setVisibility(View.VISIBLE);
+                    }
+                    ((CTCarouselMessageViewHolder)viewHolder).timestamp.setVisibility(View.GONE);
+                    ((CTCarouselMessageViewHolder)viewHolder).readDot.setVisibility(View.GONE);
+                    JSONArray carouselImagelinksArray = inboxMessage.getInboxMessageContents().get(0).getLinks();
+                    if(carouselImagelinksArray != null){
+                        int size = carouselImagelinksArray.length();
+                        JSONObject cta1Object,cta2Object,cta3Object;
+                        try {
+                            switch (size){
+
+                                case 1:
+                                    cta1Object = carouselImagelinksArray.getJSONObject(0);
+                                    ((CTCarouselMessageViewHolder)viewHolder).cta1.setVisibility(View.VISIBLE);
+                                    ((CTCarouselMessageViewHolder)viewHolder).cta1.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta1Object));
+                                    hideTwoButtons(((CTCarouselMessageViewHolder)viewHolder).cta1,((CTCarouselMessageViewHolder)viewHolder).cta2,((CTCarouselMessageViewHolder)viewHolder).cta3);
+                                    break;
+                                case 2:
+                                    cta1Object = carouselImagelinksArray.getJSONObject(0);
+                                    ((CTCarouselMessageViewHolder)viewHolder).cta1.setVisibility(View.VISIBLE);
+                                    ((CTCarouselMessageViewHolder)viewHolder).cta1.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta1Object));
+                                    cta2Object = carouselImagelinksArray.getJSONObject(1);
+                                    ((CTCarouselMessageViewHolder)viewHolder).cta2.setVisibility(View.VISIBLE);
+                                    ((CTCarouselMessageViewHolder)viewHolder).cta2.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta2Object));
+                                    hideOneButton(((CTCarouselMessageViewHolder)viewHolder).cta1,((CTCarouselMessageViewHolder)viewHolder).cta2,((CTCarouselMessageViewHolder)viewHolder).cta3);;
+                                    break;
+                                case 3:
+                                    cta1Object = carouselImagelinksArray.getJSONObject(0);
+                                    ((CTCarouselMessageViewHolder)viewHolder).cta1.setVisibility(View.VISIBLE);
+                                    ((CTCarouselMessageViewHolder)viewHolder).cta1.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta1Object));
+                                    cta2Object = carouselImagelinksArray.getJSONObject(1);
+                                    ((CTCarouselMessageViewHolder)viewHolder).cta2.setVisibility(View.VISIBLE);
+                                    ((CTCarouselMessageViewHolder)viewHolder).cta2.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta2Object));
+                                    cta3Object = carouselImagelinksArray.getJSONObject(2);
+                                    ((CTCarouselMessageViewHolder)viewHolder).cta3.setVisibility(View.VISIBLE);
+                                    ((CTCarouselMessageViewHolder)viewHolder).cta3.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta3Object));
+                                    break;
+                            }
+                        }catch (JSONException e){
+                            //TODO logging
+                        }
+                    }
+                    ((CTCarouselMessageViewHolder)viewHolder).carouselTimestamp.setVisibility(View.GONE);
+                    ((CTCarouselMessageViewHolder)viewHolder).carouselReadDot.setVisibility(View.GONE);
+                    LinearLayout.LayoutParams layoutImageParams = (LinearLayout.LayoutParams) ((CTCarouselMessageViewHolder)viewHolder).imageViewPager.getLayoutParams();
+                    CTCarouselViewPagerAdapter carouselImageViewPagerAdapter = new CTCarouselViewPagerAdapter(context,inboxMessage.getCarouselImages(),layoutImageParams);
+                    ((CTCarouselMessageViewHolder)viewHolder).imageViewPager.setAdapter(carouselImageViewPagerAdapter);
+                    dotsCount = carouselImageViewPagerAdapter.getCount();
                     dots = new ImageView[dotsCount];
                     for(int k=0;k<dotsCount;k++){
                         dots[k] = new ImageView(context);
@@ -257,31 +336,8 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                         ((CTCarouselMessageViewHolder)viewHolder).sliderDots.addView(dots[k],params);
                     }
                     dots[0].setImageDrawable(context.getApplicationContext().getResources().getDrawable(R.drawable.selected_dot));
-                    ((CTCarouselMessageViewHolder)viewHolder).imageViewPager.addOnPageChangeListener(new ViewPager.OnPageChangeListener() {
-                        @Override
-                        public void onPageScrolled(int i, float v, int i1) {
-
-                        }
-
-                        @Override
-                        public void onPageSelected(int position) {
-                            for(int i = 0; i< dotsCount; i++){
-                                dots[i].setImageDrawable(context.getApplicationContext().getResources().getDrawable(R.drawable.unselected_dot));
-                                ((CTCarouselMessageViewHolder)viewHolder).title.setText(inboxMessage.getInboxMessageContents().get(i).getTitle());
-                                ((CTCarouselMessageViewHolder)viewHolder).message.setText(inboxMessage.getInboxMessageContents().get(i).getMessage());
-                            }
-                            dots[position].setImageDrawable(context.getApplicationContext().getResources().getDrawable(R.drawable.selected_dot));
-
-                        }
-
-                        @Override
-                        public void onPageScrollStateChanged(int i) {
-
-                        }
-                    });
-                    break;
-                case CarouselImageMessage:
-
+                    CarouselPageChangeListener carouselImagePageChangeListener = new CarouselPageChangeListener((CTCarouselMessageViewHolder)viewHolder);
+                    ((CTCarouselMessageViewHolder)viewHolder).imageViewPager.addOnPageChangeListener(carouselImagePageChangeListener);
                     break;
             }
         }
@@ -314,6 +370,31 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
     }
 
 
+class CarouselPageChangeListener implements ViewPager.OnPageChangeListener{
 
+        RecyclerView.ViewHolder viewHolder;
+        CarouselPageChangeListener(RecyclerView.ViewHolder viewHolder){
+            this.viewHolder = viewHolder;
+        }
+    @Override
+    public void onPageScrolled(int i, float v, int i1) {
+
+    }
+
+    @Override
+    public void onPageSelected(int position) {
+        for(int i = 0; i< dotsCount; i++){
+            dots[i].setImageDrawable(context.getApplicationContext().getResources().getDrawable(R.drawable.unselected_dot));
+        }
+        dots[position].setImageDrawable(context.getApplicationContext().getResources().getDrawable(R.drawable.selected_dot));
+        ((CTCarouselMessageViewHolder)viewHolder).title.setText(inboxMessage.getInboxMessageContents().get(position).getTitle());
+        ((CTCarouselMessageViewHolder)viewHolder).message.setText(inboxMessage.getInboxMessageContents().get(position).getMessage());
+    }
+
+    @Override
+    public void onPageScrollStateChanged(int i) {
+
+    }
+}
 
 }

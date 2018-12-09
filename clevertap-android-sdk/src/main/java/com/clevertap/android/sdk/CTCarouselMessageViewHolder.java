@@ -14,7 +14,7 @@ class CTCarouselMessageViewHolder extends RecyclerView.ViewHolder {
     CTCarouselViewPager imageViewPager;
     LinearLayout sliderDots;
     TextView title,message,timestamp, carouselTimestamp;
-    ImageView readDot;
+    ImageView readDot,carouselReadDot;
     Button cta1,cta2,cta3;
 
     CTCarouselMessageViewHolder(@NonNull View itemView) {
@@ -27,6 +27,7 @@ class CTCarouselMessageViewHolder extends RecyclerView.ViewHolder {
         timestamp = itemView.findViewById(R.id.timestamp);
         carouselTimestamp = itemView.findViewById(R.id.carousel_timestamp);
         readDot = itemView.findViewById(R.id.read_circle);
+        carouselReadDot = itemView.findViewById(R.id.carousel_read_circle);
         cta1 = itemView.findViewById(R.id.cta_button_1);
         cta2 = itemView.findViewById(R.id.cta_button_2);
         cta3 = itemView.findViewById(R.id.cta_button_3);
