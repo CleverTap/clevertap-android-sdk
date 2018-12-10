@@ -250,7 +250,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (instances == null) {
             CleverTapAPI.createInstanceIfAvailable(activity, null);
         }
-        CleverTapAPI.setAppForeground(true);
 
         if (instances == null) {
             Logger.v("Instances is null in onActivityCreated!");
@@ -509,9 +508,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private void activityResumed(Activity activity) {
         getConfigLogger().verbose(getAccountId(), "App in foreground");
         checkTimeoutSession();
+        if(!isAppLaunchPushed()) {
+            pushAppLaunchedEvent();
+        }
         if (!inCurrentSession()) {
             onTokenRefresh();
-            pushAppLaunchedEvent();
             pushInitialEventsAsync();
         }
         checkPendingInAppNotifications(activity);
@@ -1213,10 +1214,19 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
-    private boolean shouldDeferProcessingEvent(int eventType){
+    private boolean shouldDeferProcessingEvent(JSONObject event,int eventType){
         //noinspection SimplifiableIfStatement
         if (getConfig().isCreatedPostAppLaunch()){
             return false;
+        }
+        if (event.has("evtName")) {
+            try {
+                if(event.getString("evtName").equals(Constants.NOTIFICATION_CLICKED_EVENT_NAME)){
+                    return false;
+                }
+            } catch (JSONException e) {
+                //no-op
+            }
         }
         return (eventType == Constants.RAISED_EVENT && !isAppLaunchPushed());
     }
@@ -1231,18 +1241,20 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     getConfigLogger().debug(getAccountId(), "Current user is opted out dropping event: " + eventString);
                     return;
                 }
-                if(shouldDeferProcessingEvent(eventType)){
-                    getConfigLogger().debug(getAccountId(),"App Launched not yet processed, re-queuing event "+ event);
+                if(shouldDeferProcessingEvent(event,eventType)){
+                    getConfigLogger().debug(getAccountId(),"App Launched not yet processed, re-queuing event "+ event + "after 2s");
                     getHandlerUsingMainLooper().postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            queueEvent(context,event,eventType);
+                            lazyCreateSession(context);
+                            addToQueue(context, event, eventType);
                         }
-                    },300);
+                    },2000);
                     return;
+                }else {
+                    lazyCreateSession(context);
+                    addToQueue(context, event, eventType);
                 }
-                lazyCreateSession(context);
-                addToQueue(context, event, eventType);
             }
         });
     }
@@ -1250,7 +1262,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     //Session
     private void lazyCreateSession(Context context) {
         if (!inCurrentSession()) {
-            pushAppLaunchedEvent();
             createSession(context);
             pushInitialEventsAsync();
         }
