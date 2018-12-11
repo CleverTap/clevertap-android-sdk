@@ -225,44 +225,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     }else{
                         ((CTCarouselMessageViewHolder)viewHolder).readDot.setVisibility(View.VISIBLE);
                     }
-                    JSONArray carousellinksArray = inboxMessage.getInboxMessageContents().get(0).getLinks();
-                    if(carousellinksArray != null){
-                        int size = carousellinksArray.length();
-                        JSONObject cta1Object,cta2Object,cta3Object;
-                        try {
-                            switch (size){
-
-                                case 1:
-                                    cta1Object = carousellinksArray.getJSONObject(0);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta1.setVisibility(View.VISIBLE);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta1.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta1Object));
-                                    hideTwoButtons(((CTCarouselMessageViewHolder)viewHolder).cta1,((CTCarouselMessageViewHolder)viewHolder).cta2,((CTCarouselMessageViewHolder)viewHolder).cta3);
-                                    break;
-                                case 2:
-                                    cta1Object = carousellinksArray.getJSONObject(0);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta1.setVisibility(View.VISIBLE);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta1.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta1Object));
-                                    cta2Object = carousellinksArray.getJSONObject(1);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta2.setVisibility(View.VISIBLE);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta2.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta2Object));
-                                    hideOneButton(((CTCarouselMessageViewHolder)viewHolder).cta1,((CTCarouselMessageViewHolder)viewHolder).cta2,((CTCarouselMessageViewHolder)viewHolder).cta3);;
-                                    break;
-                                case 3:
-                                    cta1Object = carousellinksArray.getJSONObject(0);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta1.setVisibility(View.VISIBLE);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta1.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta1Object));
-                                    cta2Object = carousellinksArray.getJSONObject(1);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta2.setVisibility(View.VISIBLE);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta2.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta2Object));
-                                    cta3Object = carousellinksArray.getJSONObject(2);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta3.setVisibility(View.VISIBLE);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta3.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta3Object));
-                                    break;
-                            }
-                        }catch (JSONException e){
-                            //TODO logging
-                        }
-                    }
                     ((CTCarouselMessageViewHolder)viewHolder).carouselTimestamp.setVisibility(View.GONE);
                     ((CTCarouselMessageViewHolder)viewHolder).carouselReadDot.setVisibility(View.GONE);
 
@@ -281,44 +243,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     }
                     ((CTCarouselMessageViewHolder)viewHolder).timestamp.setVisibility(View.GONE);
                     ((CTCarouselMessageViewHolder)viewHolder).readDot.setVisibility(View.GONE);
-                    JSONArray carouselImagelinksArray = inboxMessage.getInboxMessageContents().get(0).getLinks();
-                    if(carouselImagelinksArray != null){
-                        int size = carouselImagelinksArray.length();
-                        JSONObject cta1Object,cta2Object,cta3Object;
-                        try {
-                            switch (size){
-
-                                case 1:
-                                    cta1Object = carouselImagelinksArray.getJSONObject(0);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta1.setVisibility(View.VISIBLE);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta1.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta1Object));
-                                    hideTwoButtons(((CTCarouselMessageViewHolder)viewHolder).cta1,((CTCarouselMessageViewHolder)viewHolder).cta2,((CTCarouselMessageViewHolder)viewHolder).cta3);
-                                    break;
-                                case 2:
-                                    cta1Object = carouselImagelinksArray.getJSONObject(0);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta1.setVisibility(View.VISIBLE);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta1.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta1Object));
-                                    cta2Object = carouselImagelinksArray.getJSONObject(1);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta2.setVisibility(View.VISIBLE);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta2.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta2Object));
-                                    hideOneButton(((CTCarouselMessageViewHolder)viewHolder).cta1,((CTCarouselMessageViewHolder)viewHolder).cta2,((CTCarouselMessageViewHolder)viewHolder).cta3);;
-                                    break;
-                                case 3:
-                                    cta1Object = carouselImagelinksArray.getJSONObject(0);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta1.setVisibility(View.VISIBLE);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta1.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta1Object));
-                                    cta2Object = carouselImagelinksArray.getJSONObject(1);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta2.setVisibility(View.VISIBLE);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta2.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta2Object));
-                                    cta3Object = carouselImagelinksArray.getJSONObject(2);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta3.setVisibility(View.VISIBLE);
-                                    ((CTCarouselMessageViewHolder)viewHolder).cta3.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta3Object));
-                                    break;
-                            }
-                        }catch (JSONException e){
-                            //TODO logging
-                        }
-                    }
                     ((CTCarouselMessageViewHolder)viewHolder).carouselTimestamp.setVisibility(View.GONE);
                     ((CTCarouselMessageViewHolder)viewHolder).carouselReadDot.setVisibility(View.GONE);
                     LinearLayout.LayoutParams layoutImageParams = (LinearLayout.LayoutParams) ((CTCarouselMessageViewHolder)viewHolder).imageViewPager.getLayoutParams();
