@@ -1,5 +1,8 @@
 ## CHANGE LOG
 
+### Version 3.3.4 (December 11, 2018)
+* Fixes the bug which raised `App Launched` event in some cases where an event was pushed from the background
+
 ### Version 3.3.3 (November 28, 2018)
 * Fixes the bug which caused CTA buttons to not open the mentioned deeplink
 

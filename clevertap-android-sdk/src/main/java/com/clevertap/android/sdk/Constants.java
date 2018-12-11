@@ -92,6 +92,7 @@ public class Constants {
     static final String KEY_COUNTS_PER_INAPP = "counts_per_inapp";
     static final String INAPP_ID_IN_PAYLOAD = "ti";
     static final int LOCATION_PING_INTERVAL_IN_SECONDS = 10;
+    static final String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME};
 
     /**
      * Profile command constants.

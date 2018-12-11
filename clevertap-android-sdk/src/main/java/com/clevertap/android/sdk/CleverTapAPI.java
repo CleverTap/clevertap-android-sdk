@@ -1221,7 +1221,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
         if (event.has("evtName")) {
             try {
-                if(event.getString("evtName").equals(Constants.NOTIFICATION_CLICKED_EVENT_NAME)){
+                if(Arrays.asList(Constants.SYSTEM_EVENTS).contains(event.getString("evtName"))){
                     return false;
                 }
             } catch (JSONException e) {
@@ -1246,11 +1246,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     getHandlerUsingMainLooper().postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            lazyCreateSession(context);
-                            addToQueue(context, event, eventType);
+                            postAsyncSafely("queueEventWithDelay", new Runnable() {
+                                @Override
+                                public void run() {
+                                    lazyCreateSession(context);
+                                    addToQueue(context, event, eventType);
+                                }
+                            });
                         }
                     },2000);
-                    return;
                 }else {
                     lazyCreateSession(context);
                     addToQueue(context, event, eventType);
