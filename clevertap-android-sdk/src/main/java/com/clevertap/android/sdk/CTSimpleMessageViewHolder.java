@@ -9,7 +9,6 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
-import com.google.android.exoplayer2.ui.PlayerView;
 
 class CTSimpleMessageViewHolder extends RecyclerView.ViewHolder {
 
@@ -20,11 +19,10 @@ class CTSimpleMessageViewHolder extends RecyclerView.ViewHolder {
     Button cta1,cta2,cta3;
     RelativeLayout simpleMessageRelativeLayout;
     FrameLayout simpleMessageFrameLayout;
-    PlayerView playerView;
 
     CTSimpleMessageViewHolder(@NonNull View itemView) {
         super(itemView);
-
+        itemView.setTag(this);
         title = itemView.findViewById(R.id.messageTitle);
         message = itemView.findViewById(R.id.messageText);
         timestamp = itemView.findViewById(R.id.timestamp);
@@ -35,8 +33,5 @@ class CTSimpleMessageViewHolder extends RecyclerView.ViewHolder {
         mediaImage = itemView.findViewById(R.id.media_image);
         simpleMessageRelativeLayout = itemView.findViewById(R.id.simple_message_relative_layout);
         simpleMessageFrameLayout = itemView.findViewById(R.id.simple_message_frame_layout);
-        playerView = new PlayerView(simpleMessageFrameLayout.getContext());
-        playerView.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.WRAP_CONTENT));
-        simpleMessageFrameLayout.addView(playerView);
     }
 }

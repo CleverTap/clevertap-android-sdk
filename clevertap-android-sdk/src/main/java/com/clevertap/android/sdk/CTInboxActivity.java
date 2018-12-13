@@ -5,11 +5,16 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.os.Parcelable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.DividerItemDecoration;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.LinearLayout;
@@ -18,7 +23,7 @@ import android.widget.TableLayout;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
-public class CTNotificationInboxActivity extends FragmentActivity {
+public class CTInboxActivity extends FragmentActivity {
     interface InboxActivityListener{
         void messageDidShow();
         void messageDidClick();
@@ -29,6 +34,10 @@ public class CTNotificationInboxActivity extends FragmentActivity {
     private CTInboxStyleConfig styleConfig;
     private WeakReference<InboxActivityListener> listenerWeakReference;
     private LinearLayout linearLayout;
+    private ExoPlayerRecyclerView recyclerView;
+    private CTInboxMessageAdapter inboxMessageAdapter;
+    private boolean firstTime = true;
+    private ViewPager viewPager;
 
     void setListener(InboxActivityListener listener) {
         listenerWeakReference = new WeakReference<>(listener);
@@ -67,6 +76,7 @@ public class CTNotificationInboxActivity extends FragmentActivity {
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         toolbar.setTitle(styleConfig.getNavBarTitle());
+        toolbar.setTitleTextColor(Color.parseColor(styleConfig.getNavBarTitleColor()));
         toolbar.setBackgroundColor(Color.parseColor(styleConfig.getNavBarColor()));
         Drawable drawable = getResources().getDrawable(R.drawable.ic_arrow_back_white_24dp);
         drawable.setColorFilter(Color.parseColor(styleConfig.getBackButtonColor()),PorterDuff.Mode.SRC_IN);
@@ -80,8 +90,8 @@ public class CTNotificationInboxActivity extends FragmentActivity {
 
         linearLayout = findViewById(R.id.inbox_linear_layout);
         TabLayout tabLayout = linearLayout.findViewById(R.id.tab_layout);
+        viewPager = linearLayout.findViewById(R.id.view_pager);
         if(styleConfig.isUsingTabs()){
-            ViewPager viewPager = linearLayout.findViewById(R.id.view_pager);
             CTInboxTabAdapter inboxTabAdapter = new CTInboxTabAdapter(getSupportFragmentManager());
             tabLayout.setVisibility(View.VISIBLE);
             tabLayout.setSelectedTabIndicatorColor(Color.parseColor(styleConfig.getSelectedTabIndicatorColor()));
@@ -111,8 +121,28 @@ public class CTNotificationInboxActivity extends FragmentActivity {
             viewPager.setAdapter(inboxTabAdapter);
             tabLayout.setupWithViewPager(viewPager);
         }else{
+            viewPager.setVisibility(View.GONE);
             tabLayout.setVisibility(View.GONE);
-            //TODO
+            recyclerView = findViewById(R.id.activity_recycler_view);
+            LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+            recyclerView.setLayoutManager(linearLayoutManager);
+            DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
+                    linearLayoutManager.getOrientation());
+            recyclerView.addItemDecoration(dividerItemDecoration);
+            recyclerView.setItemAnimator(new DefaultItemAnimator());
+            recyclerView.setVideoInfoList(inboxMessageArrayList);
+            inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, this,recyclerView);
+            recyclerView.setAdapter(inboxMessageAdapter);
+            inboxMessageAdapter.notifyDataSetChanged();
+            if (firstTime) {
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        recyclerView.playVideo();
+                    }
+                },1000);
+                firstTime = false;
+            }
         }
     }
 

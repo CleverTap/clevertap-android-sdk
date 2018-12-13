@@ -4,23 +4,29 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:id="@+id/simple_message_relative_layout">
-    <FrameLayout
-        android:id="@+id/simple_message_frame_layout"
+    <RelativeLayout
+        android:id="@+id/media_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
-    </FrameLayout>
-    <ImageView
-        android:id="@+id/media_image"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:visibility="gone"/>
+        <FrameLayout
+            android:id="@+id/simple_message_frame_layout"
+            android:layout_width="match_parent"
+            android:visibility="gone"
+            android:layout_height="wrap_content">
+        </FrameLayout>
+        <ImageView
+            android:id="@+id/media_image"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"/>
+    </RelativeLayout>
     <RelativeLayout
         android:id="@+id/body_relative_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="@android:color/white"
-        android:layout_below="@+id/media_image">
+        android:layout_below="@+id/media_layout">
         <TextView
             android:id="@+id/messageTitle"
             android:layout_width="match_parent"

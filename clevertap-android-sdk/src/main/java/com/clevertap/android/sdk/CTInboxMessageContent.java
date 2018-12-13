@@ -16,6 +16,7 @@ public class CTInboxMessageContent implements Parcelable {
     private String actionUrl;
     private String icon;
     private JSONArray links;
+    private String contentType;
 
     CTInboxMessageContent(){}
 
@@ -24,7 +25,12 @@ public class CTInboxMessageContent implements Parcelable {
             this.title = contentObject.has("title") ? contentObject.getString("title") : "";
             this.message = contentObject.has("message") ? contentObject.getString("message") : "";
             this.icon = contentObject.has("icon") ? contentObject.getString("icon") : "";
-            this.media = contentObject.has("media") ? contentObject.getString("media") : "";
+            JSONObject mediaObject = contentObject.has("media") ? contentObject.getJSONObject("media") : null;
+            if(mediaObject != null){
+                this.media = mediaObject.has("mediaUrl") ? mediaObject.getString("mediaUrl") : "";
+                this.contentType = mediaObject.has("type") ? mediaObject.getString("type") : "";
+            }
+
             JSONObject action = contentObject.has("action") ? contentObject.getJSONObject("action") : null;
             if(action != null){
                 this.actionType = action.has("type") ? action.getString("type") : "";
@@ -53,6 +59,7 @@ public class CTInboxMessageContent implements Parcelable {
         } catch (JSONException e) {
             Logger.v("Unable to init CTInboxMessageContent with Parcel - "+e.getLocalizedMessage());
         }
+        contentType = in.readString();
     }
 
     @Override
@@ -74,6 +81,7 @@ public class CTInboxMessageContent implements Parcelable {
             dest.writeByte((byte) (0x01));
             dest.writeString(links.toString());
         }
+        dest.writeString(contentType);
     }
 
     @SuppressWarnings("unused")
@@ -175,5 +183,24 @@ public class CTInboxMessageContent implements Parcelable {
             Logger.v("Unable to get Link URL with JSON - "+e.getLocalizedMessage());
             return null;
         }
+    }
+
+    public String getContentType() {
+        return contentType;
+    }
+
+    public boolean mediaIsImage() {
+        String contentType = this.getContentType();
+        return contentType != null && this.media != null && contentType.startsWith("image") && !contentType.equals("image/gif");
+    }
+
+    public boolean mediaIsGIF () {
+        String contentType = this.getContentType();
+        return contentType != null && this.media != null && contentType.equals("image/gif");
+    }
+
+    public boolean mediaIsVideo () {
+        String contentType = this.getContentType();
+        return contentType != null && this.media != null && contentType.startsWith("video");
     }
 }

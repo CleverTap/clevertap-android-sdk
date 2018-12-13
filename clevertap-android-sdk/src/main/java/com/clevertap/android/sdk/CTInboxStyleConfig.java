@@ -15,14 +15,26 @@ public class CTInboxStyleConfig implements Parcelable {
     private String inboxBackgroundColor;
     private String firstTab;
     private String secondTab;
-    private boolean usingTabs;//TODO Use string array for tab names to use internally
+    private boolean usingTabs;
     private String backButtonColor;
     private String selectedTabColor;
     private String unselectedTabColor;
     private String selectedTabIndicatorColor;
     private String tabBackgroundColor;
 
-    CTInboxStyleConfig(){};
+    public CTInboxStyleConfig(){
+        this.navBarColor = "#FFFFFF";
+        this.navBarTitle = "App Inbox";
+        this.navBarTitleColor = "#333333";
+        this.inboxBackgroundColor = "#D3D4DA";
+        this.firstTab = "";
+        this.secondTab = "";
+        this.backButtonColor = "#333333";
+        this.selectedTabColor = "#1C84FE";
+        this.unselectedTabColor = "#808080";
+        this.selectedTabIndicatorColor = "#1C84FE";
+        this.tabBackgroundColor = "#FFFFFF";
+    };
 
     protected CTInboxStyleConfig(Parcel in) {
         titleColor = in.readString();
@@ -161,12 +173,12 @@ public class CTInboxStyleConfig implements Parcelable {
         this.secondTab = secondTab;
     }
 
-    public boolean isUsingTabs() {
-        return usingTabs;
-    }
-
-    public void setUsingTabs(boolean usingTabs) {
-        this.usingTabs = usingTabs;
+    boolean isUsingTabs() {
+        if(firstTab.isEmpty() || secondTab.isEmpty()) {
+            return false;
+        }else{
+            return true;
+        }
     }
 
     public String getBackButtonColor() {

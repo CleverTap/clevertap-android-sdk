@@ -9,12 +9,14 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -28,6 +30,8 @@ import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
+import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
+import com.google.android.exoplayer2.ui.PlayerView;
 import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
@@ -51,10 +55,36 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
     private int dotsCount;
     private ImageView[] dots;
     private CTInboxMessage inboxMessage;
+    private ExoPlayerRecyclerView recyclerView;
+    PlayerView playerView;
 
-    CTInboxMessageAdapter(ArrayList<CTInboxMessage> inboxMessages, Activity activity){
+    CTInboxMessageAdapter(ArrayList<CTInboxMessage> inboxMessages, Activity activity, ExoPlayerRecyclerView recyclerView){
         this.inboxMessages = inboxMessages;
         this.context = activity;
+        this.recyclerView = recyclerView;
+//        if (recyclerView.getLayoutManager() instanceof LinearLayoutManager) {
+//            final LinearLayoutManager linearLayoutManager = (LinearLayoutManager) this.recyclerView.getLayoutManager();
+//
+//            this.recyclerView.setOnScrollListener(new RecyclerView.OnScrollListener() {
+//                @Override
+//                public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
+//                    super.onScrollStateChanged(recyclerView, newState);
+//                }
+//
+//                @Override
+//                public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
+//                    super.onScrolled(recyclerView, dx, dy);
+//                    int position = -1;
+//                    if (linearLayoutManager != null) {
+//                        position = linearLayoutManager.findFirstCompletelyVisibleItemPosition();
+//                    }
+//                    if(player!=null){
+//                        playerView.getTag()
+//                        player.stop();
+//                    }
+//                }
+//            });
+//        }
     }
 
     @NonNull
@@ -105,9 +135,8 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                 case SimpleMessage:
                     ((CTSimpleMessageViewHolder)viewHolder).title.setText(inboxMessage.getInboxMessageContents().get(0).getTitle());
                     ((CTSimpleMessageViewHolder)viewHolder).message.setText(inboxMessage.getInboxMessageContents().get(0).getMessage());
-                    @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("dd/MMM");
-                    String timestamp = sdf.format(new Date(inboxMessage.getDate()));
-                    ((CTSimpleMessageViewHolder)viewHolder).timestamp.setText(timestamp);
+                    String displayTimestamp  = calculateDisplayTimestamp(inboxMessage.getDate());
+                    ((CTSimpleMessageViewHolder)viewHolder).timestamp.setText(displayTimestamp);
                     if(inboxMessage.isRead()){
                         ((CTSimpleMessageViewHolder)viewHolder).readDot.setVisibility(View.GONE);
                     }else{
@@ -148,20 +177,30 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                 break;
                             }
                         }catch (JSONException e){
-                            //TODO logging
+                            Logger.d("Error parsing CTA JSON - "+e.getLocalizedMessage());
                         }
                     }
-                    ((CTSimpleMessageViewHolder)viewHolder).mediaImage.setVisibility(View.VISIBLE);
-                    Glide.with(((CTSimpleMessageViewHolder)viewHolder).mediaImage.getContext())
-                            .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
-                            .into(((CTSimpleMessageViewHolder)viewHolder).mediaImage);
+                    if(inboxMessage.getInboxMessageContents().get(0).mediaIsImage()) {
+                        ((CTSimpleMessageViewHolder)viewHolder).mediaImage.setVisibility(View.VISIBLE);
+                        Glide.with(((CTSimpleMessageViewHolder)viewHolder).mediaImage.getContext())
+                                .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
+                                .into(((CTSimpleMessageViewHolder)viewHolder).mediaImage);
+                    } else if(inboxMessage.getInboxMessageContents().get(0).mediaIsGIF()){
+                        ((CTSimpleMessageViewHolder)viewHolder).mediaImage.setVisibility(View.VISIBLE);
+                        Glide.with(((CTSimpleMessageViewHolder)viewHolder).mediaImage.getContext())
+                                .asGif()
+                                .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
+                                .into(((CTSimpleMessageViewHolder)viewHolder).mediaImage);
+                    }else if(inboxMessage.getInboxMessageContents().get(0).mediaIsVideo()) {
+                        //The below method adds videos to the respective cells but autoplay/pause on scroll needs to be added
+                        addVideoView(inboxMessage.getType(),viewHolder, context,i);
+                    }
                     break;
                 case IconMessage:
                     ((CTIconMessageViewHolder)viewHolder).title.setText(inboxMessage.getInboxMessageContents().get(0).getTitle());
                     ((CTIconMessageViewHolder)viewHolder).message.setText(inboxMessage.getInboxMessageContents().get(0).getMessage());
-                    @SuppressLint("SimpleDateFormat") SimpleDateFormat iconSdf = new SimpleDateFormat("dd/MMM");
-                    String iconTimestamp = iconSdf.format(new Date(inboxMessage.getDate()));
-                    ((CTIconMessageViewHolder)viewHolder).timestamp.setText(iconTimestamp);
+                    String iconDisplayTimestamp  = calculateDisplayTimestamp(inboxMessage.getDate());
+                    ((CTIconMessageViewHolder)viewHolder).timestamp.setText(iconDisplayTimestamp);
                     if(inboxMessage.isRead()){
                         ((CTIconMessageViewHolder)viewHolder).readDot.setVisibility(View.GONE);
                     }else{
@@ -202,24 +241,30 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                     break;
                             }
                         }catch (JSONException e){
-                            //TODO logging
+                            Logger.d("Error parsing CTA JSON - "+e.getLocalizedMessage());
                         }
                     }
-                    ((CTIconMessageViewHolder)viewHolder).mediaImage.setVisibility(View.VISIBLE);
-                    Glide.with(((CTIconMessageViewHolder)viewHolder).mediaImage.getContext())
-                            .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
-                            .into(((CTIconMessageViewHolder)viewHolder).mediaImage);
-                    ((CTIconMessageViewHolder)viewHolder).iconImage.setVisibility(View.VISIBLE);
-                    Glide.with(((CTIconMessageViewHolder)viewHolder).iconImage.getContext())
-                            .load(inboxMessage.getInboxMessageContents().get(0).getIcon())
-                            .into(((CTIconMessageViewHolder)viewHolder).iconImage);
+                    if(inboxMessage.getInboxMessageContents().get(0).mediaIsImage()) {
+                        ((CTIconMessageViewHolder)viewHolder).mediaImage.setVisibility(View.VISIBLE);
+                        Glide.with(((CTIconMessageViewHolder)viewHolder).mediaImage.getContext())
+                                .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
+                                .into(((CTIconMessageViewHolder)viewHolder).mediaImage);
+                    } else if(inboxMessage.getInboxMessageContents().get(0).mediaIsGIF()){
+                        ((CTIconMessageViewHolder)viewHolder).mediaImage.setVisibility(View.VISIBLE);
+                        Glide.with(((CTIconMessageViewHolder)viewHolder).mediaImage.getContext())
+                                .asGif()
+                                .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
+                                .into(((CTIconMessageViewHolder)viewHolder).mediaImage);
+                    }else if(inboxMessage.getInboxMessageContents().get(0).mediaIsVideo()) {
+                        //The below method adds videos to the respective cells but autoplay/pause on scroll needs to be added
+                        addVideoView(inboxMessage.getType(),viewHolder, context,i);
+                    }
                     break;
                 case CarouselMessage:
                     ((CTCarouselMessageViewHolder)viewHolder).title.setText(inboxMessage.getInboxMessageContents().get(0).getTitle());
                     ((CTCarouselMessageViewHolder)viewHolder).message.setText(inboxMessage.getInboxMessageContents().get(0).getMessage());
-                    @SuppressLint("SimpleDateFormat") SimpleDateFormat carouselSdf = new SimpleDateFormat("dd/MMM");
-                    String carouselMessagetimestamp = carouselSdf.format(new Date(inboxMessage.getDate()));
-                    ((CTCarouselMessageViewHolder)viewHolder).timestamp.setText(carouselMessagetimestamp);
+                    String carouselDisplayTimestamp  = calculateDisplayTimestamp(inboxMessage.getDate());
+                    ((CTCarouselMessageViewHolder)viewHolder).timestamp.setText(carouselDisplayTimestamp);
                     if(inboxMessage.isRead()){
                         ((CTCarouselMessageViewHolder)viewHolder).readDot.setVisibility(View.GONE);
                     }else{
@@ -233,9 +278,8 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
 
                     ((CTCarouselMessageViewHolder)viewHolder).title.setVisibility(View.GONE);
                     ((CTCarouselMessageViewHolder)viewHolder).message.setVisibility(View.GONE);
-                    @SuppressLint("SimpleDateFormat") SimpleDateFormat carouselImageSdf = new SimpleDateFormat("dd/MMM");
-                    String carouselImageMessagetimestamp = carouselImageSdf.format(new Date(inboxMessage.getDate()));
-                    ((CTCarouselMessageViewHolder)viewHolder).carouselTimestamp.setText(carouselImageMessagetimestamp);
+                    String carouselImageDisplayTimestamp  = calculateDisplayTimestamp(inboxMessage.getDate());
+                    ((CTCarouselMessageViewHolder)viewHolder).timestamp.setText(carouselImageDisplayTimestamp);
                     if(inboxMessage.isRead()){
                         ((CTCarouselMessageViewHolder)viewHolder).carouselReadDot.setVisibility(View.GONE);
                     }else{
@@ -293,8 +337,73 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
         tertiaryButton.setLayoutParams(tertiaryLayoutParams);
     }
 
+    private String calculateDisplayTimestamp(int time){
+        int now = (int)System.currentTimeMillis();
+        int diff = now-time;
+        if(diff < 60*1000){
+            return "Just Now";
+        }else if(diff > 60*1000 && diff < 59*60*1000){
+            return (diff/(60*1000)) + "mins ago";
+        }else if(diff > 59*60*1000 && diff < 23*59*60*1000 ){
+            return diff/(60*60*1000) + "hours ago";
+        }else if(diff > 24*60*60*1000 && diff < 48*60*60*1000){
+            return "Yesterday";
+        }else {
+            @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("dd MMM");
+            return sdf.format(new Date(time));
+        }
+    }
 
-class CarouselPageChangeListener implements ViewPager.OnPageChangeListener{
+    private void addVideoView(CTInboxMessageType inboxMessageType, RecyclerView.ViewHolder viewHolder, Context context, int pos){
+        playerView = new PlayerView(context);
+        playerView.setTag(pos);
+        playerView.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.WRAP_CONTENT));
+        playerView.setShowBuffering(true);
+        playerView.setUseArtwork(true);
+        playerView.setControllerAutoShow(false);
+        playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_ZOOM);
+        BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
+        TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
+        TrackSelector trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
+        // 2. Create the player
+        player = ExoPlayerFactory.newSimpleInstance(context, trackSelector);
+        // 3. Produces DataSource instances through which media data is loaded.
+        DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(context,
+                Util.getUserAgent(context, context.getPackageName()), (TransferListener<? super DataSource>) bandwidthMeter);
+        HlsMediaSource hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(inboxMessage.getInboxMessageContents().get(0).getMedia()));
+        // 4. Prepare the player with the source.
+        player.prepare(hlsMediaSource);
+        player.setRepeatMode(Player.REPEAT_MODE_ONE);
+        player.seekTo(1);
+        playerView.requestFocus();
+        playerView.setVisibility(View.VISIBLE);
+        playerView.setPlayer(player);
+        player.setPlayWhenReady(false);
+
+        switch (inboxMessageType){
+            case IconMessage:
+                CTIconMessageViewHolder iconMessageViewHolder = (CTIconMessageViewHolder) viewHolder;
+
+                iconMessageViewHolder.iconMessageFrameLayout.addView(playerView);
+                iconMessageViewHolder.iconMessageFrameLayout.setVisibility(View.VISIBLE);
+            case SimpleMessage:
+                CTSimpleMessageViewHolder simpleMessageViewHolder = (CTSimpleMessageViewHolder) viewHolder;
+
+                simpleMessageViewHolder.simpleMessageFrameLayout.addView(playerView);
+                simpleMessageViewHolder.simpleMessageFrameLayout.setVisibility(View.VISIBLE);
+                break;
+        }
+
+
+    }
+
+    @Override
+    public void onViewRecycled(@NonNull RecyclerView.ViewHolder holder) {
+        super.onViewRecycled(holder);
+
+    }
+
+    class CarouselPageChangeListener implements ViewPager.OnPageChangeListener{
 
         RecyclerView.ViewHolder viewHolder;
         CarouselPageChangeListener(RecyclerView.ViewHolder viewHolder){

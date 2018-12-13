@@ -19,13 +19,13 @@ public class CTInboxSecondTabFragment extends CTInboxTabBaseFragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View allView = inflater.inflate(R.layout.inbox_first_tab,container,false);
-        recyclerView = allView.findViewById(R.id.all_tab_recycler_view);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
-                new LinearLayoutManager(getActivity()).getOrientation());
-        recyclerView.addItemDecoration(dividerItemDecoration);
-        inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, getActivity());
-        recyclerView.setAdapter(inboxMessageAdapter);
+//        recyclerView = allView.findViewById(R.id.first_tab_recycler_view);
+//        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+//        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
+//                new LinearLayoutManager(getActivity()).getOrientation());
+//        recyclerView.addItemDecoration(dividerItemDecoration);
+//        inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, getActivity());
+//        recyclerView.setAdapter(inboxMessageAdapter);
         return allView;
     }
 }

@@ -5,7 +5,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * Controller class which handles Users and Messages for the Notification Inbox
@@ -18,7 +17,8 @@ class CTInboxController {
     private String accountId;
     private String guid;
     private String userId;
-    CTNotificationInboxListener listener;
+    CTInboxListener listener;
+    CTInboxPrivateListener privateListener;
     private CTUserDAO userDAO;
     private DBAdapter dbAdapter;
 
@@ -119,7 +119,7 @@ class CTInboxController {
         return initialized;
     }
 
-    CTNotificationInboxListener getListener() {
+    CTInboxListener getListener() {
         return listener;
     }
 
@@ -127,11 +127,14 @@ class CTInboxController {
         if(listener!=null){
             listener.inboxMessagesDidUpdate();
         }
+        if(privateListener != null){
+            privateListener.privateInboxMessagesDidUpdate();
+        }
     }
 
     void notifyInitialized(){
-        if(listener!=null){
-            listener.inboxDidInitialize();
+        if(privateListener != null){
+            privateListener.privateInboxDidInitialize();
         }
     }
 
@@ -151,6 +154,7 @@ class CTInboxController {
                 CTMessageDAO messageDAO = CTMessageDAO.initWithJSON(inboxMessage, userDAO.getUserId());
 
                 if(messageDAO != null) {
+                    //TODO add logic for updating message with same id
                     if (getMessageForId(inboxMessage.getString("id"))!=null && getMessageForId(inboxMessage.getString("id")).equals(inboxMessage)) {
                         Logger.d("Notification Inbox Message already present, updating values");
                         updateMessageList.add(messageDAO);

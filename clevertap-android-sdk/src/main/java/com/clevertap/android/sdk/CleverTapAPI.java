@@ -70,7 +70,10 @@ import static android.content.Context.NOTIFICATION_SERVICE;
  * <h1>CleverTapAPI</h1>
  * This is the main CleverTapAPI class that manages the SDK instances
  */
-public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationListener,InAppNotificationActivity.InAppActivityListener, CTInAppBaseFragment.InAppListener, CTNotificationInboxListener, CTNotificationInboxActivity.InboxActivityListener {
+public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationListener,
+        InAppNotificationActivity.InAppActivityListener,
+        CTInAppBaseFragment.InAppListener, CTInboxListener, CTInboxPrivateListener,
+        CTInboxActivity.InboxActivityListener {
 
     public enum LogLevel{
         OFF(-1),
@@ -160,6 +163,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private boolean offline = false;
     private CTInboxController ctInboxController;
     private final Object inboxControllerLock = new Object();
+    private CTInboxListener inboxListener;
 
     @Deprecated
     public final EventHandler event;
@@ -224,17 +228,17 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         });
         Logger.i("CleverTap SDK initialized with accountId: "+ config.getAccountId() + " accountToken: " + config.getAccountId() + " accountRegion: " + config.getAccountRegion());
 
-        //TODO Remove after testing
-        postAsyncSafely("stub", new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    manualInboxUpdate(context);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        });
+//        //TODO Remove after testing
+//        postAsyncSafely("stub", new Runnable() {
+//            @Override
+//            public void run() {
+//                try {
+//                    manualInboxUpdate(context);
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        });
     }
 
     // only call async
@@ -2212,7 +2216,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 // Ignore
             }
 
-            //TODO
             //Handle notification inbox
             try{
                 getConfigLogger().verbose("Processing inbox messages...");
@@ -2244,8 +2247,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 if (this.ctInboxController == null) {
                     this.ctInboxController = CTInboxController.initWithAccountId(getAccountId(), getCleverTapID(), loadDBAdapter(context));
                     if (this.ctInboxController != null && ctInboxController.isInitialized()) {
-                        if (this.ctInboxController.listener == null) {
-                            this.ctInboxController.listener = new WeakReference<>(this).get();
+                        if (this.ctInboxController.privateListener == null) {
+                            this.ctInboxController.privateListener = new WeakReference<>(this).get();
                         }
                         this.ctInboxController.notifyInitialized();
                         JSONArray inboxMessages = response.getJSONArray("inbox_notifs");
@@ -2272,29 +2275,53 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
-     * This method sets the CTNotificationInboxListener
-     * @param notificationInboxListener An {@link CTNotificationInboxListener} object
+     * This method sets the CTInboxListener
+     * @param notificationInboxListener An {@link CTInboxListener} object
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
-    public void setCTNotificationInboxListener(CTNotificationInboxListener notificationInboxListener) {
-        synchronized (inboxControllerLock) {
-            if (this.ctInboxController != null) {
-                this.ctInboxController.listener = notificationInboxListener;
-            }
-        }
+    public void setCTNotificationInboxListener(CTInboxListener notificationInboxListener) {
+        inboxListener = notificationInboxListener;
+        //        synchronized (inboxControllerLock) {
+//            if (this.ctInboxController != null) {
+//                this.ctInboxController.listener = notificationInboxListener;
+//            }
+//        }
     }
 
     /**
-     * Returns the CTNotificationInboxListener object
-     * @return An {@link CTNotificationInboxListener} object
+     * Returns the CTInboxListener object
+     * @return An {@link CTInboxListener} object
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
-    public CTNotificationInboxListener getCTNotificationInboxListener() {
+    public CTInboxListener getCTNotificationInboxListener() {
         synchronized (inboxControllerLock) {
             if (this.ctInboxController != null) {
                 return this.ctInboxController.listener;
             } else {
                 return null;
+            }
+        }
+    }
+
+    @Override
+    public void privateInboxDidInitialize() {
+        if(inboxListener != null){
+            synchronized (inboxControllerLock) {
+                this.ctInboxController.listener = inboxListener;
+                this.ctInboxController.listener.inboxDidInitialize();
+
+            }
+        }
+
+    }
+
+    @Override
+    public void privateInboxMessagesDidUpdate() {
+        if(inboxListener != null){
+            synchronized (inboxControllerLock) {
+                this.ctInboxController.listener = inboxListener;
+                this.ctInboxController.listener.inboxMessagesDidUpdate();
+
             }
         }
     }
@@ -2305,8 +2332,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             if (this.ctInboxController == null) {
                 this.ctInboxController = CTInboxController.initWithAccountId(getAccountId(), getCleverTapID(), loadDBAdapter(context));
                 if (this.ctInboxController != null && ctInboxController.isInitialized()) {
-                    if (this.ctInboxController.listener == null) {
-                        this.ctInboxController.listener = new WeakReference<>(this).get();
+                    if (this.ctInboxController.privateListener == null) {
+                        this.ctInboxController.privateListener = new WeakReference<>(this).get();
                     }
                     this.ctInboxController.notifyInitialized();
                     JSONObject jsonObject = new JSONObject(loadJSONFromAsset(context));
@@ -5827,7 +5854,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //Notification Inbox public APIs
-    public void initializeInbox(){
+    public void initializeInbox(final CleverTapAPI cleverTapAPI){
         postAsyncSafely("initializeInbox", new Runnable() {
             @Override
             public void run() {
@@ -5839,7 +5866,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         getConfigLogger().debug(getAccountId(), "Notification Inbox initialized");
                     } else {
                         ctInboxController = CTInboxController.initWithAccountId(getAccountId(), getCleverTapID(), loadDBAdapter(context));
-                        //TODO Add listeners
+                        if (ctInboxController != null && ctInboxController.isInitialized()) {
+                            if (ctInboxController.privateListener == null) {
+                                ctInboxController.privateListener = new WeakReference<>(cleverTapAPI).get();
+                            }
+                            ctInboxController.notifyInitialized();
+                        }
                     }
                 }
             }
@@ -5947,7 +5979,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     public void createNotificationInboxActivity(CTInboxStyleConfig styleConfig){
-        Intent intent = new Intent(context,CTNotificationInboxActivity.class);
+        Intent intent = new Intent(context,CTInboxActivity.class);
         intent.putExtra("styleConfig",styleConfig);
         intent.putExtra("config",config);
         try {
@@ -5967,24 +5999,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     public void createNotificationInboxActivity(){
 
         CTInboxStyleConfig styleConfig = new CTInboxStyleConfig();
-        styleConfig.setTitleColor("#000000");
-        styleConfig.setBodyColor("#000000");
-        styleConfig.setLayoutColor("#FFFFFF");
-        styleConfig.setCtaColor("#0000FF");
-        styleConfig.setUsingTabs(true);
-        styleConfig.setFirstTab("Promotions");
-        //styleConfig.setSecondTab("New Year Offers");
-        styleConfig.setInboxBackgroundColor("#C2C2C2");
-        styleConfig.setNavBarColor("#FF0000");
-        styleConfig.setNavBarTitle("Notification Inbox");
-        styleConfig.setNavBarTitleColor("#000000");
-        styleConfig.setBackButtonColor("#000000");
-        styleConfig.setSelectedTabColor("#8080FA");
-        styleConfig.setUnselectedTabColor("#3434F8");
-        styleConfig.setSelectedTabIndicatorColor("#F85734");
-        styleConfig.setTabBackgroundColor("#FBC145");
         ArrayList<CTInboxMessage> inboxMessageArrayList = getAllInboxMessages();
-        Intent intent = new Intent(context,CTNotificationInboxActivity.class);
+        Intent intent = new Intent(context,CTInboxActivity.class);
         intent.putExtra("styleConfig",styleConfig);
         intent.putExtra("config",config);
         intent.putExtra("messageList",inboxMessageArrayList);

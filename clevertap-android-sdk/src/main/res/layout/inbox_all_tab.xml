@@ -8,7 +8,7 @@
     android:orientation="vertical"
     android:id="@+id/all_tab_linear_layout">
 
-    <android.support.v7.widget.RecyclerView
+    <com.clevertap.android.sdk.ExoPlayerRecyclerView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:id="@+id/all_tab_recycler_view" />
