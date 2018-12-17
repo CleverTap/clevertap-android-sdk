@@ -143,6 +143,6 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
     **Note:**  All configuration to the CleverTapInstanceConfig object must be done prior to calling CleverTapAPI.instanceWithConfig.  Subsequent changes to the CleverTapInstanceConfig object will have no effect on the additional CleverTap instance created.
     
 ## Example Usage   
-See the [usage examples here](https://github.com/CleverTap/sdk-android-source/blob/3.2.0/EXAMPLES.md). Also, see the [example project](https://github.com/CleverTap/sdk-android-source/tree/3.2.0/AndroidStarter), included with this repo. 
+See the [usage examples here](https://github.com/CleverTap/sdk-android-source/blob/master/EXAMPLES.md). Also, see the [example project](https://github.com/CleverTap/sdk-android-source/tree/master/AndroidStarter), included with this repo. 
 
 See our [full documentation here](https://developer.clevertap.com/docs/android) for more information on Events and Profile Tracking, Push Notifications, In-App messages, Install Referrer tracking and app personalization.
