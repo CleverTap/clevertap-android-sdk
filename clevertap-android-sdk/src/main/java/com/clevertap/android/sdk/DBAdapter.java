@@ -20,7 +20,8 @@ public class DBAdapter {
         PROFILE_EVENTS("profileEvents"),
         USER_PROFILES("userProfiles"),
         PUSH_NOTIFICATIONS("pushNotifications"),
-        PUSH_NOTIFICATION_VIEWED("notificationViewed");
+        PUSH_NOTIFICATION_VIEWED("notificationViewed"),
+        UNINSTALL_TS("uninstallTimestamp");
 
         Table(String name) {
             tableName = name;
@@ -78,6 +79,13 @@ public class DBAdapter {
                     KEY_DATA + " STRING NOT NULL, " +
                     KEY_CREATED_AT + " INTEGER NOT NULL);";
 
+    private static final String CREATE_UNINSTALL_TS_TABLE =
+            "CREATE TABLE " + Table.UNINSTALL_TS.getName() + " (_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    KEY_CREATED_AT + " INTEGER NOT NULL);";
+
+    private static final String UNINSTALL_TS_INDEX =
+            "CREATE INDEX IF NOT EXISTS time_idx ON " + Table.UNINSTALL_TS.getName() +
+                    " (" + KEY_CREATED_AT + ");";
 
 
     private final DatabaseHelper dbHelper;
@@ -106,9 +114,11 @@ public class DBAdapter {
             db.execSQL(CREATE_USER_PROFILES_TABLE);
             db.execSQL(CREATE_PUSH_NOTIFICATIONS_TABLE);
             db.execSQL(CREATE_NOTIFICATION_VIEWED_TABLE);
+            db.execSQL(CREATE_UNINSTALL_TS_TABLE);
 
             db.execSQL(EVENTS_TIME_INDEX);
             db.execSQL(PROFILE_EVENTS_TIME_INDEX);
+            db.execSQL(UNINSTALL_TS_INDEX);
         }
 
         @SuppressLint("SQLiteString")
@@ -122,13 +132,18 @@ public class DBAdapter {
             db.execSQL("DROP TABLE IF EXISTS " + Table.USER_PROFILES.getName());
             db.execSQL("DROP TABLE IF EXISTS " + Table.PUSH_NOTIFICATIONS.getName());
             db.execSQL("DROP TABLE IF EXISTS " + Table.PUSH_NOTIFICATION_VIEWED.getName());
+            db.execSQL("DROP TABLE IF EXISTS " + Table.UNINSTALL_TS.getName());
+
             db.execSQL(CREATE_EVENTS_TABLE);
             db.execSQL(CREATE_PROFILE_EVENTS_TABLE);
             db.execSQL(CREATE_USER_PROFILES_TABLE);
             db.execSQL(CREATE_PUSH_NOTIFICATIONS_TABLE);
             db.execSQL(CREATE_NOTIFICATION_VIEWED_TABLE);
+            db.execSQL(CREATE_UNINSTALL_TS_TABLE);
+
             db.execSQL(EVENTS_TIME_INDEX);
             db.execSQL(PROFILE_EVENTS_TIME_INDEX);
+            db.execSQL(UNINSTALL_TS_INDEX);
 
         }
 
@@ -488,5 +503,53 @@ public class DBAdapter {
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private boolean belowMemThreshold() {
         return dbHelper.belowMemThreshold();
+    }
+
+    /**
+     * Adds a String timestamp representing uninstall flag to the DB.
+     *
+     */
+    void storeUninstallTimestamp() {
+
+        if (!this.belowMemThreshold()) {
+            getConfigLogger().verbose("There is not enough space left on the device to store data, data discarded");
+            return ;
+        }
+        final String tableName = Table.UNINSTALL_TS.getName();
+
+        try {
+            final SQLiteDatabase db = dbHelper.getWritableDatabase();
+            final ContentValues cv = new ContentValues();
+            cv.put(KEY_CREATED_AT, System.currentTimeMillis());
+            db.insert(tableName, null, cv);
+        } catch (final SQLiteException e) {
+            getConfigLogger().verbose("Error adding data to table " + tableName + " Recreating DB");
+            dbHelper.deleteDatabase();
+        } finally {
+            dbHelper.close();
+        }
+
+    }
+
+    long getLastUninstallTimestamp(){
+        final String tName = Table.UNINSTALL_TS.getName();
+        Cursor cursor = null;
+        long timestamp = 0;
+        try{
+            final SQLiteDatabase db = dbHelper.getReadableDatabase();
+            cursor = db.rawQuery("SELECT * FROM " + tName +
+                    " ORDER BY " + KEY_CREATED_AT + " DESC LIMIT 1",null);
+            if(cursor!=null && cursor.moveToFirst()){
+                timestamp = cursor.getLong(cursor.getColumnIndex(KEY_CREATED_AT));
+            }
+        }catch (final SQLiteException e) {
+            getConfigLogger().verbose("Could not fetch records out of database " + tName + ".", e);
+        } finally {
+            dbHelper.close();
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return timestamp;
     }
 }

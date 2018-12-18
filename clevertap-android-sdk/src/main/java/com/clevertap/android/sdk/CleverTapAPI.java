@@ -2,16 +2,19 @@ package com.clevertap.android.sdk;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.AlertDialog;
+import android.app.AlarmManager;
 import android.app.FragmentTransaction;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.job.JobInfo;
+import android.app.job.JobParameters;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
@@ -27,10 +30,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import com.clevertap.android.sdk.exceptions.CleverTapMetaDataNotFoundException;
 import com.clevertap.android.sdk.exceptions.CleverTapPermissionsNotSatisfied;
@@ -50,6 +55,7 @@ import java.net.URLDecoder;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -64,6 +70,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 
+import static android.content.Context.JOB_SCHEDULER_SERVICE;
 import static android.content.Context.NOTIFICATION_SERVICE;
 
 /**
@@ -86,14 +93,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         public int intValue() { return value; }
     }
 
-    private enum EventGroup {
-
-        REGULAR("/a1"),
-        PUSH_NOTIFICATION_VIEWED("/a450");
-
-        private final String httpResource;
-        EventGroup(String httpResource) { this.httpResource = httpResource; }
-    }
+//    private enum EventGroup {
+//
+//        REGULAR("/a1"),
+//        PUSH_NOTIFICATION_VIEWED("/a450");
+//
+//        private final String httpResource;
+//        EventGroup(String httpResource) { this.httpResource = httpResource; }
+//    }
 
     /**
      * @deprecated Use {@link #pushChargedEvent(HashMap chargeDetails, ArrayList items)}
@@ -168,6 +175,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private long NOTIFICATION_THREAD_ID = 0;
     private final Boolean eventLock = true;
     private boolean offline = false;
+    private boolean isBgPing = false;
+    private int pingFrequency = 240;
 
     @Deprecated
     public final EventHandler event;
@@ -230,6 +239,19 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 StorageHelper.putString(context,storageKeyWithSuffix("instance"), configJson);
             }
         });
+
+        if(this.config.isBackgroundSync()) {
+            postAsyncSafely("createJobScheduler", new Runnable() {
+                @Override
+                public void run() {
+                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        createJobScheduler(context);
+                    }else{
+                        createAlarmScheduler(context);
+                    }
+                }
+            });
+        }
         Logger.i("CleverTap SDK initialized with accountId: "+ config.getAccountId() + " accountToken: " + config.getAccountId() + " accountRegion: " + config.getAccountRegion());
     }
 
@@ -1343,6 +1365,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 } else if (eventType == Constants.PING_EVENT) {
                     type = "ping";
                     attachMeta(event, context);
+                    if(event.has("bk")){
+                        isBgPing = true;
+                        event.remove("bk");
+                    }
                 } else if (eventType == Constants.PROFILE_EVENT) {
                     type = "profile";
                 } else if (eventType == Constants.DATA_EVENT) {
@@ -1396,7 +1422,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     event.put(Constants.ERROR_KEY, getErrorObject(vr));
                 }
                 queuePushNotificationViewedEventToDB(context,event,eventType);
-                schedulePushNotificationViewedQueueFlush(context);
+                //schedulePushNotificationViewedQueueFlush(context);
             }catch (Throwable t){
                 getConfigLogger().verbose(getAccountId(),"Failed to queue notification viewed event: "+ event.toString(),t);
             }
@@ -1558,7 +1584,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             commsRunnable = new Runnable() {
                 @Override
                 public void run() {
-                    flushQueueAsync(context,EventGroup.REGULAR);
+                    flushQueueAsync(context);
                 }
             };
         // Cancel any outstanding send runnables, and issue a new delayed one
@@ -1568,16 +1594,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         getConfigLogger().verbose(getAccountId(), "Scheduling delayed queue flush on main event loop");
     }
 
-    private void flushQueueAsync(final Context context, final EventGroup eventGroup) {
+    private void flushQueueAsync(final Context context) {
         postAsyncSafely("CommsManager#flushQueueAsync", new Runnable() {
             @Override
             public void run() {
-                flushQueueSync(context,eventGroup);
+                flushQueueSync(context);
             }
         });
     }
 
-    private void flushQueueSync(final Context context, final EventGroup eventGroup) {
+    private void flushQueueSync(final Context context) {
         if (!isNetworkOnline(context)) {
             getConfigLogger().verbose(getAccountId(), "Network connectivity unavailable. Will retry later");
             return;
@@ -1591,28 +1617,28 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (needsHandshakeForDomain()) {
             mResponseFailureCount = 0;
             setDomain(context, null);
-            performHandshakeForDomain(context, eventGroup, new Runnable() {
+            performHandshakeForDomain(context, new Runnable() {
                 @Override
                 public void run() {
-                    flushDBQueue(context,eventGroup);
+                    flushDBQueue(context);
                 }
             });
         } else {
-            flushDBQueue(context,eventGroup);
+            flushDBQueue(context);
         }
     }
 
-    private void schedulePushNotificationViewedQueueFlush(final Context context){
-        if (pushNotificationViewedRunnable == null)
-            pushNotificationViewedRunnable = new Runnable() {
-                @Override
-                public void run() {
-                    flushQueueAsync(context,EventGroup.PUSH_NOTIFICATION_VIEWED);
-                }
-            };
-        getHandlerUsingMainLooper().removeCallbacks(pushNotificationViewedRunnable);
-        getHandlerUsingMainLooper().post(pushNotificationViewedRunnable);
-    }
+//    private void schedulePushNotificationViewedQueueFlush(final Context context){
+//        if (pushNotificationViewedRunnable == null)
+//            pushNotificationViewedRunnable = new Runnable() {
+//                @Override
+//                public void run() {
+//                    flushQueueAsync(context,EventGroup.PUSH_NOTIFICATION_VIEWED);
+//                }
+//            };
+//        getHandlerUsingMainLooper().removeCallbacks(pushNotificationViewedRunnable);
+//        getHandlerUsingMainLooper().post(pushNotificationViewedRunnable);
+//    }
 
 
     //Util
@@ -1657,12 +1683,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         StorageHelper.putString(context, storageKeyWithSuffix(Constants.KEY_DOMAIN_NAME), domainName);
     }
 
-    private void performHandshakeForDomain(final Context context, final EventGroup eventGroup, final Runnable handshakeSuccessCallback) {
+    private void performHandshakeForDomain(final Context context, final Runnable handshakeSuccessCallback) {
         if (isMuted()) {
             return;
         }
 
-        final String endpoint = getEndpoint(true, eventGroup);
+        final String endpoint = getEndpoint(true);
         if (endpoint == null) {
             getConfigLogger().verbose(getAccountId(), "Unable to perform handshake, endpoint is null");
         }
@@ -1698,8 +1724,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
-    private String getEndpoint(final boolean defaultToHandshakeURL, final EventGroup eventGroup) {
-        String domain = getDomain(defaultToHandshakeURL,eventGroup);
+    private String getEndpoint(final boolean defaultToHandshakeURL) {
+        String domain = getDomain(defaultToHandshakeURL);
         if (domain == null) {
             getConfigLogger().verbose(getAccountId(), "Unable to configure endpoint, domain is null");
             return null;
@@ -1766,7 +1792,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return  sslSocketFactory;
     }
 
-    private String getDomain(boolean defaultToHandshakeURL, EventGroup eventGroup) {
+    private String getDomain(boolean defaultToHandshakeURL) {
         String domain = getDomainFromPrefsOrMetadata();
 
         final boolean emptyDomain = domain == null || domain.trim().length() == 0;
@@ -1777,7 +1803,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (emptyDomain) {
             domain = Constants.PRIMARY_DOMAIN + "/hello";
         } else {
-            domain += eventGroup.httpResource;
+            domain += "/a1";
         }
 
         return domain;
@@ -1896,7 +1922,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         StorageHelper.putInt(context, storageKeyWithSuffix(Constants.KEY_LAST_TS), 0);
     }
 
-    private void flushDBQueue(final Context context, final EventGroup eventGroup){
+    private void flushDBQueue(final Context context){
         getConfigLogger().verbose(getAccountId(), "Somebody has invoked me to send the queue to CleverTap servers");
 
         QueueCursor cursor;
@@ -1905,7 +1931,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         while (loadMore) {
 
-            cursor = getQueuedEvents(context, eventGroup,50, previousCursor);
+            cursor = getQueuedEvents(context,50, previousCursor);
 
             if (cursor == null || cursor.isEmpty()) {
                 getConfigLogger().verbose(getAccountId(), "No events in the queue, bailing");
@@ -1920,17 +1946,17 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 break;
             }
 
-            loadMore = sendQueue(context,eventGroup, queue);
+            loadMore = sendQueue(context, queue);
         }
     }
 
     @SuppressWarnings("SameParameterValue")
-    private QueueCursor getQueuedEvents(final Context context, EventGroup eventGroup, final int batchSize, final QueueCursor previousCursor) {
-        if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED){
-            return getPushNotificationViewedQueuedEvents(context,batchSize,previousCursor);
-        }else{
+    private QueueCursor getQueuedEvents(final Context context, final int batchSize, final QueueCursor previousCursor) {
+//        if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED){
+//            return getPushNotificationViewedQueuedEvents(context,batchSize,previousCursor);
+//        }else{
             return getQueuedDBEvents(context, batchSize, previousCursor);
-        }
+        //}
     }
 
     private QueueCursor getQueuedDBEvents(final Context context, final int batchSize, final QueueCursor previousCursor) {
@@ -1993,7 +2019,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     /**
      * @return true if the network request succeeded. Anything non 200 results in a false.
      */
-    private boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue) {
+    private boolean sendQueue(final Context context, final JSONArray queue) {
 
         if (queue == null || queue.length() <= 0) return false;
 
@@ -2004,7 +2030,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         HttpsURLConnection conn = null;
         try {
-            final String endpoint = getEndpoint(false,eventGroup);
+            final String endpoint = getEndpoint(false);
 
             // This is just a safety check, which would only arise
             // if upstream didn't adhere to the protocol (sent nothing during the initial handshake)
@@ -2123,6 +2149,13 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             header.put("tk", token);
             header.put("l_ts", getLastRequestTimestamp());
             header.put("f_ts", getFirstRequestTimestamp());
+
+            if(isBgPing){
+                header.put("bk",1);
+                header.put("s_wzrk_ids", new JSONArray());//TODO add wzrk_ids of rendered campaigns
+                isBgPing = false;
+            }
+
 
             // Attach ARP
             try {
@@ -2283,6 +2316,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 // Ignore
             }
 
+            if(response.has("pf")){
+                int frequency = response.getInt("pf");
+                setPingFrequency(frequency);
+            }
+
             try{
                 if(response.has("wzrk_push")){
                     final JSONArray pushNotifications = response.getJSONArray("wzrk_push");
@@ -2299,6 +2337,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             mResponseFailureCount++;
             getConfigLogger().verbose(getAccountId(), "Problem process send queue response", t);
         }
+    }
+
+    int getPingFrequency() {
+        return pingFrequency;
+    }
+
+    void setPingFrequency(int pingFrequency) {
+        this.pingFrequency = pingFrequency;
     }
 
     //InApp
@@ -4491,7 +4537,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         forcePushDeviceToken(false);
 
                         // try and flush and then reset the queues
-                        flushQueueSync(context,EventGroup.REGULAR);
+                        flushQueueSync(context);
                         clearQueues(context);
 
                         // clear out the old data
@@ -4587,7 +4633,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @SuppressWarnings("unused")
     public void flush() {
-        flushQueueAsync(context,EventGroup.REGULAR);
+        flushQueueAsync(context);
     }
 
     //Push
@@ -5004,6 +5050,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         notifMessage = (notifMessage != null) ? notifMessage : "";
                         if (notifMessage.isEmpty()) {
                             getConfigLogger().verbose(getAccountId(),"Push notification message is empty, not rendering");
+                            loadDBAdapter(context).storeUninstallTimestamp();
                             return;
                         }
                         String notifTitle = extras.getString("nt", "");
@@ -5838,5 +5885,148 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             Logger.v("Couldn't get user's location", t);
             return null;
         }
+    }
+
+    private void createAlarmScheduler(Context context){
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
+        intent.setPackage(context.getPackageName());
+        PendingIntent alarmPendingIntent = PendingIntent.getService(context,1,intent,PendingIntent.FLAG_UPDATE_CURRENT);
+        if (alarmManager != null) {
+            alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime(),AlarmManager.INTERVAL_HOUR * getPingFrequency()/60,alarmPendingIntent);
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private void createJobScheduler(Context context){
+        ComponentName componentName = new ComponentName(context, CTBackgroundJobService.class);
+
+        JobInfo.Builder builder = new JobInfo.Builder(12,componentName);
+        builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
+        builder.setRequiresCharging(false);
+
+        if(this.deviceInfo.testPermission(context,"android.permission.RECEIVE_BOOT_COMPLETED")){
+            builder.setPersisted(true);
+        }
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
+            builder.setPeriodic(getPingFrequency()*60*1000,15*60*1000);
+        }else{
+            builder.setPeriodic(getPingFrequency()*60*1000);
+        }
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            builder.setRequiresBatteryNotLow(true);
+        }
+
+        JobInfo jobInfo = builder.build();
+
+        JobScheduler jobScheduler = (JobScheduler)context.getSystemService(JOB_SCHEDULER_SERVICE);
+        int resultCode = 0;
+        if (jobScheduler != null) {
+            resultCode = jobScheduler.schedule(jobInfo);
+        }
+        if (resultCode == JobScheduler.RESULT_SUCCESS) {
+            Logger.d(getAccountId(), "Job scheduled!");
+        } else {
+            Logger.d(getAccountId(), "Job not scheduled");
+        }
+    }
+
+    static void runJobWork(Context context, JobParameters parameters){
+        if (instances == null) {
+            CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
+            if(instance != null) {
+                instance.runInstanceJobWork(context,parameters);
+            }
+            return;
+        }
+        for (String accountId: CleverTapAPI.instances.keySet()) {
+            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+            if (instance.getConfig().isAnalyticsOnly()) {
+                Logger.d(accountId, "Instance is Analytics Only not processing device token");
+                continue;
+            }
+            instance.runInstanceJobWork(context,parameters);
+        }
+    }
+
+    static void runBackgroundIntentService(Context context){
+        if (instances == null) {
+            CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
+            if(instance != null) {
+                instance.runInstanceJobWork(context,null);
+            }
+            return;
+        }
+        for (String accountId: CleverTapAPI.instances.keySet()) {
+            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+            if (instance.getConfig().isAnalyticsOnly()) {
+                Logger.d(accountId, "Instance is Analytics Only not processing device token");
+                continue;
+            }
+            instance.runInstanceJobWork(context,null);
+        }
+    }
+
+    private void runInstanceJobWork(final Context context, final JobParameters parameters){
+        postAsyncSafely("runningJobService", new Runnable() {
+            @Override
+            public void run() {
+                if(getCachedFCMToken() == null || getCachedGCMToken() == null){
+                    Logger.v(getAccountId(),"Token is not present, not running the Job");
+                    return;
+                }
+
+                Calendar calendar = Calendar.getInstance();
+                calendar.set(Calendar.HOUR,22);
+                calendar.set(Calendar.MINUTE,0);
+                calendar.set(Calendar.SECOND,0);
+                calendar.set(Calendar.MILLISECOND,0);
+
+                long startMs = calendar.getTimeInMillis();
+
+                calendar.add(Calendar.HOUR,8);
+                long endMs = calendar.getTimeInMillis();
+
+                long lastTS = loadDBAdapter(context).getLastUninstallTimestamp();
+
+                if(lastTS !=0) {
+                    if (lastTS >= startMs && lastTS <= endMs) {
+                        Logger.v(getAccountId(), "Job Service won't run in default DND hours");
+                        return;
+                    }
+                }
+
+                if(lastTS != 0 && lastTS > System.currentTimeMillis() - 24*60*60*1000){
+                    try {
+                        JSONObject eventObject = new JSONObject();
+                        eventObject.put("bk",1);
+                        queueEvent(context, new JSONObject(), Constants.PING_EVENT);
+
+                        if(parameters == null){
+                            AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+                            Intent cancelIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
+                            cancelIntent.setPackage(context.getPackageName());
+                            PendingIntent alarmPendingIntent = PendingIntent.getService(context,1,cancelIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+                            if (alarmManager != null) {
+                                alarmManager.cancel(alarmPendingIntent);
+                            }
+                            Intent alarmIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
+                            alarmIntent.setPackage(context.getPackageName());
+                            PendingIntent alarmServicePendingIntent = PendingIntent.getService(context,1,alarmIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+                            if (alarmManager != null) {
+                                alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() * (getPingFrequency()*60*1000),AlarmManager.INTERVAL_HOUR * getPingFrequency()/60,alarmServicePendingIntent);
+                            }
+                        }
+
+                    } catch (JSONException e) {
+                        Logger.v("Unable to raise background Ping event");
+                    }
+
+                }
+            }
+        });
     }
 }
