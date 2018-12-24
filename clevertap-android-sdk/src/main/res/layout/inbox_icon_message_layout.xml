@@ -4,6 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:id="@+id/icon_message_relative_layout">
+    <RelativeLayout
+        android:id="@+id/click_relative_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
     <LinearLayout
         android:id="@+id/body_relative_layout"
         android:layout_width="match_parent"
@@ -61,11 +65,18 @@
             android:visibility="gone"
             android:layout_height="160dp">
         </FrameLayout>
-        <ImageView
+        <com.clevertap.android.sdk.RectangleImageView
             android:id="@+id/media_image"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:visibility="gone"/>
+            android:scaleType="centerCrop"
+            android:visibility="visible"/>
+        <com.clevertap.android.sdk.SquareImageView
+            android:id="@+id/square_media_image"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:scaleType="fitXY"
+            android:visibility="visible"/>
     </RelativeLayout>
     <LinearLayout
         android:id="@+id/timestamp_linear_layout"
@@ -99,11 +110,12 @@
         android:layout_height="1dp"
         android:layout_below="@+id/timestamp_linear_layout"
         android:background="@android:color/darker_gray"/>
+    </RelativeLayout>
     <LinearLayout
         android:id="@+id/cta_linear_layout"
         android:layout_width="match_parent"
         android:layout_height="44dp"
-        android:layout_below="@id/div_view"
+        android:layout_below="@id/click_relative_layout"
         android:orientation="horizontal"
         android:weightSum="6"
         android:background="@android:color/white">

@@ -7,6 +7,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 class CTCarouselMessageViewHolder extends RecyclerView.ViewHolder {
@@ -16,6 +17,7 @@ class CTCarouselMessageViewHolder extends RecyclerView.ViewHolder {
     TextView title,message,timestamp, carouselTimestamp;
     ImageView readDot,carouselReadDot;
     Button cta1,cta2,cta3;
+    RelativeLayout clickLayout;
 
     CTCarouselMessageViewHolder(@NonNull View itemView) {
         super(itemView);
@@ -31,5 +33,6 @@ class CTCarouselMessageViewHolder extends RecyclerView.ViewHolder {
         cta1 = itemView.findViewById(R.id.cta_button_1);
         cta2 = itemView.findViewById(R.id.cta_button_2);
         cta3 = itemView.findViewById(R.id.cta_button_3);
+        clickLayout = itemView.findViewById(R.id.body_relative_layout);
     }
 }

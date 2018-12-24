@@ -15,9 +15,9 @@ class CTSimpleMessageViewHolder extends RecyclerView.ViewHolder {
     TextView title;
     TextView message;
     TextView timestamp;
-    ImageView readDot, mediaImage;
+    ImageView readDot, mediaImage, squareImage;
     Button cta1,cta2,cta3;
-    RelativeLayout simpleMessageRelativeLayout;
+    RelativeLayout simpleMessageRelativeLayout,clickLayout;
     FrameLayout simpleMessageFrameLayout;
 
     CTSimpleMessageViewHolder(@NonNull View itemView) {
@@ -33,5 +33,7 @@ class CTSimpleMessageViewHolder extends RecyclerView.ViewHolder {
         mediaImage = itemView.findViewById(R.id.media_image);
         simpleMessageRelativeLayout = itemView.findViewById(R.id.simple_message_relative_layout);
         simpleMessageFrameLayout = itemView.findViewById(R.id.simple_message_frame_layout);
+        squareImage = itemView.findViewById(R.id.square_media_image);
+        clickLayout = itemView.findViewById(R.id.click_relative_layout);
     }
 }

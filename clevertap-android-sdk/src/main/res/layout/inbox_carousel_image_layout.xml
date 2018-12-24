@@ -2,11 +2,19 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <ImageView
+    <com.clevertap.android.sdk.RectangleImageView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:scaleType="fitXY"
         android:src="@drawable/ct_audio"
+        android:visibility="gone"
         android:adjustViewBounds="true"
         android:id="@+id/imageView" />
+    <com.clevertap.android.sdk.SquareImageView
+        android:id="@+id/squareImageView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ct_audio"
+        android:scaleType="fitXY"
+        android:visibility="gone"/>
 </LinearLayout>

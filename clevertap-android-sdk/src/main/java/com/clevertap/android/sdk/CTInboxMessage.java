@@ -29,6 +29,7 @@ public class CTInboxMessage implements Parcelable {
     private List<String> tags = new ArrayList<>();
     private String bgColor;
     private ArrayList<CTInboxMessageContent> inboxMessageContents = new ArrayList<>();
+    private String orientation;
 
 
     CTInboxMessage initWithJSON(JSONObject jsonObject){
@@ -55,6 +56,7 @@ public class CTInboxMessage implements Parcelable {
                         this.inboxMessageContents.add(ctInboxMessageContent);
                     }
                 }
+                this.orientation = cellObject.has("orientation") ? cellObject.getString("orientation") : "";
             }
         } catch (JSONException e) {
             Logger.v("Unable to init CTInboxMessage with JSON - "+e.getLocalizedMessage());
@@ -91,6 +93,7 @@ public class CTInboxMessage implements Parcelable {
             } else {
                 inboxMessageContents = null;
             }
+            orientation = in.readString();
         }catch (JSONException e){
            Logger.v("Unable to parse CTInboxMessage from parcel - "+e.getLocalizedMessage());
         }
@@ -137,6 +140,7 @@ public class CTInboxMessage implements Parcelable {
             dest.writeByte((byte) (0x01));
             dest.writeList(inboxMessageContents);
         }
+        dest.writeString(orientation);
     }
 
     @SuppressWarnings("unused")
@@ -218,5 +222,9 @@ public class CTInboxMessage implements Parcelable {
             carouselImages.add(ctInboxMessageContent.getMedia());
         }
         return carouselImages;
+    }
+
+    public String getOrientation() {
+        return orientation;
     }
 }

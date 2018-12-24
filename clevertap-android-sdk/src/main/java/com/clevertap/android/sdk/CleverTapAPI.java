@@ -4013,6 +4013,22 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             return;
         }
 
+        if (extras.containsKey(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)) {
+            pendingInappRunnable  = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Logger.v("Received inbox via push payload: " + extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
+                        JSONObject r = new JSONObject(extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
+                        processInboxResponse(r, context);
+                    } catch (Throwable t) {
+                        Logger.v("Failed to display inapp notification from push notification payload", t);
+                    }
+                }
+            };
+            return;
+        }
+
         if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG) || (extras.getString(Constants.NOTIFICATION_ID_TAG) == null)) {
             getConfigLogger().debug(getAccountId(), "Push notification ID Tag is null, not processing Notification Clicked event for:  " + extras.toString());
             return;
@@ -5979,9 +5995,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     public void createNotificationInboxActivity(CTInboxStyleConfig styleConfig){
+        ArrayList<CTInboxMessage> inboxMessageArrayList = getAllInboxMessages();
+        inboxMessageArrayList = checkForVideoMessages(inboxMessageArrayList);
         Intent intent = new Intent(context,CTInboxActivity.class);
         intent.putExtra("styleConfig",styleConfig);
         intent.putExtra("config",config);
+        intent.putExtra("messageList",inboxMessageArrayList);
         try {
             Activity currentActivity = getCurrentActivity();
             if (currentActivity == null) {
@@ -6000,6 +6019,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         CTInboxStyleConfig styleConfig = new CTInboxStyleConfig();
         ArrayList<CTInboxMessage> inboxMessageArrayList = getAllInboxMessages();
+        inboxMessageArrayList = checkForVideoMessages(inboxMessageArrayList);
         Intent intent = new Intent(context,CTInboxActivity.class);
         intent.putExtra("styleConfig",styleConfig);
         intent.putExtra("config",config);
@@ -6051,6 +6071,35 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @Override
     public void messageDidClick() {
 
+    }
+
+    private ArrayList<CTInboxMessage> checkForVideoMessages(ArrayList<CTInboxMessage> inboxMessageList){
+
+        boolean exoPlayerPresent = false;
+
+        Class className = null;
+        try{
+            className = Class.forName("com.google.android.exoplayer2.ExoPlayerFactory");
+            className = Class.forName("com.google.android.exoplayer2.source.hls.HlsMediaSource");
+            className = Class.forName("com.google.android.exoplayer2.ui.PlayerView");
+            exoPlayerPresent = true;
+        }catch (Throwable t){
+            Logger.d("ExoPlayer library files are missing!!!");
+            Logger.d("Please add ExoPlayer dependencies to render Inbox messages playing video. For more information checkout CleverTap documentation.");
+            if(className!=null)
+                Logger.d("ExoPlayer classes not found "+className.getName());
+            else
+                Logger.d("ExoPlayer classes not found");
+        }
+        if(!exoPlayerPresent) {
+            for (CTInboxMessage inboxMessage : inboxMessageList) {
+                if (inboxMessage.getInboxMessageContents().get(0).mediaIsVideo()) {
+                    inboxMessageList.remove(inboxMessage);
+                    Logger.d("Dropping inbox messages containing videos since Exoplayer files are missing. For more information checkout CleverTap documentation.");
+                }
+            }
+        }
+        return inboxMessageList;
     }
 
 }

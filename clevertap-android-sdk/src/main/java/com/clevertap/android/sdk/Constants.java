@@ -34,6 +34,7 @@ public class Constants {
     static final String ERROR_KEY = "wzrk_error";
     static final int PUSH_DELAY_MS = 1000;
     static final String INAPP_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inapp";
+    static final String INBOX_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inbox";
     static final String INAPP_DATA_TAG = "html";
     static final String INAPP_X_PERCENT = "xp";
     static final String INAPP_Y_PERCENT = "yp";

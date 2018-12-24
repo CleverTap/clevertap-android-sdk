@@ -229,7 +229,7 @@ public class ExoPlayerRecyclerView extends RecyclerView {
 
         screenDefaultHeight = point.y;
         videoSurfaceView = new PlayerView(appContext);
-        videoSurfaceView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_ZOOM);
+        videoSurfaceView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
 
         BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
         TrackSelection.Factory videoTrackSelectionFactory =

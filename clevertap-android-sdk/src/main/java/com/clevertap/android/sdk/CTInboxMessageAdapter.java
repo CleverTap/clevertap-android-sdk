@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.LinearLayoutManager;
@@ -55,36 +56,11 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
     private int dotsCount;
     private ImageView[] dots;
     private CTInboxMessage inboxMessage;
-    private ExoPlayerRecyclerView recyclerView;
     PlayerView playerView;
 
-    CTInboxMessageAdapter(ArrayList<CTInboxMessage> inboxMessages, Activity activity, ExoPlayerRecyclerView recyclerView){
+    CTInboxMessageAdapter(ArrayList<CTInboxMessage> inboxMessages, Activity activity){
         this.inboxMessages = inboxMessages;
         this.context = activity;
-        this.recyclerView = recyclerView;
-//        if (recyclerView.getLayoutManager() instanceof LinearLayoutManager) {
-//            final LinearLayoutManager linearLayoutManager = (LinearLayoutManager) this.recyclerView.getLayoutManager();
-//
-//            this.recyclerView.setOnScrollListener(new RecyclerView.OnScrollListener() {
-//                @Override
-//                public void onScrollStateChanged(@NonNull RecyclerView recyclerView, int newState) {
-//                    super.onScrollStateChanged(recyclerView, newState);
-//                }
-//
-//                @Override
-//                public void onScrolled(@NonNull RecyclerView recyclerView, int dx, int dy) {
-//                    super.onScrolled(recyclerView, dx, dy);
-//                    int position = -1;
-//                    if (linearLayoutManager != null) {
-//                        position = linearLayoutManager.findFirstCompletelyVisibleItemPosition();
-//                    }
-//                    if(player!=null){
-//                        playerView.getTag()
-//                        player.stop();
-//                    }
-//                }
-//            });
-//        }
     }
 
     @NonNull
@@ -180,21 +156,49 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                             Logger.d("Error parsing CTA JSON - "+e.getLocalizedMessage());
                         }
                     }
-                    if(inboxMessage.getInboxMessageContents().get(0).mediaIsImage()) {
-                        ((CTSimpleMessageViewHolder)viewHolder).mediaImage.setVisibility(View.VISIBLE);
-                        Glide.with(((CTSimpleMessageViewHolder)viewHolder).mediaImage.getContext())
-                                .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
-                                .into(((CTSimpleMessageViewHolder)viewHolder).mediaImage);
-                    } else if(inboxMessage.getInboxMessageContents().get(0).mediaIsGIF()){
-                        ((CTSimpleMessageViewHolder)viewHolder).mediaImage.setVisibility(View.VISIBLE);
-                        Glide.with(((CTSimpleMessageViewHolder)viewHolder).mediaImage.getContext())
-                                .asGif()
-                                .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
-                                .into(((CTSimpleMessageViewHolder)viewHolder).mediaImage);
-                    }else if(inboxMessage.getInboxMessageContents().get(0).mediaIsVideo()) {
-                        //The below method adds videos to the respective cells but autoplay/pause on scroll needs to be added
-                        addVideoView(inboxMessage.getType(),viewHolder, context,i);
+                    switch (inboxMessage.getOrientation()){
+                        case "l" :
+                            if(inboxMessage.getInboxMessageContents().get(0).mediaIsImage()) {
+                                ((CTSimpleMessageViewHolder)viewHolder).mediaImage.setVisibility(View.VISIBLE);
+                                ((CTSimpleMessageViewHolder)viewHolder).mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                                Glide.with(((CTSimpleMessageViewHolder)viewHolder).mediaImage.getContext())
+                                        .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
+                                        .into(((CTSimpleMessageViewHolder)viewHolder).mediaImage);
+                            } else if(inboxMessage.getInboxMessageContents().get(0).mediaIsGIF()){
+                                ((CTSimpleMessageViewHolder)viewHolder).mediaImage.setVisibility(View.VISIBLE);
+                                ((CTSimpleMessageViewHolder)viewHolder).mediaImage.setScaleType(ImageView.ScaleType.FIT_XY);
+                                Glide.with(((CTSimpleMessageViewHolder)viewHolder).mediaImage.getContext())
+                                        .asGif()
+                                        .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
+                                        .into(((CTSimpleMessageViewHolder)viewHolder).mediaImage);
+                            }else if(inboxMessage.getInboxMessageContents().get(0).mediaIsVideo()) {
+                                //The below method adds videos to the respective cells but autoplay/pause on scroll needs to be added
+                                addVideoView(inboxMessage.getType(),viewHolder, context,i);
+                            }
+                            break;
+                        case "p" : if(inboxMessage.getInboxMessageContents().get(0).mediaIsImage()) {
+                            ((CTSimpleMessageViewHolder)viewHolder).squareImage.setVisibility(View.VISIBLE);
+                            ((CTSimpleMessageViewHolder)viewHolder).squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                            Glide.with(((CTSimpleMessageViewHolder)viewHolder).squareImage.getContext())
+                                    .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
+                                    .into(((CTSimpleMessageViewHolder)viewHolder).squareImage);
+                        } else if(inboxMessage.getInboxMessageContents().get(0).mediaIsGIF()){
+                            ((CTSimpleMessageViewHolder)viewHolder).squareImage.setVisibility(View.VISIBLE);
+                            ((CTSimpleMessageViewHolder)viewHolder).squareImage.setScaleType(ImageView.ScaleType.FIT_XY);
+                            Glide.with(((CTSimpleMessageViewHolder)viewHolder).squareImage.getContext())
+                                    .asGif()
+                                    .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
+                                    .into(((CTSimpleMessageViewHolder)viewHolder).squareImage);
+                        }else if(inboxMessage.getInboxMessageContents().get(0).mediaIsVideo()) {
+                            //The below method adds videos to the respective cells but autoplay/pause on scroll needs to be added
+                            addVideoView(inboxMessage.getType(),viewHolder, context,i);
+                        }
+                        break;
                     }
+                    ((CTSimpleMessageViewHolder)viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage));
+                    ((CTSimpleMessageViewHolder)viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage,((CTSimpleMessageViewHolder)viewHolder).cta1));
+                    ((CTSimpleMessageViewHolder)viewHolder).cta2.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage,((CTSimpleMessageViewHolder)viewHolder).cta2));
+                    ((CTSimpleMessageViewHolder)viewHolder).cta3.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage,((CTSimpleMessageViewHolder)viewHolder).cta3));
                     break;
                 case IconMessage:
                     ((CTIconMessageViewHolder)viewHolder).title.setText(inboxMessage.getInboxMessageContents().get(0).getTitle());
@@ -244,21 +248,49 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                             Logger.d("Error parsing CTA JSON - "+e.getLocalizedMessage());
                         }
                     }
-                    if(inboxMessage.getInboxMessageContents().get(0).mediaIsImage()) {
-                        ((CTIconMessageViewHolder)viewHolder).mediaImage.setVisibility(View.VISIBLE);
-                        Glide.with(((CTIconMessageViewHolder)viewHolder).mediaImage.getContext())
-                                .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
-                                .into(((CTIconMessageViewHolder)viewHolder).mediaImage);
-                    } else if(inboxMessage.getInboxMessageContents().get(0).mediaIsGIF()){
-                        ((CTIconMessageViewHolder)viewHolder).mediaImage.setVisibility(View.VISIBLE);
-                        Glide.with(((CTIconMessageViewHolder)viewHolder).mediaImage.getContext())
-                                .asGif()
-                                .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
-                                .into(((CTIconMessageViewHolder)viewHolder).mediaImage);
-                    }else if(inboxMessage.getInboxMessageContents().get(0).mediaIsVideo()) {
-                        //The below method adds videos to the respective cells but autoplay/pause on scroll needs to be added
-                        addVideoView(inboxMessage.getType(),viewHolder, context,i);
+                    switch (inboxMessage.getOrientation()){
+                        case "l" :
+                            if(inboxMessage.getInboxMessageContents().get(0).mediaIsImage()) {
+                                ((CTIconMessageViewHolder)viewHolder).mediaImage.setVisibility(View.VISIBLE);
+                                ((CTIconMessageViewHolder)viewHolder).mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                                Glide.with(((CTIconMessageViewHolder)viewHolder).mediaImage.getContext())
+                                        .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
+                                        .into(((CTIconMessageViewHolder)viewHolder).mediaImage);
+                            } else if(inboxMessage.getInboxMessageContents().get(0).mediaIsGIF()){
+                                ((CTIconMessageViewHolder)viewHolder).mediaImage.setVisibility(View.VISIBLE);
+                                ((CTIconMessageViewHolder)viewHolder).mediaImage.setScaleType(ImageView.ScaleType.FIT_XY);
+                                Glide.with(((CTIconMessageViewHolder)viewHolder).mediaImage.getContext())
+                                        .asGif()
+                                        .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
+                                        .into(((CTIconMessageViewHolder)viewHolder).mediaImage);
+                            }else if(inboxMessage.getInboxMessageContents().get(0).mediaIsVideo()) {
+                                //The below method adds videos to the respective cells but autoplay/pause on scroll needs to be added
+                                addVideoView(inboxMessage.getType(),viewHolder, context,i);
+                            }
+                            break;
+                        case "p" : if(inboxMessage.getInboxMessageContents().get(0).mediaIsImage()) {
+                            ((CTIconMessageViewHolder)viewHolder).squareImage.setVisibility(View.VISIBLE);
+                            ((CTIconMessageViewHolder)viewHolder).squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                            Glide.with(((CTIconMessageViewHolder)viewHolder).squareImage.getContext())
+                                    .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
+                                    .into(((CTIconMessageViewHolder)viewHolder).squareImage);
+                        } else if(inboxMessage.getInboxMessageContents().get(0).mediaIsGIF()){
+                            ((CTIconMessageViewHolder)viewHolder).squareImage.setVisibility(View.VISIBLE);
+                            ((CTIconMessageViewHolder)viewHolder).squareImage.setScaleType(ImageView.ScaleType.FIT_XY);
+                            Glide.with(((CTIconMessageViewHolder)viewHolder).squareImage.getContext())
+                                    .asGif()
+                                    .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
+                                    .into(((CTIconMessageViewHolder)viewHolder).squareImage);
+                        }else if(inboxMessage.getInboxMessageContents().get(0).mediaIsVideo()) {
+                            //The below method adds videos to the respective cells but autoplay/pause on scroll needs to be added
+                            addVideoView(inboxMessage.getType(),viewHolder, context,i);
+                        }
+                            break;
                     }
+                    ((CTIconMessageViewHolder)viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage));
+                    ((CTIconMessageViewHolder)viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage,((CTIconMessageViewHolder)viewHolder).cta1));
+                    ((CTIconMessageViewHolder)viewHolder).cta2.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage,((CTIconMessageViewHolder)viewHolder).cta2));
+                    ((CTIconMessageViewHolder)viewHolder).cta3.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage,((CTIconMessageViewHolder)viewHolder).cta3));
                     break;
                 case CarouselMessage:
                     ((CTCarouselMessageViewHolder)viewHolder).title.setText(inboxMessage.getInboxMessageContents().get(0).getTitle());
@@ -272,10 +304,9 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     }
                     ((CTCarouselMessageViewHolder)viewHolder).carouselTimestamp.setVisibility(View.GONE);
                     ((CTCarouselMessageViewHolder)viewHolder).carouselReadDot.setVisibility(View.GONE);
-
+                    ((CTCarouselMessageViewHolder)viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage));
                     break;
                 case CarouselImageMessage:
-
                     ((CTCarouselMessageViewHolder)viewHolder).title.setVisibility(View.GONE);
                     ((CTCarouselMessageViewHolder)viewHolder).message.setVisibility(View.GONE);
                     String carouselImageDisplayTimestamp  = calculateDisplayTimestamp(inboxMessage.getDate());
@@ -306,6 +337,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     dots[0].setImageDrawable(context.getApplicationContext().getResources().getDrawable(R.drawable.selected_dot));
                     CarouselPageChangeListener carouselImagePageChangeListener = new CarouselPageChangeListener((CTCarouselMessageViewHolder)viewHolder);
                     ((CTCarouselMessageViewHolder)viewHolder).imageViewPager.addOnPageChangeListener(carouselImagePageChangeListener);
+                    ((CTCarouselMessageViewHolder)viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage));
                     break;
             }
         }
@@ -361,7 +393,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
         playerView.setShowBuffering(true);
         playerView.setUseArtwork(true);
         playerView.setControllerAutoShow(false);
-        playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_ZOOM);
+        playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
         BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
         TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
         TrackSelector trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
@@ -374,7 +406,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
         // 4. Prepare the player with the source.
         player.prepare(hlsMediaSource);
         player.setRepeatMode(Player.REPEAT_MODE_ONE);
-        player.seekTo(1);
+        player.seekTo(1000);
         playerView.requestFocus();
         playerView.setVisibility(View.VISIBLE);
         playerView.setPlayer(player);
@@ -402,6 +434,31 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
         super.onViewRecycled(holder);
 
     }
+
+    void filterMessages(final String tab){
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                if(tab.equalsIgnoreCase("all"))
+                    return;
+                ArrayList<CTInboxMessage> filteredMessages = new ArrayList<>();
+                for(CTInboxMessage inboxMessage : inboxMessages){
+                    if(inboxMessage.getTags().contains(tab)){
+                        filteredMessages.add(inboxMessage);
+                    }
+                }
+                inboxMessages = filteredMessages;
+                ((Activity)context).runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        notifyDataSetChanged();
+                    }
+                });
+            }
+        }).start();
+    }
+
+
 
     class CarouselPageChangeListener implements ViewPager.OnPageChangeListener{
 

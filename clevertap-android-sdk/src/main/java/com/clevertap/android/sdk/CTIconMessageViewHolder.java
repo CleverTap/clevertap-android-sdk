@@ -6,14 +6,16 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 class CTIconMessageViewHolder extends RecyclerView.ViewHolder {
 
-    ImageView readDot, mediaImage,iconImage;
+    ImageView readDot, mediaImage,iconImage,squareImage;
     Button cta1,cta2,cta3;
     TextView title,message,timestamp;
     FrameLayout iconMessageFrameLayout;
+    RelativeLayout clickLayout;
 
     public CTIconMessageViewHolder(@NonNull View itemView) {
         super(itemView);
@@ -28,5 +30,7 @@ class CTIconMessageViewHolder extends RecyclerView.ViewHolder {
         cta2 = itemView.findViewById(R.id.cta_button_2);
         cta3 = itemView.findViewById(R.id.cta_button_3);
         iconMessageFrameLayout = itemView.findViewById(R.id.icon_message_frame_layout);
+        squareImage = itemView.findViewById(R.id.square_media_image);
+        clickLayout = itemView.findViewById(R.id.click_relative_layout);
     }
 }
