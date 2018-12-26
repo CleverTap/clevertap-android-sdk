@@ -36,7 +36,7 @@ public class CTInboxAllTabFragment extends CTInboxTabBaseFragment {
             exoPlayerRecyclerView.addItemDecoration(dividerItemDecoration);
             exoPlayerRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
-            inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, getActivity());
+            inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, getActivity(),this);
             inboxMessageAdapter.filterMessages("all");
             exoPlayerRecyclerView.setAdapter(inboxMessageAdapter);
             inboxMessageAdapter.notifyDataSetChanged();
@@ -59,7 +59,7 @@ public class CTInboxAllTabFragment extends CTInboxTabBaseFragment {
             recyclerView.addItemDecoration(dividerItemDecoration);
             recyclerView.setItemAnimator(new DefaultItemAnimator());
 
-            inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, getActivity());
+            inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, getActivity(),this);
             inboxMessageAdapter.filterMessages("all");
             recyclerView.setAdapter(inboxMessageAdapter);
             inboxMessageAdapter.notifyDataSetChanged();

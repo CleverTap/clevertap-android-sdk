@@ -154,7 +154,7 @@ class CTInboxController {
                 CTMessageDAO messageDAO = CTMessageDAO.initWithJSON(inboxMessage, userDAO.getUserId());
 
                 if(messageDAO != null) {
-                    if (getMessageDaoForId(inboxMessage.getString("id"))!=null && getMessageDaoForId(inboxMessage.getString("id")).equals(inboxMessage)) {
+                    if (getMessageDaoForId(inboxMessage.getString("id"))!=null && getMessageDaoForId(inboxMessage.getString("id")).getId().equals(inboxMessage.getString("id"))) {
                         Logger.d("Notification Inbox Message already present, updating values");
                         updateMessageList.add(messageDAO);
                     }else{
@@ -180,7 +180,7 @@ class CTInboxController {
             Logger.d("Notification Inbox messages updated");
         }
 
-        //TODO cleanup messages based on TTL
+        this.dbAdapter.cleanUpMessages(this.userId);
 
         this.messages = this.dbAdapter.getMessages(this.userId);
         this.unreadMessages = this.dbAdapter.getUnreadMessages(this.userId);

@@ -4120,6 +4120,20 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return fields;
     }
 
+    private JSONObject getWzrkFields(CTInboxMessage root) throws JSONException {
+        final JSONObject fields = new JSONObject();
+        JSONObject jsonObject = root.getData();
+        Iterator<String> iterator = jsonObject.keys();
+
+        while(iterator.hasNext()){
+            String keyName = iterator.next();
+            if(keyName.startsWith(Constants.WZRK_PREFIX))
+                fields.put(keyName,jsonObject.get(keyName));
+        }
+
+        return fields;
+    }
+
     /**
      * Push Charged event, which describes a purchase made.
      *
@@ -4348,6 +4362,45 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param customData Additional data such as form input to to be added to the event data
      */
     void pushInAppNotificationStateEvent(boolean clicked, CTInAppNotification data, Bundle customData) {
+        JSONObject event = new JSONObject();
+        try {
+            JSONObject notif = getWzrkFields(data);
+
+            if (customData != null) {
+                for (String x : customData.keySet()) {
+
+                    Object value = customData.get(x);
+                    if (value != null) notif.put(x, value);
+                }
+            }
+
+            if (clicked) {
+                try {
+                    setWzrkParams(notif);
+                } catch (Throwable t) {
+                    // no-op
+                }
+                event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
+            } else {
+                event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
+            }
+
+            event.put("evtData", notif);
+            queueEvent(context, event, Constants.RAISED_EVENT);
+        } catch (Throwable ignored) {
+            // We won't get here
+        }
+    }
+
+    /**
+     * Raises the Notification Clicked event, if {@param clicked} is true,
+     * otherwise the Notification Viewed event, if {@param clicked} is false.
+     *
+     * @param clicked    Whether or not this notification was clicked
+     * @param data       The data to be attached as the event data
+     * @param customData Additional data such as form input to to be added to the event data
+     */
+    void pushInboxMessageStateEvent(boolean clicked, CTInboxMessage data, Bundle customData) {
         JSONObject event = new JSONObject();
         try {
             JSONObject notif = getWzrkFields(data);
@@ -6064,13 +6117,13 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     @Override
-    public void messageDidShow() {
-
+    public void messageDidShow(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data) {
+        pushInboxMessageStateEvent(false,inboxMessage,data);
     }
 
     @Override
-    public void messageDidClick() {
-
+    public void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data) {
+        pushInboxMessageStateEvent(true,inboxMessage,data);
     }
 
     private ArrayList<CTInboxMessage> checkForVideoMessages(ArrayList<CTInboxMessage> inboxMessageList){

@@ -21,6 +21,7 @@ class CTMessageDAO {
     private int expires;
     private String userId;
     private List<String> tags = new ArrayList<>();
+    private String campaignId;
 
     String getId() {
         return id;
@@ -87,9 +88,17 @@ class CTMessageDAO {
 
     }
 
+    String getCampaignId() {
+        return campaignId;
+    }
+
+    void setCampaignId(String campaignId) {
+        this.campaignId = campaignId;
+    }
+
     CTMessageDAO(){}
 
-    private CTMessageDAO(String id, JSONObject jsonData, boolean read, int date, int expires, String userId, JSONArray jsonArray){
+    private CTMessageDAO(String id, JSONObject jsonData, boolean read, int date, int expires, String userId, JSONArray jsonArray, String campaignId){
         this.id = id;
         this.jsonData = jsonData;
         this.read = read;
@@ -106,6 +115,7 @@ class CTMessageDAO {
                 }
             }
         }
+        this.campaignId = campaignId;
     }
 
     static CTMessageDAO initWithJSON(JSONObject inboxMessage, String userId){
@@ -115,7 +125,8 @@ class CTMessageDAO {
             int expires = inboxMessage.has("ttl") ? inboxMessage.getInt("ttl") : -1;
             JSONObject cellObject = inboxMessage.has("cell") ? inboxMessage.getJSONObject("cell") : null;
             JSONArray jsonArray = inboxMessage.has("tags") ? inboxMessage.getJSONArray("tags") : null;
-            return new CTMessageDAO(id, cellObject, false,date,expires,userId, jsonArray);
+            String campaignId = inboxMessage.has("wzrk_id") ? inboxMessage.getString("wzrk_id") : null;
+            return new CTMessageDAO(id, cellObject, false,date,expires,userId, jsonArray,campaignId);
         }catch (JSONException e){
             Logger.d("Unable to parse Notification inbox message to CTMessageDao - "+e.getLocalizedMessage());
             return null;
@@ -135,6 +146,7 @@ class CTMessageDAO {
                 jsonArray.put(tags.get(i));
             }
             jsonObject.put("tags",jsonArray);
+            jsonObject.put("wzrk_id",campaignId);
             return jsonObject;
         } catch (JSONException e) {
             Logger.v("Unable to convert CTMessageDao to JSON - "+e.getLocalizedMessage());

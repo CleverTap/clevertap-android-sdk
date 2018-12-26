@@ -7,6 +7,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -56,11 +57,13 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
     private int dotsCount;
     private ImageView[] dots;
     private CTInboxMessage inboxMessage;
+    Fragment fragment;
     PlayerView playerView;
 
-    CTInboxMessageAdapter(ArrayList<CTInboxMessage> inboxMessages, Activity activity){
+    CTInboxMessageAdapter(ArrayList<CTInboxMessage> inboxMessages, Activity activity, Fragment fragment){
         this.inboxMessages = inboxMessages;
         this.context = activity;
+        this.fragment = fragment;
     }
 
     @NonNull
@@ -195,10 +198,17 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                         }
                         break;
                     }
-                    ((CTSimpleMessageViewHolder)viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage));
-                    ((CTSimpleMessageViewHolder)viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage,((CTSimpleMessageViewHolder)viewHolder).cta1));
-                    ((CTSimpleMessageViewHolder)viewHolder).cta2.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage,((CTSimpleMessageViewHolder)viewHolder).cta2));
-                    ((CTSimpleMessageViewHolder)viewHolder).cta3.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage,((CTSimpleMessageViewHolder)viewHolder).cta3));
+                    if(fragment!=null) {
+                        ((CTSimpleMessageViewHolder) viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, null,fragment));
+                        ((CTSimpleMessageViewHolder) viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTSimpleMessageViewHolder) viewHolder).cta1, fragment));
+                        ((CTSimpleMessageViewHolder) viewHolder).cta2.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTSimpleMessageViewHolder) viewHolder).cta2, fragment));
+                        ((CTSimpleMessageViewHolder) viewHolder).cta3.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTSimpleMessageViewHolder) viewHolder).cta3, fragment));
+                    }else{
+                        ((CTSimpleMessageViewHolder) viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage,null, (Activity) context));
+                        ((CTSimpleMessageViewHolder) viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTSimpleMessageViewHolder) viewHolder).cta1, (Activity) context));
+                        ((CTSimpleMessageViewHolder) viewHolder).cta2.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTSimpleMessageViewHolder) viewHolder).cta2, (Activity) context));
+                        ((CTSimpleMessageViewHolder) viewHolder).cta3.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTSimpleMessageViewHolder) viewHolder).cta3, (Activity) context));
+                    }
                     break;
                 case IconMessage:
                     ((CTIconMessageViewHolder)viewHolder).title.setText(inboxMessage.getInboxMessageContents().get(0).getTitle());
@@ -287,10 +297,17 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                         }
                             break;
                     }
-                    ((CTIconMessageViewHolder)viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage));
-                    ((CTIconMessageViewHolder)viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage,((CTIconMessageViewHolder)viewHolder).cta1));
-                    ((CTIconMessageViewHolder)viewHolder).cta2.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage,((CTIconMessageViewHolder)viewHolder).cta2));
-                    ((CTIconMessageViewHolder)viewHolder).cta3.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage,((CTIconMessageViewHolder)viewHolder).cta3));
+                    if(fragment!=null) {
+                        ((CTIconMessageViewHolder) viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, null,fragment));
+                        ((CTIconMessageViewHolder) viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTIconMessageViewHolder) viewHolder).cta1, fragment));
+                        ((CTIconMessageViewHolder) viewHolder).cta2.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTIconMessageViewHolder) viewHolder).cta2, fragment));
+                        ((CTIconMessageViewHolder) viewHolder).cta3.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTIconMessageViewHolder) viewHolder).cta3, fragment));
+                    }else{
+                        ((CTIconMessageViewHolder) viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage,null, (Activity) context));
+                        ((CTIconMessageViewHolder) viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTIconMessageViewHolder) viewHolder).cta1, (Activity) context));
+                        ((CTIconMessageViewHolder) viewHolder).cta2.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTIconMessageViewHolder) viewHolder).cta2, (Activity) context));
+                        ((CTIconMessageViewHolder) viewHolder).cta3.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTIconMessageViewHolder) viewHolder).cta3, (Activity) context));
+                    }
                     break;
                 case CarouselMessage:
                     ((CTCarouselMessageViewHolder)viewHolder).title.setText(inboxMessage.getInboxMessageContents().get(0).getTitle());
@@ -304,7 +321,11 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     }
                     ((CTCarouselMessageViewHolder)viewHolder).carouselTimestamp.setVisibility(View.GONE);
                     ((CTCarouselMessageViewHolder)viewHolder).carouselReadDot.setVisibility(View.GONE);
-                    ((CTCarouselMessageViewHolder)viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage));
+                    if(fragment!=null) {
+                        ((CTCarouselMessageViewHolder) viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage,null,fragment,((CTCarouselMessageViewHolder)viewHolder).imageViewPager.getCurrentItem()));
+                    }else{
+                        ((CTCarouselMessageViewHolder) viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage,null, (Activity) context,((CTCarouselMessageViewHolder)viewHolder).imageViewPager.getCurrentItem()));
+                    }
                     break;
                 case CarouselImageMessage:
                     ((CTCarouselMessageViewHolder)viewHolder).title.setVisibility(View.GONE);
@@ -337,7 +358,11 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     dots[0].setImageDrawable(context.getApplicationContext().getResources().getDrawable(R.drawable.selected_dot));
                     CarouselPageChangeListener carouselImagePageChangeListener = new CarouselPageChangeListener((CTCarouselMessageViewHolder)viewHolder);
                     ((CTCarouselMessageViewHolder)viewHolder).imageViewPager.addOnPageChangeListener(carouselImagePageChangeListener);
-                    ((CTCarouselMessageViewHolder)viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage));
+                    if(fragment!=null) {
+                        ((CTCarouselMessageViewHolder) viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage,null,fragment,((CTCarouselMessageViewHolder)viewHolder).imageViewPager.getCurrentItem()));
+                    }else{
+                        ((CTCarouselMessageViewHolder) viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage,null, (Activity) context,((CTCarouselMessageViewHolder)viewHolder).imageViewPager.getCurrentItem()));
+                    }
                     break;
             }
         }

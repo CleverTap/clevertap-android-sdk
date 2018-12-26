@@ -30,12 +30,14 @@ public class CTInboxMessage implements Parcelable {
     private String bgColor;
     private ArrayList<CTInboxMessageContent> inboxMessageContents = new ArrayList<>();
     private String orientation;
+    private String campaignId;
 
 
     CTInboxMessage initWithJSON(JSONObject jsonObject){
         this.data = jsonObject;
         try {
             this.messageId = jsonObject.has("id") ? jsonObject.getString("id") : "";
+            this.campaignId = jsonObject.has("wzrk_id") ? jsonObject.getString("wzrk_id") : "";
             this.date = jsonObject.has("date") ? jsonObject.getInt("date") : -1;
             this.expires = jsonObject.has("ttl") ? jsonObject.getInt("ttl") : -1;
             this.isRead = jsonObject.has("isRead") && jsonObject.getBoolean("isRead");
@@ -94,6 +96,7 @@ public class CTInboxMessage implements Parcelable {
                 inboxMessageContents = null;
             }
             orientation = in.readString();
+            campaignId = in.readString();
         }catch (JSONException e){
            Logger.v("Unable to parse CTInboxMessage from parcel - "+e.getLocalizedMessage());
         }
@@ -141,6 +144,7 @@ public class CTInboxMessage implements Parcelable {
             dest.writeList(inboxMessageContents);
         }
         dest.writeString(orientation);
+        dest.writeString(campaignId);
     }
 
     @SuppressWarnings("unused")
@@ -206,6 +210,10 @@ public class CTInboxMessage implements Parcelable {
 
     public ArrayList<CTInboxMessageContent> getInboxMessageContents() {
         return inboxMessageContents;
+    }
+
+    public String getCampaignId() {
+        return campaignId;
     }
 
     public CTInboxMessageType getType() {

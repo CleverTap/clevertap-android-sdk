@@ -1,15 +1,15 @@
 package com.clevertap.android.sdk;
 
-import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Parcelable;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -19,15 +19,14 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.LinearLayout;
-import android.widget.TableLayout;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
-public class CTInboxActivity extends FragmentActivity {
+public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseFragment.InboxListener {
     interface InboxActivityListener{
-        void messageDidShow();
-        void messageDidClick();
+        void messageDidShow(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data);
+        void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data);
     }
 
     private ArrayList<CTInboxMessage> inboxMessageArrayList;
@@ -137,7 +136,7 @@ public class CTInboxActivity extends FragmentActivity {
                 exoPlayerRecyclerView.addItemDecoration(dividerItemDecoration);
                 exoPlayerRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
-                inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, this);
+                inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, this,null);
                 exoPlayerRecyclerView.setAdapter(inboxMessageAdapter);
                 inboxMessageAdapter.notifyDataSetChanged();
                 if (firstTime) {
@@ -159,7 +158,7 @@ public class CTInboxActivity extends FragmentActivity {
                 recyclerView.addItemDecoration(dividerItemDecoration);
                 recyclerView.setItemAnimator(new DefaultItemAnimator());
 
-                inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, this);
+                inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, this,null);
                 recyclerView.setAdapter(inboxMessageAdapter);
                 inboxMessageAdapter.notifyDataSetChanged();
             }
@@ -177,4 +176,69 @@ public class CTInboxActivity extends FragmentActivity {
         return videoPresent;
     }
 
+    @Override
+    public void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data) {
+        didShow(data,inboxMessage);
+    }
+
+    @Override
+    public void messageDidClick(Context baseContext, CTInboxMessage inboxMessage, Bundle data) {
+        didClick(data,inboxMessage);
+    }
+
+    void didClick(Bundle data, CTInboxMessage inboxMessage) {
+        InboxActivityListener listener = getListener();
+        if (listener != null) {
+            listener.messageDidClick(this,inboxMessage, data);
+        }
+    }
+
+    void didShow(Bundle data, CTInboxMessage inboxMessage) {
+        InboxActivityListener listener = getListener();
+        if (listener != null) {
+            listener.messageDidShow(this,inboxMessage, data);
+        }
+    }
+
+    void handleClick(int position, String buttonText){
+        try {
+            Bundle data = new Bundle();
+
+            data.putString(Constants.NOTIFICATION_ID_TAG,inboxMessageArrayList.get(position).getCampaignId());
+            if(buttonText != null && !buttonText.isEmpty())
+                data.putString("wzrk_c2a", buttonText);
+            didClick(data,inboxMessageArrayList.get(position));
+
+            String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getActionUrl();
+            if (actionUrl != null) {
+                fireUrlThroughIntent(actionUrl, data);
+                return;
+            }
+        } catch (Throwable t) {
+            config.getLogger().debug("Error handling notification button click: " + t.getCause());
+        }
+    }
+
+    void handleViewPagerClick(int position, int viewPagerPosition){
+        try {
+            Bundle data = new Bundle();
+
+            data.putString(Constants.NOTIFICATION_ID_TAG,inboxMessageArrayList.get(position).getCampaignId());
+            didClick(data,inboxMessageArrayList.get(position));
+            String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(viewPagerPosition).getActionUrl();
+            fireUrlThroughIntent(actionUrl, data);
+            return;
+        }catch (Throwable t){
+            config.getLogger().debug("Error handling notification button click: " + t.getCause());
+        }
+    }
+
+    void fireUrlThroughIntent(String url, Bundle formData) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(intent);
+        } catch (Throwable t) {
+            // Ignore
+        }
+    }
 }

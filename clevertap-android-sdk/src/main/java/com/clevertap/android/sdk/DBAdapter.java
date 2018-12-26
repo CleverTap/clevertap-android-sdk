@@ -49,6 +49,7 @@ public class DBAdapter {
     private static final String EXPIRES = "expires";
     private static final String TAGS = "tags";
     private static final String MESSAGE_USER = "messageUser";
+    private static final String CAMPAIGN = "campaignId";
 
     private static final int DB_UPDATE_ERROR = -1;
     private static final int DB_OUT_OF_MEMORY_ERROR = -2;
@@ -80,6 +81,7 @@ public class DBAdapter {
     private static final String CREATE_INBOX_MESSAGES_TABLE =
             "CREATE TABLE " + Table.INBOX_MESSAGES.getName() + " (" + ID + " TEXT NOT NULL," +
                     KEY_DATA + " TEXT NOT NULL, " +
+                    CAMPAIGN + " TEXT NOT NULL, " +
                     TAGS + " TEXT NOT NULL, " +
                     IS_READ + " INTEGER NOT NULL DEFAULT 0, " +
                     EXPIRES + " INTEGER NOT NULL, " +
@@ -519,6 +521,7 @@ public class DBAdapter {
                 final ContentValues cv = new ContentValues();
                 cv.put(ID, messageDAO.getId());
                 cv.put(KEY_DATA, messageDAO.getJsonData().toString());
+                cv.put(CAMPAIGN,messageDAO.getCampaignId());
                 cv.put(TAGS, messageDAO.getTags());
                 cv.put(IS_READ, messageDAO.isRead());
                 cv.put(EXPIRES, messageDAO.getExpires());
@@ -565,6 +568,7 @@ public class DBAdapter {
             for(CTMessageDAO messageDAO : inboxMessages) {
                 final ContentValues cv = new ContentValues();
                 cv.put(KEY_DATA, messageDAO.getJsonData().toString());
+                cv.put(CAMPAIGN,messageDAO.getCampaignId());
                 cv.put(IS_READ, messageDAO.isRead());
                 cv.put(TAGS,messageDAO.getTags());
                 cv.put(EXPIRES, messageDAO.getExpires());
@@ -618,6 +622,7 @@ public class DBAdapter {
                     messageDAO.setRead(cursor.getInt(cursor.getColumnIndex(IS_READ)));
                     messageDAO.setUserId(cursor.getString(cursor.getColumnIndex(MESSAGE_USER)));
                     messageDAO.setTags(cursor.getString(cursor.getColumnIndex(TAGS)));
+                    messageDAO.setCampaignId(cursor.getString(cursor.getColumnIndex(CAMPAIGN)));
                 } catch (final JSONException e) {
                     // Ignore
                 }
@@ -725,6 +730,7 @@ public class DBAdapter {
                     ctMessageDAO.setRead(cursor.getInt(cursor.getColumnIndex(IS_READ)));
                     ctMessageDAO.setUserId(cursor.getString(cursor.getColumnIndex(MESSAGE_USER)));
                     ctMessageDAO.setTags(cursor.getString(cursor.getColumnIndex(TAGS)));
+                    ctMessageDAO.setCampaignId(cursor.getString(cursor.getColumnIndex(CAMPAIGN)));
                     messageDAOArrayList.add(ctMessageDAO);
                 }
                 cursor.close();
@@ -766,6 +772,7 @@ public class DBAdapter {
                     ctMessageDAO.setRead(cursor.getInt(cursor.getColumnIndex(IS_READ)));
                     ctMessageDAO.setUserId(cursor.getString(cursor.getColumnIndex(MESSAGE_USER)));
                     ctMessageDAO.setTags(cursor.getString(cursor.getColumnIndex(TAGS)));
+                    ctMessageDAO.setCampaignId(cursor.getString(cursor.getColumnIndex(CAMPAIGN)));
                     messageDAOArrayList.add(ctMessageDAO);
                 }
                 cursor.close();
@@ -782,6 +789,17 @@ public class DBAdapter {
             return null;
         } finally {
             dbHelper.close();
+        }
+    }
+
+    void cleanUpMessages(String userId){
+        ArrayList<CTMessageDAO> messageDAOArrayList = getMessages(userId);
+        for(CTMessageDAO messageDAO : messageDAOArrayList){
+            if(messageDAO.getExpires() != 0) {
+                if (System.currentTimeMillis() > messageDAO.getDate() + messageDAO.getExpires()) {
+                    deleteMessageForId(messageDAO.getId());
+                }
+            }
         }
     }
 }
