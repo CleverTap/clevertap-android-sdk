@@ -24,6 +24,7 @@ abstract class CTInboxTabBaseFragment extends Fragment {
     boolean videoPresent = false;
     CTInboxStyleConfig styleConfig;
     private WeakReference<CTInboxTabBaseFragment.InboxListener> listenerWeakReference;
+    CleverTapAPI cleverTapAPI;
 
     void setListener(InboxListener listener) {
         listenerWeakReference = new WeakReference<>(listener);
@@ -51,6 +52,7 @@ abstract class CTInboxTabBaseFragment extends Fragment {
             Logger.d("Inbox Message List - "+inboxMessageArrayList.toString());
             config = bundle.getParcelable("config");
             styleConfig = bundle.getParcelable("styleConfig");
+            cleverTapAPI = CleverTapAPI.instanceWithConfig(getActivity(),config);
         }
     }
 
@@ -150,5 +152,9 @@ abstract class CTInboxTabBaseFragment extends Fragment {
         } catch (Throwable t) {
             // Ignore
         }
+    }
+
+    void markReadForMessageId(CTInboxMessage inboxMessage){
+        cleverTapAPI.markReadInboxMessage(inboxMessage);
     }
 }

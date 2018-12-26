@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -74,10 +75,20 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
             case SimpleMessage :
                 view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.inbox_simple_message_layout,viewGroup,false);
                 CTSimpleMessageViewHolder ctSimpleMessageViewHolder = new CTSimpleMessageViewHolder(view);
+                if(fragment != null){
+                    ((CTInboxTabBaseFragment)fragment).didShow(null,i);
+                }else if(context != null){
+                    ((CTInboxActivity)context).didShow(null,inboxMessages.get(i));
+                }
                 return ctSimpleMessageViewHolder;
             case IconMessage:
                 view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.inbox_icon_message_layout,viewGroup,false);
                 CTIconMessageViewHolder ctIconMessageViewHolder = new CTIconMessageViewHolder(view);
+                if(fragment != null){
+                    ((CTInboxTabBaseFragment)fragment).didShow(null,i);
+                }else if(context != null){
+                    ((CTInboxActivity)context).didShow(null,inboxMessages.get(i));
+                }
                 return ctIconMessageViewHolder;
             case CarouselMessage:
             case CarouselImageMessage:
@@ -101,6 +112,11 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                 dots[0].setImageDrawable(context.getApplicationContext().getResources().getDrawable(R.drawable.selected_dot));
                 CarouselPageChangeListener carouselPageChangeListener = new CarouselPageChangeListener(ctCarouselMessageViewHolder);
                 ctCarouselMessageViewHolder.imageViewPager.addOnPageChangeListener(carouselPageChangeListener);
+                if(fragment != null){
+                    ((CTInboxTabBaseFragment)fragment).didShow(null,i);
+                }else if(context != null){
+                    ((CTInboxActivity)context).didShow(null,inboxMessage);
+                }
                 return ctCarouselMessageViewHolder;
         }
         return null;
@@ -196,6 +212,30 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                             //The below method adds videos to the respective cells but autoplay/pause on scroll needs to be added
                             addVideoView(inboxMessage.getType(),viewHolder, context,i);
                         }
+                        Runnable runnable = new Runnable() {
+                            @Override
+                            public void run() {
+                                if(fragment != null){
+                                    ((CTInboxTabBaseFragment)fragment).markReadForMessageId(inboxMessage);
+                                    ((CTInboxActivity)context).runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            ((CTSimpleMessageViewHolder)viewHolder).readDot.setVisibility(View.GONE);
+                                        }
+                                    });
+                                }else if(context != null){
+                                    ((CTInboxActivity)context).markReadForMessageId(inboxMessage);
+                                    ((CTInboxActivity)context).runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            ((CTSimpleMessageViewHolder)viewHolder).readDot.setVisibility(View.GONE);
+                                        }
+                                    });
+                                }
+
+                            }
+                        };
+                        new Handler().postDelayed(runnable,1000);
                         break;
                     }
                     if(fragment!=null) {
@@ -293,9 +333,32 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                     .into(((CTIconMessageViewHolder)viewHolder).squareImage);
                         }else if(inboxMessage.getInboxMessageContents().get(0).mediaIsVideo()) {
                             //The below method adds videos to the respective cells but autoplay/pause on scroll needs to be added
-                            addVideoView(inboxMessage.getType(),viewHolder, context,i);
+                            addVideoView(inboxMessage.getType(), viewHolder, context, i);
                         }
-                            break;
+                        Runnable runnable = new Runnable() {
+                            @Override
+                            public void run() {
+                                if(fragment != null){
+                                    ((CTInboxTabBaseFragment)fragment).markReadForMessageId(inboxMessage);
+                                    ((CTInboxActivity)context).runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            ((CTIconMessageViewHolder)viewHolder).readDot.setVisibility(View.GONE);
+                                        }
+                                    });
+                                }else if(context != null){
+                                    ((CTInboxActivity)context).markReadForMessageId(inboxMessage);
+                                    ((CTInboxActivity)context).runOnUiThread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            ((CTIconMessageViewHolder)viewHolder).readDot.setVisibility(View.GONE);
+                                        }
+                                    });
+                                }
+                            }
+                        };
+                        new Handler().postDelayed(runnable,1000);
+                        break;
                     }
                     if(fragment!=null) {
                         ((CTIconMessageViewHolder) viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, null,fragment));
@@ -326,6 +389,29 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     }else{
                         ((CTCarouselMessageViewHolder) viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage,null, (Activity) context,((CTCarouselMessageViewHolder)viewHolder).imageViewPager.getCurrentItem()));
                     }
+                    Runnable runnable = new Runnable() {
+                        @Override
+                        public void run() {
+                            if(fragment != null){
+                                ((CTInboxTabBaseFragment)fragment).markReadForMessageId(inboxMessage);
+                                ((CTInboxActivity)context).runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        ((CTCarouselMessageViewHolder)viewHolder).readDot.setVisibility(View.GONE);
+                                    }
+                                });
+                            }else if(context != null){
+                                ((CTInboxActivity)context).markReadForMessageId(inboxMessage);
+                                ((CTInboxActivity)context).runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        ((CTCarouselMessageViewHolder)viewHolder).readDot.setVisibility(View.GONE);
+                                    }
+                                });
+                            }
+                        }
+                    };
+                    new Handler().postDelayed(runnable,1000);
                     break;
                 case CarouselImageMessage:
                     ((CTCarouselMessageViewHolder)viewHolder).title.setVisibility(View.GONE);
@@ -363,6 +449,29 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     }else{
                         ((CTCarouselMessageViewHolder) viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage,null, (Activity) context,((CTCarouselMessageViewHolder)viewHolder).imageViewPager.getCurrentItem()));
                     }
+                    Runnable runnableImage = new Runnable() {
+                        @Override
+                        public void run() {
+                            if(fragment != null){
+                                ((CTInboxTabBaseFragment)fragment).markReadForMessageId(inboxMessage);
+                                ((CTInboxActivity)context).runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        ((CTCarouselMessageViewHolder)viewHolder).carouselReadDot.setVisibility(View.GONE);
+                                    }
+                                });
+                            }else if(context != null){
+                                ((CTInboxActivity)context).markReadForMessageId(inboxMessage);
+                                ((CTInboxActivity)context).runOnUiThread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        ((CTCarouselMessageViewHolder)viewHolder).carouselReadDot.setVisibility(View.GONE);
+                                    }
+                                });
+                            }
+                        }
+                    };
+                    new Handler().postDelayed(runnableImage,1000);
                     break;
             }
         }

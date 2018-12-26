@@ -39,6 +39,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
     private CTInboxMessageAdapter inboxMessageAdapter;
     private boolean firstTime = true;
     private ViewPager viewPager;
+    private CleverTapAPI cleverTapAPI;
 
     void setListener(InboxActivityListener listener) {
         listenerWeakReference = new WeakReference<>(listener);
@@ -68,6 +69,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
             inboxMessageArrayList = extras.getParcelableArrayList("messageList");
             config = extras.getParcelable("config");
             setListener((InboxActivityListener) CleverTapAPI.instanceWithConfig(getApplicationContext(),config));
+            cleverTapAPI = CleverTapAPI.instanceWithConfig(getApplicationContext(),config);
         }catch (Throwable t){
             Logger.v("Cannot find a valid notification inbox bundle to show!", t);
             return;
@@ -240,5 +242,9 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
         } catch (Throwable t) {
             // Ignore
         }
+    }
+
+    void markReadForMessageId(CTInboxMessage inboxMessage){
+        cleverTapAPI.markReadInboxMessage(inboxMessage);
     }
 }
