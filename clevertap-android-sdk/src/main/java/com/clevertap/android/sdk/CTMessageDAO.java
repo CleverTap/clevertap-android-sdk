@@ -120,7 +120,7 @@ class CTMessageDAO {
 
     static CTMessageDAO initWithJSON(JSONObject inboxMessage, String userId){
         try {
-            String id = inboxMessage.has("id") ? inboxMessage.getString("id") : null;
+            String id = inboxMessage.has("_id") ? inboxMessage.getString("_id") : null;
             int date = inboxMessage.has("date") ? inboxMessage.getInt("date") : -1;
             int expires = inboxMessage.has("ttl") ? inboxMessage.getInt("ttl") : -1;
             JSONObject cellObject = inboxMessage.has("cell") ? inboxMessage.getJSONObject("cell") : null;

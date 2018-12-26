@@ -10,7 +10,9 @@ import org.json.JSONObject;
 public class CTInboxMessageContent implements Parcelable {
 
     private String title;
+    private String titleColor;
     private String message;
+    private String messageColor;
     private String media;
     private String actionType;
     private String actionUrl;
@@ -22,8 +24,16 @@ public class CTInboxMessageContent implements Parcelable {
 
     CTInboxMessageContent initWithJSON(JSONObject contentObject){
         try {
-            this.title = contentObject.has("title") ? contentObject.getString("title") : "";
-            this.message = contentObject.has("message") ? contentObject.getString("message") : "";
+            JSONObject titleObject = contentObject.has("title") ? contentObject.getJSONObject("title") : null;
+            if(titleObject != null) {
+                this.title = titleObject.has("title") ? titleObject.getString("title") : "";
+                this.titleColor = titleObject.has("color") ? titleObject.getString("color") : "";
+            }
+            JSONObject msgObject = contentObject.has("message") ? contentObject.getJSONObject("message") : null;
+            if(msgObject != null) {
+                this.message = msgObject.has("message") ? msgObject.getString("message") : "";
+                this.messageColor = msgObject.has("color") ? msgObject.getString("color") : "";
+            }
             this.icon = contentObject.has("icon") ? contentObject.getString("icon") : "";
             JSONObject mediaObject = contentObject.has("media") ? contentObject.getJSONObject("media") : null;
             if(mediaObject != null){
@@ -49,7 +59,9 @@ public class CTInboxMessageContent implements Parcelable {
 
     protected CTInboxMessageContent(Parcel in) {
         title = in.readString();
+        titleColor = in.readString();
         message = in.readString();
+        messageColor = in.readString();
         media = in.readString();
         actionType = in.readString();
         actionUrl = in.readString();
@@ -70,7 +82,9 @@ public class CTInboxMessageContent implements Parcelable {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(title);
+        dest.writeString(titleColor);
         dest.writeString(message);
+        dest.writeString(messageColor);
         dest.writeString(media);
         dest.writeString(actionType);
         dest.writeString(actionUrl);
@@ -153,6 +167,22 @@ public class CTInboxMessageContent implements Parcelable {
         this.links = links;
     }
 
+    public String getTitleColor() {
+        return titleColor;
+    }
+
+    public void setTitleColor(String titleColor) {
+        this.titleColor = titleColor;
+    }
+
+    public String getMessageColor() {
+        return messageColor;
+    }
+
+    public void setMessageColor(String messageColor) {
+        this.messageColor = messageColor;
+    }
+
     public String getLinktype(JSONObject jsonObject){
         if(jsonObject == null) return null;
         try {
@@ -181,6 +211,16 @@ public class CTInboxMessageContent implements Parcelable {
             return urlObject.has("android") ? urlObject.getString("android") : "";
         } catch (JSONException e) {
             Logger.v("Unable to get Link URL with JSON - "+e.getLocalizedMessage());
+            return null;
+        }
+    }
+
+    public String getLinkColor(JSONObject jsonObject){
+        if(jsonObject == null) return null;
+        try {
+            return jsonObject.has("color") ? jsonObject.getString("color") : "";
+        } catch (JSONException e) {
+            Logger.v("Unable to get Link Text Color with JSON - "+e.getLocalizedMessage());
             return null;
         }
     }
