@@ -6,6 +6,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
@@ -17,7 +18,8 @@ class CTSimpleMessageViewHolder extends RecyclerView.ViewHolder {
     TextView timestamp;
     ImageView readDot, mediaImage, squareImage;
     Button cta1,cta2,cta3;
-    RelativeLayout simpleMessageRelativeLayout,clickLayout;
+    RelativeLayout simpleMessageRelativeLayout,clickLayout,bodyRelativeLayout;
+    LinearLayout ctaLinearLayout;
     FrameLayout simpleMessageFrameLayout;
 
     CTSimpleMessageViewHolder(@NonNull View itemView) {
@@ -35,5 +37,7 @@ class CTSimpleMessageViewHolder extends RecyclerView.ViewHolder {
         simpleMessageFrameLayout = itemView.findViewById(R.id.simple_message_frame_layout);
         squareImage = itemView.findViewById(R.id.square_media_image);
         clickLayout = itemView.findViewById(R.id.click_relative_layout);
+        ctaLinearLayout = itemView.findViewById(R.id.cta_linear_layout);
+        bodyRelativeLayout = itemView.findViewById(R.id.body_relative_layout);
     }
 }

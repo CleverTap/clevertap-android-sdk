@@ -26,19 +26,22 @@ public class CTInboxMessageContent implements Parcelable {
         try {
             JSONObject titleObject = contentObject.has("title") ? contentObject.getJSONObject("title") : null;
             if(titleObject != null) {
-                this.title = titleObject.has("title") ? titleObject.getString("title") : "";
+                this.title = titleObject.has("text") ? titleObject.getString("text") : "";
                 this.titleColor = titleObject.has("color") ? titleObject.getString("color") : "";
             }
             JSONObject msgObject = contentObject.has("message") ? contentObject.getJSONObject("message") : null;
             if(msgObject != null) {
-                this.message = msgObject.has("message") ? msgObject.getString("message") : "";
+                this.message = msgObject.has("text") ? msgObject.getString("text") : "";
                 this.messageColor = msgObject.has("color") ? msgObject.getString("color") : "";
             }
-            this.icon = contentObject.has("icon") ? contentObject.getString("icon") : "";
+            JSONObject iconObject = contentObject.has("icon") ? contentObject.getJSONObject("icon") : null;
+            if(iconObject != null){
+                this.icon =  contentObject.has("url") ? contentObject.getString("url") : "";
+            }
             JSONObject mediaObject = contentObject.has("media") ? contentObject.getJSONObject("media") : null;
             if(mediaObject != null){
-                this.media = mediaObject.has("mediaUrl") ? mediaObject.getString("mediaUrl") : "";
-                this.contentType = mediaObject.has("type") ? mediaObject.getString("type") : "";
+                this.media = mediaObject.has("url") ? mediaObject.getString("url") : "";
+                this.contentType = mediaObject.has("content_type") ? mediaObject.getString("content_type") : "";
             }
 
             JSONObject action = contentObject.has("action") ? contentObject.getJSONObject("action") : null;

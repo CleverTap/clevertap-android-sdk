@@ -98,35 +98,27 @@ class CTMessageDAO {
 
     CTMessageDAO(){}
 
-    private CTMessageDAO(String id, JSONObject jsonData, boolean read, int date, int expires, String userId, JSONArray jsonArray, String campaignId){
+    private CTMessageDAO(String id, JSONObject jsonData, boolean read, int date, int expires, String userId, String tags, String campaignId){
         this.id = id;
         this.jsonData = jsonData;
         this.read = read;
         this.date = date;
         this.expires = expires;
         this.userId = userId;
-        if(jsonArray != null){
-            for(int i =0; i< jsonArray.length(); i++)
-            {
-                try {
-                    this.tags.add(jsonArray.getString(i));
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+        if(tags!=null)
+            this.tags = Arrays.asList(tags.split(","));
         this.campaignId = campaignId;
     }
 
     static CTMessageDAO initWithJSON(JSONObject inboxMessage, String userId){
         try {
-            String id = inboxMessage.has("_id") ? inboxMessage.getString("_id") : null;
+            String id = inboxMessage.has("_id") ? inboxMessage.getString("_id") : "00";
             int date = inboxMessage.has("date") ? inboxMessage.getInt("date") : -1;
             int expires = inboxMessage.has("ttl") ? inboxMessage.getInt("ttl") : -1;
-            JSONObject cellObject = inboxMessage.has("cell") ? inboxMessage.getJSONObject("cell") : null;
-            JSONArray jsonArray = inboxMessage.has("tags") ? inboxMessage.getJSONArray("tags") : null;
-            String campaignId = inboxMessage.has("wzrk_id") ? inboxMessage.getString("wzrk_id") : null;
-            return new CTMessageDAO(id, cellObject, false,date,expires,userId, jsonArray,campaignId);
+            JSONObject cellObject = inboxMessage.has("msg") ? inboxMessage.getJSONObject("msg") : null;
+            String tags = inboxMessage.has("tags") ? inboxMessage.getString("tags") : null;
+            String campaignId = inboxMessage.has("wzrk_id") ? inboxMessage.getString("wzrk_id") : "0_0";
+            return new CTMessageDAO(id, cellObject, false,date,expires,userId, tags,campaignId);
         }catch (JSONException e){
             Logger.d("Unable to parse Notification inbox message to CTMessageDao - "+e.getLocalizedMessage());
             return null;
@@ -137,7 +129,7 @@ class CTMessageDAO {
         JSONObject jsonObject = new JSONObject();
         try {
             jsonObject.put("id",this.id);
-            jsonObject.put("cell",this.jsonData);
+            jsonObject.put("msg",this.jsonData);
             jsonObject.put("isRead",this.read);
             jsonObject.put("date",this.date);
             jsonObject.put("ttl",this.expires);

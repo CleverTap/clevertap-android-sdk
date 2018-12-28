@@ -146,17 +146,19 @@ class CTInboxController {
         for(int i=0;i<inboxMessages.length();i++){
             try {
                 JSONObject inboxMessage = inboxMessages.getJSONObject(i);
-                if(!inboxMessage.has("id")){
-                    Logger.d("Notification inbox message doesn't have proper JSON");
-                    return false;
+                if(!inboxMessage.has("_id")){
+                    Logger.d("Notification inbox message doesn't have _id, adding for test message");
+                    inboxMessage.put("_id","000");
                 }
 
                 CTMessageDAO messageDAO = CTMessageDAO.initWithJSON(inboxMessage, userDAO.getUserId());
 
                 if(messageDAO != null) {
-                    if (getMessageDaoForId(inboxMessage.getString("id"))!=null && getMessageDaoForId(inboxMessage.getString("id")).getId().equals(inboxMessage.getString("id"))) {
-                        Logger.d("Notification Inbox Message already present, updating values");
-                        updateMessageList.add(messageDAO);
+                    if (getMessageDaoForId(inboxMessage.getString("_id")).getId()!=null) {
+                        if(getMessageDaoForId(inboxMessage.getString("_id")).getId().equals(inboxMessage.getString("_id"))) {
+                            Logger.d("Notification Inbox Message already present, updating values");
+                            updateMessageList.add(messageDAO);
+                        }
                     }else{
                         messageDAOArrayList.add(messageDAO);
                         Logger.d("Notification Inbox Message not present, adding values");
@@ -180,7 +182,7 @@ class CTInboxController {
             Logger.d("Notification Inbox messages updated");
         }
 
-        this.dbAdapter.cleanUpMessages(this.userId);
+        //this.dbAdapter.cleanUpMessages(this.userId);
 
         this.messages = this.dbAdapter.getMessages(this.userId);
         this.unreadMessages = this.dbAdapter.getUnreadMessages(this.userId);

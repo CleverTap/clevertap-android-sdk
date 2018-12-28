@@ -36,10 +36,10 @@ public class CTInboxMessage implements Parcelable {
     CTInboxMessage initWithJSON(JSONObject jsonObject){
         this.data = jsonObject;
         try {
-            this.messageId = jsonObject.has("id") ? jsonObject.getString("id") : "";
-            this.campaignId = jsonObject.has("wzrk_id") ? jsonObject.getString("wzrk_id") : "";
-            this.date = jsonObject.has("date") ? jsonObject.getInt("date") : -1;
-            this.expires = jsonObject.has("ttl") ? jsonObject.getInt("ttl") : -1;
+            this.messageId = jsonObject.has("id") ? jsonObject.getString("id") : "0";
+            this.campaignId = jsonObject.has("wzrk_id") ? jsonObject.getString("wzrk_id") : "0_0";
+            this.date = jsonObject.has("date") ? jsonObject.getInt("date") : 0;
+            this.expires = jsonObject.has("ttl") ? jsonObject.getInt("ttl") : 1000*60*60*24;
             this.isRead = jsonObject.has("isRead") && jsonObject.getBoolean("isRead");
             JSONArray tagsArray = jsonObject.has("tags") ? jsonObject.getJSONArray("tags") : null;
             if(tagsArray != null){
@@ -47,7 +47,7 @@ public class CTInboxMessage implements Parcelable {
                     this.tags.add(tagsArray.getString(i));
                 }
             }
-            JSONObject cellObject = jsonObject.has("cell") ? jsonObject.getJSONObject("cell") : null;
+            JSONObject cellObject = jsonObject.has("msg") ? jsonObject.getJSONObject("msg") : null;
             if(cellObject != null){
                 this.type = cellObject.has("type") ? CTInboxMessageType.fromString(cellObject.getString("type")) : CTInboxMessageType.fromString("");
                 this.bgColor = cellObject.has("bg") ? cellObject.getString("bg") : "";

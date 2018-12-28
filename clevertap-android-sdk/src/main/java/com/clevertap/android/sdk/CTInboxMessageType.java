@@ -2,8 +2,8 @@ package com.clevertap.android.sdk;
 
 enum CTInboxMessageType {
 
-    SimpleMessage("simple-message"),
-    IconMessage("icon-message"),
+    SimpleMessage("simple"),
+    IconMessage("message-icon"),
     CarouselMessage("carousel"),
     CarouselImageMessage("carousel-image");
 
@@ -14,9 +14,9 @@ enum CTInboxMessageType {
 
     static CTInboxMessageType fromString(String type){
         switch (type){
-            case "simple-message" : return SimpleMessage;
+            case "simple" : return SimpleMessage;
 
-            case "icon-message" : return IconMessage;
+            case "message-icon" : return IconMessage;
 
             case "carousel" : return CarouselMessage;
 

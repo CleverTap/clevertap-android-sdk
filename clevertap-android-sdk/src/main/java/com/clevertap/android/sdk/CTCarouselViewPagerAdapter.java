@@ -21,11 +21,15 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
     private ArrayList<String> carouselImages;
     private View view;
     private LinearLayout.LayoutParams layoutParams;
+    private CTInboxMessage inboxMessage;
+    private int row;
 
-    CTCarouselViewPagerAdapter(Context context, ArrayList<String> carouselImages, LinearLayout.LayoutParams layoutParams) {
+    CTCarouselViewPagerAdapter(Context context, CTInboxMessage inboxMessage, LinearLayout.LayoutParams layoutParams, int row) {
         this.context = context;
-        this.carouselImages = carouselImages;
+        this.carouselImages = inboxMessage.getCarouselImages();
         this.layoutParams = layoutParams;
+        this.inboxMessage = inboxMessage;
+        this.row = row;
     }
 
     @Override
@@ -40,7 +44,7 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
 
     @NonNull
     @Override
-    public Object instantiateItem(@NonNull ViewGroup container, int position) {
+    public Object instantiateItem(@NonNull final ViewGroup container, final int position) {
 
         layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         view = layoutInflater.inflate(R.layout.inbox_carousel_image_layout,container,false);
@@ -50,6 +54,12 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
                 .load(carouselImages.get(position))
                 .into(imageView);
         container.addView(view,layoutParams);
+        view.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ((CTInboxActivity)context).handleViewPagerClick(row,position);
+            }
+        });
         return view;
     }
 

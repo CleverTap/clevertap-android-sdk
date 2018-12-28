@@ -2219,7 +2219,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             //Handle notification inbox
             try{
                 getConfigLogger().verbose("Processing inbox messages...");
-                processInboxResponse(response,context);
+                processInboxResponse(response,context,false);
             }catch (Throwable t){
                 getConfigLogger().verbose("Notification inbox exception: "+ t.getLocalizedMessage());
             }
@@ -2231,10 +2231,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //NotificationInbox
-    private void processInboxResponse(final JSONObject response, final Context context){
+    private void processInboxResponse(final JSONObject response, final Context context, boolean isTest){
         try{
             getConfigLogger().verbose(getAccountId(),"Inbox: Processing response");
-            if (!response.has("inbox_notifs")) {
+            if (!response.has("inbox_notifications")) {
                 getConfigLogger().verbose(getAccountId(),"Inbox: Response JSON object doesn't contain the inbox key, bailing");
                 return;
             }
@@ -2251,9 +2251,35 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                             this.ctInboxController.privateListener = new WeakReference<>(this).get();
                         }
                         this.ctInboxController.notifyInitialized();
-                        JSONArray inboxMessages = response.getJSONArray("inbox_notifs");
+                        JSONArray inboxMessages;
+                        if(!isTest){
+                           inboxMessages  = response.getJSONArray("inbox_notifications");
+                        }
+                        else{
+                            JSONObject jsonObject = response.getJSONObject("inbox_notifications");
+                            JSONArray jsonArray = new JSONArray();
+                            jsonArray.put(jsonObject);
+                            inboxMessages = jsonArray;
+
+                        }
                         this.ctInboxController.updateMessages(inboxMessages);
                     }
+                }else{
+                    if (this.ctInboxController.privateListener == null) {
+                        this.ctInboxController.privateListener = new WeakReference<>(this).get();
+                    }
+                    this.ctInboxController.notifyInitialized();
+                    JSONArray inboxMessages;
+                    if(!isTest){
+                        inboxMessages  = response.getJSONArray("inbox_notifications");
+                    }
+                    else{
+                        JSONObject jsonObject = response.getJSONObject("inbox_notifications");
+                        JSONArray jsonArray = new JSONArray();
+                        jsonArray.put(jsonObject);
+                        inboxMessages = jsonArray;
+                    }
+                    this.ctInboxController.updateMessages(inboxMessages);
                 }
             }
 
@@ -2336,9 +2362,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         this.ctInboxController.privateListener = new WeakReference<>(this).get();
                     }
                     this.ctInboxController.notifyInitialized();
-                    JSONObject jsonObject = new JSONObject(loadJSONFromAsset(context));
-                    JSONArray inboxMessages = new JSONArray();
-                    inboxMessages.put(jsonObject);
+                    //JSONObject jsonObject = new JSONObject(loadJSONFromAsset(context));
+                    JSONArray inboxMessages = new JSONArray(loadJSONFromAsset(context));
+                    //inboxMessages.put(jsonObject);
                     this.ctInboxController.updateMessages(inboxMessages);
                 }
             }
@@ -4020,7 +4046,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     try {
                         Logger.v("Received inbox via push payload: " + extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
                         JSONObject r = new JSONObject(extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
-                        processInboxResponse(r, context);
+                        processInboxResponse(r, context,true);
                     } catch (Throwable t) {
                         Logger.v("Failed to display inapp notification from push notification payload", t);
                     }
@@ -6049,7 +6075,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     public void createNotificationInboxActivity(CTInboxStyleConfig styleConfig){
         ArrayList<CTInboxMessage> inboxMessageArrayList = getAllInboxMessages();
+        Logger.d(getAccountId(),"All inbox messages - "+inboxMessageArrayList.toString());
         inboxMessageArrayList = checkForVideoMessages(inboxMessageArrayList);
+        Logger.d(getAccountId(),"All inbox messages after video check - "+inboxMessageArrayList.toString());
         Intent intent = new Intent(context,CTInboxActivity.class);
         intent.putExtra("styleConfig",styleConfig);
         intent.putExtra("config",config);
@@ -6072,7 +6100,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         CTInboxStyleConfig styleConfig = new CTInboxStyleConfig();
         ArrayList<CTInboxMessage> inboxMessageArrayList = getAllInboxMessages();
+        Logger.d(getAccountId(),"All inbox messages - "+inboxMessageArrayList.toString());
         inboxMessageArrayList = checkForVideoMessages(inboxMessageArrayList);
+        Logger.d(getAccountId(),"All inbox messages after video check - "+inboxMessageArrayList.toString());
         Intent intent = new Intent(context,CTInboxActivity.class);
         intent.putExtra("styleConfig",styleConfig);
         intent.putExtra("config",config);
