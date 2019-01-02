@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
@@ -388,6 +389,9 @@ public class DeviceInfo {
         return getDeviceCachedInfo().dpi;
     }
 
+    boolean getNotificationsEnabledForUser(){
+        return getDeviceCachedInfo().notificationsEnabled;
+    }
 
     private class DeviceCachedInfo{
 
@@ -405,6 +409,7 @@ public class DeviceInfo {
         private double height;
         private double width;
         private int dpi;
+        private boolean notificationsEnabled;
 
         private DeviceCachedInfo() {
             versionName = getVersionName();
@@ -421,6 +426,7 @@ public class DeviceInfo {
             height = getHeight();
             width = getWidth();
             dpi = getDPI();
+            notificationsEnabled = getNotificationEnabledForUser();
         }
 
         private String getVersionName() {
@@ -576,6 +582,10 @@ public class DeviceInfo {
             result = Math.round(result);
             result = result / 100;
             return result;
+        }
+
+        private boolean getNotificationEnabledForUser(){
+            return NotificationManagerCompat.from(context).areNotificationsEnabled();
         }
     }
 }

@@ -2149,7 +2149,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             header.put("tk", token);
             header.put("l_ts", getLastRequestTimestamp());
             header.put("f_ts", getFirstRequestTimestamp());
-
+            header.put("ct_dnd",this.deviceInfo.getNotificationsEnabledForUser() && (getCachedGCMToken() != null || getCachedFCMToken() != null));
             if(isBgPing){
                 header.put("bk",1);
                 header.put("s_wzrk_ids", new JSONArray());//TODO add wzrk_ids of rendered campaigns
@@ -2316,17 +2316,21 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 // Ignore
             }
 
-            if(response.has("pf")){
-                int frequency = response.getInt("pf");
-                setPingFrequency(frequency);
-            }
-
             try{
-                if(response.has("wzrk_push")){
-                    final JSONArray pushNotifications = response.getJSONArray("wzrk_push");
+                if(response.has("pushamp_notifs")){
+                    JSONObject pushAmpObject = response.getJSONObject("pushamp_notifs");
+                    final JSONArray pushNotifications = pushAmpObject.getJSONArray("list");
                     if(pushNotifications.length()>0){
                         getConfigLogger().verbose(getAccountId(), "Handling Push payload locally");
                         handlePushNotificationsInResponse(pushNotifications);
+                    }
+                    if(pushAmpObject.has("pf")){
+                        int frequency = pushAmpObject.getInt("pf");
+                        setPingFrequency(frequency);
+                    }
+                    if(pushAmpObject.has("ack")){
+                        boolean ack = pushAmpObject.getBoolean("ack");
+                        //TODO set ACK logic
                     }
                 }
             }catch (Throwable t){
@@ -5902,7 +5906,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private void createJobScheduler(Context context){
         ComponentName componentName = new ComponentName(context, CTBackgroundJobService.class);
 
-        JobInfo.Builder builder = new JobInfo.Builder(12,componentName);
+        JobInfo.Builder builder = new JobInfo.Builder(1111,componentName);
         builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
         builder.setRequiresCharging(false);
 
@@ -5923,6 +5927,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         JobInfo jobInfo = builder.build();
 
         JobScheduler jobScheduler = (JobScheduler)context.getSystemService(JOB_SCHEDULER_SERVICE);
+
         int resultCode = 0;
         if (jobScheduler != null) {
             resultCode = jobScheduler.schedule(jobInfo);
@@ -5938,7 +5943,37 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (instances == null) {
             CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
             if(instance != null) {
-                instance.runInstanceJobWork(context,parameters);
+                if(instance.getConfig().isBackgroundSync()) {
+                    instance.runInstanceJobWork(context, parameters);
+                }else{
+                    Logger.d("Instance doesn't allow Background sync, not running the Job");
+                }
+            }
+            return;
+        }
+        for (String accountId: CleverTapAPI.instances.keySet()) {
+            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+            if (instance.getConfig().isAnalyticsOnly()) {
+                Logger.d(accountId, "Instance is Analytics Only not running the Job");
+                continue;
+            }
+            if(!instance.getConfig().isBackgroundSync()) {
+                Logger.d(accountId,"Instance doesn't allow Background sync, not running the Job");
+                continue;
+            }
+            instance.runInstanceJobWork(context, parameters);
+        }
+    }
+
+    static void runBackgroundIntentService(Context context){
+        if (instances == null) {
+            CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
+            if(instance != null) {
+                if(instance.getConfig().isBackgroundSync()) {
+                    instance.runInstanceJobWork(context, null);
+                }else{
+                    Logger.d("Instance doesn't allow Background sync, not running the Job");
+                }
             }
             return;
         }
@@ -5948,22 +5983,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 Logger.d(accountId, "Instance is Analytics Only not processing device token");
                 continue;
             }
-            instance.runInstanceJobWork(context,parameters);
-        }
-    }
-
-    static void runBackgroundIntentService(Context context){
-        if (instances == null) {
-            CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
-            if(instance != null) {
-                instance.runInstanceJobWork(context,null);
-            }
-            return;
-        }
-        for (String accountId: CleverTapAPI.instances.keySet()) {
-            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
-            if (instance.getConfig().isAnalyticsOnly()) {
-                Logger.d(accountId, "Instance is Analytics Only not processing device token");
+            if(!instance.getConfig().isBackgroundSync()){
+                Logger.d(accountId,"Instance doesn't allow Background sync, not running the Job");
                 continue;
             }
             instance.runInstanceJobWork(context,null);
