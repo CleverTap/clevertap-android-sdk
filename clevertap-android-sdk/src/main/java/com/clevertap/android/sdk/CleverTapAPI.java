@@ -155,7 +155,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private ExecutorService es;
     private ExecutorService ns;
     private Runnable commsRunnable = null;
-    private Runnable pushNotificationViewedRunnable = null;
     private Validator validator;
     private final Object optOutFlagLock = new Object();
     private boolean currentUserOptedOut = false;
@@ -1329,18 +1328,19 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (isMuted()) {
             return;
         }
-        try {
-            if(event.has("evtName")) {
-                if (event.getString("evtName").equals(Constants.NOTIFICATION_VIEWED_EVENT_NAME))
-                    processPushNotificationViewedEvent(context, event, eventType);
-                else
-                    processEvent(context, event, eventType);
-            }else{
+//        try {
+//            if(event.has("evtName")) {
+//                if (event.getString("evtName").equals(Constants.NOTIFICATION_VIEWED_EVENT_NAME))
+//                    processPushNotificationViewedEvent(context, event, eventType);
+//                else
+//                    processEvent(context, event, eventType);
+//            }
+//            else{
                 processEvent(context, event, eventType);
-            }
-        }catch (JSONException e){
-            getConfigLogger().verbose(getAccountId(),"Couldn't parse event JSON : " + e.getLocalizedMessage());
-        }
+            //}
+//        }catch (JSONException e){
+//            getConfigLogger().verbose(getAccountId(),"Couldn't parse event JSON : " + e.getLocalizedMessage());
+//        }
     }
 
     //Util
@@ -1409,25 +1409,25 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
-    private void processPushNotificationViewedEvent(final Context context, final JSONObject event, final int eventType){
-        synchronized (eventLock){
-            try{
-                int session = getCurrentSession();
-                event.put("s",session);
-                event.put("type","event");
-                event.put("ep", System.currentTimeMillis() / 1000);
-                // Report any pending validation error
-                ValidationResult vr = popValidationResult();
-                if (vr != null) {
-                    event.put(Constants.ERROR_KEY, getErrorObject(vr));
-                }
-                queuePushNotificationViewedEventToDB(context,event,eventType);
-                //schedulePushNotificationViewedQueueFlush(context);
-            }catch (Throwable t){
-                getConfigLogger().verbose(getAccountId(),"Failed to queue notification viewed event: "+ event.toString(),t);
-            }
-        }
-    }
+//    private void processPushNotificationViewedEvent(final Context context, final JSONObject event, final int eventType){
+//        synchronized (eventLock){
+//            try{
+//                int session = getCurrentSession();
+//                event.put("s",session);
+//                event.put("type","event");
+//                event.put("ep", System.currentTimeMillis() / 1000);
+//                // Report any pending validation error
+//                ValidationResult vr = popValidationResult();
+//                if (vr != null) {
+//                    event.put(Constants.ERROR_KEY, getErrorObject(vr));
+//                }
+//                queuePushNotificationViewedEventToDB(context,event,eventType);
+//                //schedulePushNotificationViewedQueueFlush(context);
+//            }catch (Throwable t){
+//                getConfigLogger().verbose(getAccountId(),"Failed to queue notification viewed event: "+ event.toString(),t);
+//            }
+//        }
+//    }
 
     //Session
     private int getLastSessionLength() {
@@ -1542,9 +1542,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         queueEventInternal(context,event,table);
     }
 
-    private void queuePushNotificationViewedEventToDB(final Context context, final JSONObject event, final int eventType){
-        queueEventInternal(context,event,DBAdapter.Table.PUSH_NOTIFICATION_VIEWED);
-    }
+//    private void queuePushNotificationViewedEventToDB(final Context context, final JSONObject event, final int eventType){
+//        queueEventInternal(context,event,DBAdapter.Table.PUSH_NOTIFICATION_VIEWED);
+//    }
 
     private void queueEventInternal(final Context context, final JSONObject event, DBAdapter.Table table) {
         synchronized (eventLock) {
@@ -1564,7 +1564,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             dbAdapter = new DBAdapter(context,this.config);
             dbAdapter.cleanupStaleEvents(DBAdapter.Table.EVENTS);
             dbAdapter.cleanupStaleEvents(DBAdapter.Table.PROFILE_EVENTS);
-            dbAdapter.cleanupStaleEvents(DBAdapter.Table.PUSH_NOTIFICATION_VIEWED);
+            //dbAdapter.cleanupStaleEvents(DBAdapter.Table.PUSH_NOTIFICATION_VIEWED);
             dbAdapter.cleanUpPushNotifications();
         }
         return dbAdapter;
@@ -1869,8 +1869,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             tableName = DBAdapter.Table.PROFILE_EVENTS;
             adapter.removeEvents(tableName);
 
-            tableName = DBAdapter.Table.PUSH_NOTIFICATION_VIEWED;
-            adapter.removeEvents(tableName);
+//            tableName = DBAdapter.Table.PUSH_NOTIFICATION_VIEWED;
+//            adapter.removeEvents(tableName);
 
             clearUserContext(context);
         }
@@ -2012,9 +2012,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
-    private QueueCursor getPushNotificationViewedQueuedEvents(final Context context, final int batchSize, final QueueCursor previousCursor){
-        return getQueueCursor(context, DBAdapter.Table.PUSH_NOTIFICATION_VIEWED,batchSize,previousCursor);
-    }
+//    private QueueCursor getPushNotificationViewedQueuedEvents(final Context context, final int batchSize, final QueueCursor previousCursor){
+//        return getQueueCursor(context, DBAdapter.Table.PUSH_NOTIFICATION_VIEWED,batchSize,previousCursor);
+//    }
 
     /**
      * @return true if the network request succeeded. Anything non 200 results in a false.
@@ -2149,13 +2149,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             header.put("tk", token);
             header.put("l_ts", getLastRequestTimestamp());
             header.put("f_ts", getFirstRequestTimestamp());
-            header.put("ct_dnd",this.deviceInfo.getNotificationsEnabledForUser() && (getCachedGCMToken() != null || getCachedFCMToken() != null));
+            header.put("ddnd",this.deviceInfo.getNotificationsEnabledForUser() && (getCachedGCMToken() != null || getCachedFCMToken() != null));
             if(isBgPing){
                 header.put("bk",1);
-                header.put("s_wzrk_ids", new JSONArray());//TODO add wzrk_ids of rendered campaigns
                 isBgPing = false;
             }
-
+            if(!getBooleanFromPrefs(Constants.RESPONSE_ACK)){
+                header.put("rtl", getRenderedTargetList());
+            }
 
             // Attach ARP
             try {
@@ -2330,7 +2331,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     }
                     if(pushAmpObject.has("ack")){
                         boolean ack = pushAmpObject.getBoolean("ack");
-                        //TODO set ACK logic
+                        StorageHelper.putBoolean(context,storageKeyWithSuffix(Constants.RESPONSE_ACK),ack);
                     }
                 }
             }catch (Throwable t){
@@ -2349,6 +2350,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     void setPingFrequency(int pingFrequency) {
         this.pingFrequency = pingFrequency;
+    }
+
+    private JSONArray getRenderedTargetList(){
+        String[] pushIds = this.dbAdapter.fetchPushNotificationIds();
+        JSONArray renderedTargets = new JSONArray();
+        for(int i=0;i<pushIds.length;i++){
+            renderedTargets.put(i);
+        }
+        return renderedTargets;
     }
 
     //InApp
@@ -4910,8 +4920,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     pushBundle.putString("wzrk_dl",pushObject.getString("wzrk_dl"));
                 if(pushObject.has("wzrk_pid"))
                     pushBundle.putString("wzrk_pid",pushObject.getString("wzrk_pid"));
-                if(pushObject.has("wzrk_rnv"))
-                    pushBundle.putString("wzrk_rnv",pushObject.getString("wzrk_rnv"));
                 if(pushObject.has("wzrk_ttl"))
                     pushBundle.putString("wzrk_ttl",pushObject.getString("wzrk_ttl"));
                 Iterator iterator = pushObject.keys();
@@ -5018,6 +5026,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (config.isAnalyticsOnly()) {
             getConfigLogger().debug(getAccountId(), "Instance is set for Analytics only, cannot create notification");
             return;
+        }
+
+        dbAdapter = loadDBAdapter(context);
+
+        if(extras.getString("wzrk_pid") != null) {
+            if (dbAdapter.doesPushNotificationIdExist(extras.getString("wzrk_pid"))){
+                getConfigLogger().debug(getAccountId(),"Push Notification Already rendered, not showing again");
+                return;
+            }
         }
 
         try {
@@ -5327,12 +5344,13 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (notificationManager != null) {
             notificationManager.notify(notificationId, n);
             //if(extras.getString("wzrk_rnv","false").equals("true")) {
-                pushNotificationViewedEvent(extras);
+            //    pushNotificationViewedEvent(extras);
             //}
-            long ttl = extras.getLong("wzrk_ttl",Constants.DEFAULT_PUSH_TTL);
+            long ttl = extras.getLong("wzrk_ttl",System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL);
             String wzrk_pid = extras.getString("wzrk_pid");
+            String wzrk_id = extras.getString("wzrk_id");
             DBAdapter dbAdapter = loadDBAdapter(context);
-            dbAdapter.storePushNotificationId(wzrk_pid,ttl);
+            dbAdapter.storePushNotificationId(wzrk_pid,ttl,wzrk_id);
         }
 
     }

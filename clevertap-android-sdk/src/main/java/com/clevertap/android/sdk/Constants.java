@@ -94,6 +94,7 @@ public class Constants {
     static final String INAPP_ID_IN_PAYLOAD = "ti";
     static final int LOCATION_PING_INTERVAL_IN_SECONDS = 10;
     static final long DEFAULT_PUSH_TTL = 1000 * 60 * 60 * 24 * 4;//TODO agree on value
+    static final String RESPONSE_ACK = "ack";
 
     /**
      * Profile command constants.
