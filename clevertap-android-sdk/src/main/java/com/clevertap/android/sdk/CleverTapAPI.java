@@ -2,12 +2,17 @@ package com.clevertap.android.sdk;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.FragmentTransaction;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.job.JobInfo;
+import android.app.job.JobParameters;
+import android.app.job.JobScheduler;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
@@ -26,10 +31,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import com.clevertap.android.sdk.exceptions.CleverTapMetaDataNotFoundException;
 import com.clevertap.android.sdk.exceptions.CleverTapPermissionsNotSatisfied;
@@ -50,6 +57,7 @@ import java.net.URLDecoder;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -64,6 +72,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 
+import static android.content.Context.JOB_SCHEDULER_SERVICE;
 import static android.content.Context.NOTIFICATION_SERVICE;
 
 /**
@@ -88,6 +97,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         public int intValue() { return value; }
     }
+
+//    private enum EventGroup {
+//
+//        REGULAR("/a1"),
+//        PUSH_NOTIFICATION_VIEWED("/a450");
+//
+//        private final String httpResource;
+//        EventGroup(String httpResource) { this.httpResource = httpResource; }
+//    }
 
     /**
      * @deprecated Use {@link #pushChargedEvent(HashMap chargeDetails, ArrayList items)}
@@ -164,6 +182,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private CTInboxController ctInboxController;
     private final Object inboxControllerLock = new Object();
     private CTInboxListener inboxListener;
+    private boolean isBgPing = false;
+    private int pingFrequency = 240;
 
     @Deprecated
     public final EventHandler event;
@@ -226,6 +246,19 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 StorageHelper.putString(context,storageKeyWithSuffix("instance"), configJson);
             }
         });
+
+        if(this.config.isBackgroundSync()) {
+            postAsyncSafely("createJobScheduler", new Runnable() {
+                @Override
+                public void run() {
+                    if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        createJobScheduler(context);
+                    }else{
+                        createAlarmScheduler(context);
+                    }
+                }
+            });
+        }
         Logger.i("CleverTap SDK initialized with accountId: "+ config.getAccountId() + " accountToken: " + config.getAccountId() + " accountRegion: " + config.getAccountRegion());
 
 //        //TODO Remove after testing
@@ -1330,7 +1363,19 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (isMuted()) {
             return;
         }
-        processEvent(context, event, eventType);
+//        try {
+//            if(event.has("evtName")) {
+//                if (event.getString("evtName").equals(Constants.NOTIFICATION_VIEWED_EVENT_NAME))
+//                    processPushNotificationViewedEvent(context, event, eventType);
+//                else
+//                    processEvent(context, event, eventType);
+//            }
+//            else{
+                processEvent(context, event, eventType);
+            //}
+//        }catch (JSONException e){
+//            getConfigLogger().verbose(getAccountId(),"Couldn't parse event JSON : " + e.getLocalizedMessage());
+//        }
     }
 
     //Util
@@ -1355,6 +1400,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 } else if (eventType == Constants.PING_EVENT) {
                     type = "ping";
                     attachMeta(event, context);
+                    if(event.has("bk")){
+                        isBgPing = true;
+                        event.remove("bk");
+                    }
                 } else if (eventType == Constants.PROFILE_EVENT) {
                     type = "profile";
                 } else if (eventType == Constants.DATA_EVENT) {
@@ -1394,6 +1443,26 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
         }
     }
+
+//    private void processPushNotificationViewedEvent(final Context context, final JSONObject event, final int eventType){
+//        synchronized (eventLock){
+//            try{
+//                int session = getCurrentSession();
+//                event.put("s",session);
+//                event.put("type","event");
+//                event.put("ep", System.currentTimeMillis() / 1000);
+//                // Report any pending validation error
+//                ValidationResult vr = popValidationResult();
+//                if (vr != null) {
+//                    event.put(Constants.ERROR_KEY, getErrorObject(vr));
+//                }
+//                queuePushNotificationViewedEventToDB(context,event,eventType);
+//                //schedulePushNotificationViewedQueueFlush(context);
+//            }catch (Throwable t){
+//                getConfigLogger().verbose(getAccountId(),"Failed to queue notification viewed event: "+ event.toString(),t);
+//            }
+//        }
+//    }
 
     //Session
     private int getLastSessionLength() {
@@ -1504,10 +1573,17 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //Event
     private void queueEventToDB(final Context context, final JSONObject event, final int type) {
+        DBAdapter.Table table = (type == Constants.PROFILE_EVENT) ? DBAdapter.Table.PROFILE_EVENTS : DBAdapter.Table.EVENTS;
+        queueEventInternal(context,event,table);
+    }
+
+//    private void queuePushNotificationViewedEventToDB(final Context context, final JSONObject event, final int eventType){
+//        queueEventInternal(context,event,DBAdapter.Table.PUSH_NOTIFICATION_VIEWED);
+//    }
+
+    private void queueEventInternal(final Context context, final JSONObject event, DBAdapter.Table table) {
         synchronized (eventLock) {
             DBAdapter adapter = loadDBAdapter(context);
-            DBAdapter.Table table = (type == Constants.PROFILE_EVENT) ? DBAdapter.Table.PROFILE_EVENTS : DBAdapter.Table.EVENTS;
-
             int returnCode = adapter.storeObject(event, table);
 
             if (returnCode > 0) {
@@ -1523,6 +1599,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             dbAdapter = new DBAdapter(context,this.config);
             dbAdapter.cleanupStaleEvents(DBAdapter.Table.EVENTS);
             dbAdapter.cleanupStaleEvents(DBAdapter.Table.PROFILE_EVENTS);
+            //dbAdapter.cleanupStaleEvents(DBAdapter.Table.PUSH_NOTIFICATION_VIEWED);
+            dbAdapter.cleanUpPushNotifications();
         }
         return dbAdapter;
     }
@@ -1584,6 +1662,19 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             flushDBQueue(context);
         }
     }
+
+//    private void schedulePushNotificationViewedQueueFlush(final Context context){
+//        if (pushNotificationViewedRunnable == null)
+//            pushNotificationViewedRunnable = new Runnable() {
+//                @Override
+//                public void run() {
+//                    flushQueueAsync(context,EventGroup.PUSH_NOTIFICATION_VIEWED);
+//                }
+//            };
+//        getHandlerUsingMainLooper().removeCallbacks(pushNotificationViewedRunnable);
+//        getHandlerUsingMainLooper().post(pushNotificationViewedRunnable);
+//    }
+
 
     //Util
     private boolean isNetworkOnline(Context context) {
@@ -1805,11 +1896,17 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     private void clearQueues(final Context context) {
         synchronized (eventLock) {
+
             DBAdapter adapter = loadDBAdapter(context);
             DBAdapter.Table tableName = DBAdapter.Table.EVENTS;
+
             adapter.removeEvents(tableName);
             tableName = DBAdapter.Table.PROFILE_EVENTS;
             adapter.removeEvents(tableName);
+
+//            tableName = DBAdapter.Table.PUSH_NOTIFICATION_VIEWED;
+//            adapter.removeEvents(tableName);
+
             clearUserContext(context);
         }
     }
@@ -1860,15 +1957,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         StorageHelper.putInt(context, storageKeyWithSuffix(Constants.KEY_LAST_TS), 0);
     }
 
-    //Event
-    private void flushDBQueue(final Context context) {
+    private void flushDBQueue(final Context context){
         getConfigLogger().verbose(getAccountId(), "Somebody has invoked me to send the queue to CleverTap servers");
 
         QueueCursor cursor;
         QueueCursor previousCursor = null;
         boolean loadMore = true;
+
         while (loadMore) {
-            cursor = getQueuedEvents(context, 50, previousCursor);
+
+            cursor = getQueuedEvents(context,50, previousCursor);
 
             if (cursor == null || cursor.isEmpty()) {
                 getConfigLogger().verbose(getAccountId(), "No events in the queue, bailing");
@@ -1889,32 +1987,20 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     @SuppressWarnings("SameParameterValue")
     private QueueCursor getQueuedEvents(final Context context, final int batchSize, final QueueCursor previousCursor) {
-        return getQueuedDBEvents(context, batchSize, previousCursor);
+//        if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED){
+//            return getPushNotificationViewedQueuedEvents(context,batchSize,previousCursor);
+//        }else{
+            return getQueuedDBEvents(context, batchSize, previousCursor);
+        //}
     }
 
     private QueueCursor getQueuedDBEvents(final Context context, final int batchSize, final QueueCursor previousCursor) {
 
-        synchronized (eventLock) {
-            DBAdapter adapter = loadDBAdapter(context);
-            DBAdapter.Table tableName = (previousCursor != null) ? previousCursor.getTableName() : DBAdapter.Table.EVENTS;
+        synchronized (eventLock){
+            QueueCursor newCursor = getQueueCursor(context,DBAdapter.Table.EVENTS,batchSize,previousCursor);
 
-            // if previousCursor that means the batch represented by the previous cursor was processed so remove those from the db
-            if (previousCursor != null) {
-                adapter.cleanupEventsFromLastId(previousCursor.getLastId(), previousCursor.getTableName());
-            }
-
-            // grab the new batch
-            QueueCursor newCursor = new QueueCursor();
-            newCursor.setTableName(tableName);
-            JSONObject queuedDBEvents = adapter.fetchEvents(tableName, batchSize);
-            newCursor = updateCursorForDBObject(queuedDBEvents, newCursor);
-
-            // if we have no events then try and fetch profile events
-            if (newCursor.isEmpty() && tableName.equals(DBAdapter.Table.EVENTS)) {
-                tableName = DBAdapter.Table.PROFILE_EVENTS;
-                newCursor.setTableName(tableName);
-                queuedDBEvents = adapter.fetchEvents(tableName, batchSize);
-                newCursor = updateCursorForDBObject(queuedDBEvents, newCursor);
+            if ( newCursor.isEmpty() && newCursor.getTableName().equals(DBAdapter.Table.EVENTS)){
+                newCursor = getQueueCursor(context,DBAdapter.Table.PROFILE_EVENTS,batchSize,null);
             }
 
             return newCursor.isEmpty() ? null : newCursor;
@@ -1940,6 +2026,30 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         return cursor;
     }
+
+    private QueueCursor getQueueCursor(final Context context, DBAdapter.Table table, final int batchSize, final QueueCursor previousCursor){
+        synchronized (eventLock) {
+            DBAdapter adapter = loadDBAdapter(context);
+            DBAdapter.Table tableName = (previousCursor != null) ? previousCursor.getTableName() : table;
+
+            // if previousCursor that means the batch represented by the previous cursor was processed so remove those from the db
+            if (previousCursor != null) {
+                adapter.cleanupEventsFromLastId(previousCursor.getLastId(), previousCursor.getTableName());
+            }
+
+            // grab the new batch
+            QueueCursor newCursor = new QueueCursor();
+            newCursor.setTableName(tableName);
+            JSONObject queuedDBEvents = adapter.fetchEvents(tableName, batchSize);
+            newCursor = updateCursorForDBObject(queuedDBEvents, newCursor);
+
+            return newCursor;
+        }
+    }
+
+//    private QueueCursor getPushNotificationViewedQueuedEvents(final Context context, final int batchSize, final QueueCursor previousCursor){
+//        return getQueueCursor(context, DBAdapter.Table.PUSH_NOTIFICATION_VIEWED,batchSize,previousCursor);
+//    }
 
     /**
      * @return true if the network request succeeded. Anything non 200 results in a false.
@@ -2074,6 +2184,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             header.put("tk", token);
             header.put("l_ts", getLastRequestTimestamp());
             header.put("f_ts", getFirstRequestTimestamp());
+            header.put("ddnd",this.deviceInfo.getNotificationsEnabledForUser() && (getCachedGCMToken() != null || getCachedFCMToken() != null));
+            if(isBgPing){
+                header.put("bk",1);
+                isBgPing = false;
+            }
+            if(!getBooleanFromPrefs(Constants.RESPONSE_ACK)){
+                header.put("rtl", getRenderedTargetList());
+            }
 
             // Attach ARP
             try {
@@ -2140,6 +2258,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         try {
             getConfigLogger().verbose(getAccountId(), "Trying to process response: " + responseStr);
+            if(responseStr.equals("NotificationRenderServlet response")){
+                return;
+            }
             JSONObject response = new JSONObject(responseStr);
             try {
                 if(!this.config.isAnalyticsOnly())
@@ -2231,12 +2352,34 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 // Ignore
             }
 
+
             //Handle notification inbox
             try{
                 getConfigLogger().verbose("Processing inbox messages...");
                 processInboxResponse(response,context,false);
+            }catch (Throwable t) {
+                getConfigLogger().verbose("Notification inbox exception: " + t.getLocalizedMessage());
+            }
+
+            try{
+                if(response.has("pushamp_notifs")){
+                    JSONObject pushAmpObject = response.getJSONObject("pushamp_notifs");
+                    final JSONArray pushNotifications = pushAmpObject.getJSONArray("list");
+                    if(pushNotifications.length()>0){
+                        getConfigLogger().verbose(getAccountId(), "Handling Push payload locally");
+                        handlePushNotificationsInResponse(pushNotifications);
+                    }
+                    if(pushAmpObject.has("pf")){
+                        int frequency = pushAmpObject.getInt("pf");
+                        setPingFrequency(frequency);
+                    }
+                    if(pushAmpObject.has("ack")){
+                        boolean ack = pushAmpObject.getBoolean("ack");
+                        StorageHelper.putBoolean(context,storageKeyWithSuffix(Constants.RESPONSE_ACK),ack);
+                    }
+                }
             }catch (Throwable t){
-                getConfigLogger().verbose("Notification inbox exception: "+ t.getLocalizedMessage());
+                //Ignore
             }
 
         } catch (Throwable t) {
@@ -2402,6 +2545,22 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return json;
     }
 
+    int getPingFrequency() {
+        return pingFrequency;
+    }
+
+    void setPingFrequency(int pingFrequency) {
+        this.pingFrequency = pingFrequency;
+    }
+
+    private JSONArray getRenderedTargetList(){
+        String[] pushIds = this.dbAdapter.fetchPushNotificationIds();
+        JSONArray renderedTargets = new JSONArray();
+        for(int i=0;i<pushIds.length;i++){
+            renderedTargets.put(i);
+        }
+        return renderedTargets;
+    }
 
     //InApp
     private void processInAppResponse(final JSONObject response, final Context context) {
@@ -4993,6 +5152,62 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //PN
+    private void handlePushNotificationsInResponse(JSONArray pushNotifications){
+        try {
+            for (int i = 0; i < pushNotifications.length(); i++) {
+                Bundle pushBundle = new Bundle();
+                JSONObject pushObject = pushNotifications.getJSONObject(i);
+                if(pushObject.has("wzrk_acct_id"))
+                    pushBundle.putString("wzrk_acct_id",pushObject.getString("wzrk_acct_id"));
+                if(pushObject.has("wzrk_acts"))
+                    pushBundle.putString("wzrk_acts",pushObject.getJSONArray("wzrk_acts").toString());
+                if(pushObject.has("nm"))
+                    pushBundle.putString("nm",pushObject.getString("nm"));
+                if(pushObject.has("nt"))
+                    pushBundle.putString("nt",pushObject.getString("nt"));
+                if(pushObject.has("wzrk_bp"))
+                    pushBundle.putString("wzrk_bp",pushObject.getString("wzrk_bp"));
+                if(pushObject.has("pr"))
+                    pushBundle.putString("pr",pushObject.getString("pr"));
+                if(pushObject.has("wzrk_pivot"))
+                    pushBundle.putString("wzrk_pivot",pushObject.getString("wzrk_pivot"));
+                if(pushObject.has("wzrk_sound"))
+                    pushBundle.putString("wzrk_sound",pushObject.getString("wzrk_sound"));
+                if(pushObject.has("wzrk_cid"))
+                    pushBundle.putString("wzrk_cid",pushObject.getString("wzrk_cid"));
+                if(pushObject.has("wzrk_bc"))
+                    pushBundle.putString("wzrk_bc",pushObject.getString("wzrk_bc"));
+                if(pushObject.has("wzrk_bi"))
+                    pushBundle.putString("wzrk_bi",pushObject.getString("wzrk_bi"));
+                if(pushObject.has("wzrk_id"))
+                    pushBundle.putString("wzrk_id",pushObject.getString("wzrk_id"));
+                if(pushObject.has("wzrk_pn"))
+                    pushBundle.putString("wzrk_pn",pushObject.getString("wzrk_pn"));
+                if(pushObject.has("ico"))
+                    pushBundle.putString("ico",pushObject.getString("ico"));
+                if(pushObject.has("wzrk_ck"))
+                    pushBundle.putString("wzrk_ck",pushObject.getString("wzrk_ck"));
+                if(pushObject.has("wzrk_dl"))
+                    pushBundle.putString("wzrk_dl",pushObject.getString("wzrk_dl"));
+                if(pushObject.has("wzrk_pid"))
+                    pushBundle.putString("wzrk_pid",pushObject.getString("wzrk_pid"));
+                if(pushObject.has("wzrk_ttl"))
+                    pushBundle.putString("wzrk_ttl",pushObject.getString("wzrk_ttl"));
+                Iterator iterator = pushObject.keys();
+                while(iterator.hasNext()){
+                    String key = iterator.next().toString();
+                    pushBundle.putString(key,pushObject.getString(key));
+                }
+                if(!pushBundle.isEmpty() && !dbAdapter.doesPushNotificationIdExist(pushObject.getString("wzrk_pid"))){
+                    createNotification(context,pushBundle);
+                }else{
+                    getConfigLogger().verbose(getAccountId(),"Push Notification already shown, ignoring local notification :"+pushObject.getString("wzrk_pid"));
+                }
+            }
+        }catch (JSONException e){
+            getConfigLogger().verbose(getAccountId(),"Error parsing push notification JSON");
+        }
+    }
     /**
      * Checks whether this notification is from CleverTap.
      *
@@ -5084,6 +5299,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             return;
         }
 
+        dbAdapter = loadDBAdapter(context);
+
+        if(extras.getString("wzrk_pid") != null) {
+            if (dbAdapter.doesPushNotificationIdExist(extras.getString("wzrk_pid"))){
+                getConfigLogger().debug(getAccountId(),"Push Notification Already rendered, not showing again");
+                return;
+            }
+        }
+
         try {
             postAsyncSafely("CleverTapAPI#_createNotification", new Runnable() {
                 @Override
@@ -5118,6 +5342,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         notifMessage = (notifMessage != null) ? notifMessage : "";
                         if (notifMessage.isEmpty()) {
                             getConfigLogger().verbose(getAccountId(),"Push notification message is empty, not rendering");
+                            loadDBAdapter(context).storeUninstallTimestamp();
                             return;
                         }
                         String notifTitle = extras.getString("nt", "");
@@ -5406,6 +5631,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         if (notificationManager != null) {
             notificationManager.notify(notificationId, n);
+            //if(extras.getString("wzrk_rnv","false").equals("true")) {
+            //    pushNotificationViewedEvent(extras);
+            //}
+            long ttl = extras.getLong("wzrk_ttl",System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL);
+            String wzrk_pid = extras.getString("wzrk_pid");
+            String wzrk_id = extras.getString("wzrk_id");
+            DBAdapter dbAdapter = loadDBAdapter(context);
+            dbAdapter.storePushNotificationId(wzrk_pid,ttl,wzrk_id);
         }
 
     }
@@ -6201,4 +6434,163 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return inboxMessageList;
     }
 
+    private void createAlarmScheduler(Context context){
+        AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+        Intent intent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
+        intent.setPackage(context.getPackageName());
+        PendingIntent alarmPendingIntent = PendingIntent.getService(context,1,intent,PendingIntent.FLAG_UPDATE_CURRENT);
+        if (alarmManager != null) {
+            alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime(),AlarmManager.INTERVAL_HOUR * getPingFrequency()/60,alarmPendingIntent);
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private void createJobScheduler(Context context){
+        ComponentName componentName = new ComponentName(context, CTBackgroundJobService.class);
+
+        JobInfo.Builder builder = new JobInfo.Builder(1111,componentName);
+        builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
+        builder.setRequiresCharging(false);
+
+        if(this.deviceInfo.testPermission(context,"android.permission.RECEIVE_BOOT_COMPLETED")){
+            builder.setPersisted(true);
+        }
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
+            builder.setPeriodic(getPingFrequency()*60*1000,15*60*1000);
+        }else{
+            builder.setPeriodic(getPingFrequency()*60*1000);
+        }
+
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            builder.setRequiresBatteryNotLow(true);
+        }
+
+        JobInfo jobInfo = builder.build();
+
+        JobScheduler jobScheduler = (JobScheduler)context.getSystemService(JOB_SCHEDULER_SERVICE);
+
+        int resultCode = 0;
+        if (jobScheduler != null) {
+            resultCode = jobScheduler.schedule(jobInfo);
+        }
+        if (resultCode == JobScheduler.RESULT_SUCCESS) {
+            Logger.d(getAccountId(), "Job scheduled!");
+        } else {
+            Logger.d(getAccountId(), "Job not scheduled");
+        }
+    }
+
+    static void runJobWork(Context context, JobParameters parameters){
+        if (instances == null) {
+            CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
+            if(instance != null) {
+                if(instance.getConfig().isBackgroundSync()) {
+                    instance.runInstanceJobWork(context, parameters);
+                }else{
+                    Logger.d("Instance doesn't allow Background sync, not running the Job");
+                }
+            }
+            return;
+        }
+        for (String accountId: CleverTapAPI.instances.keySet()) {
+            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+            if (instance.getConfig().isAnalyticsOnly()) {
+                Logger.d(accountId, "Instance is Analytics Only not running the Job");
+                continue;
+            }
+            if(!instance.getConfig().isBackgroundSync()) {
+                Logger.d(accountId,"Instance doesn't allow Background sync, not running the Job");
+                continue;
+            }
+            instance.runInstanceJobWork(context, parameters);
+        }
+    }
+
+    static void runBackgroundIntentService(Context context){
+        if (instances == null) {
+            CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
+            if(instance != null) {
+                if(instance.getConfig().isBackgroundSync()) {
+                    instance.runInstanceJobWork(context, null);
+                }else{
+                    Logger.d("Instance doesn't allow Background sync, not running the Job");
+                }
+            }
+            return;
+        }
+        for (String accountId: CleverTapAPI.instances.keySet()) {
+            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+            if (instance.getConfig().isAnalyticsOnly()) {
+                Logger.d(accountId, "Instance is Analytics Only not processing device token");
+                continue;
+            }
+            if(!instance.getConfig().isBackgroundSync()){
+                Logger.d(accountId,"Instance doesn't allow Background sync, not running the Job");
+                continue;
+            }
+            instance.runInstanceJobWork(context,null);
+        }
+    }
+
+    private void runInstanceJobWork(final Context context, final JobParameters parameters){
+        postAsyncSafely("runningJobService", new Runnable() {
+            @Override
+            public void run() {
+                if(getCachedFCMToken() == null || getCachedGCMToken() == null){
+                    Logger.v(getAccountId(),"Token is not present, not running the Job");
+                    return;
+                }
+
+                Calendar calendar = Calendar.getInstance();
+                calendar.set(Calendar.HOUR,22);
+                calendar.set(Calendar.MINUTE,0);
+                calendar.set(Calendar.SECOND,0);
+                calendar.set(Calendar.MILLISECOND,0);
+
+                long startMs = calendar.getTimeInMillis();
+
+                calendar.add(Calendar.HOUR,8);
+                long endMs = calendar.getTimeInMillis();
+
+                long lastTS = loadDBAdapter(context).getLastUninstallTimestamp();
+
+                if(lastTS !=0) {
+                    if (lastTS >= startMs && lastTS <= endMs) {
+                        Logger.v(getAccountId(), "Job Service won't run in default DND hours");
+                        return;
+                    }
+                }
+
+                if(lastTS != 0 && lastTS > System.currentTimeMillis() - 24*60*60*1000){
+                    try {
+                        JSONObject eventObject = new JSONObject();
+                        eventObject.put("bk",1);
+                        queueEvent(context, new JSONObject(), Constants.PING_EVENT);
+
+                        if(parameters == null){
+                            AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+                            Intent cancelIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
+                            cancelIntent.setPackage(context.getPackageName());
+                            PendingIntent alarmPendingIntent = PendingIntent.getService(context,1,cancelIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+                            if (alarmManager != null) {
+                                alarmManager.cancel(alarmPendingIntent);
+                            }
+                            Intent alarmIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
+                            alarmIntent.setPackage(context.getPackageName());
+                            PendingIntent alarmServicePendingIntent = PendingIntent.getService(context,1,alarmIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+                            if (alarmManager != null) {
+                                alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() * (getPingFrequency()*60*1000),AlarmManager.INTERVAL_HOUR * getPingFrequency()/60,alarmServicePendingIntent);
+                            }
+                        }
+
+                    } catch (JSONException e) {
+                        Logger.v("Unable to raise background Ping event");
+                    }
+
+                }
+            }
+        });
+    }
 }

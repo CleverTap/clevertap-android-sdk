@@ -14,6 +14,7 @@ public class Constants {
     static final String LABEL_REGION = "CLEVERTAP_REGION";
     static final String LABEL_DISABLE_APP_LAUNCH = "CLEVERTAP_DISABLE_APP_LAUNCHED";
     static final String LABEL_SSL_PINNING = "CLEVERTAP_SSL_PINNING";
+    static final String LABEL_BACKGROUND_SYNC = "CLEVERTAP_BACKGROUND_SYNC";
     static final String CLEVERTAP_OPTOUT = "ct_optout";
     static final String CLEVERTAP_USE_GOOGLE_AD_ID = "CLEVERTAP_USE_GOOGLE_AD_ID";
     static final String CLEVERTAP_STORAGE_TAG = "WizRocket";
@@ -95,6 +96,8 @@ public class Constants {
     static final String INAPP_ID_IN_PAYLOAD = "ti";
     static final int LOCATION_PING_INTERVAL_IN_SECONDS = 10;
     static final String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME};
+    static final long DEFAULT_PUSH_TTL = 1000 * 60 * 60 * 24 * 4;//TODO agree on value
+    static final String RESPONSE_ACK = "ack";
 
     /**
      * Profile command constants.

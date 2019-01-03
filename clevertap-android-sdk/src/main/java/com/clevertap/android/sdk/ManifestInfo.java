@@ -16,6 +16,7 @@ public class ManifestInfo {
     private static ManifestInfo instance;
     private static String excludedActivities;
     private static boolean sslPinning;
+    private static boolean backgroundSync;
 
     private static String _getManifestStringValueForKey(Bundle manifest, String name) {
         try {
@@ -53,6 +54,7 @@ public class ManifestInfo {
         appLaunchedDisabled = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_DISABLE_APP_LAUNCH));
         excludedActivities = _getManifestStringValueForKey(metaData,Constants.LABEL_INAPP_EXCLUDE);
         sslPinning = "1".equals(_getManifestStringValueForKey(metaData,Constants.LABEL_SSL_PINNING));
+        backgroundSync = "1".equals(_getManifestStringValueForKey(metaData,Constants.LABEL_BACKGROUND_SYNC));
     }
 
     public synchronized static ManifestInfo getInstance(Context context){
@@ -93,6 +95,10 @@ public class ManifestInfo {
     }
 
     String getExcludedActivities(){return excludedActivities;}
+
+    boolean isBackgroundSync() {
+        return backgroundSync;
+    }
 
     static void changeCredentials(String id, String token, String region){
         accountId = id;
