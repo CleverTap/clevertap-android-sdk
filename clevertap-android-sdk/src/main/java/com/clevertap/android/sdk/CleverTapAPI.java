@@ -2,7 +2,6 @@ package com.clevertap.android.sdk;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.app.FragmentTransaction;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -11,11 +10,11 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.location.Location;
 import android.location.LocationManager;
 import android.media.AudioAttributes;
@@ -43,6 +42,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.net.URL;
@@ -70,7 +70,10 @@ import static android.content.Context.NOTIFICATION_SERVICE;
  * <h1>CleverTapAPI</h1>
  * This is the main CleverTapAPI class that manages the SDK instances
  */
-public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationListener,InAppNotificationActivity.InAppActivityListener, CTInAppBaseFragment.InAppListener {
+public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationListener,
+        InAppNotificationActivity.InAppActivityListener,
+        CTInAppBaseFragment.InAppListener, CTInboxListener, CTInboxPrivateListener,
+        CTInboxActivity.InboxActivityListener {
 
     public enum LogLevel{
         OFF(-1),
@@ -158,6 +161,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private long NOTIFICATION_THREAD_ID = 0;
     private final Boolean eventLock = true;
     private boolean offline = false;
+    private CTInboxController ctInboxController;
+    private final Object inboxControllerLock = new Object();
+    private CTInboxListener inboxListener;
 
     @Deprecated
     public final EventHandler event;
@@ -221,6 +227,18 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
         });
         Logger.i("CleverTap SDK initialized with accountId: "+ config.getAccountId() + " accountToken: " + config.getAccountId() + " accountRegion: " + config.getAccountRegion());
+
+//        //TODO Remove after testing
+//        postAsyncSafely("stub", new Runnable() {
+//            @Override
+//            public void run() {
+//                try {
+//                    manualInboxUpdate(context);
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        });
     }
 
     // only call async
@@ -2213,11 +2231,177 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 // Ignore
             }
 
+            //Handle notification inbox
+            try{
+                getConfigLogger().verbose("Processing inbox messages...");
+                processInboxResponse(response,context,false);
+            }catch (Throwable t){
+                getConfigLogger().verbose("Notification inbox exception: "+ t.getLocalizedMessage());
+            }
+
         } catch (Throwable t) {
             mResponseFailureCount++;
             getConfigLogger().verbose(getAccountId(), "Problem process send queue response", t);
         }
     }
+
+    //NotificationInbox
+    private void processInboxResponse(final JSONObject response, final Context context, boolean isTest){
+        try{
+            getConfigLogger().verbose(getAccountId(),"Inbox: Processing response");
+            if (!response.has("inbox_notifications")) {
+                getConfigLogger().verbose(getAccountId(),"Inbox: Response JSON object doesn't contain the inbox key, bailing");
+                return;
+            }
+
+            if(getConfig().isAnalyticsOnly()){
+                getConfigLogger().verbose(getAccountId(),"CleverTap instance is configured to analytics only, not processing inbox messages");
+                return;
+            }
+            synchronized (inboxControllerLock) {
+                if (this.ctInboxController == null) {
+                    this.ctInboxController = CTInboxController.initWithAccountId(getAccountId(), getCleverTapID(), loadDBAdapter(context));
+                    if (this.ctInboxController != null && ctInboxController.isInitialized()) {
+                        if (this.ctInboxController.privateListener == null) {
+                            this.ctInboxController.privateListener = new WeakReference<>(this).get();
+                        }
+                        this.ctInboxController.notifyInitialized();
+                        JSONArray inboxMessages;
+                        if(!isTest){
+                           inboxMessages  = response.getJSONArray("inbox_notifications");
+                        }
+                        else{
+                            JSONObject jsonObject = response.getJSONObject("inbox_notifications");
+                            JSONArray jsonArray = new JSONArray();
+                            jsonArray.put(jsonObject);
+                            inboxMessages = jsonArray;
+
+                        }
+                        this.ctInboxController.updateMessages(inboxMessages);
+                    }
+                }else{
+                    if (this.ctInboxController.privateListener == null) {
+                        this.ctInboxController.privateListener = new WeakReference<>(this).get();
+                    }
+                    this.ctInboxController.notifyInitialized();
+                    JSONArray inboxMessages;
+                    if(!isTest){
+                        inboxMessages  = response.getJSONArray("inbox_notifications");
+                    }
+                    else{
+                        JSONObject jsonObject = response.getJSONObject("inbox_notifications");
+                        JSONArray jsonArray = new JSONArray();
+                        jsonArray.put(jsonObject);
+                        inboxMessages = jsonArray;
+                    }
+                    this.ctInboxController.updateMessages(inboxMessages);
+                }
+            }
+
+        }catch (Throwable t){
+            getConfigLogger().verbose(getAccountId(),"InboxResponse: Failed to parse response", t);
+        }
+    }
+
+    @Override
+    public void inboxMessagesDidUpdate() {
+        //TODO
+        getConfigLogger().debug(getAccountId(),"Notification Inbox updated");
+    }
+
+    @Override
+    public void inboxDidInitialize() {
+        //TODO
+        getConfigLogger().debug(getAccountId(),"Notification Inbox initialized");
+    }
+
+    /**
+     * This method sets the CTInboxListener
+     * @param notificationInboxListener An {@link CTInboxListener} object
+     */
+    @SuppressWarnings({"unused", "WeakerAccess"})
+    public void setCTNotificationInboxListener(CTInboxListener notificationInboxListener) {
+        inboxListener = notificationInboxListener;
+        //        synchronized (inboxControllerLock) {
+//            if (this.ctInboxController != null) {
+//                this.ctInboxController.listener = notificationInboxListener;
+//            }
+//        }
+    }
+
+    /**
+     * Returns the CTInboxListener object
+     * @return An {@link CTInboxListener} object
+     */
+    @SuppressWarnings({"unused", "WeakerAccess"})
+    public CTInboxListener getCTNotificationInboxListener() {
+        synchronized (inboxControllerLock) {
+            if (this.ctInboxController != null) {
+                return this.ctInboxController.listener;
+            } else {
+                return null;
+            }
+        }
+    }
+
+    @Override
+    public void privateInboxDidInitialize() {
+        if(inboxListener != null){
+            synchronized (inboxControllerLock) {
+                this.ctInboxController.listener = inboxListener;
+                this.ctInboxController.listener.inboxDidInitialize();
+
+            }
+        }
+
+    }
+
+    @Override
+    public void privateInboxMessagesDidUpdate() {
+        if(inboxListener != null){
+            synchronized (inboxControllerLock) {
+                this.ctInboxController.listener = inboxListener;
+                this.ctInboxController.listener.inboxMessagesDidUpdate();
+
+            }
+        }
+    }
+
+    //TODO Remove after testing
+    public void manualInboxUpdate(Context context) throws JSONException {
+        synchronized (inboxControllerLock) {
+            if (this.ctInboxController == null) {
+                this.ctInboxController = CTInboxController.initWithAccountId(getAccountId(), getCleverTapID(), loadDBAdapter(context));
+                if (this.ctInboxController != null && ctInboxController.isInitialized()) {
+                    if (this.ctInboxController.privateListener == null) {
+                        this.ctInboxController.privateListener = new WeakReference<>(this).get();
+                    }
+                    this.ctInboxController.notifyInitialized();
+                    //JSONObject jsonObject = new JSONObject(loadJSONFromAsset(context));
+                    JSONArray inboxMessages = new JSONArray(loadJSONFromAsset(context));
+                    //inboxMessages.put(jsonObject);
+                    this.ctInboxController.updateMessages(inboxMessages);
+                }
+            }
+        }
+    }
+
+    String loadJSONFromAsset(Context context) {
+        String json = null;
+        try {
+            InputStream is = context.getAssets().open("inbox.json");
+            int size = is.available();
+            byte[] buffer = new byte[size];
+            is.read(buffer);
+            is.close();
+            json = new String(buffer, "UTF-8");
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            return null;
+        }
+        return json;
+    }
+
 
     //InApp
     private void processInAppResponse(final JSONObject response, final Context context) {
@@ -3870,6 +4054,22 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             return;
         }
 
+        if (extras.containsKey(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)) {
+            pendingInappRunnable  = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Logger.v("Received inbox via push payload: " + extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
+                        JSONObject r = new JSONObject(extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
+                        processInboxResponse(r, context,true);
+                    } catch (Throwable t) {
+                        Logger.v("Failed to display inapp notification from push notification payload", t);
+                    }
+                }
+            };
+            return;
+        }
+
         if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG) || (extras.getString(Constants.NOTIFICATION_ID_TAG) == null)) {
             getConfigLogger().debug(getAccountId(), "Push notification ID Tag is null, not processing Notification Clicked event for:  " + extras.toString());
             return;
@@ -3950,6 +4150,20 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private JSONObject getWzrkFields(CTInAppNotification root) throws JSONException {
         final JSONObject fields = new JSONObject();
         JSONObject jsonObject = root.getJsonDescription();
+        Iterator<String> iterator = jsonObject.keys();
+
+        while(iterator.hasNext()){
+            String keyName = iterator.next();
+            if(keyName.startsWith(Constants.WZRK_PREFIX))
+                fields.put(keyName,jsonObject.get(keyName));
+        }
+
+        return fields;
+    }
+
+    private JSONObject getWzrkFields(CTInboxMessage root) throws JSONException {
+        final JSONObject fields = new JSONObject();
+        JSONObject jsonObject = root.getData();
         Iterator<String> iterator = jsonObject.keys();
 
         while(iterator.hasNext()){
@@ -4219,6 +4433,45 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+    /**
+     * Raises the Notification Clicked event, if {@param clicked} is true,
+     * otherwise the Notification Viewed event, if {@param clicked} is false.
+     *
+     * @param clicked    Whether or not this notification was clicked
+     * @param data       The data to be attached as the event data
+     * @param customData Additional data such as form input to to be added to the event data
+     */
+    void pushInboxMessageStateEvent(boolean clicked, CTInboxMessage data, Bundle customData) {
+        JSONObject event = new JSONObject();
+        try {
+            JSONObject notif = getWzrkFields(data);
+
+            if (customData != null) {
+                for (String x : customData.keySet()) {
+
+                    Object value = customData.get(x);
+                    if (value != null) notif.put(x, value);
+                }
+            }
+
+            if (clicked) {
+                try {
+                    setWzrkParams(notif);
+                } catch (Throwable t) {
+                    // no-op
+                }
+                event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
+            } else {
+                event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
+            }
+
+            event.put("evtData", notif);
+            queueEvent(context, event, Constants.RAISED_EVENT);
+        } catch (Throwable ignored) {
+            // We won't get here
+        }
+    }
+
     //Session
 
     /**
@@ -4433,6 +4686,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         synchronized (processingUserLoginLock) {
                             processingUserLoginIdentifier = null;
                         }
+                        resetInbox();
                     } catch (Throwable t) {
                         getConfigLogger().verbose(getAccountId(), "Reset Profile error", t);
                     }
@@ -4905,17 +5159,24 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 if (bpMap == null)
                     throw new Exception("Failed to fetch big picture!");
 
-                style = new NotificationCompat.BigPictureStyle()
-                        .setSummaryText(notifMessage)
-                        .bigPicture(bpMap);
+                if(extras.containsKey("wzrk_nms")){
+                    String summaryText = extras.getString("wzrk_nms");
+                    style = new NotificationCompat.BigPictureStyle()
+                            .setSummaryText(summaryText)
+                            .bigPicture(bpMap);
+                }else {
+                    style = new NotificationCompat.BigPictureStyle()
+                            .setSummaryText(notifMessage)
+                            .bigPicture(bpMap);
+                }
             } catch (Throwable t) {
-                style = new NotificationCompat.BigTextStyle()
-                        .bigText(notifMessage);
+                    style = new NotificationCompat.BigTextStyle()
+                            .bigText(notifMessage);
                 getConfigLogger().verbose(getAccountId(), "Falling back to big text notification, couldn't fetch big picture", t);
             }
         } else {
-            style = new NotificationCompat.BigTextStyle()
-                    .bigText(notifMessage);
+                style = new NotificationCompat.BigTextStyle()
+                        .bigText(notifMessage);
         }
 
         int smallIcon;
@@ -5002,8 +5263,17 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     // no-op
                 }
             }
+            if(extras.containsKey("wzrk_st")){
+                nb.setSubText(extras.getString("wzrk_st"));
+            }
         } else {
             nb = new NotificationCompat.Builder(context);
+        }
+
+        if(extras.containsKey("wzrk_clr")){
+            int color = Color.parseColor(extras.getString("wzrk_clr"));
+            nb.setColor(color);
+            nb.setColorized(true);
         }
 
         nb.setContentTitle(notifTitle)
@@ -5693,4 +5963,242 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             return null;
         }
     }
+
+    //Notification Inbox public APIs
+    public void initializeInbox(final CleverTapAPI cleverTapAPI){
+        postAsyncSafely("initializeInbox", new Runnable() {
+            @Override
+            public void run() {
+                if(getConfig().isAnalyticsOnly()){
+                    getConfigLogger().debug(getAccountId(),"Instance is analytics only, not initializing Notification Inbox");
+                }
+                synchronized (inboxControllerLock) {
+                    if (ctInboxController != null) {
+                        getConfigLogger().debug(getAccountId(), "Notification Inbox initialized");
+                    } else {
+                        ctInboxController = CTInboxController.initWithAccountId(getAccountId(), getCleverTapID(), loadDBAdapter(context));
+                        if (ctInboxController != null && ctInboxController.isInitialized()) {
+                            if (ctInboxController.privateListener == null) {
+                                ctInboxController.privateListener = new WeakReference<>(cleverTapAPI).get();
+                            }
+                            ctInboxController.notifyInitialized();
+                        }
+                    }
+                }
+            }
+        });
+
+    }
+
+    public int getInboxMessageCount(){
+       if(isInboxInitialized()) {
+           synchronized (inboxControllerLock) {
+               return ctInboxController.count();
+           }
+       }else{
+           getConfigLogger().debug(getAccountId(),"Notification Inbox not initialized");
+           return -1;
+       }
+
+    }
+
+    public int getInboxMessageUnreadCount(){
+        if(isInboxInitialized()) {
+            synchronized (inboxControllerLock) {
+                return ctInboxController.unreadCount();
+            }
+        }else{
+            getConfigLogger().debug(getAccountId(),"Notification Inbox not initialized");
+            return -1;
+        }
+
+    }
+
+    public CTInboxMessage getInboxMessageForId(String messageId){
+        if(isInboxInitialized()) {
+            synchronized (inboxControllerLock) {
+                JSONObject messageJson = ctInboxController.getMessageForId(messageId);
+                return new CTInboxMessage().initWithJSON(messageJson);
+            }
+        }else{
+            getConfigLogger().debug(getAccountId(),"Notification Inbox not initialized");
+            return null;
+        }
+    }
+
+    public void deleteInboxMessage(final CTInboxMessage message){
+        postAsyncSafely("deleteInboxMessage", new Runnable() {
+            @Override
+            public void run() {
+                if (isInboxInitialized()) {
+                    synchronized (inboxControllerLock) {
+                        ctInboxController.deleteMessageWithId(message.getMessageId());
+                    }
+                } else {
+                    getConfigLogger().debug(getAccountId(), "Notification Inbox not initialized");
+                }
+            }});
+    }
+
+    public void markReadInboxMessage(final CTInboxMessage message){
+        postAsyncSafely("markReadInboxMessage", new Runnable() {
+            @Override
+            public void run() {
+                if(isInboxInitialized()){
+                    synchronized (inboxControllerLock) {
+                        ctInboxController.markReadForMessageWithId(message.getMessageId());
+                    }
+                }else{
+                    getConfigLogger().debug(getAccountId(),"Notification Inbox not initialized");
+                }
+            }
+        });
+    }
+
+    public ArrayList<CTInboxMessage> getUnreadInboxMessages(){
+        ArrayList<CTInboxMessage> inboxMessageArrayList = new ArrayList<>();
+        if(isInboxInitialized()){
+            synchronized (inboxControllerLock) {
+                ArrayList<CTMessageDAO> messageDAOArrayList = ctInboxController.getUnreadMessages();
+                for (CTMessageDAO messageDAO : messageDAOArrayList) {
+                    inboxMessageArrayList.add(new CTInboxMessage().initWithJSON(messageDAO.toJSON()));
+                }
+                return inboxMessageArrayList;
+            }
+        }else{
+            getConfigLogger().debug(getAccountId(),"Notification Inbox not initialized");
+            return null;
+        }
+
+    }
+
+    public ArrayList<CTInboxMessage> getAllInboxMessages(){
+        ArrayList<CTInboxMessage> inboxMessageArrayList = new ArrayList<>();
+        if(isInboxInitialized()){
+            synchronized (inboxControllerLock) {
+                ArrayList<CTMessageDAO> messageDAOArrayList = ctInboxController.getMessages();
+                for (CTMessageDAO messageDAO : messageDAOArrayList) {
+                    inboxMessageArrayList.add(new CTInboxMessage().initWithJSON(messageDAO.toJSON()));
+                }
+                return inboxMessageArrayList;
+            }
+        }else{
+            getConfigLogger().debug(getAccountId(),"Notification Inbox not initialized");
+            return null;
+        }
+
+    }
+
+    public void createNotificationInboxActivity(CTInboxStyleConfig styleConfig){
+        ArrayList<CTInboxMessage> inboxMessageArrayList = getAllInboxMessages();
+        Logger.d(getAccountId(),"All inbox messages - "+inboxMessageArrayList.toString());
+        inboxMessageArrayList = checkForVideoMessages(inboxMessageArrayList);
+        Logger.d(getAccountId(),"All inbox messages after video check - "+inboxMessageArrayList.toString());
+        Intent intent = new Intent(context,CTInboxActivity.class);
+        intent.putExtra("styleConfig",styleConfig);
+        intent.putExtra("config",config);
+        intent.putExtra("messageList",inboxMessageArrayList);
+        try {
+            Activity currentActivity = getCurrentActivity();
+            if (currentActivity == null) {
+                throw new IllegalStateException("Current activity reference not found");
+            }
+            currentActivity.startActivity(intent);
+            Logger.d("Displaying Notification Inbox");
+
+        } catch (Throwable t) {
+            Logger.v("Please verify the integration of your app." +
+                    " It is not setup to support Notification Inbox yet.", t);
+        }
+    }
+
+    public void createNotificationInboxActivity(){
+
+        CTInboxStyleConfig styleConfig = new CTInboxStyleConfig();
+        ArrayList<CTInboxMessage> inboxMessageArrayList = getAllInboxMessages();
+        Logger.d(getAccountId(),"All inbox messages - "+inboxMessageArrayList.toString());
+        inboxMessageArrayList = checkForVideoMessages(inboxMessageArrayList);
+        Logger.d(getAccountId(),"All inbox messages after video check - "+inboxMessageArrayList.toString());
+        Intent intent = new Intent(context,CTInboxActivity.class);
+        intent.putExtra("styleConfig",styleConfig);
+        intent.putExtra("config",config);
+        intent.putExtra("messageList",inboxMessageArrayList);
+        try {
+            Activity currentActivity = getCurrentActivity();
+            if (currentActivity == null) {
+                throw new IllegalStateException("Current activity reference not found");
+            }
+            currentActivity.startActivity(intent);
+            currentActivity.overridePendingTransition(android.R.anim.fade_in,android.R.anim.fade_out);
+            Logger.d("Displaying Notification Inbox");
+
+        } catch (Throwable t) {
+            Logger.v("Please verify the integration of your app." +
+                    " It is not setup to support Notification Inbox yet.", t);
+        }
+    }
+
+    //Notification Inbox Private APIs
+    private void resetInbox(){
+        synchronized (inboxControllerLock) {
+            this.ctInboxController = CTInboxController.initWithAccountId(getAccountId(), getCleverTapID(), loadDBAdapter(context));
+            if (this.ctInboxController != null && ctInboxController.isInitialized()) {
+                this.ctInboxController.listener = new WeakReference<>(this).get();
+            }
+        }
+    }
+
+    private boolean isInboxInitialized(){
+        if(getConfig().isAnalyticsOnly()){
+            getConfigLogger().debug(getAccountId(),"Instance is analytics only, not initializing Notification Inbox");
+            return false;
+        }
+        synchronized (inboxControllerLock) {
+            if (this.ctInboxController != null) {
+                return this.ctInboxController.isInitialized();
+            } else {
+                return false;
+            }
+        }
+    }
+
+    @Override
+    public void messageDidShow(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data) {
+        pushInboxMessageStateEvent(false,inboxMessage,data);
+    }
+
+    @Override
+    public void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data) {
+        pushInboxMessageStateEvent(true,inboxMessage,data);
+    }
+
+    private ArrayList<CTInboxMessage> checkForVideoMessages(ArrayList<CTInboxMessage> inboxMessageList){
+
+        boolean exoPlayerPresent = false;
+
+        Class className = null;
+        try{
+            className = Class.forName("com.google.android.exoplayer2.ExoPlayerFactory");
+            className = Class.forName("com.google.android.exoplayer2.source.hls.HlsMediaSource");
+            className = Class.forName("com.google.android.exoplayer2.ui.PlayerView");
+            exoPlayerPresent = true;
+        }catch (Throwable t){
+            Logger.d("ExoPlayer library files are missing!!!");
+            Logger.d("Please add ExoPlayer dependencies to render Inbox messages playing video. For more information checkout CleverTap documentation.");
+            if(className!=null)
+                Logger.d("ExoPlayer classes not found "+className.getName());
+            else
+                Logger.d("ExoPlayer classes not found");
+        }
+        if(!exoPlayerPresent) {
+            for (CTInboxMessage inboxMessage : inboxMessageList) {
+                if (inboxMessage.getInboxMessageContents().get(0).mediaIsVideo()) {
+                    inboxMessageList.remove(inboxMessage);
+                    Logger.d("Dropping inbox messages containing videos since Exoplayer files are missing. For more information checkout CleverTap documentation.");
+                }
+            }
+        }
+        return inboxMessageList;
+    }
+
 }

@@ -34,6 +34,7 @@ public class Constants {
     static final String ERROR_KEY = "wzrk_error";
     static final int PUSH_DELAY_MS = 1000;
     static final String INAPP_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inapp";
+    static final String INBOX_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inbox";
     static final String INAPP_DATA_TAG = "html";
     static final String INAPP_X_PERCENT = "xp";
     static final String INAPP_Y_PERCENT = "yp";
@@ -48,6 +49,7 @@ public class Constants {
     static final String INAPP_NOTIF_DARKEN_SCREEN = "dk";
     static final String INAPP_NOTIF_SHOW_CLOSE = "sc";
     static final String INAPP_JSON_RESPONSE_KEY = "inapp_notifs";
+    static final String INBOX_JSON_RESPONSE_KEY = "inbox_notifications";
     static final String INAPP_MAX_DISPLAY_COUNT = "mdc";
     static final String INAPP_MAX_PER_SESSION = "imc";
     static final String INAPP_WINDOW = "w";
