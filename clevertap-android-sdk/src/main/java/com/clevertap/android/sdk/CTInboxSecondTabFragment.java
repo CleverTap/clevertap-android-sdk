@@ -30,7 +30,7 @@ public class CTInboxSecondTabFragment extends CTInboxTabBaseFragment {
             exoPlayerRecyclerView.setVideoInfoList(inboxMessageArrayList);
             LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
             exoPlayerRecyclerView.setLayoutManager(linearLayoutManager);
-            DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
+            DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(exoPlayerRecyclerView.getContext(),
                     linearLayoutManager.getOrientation());
             exoPlayerRecyclerView.addItemDecoration(dividerItemDecoration);
             exoPlayerRecyclerView.setItemAnimator(new DefaultItemAnimator());

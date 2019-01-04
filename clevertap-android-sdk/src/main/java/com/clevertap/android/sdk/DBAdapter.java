@@ -475,7 +475,7 @@ public class DBAdapter {
      * @param id the String value of Push Notification Id
      * @return the number of rows in the table, or DB_OUT_OF_MEMORY_ERROR/DB_UPDATE_ERROR
      */
-    public void storePushNotificationId(String id, long ttl, String wzrk_id) {
+    public void storePushNotificationId(String id, long ttl) {
 
         if (id == null) return ;
 
@@ -743,8 +743,8 @@ public class DBAdapter {
             if (cursor != null && cursor.moveToFirst()) {
                 try {
                     messageDAO.setId(messageId);
-                    messageDAO.setDate(cursor.getInt(cursor.getColumnIndex(KEY_CREATED_AT)));
-                    messageDAO.setExpires(cursor.getInt(cursor.getColumnIndex(EXPIRES)));
+                    messageDAO.setDate(cursor.getLong(cursor.getColumnIndex(KEY_CREATED_AT)));
+                    messageDAO.setExpires(cursor.getLong(cursor.getColumnIndex(EXPIRES)));
                     messageDAO.setJsonData(new JSONObject(cursor.getString(cursor.getColumnIndex(KEY_DATA))));
                     messageDAO.setRead(cursor.getInt(cursor.getColumnIndex(IS_READ)));
                     messageDAO.setUserId(cursor.getString(cursor.getColumnIndex(MESSAGE_USER)));
@@ -849,7 +849,7 @@ public class DBAdapter {
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
             ContentValues cv = new ContentValues();
             cv.put(IS_READ,1);
-            db.update(tName,cv,ID + " = " + messageId,null);
+            db.update(Table.INBOX_MESSAGES.getName(), cv,ID + " = ?",new String[]{messageId});
             return true;
         }catch (final SQLiteException e){
             getConfigLogger().verbose("Error removing stale records from " + tName + ". Recreating DB.", e);
@@ -899,8 +899,8 @@ public class DBAdapter {
                     CTMessageDAO ctMessageDAO = new CTMessageDAO();
                     ctMessageDAO.setId(cursor.getString(cursor.getColumnIndex(ID)));
                     ctMessageDAO.setJsonData(new JSONObject(cursor.getString(cursor.getColumnIndex(KEY_DATA))));
-                    ctMessageDAO.setDate(cursor.getInt(cursor.getColumnIndex(KEY_CREATED_AT)));
-                    ctMessageDAO.setExpires(cursor.getInt(cursor.getColumnIndex(EXPIRES)));
+                    ctMessageDAO.setDate(cursor.getLong(cursor.getColumnIndex(KEY_CREATED_AT)));
+                    ctMessageDAO.setExpires(cursor.getLong(cursor.getColumnIndex(EXPIRES)));
                     ctMessageDAO.setRead(cursor.getInt(cursor.getColumnIndex(IS_READ)));
                     ctMessageDAO.setUserId(cursor.getString(cursor.getColumnIndex(MESSAGE_USER)));
                     ctMessageDAO.setTags(cursor.getString(cursor.getColumnIndex(TAGS)));
@@ -941,8 +941,8 @@ public class DBAdapter {
                     CTMessageDAO ctMessageDAO = new CTMessageDAO();
                     ctMessageDAO.setId(cursor.getString(cursor.getColumnIndex(ID)));
                     ctMessageDAO.setJsonData(new JSONObject(cursor.getString(cursor.getColumnIndex(KEY_DATA))));
-                    ctMessageDAO.setDate(cursor.getInt(cursor.getColumnIndex(KEY_CREATED_AT)));
-                    ctMessageDAO.setExpires(cursor.getInt(cursor.getColumnIndex(EXPIRES)));
+                    ctMessageDAO.setDate(cursor.getLong(cursor.getColumnIndex(KEY_CREATED_AT)));
+                    ctMessageDAO.setExpires(cursor.getLong(cursor.getColumnIndex(EXPIRES)));
                     ctMessageDAO.setRead(cursor.getInt(cursor.getColumnIndex(IS_READ)));
                     ctMessageDAO.setUserId(cursor.getString(cursor.getColumnIndex(MESSAGE_USER)));
                     ctMessageDAO.setTags(cursor.getString(cursor.getColumnIndex(TAGS)));
@@ -970,7 +970,7 @@ public class DBAdapter {
         ArrayList<CTMessageDAO> messageDAOArrayList = getMessages(userId);
         for(CTMessageDAO messageDAO : messageDAOArrayList){
             if(messageDAO.getExpires() != 0) {
-                if (System.currentTimeMillis() > messageDAO.getDate() + messageDAO.getExpires()) {
+                if (System.currentTimeMillis() > messageDAO.getExpires()) {
                     deleteMessageForId(messageDAO.getId());
                 }
             }

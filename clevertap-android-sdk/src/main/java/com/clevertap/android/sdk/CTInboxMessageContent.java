@@ -36,7 +36,7 @@ public class CTInboxMessageContent implements Parcelable {
             }
             JSONObject iconObject = contentObject.has("icon") ? contentObject.getJSONObject("icon") : null;
             if(iconObject != null){
-                this.icon =  contentObject.has("url") ? contentObject.getString("url") : "";
+                this.icon =  iconObject.has("url") ? iconObject.getString("url") : "";
             }
             JSONObject mediaObject = contentObject.has("media") ? contentObject.getJSONObject("media") : null;
             if(mediaObject != null){
@@ -200,6 +200,16 @@ public class CTInboxMessageContent implements Parcelable {
         if(jsonObject == null) return null;
         try {
             return jsonObject.has("text") ? jsonObject.getString("text") : "";
+        } catch (JSONException e) {
+            Logger.v("Unable to get Link Text with JSON - "+e.getLocalizedMessage());
+            return null;
+        }
+    }
+
+    public String getLinkCopyText(JSONObject jsonObject){
+        if(jsonObject == null) return null;
+        try {
+            return jsonObject.has("copytext") ? jsonObject.getString("copytext") : "";
         } catch (JSONException e) {
             Logger.v("Unable to get Link Text with JSON - "+e.getLocalizedMessage());
             return null;

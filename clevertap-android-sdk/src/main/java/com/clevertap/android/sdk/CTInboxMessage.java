@@ -19,8 +19,8 @@ public class CTInboxMessage implements Parcelable {
     private String body;
     private String imageUrl;
     private String actionUrl;
-    private int date;
-    private int expires;
+    private long date;
+    private long expires;
     private String messageId;
     private JSONObject data;
     private JSONObject customData;
@@ -38,15 +38,9 @@ public class CTInboxMessage implements Parcelable {
         try {
             this.messageId = jsonObject.has("id") ? jsonObject.getString("id") : "0";
             this.campaignId = jsonObject.has("wzrk_id") ? jsonObject.getString("wzrk_id") : "0_0";
-            this.date = jsonObject.has("date") ? jsonObject.getInt("date") : 0;
-            this.expires = jsonObject.has("ttl") ? jsonObject.getInt("ttl") : 1000*60*60*24;
+            this.date = jsonObject.has("date") ? jsonObject.getLong("date") : System.currentTimeMillis();
+            this.expires = jsonObject.has("ttl") ? jsonObject.getLong("ttl") : 1000*60*60*24;
             this.isRead = jsonObject.has("isRead") && jsonObject.getBoolean("isRead");
-            JSONArray tagsArray = jsonObject.has("tags") ? jsonObject.getJSONArray("tags") : null;
-            if(tagsArray != null){
-                for(int i=0; i< tagsArray.length(); i++){
-                    this.tags.add(tagsArray.getString(i));
-                }
-            }
             JSONObject cellObject = jsonObject.has("msg") ? jsonObject.getJSONObject("msg") : null;
             if(cellObject != null){
                 this.type = cellObject.has("type") ? CTInboxMessageType.fromString(cellObject.getString("type")) : CTInboxMessageType.fromString("");
@@ -59,6 +53,12 @@ public class CTInboxMessage implements Parcelable {
                     }
                 }
                 this.orientation = cellObject.has("orientation") ? cellObject.getString("orientation") : "";
+                JSONArray tagsArray = cellObject.has("tags") ? cellObject.getJSONArray("tags") : null;
+                if(tagsArray != null){
+                    for(int i=0; i< tagsArray.length(); i++){
+                        this.tags.add(tagsArray.getString(i));
+                    }
+                }
             }
         } catch (JSONException e) {
             Logger.v("Unable to init CTInboxMessage with JSON - "+e.getLocalizedMessage());
@@ -75,8 +75,8 @@ public class CTInboxMessage implements Parcelable {
             body = in.readString();
             imageUrl = in.readString();
             actionUrl = in.readString();
-            date = in.readInt();
-            expires = in.readInt();
+            date = in.readLong();
+            expires = in.readLong();
             messageId = in.readString();
             data = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
             customData = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
@@ -113,8 +113,8 @@ public class CTInboxMessage implements Parcelable {
         dest.writeString(body);
         dest.writeString(imageUrl);
         dest.writeString(actionUrl);
-        dest.writeInt(date);
-        dest.writeInt(expires);
+        dest.writeLong(date);
+        dest.writeLong(expires);
         dest.writeString(messageId);
         if (data == null) {
             dest.writeByte((byte) (0x00));
@@ -176,11 +176,11 @@ public class CTInboxMessage implements Parcelable {
         return actionUrl;
     }
 
-    public int getDate() {
+    public long getDate() {
         return date;
     }
 
-    public int getExpires() {
+    public long getExpires() {
         return expires;
     }
 

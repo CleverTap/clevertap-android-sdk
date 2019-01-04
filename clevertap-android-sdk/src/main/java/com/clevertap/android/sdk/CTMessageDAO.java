@@ -17,8 +17,8 @@ class CTMessageDAO {
     private String id;
     private JSONObject jsonData;
     private boolean read;
-    private int date;
-    private int expires;
+    private long date;
+    private long expires;
     private String userId;
     private List<String> tags = new ArrayList<>();
     private String campaignId;
@@ -54,19 +54,19 @@ class CTMessageDAO {
             this.read = false;
     }
 
-    int getDate() {
+    long getDate() {
         return date;
     }
 
-    void setDate(int date) {
+    void setDate(long date) {
         this.date = date;
     }
 
-    int getExpires() {
+    long getExpires() {
         return expires;
     }
 
-    void setExpires(int expires) {
+    void setExpires(long expires) {
         this.expires = expires;
     }
 
@@ -116,7 +116,10 @@ class CTMessageDAO {
             int date = inboxMessage.has("date") ? inboxMessage.getInt("date") : -1;
             int expires = inboxMessage.has("ttl") ? inboxMessage.getInt("ttl") : -1;
             JSONObject cellObject = inboxMessage.has("msg") ? inboxMessage.getJSONObject("msg") : null;
-            String tags = inboxMessage.has("tags") ? inboxMessage.getString("tags") : null;
+            String tags = "";
+            if(cellObject != null) {
+                tags = cellObject.has("tags") ? cellObject.getString("tags") : null;
+            }
             String campaignId = inboxMessage.has("wzrk_id") ? inboxMessage.getString("wzrk_id") : "0_0";
             return new CTMessageDAO(id, cellObject, false,date,expires,userId, tags,campaignId);
         }catch (JSONException e){

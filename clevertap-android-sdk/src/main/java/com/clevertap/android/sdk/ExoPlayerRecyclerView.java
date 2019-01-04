@@ -55,7 +55,7 @@ public class ExoPlayerRecyclerView extends RecyclerView {
     private PlayerView videoSurfaceView;
     //private ImageView mCoverImage;
     private Context appContext;
-
+    int targetPosition;
 
     /**
      * the position of playing video
@@ -139,7 +139,7 @@ public class ExoPlayerRecyclerView extends RecyclerView {
             return;
         }
 
-        int targetPosition;
+        //int targetPosition;
         if (startPosition != endPosition) {
             int startPositionVideoHeight = getVisibleVideoSurfaceHeight(startPosition);
             int endPositionVideoHeight = getVisibleVideoSurfaceHeight(endPosition);
@@ -229,7 +229,7 @@ public class ExoPlayerRecyclerView extends RecyclerView {
 
         screenDefaultHeight = point.y;
         videoSurfaceView = new PlayerView(appContext);
-        videoSurfaceView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
+        videoSurfaceView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_ZOOM);
 
         BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
         TrackSelection.Factory videoTrackSelectionFactory =
@@ -249,7 +249,7 @@ public class ExoPlayerRecyclerView extends RecyclerView {
         videoSurfaceView.setUseController(true);
         videoSurfaceView.setShowBuffering(true);
         videoSurfaceView.setUseArtwork(true);
-        videoSurfaceView.setControllerAutoShow(true);
+        videoSurfaceView.setControllerAutoShow(false);
         videoSurfaceView.setPlayer(player);
         Drawable artwork = context.getResources().getDrawable(R.drawable.ct_audio);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

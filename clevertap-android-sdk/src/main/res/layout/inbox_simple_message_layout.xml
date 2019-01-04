@@ -112,7 +112,7 @@
             android:padding="2dp"
             android:text="CTA1"
             android:textColor="@android:color/holo_blue_light"
-            android:visibility="visible"
+            android:visibility="gone"
             android:background="@android:color/white"/>
         <Button
             android:id="@+id/cta_button_2"
@@ -139,7 +139,7 @@
     </LinearLayout>
     <View
         android:layout_width="match_parent"
-        android:layout_height="1dp"
+        android:layout_height="2dp"
         android:layout_below="@+id/cta_linear_layout"
-        android:background="@android:color/darker_gray"/>
+        android:background="@android:color/white"/>
 </RelativeLayout>

@@ -24,13 +24,13 @@
                 android:id="@+id/sliderDots"
                 android:orientation="horizontal"
                 android:layout_width="match_parent"
+                android:layout_gravity="center"
                 android:layout_height="34dp">
                 <LinearLayout
-                    android:layout_width="wrap_content"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
-                    android:layout_gravity="center"
-                    android:gravity="end|right">
+                    android:gravity="end">
                     <TextView
                         android:id="@+id/carousel_timestamp"
                         android:layout_width="wrap_content"
@@ -102,4 +102,9 @@
                 android:layout_marginEnd="20dp" />
         </LinearLayout>
     </RelativeLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:layout_below="@+id/body_relative_layout"
+        android:background="@android:color/white"/>
 </RelativeLayout>

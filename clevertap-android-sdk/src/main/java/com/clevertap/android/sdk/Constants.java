@@ -98,6 +98,7 @@ public class Constants {
     static final String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME};
     static final long DEFAULT_PUSH_TTL = 1000 * 60 * 60 * 24 * 4;//TODO agree on value
     static final String RESPONSE_ACK = "ack";
+    static final String JOB_ID = "jobid";
 
     /**
      * Profile command constants.

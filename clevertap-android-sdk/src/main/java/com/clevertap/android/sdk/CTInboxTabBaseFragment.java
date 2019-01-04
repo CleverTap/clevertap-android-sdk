@@ -38,7 +38,7 @@ abstract class CTInboxTabBaseFragment extends Fragment {
             // no-op
         }
         if (listener == null) {
-            config.getLogger().verbose(config.getAccountId(),"InboxListener is null for messages");
+            Logger.v("InboxListener is null for messages");
         }
         return listener;
     }
