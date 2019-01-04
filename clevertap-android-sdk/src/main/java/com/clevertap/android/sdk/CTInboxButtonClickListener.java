@@ -12,6 +12,9 @@ import android.widget.Toast;
 
 import org.json.JSONObject;
 
+/**
+ * Custom OnClickListener to handle both "onMessage" and "onLink" clicks
+ */
 class CTInboxButtonClickListener implements View.OnClickListener {
 
     private int position;
@@ -58,16 +61,16 @@ class CTInboxButtonClickListener implements View.OnClickListener {
 
     @Override
     public void onClick(View v) {
-        if(viewPager != null){
+        if(viewPager != null){//Handles viewpager clicks
             if(fragment != null) {
                 ((CTInboxTabBaseFragment) fragment).handleViewPagerClick(position, viewPager.getCurrentItem());
             }else if(activity != null){
                 ((CTInboxActivity)activity).handleViewPagerClick(position,viewPager.getCurrentItem());
             }
-        }else{
+        }else{//Handles button clicks
             if(button != null && buttonObject != null) {
                 if(fragment != null) {
-                    if(inboxMessage.getInboxMessageContents().get(0).getLinktype(buttonObject).equalsIgnoreCase("copytext")) {
+                    if(inboxMessage.getInboxMessageContents().get(0).getLinktype(buttonObject).equalsIgnoreCase("copytext")) {//Copy to clipboard feature
                         if(fragment.getActivity() !=null) {
                             copyToClipboard(fragment.getActivity(), buttonObject);
                         }
@@ -76,10 +79,14 @@ class CTInboxButtonClickListener implements View.OnClickListener {
                         ((CTInboxTabBaseFragment) fragment).handleClick(this.position, button.getText().toString());
                     }
                 }else if(activity != null){
-                    if(activity.getApplicationContext() !=null) {
-                        copyToClipboard(activity.getApplicationContext(), buttonObject);
+                    if(inboxMessage.getInboxMessageContents().get(0).getLinktype(buttonObject).equalsIgnoreCase("copytext")) {//Copy to clipboard feature
+                        if(fragment.getActivity() !=null) {
+                            copyToClipboard(activity.getApplicationContext(), buttonObject);
+                        }
+                        ((CTInboxActivity) activity).handleClick(this.position, button.getText().toString());
+                    }else{
+                        ((CTInboxActivity) activity).handleClick(this.position, button.getText().toString());
                     }
-                    ((CTInboxActivity) activity).handleClick(this.position, button.getText().toString());
                 }
             }else{
                 if(fragment != null) {

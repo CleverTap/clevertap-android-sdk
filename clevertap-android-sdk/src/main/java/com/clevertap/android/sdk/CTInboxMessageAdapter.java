@@ -119,6 +119,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     }else{
                         ((CTSimpleMessageViewHolder)viewHolder).readDot.setVisibility(View.VISIBLE);
                     }
+                    //Shows the CTA layout only if links are present, also handles the display of the CTAs depending on the number
                     JSONArray linksArray = inboxMessage.getInboxMessageContents().get(0).getLinks();
                     if(linksArray != null){
                         int size = linksArray.length();
@@ -186,6 +187,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     }else{
                         ((CTSimpleMessageViewHolder)viewHolder).ctaLinearLayout.setVisibility(View.GONE);
                     }
+                    //Loads the media based on orientation and media type
                     switch (inboxMessage.getOrientation()){
                         case "l" :
                             if(inboxMessage.getInboxMessageContents().get(0).mediaIsImage()) {
@@ -224,6 +226,8 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                         break;
                     }
                     final int position = i;
+                    //New thread to remove the Read dot, mark message as read and raise Notification Viewed
+                    //TODO check why message is not getting marked as read in DB and Notification Viewed is being raised erratically
                     Runnable simpleRunnable = new Runnable() {
                         @Override
                         public void run() {
@@ -275,6 +279,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     }else{
                         ((CTIconMessageViewHolder)viewHolder).readDot.setVisibility(View.VISIBLE);
                     }
+                    //Shows the CTA layout only if links are present, also handles the display of the CTAs depending on the number
                     JSONArray iconlinksArray = inboxMessage.getInboxMessageContents().get(0).getLinks();
                     if(iconlinksArray != null){
                         int size = iconlinksArray.length();
@@ -341,6 +346,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     }else{
                         ((CTIconMessageViewHolder)viewHolder).ctaLinearLayout.setVisibility(View.GONE);
                     }
+                    //Loads the media based on orientation and media type
                     switch (inboxMessage.getOrientation()){
                         case "l" :
                             if(inboxMessage.getInboxMessageContents().get(0).mediaIsImage()) {
@@ -379,6 +385,8 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                             break;
                     }
                     final int imagePosition = i;
+                    //New thread to remove the Read dot, mark message as read and raise Notification Viewed
+                    //TODO check why message is not getting marked as read in DB and Notification Viewed is being raised erratically
                     Runnable iconRunnable = new Runnable() {
                         @Override
                         public void run() {
@@ -441,9 +449,11 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     ((CTCarouselMessageViewHolder)viewHolder).carouselTimestamp.setVisibility(View.GONE);
                     ((CTCarouselMessageViewHolder)viewHolder).carouselReadDot.setVisibility(View.GONE);
                     final int carouselPosition = i;
+                    //Loads the viewpager
                     LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) ((CTCarouselMessageViewHolder)viewHolder).imageViewPager.getLayoutParams();
                     CTCarouselViewPagerAdapter carouselViewPagerAdapter = new CTCarouselViewPagerAdapter(context,inboxMessage,layoutParams,carouselPosition);
                     ((CTCarouselMessageViewHolder)viewHolder).imageViewPager.setAdapter(carouselViewPagerAdapter);
+                    //Adds the dots for the carousel
                     dotsCount = carouselViewPagerAdapter.getCount();
                     ImageView[] dots = new ImageView[dotsCount];
                     for(int k=0;k<dotsCount;k++){
@@ -451,7 +461,13 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                         dots[k].setVisibility(View.VISIBLE);
                         dots[k].setImageDrawable(context.getApplicationContext().getResources().getDrawable(R.drawable.unselected_dot));
                         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-                        params.setMargins(8, 0, 8, 0);
+                        DisplayMetrics displayMetrics = new DisplayMetrics();
+                        if(fragment!=null) {
+                            fragment.getActivity().getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+                        }else{
+                            ((Activity)context).getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+                        }
+                        params.setMargins(displayMetrics.widthPixels/2, 0, 8, 0);
                         params.gravity = Gravity.CENTER;
                         ((CTCarouselMessageViewHolder)viewHolder).sliderDots.addView(dots[k],params);
                     }
@@ -601,6 +617,12 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
         tertiaryButton.setLayoutParams(tertiaryLayoutParams);
     }
 
+    /**
+     * Logic for timestamp
+     * TODO check why this is not working
+     * @param time
+     * @return
+     */
     private String calculateDisplayTimestamp(long time){
         long now = System.currentTimeMillis();
         long diff = now-time;
@@ -662,12 +684,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
     }
 
     @Override
-    public void onViewRecycled(@NonNull RecyclerView.ViewHolder holder) {
-        super.onViewRecycled(holder);
-
-    }
-
-    @Override
     public int getItemViewType(int position) {
         switch (inboxMessages.get(position).getType()){
             case SimpleMessage: return SIMPLE;
@@ -678,6 +694,10 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
         }
     }
 
+    /**
+     * Filters inbox messages for tabs based on tags
+     * @param tab
+     */
     void filterMessages(final String tab){
         new Thread(new Runnable() {
             @Override
@@ -702,7 +722,9 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
     }
 
 
-
+    /**
+     * Custom PageChangeListener for Carousel
+     */
     class CarouselPageChangeListener implements ViewPager.OnPageChangeListener{
         private RecyclerView.ViewHolder viewHolder;
         private ImageView[] dots;

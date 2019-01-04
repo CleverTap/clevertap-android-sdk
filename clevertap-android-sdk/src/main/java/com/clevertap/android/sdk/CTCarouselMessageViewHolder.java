@@ -10,6 +10,9 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+/**
+ * Viewholder class for Carousels
+ */
 class CTCarouselMessageViewHolder extends RecyclerView.ViewHolder {
 
     CTCarouselViewPager imageViewPager;

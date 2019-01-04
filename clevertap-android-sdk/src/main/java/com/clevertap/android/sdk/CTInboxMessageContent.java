@@ -7,6 +7,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/**
+ * Public model class for the "msg" object from notification inbox payload
+ */
 public class CTInboxMessageContent implements Parcelable {
 
     private String title;

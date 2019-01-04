@@ -138,6 +138,11 @@ class CTInboxController {
         }
     }
 
+    /**
+     * Adds or updates inbox messages
+     * @param inboxMessages
+     * @return
+     */
     private boolean updateUserMessages(JSONArray inboxMessages){
         userDAO.setNewMessages(inboxMessages);
         boolean haveUpdates = false;
@@ -182,6 +187,7 @@ class CTInboxController {
             Logger.d("Notification Inbox messages updated");
         }
 
+        //TODO uncomment in the end
         //this.dbAdapter.cleanUpMessages(this.userId);
 
         this.messages = this.dbAdapter.getMessages(this.userId);

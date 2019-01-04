@@ -6,6 +6,9 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.support.annotation.RequiresApi;
 
+/**
+ * Background Job service to sync up for new notifications
+ */
 @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public class CTBackgroundJobService extends JobService {
     @Override

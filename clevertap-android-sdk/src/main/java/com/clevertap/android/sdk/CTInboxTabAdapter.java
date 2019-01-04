@@ -8,6 +8,9 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Custom PagerAdapter for Notification Inbox tabs
+ */
 public class CTInboxTabAdapter extends FragmentStatePagerAdapter {
 
     private final List<Fragment> fragmentList = new ArrayList<>();

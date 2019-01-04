@@ -10,6 +10,9 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+/**
+ * Custom Viewholder for Icon Message type of Inbox template
+ */
 class CTIconMessageViewHolder extends RecyclerView.ViewHolder {
 
     ImageView readDot, mediaImage,iconImage,squareImage;

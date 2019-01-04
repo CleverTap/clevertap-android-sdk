@@ -11,6 +11,9 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 
+/**
+ * Custom ViewHolder for Simple message layout
+ */
 class CTSimpleMessageViewHolder extends RecyclerView.ViewHolder {
 
     TextView title;

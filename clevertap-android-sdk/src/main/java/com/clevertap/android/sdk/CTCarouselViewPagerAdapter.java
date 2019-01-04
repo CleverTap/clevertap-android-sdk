@@ -15,6 +15,9 @@ import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 
+/**
+ * Custom ViewPager Adapter to add views to the Carousel
+ */
 public class CTCarouselViewPagerAdapter extends PagerAdapter {
     private Context context;
     private LayoutInflater layoutInflater;

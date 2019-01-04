@@ -23,6 +23,9 @@ import android.widget.LinearLayout;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
+/**
+ * CTInboxActivity
+ */
 public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseFragment.InboxListener {
     interface InboxActivityListener{
         void messageDidShow(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data);
@@ -41,7 +44,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
     private ViewPager viewPager;
     private CleverTapAPI cleverTapAPI;
 
-    void setListener(InboxActivityListener listener) {
+    void setListener(InboxActivityListener listener) {//Sets Listener for InboxActivity
         listenerWeakReference = new WeakReference<>(listener);
     }
 
@@ -94,6 +97,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
         linearLayout = findViewById(R.id.inbox_linear_layout);
         TabLayout tabLayout = linearLayout.findViewById(R.id.tab_layout);
         viewPager = linearLayout.findViewById(R.id.view_pager);
+        //Tabs are shown only if mentioned in StyleConfig
         if(styleConfig.isUsingTabs()){
             CTInboxTabAdapter inboxTabAdapter = new CTInboxTabAdapter(getSupportFragmentManager());
             tabLayout.setVisibility(View.VISIBLE);
@@ -127,6 +131,8 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
         }else{
             viewPager.setVisibility(View.GONE);
             tabLayout.setVisibility(View.GONE);
+            //ExoPlayerRecyclerView manages autoplay of videos on scoll and hence only used if Inbox messages contain videos
+            //TODO render ExoPlayerRecyclerView programatically in case ExoPlayer libs are not included in the main app
             if(checkInboxMessagesContainVideo(inboxMessageArrayList)) {
                 exoPlayerRecyclerView = findViewById(R.id.activity_exo_recycler_view);
                 exoPlayerRecyclerView.setVisibility(View.VISIBLE);
@@ -150,7 +156,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
                     },1000);
                     firstTime = false;
                 }
-            }else{
+            }else{//Normal Recycler view in case inbox messages don't contain any videos
                 recyclerView = findViewById(R.id.activity_recycler_view);
                 recyclerView.setVisibility(View.VISIBLE);
                 LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
@@ -202,6 +208,11 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
         }
     }
 
+    /**
+     * Handles click of inbox message CTA button
+     * @param position
+     * @param buttonText
+     */
     void handleClick(int position, String buttonText){
         try {
             Bundle data = new Bundle();
@@ -221,6 +232,11 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
         }
     }
 
+    /**
+     * Handles click of inbox message carousel view pager
+     * @param position
+     * @param viewPagerPosition
+     */
     void handleViewPagerClick(int position, int viewPagerPosition){
         try {
             Bundle data = new Bundle();
@@ -244,6 +260,10 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
         }
     }
 
+    /**
+     * Marking specified inboxMessage as Read
+     * @param inboxMessage
+     */
     void markReadForMessageId(CTInboxMessage inboxMessage){
         cleverTapAPI.markReadInboxMessage(inboxMessage);
     }

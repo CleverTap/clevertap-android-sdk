@@ -6277,6 +6277,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }});
     }
 
+    //marks the message as read
     public void markReadInboxMessage(final CTInboxMessage message){
         postAsyncSafely("markReadInboxMessage", new Runnable() {
             @Override
@@ -6407,16 +6408,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             else
                 Logger.d("ExoPlayer classes not found");
         }
-        ArrayList<CTInboxMessage> videoLessList = new ArrayList<>();
         if(!exoPlayerPresent) {
             for (CTInboxMessage inboxMessage : inboxMessageList) {
-                if (!inboxMessage.getInboxMessageContents().get(0).mediaIsVideo()) {
-                    videoLessList.add(inboxMessage);
+                if (inboxMessage.getInboxMessageContents().get(0).mediaIsVideo()) {
+                    inboxMessageList.remove(inboxMessage);
                     Logger.d("Dropping inbox messages containing videos since Exoplayer files are missing. For more information checkout CleverTap documentation.");
                 }
             }
         }
-        return videoLessList;
+        return inboxMessageList;
     }
 
     private void createAlarmScheduler(Context context){

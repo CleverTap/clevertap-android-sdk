@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -53,6 +54,9 @@ abstract class CTInboxTabBaseFragment extends Fragment {
             config = bundle.getParcelable("config");
             styleConfig = bundle.getParcelable("styleConfig");
             cleverTapAPI = CleverTapAPI.instanceWithConfig(getActivity(),config);
+            if (((Activity)context) != null && ((Activity)context) instanceof CTInboxActivity) {
+                setListener((CTInboxTabBaseFragment.InboxListener) ((Activity)context));
+            }
         }
     }
 
@@ -155,6 +159,7 @@ abstract class CTInboxTabBaseFragment extends Fragment {
     }
 
     void markReadForMessageId(CTInboxMessage inboxMessage){
+        Logger.v("Marking " + inboxMessage.getCampaignId() + " as read");
         cleverTapAPI.markReadInboxMessage(inboxMessage);
     }
 }

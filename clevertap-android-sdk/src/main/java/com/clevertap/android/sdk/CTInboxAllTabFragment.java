@@ -14,6 +14,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+/**
+ * CTInboxAllTabFragment
+ */
 public class CTInboxAllTabFragment extends CTInboxTabBaseFragment {
     private RecyclerView recyclerView;
     private CTInboxMessageAdapter inboxMessageAdapter;
@@ -25,6 +28,9 @@ public class CTInboxAllTabFragment extends CTInboxTabBaseFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View allView = inflater.inflate(R.layout.inbox_all_tab,container,false);
         videoPresent = checkInboxMessagesContainVideo(inboxMessageArrayList);
+        //Check if video present to render appropriate recyclerview
+        //TODO this check can be removed and instead use the check while the activity is getting created
+        //TODO Render exoplayerrecyclerview dynamically only if videos are present in the inbox messages
         if(videoPresent) {
             exoPlayerRecyclerView = allView.findViewById(R.id.all_tab_exo_recycler_view);
             exoPlayerRecyclerView.setVisibility(View.VISIBLE);
@@ -37,7 +43,7 @@ public class CTInboxAllTabFragment extends CTInboxTabBaseFragment {
             exoPlayerRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
             inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, getActivity(),this);
-            inboxMessageAdapter.filterMessages("all");
+            inboxMessageAdapter.filterMessages("all");//Filters the messages before rendering the list on tabs
             exoPlayerRecyclerView.setAdapter(inboxMessageAdapter);
             inboxMessageAdapter.notifyDataSetChanged();
             if (firstTime) {
@@ -60,7 +66,7 @@ public class CTInboxAllTabFragment extends CTInboxTabBaseFragment {
             recyclerView.setItemAnimator(new DefaultItemAnimator());
 
             inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, getActivity(),this);
-            inboxMessageAdapter.filterMessages("all");
+            inboxMessageAdapter.filterMessages("all");//Filters the messages before rendering the list on tabs
             recyclerView.setAdapter(inboxMessageAdapter);
             inboxMessageAdapter.notifyDataSetChanged();
         }
