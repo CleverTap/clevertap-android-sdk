@@ -134,6 +134,7 @@ public class CleverTapInstanceConfig implements Parcelable {
     }
 
     // for internal use only!
+    @SuppressWarnings({"unused", "WeakerAccess"})
     protected static CleverTapInstanceConfig createInstance(@NonNull String jsonString){
         try {
             return new CleverTapInstanceConfig(jsonString);
@@ -143,6 +144,7 @@ public class CleverTapInstanceConfig implements Parcelable {
     }
 
     // convenience to construct the internal only default config
+    @SuppressWarnings({"unused", "WeakerAccess"})
     protected static CleverTapInstanceConfig createDefaultInstance(Context context, @NonNull String accountId, @NonNull String accountToken, String accountRegion) {
         return new CleverTapInstanceConfig(context, accountId, accountToken, accountRegion, true);
     }
@@ -151,10 +153,12 @@ public class CleverTapInstanceConfig implements Parcelable {
         return accountId;
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public String getAccountToken() {
         return accountToken;
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public String getAccountRegion() {
         return accountRegion;
     }
@@ -163,6 +167,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         return gcmSenderId;
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public boolean isAnalyticsOnly() {
         return analyticsOnly;
     }
@@ -201,7 +206,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         return sslPinning;
     }
 
-
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void enablePersonalization(boolean enablePersonalization) {
         this.personalization = enablePersonalization;
     }
@@ -220,6 +225,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.debugLevel = debugLevel.intValue();
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void setDebugLevel(int debugLevel) {
         this.debugLevel = debugLevel;
     }
@@ -232,6 +238,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         return backgroundSync;
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void setBackgroundSync(boolean backgroundSync) {
         this.backgroundSync = backgroundSync;
     }

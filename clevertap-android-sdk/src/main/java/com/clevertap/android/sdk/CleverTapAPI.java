@@ -2,7 +2,6 @@ package com.clevertap.android.sdk;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.ActivityOptions;
 import android.app.AlarmManager;
 import android.app.FragmentTransaction;
 import android.app.Notification;
@@ -13,13 +12,11 @@ import android.app.PendingIntent;
 import android.app.job.JobInfo;
 import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
-import android.app.job.JobService;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -39,7 +36,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
-import android.util.Log;
+
 
 import com.clevertap.android.sdk.exceptions.CleverTapMetaDataNotFoundException;
 import com.clevertap.android.sdk.exceptions.CleverTapPermissionsNotSatisfied;
@@ -78,6 +75,10 @@ import javax.net.ssl.SSLSocketFactory;
 import static android.content.Context.JOB_SCHEDULER_SERVICE;
 import static android.content.Context.NOTIFICATION_SERVICE;
 
+// TODO remove unused import statements
+// TODO clean up all the warnings in this file!!!!!!
+// TODO clean up all commented out code
+
 /**
  * <h1>CleverTapAPI</h1>
  * This is the main CleverTapAPI class that manages the SDK instances
@@ -87,6 +88,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         CTInAppBaseFragment.InAppListener, CTInboxListener, CTInboxPrivateListener,
         CTInboxActivity.InboxActivityListener {
 
+    @SuppressWarnings({"unused"})
     public enum LogLevel{
         OFF(-1),
         INFO(0),
@@ -250,6 +252,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
         });
 
+        // TODO check for AnalyticsOnly here and don't create if true
         if(this.config.isBackgroundSync()) {
             postAsyncSafely("createJobScheduler", new Runnable() {
                 @Override
@@ -496,6 +499,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param config The {@link CleverTapInstanceConfig} object
      * @return The {@link CleverTapAPI} object
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public static CleverTapAPI instanceWithConfig(Context context, @NonNull CleverTapInstanceConfig config){
         //noinspection ConstantConditions
         if (config == null) {
@@ -999,6 +1003,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Returns the log level set for CleverTapAPI
      * @return The {@link CleverTapAPI.LogLevel} int value
      */
+    @SuppressWarnings("WeakerAccess")
     public static int getDebugLevel() {
         return debugLevel;
     }
@@ -2081,54 +2086,51 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             conn = buildHttpsURLConnection(endpoint);
 
             final String body;
+            final String req = insertHeader(context, queue);
+            if (req == null) {
+                getConfigLogger().debug(getAccountId(), "Problem configuring queue request, unable to send queue");
+                return false;
+            }
 
+            getConfigLogger().debug(getAccountId(), "Send queue contains " + queue.length() + " items: " + req);
+            getConfigLogger().debug(getAccountId(), "Sending queue to: " + endpoint);
+            conn.setDoOutput(true);
+            conn.getOutputStream().write(req.getBytes("UTF-8"));
 
+            final int responseCode = conn.getResponseCode();
 
-                final String req = insertHeader(context, queue);
-                if (req == null) {
-                    getConfigLogger().debug(getAccountId(), "Problem configuring queue request, unable to send queue");
+            // Always check for a 200 OK
+            if (responseCode != 200) {
+                throw new IOException("Response code is not 200. It is " + responseCode);
+            }
+
+            // Check for a change in domain
+            final String newDomain = conn.getHeaderField(Constants.HEADER_DOMAIN_NAME);
+            if (newDomain != null && newDomain.trim().length() > 0) {
+                if (hasDomainChanged(newDomain)) {
+                    // The domain has changed. Return a status of -1 so that the caller retries
+                    setDomain(context, newDomain);
+                    getConfigLogger().debug(getAccountId(), "The domain has changed to " + newDomain + ". The request will be retried shortly.");
                     return false;
                 }
+            }
 
-                getConfigLogger().debug(getAccountId(), "Send queue contains " + queue.length() + " items: " + req);
-                getConfigLogger().debug(getAccountId(), "Sending queue to: " + endpoint);
-                conn.setDoOutput(true);
-                conn.getOutputStream().write(req.getBytes("UTF-8"));
+            if (processIncomingHeaders(context, conn)) {
+                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
 
-                final int responseCode = conn.getResponseCode();
-
-                // Always check for a 200 OK
-                if (responseCode != 200) {
-                    throw new IOException("Response code is not 200. It is " + responseCode);
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = br.readLine()) != null) {
+                    sb.append(line);
                 }
+                body = sb.toString();
+                processResponse(context, body);
+            }
 
-                // Check for a change in domain
-                final String newDomain = conn.getHeaderField(Constants.HEADER_DOMAIN_NAME);
-                if (newDomain != null && newDomain.trim().length() > 0) {
-                    if (hasDomainChanged(newDomain)) {
-                        // The domain has changed. Return a status of -1 so that the caller retries
-                        setDomain(context, newDomain);
-                        getConfigLogger().debug(getAccountId(), "The domain has changed to " + newDomain + ". The request will be retried shortly.");
-                        return false;
-                    }
-                }
+            setLastRequestTimestamp(context, currentRequestTimestamp);
+            setFirstRequestTimestampIfNeeded(context, currentRequestTimestamp);
 
-                if (processIncomingHeaders(context, conn)) {
-                    BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
-
-                    StringBuilder sb = new StringBuilder();
-                    String line;
-                    while ((line = br.readLine()) != null) {
-                        sb.append(line);
-                    }
-                    body = sb.toString();
-                    processResponse(context, body);
-                }
-
-                setLastRequestTimestamp(context, currentRequestTimestamp);
-                setFirstRequestTimestampIfNeeded(context, currentRequestTimestamp);
-
-                getConfigLogger().debug(getAccountId(), "Queue sent successfully");
+            getConfigLogger().debug(getAccountId(), "Queue sent successfully");
 
             mResponseFailureCount = 0;
             return true;
@@ -2262,6 +2264,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         try {
             getConfigLogger().verbose(getAccountId(), "Trying to process response: " + responseStr);
+
+            // TODO do we need to remove this ?????
             if(responseStr.equals("NotificationRenderServlet response")){
                 return;
             }
@@ -2356,8 +2360,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 // Ignore
             }
 
-
             //Handle notification inbox
+            // TODO do we need to skip if AnalyticsOnly
             try{
                 getConfigLogger().verbose(getAccountId(),"Processing inbox messages...");
                 processInboxResponse(response,context);
@@ -2365,6 +2369,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 getConfigLogger().verbose("Notification inbox exception: " + t.getLocalizedMessage());
             }
 
+            // TODO do we need to skip if AnalyticsOnly
             try{
                 if(response.has("pushamp_notifs")){
                     getConfigLogger().verbose(getAccountId(),"Processing pushamp messages...");
@@ -2380,7 +2385,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     }
                     if(pushAmpObject.has("ack")){
                         boolean ack = pushAmpObject.getBoolean("ack");
-                        StorageHelper.putBoolean(context,storageKeyWithSuffix(Constants.RESPONSE_ACK),ack);
+                        StorageHelper.putBoolean(context,storageKeyWithSuffix(Constants.RESPONSE_ACK),ack);  // TODO what is this for ?
                     }
                 }
             }catch (Throwable t){
@@ -2516,6 +2521,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //TODO Remove after testing
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void manualInboxUpdate(Context context) throws JSONException {
         synchronized (inboxControllerLock) {
             if (this.ctInboxController == null) {
@@ -2534,8 +2540,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
-    String loadJSONFromAsset(Context context) {
-        String json = null;
+    private String loadJSONFromAsset(Context context) {
+        String json;
         try {
             InputStream is = context.getAssets().open("inbox.json");
             int size = is.available();
@@ -3162,6 +3168,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Returns the SyncListener object
      * @return The {@link SyncListener} object
      */
+    @SuppressWarnings("WeakerAccess")
     public SyncListener getSyncListener() {
         return syncListener;
     }
@@ -3285,6 +3292,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      *                {@link Integer}, {@link Long}, {@link Boolean}, {@link Float}, {@link Double},
      *                {@link java.util.Date}, or {@link Character}
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void pushProfile(final Map<String, Object> profile) {
         if (profile == null || profile.isEmpty())
             return;
@@ -3464,6 +3472,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Returns the total number of times the app has been launched
      * @return Total number of app launches in int
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public int getTotalVisits() {
         EventDetail ed = getLocalDataStore().getEventDetail(Constants.APP_LAUNCHED_EVENT);
         if (ed != null) return ed.getCount();
@@ -3475,6 +3484,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Returns the number of screens which have been displayed by the app
      * @return Total number of screens which have been displayed by the app
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public int getScreenCount() {
         return CleverTapAPI.activityCount;
     }
@@ -3483,6 +3493,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Returns the time elapsed by the user on the app
      * @return Time elapsed by user on the app in int
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public int getTimeElapsed() {
         int currentSession = getCurrentSession();
         if (currentSession == 0) return -1;
@@ -3495,6 +3506,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Returns the timestamp of the previous visit
      * @return Timestamp of previous visit in int
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public int getPreviousVisitTime() {
         return lastVisitTime;
     }
@@ -3503,6 +3515,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Returns a UTMDetail object which consists of UTM parameters like source, medium & campaign
      * @return The {@link UTMDetail} object
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public UTMDetail getUTMDetails() {
         UTMDetail ud = new UTMDetail();
         ud.setSource(source);
@@ -3520,6 +3533,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param key    String
      * @param values {@link ArrayList} with String values
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void setMultiValuesForKey(final String key, final ArrayList<String> values) {
         postAsyncSafely("setMultiValuesForKey", new Runnable() {
             @Override
@@ -3542,6 +3556,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param key   String
      * @param value String
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void addMultiValueForKey(String key, String value) {
 
         //noinspection ConstantConditions
@@ -3566,6 +3581,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param key    String
      * @param values {@link ArrayList} with String values
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void addMultiValuesForKey(final String key, final ArrayList<String> values) {
         postAsyncSafely("addMultiValuesForKey", new Runnable() {
             @Override
@@ -3586,6 +3602,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param key   String
      * @param value String
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void removeMultiValueForKey(String key, String value) {
 
         //noinspection ConstantConditions
@@ -3608,6 +3625,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param key    String
      * @param values {@link ArrayList} with String values
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void removeMultiValuesForKey(final String key, final ArrayList<String> values) {
         postAsyncSafely("removeMultiValuesForKey", new Runnable() {
             @Override
@@ -3622,6 +3640,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      *
      * @param key String
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void removeValueForKey(final String key) {
         postAsyncSafely("removeValueForKey", new Runnable() {
             @Override
@@ -3687,6 +3706,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      *
      * @param graphUser The object returned from Facebook
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void pushFacebookUser(final JSONObject graphUser) {
         postAsyncSafely("pushFacebookUser", new Runnable() {
             @Override
@@ -3810,6 +3830,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param person The {@link com.google.android.gms.plus.model.people.Person} object
      * @see com.google.android.gms.plus.model.people.Person
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void pushGooglePlusPerson(final com.google.android.gms.plus.model.people.Person person) {
         postAsyncSafely("pushGooglePlusPerson", new Runnable() {
             @Override
@@ -3913,6 +3934,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param name String
      * @return {@link JSONArray}, String or null
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public Object getProperty(String name) {
         if (!this.config.isPersonalizationEnabled()) return null;
         return getLocalDataStore().getProfileProperty(name);
@@ -4173,6 +4195,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param extras The {@link Bundle} object that contains the
      *               notification details
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void pushNotificationClickedEvent(final Bundle extras) {
 
         if (this.config.isAnalyticsOnly()) {
@@ -4351,6 +4374,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param items         An {@link ArrayList} which contains up to 15 {@link HashMap} objects,
      *                      where each HashMap object describes a particular item purchased
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void pushChargedEvent(HashMap<String, Object> chargeDetails,
                      ArrayList<HashMap<String, Object>> items) {
 
@@ -4451,6 +4475,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      *                     {@link Integer}, {@link Long}, {@link Boolean}, {@link Float}, {@link Double},
      *                     {@link java.util.Date}, or {@link Character}
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void pushEvent(String eventName, Map<String, Object> eventActions) {
 
         if (eventName == null || eventName.equals(""))
@@ -4517,6 +4542,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      *
      * @param eventName The name of the event
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void pushEvent(String eventName) {
         if (eventName == null || eventName.trim().equals(""))
             return;
@@ -4531,6 +4557,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param extras The {@link Bundle} object that contains the
      *               notification details
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void pushNotificationViewedEvent(Bundle extras){
 
         if (extras == null || extras.isEmpty() || extras.get(Constants.NOTIFICATION_TAG) == null) {
@@ -4569,6 +4596,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param data       The data to be attached as the event data
      * @param customData Additional data such as form input to to be added to the event data
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     void pushInAppNotificationStateEvent(boolean clicked, CTInAppNotification data, Bundle customData) {
         JSONObject event = new JSONObject();
         try {
@@ -4608,6 +4636,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param data       The data to be attached as the event data
      * @param customData Additional data such as form input to to be added to the event data
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     void pushInboxMessageStateEvent(boolean clicked, CTInboxMessage data, Bundle customData) {
         JSONObject event = new JSONObject();
         try {
@@ -4648,6 +4677,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param event The event name for which you want the Event details
      * @return The {@link EventDetail} object
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public EventDetail getDetails(String event) {
         return getLocalDataStore().getEventDetail(event);
     }
@@ -4656,6 +4686,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Returns a Map of event names and corresponding event details of all the events raised
      * @return A Map of Event Name and its corresponding EventDetail object
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public Map<String, EventDetail> getHistory() {
         return getLocalDataStore().getEventHistory(context);
     }
@@ -4665,6 +4696,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param event The event name for which you want the first time timestamp
      * @return The timestamp in int
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public int getFirstTime(String event) {
         EventDetail eventDetail = getLocalDataStore().getEventDetail(event);
         if (eventDetail != null) return eventDetail.getFirstTime();
@@ -4677,6 +4709,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param event The event name for which you want the last time timestamp
      * @return The timestamp in int
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public int getLastTime(String event) {
         EventDetail eventDetail = getLocalDataStore().getEventDetail(event);
         if (eventDetail != null) return eventDetail.getLastTime();
@@ -4689,6 +4722,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param event The event for which you want to get the total count
      * @return Total count in int
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public int getCount(String event) {
         EventDetail eventDetail = getLocalDataStore().getEventDetail(event);
         if (eventDetail != null) return eventDetail.getCount();
@@ -4703,6 +4737,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param errorMessage The error message
      * @param errorCode    The error code
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void pushError(final String errorMessage, final int errorCode) {
         final HashMap<String, Object> props = new HashMap<>();
         props.put("Error Message", errorMessage);
@@ -4924,7 +4959,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     /**
      * Sends all the events in the event queue.
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void flush() {
         flushQueueAsync(context);
     }
@@ -4940,6 +4975,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      *                 Set this to true to receive push messages from CleverTap,
      *                 and false to not receive any messages from CleverTap.
      */
+    @SuppressWarnings("WeakerAccess")
     public void pushGcmRegistrationId(String gcmId, boolean register) {
         pushDeviceToken(gcmId, register, PushType.GCM);
     }
@@ -4953,6 +4989,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      *                 Set this to true to receive push messages from CleverTap,
      *                 and false to not receive any messages from CleverTap.
      */
+    @SuppressWarnings("WeakerAccess")
     public void pushFcmRegistrationId(String fcmId, boolean register) {
         pushDeviceToken(fcmId, register, PushType.FCM);
     }
@@ -5160,6 +5197,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //PN
+    // TODO optimize this function , check if it exists  before you do all this work; don't understand the enumeration of all the keys and then the iterator
     private void handlePushNotificationsInResponse(JSONArray pushNotifications){
         try {
             for (int i = 0; i < pushNotifications.length(); i++) {
@@ -5222,6 +5260,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param extras The payload from the GCM intent
      * @return See {@link NotificationInfo}
      */
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public static NotificationInfo getNotificationInfo(final Bundle extras) {
         if (extras == null) return new NotificationInfo(false, false);
 
@@ -5240,6 +5279,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param context A reference to an Android context
      * @param extras  The {@link Bundle} object received by the broadcast receiver
      */
+    @SuppressWarnings({"WeakerAccess"})
     public static void createNotification(final Context context, final Bundle extras) {
         createNotification(context, extras, Constants.EMPTY_NOTIFICATION_ID);
     }
@@ -5309,6 +5349,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         dbAdapter = loadDBAdapter(context);
 
+        // TODO this needs to be on the background thread?, its making a db call; check in strict mode
         if(extras.getString("wzrk_pid") != null) {
             if (dbAdapter.doesPushNotificationIdExist(extras.getString("wzrk_pid"))){
                 getConfigLogger().debug(getAccountId(),"Push Notification Already rendered, not showing again");
@@ -5647,6 +5688,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static boolean isServiceAvailable(Context context, String action, Class clazz) {
         final PackageManager packageManager = context.getPackageManager();
         final Intent intent = new Intent(action);
@@ -6202,6 +6244,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //Notification Inbox public APIs
+    // TODO make nice JavaDocs things for all the new public methods
+
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void initializeInbox(final CleverTapAPI cleverTapAPI){
         postAsyncSafely("initializeInbox", new Runnable() {
             @Override
@@ -6227,6 +6272,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public int getInboxMessageCount(){
        if(isInboxInitialized()) {
            synchronized (inboxControllerLock) {
@@ -6239,6 +6285,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public int getInboxMessageUnreadCount(){
         if(isInboxInitialized()) {
             synchronized (inboxControllerLock) {
@@ -6251,6 +6298,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public CTInboxMessage getInboxMessageForId(String messageId){
         if(isInboxInitialized()) {
             synchronized (inboxControllerLock) {
@@ -6263,6 +6311,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void deleteInboxMessage(final CTInboxMessage message){
         postAsyncSafely("deleteInboxMessage", new Runnable() {
             @Override
@@ -6278,6 +6327,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //marks the message as read
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void markReadInboxMessage(final CTInboxMessage message){
         postAsyncSafely("markReadInboxMessage", new Runnable() {
             @Override
@@ -6293,6 +6343,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         });
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public ArrayList<CTInboxMessage> getUnreadInboxMessages(){
         ArrayList<CTInboxMessage> inboxMessageArrayList = new ArrayList<>();
         if(isInboxInitialized()){
@@ -6310,6 +6361,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public ArrayList<CTInboxMessage> getAllInboxMessages(){
         ArrayList<CTInboxMessage> inboxMessageArrayList = new ArrayList<>();
         if(isInboxInitialized()){
@@ -6327,6 +6379,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     }
 
+    // TODO rename to displayNotificationInboxActivity// or showNotificationInbox or showAppInbox
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void createNotificationInboxActivity(CTInboxStyleConfig styleConfig){
         ArrayList<CTInboxMessage> inboxMessageArrayList = getAllInboxMessages();
         Logger.d(getAccountId(),"All inbox messages - "+inboxMessageArrayList.toString());
@@ -6350,8 +6404,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+    // TODO rename to displayNotificationInboxActivity// or showNotificationInbox or showAppInbox
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void createNotificationInboxActivity(){
-
         CTInboxStyleConfig styleConfig = new CTInboxStyleConfig();
         createNotificationInboxActivity(styleConfig);
     }
@@ -6391,7 +6446,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     private ArrayList<CTInboxMessage> checkForVideoMessages(ArrayList<CTInboxMessage> inboxMessageList){
-
         boolean exoPlayerPresent = false;
 
         Class className = null;
@@ -6432,7 +6486,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @SuppressLint("MissingPermission")
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void createJobScheduler(Context context){
-        ComponentName componentName = new ComponentName(context, CTBackgroundJobService.class);
+        ComponentName componentName = new ComponentName(context, CTBackgroundJobService.class);  // TODO was getting a not in manifest warning here; double check the manifest declaration
         JobScheduler jobScheduler = (JobScheduler)context.getSystemService(JOB_SCHEDULER_SERVICE);
         int existingJobId = StorageHelper.getInt(context,Constants.JOB_ID,-1);
         if (jobScheduler != null) {
@@ -6455,8 +6509,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
                 JobInfo jobInfo = builder.build();
 
-                int resultCode = 0;
-                resultCode = jobScheduler.schedule(jobInfo);
+                int resultCode = jobScheduler.schedule(jobInfo);
                 if (resultCode == JobScheduler.RESULT_SUCCESS) {
                     Logger.d(getAccountId(), "Job scheduled!");
                     StorageHelper.putInt(context, storageKeyWithSuffix(Constants.JOB_ID), jobid);
@@ -6507,11 +6560,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
         for (String accountId: CleverTapAPI.instances.keySet()) {
             CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
-            if (instance != null && instance.getConfig().isAnalyticsOnly()) {
+            if (instance == null) continue;
+            if (instance.getConfig().isAnalyticsOnly()) {
                 Logger.d(accountId, "Instance is Analytics Only not processing device token");
                 continue;
             }
-            if(!(instance != null && instance.getConfig().isBackgroundSync())){
+            if(!instance.getConfig().isBackgroundSync()){
                 Logger.d(accountId,"Instance doesn't allow Background sync, not running the Job");
                 continue;
             }
@@ -6523,7 +6577,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         postAsyncSafely("runningJobService", new Runnable() {
             @Override
             public void run() {
-                if(getCachedFCMToken() == null || getCachedGCMToken() == null){
+                if(getCachedFCMToken() == null && getCachedGCMToken() == null){
                     Logger.v(getAccountId(),"Token is not present, not running the Job");
                     return;
                 }
@@ -6541,6 +6595,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
                 long lastTS = loadDBAdapter(context).getLastUninstallTimestamp();
 
+                // TODO don't understand this code
                 if(lastTS !=0) {
                     if (lastTS >= startMs && lastTS <= endMs) {
                         Logger.v(getAccountId(), "Job Service won't run in default DND hours");
@@ -6548,6 +6603,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     }
                 }
 
+                // TODO != 0 ???; runs only once a day ????
+                // TODO how do we stop the alarm manager from running if we need to ??
+                // TODO how do we stop the jobScheduler from running if we need to ???
                 if(lastTS != 0 && lastTS > System.currentTimeMillis() - 24*60*60*1000){
                     try {
                         JSONObject eventObject = new JSONObject();

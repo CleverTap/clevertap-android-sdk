@@ -17,10 +17,30 @@
             android:configChanges="orientation|keyboardHidden"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
+        <activity
+            android:name="com.clevertap.android.sdk.CTInboxActivity"
+            android:configChanges="orientation|keyboardHidden"
+            android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar" />
+
         <receiver
             android:name="com.clevertap.android.sdk.CTPushNotificationReceiver"
             android:exported="false"
             android:enabled="true">
         </receiver>
+
+        <service
+            android:name="com.clevertap.android.sdk.CTBackgroundIntentService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.clevertap.BG_EVENT"/>
+            </intent-filter>
+        </service>
+
+        <service
+            android:name="com.clevertap.android.sdk.CTBackgroundJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false">
+        </service>
     </application>
 </manifest>
