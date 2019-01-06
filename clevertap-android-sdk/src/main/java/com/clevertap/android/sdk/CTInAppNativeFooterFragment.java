@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk;
 
+import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Build;
@@ -30,6 +31,7 @@ public class CTInAppNativeFooterFragment extends CTInAppBasePartialNativeFragmen
         inAppView = inflater.inflate(R.layout.inapp_footer, container, false);
 
         FrameLayout fl  = inAppView.findViewById(R.id.footer_frame_layout);
+        @SuppressWarnings({"unused"})
         FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
 
         RelativeLayout relativeLayout = fl.findViewById(R.id.footer_relative_layout);
@@ -74,6 +76,7 @@ public class CTInAppNativeFooterFragment extends CTInAppBasePartialNativeFragmen
         }
 
         inAppView.setOnTouchListener(new View.OnTouchListener() {
+            @SuppressLint("ClickableViewAccessibility")
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                     gd.onTouchEvent(event);

@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk;
 
+import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -27,6 +28,7 @@ public class CTInAppNativeCoverImageFragment extends CTInAppBaseFullFragment {
             imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
         }
 
+        @SuppressLint("ResourceType")
         CloseImageView closeImageView = fl.findViewById(199272);
 
         closeImageView.setOnClickListener(new View.OnClickListener() {

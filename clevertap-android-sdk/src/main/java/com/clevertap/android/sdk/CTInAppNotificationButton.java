@@ -30,6 +30,7 @@ class CTInAppNotificationButton implements Parcelable {
         return textColor;
     }
 
+    @SuppressWarnings({"unused"})
     void setTextColor(String textColor) {
         this.textColor = textColor;
     }
@@ -46,14 +47,17 @@ class CTInAppNotificationButton implements Parcelable {
         return actionUrl;
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess"})
     void setActionUrl(String actionUrl) {
         this.actionUrl = actionUrl;
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess"})
     JSONObject getJsonDescription() {
         return jsonDescription;
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess"})
     void setJsonDescription(JSONObject jsonDescription) {
         this.jsonDescription = jsonDescription;
     }
@@ -66,19 +70,21 @@ class CTInAppNotificationButton implements Parcelable {
         this.error = error;
     }
 
-    public String getBorderColor() {
+    String getBorderColor() {
         return borderColor;
     }
 
-    public void setBorderColor(String borderColor) {
+    @SuppressWarnings({"unused", "WeakerAccess"})
+    void setBorderColor(String borderColor) {
         this.borderColor = borderColor;
     }
 
-    public String getBorderRadius() {
+    String getBorderRadius() {
         return borderRadius;
     }
 
-    public void setBorderRadius(String borderRadius) {
+    @SuppressWarnings({"unused", "WeakerAccess"})
+    void setBorderRadius(String borderRadius) {
         this.borderRadius = borderRadius;
     }
 

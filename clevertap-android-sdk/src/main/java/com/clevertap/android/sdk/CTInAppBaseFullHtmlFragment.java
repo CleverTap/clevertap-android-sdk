@@ -39,7 +39,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
     }
 
     private View displayHTMLView(LayoutInflater inflater, ViewGroup container){
-        View inAppView = null;
+        View inAppView;
         try {
             inAppView = inflater.inflate(R.layout.inapp_html_full, container, false);
             RelativeLayout rl = inAppView.findViewById(R.id.inapp_html_full_relative_layout);

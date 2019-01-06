@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk;
 
+import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.graphics.Bitmap;
 import android.graphics.Color;
@@ -11,7 +12,6 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.content.ContextCompat;
-import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -54,6 +54,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     private ViewGroup.LayoutParams videoFramelayoutParams,playerViewLayoutParams,imageViewLayoutParams;
     private static long mediaPosition = 0;
     private FrameLayout videoFrameLayout;
+    @SuppressWarnings({"unused"})
     private int layoutHeight = 0;
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
@@ -73,6 +74,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
 
         final FrameLayout fl  = inAppView.findViewById(R.id.inapp_interstitial_frame_layout);
 
+        @SuppressLint("ResourceType")
         final CloseImageView closeImageView = fl.findViewById(199272);
 
         relativeLayout = fl.findViewById(R.id.interstitial_relative_layout);
@@ -86,7 +88,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                 }else {
                     if(isTablet()) {
                         layoutParams.setMargins(85,60,85,0);
-                        layoutParams.width = (int) (relativeLayout1.getMeasuredWidth())-85;
+                        layoutParams.width = (relativeLayout1.getMeasuredWidth())-85;
                         layoutHeight = layoutParams.height = (int) (layoutParams.width * 1.78f);
                         relativeLayout1.setLayoutParams(layoutParams);
                         FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(closeImageView.getWidth(),closeImageView.getHeight());
@@ -165,7 +167,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
             mainButton.setVisibility(View.INVISIBLE);
             setupInAppButton(secondaryButton,buttons.get(0),0);
         }
-        else if (buttons != null && !buttons.isEmpty()) {
+        else if (!buttons.isEmpty()) {
             for(int i=0; i < buttons.size(); i++) {
                 if (i >= 2) continue; // only show 2 buttons
                 CTInAppNotificationButton inAppNotificationButton = buttons.get(i);

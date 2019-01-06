@@ -45,6 +45,8 @@ import com.google.android.exoplayer2.util.Util;
 import java.util.ArrayList;
 import java.util.List;
 
+// TODO fix warnings
+
 public class ExoPlayerRecyclerView extends RecyclerView {
 
     private List<CTInboxMessage> videoInfoList = new ArrayList<>();

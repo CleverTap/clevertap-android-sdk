@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Point;
 import android.util.DisplayMetrics;
@@ -7,14 +8,16 @@ import android.util.TypedValue;
 import android.view.View;
 import android.webkit.WebView;
 
+@SuppressLint("ViewConstructor")
 class CTInAppWebView extends WebView {
 
-    private int width = 0;
-    private int height = 0;
-    private int widthPercentage = 0;
-    private int heightPercentage = 0;
+    private int width;
+    private int height;
+    private int widthPercentage;
+    private int heightPercentage;
     final Point dim = new Point();
 
+    @SuppressLint("ResourceType")
     public CTInAppWebView(Context context, int width , int height, int widthPercentage, int heightPercentage) {
         super(context);
         this.width = width;

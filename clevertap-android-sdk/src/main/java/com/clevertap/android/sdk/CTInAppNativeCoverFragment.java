@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk;
 
+import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Build;
@@ -58,7 +59,7 @@ public class CTInAppNativeCoverFragment extends CTInAppBaseFullNativeFragment {
             mainButton.setVisibility(View.INVISIBLE);
             setupInAppButton(secondaryButton,buttons.get(0),0);
         }
-        else if (buttons != null && !buttons.isEmpty()) {
+        else if (!buttons.isEmpty()) {
             for(int i=0; i < buttons.size(); i++) {
                 if (i >= 2) continue; // only show 2 buttons
                 CTInAppNotificationButton inAppNotificationButton = buttons.get(i);
@@ -67,6 +68,7 @@ public class CTInAppNativeCoverFragment extends CTInAppBaseFullNativeFragment {
             }
         }
 
+        @SuppressLint("ResourceType")
         CloseImageView closeImageView = fl.findViewById(199272);
 
         closeImageView.setOnClickListener(new View.OnClickListener() {

@@ -58,15 +58,18 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
+
+// TODO fix the warnings in this file
+
 class CTInboxMessageAdapter extends RecyclerView.Adapter {
 
     private ArrayList<CTInboxMessage> inboxMessages;
-    private SimpleExoPlayer player;
+    private SimpleExoPlayer player; // TODO this is a problem right?
     private Context context;
     private int dotsCount;
     private CTInboxMessage inboxMessage;
     private Fragment fragment;
-    private PlayerView playerView;
+    private PlayerView playerView;   // TODO problem ??
     private static final int SIMPLE = 0;
     private static final int ICON = 1;
     private static final int CAROUSEL = 2;

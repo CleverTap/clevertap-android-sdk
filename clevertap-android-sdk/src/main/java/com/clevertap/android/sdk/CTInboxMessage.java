@@ -14,6 +14,7 @@ import java.util.List;
 /**
  * Public facing model class for type of InboxMessage
  */
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class CTInboxMessage implements Parcelable {
     private String title;
     private String body;
@@ -83,14 +84,14 @@ public class CTInboxMessage implements Parcelable {
             isRead = in.readByte() != 0x00;
             type = (CTInboxMessageType) in.readValue(CTInboxMessageType.class.getClassLoader());
             if (in.readByte() == 0x01) {
-                tags = new ArrayList<String>();
+                tags = new ArrayList<>();
                 in.readList(tags, String.class.getClassLoader());
             } else {
                 tags = null;
             }
             bgColor = in.readString();
             if (in.readByte() == 0x01) {
-                inboxMessageContents = new ArrayList<CTInboxMessageContent>();
+                inboxMessageContents = new ArrayList<>();
                 in.readList(inboxMessageContents, CTInboxMessageContent.class.getClassLoader());
             } else {
                 inboxMessageContents = null;

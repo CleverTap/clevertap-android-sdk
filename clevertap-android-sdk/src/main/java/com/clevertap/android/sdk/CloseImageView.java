@@ -63,6 +63,7 @@ final class CloseImageView extends ImageView {
 
     private final int canvasSize = getScaledPixels(Constants.INAPP_CLOSE_IV_WIDTH);
 
+    @SuppressWarnings("SameParameterValue")
     private int getScaledPixels(int raw) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                 raw, getResources().getDisplayMetrics());

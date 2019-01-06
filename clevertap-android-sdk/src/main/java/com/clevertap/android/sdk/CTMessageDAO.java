@@ -48,10 +48,7 @@ class CTMessageDAO {
     }
 
     void setRead(int read) {
-        if(read == 1)
-            this.read = true;
-        else
-            this.read = false;
+        this.read = read == 1;
     }
 
     long getDate() {

@@ -2418,7 +2418,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         if (this.ctInboxController.privateListener == null) {
                             this.ctInboxController.privateListener = new WeakReference<>(this).get();
                         }
-                        this.ctInboxController.notifyInitialized();
+                        this.ctInboxController.notifyInitialized();  // TODO why are you calling notifyInitialized on the controller,  CleverTapApi is always the listener
                         JSONArray inboxMessages;
                         //if(!isTest){
                            inboxMessages  = response.getJSONArray("inbox_notifs");
@@ -2482,6 +2482,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 //        }
     }
 
+    // TODO why are you setting the inboxListener on the controller,  the inboxListener should be on CleverTapAPI and CleverTapAPI should listen to the controller and then forward what it needs to the external listener
     /**
      * Returns the CTInboxListener object
      * @return An {@link CTInboxListener} object
@@ -2546,6 +2547,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             InputStream is = context.getAssets().open("inbox.json");
             int size = is.available();
             byte[] buffer = new byte[size];
+            //noinspection ResultOfMethodCallIgnored
             is.read(buffer);
             is.close();
             json = new String(buffer, "UTF-8");
@@ -2884,6 +2886,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (inAppFragment != null) {
             Logger.d("Displaying In-App: "+inAppNotification.getJsonDescription());
             try {
+                //noinspection ConstantConditions
                 FragmentTransaction fragmentTransaction = getCurrentActivity().getFragmentManager().beginTransaction();
                 Bundle bundle = new Bundle();
                 bundle.putParcelable("inApp",inAppNotification);
@@ -6247,11 +6250,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     // TODO make nice JavaDocs things for all the new public methods
 
     @SuppressWarnings({"unused", "WeakerAccess"})
-    public void initializeInbox(final CleverTapAPI cleverTapAPI){
+    public void initializeInbox(final CleverTapAPI cleverTapAPI){  // TODO why is cleverTapAPI an argument to this ????  You are repeating this initializtion code in processResponse, should make on common method for this
         postAsyncSafely("initializeInbox", new Runnable() {
             @Override
             public void run() {
-                if(getConfig().isAnalyticsOnly()){
+                if(getConfig().isAnalyticsOnly()){ // TODO you could move this outside of the async block
                     getConfigLogger().debug(getAccountId(),"Instance is analytics only, not initializing Notification Inbox");
                 }
                 synchronized (inboxControllerLock) {
@@ -6263,7 +6266,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                             if (ctInboxController.privateListener == null) {
                                 ctInboxController.privateListener = new WeakReference<>(cleverTapAPI).get();
                             }
-                            ctInboxController.notifyInitialized();
+                            ctInboxController.notifyInitialized(); // TODO NO, cleverTapAPI should notify
                         }
                     }
                 }
@@ -6276,7 +6279,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     public int getInboxMessageCount(){
        if(isInboxInitialized()) {
            synchronized (inboxControllerLock) {
-               return ctInboxController.count();
+               return ctInboxController.count();   // TODO how are you handling TTL  ??
            }
        }else{
            getConfigLogger().debug(getAccountId(),"Notification Inbox not initialized");
@@ -6289,7 +6292,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     public int getInboxMessageUnreadCount(){
         if(isInboxInitialized()) {
             synchronized (inboxControllerLock) {
-                return ctInboxController.unreadCount();
+                return ctInboxController.unreadCount();  // TODO how are you handling TTL  ??
             }
         }else{
             getConfigLogger().debug(getAccountId(),"Notification Inbox not initialized");
@@ -6344,7 +6347,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     @SuppressWarnings({"unused", "WeakerAccess"})
-    public ArrayList<CTInboxMessage> getUnreadInboxMessages(){
+    public ArrayList<CTInboxMessage> getUnreadInboxMessages(){  // TODO how are you handling TTL  ??
         ArrayList<CTInboxMessage> inboxMessageArrayList = new ArrayList<>();
         if(isInboxInitialized()){
             synchronized (inboxControllerLock) {
@@ -6362,7 +6365,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     @SuppressWarnings({"unused", "WeakerAccess"})
-    public ArrayList<CTInboxMessage> getAllInboxMessages(){
+    public ArrayList<CTInboxMessage> getAllInboxMessages(){ // TODO how are you handling TTL  ??
         ArrayList<CTInboxMessage> inboxMessageArrayList = new ArrayList<>();
         if(isInboxInitialized()){
             synchronized (inboxControllerLock) {
@@ -6417,6 +6420,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             this.ctInboxController = CTInboxController.initWithAccountId(getAccountId(), getCleverTapID(), loadDBAdapter(context));
             if (this.ctInboxController != null && ctInboxController.isInitialized()) {
                 this.ctInboxController.listener = new WeakReference<>(this).get();
+                // TODO do you need to notify here ???
             }
         }
     }
@@ -6437,6 +6441,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     @Override
     public void messageDidShow(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data) {
+        // TODO you should mark read in this method not what you are doing now
         pushInboxMessageStateEvent(false,inboxMessage,data);
     }
 
@@ -6445,6 +6450,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         pushInboxMessageStateEvent(true,inboxMessage,data);
     }
 
+    // TODO is this the right place for this or should it be internal to the InboxController???
     private ArrayList<CTInboxMessage> checkForVideoMessages(ArrayList<CTInboxMessage> inboxMessageList){
         boolean exoPlayerPresent = false;
 

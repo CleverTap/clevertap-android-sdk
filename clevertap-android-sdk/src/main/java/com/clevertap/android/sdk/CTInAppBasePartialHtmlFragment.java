@@ -39,8 +39,8 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
     abstract ViewGroup getLayout(View view);
 
     private View displayHTMLView(LayoutInflater inflater, ViewGroup container){
-        View inAppView = null;
-        ViewGroup layout = null;
+        View inAppView;
+        ViewGroup layout;
         try {
             inAppView = getView(inflater, container);
             layout = getLayout(inAppView);

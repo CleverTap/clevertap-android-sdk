@@ -20,7 +20,9 @@
         <activity
             android:name="com.clevertap.android.sdk.CTInboxActivity"
             android:configChanges="orientation|keyboardHidden"
-            android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar" />
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"/>
+            <!--android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar"  TODO got resource not found-->
+
 
         <receiver
             android:name="com.clevertap.android.sdk.CTPushNotificationReceiver"

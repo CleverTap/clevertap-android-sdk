@@ -11,6 +11,7 @@ import java.util.List;
 /**
  * Custom PagerAdapter for Notification Inbox tabs
  */
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class CTInboxTabAdapter extends FragmentStatePagerAdapter {
 
     private final List<Fragment> fragmentList = new ArrayList<>();

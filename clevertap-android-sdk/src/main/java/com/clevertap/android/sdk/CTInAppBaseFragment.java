@@ -76,6 +76,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     void didShow(Bundle data) {
         InAppListener listener = getListener();
         if (listener != null) {

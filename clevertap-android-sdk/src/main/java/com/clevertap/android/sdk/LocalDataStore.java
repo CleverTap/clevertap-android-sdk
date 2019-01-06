@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class LocalDataStore {
+class LocalDataStore {
 
     private Context context;
     private CleverTapInstanceConfig config;

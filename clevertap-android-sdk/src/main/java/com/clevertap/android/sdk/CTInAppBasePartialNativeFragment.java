@@ -1,14 +1,6 @@
 package com.clevertap.android.sdk;
 
-import android.annotation.SuppressLint;
 import android.graphics.Color;
-import android.graphics.Paint;
-import android.graphics.drawable.Drawable;
-import android.graphics.drawable.GradientDrawable;
-import android.graphics.drawable.LayerDrawable;
-import android.graphics.drawable.ShapeDrawable;
-import android.graphics.drawable.shapes.RoundRectShape;
-import android.os.Build;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -25,6 +17,7 @@ public abstract class CTInAppBasePartialNativeFragment extends CTInAppBasePartia
     View inAppView;
     final GestureDetector gd = new GestureDetector(new GestureListener());
 
+    @SuppressWarnings({"unused"})
     void setupInAppButton(Button inAppButton, final CTInAppNotificationButton inAppNotificationButton, final CTInAppNotification inAppNotification, final int buttonIndex){
         if(inAppNotificationButton!=null) {
             inAppButton.setTag(buttonIndex);

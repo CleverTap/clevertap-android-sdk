@@ -7,7 +7,11 @@ import android.os.Looper;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 
-public class GifImageView extends ImageView implements Runnable {
+
+// TODO fix error
+
+@SuppressWarnings({"unused", "WeakerAccess"})
+class GifImageView extends ImageView implements Runnable {
 
     private static final String TAG = "GifDecoderView";
     private GifDecoder gifDecoder;

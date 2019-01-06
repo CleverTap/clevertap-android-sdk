@@ -115,6 +115,7 @@ final class ManifestValidator {
         Logger.i(serviceClassName.replaceFirst("com.clevertap.android.sdk.","") + " not present" );
     }
 
+    @SuppressWarnings("SameParameterValue")
     private static void validateActivityInManifest(Application application, Class activityClass) throws PackageManager.NameNotFoundException {
         PackageManager pm = application.getPackageManager();
         String packageName = application.getPackageName();

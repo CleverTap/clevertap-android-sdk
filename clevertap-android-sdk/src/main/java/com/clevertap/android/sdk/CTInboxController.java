@@ -6,6 +6,8 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 
+
+// TODO handle isRead and TTL cases ????  particlarly when there is no updatedMessages coming from the server
 /**
  * Controller class which handles Users and Messages for the Notification Inbox
  */
@@ -14,8 +16,6 @@ class CTInboxController {
     private int count;
     private int unreadCount;
     private ArrayList<CTMessageDAO> messages,unreadMessages;
-    private String accountId;
-    private String guid;
     private String userId;
     CTInboxListener listener;
     CTInboxPrivateListener privateListener;
@@ -23,11 +23,9 @@ class CTInboxController {
     private DBAdapter dbAdapter;
 
     private CTInboxController(String accountId, String guid, DBAdapter adapter){
-        this.accountId = accountId;
-        this.guid = guid;
-        this.userId = this.accountId + this.guid;
+        this.userId = accountId + guid;
         this.dbAdapter = adapter;
-        this.userDAO = this.dbAdapter.fetchOrCreateUser(this.userId,this.accountId,this.guid);
+        this.userDAO = this.dbAdapter.fetchOrCreateUser(this.userId, accountId, guid);
         this.messages = this.dbAdapter.getMessages(this.userId);
         this.unreadMessages = this.dbAdapter.getUnreadMessages(this.userId);
         this.count = this.messages.size();
@@ -37,7 +35,7 @@ class CTInboxController {
 
     static CTInboxController initWithAccountId(String accountId, String guid, DBAdapter adapter){
         try{
-            return new CTInboxController(accountId,guid, adapter);
+            return new CTInboxController(accountId, guid, adapter);
         }catch (Throwable t){
             return null;
         }
@@ -119,6 +117,7 @@ class CTInboxController {
         return initialized;
     }
 
+    @SuppressWarnings({"unused"})
     CTInboxListener getListener() {
         return listener;
     }
@@ -138,11 +137,6 @@ class CTInboxController {
         }
     }
 
-    /**
-     * Adds or updates inbox messages
-     * @param inboxMessages
-     * @return
-     */
     private boolean updateUserMessages(JSONArray inboxMessages){
         userDAO.setNewMessages(inboxMessages);
         boolean haveUpdates = false;

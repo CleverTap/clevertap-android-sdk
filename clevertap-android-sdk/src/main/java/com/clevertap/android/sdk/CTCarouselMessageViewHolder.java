@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk;
 
 import android.support.annotation.NonNull;
-import android.support.v4.view.ViewPager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Button;
@@ -19,12 +18,12 @@ class CTCarouselMessageViewHolder extends RecyclerView.ViewHolder {
     LinearLayout sliderDots;
     TextView title,message,timestamp, carouselTimestamp;
     ImageView readDot,carouselReadDot;
+    @SuppressWarnings({"WeakerAccess"})
     Button cta1,cta2,cta3;
     RelativeLayout clickLayout;
 
     CTCarouselMessageViewHolder(@NonNull View itemView) {
         super(itemView);
-
         imageViewPager = itemView.findViewById(R.id.image_carousel_viewpager);
         sliderDots = itemView.findViewById(R.id.sliderDots);
         title = itemView.findViewById(R.id.messageTitle);

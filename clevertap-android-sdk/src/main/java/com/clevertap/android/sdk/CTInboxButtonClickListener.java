@@ -72,7 +72,7 @@ class CTInboxButtonClickListener implements View.OnClickListener {
                 if(fragment != null) {
                     if(inboxMessage.getInboxMessageContents().get(0).getLinktype(buttonObject).equalsIgnoreCase("copytext")) {//Copy to clipboard feature
                         if(fragment.getActivity() !=null) {
-                            copyToClipboard(fragment.getActivity(), buttonObject);
+                            copyToClipboard(fragment.getActivity());
                         }
                         ((CTInboxTabBaseFragment) fragment).handleClick(this.position, button.getText().toString());
                     }else{
@@ -81,7 +81,7 @@ class CTInboxButtonClickListener implements View.OnClickListener {
                 }else if(activity != null){
                     if(inboxMessage.getInboxMessageContents().get(0).getLinktype(buttonObject).equalsIgnoreCase("copytext")) {//Copy to clipboard feature
                         if(fragment.getActivity() !=null) {
-                            copyToClipboard(activity.getApplicationContext(), buttonObject);
+                            copyToClipboard(activity.getApplicationContext());
                         }
                         ((CTInboxActivity) activity).handleClick(this.position, button.getText().toString());
                     }else{
@@ -98,7 +98,7 @@ class CTInboxButtonClickListener implements View.OnClickListener {
         }
     }
 
-    private void copyToClipboard(Context context, JSONObject jsonObject){
+    private void copyToClipboard(Context context){
         ClipboardManager clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
         ClipData clipData = ClipData.newPlainText(button.getText(),inboxMessage.getInboxMessageContents().get(0).getLinkCopyText(buttonObject));
         if (clipboardManager != null) {

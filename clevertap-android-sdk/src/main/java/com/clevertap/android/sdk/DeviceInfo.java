@@ -20,7 +20,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.UUID;
 
-public class DeviceInfo {
+class DeviceInfo {
 
     private Context context;
     private CleverTapInstanceConfig config;
@@ -75,6 +75,7 @@ public class DeviceInfo {
     }
 
     // don't run on main thread
+    @SuppressWarnings({"WeakerAccess"})
     protected void initDeviceID() {
         getDeviceCachedInfo();  // put this here to avoid running on main thread
 

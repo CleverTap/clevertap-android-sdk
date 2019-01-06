@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk;
 
+import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Build;
@@ -74,6 +75,7 @@ public class CTInAppNativeHeaderFragment extends CTInAppBasePartialNativeFragmen
         }
 
         inAppView.setOnTouchListener(new View.OnTouchListener() {
+            @SuppressLint("ClickableViewAccessibility")
             @Override
             public boolean onTouch(View v, MotionEvent event) {
                 gd.onTouchEvent(event);

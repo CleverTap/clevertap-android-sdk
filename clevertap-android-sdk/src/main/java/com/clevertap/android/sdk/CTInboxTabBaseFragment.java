@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -11,6 +10,8 @@ import android.support.v4.app.Fragment;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+
+// TODO fix warnings in this file
 
 abstract class CTInboxTabBaseFragment extends Fragment {
 
@@ -54,8 +55,8 @@ abstract class CTInboxTabBaseFragment extends Fragment {
             config = bundle.getParcelable("config");
             styleConfig = bundle.getParcelable("styleConfig");
             cleverTapAPI = CleverTapAPI.instanceWithConfig(getActivity(),config);
-            if (((Activity)context) != null && ((Activity)context) instanceof CTInboxActivity) {
-                setListener((CTInboxTabBaseFragment.InboxListener) ((Activity)context));
+            if (context instanceof CTInboxActivity) {
+                setListener((CTInboxTabBaseFragment.InboxListener) context);
             }
         }
     }
@@ -127,8 +128,7 @@ abstract class CTInboxTabBaseFragment extends Fragment {
 
             String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getActionUrl();
             if (actionUrl != null) {
-                fireUrlThroughIntent(actionUrl, data);
-                return;
+                fireUrlThroughIntent(actionUrl);
             }
         } catch (Throwable t) {
             config.getLogger().debug("Error handling notification button click: " + t.getCause());
@@ -142,14 +142,13 @@ abstract class CTInboxTabBaseFragment extends Fragment {
         data.putString(Constants.NOTIFICATION_ID_TAG,inboxMessageArrayList.get(position).getCampaignId());
         didClick(data,position);
         String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(viewPagerPosition).getActionUrl();
-            fireUrlThroughIntent(actionUrl, data);
-            return;
+            fireUrlThroughIntent(actionUrl);
         }catch (Throwable t){
             config.getLogger().debug("Error handling notification button click: " + t.getCause());
         }
     }
 
-    void fireUrlThroughIntent(String url, Bundle formData) {
+    void fireUrlThroughIntent(String url) {
         try {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);

@@ -10,6 +10,7 @@ import org.json.JSONObject;
 /**
  * Public model class for the "msg" object from notification inbox payload
  */
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class CTInboxMessageContent implements Parcelable {
 
     private String title;
