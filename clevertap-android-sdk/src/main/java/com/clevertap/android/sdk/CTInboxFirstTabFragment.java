@@ -5,7 +5,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -16,19 +15,19 @@ import android.view.ViewGroup;
 
 public class CTInboxFirstTabFragment extends CTInboxTabBaseFragment {
     RecyclerView recyclerView;
-    private ExoPlayerRecyclerView exoPlayerRecyclerView;
-    private CTInboxMessageAdapter inboxMessageAdapter;
+    private ExoPlayerRecyclerView exoPlayerRecyclerView; // TODO this can't be here right ?? use RecyclerView and cast if available ??
     private boolean firstTime = true;
-    private boolean videoPresent = false;
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View allView = inflater.inflate(R.layout.inbox_first_tab,container,false);
-        videoPresent = checkInboxMessagesContainVideo(inboxMessageArrayList);
+        boolean videoPresent = checkInboxMessagesContainVideo(inboxMessageArrayList);
         //Check if video present to render appropriate recyclerview
         //TODO this check can be removed and instead use the check while the activity is getting created
         //TODO Render exoplayerrecyclerview dynamically only if videos are present in the inbox messages
+        // TODO why only use ExoRecyler if videos are in the list, it must be able to be used for non-videos too right?  so if ExoPlayer is included, use it, if not don't.  that way you don't always have to check for video's on the list
+        CTInboxMessageAdapter inboxMessageAdapter;
         if(videoPresent) {
             exoPlayerRecyclerView = allView.findViewById(R.id.first_tab_exo_recycler_view);
             exoPlayerRecyclerView.setVisibility(View.VISIBLE);

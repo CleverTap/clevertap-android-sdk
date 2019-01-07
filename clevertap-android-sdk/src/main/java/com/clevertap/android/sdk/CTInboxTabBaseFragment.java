@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -13,6 +12,9 @@ import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Iterator;
+
+// TODO fix warnings in this file
 
 abstract class CTInboxTabBaseFragment extends Fragment {
 
@@ -56,8 +58,8 @@ abstract class CTInboxTabBaseFragment extends Fragment {
             config = bundle.getParcelable("config");
             styleConfig = bundle.getParcelable("styleConfig");
             cleverTapAPI = CleverTapAPI.instanceWithConfig(getActivity(),config);
-            if (((Activity)context) != null && ((Activity)context) instanceof CTInboxActivity) {
-                setListener((CTInboxTabBaseFragment.InboxListener) ((Activity)context));
+            if (context instanceof CTInboxActivity) {
+                setListener((CTInboxTabBaseFragment.InboxListener) context);
             }
         }
     }
@@ -122,7 +124,15 @@ abstract class CTInboxTabBaseFragment extends Fragment {
         try {
             Bundle data = new Bundle();
 
-            data.putString(Constants.NOTIFICATION_ID_TAG,inboxMessageArrayList.get(position).getCampaignId());
+            //data.putString(Constants.NOTIFICATION_ID_TAG,inboxMessageArrayList.get(position).getCampaignId());
+            JSONObject wzrkParams = inboxMessageArrayList.get(position).getWzrkParams();
+            Iterator<String> iterator = wzrkParams.keys();
+            while(iterator.hasNext()){
+                String keyName = iterator.next();
+                if(keyName.startsWith(Constants.WZRK_PREFIX))
+                    data.putString(keyName,wzrkParams.getString(keyName));
+            }
+
             if(buttonText != null && !buttonText.isEmpty())
                 data.putString("wzrk_c2a", buttonText);
             didClick(data,position);
@@ -133,37 +143,41 @@ abstract class CTInboxTabBaseFragment extends Fragment {
                 }else{
                     String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getLinkUrl(jsonObject);
                     if (actionUrl != null) {
-                        fireUrlThroughIntent(actionUrl, data);
+                        fireUrlThroughIntent(actionUrl);
                         return;
                     }
                 }
             }else {
                 String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getActionUrl();
                 if (actionUrl != null) {
-                    fireUrlThroughIntent(actionUrl, data);
+                    fireUrlThroughIntent(actionUrl);
                     return;
                 }
             }
         } catch (Throwable t) {
-            config.getLogger().debug("Error handling notification button click: " + t.getCause());
+            Logger.d("Error handling notification button click: " + t.getCause());
         }
     }
 
     void handleViewPagerClick(int position, int viewPagerPosition){
         try {
         Bundle data = new Bundle();
-
-        data.putString(Constants.NOTIFICATION_ID_TAG,inboxMessageArrayList.get(position).getCampaignId());
+        JSONObject wzrkParams = inboxMessageArrayList.get(position).getWzrkParams();
+        Iterator<String> iterator = wzrkParams.keys();
+        while(iterator.hasNext()){
+            String keyName = iterator.next();
+            if(keyName.startsWith(Constants.WZRK_PREFIX))
+                data.putString(keyName,wzrkParams.getString(keyName));
+        }
         didClick(data,position);
         String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(viewPagerPosition).getActionUrl();
-            fireUrlThroughIntent(actionUrl, data);
-            return;
+            fireUrlThroughIntent(actionUrl);
         }catch (Throwable t){
-            config.getLogger().debug("Error handling notification button click: " + t.getCause());
+            Logger.d("Error handling notification button click: " + t.getCause());
         }
     }
 
-    void fireUrlThroughIntent(String url, Bundle formData) {
+    void fireUrlThroughIntent(String url) {
         try {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
@@ -173,7 +187,11 @@ abstract class CTInboxTabBaseFragment extends Fragment {
     }
 
     void markReadForMessageId(CTInboxMessage inboxMessage){
-        Logger.v("Marking " + inboxMessage.getCampaignId() + " as read");
-        cleverTapAPI.markReadInboxMessage(inboxMessage);
+        if(inboxMessage.isRead()){
+            Logger.v("Message already marked as read - " + inboxMessage.getCampaignId());
+        }else {
+            Logger.v("Marking " + inboxMessage.getCampaignId() + " as read");
+            cleverTapAPI.markReadInboxMessage(inboxMessage);
+        }
     }
 }

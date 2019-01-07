@@ -29,23 +29,23 @@ final class QueueCursor {
                 "tableName: " + tableName + " | lastId: " + lastId + " | numItems: " + data.length() + " | items: " + data.toString();
     }
 
-    public void setData(JSONArray data) {
+    void setData(JSONArray data) {
         this.data = data;
     }
 
-    public String getLastId() {
+    String getLastId() {
         return lastId;
     }
 
-    public void setLastId(String lastId) {
+    void setLastId(String lastId) {
         this.lastId = lastId;
     }
 
-    public DBAdapter.Table getTableName() {
+    DBAdapter.Table getTableName() {
         return tableName;
     }
 
-    public void setTableName(DBAdapter.Table tableName) {
+    void setTableName(DBAdapter.Table tableName) {
         this.tableName = tableName;
     }
 }

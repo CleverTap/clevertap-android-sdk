@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk;
 
+import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
@@ -16,6 +17,7 @@ import android.widget.RelativeLayout;
 
 public class CTInAppNativeHalfInterstitialImageFragment extends CTInAppBaseFullFragment {
     private RelativeLayout relativeLayout;
+    @SuppressWarnings({"unused"})
     private int layoutHeight = 0;
     @Nullable
     @Override
@@ -30,6 +32,7 @@ public class CTInAppNativeHalfInterstitialImageFragment extends CTInAppBaseFullF
 
         final FrameLayout fl  = inAppView.findViewById(R.id.inapp_half_interstitial_image_frame_layout);
 
+        @SuppressLint("ResourceType")
         final CloseImageView closeImageView = fl.findViewById(199272);
 
         fl.setBackgroundDrawable(new ColorDrawable(0xBB000000));
@@ -44,7 +47,7 @@ public class CTInAppNativeHalfInterstitialImageFragment extends CTInAppBaseFullF
                 }else {
                     if(isTablet()) {
                         layoutParams.setMargins(90,240,90,0);
-                        layoutParams.width = (int) (relativeLayout1.getMeasuredWidth())-90;
+                        layoutParams.width = (relativeLayout1.getMeasuredWidth())-90;
                         layoutHeight = layoutParams.height = (int) (layoutParams.width * 1.3f);
                         relativeLayout1.setLayoutParams(layoutParams);
                         FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(closeImageView.getWidth(),closeImageView.getHeight());

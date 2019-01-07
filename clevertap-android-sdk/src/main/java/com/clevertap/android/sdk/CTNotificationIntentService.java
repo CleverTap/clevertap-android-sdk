@@ -22,7 +22,7 @@ public class CTNotificationIntentService extends IntentService {
         if (extras == null) return;
 
         String type = extras.getString("ct_type");
-        if (type != null && TYPE_BUTTON_CLICK.equals(type)) {
+        if (TYPE_BUTTON_CLICK.equals(type)) {
             Logger.v("CTNotificationIntentService handling " + TYPE_BUTTON_CLICK);
             handleActionButtonClick(extras);
         } else {

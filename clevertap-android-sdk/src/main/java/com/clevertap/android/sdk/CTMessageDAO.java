@@ -8,6 +8,7 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -22,6 +23,7 @@ class CTMessageDAO {
     private String userId;
     private List<String> tags = new ArrayList<>();
     private String campaignId;
+    private JSONObject wzrkParams;
 
     String getId() {
         return id;
@@ -48,10 +50,7 @@ class CTMessageDAO {
     }
 
     void setRead(int read) {
-        if(read == 1)
-            this.read = true;
-        else
-            this.read = false;
+        this.read = read == 1;
     }
 
     long getDate() {
@@ -96,9 +95,17 @@ class CTMessageDAO {
         this.campaignId = campaignId;
     }
 
+    JSONObject getWzrkParams() {
+        return wzrkParams;
+    }
+
+    void setWzrkParams(JSONObject wzrk_params) {
+        this.wzrkParams = wzrk_params;
+    }
+
     CTMessageDAO(){}
 
-    private CTMessageDAO(String id, JSONObject jsonData, boolean read, long date, long expires, String userId, String tags, String campaignId){
+    private CTMessageDAO(String id, JSONObject jsonData, boolean read, long date, long expires, String userId, String tags, String campaignId, JSONObject wzrkParams){
         this.id = id;
         this.jsonData = jsonData;
         this.read = read;
@@ -108,6 +115,7 @@ class CTMessageDAO {
         if(tags!=null)
             this.tags = Arrays.asList(tags.split(","));
         this.campaignId = campaignId;
+        this.wzrkParams = wzrkParams;
     }
 
     static CTMessageDAO initWithJSON(JSONObject inboxMessage, String userId){
@@ -121,7 +129,8 @@ class CTMessageDAO {
                 tags = cellObject.has("tags") ? cellObject.getString("tags") : null;
             }
             String campaignId = inboxMessage.has("wzrk_id") ? inboxMessage.getString("wzrk_id") : "0_0";
-            return new CTMessageDAO(id, cellObject, false,date,expires,userId, tags,campaignId);
+            JSONObject wzrkParams = getWzrkFields(inboxMessage);
+            return new CTMessageDAO(id, cellObject, false,date,expires,userId, tags,campaignId,wzrkParams);
         }catch (JSONException e){
             Logger.d("Unable to parse Notification inbox message to CTMessageDao - "+e.getLocalizedMessage());
             return null;
@@ -142,10 +151,25 @@ class CTMessageDAO {
             }
             jsonObject.put("tags",jsonArray);
             jsonObject.put("wzrk_id",campaignId);
+            jsonObject.put("wzrkParams",wzrkParams);
             return jsonObject;
         } catch (JSONException e) {
             Logger.v("Unable to convert CTMessageDao to JSON - "+e.getLocalizedMessage());
             return jsonObject;
         }
+    }
+
+    static JSONObject getWzrkFields(JSONObject root) throws JSONException {
+        final JSONObject fields = new JSONObject();
+        JSONObject jsonObject = root;
+        Iterator<String> iterator = jsonObject.keys();
+
+        while(iterator.hasNext()){
+            String keyName = iterator.next();
+            if(keyName.startsWith(Constants.WZRK_PREFIX))
+                fields.put(keyName,jsonObject.get(keyName));
+        }
+
+        return fields;
     }
 }

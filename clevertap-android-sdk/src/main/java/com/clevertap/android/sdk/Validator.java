@@ -21,9 +21,10 @@ final class Validator {
             "Notification Viewed", "UTM Visited", "Notification Sent", "App Launched", "wzrk_d",
             "App Uninstalled", "Notification Bounced"};
 
-    public static final String ADD_VALUES_OPERATION = "multiValuePropertyAddValues";
-    public static final String REMOVE_VALUES_OPERATION = "multiValuePropertyRemoveValues";
+    static final String ADD_VALUES_OPERATION = "multiValuePropertyAddValues";
+    static final String REMOVE_VALUES_OPERATION = "multiValuePropertyRemoveValues";
 
+    @SuppressWarnings("unused")
     private enum RestrictedMultiValueFields {
         Name(), Email(), Education(),
         Married(), DOB(), Gender(),

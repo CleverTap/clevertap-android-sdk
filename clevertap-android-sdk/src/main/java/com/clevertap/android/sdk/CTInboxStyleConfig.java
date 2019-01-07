@@ -3,6 +3,7 @@ package com.clevertap.android.sdk;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+@SuppressWarnings({"unused", "WeakerAccess"})
 public class CTInboxStyleConfig implements Parcelable {
 
     private String titleColor;
@@ -34,7 +35,7 @@ public class CTInboxStyleConfig implements Parcelable {
         this.unselectedTabColor = "#808080";
         this.selectedTabIndicatorColor = "#1C84FE";
         this.tabBackgroundColor = "#FFFFFF";
-    };
+    }
 
     protected CTInboxStyleConfig(Parcel in) {
         titleColor = in.readString();
@@ -174,11 +175,7 @@ public class CTInboxStyleConfig implements Parcelable {
     }
 
     boolean isUsingTabs() {
-        if(firstTab.isEmpty() || secondTab.isEmpty()) {
-            return false;
-        }else{
-            return true;
-        }
+        return !firstTab.isEmpty() && !secondTab.isEmpty();
     }
 
     public String getBackButtonColor() {

@@ -179,7 +179,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private final Object inboxControllerLock = new Object();
     private CTInboxListener inboxListener;
     private boolean isBgPing = false;
-    private int pingFrequency = 10;//TODO change to 240
 
     @Deprecated
     public final EventHandler event;
@@ -1782,10 +1781,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (emptyDomain && !defaultToHandshakeURL) {
             return null;
         }
-        domain = "490b9e9e.ngrok.io";//TODO change after testing
+
         if (emptyDomain) {
-            domain = /*Constants.PRIMARY_DOMAIN*/"490b9e9e.ngrok.io" + "/hello";
-            //domain = Constants.PRIMARY_DOMAIN + "/hello";
+            domain = Constants.PRIMARY_DOMAIN + "/hello";
         } else {
             domain += "/a1";
         }
@@ -2285,36 +2283,39 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 // Ignore
             }
 
-            //Handle notification inbox
-            // TODO do we need to skip if AnalyticsOnly
-            try{
-                getConfigLogger().verbose(getAccountId(),"Processing inbox messages...");
-                processInboxResponse(response,context);
-            }catch (Throwable t) {
-                getConfigLogger().verbose("Notification inbox exception: " + t.getLocalizedMessage());
+            //Handle notification inbox response
+            if(!getConfig().isAnalyticsOnly()) {
+                try {
+                    getConfigLogger().verbose(getAccountId(), "Processing inbox messages...");
+                    processInboxResponse(response, context);
+                } catch (Throwable t) {
+                    getConfigLogger().verbose("Notification inbox exception: " + t.getLocalizedMessage());
+                }
             }
 
-            // TODO do we need to skip if AnalyticsOnly
-            try{
-                if(response.has("pushamp_notifs")){
-                    getConfigLogger().verbose(getAccountId(),"Processing pushamp messages...");
-                    JSONObject pushAmpObject = response.getJSONObject("pushamp_notifs");
-                    final JSONArray pushNotifications = pushAmpObject.getJSONArray("list");
-                    if(pushNotifications.length()>0){
-                        getConfigLogger().verbose(getAccountId(), "Handling Push payload locally");
-                        handlePushNotificationsInResponse(pushNotifications);
+            //Handle Push Amplification response
+            if(!getConfig().isAnalyticsOnly()) {
+                try {
+                    if (response.has("pushamp_notifs")) {
+                        getConfigLogger().verbose(getAccountId(), "Processing pushamp messages...");
+                        JSONObject pushAmpObject = response.getJSONObject("pushamp_notifs");
+                        final JSONArray pushNotifications = pushAmpObject.getJSONArray("list");
+                        if (pushNotifications.length() > 0) {
+                            getConfigLogger().verbose(getAccountId(), "Handling Push payload locally");
+                            handlePushNotificationsInResponse(pushNotifications);
+                        }
+                        if (pushAmpObject.has("pf")) {
+                            int frequency = pushAmpObject.getInt("pf");
+                            setPingFrequency(context, frequency);
+                        }
+                        if (pushAmpObject.has("ack")) {
+                            boolean ack = pushAmpObject.getBoolean("ack");
+                            StorageHelper.putBoolean(context, storageKeyWithSuffix(Constants.RESPONSE_ACK), ack);  // TODO what is this for ?
+                        }
                     }
-                    if(pushAmpObject.has("pf")){
-                        int frequency = pushAmpObject.getInt("pf");
-                        setPingFrequency(frequency);
-                    }
-                    if(pushAmpObject.has("ack")){
-                        boolean ack = pushAmpObject.getBoolean("ack");
-                        StorageHelper.putBoolean(context,storageKeyWithSuffix(Constants.RESPONSE_ACK),ack);  // TODO what is this for ?
-                    }
+                } catch (Throwable t) {
+                    //Ignore
                 }
-            }catch (Throwable t){
-                //Ignore
             }
 
         } catch (Throwable t) {
@@ -2343,7 +2344,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         if (this.ctInboxController.privateListener == null) {
                             this.ctInboxController.privateListener = new WeakReference<>(this).get();
                         }
-                        this.ctInboxController.notifyInitialized();
+                        this.ctInboxController.notifyInitialized();  // TODO why are you calling notifyInitialized on the controller,  CleverTapApi is always the listener
                         JSONArray inboxMessages;
                            inboxMessages  = response.getJSONArray("inbox_notifs");
                         this.ctInboxController.updateMessages(inboxMessages);
@@ -2390,6 +2391,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+    // TODO why are you setting the inboxListener on the controller,  the inboxListener should be on CleverTapAPI and CleverTapAPI should listen to the controller and then forward what it needs to the external listener
     /**
      * Returns the CTInboxListener object
      * @return An {@link CTInboxListener} object
@@ -2454,6 +2456,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             InputStream is = context.getAssets().open("inbox.json");
             int size = is.available();
             byte[] buffer = new byte[size];
+            //noinspection ResultOfMethodCallIgnored
             is.read(buffer);
             is.close();
             json = new String(buffer, "UTF-8");
@@ -2464,12 +2467,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return json;
     }
 
-    private int getPingFrequency() {
-        return pingFrequency;
+    private int getPingFrequency(Context context) {
+        return StorageHelper.getInt(context,storageKeyWithSuffix(Constants.PING_FREQUENCY),Constants.PING_FREQUENCY_VALUE);
     }
 
-    private void setPingFrequency(int pingFrequency) {
-        this.pingFrequency = pingFrequency;
+    private void setPingFrequency(Context context, int pingFrequency) {
+        StorageHelper.putInt(context,Constants.PING_FREQUENCY,pingFrequency);
     }
 
     private JSONArray getRenderedTargetList(){
@@ -2792,6 +2795,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (inAppFragment != null) {
             Logger.d("Displaying In-App: "+inAppNotification.getJsonDescription());
             try {
+                //noinspection ConstantConditions
                 FragmentTransaction fragmentTransaction = getCurrentActivity().getFragmentManager().beginTransaction();
                 Bundle bundle = new Bundle();
                 bundle.putParcelable("inApp",inAppNotification);
@@ -4261,17 +4265,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     private JSONObject getWzrkFields(CTInboxMessage root) throws JSONException {
-        final JSONObject fields = new JSONObject();
-        JSONObject jsonObject = root.getData();
-        Iterator<String> iterator = jsonObject.keys();
-
-        while(iterator.hasNext()){
-            String keyName = iterator.next();
-            if(keyName.startsWith(Constants.WZRK_PREFIX))
-                fields.put(keyName,jsonObject.get(keyName));
-        }
-
-        return fields;
+        return root.getWzrkParams();
     }
 
     /**
@@ -6158,11 +6152,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     // TODO make nice JavaDocs things for all the new public methods
 
     @SuppressWarnings({"unused", "WeakerAccess"})
-    public void initializeInbox(final CleverTapAPI cleverTapAPI){
+    public void initializeInbox(final CleverTapAPI cleverTapAPI){  // TODO why is cleverTapAPI an argument to this ????  You are repeating this initializtion code in processResponse, should make on common method for this
         postAsyncSafely("initializeInbox", new Runnable() {
             @Override
             public void run() {
-                if(getConfig().isAnalyticsOnly()){
+                if(getConfig().isAnalyticsOnly()){ // TODO you could move this outside of the async block
                     getConfigLogger().debug(getAccountId(),"Instance is analytics only, not initializing Notification Inbox");
                 }
                 synchronized (inboxControllerLock) {
@@ -6174,7 +6168,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                             if (ctInboxController.privateListener == null) {
                                 ctInboxController.privateListener = new WeakReference<>(cleverTapAPI).get();
                             }
-                            ctInboxController.notifyInitialized();
+                            ctInboxController.notifyInitialized(); // TODO NO, cleverTapAPI should notify
                         }
                     }
                 }
@@ -6187,7 +6181,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     public int getInboxMessageCount(){
        if(isInboxInitialized()) {
            synchronized (inboxControllerLock) {
-               return ctInboxController.count();
+               return ctInboxController.count();   // TODO how are you handling TTL  ??
            }
        }else{
            getConfigLogger().debug(getAccountId(),"Notification Inbox not initialized");
@@ -6200,7 +6194,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     public int getInboxMessageUnreadCount(){
         if(isInboxInitialized()) {
             synchronized (inboxControllerLock) {
-                return ctInboxController.unreadCount();
+                return ctInboxController.unreadCount();  // TODO how are you handling TTL  ??
             }
         }else{
             getConfigLogger().debug(getAccountId(),"Notification Inbox not initialized");
@@ -6326,6 +6320,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             this.ctInboxController = CTInboxController.initWithAccountId(getAccountId(), getCleverTapID(), loadDBAdapter(context));
             if (this.ctInboxController != null && ctInboxController.isInitialized()) {
                 this.ctInboxController.listener = new WeakReference<>(this).get();
+                // TODO do you need to notify here ???
             }
         }
     }
@@ -6346,6 +6341,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     @Override
     public void messageDidShow(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data) {
+        // TODO you should mark read in this method not what you are doing now
         pushInboxMessageStateEvent(false,inboxMessage,data);
     }
 
@@ -6354,6 +6350,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         pushInboxMessageStateEvent(true,inboxMessage,data);
     }
 
+    // TODO is this the right place for this or should it be internal to the InboxController???
     private ArrayList<CTInboxMessage> checkForVideoMessages(ArrayList<CTInboxMessage> inboxMessageList){
         boolean exoPlayerPresent = false;
 
@@ -6388,7 +6385,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         intent.setPackage(context.getPackageName());
         PendingIntent alarmPendingIntent = PendingIntent.getService(context,1,intent,PendingIntent.FLAG_UPDATE_CURRENT);
         if (alarmManager != null) {
-            alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime(),AlarmManager.INTERVAL_HOUR * getPingFrequency()/60,alarmPendingIntent);
+            alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime(),AlarmManager.INTERVAL_HOUR * getPingFrequency(context)/60,alarmPendingIntent);
         }
     }
 
@@ -6407,9 +6404,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 builder.setRequiresCharging(false);
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    builder.setPeriodic(getPingFrequency() * 60 * 1000, 5 * 60 * 1000);
+                    builder.setPeriodic(getPingFrequency(context) * 60 * 1000, 5 * 60 * 1000);
                 } else {
-                    builder.setPeriodic(getPingFrequency() * 60 * 1000);
+                    builder.setPeriodic(getPingFrequency(context) * 60 * 1000);
                 }
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -6533,7 +6530,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                             alarmIntent.setPackage(context.getPackageName());
                             PendingIntent alarmServicePendingIntent = PendingIntent.getService(context,1,alarmIntent,PendingIntent.FLAG_UPDATE_CURRENT);
                             if (alarmManager != null) {
-                                alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() * (getPingFrequency()*60*1000),AlarmManager.INTERVAL_HOUR * getPingFrequency()/60,alarmServicePendingIntent);
+                                alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() * (getPingFrequency(context)*60*1000),AlarmManager.INTERVAL_HOUR * getPingFrequency(context)/60,alarmServicePendingIntent);
                             }
                         }
                         //TODO remove after testing

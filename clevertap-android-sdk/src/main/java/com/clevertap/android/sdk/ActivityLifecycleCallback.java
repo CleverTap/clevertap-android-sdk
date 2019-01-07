@@ -8,6 +8,7 @@ import android.os.Bundle;
 /**
  * Class for handling activity lifecycle events
  */
+@SuppressWarnings({"unused", "WeakerAccess"})
 public final class ActivityLifecycleCallback {
     static boolean registered = false;
 

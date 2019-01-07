@@ -21,7 +21,8 @@ package com.clevertap.android.sdk;
 import java.util.ArrayList;
 import java.util.List;
 
-public class GifHeader {
+@SuppressWarnings({"unused", "WeakerAccess"})
+class GifHeader {
 
     int[] gct = null;
     int status = GifDecoder.STATUS_OK;

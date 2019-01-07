@@ -18,7 +18,7 @@
  */
 package com.clevertap.android.sdk;
 
-public class GifFrame {
+class GifFrame {
     int ix, iy, iw, ih;
     /**
      * Control Flag.

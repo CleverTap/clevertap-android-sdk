@@ -14,6 +14,7 @@ import java.util.List;
 /**
  * Public facing model class for type of InboxMessage
  */
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class CTInboxMessage implements Parcelable {
     private String title;
     private String body;
@@ -31,6 +32,7 @@ public class CTInboxMessage implements Parcelable {
     private ArrayList<CTInboxMessageContent> inboxMessageContents = new ArrayList<>();
     private String orientation;
     private String campaignId;
+    private JSONObject wzrkParams;
 
 
     CTInboxMessage initWithJSON(JSONObject jsonObject){
@@ -39,7 +41,7 @@ public class CTInboxMessage implements Parcelable {
             this.messageId = jsonObject.has("id") ? jsonObject.getString("id") : "0";
             this.campaignId = jsonObject.has("wzrk_id") ? jsonObject.getString("wzrk_id") : "0_0";
             this.date = jsonObject.has("date") ? jsonObject.getLong("date") : System.currentTimeMillis()/1000;
-            this.expires = jsonObject.has("wzrk_ttl") ? jsonObject.getLong("wzrk_ttl") : 1000*60*60*24;
+            this.expires = jsonObject.has("wzrk_ttl") ? jsonObject.getLong("wzrk_ttl") : System.currentTimeMillis() + 1000*60*60*24;
             this.isRead = jsonObject.has("isRead") && jsonObject.getBoolean("isRead");
             JSONObject cellObject = jsonObject.has("msg") ? jsonObject.getJSONObject("msg") : null;
             if(cellObject != null){
@@ -60,6 +62,7 @@ public class CTInboxMessage implements Parcelable {
                     }
                 }
             }
+            this.wzrkParams = jsonObject.has("wzrkParams") ? jsonObject.getJSONObject("wzrkParams") : null;
         } catch (JSONException e) {
             Logger.v("Unable to init CTInboxMessage with JSON - "+e.getLocalizedMessage());
         }
@@ -83,20 +86,21 @@ public class CTInboxMessage implements Parcelable {
             isRead = in.readByte() != 0x00;
             type = (CTInboxMessageType) in.readValue(CTInboxMessageType.class.getClassLoader());
             if (in.readByte() == 0x01) {
-                tags = new ArrayList<String>();
+                tags = new ArrayList<>();
                 in.readList(tags, String.class.getClassLoader());
             } else {
                 tags = null;
             }
             bgColor = in.readString();
             if (in.readByte() == 0x01) {
-                inboxMessageContents = new ArrayList<CTInboxMessageContent>();
+                inboxMessageContents = new ArrayList<>();
                 in.readList(inboxMessageContents, CTInboxMessageContent.class.getClassLoader());
             } else {
                 inboxMessageContents = null;
             }
             orientation = in.readString();
             campaignId = in.readString();
+            wzrkParams = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
         }catch (JSONException e){
            Logger.v("Unable to parse CTInboxMessage from parcel - "+e.getLocalizedMessage());
         }
@@ -145,6 +149,12 @@ public class CTInboxMessage implements Parcelable {
         }
         dest.writeString(orientation);
         dest.writeString(campaignId);
+        if (wzrkParams == null) {
+            dest.writeByte((byte) (0x00));
+        } else {
+            dest.writeByte((byte) (0x01));
+            dest.writeString(wzrkParams.toString());
+        }
     }
 
     @SuppressWarnings("unused")
@@ -200,6 +210,10 @@ public class CTInboxMessage implements Parcelable {
         return isRead;
     }
 
+    void setRead(boolean read) {
+        isRead = read;
+    }
+
     public List<String> getTags() {
         return tags;
     }
@@ -234,5 +248,9 @@ public class CTInboxMessage implements Parcelable {
 
     public String getOrientation() {
         return orientation;
+    }
+
+    public JSONObject getWzrkParams() {
+        return wzrkParams == null ? new JSONObject() : wzrkParams;
     }
 }

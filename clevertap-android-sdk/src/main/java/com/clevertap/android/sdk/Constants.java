@@ -50,7 +50,7 @@ public class Constants {
     static final String INAPP_NOTIF_DARKEN_SCREEN = "dk";
     static final String INAPP_NOTIF_SHOW_CLOSE = "sc";
     static final String INAPP_JSON_RESPONSE_KEY = "inapp_notifs";
-    static final String INBOX_JSON_RESPONSE_KEY = "inbox_notifications";
+    static final String INBOX_JSON_RESPONSE_KEY = "inbox_notifs";
     static final String INAPP_MAX_DISPLAY_COUNT = "mdc";
     static final String INAPP_MAX_PER_SESSION = "imc";
     static final String INAPP_WINDOW = "w";
@@ -99,6 +99,8 @@ public class Constants {
     static final long DEFAULT_PUSH_TTL = 1000 * 60 * 60 * 24 * 4;//TODO agree on value
     static final String RESPONSE_ACK = "ack";
     static final String JOB_ID = "jobid";
+    static final int PING_FREQUENCY_VALUE = 240;
+    static final String PING_FREQUENCY = "pf";
 
     /**
      * Profile command constants.

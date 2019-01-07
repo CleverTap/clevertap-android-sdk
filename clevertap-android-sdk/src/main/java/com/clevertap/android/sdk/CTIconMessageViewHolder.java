@@ -22,7 +22,7 @@ class CTIconMessageViewHolder extends RecyclerView.ViewHolder {
     RelativeLayout clickLayout;
     LinearLayout ctaLinearLayout;
 
-    public CTIconMessageViewHolder(@NonNull View itemView) {
+    CTIconMessageViewHolder(@NonNull View itemView) {
         super(itemView);
 
         title = itemView.findViewById(R.id.messageTitle);

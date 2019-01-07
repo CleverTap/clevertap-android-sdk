@@ -14,10 +14,12 @@ import org.json.JSONObject;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
-public class DBAdapter {
+
+// TODO fix the warnings in this file
+
+class DBAdapter {
 
     public enum Table {
         EVENTS("events"),
@@ -57,6 +59,7 @@ public class DBAdapter {
     private static final String TAGS = "tags";
     private static final String MESSAGE_USER = "messageUser";
     private static final String CAMPAIGN = "campaignId";
+    private static final String WZRKPRAMS = "wzrkParams";
 
     private static final int DB_UPDATE_ERROR = -1;
     private static final int DB_OUT_OF_MEMORY_ERROR = -2;
@@ -88,6 +91,7 @@ public class DBAdapter {
     private static final String CREATE_INBOX_MESSAGES_TABLE =
             "CREATE TABLE " + Table.INBOX_MESSAGES.getName() + " (" + ID + " TEXT NOT NULL," +
                     KEY_DATA + " TEXT NOT NULL, " +
+                    WZRKPRAMS + " TEXT NOT NULL, " +
                     CAMPAIGN + " TEXT NOT NULL, " +
                     TAGS + " TEXT NOT NULL, " +
                     IS_READ + " INTEGER NOT NULL DEFAULT 0, " +
@@ -220,7 +224,7 @@ public class DBAdapter {
      * @param table the table to insert into
      * @return the number of rows in the table, or DB_OUT_OF_MEMORY_ERROR/DB_UPDATE_ERROR
      */
-    public int storeObject(JSONObject obj, Table table) {
+    int storeObject(JSONObject obj, Table table) {
         if (!this.belowMemThreshold()) {
             Logger.v("There is not enough space left on the device to store data, data discarded");
             return DB_OUT_OF_MEMORY_ERROR;
@@ -264,7 +268,7 @@ public class DBAdapter {
      * @param obj the JSON to record
      * @return the number of rows in the table, or DB_OUT_OF_MEMORY_ERROR/DB_UPDATE_ERROR
      */
-    public long storeUserProfile(String id, JSONObject obj) {
+    long storeUserProfile(String id, JSONObject obj) {
 
         if (id == null) return DB_UPDATE_ERROR;
 
@@ -295,7 +299,7 @@ public class DBAdapter {
     /**
      * remove the user profile with id from the db.
      */
-    public void removeUserProfile(String id) {
+    void removeUserProfile(String id) {
 
         if (id == null) return;
         final String tableName = Table.USER_PROFILES.getName();
@@ -310,7 +314,7 @@ public class DBAdapter {
         }
     }
 
-    public JSONObject fetchUserProfileById(final String id) {
+    JSONObject fetchUserProfileById(final String id) {
 
         if (id == null) return null;
 
@@ -347,7 +351,7 @@ public class DBAdapter {
      *
      * @param table  the table to remove events
      */
-    public void removeEvents(Table table) {
+    void removeEvents(Table table) {
         final String tName = table.getName();
 
         try {
@@ -367,7 +371,7 @@ public class DBAdapter {
      * @param lastId the last id to delete
      * @param table  the table to remove events
      */
-    public void cleanupEventsFromLastId(String lastId, Table table) {
+    void cleanupEventsFromLastId(String lastId, Table table) {
         final String tName = table.getName();
 
         try {
@@ -386,12 +390,12 @@ public class DBAdapter {
      *
      * @param table the table to remove events
      */
-    public void cleanupStaleEvents(Table table) {
+    void cleanupStaleEvents(Table table) {
         cleanInternal(table, DATA_EXPIRATION);
     }
 
 
-    public void cleanUpPushNotifications(){
+    void cleanUpPushNotifications(){
         cleanInternal(Table.PUSH_NOTIFICATIONS,0);//Expiry time is stored in PUSH_NOTIFICATIONS table
     }
 
@@ -421,7 +425,7 @@ public class DBAdapter {
      * @param table the table to read from
      * @return JSONObject containing the max row ID and a JSONArray of the JSONObject events or null
      */
-    public JSONObject fetchEvents(Table table, final int limit) {
+    JSONObject fetchEvents(Table table, final int limit) {
         final String tName = table.getName();
         Cursor cursor = null;
         String lastId = null;
@@ -475,7 +479,7 @@ public class DBAdapter {
      * @param id the String value of Push Notification Id
      * @return the number of rows in the table, or DB_OUT_OF_MEMORY_ERROR/DB_UPDATE_ERROR
      */
-    public void storePushNotificationId(String id, long ttl) {
+    void storePushNotificationId(String id, long ttl) {
 
         if (id == null) return ;
 
@@ -648,6 +652,7 @@ public class DBAdapter {
                 final ContentValues cv = new ContentValues();
                 cv.put(ID, messageDAO.getId());
                 cv.put(KEY_DATA, messageDAO.getJsonData().toString());
+                cv.put(WZRKPRAMS, messageDAO.getWzrkParams().toString());
                 cv.put(CAMPAIGN,messageDAO.getCampaignId());
                 cv.put(TAGS, messageDAO.getTags());
                 cv.put(IS_READ, messageDAO.isRead());
@@ -695,6 +700,7 @@ public class DBAdapter {
             for(CTMessageDAO messageDAO : inboxMessages) {
                 final ContentValues cv = new ContentValues();
                 cv.put(KEY_DATA, messageDAO.getJsonData().toString());
+                cv.put(WZRKPRAMS, messageDAO.getWzrkParams().toString());
                 cv.put(CAMPAIGN,messageDAO.getCampaignId());
                 cv.put(IS_READ, messageDAO.isRead());
                 cv.put(TAGS,messageDAO.getTags());
@@ -746,6 +752,7 @@ public class DBAdapter {
                     messageDAO.setDate(cursor.getLong(cursor.getColumnIndex(KEY_CREATED_AT)));
                     messageDAO.setExpires(cursor.getLong(cursor.getColumnIndex(EXPIRES)));
                     messageDAO.setJsonData(new JSONObject(cursor.getString(cursor.getColumnIndex(KEY_DATA))));
+                    messageDAO.setWzrkParams(new JSONObject(cursor.getString(cursor.getColumnIndex(WZRKPRAMS))));
                     messageDAO.setRead(cursor.getInt(cursor.getColumnIndex(IS_READ)));
                     messageDAO.setUserId(cursor.getString(cursor.getColumnIndex(MESSAGE_USER)));
                     messageDAO.setTags(cursor.getString(cursor.getColumnIndex(TAGS)));
@@ -860,9 +867,10 @@ public class DBAdapter {
         }
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess"})
     int getUnreadCount(){
         final String tName = Table.INBOX_MESSAGES.getName();
-        Cursor cursor = null;
+        Cursor cursor;
         int count = -1;
         try{
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -889,7 +897,7 @@ public class DBAdapter {
      */
     ArrayList<CTMessageDAO> getMessages(String userId){
         final String tName = Table.INBOX_MESSAGES.getName();
-        Cursor cursor = null;
+        Cursor cursor;
         ArrayList<CTMessageDAO> messageDAOArrayList = new ArrayList<>();
         try{
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -899,6 +907,7 @@ public class DBAdapter {
                     CTMessageDAO ctMessageDAO = new CTMessageDAO();
                     ctMessageDAO.setId(cursor.getString(cursor.getColumnIndex(ID)));
                     ctMessageDAO.setJsonData(new JSONObject(cursor.getString(cursor.getColumnIndex(KEY_DATA))));
+                    ctMessageDAO.setWzrkParams(new JSONObject(cursor.getString(cursor.getColumnIndex(WZRKPRAMS))));
                     ctMessageDAO.setDate(cursor.getLong(cursor.getColumnIndex(KEY_CREATED_AT)));
                     ctMessageDAO.setExpires(cursor.getLong(cursor.getColumnIndex(EXPIRES)));
                     ctMessageDAO.setRead(cursor.getInt(cursor.getColumnIndex(IS_READ)));
@@ -931,7 +940,7 @@ public class DBAdapter {
      */
     ArrayList<CTMessageDAO> getUnreadMessages(String userId){
         final String tName = Table.INBOX_MESSAGES.getName();
-        Cursor cursor = null;
+        Cursor cursor;
         ArrayList<CTMessageDAO> messageDAOArrayList = new ArrayList<>();
         try{
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -941,6 +950,7 @@ public class DBAdapter {
                     CTMessageDAO ctMessageDAO = new CTMessageDAO();
                     ctMessageDAO.setId(cursor.getString(cursor.getColumnIndex(ID)));
                     ctMessageDAO.setJsonData(new JSONObject(cursor.getString(cursor.getColumnIndex(KEY_DATA))));
+                    ctMessageDAO.setWzrkParams(new JSONObject(cursor.getString(cursor.getColumnIndex(WZRKPRAMS))));
                     ctMessageDAO.setDate(cursor.getLong(cursor.getColumnIndex(KEY_CREATED_AT)));
                     ctMessageDAO.setExpires(cursor.getLong(cursor.getColumnIndex(EXPIRES)));
                     ctMessageDAO.setRead(cursor.getInt(cursor.getColumnIndex(IS_READ)));
@@ -966,6 +976,7 @@ public class DBAdapter {
         }
     }
 
+    @SuppressWarnings({"unused"})
     void cleanUpMessages(String userId){
         ArrayList<CTMessageDAO> messageDAOArrayList = getMessages(userId);
         for(CTMessageDAO messageDAO : messageDAOArrayList){

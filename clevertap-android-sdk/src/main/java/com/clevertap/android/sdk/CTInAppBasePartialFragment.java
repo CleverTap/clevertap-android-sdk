@@ -23,7 +23,7 @@ public abstract class CTInAppBasePartialFragment extends CTInAppBaseFragment {
     @Override
     void generateListener() {
         if (config != null) {
-            setListener((InAppListener) CleverTapAPI.instanceWithConfig(getActivity().getBaseContext(),config));
+            setListener(CleverTapAPI.instanceWithConfig(getActivity().getBaseContext(),config));
         }
     }
 

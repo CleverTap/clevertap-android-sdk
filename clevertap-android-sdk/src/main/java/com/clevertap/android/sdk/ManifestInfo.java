@@ -5,7 +5,7 @@ import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 
-public class ManifestInfo {
+class ManifestInfo {
     private static String accountId;
     private static String accountToken;
     private static String accountRegion;
@@ -57,7 +57,7 @@ public class ManifestInfo {
         backgroundSync = "1".equals(_getManifestStringValueForKey(metaData,Constants.LABEL_BACKGROUND_SYNC));
     }
 
-    public synchronized static ManifestInfo getInstance(Context context){
+    synchronized static ManifestInfo getInstance(Context context){
         if (instance == null) {
             instance = new ManifestInfo(context);
         }
@@ -76,15 +76,15 @@ public class ManifestInfo {
         return accountRegion;
     }
 
-    public String getGCMSenderId(){
+    String getGCMSenderId(){
         return gcmSenderId;
     }
 
-    public boolean useGoogleAdId(){
+    boolean useGoogleAdId(){
          return useADID;
     }
 
-    public boolean isAppLaunchedDisabled(){
+    boolean isAppLaunchedDisabled(){
          return appLaunchedDisabled;
     }
 

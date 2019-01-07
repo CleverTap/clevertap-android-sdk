@@ -24,6 +24,9 @@ import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.Iterator;
+
+// TODO fix the Java Doc stuff in this file
 
 /**
  * CTInboxActivity
@@ -36,17 +39,13 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
 
     private ArrayList<CTInboxMessage> inboxMessageArrayList;
     private CleverTapInstanceConfig config;
-    private CTInboxStyleConfig styleConfig;
     private WeakReference<InboxActivityListener> listenerWeakReference;
-    private LinearLayout linearLayout;
-    private ExoPlayerRecyclerView exoPlayerRecyclerView;
-    private RecyclerView recyclerView;
-    private CTInboxMessageAdapter inboxMessageAdapter;
+    private ExoPlayerRecyclerView exoPlayerRecyclerView;  // TODO what if ExoPlayer classes not there
+    private RecyclerView recyclerView;  // TODO you could just declare RecyclerView and cast it to ExoPlayerRecyclerView if ExoPlayer included
     private boolean firstTime = true;
-    private ViewPager viewPager;
-    private CleverTapAPI cleverTapAPI;
+    private CleverTapAPI cleverTapAPI;  // TODO get rid of this;  DO NOT create these kinds of dependencies; very bad practice
 
-    void setListener(InboxActivityListener listener) {//Sets Listener for InboxActivity
+    void setListener(InboxActivityListener listener) {
         listenerWeakReference = new WeakReference<>(listener);
     }
 
@@ -67,14 +66,15 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
 
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
+        CTInboxStyleConfig styleConfig;
         try{
             Bundle extras = getIntent().getExtras();
             if(extras == null) throw new IllegalArgumentException();
             styleConfig = extras.getParcelable("styleConfig");
             inboxMessageArrayList = extras.getParcelableArrayList("messageList");
             config = extras.getParcelable("config");
-            setListener((InboxActivityListener) CleverTapAPI.instanceWithConfig(getApplicationContext(),config));
-            cleverTapAPI = CleverTapAPI.instanceWithConfig(getApplicationContext(),config);
+            setListener(CleverTapAPI.instanceWithConfig(getApplicationContext(),config));
+            cleverTapAPI = CleverTapAPI.instanceWithConfig(getApplicationContext(),config);  // TODO get rid of this
         }catch (Throwable t){
             Logger.v("Cannot find a valid notification inbox bundle to show!", t);
             return;
@@ -82,7 +82,8 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
 
         setContentView(R.layout.inbox_activity);
 
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        //noinspection ConstantConditions
         toolbar.setTitle(styleConfig.getNavBarTitle());
         toolbar.setTitleTextColor(Color.parseColor(styleConfig.getNavBarTitleColor()));
         toolbar.setBackgroundColor(Color.parseColor(styleConfig.getNavBarColor()));
@@ -96,9 +97,9 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
             }
         });
 
-        linearLayout = findViewById(R.id.inbox_linear_layout);
+        LinearLayout linearLayout = findViewById(R.id.inbox_linear_layout);
         TabLayout tabLayout = linearLayout.findViewById(R.id.tab_layout);
-        viewPager = linearLayout.findViewById(R.id.view_pager);
+        ViewPager viewPager = linearLayout.findViewById(R.id.view_pager);
         //Tabs are shown only if mentioned in StyleConfig
         if(styleConfig.isUsingTabs()){
             CTInboxTabAdapter inboxTabAdapter = new CTInboxTabAdapter(getSupportFragmentManager());
@@ -110,7 +111,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
             Bundle bundle = new Bundle();
             bundle.putParcelableArrayList("inboxMessages", inboxMessageArrayList);
             bundle.putParcelable("config", config);
-            bundle.putParcelable("styleConfig",styleConfig);
+            bundle.putParcelable("styleConfig", styleConfig);
             CTInboxAllTabFragment ctInboxAllTabFragment = new CTInboxAllTabFragment();
             ctInboxAllTabFragment.setArguments(bundle);
             inboxTabAdapter.addFragment(ctInboxAllTabFragment,"ALL");
@@ -135,6 +136,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
             tabLayout.setVisibility(View.GONE);
             //ExoPlayerRecyclerView manages autoplay of videos on scoll and hence only used if Inbox messages contain videos
             //TODO render ExoPlayerRecyclerView programatically in case ExoPlayer libs are not included in the main app
+            CTInboxMessageAdapter inboxMessageAdapter;
             if(checkInboxMessagesContainVideo(inboxMessageArrayList)) {
                 exoPlayerRecyclerView = findViewById(R.id.activity_exo_recycler_view);
                 exoPlayerRecyclerView.setVisibility(View.VISIBLE);
@@ -219,28 +221,36 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
         try {
             Bundle data = new Bundle();
 
-            data.putString(Constants.NOTIFICATION_ID_TAG,inboxMessageArrayList.get(position).getCampaignId());
+            //data.putString(Constants.NOTIFICATION_ID_TAG,inboxMessageArrayList.get(position).getCampaignId());
+            JSONObject wzrkParams = inboxMessageArrayList.get(position).getWzrkParams();
+            Iterator<String> iterator = wzrkParams.keys();
+            while(iterator.hasNext()){
+                String keyName = iterator.next();
+                if(keyName.startsWith(Constants.WZRK_PREFIX))
+                    data.putString(keyName,wzrkParams.getString(keyName));
+            }
+
             if(buttonText != null && !buttonText.isEmpty())
                 data.putString("wzrk_c2a", buttonText);
             didClick(data,inboxMessageArrayList.get(position));
 
-            if (jsonObject != null) {
+           if (jsonObject != null) {
                 if(inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getLinktype(jsonObject).equalsIgnoreCase("copytext")){
                     return;
                 }else{
                     String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getLinkUrl(jsonObject);
                     if (actionUrl != null) {
-                        fireUrlThroughIntent(actionUrl, data);
+                        fireUrlThroughIntent(actionUrl);
                         return;
                     }
                 }
             }else {
                 String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getActionUrl();
                 if (actionUrl != null) {
-                    fireUrlThroughIntent(actionUrl, data);
+                    fireUrlThroughIntent(actionUrl);
                     return;
                 }
-            }
+}
         } catch (Throwable t) {
             config.getLogger().debug("Error handling notification button click: " + t.getCause());
         }
@@ -255,17 +265,23 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
         try {
             Bundle data = new Bundle();
 
-            data.putString(Constants.NOTIFICATION_ID_TAG,inboxMessageArrayList.get(position).getCampaignId());
+            JSONObject wzrkParams = inboxMessageArrayList.get(position).getWzrkParams();
+            Iterator<String> iterator = wzrkParams.keys();
+            while(iterator.hasNext()){
+                String keyName = iterator.next();
+                if(keyName.startsWith(Constants.WZRK_PREFIX))
+                    data.putString(keyName,wzrkParams.getString(keyName));
+            }
+
             didClick(data,inboxMessageArrayList.get(position));
             String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(viewPagerPosition).getActionUrl();
-            fireUrlThroughIntent(actionUrl, data);
-            return;
+            fireUrlThroughIntent(actionUrl);
         }catch (Throwable t){
             config.getLogger().debug("Error handling notification button click: " + t.getCause());
         }
     }
 
-    void fireUrlThroughIntent(String url, Bundle formData) {
+    void fireUrlThroughIntent(String url) {
         try {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
             startActivity(intent);
@@ -279,6 +295,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
      * @param inboxMessage
      */
     void markReadForMessageId(CTInboxMessage inboxMessage){
-        cleverTapAPI.markReadInboxMessage(inboxMessage);
+        cleverTapAPI.markReadInboxMessage(inboxMessage);  //TODO move this to the listener to handle
     }
 }

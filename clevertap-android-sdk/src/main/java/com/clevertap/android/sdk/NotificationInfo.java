@@ -7,6 +7,7 @@ import android.os.Bundle;
  * <p/>
  * Use {@link CleverTapAPI#getNotificationInfo(Bundle)} to retrieve this information.
  */
+@SuppressWarnings("WeakerAccess")
 public final class NotificationInfo {
     /**
      * Whether or not this notification was sent via CleverTap.

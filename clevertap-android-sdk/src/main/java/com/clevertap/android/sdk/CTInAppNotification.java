@@ -144,7 +144,7 @@ class CTInAppNotification implements Parcelable {
             this.totalLifetimeCount = jsonObject.has("tlc") ? jsonObject.getInt("tlc") : -1;
             this.totalDailyCount = jsonObject.has("tdc") ? jsonObject.getInt("tdc") : -1;
             this.inAppType = CTInAppType.fromString(this.type);
-            this.isTablet = jsonObject.has("tablet") ? jsonObject.getBoolean("tablet") : false;
+            this.isTablet = jsonObject.has("tablet") && jsonObject.getBoolean("tablet");
             this.backgroundColor = jsonObject.has("bg") ? jsonObject.getString("bg") : "";
             JSONObject titleObject = jsonObject.has("title") ? jsonObject.getJSONObject("title") : null;
             if(titleObject != null) {
@@ -156,7 +156,7 @@ class CTInAppNotification implements Parcelable {
                 this.message = msgObject.has("text") ? msgObject.getString("text") : "";
                 this.messageColor = msgObject.has("color") ? msgObject.getString("color") : "";
             }
-            this.hideCloseButton = jsonObject.has("close") ? jsonObject.getBoolean("close") : false;
+            this.hideCloseButton = jsonObject.has("close") && jsonObject.getBoolean("close");
             JSONObject media = jsonObject.has("media") ? jsonObject.getJSONObject("media") : null;
             if(media!=null){
                 this.contentType = media.has("content_type") ? media.getString("content_type") : "";
@@ -363,6 +363,7 @@ class CTInAppNotification implements Parcelable {
         return campaignId;
     }
 
+    @SuppressWarnings({"WeakerAccess"})
     public CTInAppType getInAppType() {
         return inAppType;
     }
@@ -456,6 +457,7 @@ class CTInAppNotification implements Parcelable {
         return messageColor;
     }
 
+    @SuppressWarnings({"WeakerAccess"})
     String getContentType() {
         return contentType;
     }
@@ -498,6 +500,7 @@ class CTInAppNotification implements Parcelable {
         }
     }
 
+    @SuppressWarnings({"unused"})
     String getImageUrl() {
         return imageUrl;
     }
@@ -563,7 +566,7 @@ class CTInAppNotification implements Parcelable {
             message = in.readString();
             messageColor = in.readString();
             try {
-                buttons = (ArrayList<CTInAppNotificationButton>) in.createTypedArrayList(CTInAppNotificationButton.CREATOR);
+                buttons = in.createTypedArrayList(CTInAppNotificationButton.CREATOR);
             } catch (Throwable t) {
                 // no-op
             }

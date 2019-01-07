@@ -5,6 +5,9 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 
+
+// TODO fix warning in this file
+
 @SuppressLint("AppCompatCustomView")
 public class RectangleImageView extends ImageView {
 

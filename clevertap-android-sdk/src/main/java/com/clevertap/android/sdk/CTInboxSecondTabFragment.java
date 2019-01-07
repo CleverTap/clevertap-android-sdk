@@ -5,7 +5,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -16,7 +15,6 @@ import android.view.ViewGroup;
 
 public class CTInboxSecondTabFragment extends CTInboxTabBaseFragment {
     RecyclerView recyclerView;
-    private CTInboxMessageAdapter inboxMessageAdapter;
     private boolean firstTime = true;
 
     @Nullable
@@ -27,6 +25,7 @@ public class CTInboxSecondTabFragment extends CTInboxTabBaseFragment {
         //Check if video present to render appropriate recyclerview
         //TODO this check can be removed and instead use the check while the activity is getting created
         //TODO Render exoplayerrecyclerview dynamically only if videos are present in the inbox messages
+        CTInboxMessageAdapter inboxMessageAdapter;
         if(videoPresent) {
             exoPlayerRecyclerView = allView.findViewById(R.id.first_tab_exo_recycler_view);
             exoPlayerRecyclerView.setVisibility(View.VISIBLE);

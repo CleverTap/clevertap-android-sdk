@@ -11,7 +11,7 @@ public abstract class CTInAppBaseFullFragment extends CTInAppBaseFragment {
 
     @Override
     void generateListener() {
-        if (parent != null && parent instanceof InAppNotificationActivity) {
+        if (parent instanceof InAppNotificationActivity) {
             setListener((CTInAppBaseFragment.InAppListener) parent);
         }
     }

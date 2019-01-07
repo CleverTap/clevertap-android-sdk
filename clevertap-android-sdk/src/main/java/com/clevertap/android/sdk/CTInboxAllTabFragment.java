@@ -5,7 +5,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -18,10 +17,7 @@ import android.view.ViewGroup;
  * CTInboxAllTabFragment
  */
 public class CTInboxAllTabFragment extends CTInboxTabBaseFragment {
-    private RecyclerView recyclerView;
-    private CTInboxMessageAdapter inboxMessageAdapter;
     private boolean firstTime = true;
-
 
     @Nullable
     @Override
@@ -31,6 +27,7 @@ public class CTInboxAllTabFragment extends CTInboxTabBaseFragment {
         //Check if video present to render appropriate recyclerview
         //TODO this check can be removed and instead use the check while the activity is getting created
         //TODO Render exoplayerrecyclerview dynamically only if videos are present in the inbox messages
+        CTInboxMessageAdapter inboxMessageAdapter;
         if(videoPresent) {
             exoPlayerRecyclerView = allView.findViewById(R.id.all_tab_exo_recycler_view);
             exoPlayerRecyclerView.setVisibility(View.VISIBLE);
@@ -38,7 +35,7 @@ public class CTInboxAllTabFragment extends CTInboxTabBaseFragment {
             LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
             exoPlayerRecyclerView.setLayoutManager(linearLayoutManager);
             DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(exoPlayerRecyclerView.getContext(),
-                    linearLayoutManager.getOrientation());
+                    DividerItemDecoration.VERTICAL);
             exoPlayerRecyclerView.addItemDecoration(dividerItemDecoration);
             exoPlayerRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
@@ -56,19 +53,21 @@ public class CTInboxAllTabFragment extends CTInboxTabBaseFragment {
                 firstTime = false;
             }
         }else{
-            recyclerView = allView.findViewById(R.id.all_tab_recycler_view);
+            RecyclerView recyclerView = allView.findViewById(R.id.all_tab_recycler_view);
             recyclerView.setVisibility(View.VISIBLE);
-            LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
+            final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
             recyclerView.setLayoutManager(linearLayoutManager);
-            DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
-                    linearLayoutManager.getOrientation());
-            recyclerView.addItemDecoration(dividerItemDecoration);
+            //DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
+             //      DividerItemDecoration.VERTICAL);
+            //recyclerView.addItemDecoration(dividerItemDecoration);
+            recyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
             recyclerView.setItemAnimator(new DefaultItemAnimator());
 
             inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, getActivity(),this);
             inboxMessageAdapter.filterMessages("all");//Filters the messages before rendering the list on tabs
             recyclerView.setAdapter(inboxMessageAdapter);
             inboxMessageAdapter.notifyDataSetChanged();
+
         }
         return allView;
     }

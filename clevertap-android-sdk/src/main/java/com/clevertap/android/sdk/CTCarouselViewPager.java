@@ -54,6 +54,7 @@ public class CTCarouselViewPager extends ViewPager {
      *
      * @return The height of the view, honoring constraints from measureSpec
      */
+    @SuppressWarnings({"unused"})
     private int measureHeight(int measureSpec, View view) {
         int result = 0;
         int specMode = MeasureSpec.getMode(measureSpec);

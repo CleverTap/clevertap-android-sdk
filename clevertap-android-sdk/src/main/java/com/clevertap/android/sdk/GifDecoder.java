@@ -32,7 +32,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 
-public class GifDecoder {
+@SuppressWarnings({"unused", "WeakerAccess"})
+class GifDecoder {
     private static final String TAG = GifDecoder.class.getSimpleName();
 
     /**

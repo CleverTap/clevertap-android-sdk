@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk;
 
+import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNativeFragment {
 
     private RelativeLayout relativeLayout;
+    @SuppressWarnings({"unused"})
     private int layoutHeight = 0;
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @Nullable
@@ -40,7 +42,7 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
 
         final FrameLayout fl  = inAppView.findViewById(R.id.inapp_half_interstitial_frame_layout);
 
-        final CloseImageView closeImageView = fl.findViewById(199272);
+        @SuppressLint("ResourceType") final CloseImageView closeImageView = fl.findViewById(199272);
 
         relativeLayout = fl.findViewById(R.id.half_interstitial_relative_layout);
         relativeLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -53,7 +55,7 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
                 }else {
                     if(isTablet()) {
                         layoutParams.setMargins(90,240,90,0);
-                        layoutParams.width = (int) (relativeLayout1.getMeasuredWidth())-90;
+                        layoutParams.width = (relativeLayout1.getMeasuredWidth())-90;
                         layoutHeight = layoutParams.height = (int) (layoutParams.width * 1.3f);
                         relativeLayout1.setLayoutParams(layoutParams);
                         FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(closeImageView.getWidth(),closeImageView.getHeight());
@@ -101,7 +103,7 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
             mainButton.setVisibility(View.INVISIBLE);
             setupInAppButton(secondaryButton,buttons.get(0),0);
         }
-        else if (buttons != null && !buttons.isEmpty()) {
+        else if (!buttons.isEmpty()) {
             for(int i=0; i < buttons.size(); i++) {
                 if (i >= 2) continue; // only show 2 buttons
                 CTInAppNotificationButton inAppNotificationButton = buttons.get(i);

@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
@@ -55,7 +54,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             if (notif == null) throw new IllegalArgumentException();
             inAppNotification = notif.getParcelable("inApp");
             config = notif.getParcelable("config");
-            setListener((InAppActivityListener) CleverTapAPI.instanceWithConfig(getApplicationContext(),config));
+            setListener(CleverTapAPI.instanceWithConfig(getApplicationContext(),config));
         } catch (Throwable t) {
             Logger.v("Cannot find a valid notification bundle to show!", t);
             return;
@@ -215,6 +214,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                         });
                     }
                 }
+                //noinspection ConstantConditions
                 alertDialog.show();
                 didShow(null);
                 break;

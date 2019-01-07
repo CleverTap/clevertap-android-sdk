@@ -13,19 +13,19 @@ final class ValidationResult {
         this.errorDesc = errorDesc;
     }
 
-    public String getErrorDesc() {
+    String getErrorDesc() {
         return errorDesc;
     }
 
-    public void setErrorDesc(String errorDesc) {
+    void setErrorDesc(String errorDesc) {
         this.errorDesc = errorDesc;
     }
 
-    public Object getObject() {
+    Object getObject() {
         return object;
     }
 
-    public int getErrorCode() {
+    int getErrorCode() {
         return errorCode;
     }
 
@@ -33,11 +33,11 @@ final class ValidationResult {
         this.errorCode = 0;
     }
 
-    public void setObject(Object object) {
+    void setObject(Object object) {
         this.object = object;
     }
 
-    public void setErrorCode(int errorCode) {
+    void setErrorCode(int errorCode) {
         this.errorCode = errorCode;
     }
 }

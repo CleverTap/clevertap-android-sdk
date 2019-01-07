@@ -21,6 +21,7 @@ class CTSimpleMessageViewHolder extends RecyclerView.ViewHolder {
     TextView timestamp;
     ImageView readDot, mediaImage, squareImage;
     Button cta1,cta2,cta3;
+    @SuppressWarnings({"unused", "WeakerAccess"})
     RelativeLayout simpleMessageRelativeLayout,clickLayout,bodyRelativeLayout;
     LinearLayout ctaLinearLayout;
     FrameLayout simpleMessageFrameLayout;

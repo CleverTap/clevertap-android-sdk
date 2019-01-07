@@ -23,7 +23,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.Arrays;
 
-public class GifHeaderParser {
+class GifHeaderParser {
 
     public static final String TAG = "GifHeaderParser";
 
@@ -71,7 +71,7 @@ public class GifHeaderParser {
         blockSize = 0;
     }
 
-    public GifHeader parseHeader() {
+    GifHeader parseHeader() {
         if (rawData == null) {
             throw new IllegalStateException("You must call setData() before parseHeader()");
         }
