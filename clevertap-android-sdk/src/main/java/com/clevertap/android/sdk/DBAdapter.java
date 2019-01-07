@@ -970,7 +970,7 @@ public class DBAdapter {
         ArrayList<CTMessageDAO> messageDAOArrayList = getMessages(userId);
         for(CTMessageDAO messageDAO : messageDAOArrayList){
             if(messageDAO.getExpires() != 0) {
-                if (System.currentTimeMillis() > messageDAO.getExpires()) {
+                if (System.currentTimeMillis()/1000 > messageDAO.getExpires()) {
                     deleteMessageForId(messageDAO.getId());
                 }
             }

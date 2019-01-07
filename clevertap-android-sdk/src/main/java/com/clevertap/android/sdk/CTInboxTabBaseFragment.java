@@ -9,6 +9,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.support.v4.app.Fragment;
 
+import org.json.JSONObject;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
@@ -116,7 +118,7 @@ abstract class CTInboxTabBaseFragment extends Fragment {
         }
     }
 
-    void handleClick(int position, String buttonText){
+    void handleClick(int position, String buttonText, JSONObject jsonObject){
         try {
             Bundle data = new Bundle();
 
@@ -125,10 +127,22 @@ abstract class CTInboxTabBaseFragment extends Fragment {
                 data.putString("wzrk_c2a", buttonText);
             didClick(data,position);
 
-            String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getActionUrl();
-            if (actionUrl != null) {
-                fireUrlThroughIntent(actionUrl, data);
-                return;
+            if (jsonObject != null) {
+                if(inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getLinktype(jsonObject).equalsIgnoreCase("copytext")){
+                    return;
+                }else{
+                    String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getLinkUrl(jsonObject);
+                    if (actionUrl != null) {
+                        fireUrlThroughIntent(actionUrl, data);
+                        return;
+                    }
+                }
+            }else {
+                String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getActionUrl();
+                if (actionUrl != null) {
+                    fireUrlThroughIntent(actionUrl, data);
+                    return;
+                }
             }
         } catch (Throwable t) {
             config.getLogger().debug("Error handling notification button click: " + t.getCause());

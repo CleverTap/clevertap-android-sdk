@@ -74,25 +74,25 @@ class CTInboxButtonClickListener implements View.OnClickListener {
                         if(fragment.getActivity() !=null) {
                             copyToClipboard(fragment.getActivity(), buttonObject);
                         }
-                        ((CTInboxTabBaseFragment) fragment).handleClick(this.position, button.getText().toString());
+                        ((CTInboxTabBaseFragment) fragment).handleClick(this.position, button.getText().toString(),buttonObject);
                     }else{
-                        ((CTInboxTabBaseFragment) fragment).handleClick(this.position, button.getText().toString());
+                        ((CTInboxTabBaseFragment) fragment).handleClick(this.position, button.getText().toString(),buttonObject);
                     }
                 }else if(activity != null){
                     if(inboxMessage.getInboxMessageContents().get(0).getLinktype(buttonObject).equalsIgnoreCase("copytext")) {//Copy to clipboard feature
                         if(fragment.getActivity() !=null) {
                             copyToClipboard(activity.getApplicationContext(), buttonObject);
                         }
-                        ((CTInboxActivity) activity).handleClick(this.position, button.getText().toString());
+                        ((CTInboxActivity) activity).handleClick(this.position, button.getText().toString(),buttonObject);
                     }else{
-                        ((CTInboxActivity) activity).handleClick(this.position, button.getText().toString());
+                        ((CTInboxActivity) activity).handleClick(this.position, button.getText().toString(),buttonObject);
                     }
                 }
             }else{
                 if(fragment != null) {
-                    ((CTInboxTabBaseFragment) fragment).handleClick(this.position, null);
+                    ((CTInboxTabBaseFragment) fragment).handleClick(this.position, null,null);
                 }else if(activity != null){
-                    ((CTInboxActivity) activity).handleClick(this.position, null);
+                    ((CTInboxActivity) activity).handleClick(this.position, null,null);
                 }
             }
         }

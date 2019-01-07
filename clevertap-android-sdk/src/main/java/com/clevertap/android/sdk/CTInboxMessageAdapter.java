@@ -122,6 +122,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     //Shows the CTA layout only if links are present, also handles the display of the CTAs depending on the number
                     JSONArray linksArray = inboxMessage.getInboxMessageContents().get(0).getLinks();
                     if(linksArray != null){
+                        ((CTSimpleMessageViewHolder)viewHolder).ctaLinearLayout.setVisibility(View.VISIBLE);
                         int size = linksArray.length();
                         JSONObject cta1Object,cta2Object,cta3Object = null;
                         try {
@@ -132,6 +133,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                 ((CTSimpleMessageViewHolder) viewHolder).cta1.setVisibility(View.VISIBLE);
                                 ((CTSimpleMessageViewHolder) viewHolder).cta1.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta1Object));
                                 ((CTSimpleMessageViewHolder) viewHolder).cta1.setTextColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkColor(cta1Object)));
+                                ((CTSimpleMessageViewHolder) viewHolder).cta1.setBackgroundColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkBGColor(cta1Object)));
                                 hideTwoButtons(((CTSimpleMessageViewHolder) viewHolder).cta1, ((CTSimpleMessageViewHolder) viewHolder).cta2, ((CTSimpleMessageViewHolder) viewHolder).cta3);
                                 if(fragment!=null) {
                                     ((CTSimpleMessageViewHolder) viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTSimpleMessageViewHolder) viewHolder).cta1,cta1Object, fragment));
@@ -144,10 +146,12 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                 ((CTSimpleMessageViewHolder)viewHolder).cta1.setVisibility(View.VISIBLE);
                                 ((CTSimpleMessageViewHolder)viewHolder).cta1.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta1Object));
                                 ((CTSimpleMessageViewHolder)viewHolder).cta1.setTextColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkColor(cta1Object)));
+                                ((CTSimpleMessageViewHolder) viewHolder).cta1.setBackgroundColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkBGColor(cta1Object)));
                                 cta2Object = linksArray.getJSONObject(1);
                                 ((CTSimpleMessageViewHolder)viewHolder).cta2.setVisibility(View.VISIBLE);
                                 ((CTSimpleMessageViewHolder)viewHolder).cta2.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta2Object));
                                 ((CTSimpleMessageViewHolder)viewHolder).cta2.setTextColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkColor(cta2Object)));
+                                ((CTSimpleMessageViewHolder) viewHolder).cta2.setBackgroundColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkBGColor(cta2Object)));
                                 hideOneButton(((CTSimpleMessageViewHolder)viewHolder).cta1,((CTSimpleMessageViewHolder)viewHolder).cta2,((CTSimpleMessageViewHolder)viewHolder).cta3);
                                 if(fragment!=null) {
                                     ((CTSimpleMessageViewHolder) viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTSimpleMessageViewHolder) viewHolder).cta1,cta1Object, fragment));
@@ -162,14 +166,17 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                 ((CTSimpleMessageViewHolder)viewHolder).cta1.setVisibility(View.VISIBLE);
                                 ((CTSimpleMessageViewHolder)viewHolder).cta1.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta1Object));
                                 ((CTSimpleMessageViewHolder)viewHolder).cta1.setTextColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkColor(cta1Object)));
+                                ((CTSimpleMessageViewHolder) viewHolder).cta1.setBackgroundColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkBGColor(cta1Object)));
                                 cta2Object = linksArray.getJSONObject(1);
                                 ((CTSimpleMessageViewHolder)viewHolder).cta2.setVisibility(View.VISIBLE);
                                 ((CTSimpleMessageViewHolder)viewHolder).cta2.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta2Object));
                                 ((CTSimpleMessageViewHolder)viewHolder).cta2.setTextColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkColor(cta2Object)));
+                                ((CTSimpleMessageViewHolder) viewHolder).cta2.setBackgroundColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkBGColor(cta2Object)));
                                 cta3Object = linksArray.getJSONObject(2);
                                 ((CTSimpleMessageViewHolder)viewHolder).cta3.setVisibility(View.VISIBLE);
                                 ((CTSimpleMessageViewHolder)viewHolder).cta3.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta3Object));
                                 ((CTSimpleMessageViewHolder)viewHolder).cta3.setTextColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkColor(cta3Object)));
+                                ((CTSimpleMessageViewHolder) viewHolder).cta3.setBackgroundColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkBGColor(cta3Object)));
                                 if(fragment!=null) {
                                     ((CTSimpleMessageViewHolder) viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTSimpleMessageViewHolder) viewHolder).cta1,cta1Object, fragment));
                                     ((CTSimpleMessageViewHolder) viewHolder).cta2.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTSimpleMessageViewHolder) viewHolder).cta2,cta2Object, fragment));
@@ -282,6 +289,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     //Shows the CTA layout only if links are present, also handles the display of the CTAs depending on the number
                     JSONArray iconlinksArray = inboxMessage.getInboxMessageContents().get(0).getLinks();
                     if(iconlinksArray != null){
+                        ((CTIconMessageViewHolder)viewHolder).ctaLinearLayout.setVisibility(View.VISIBLE);
                         int size = iconlinksArray.length();
                         JSONObject cta1Object,cta2Object,cta3Object;
                         try {
@@ -291,6 +299,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                     ((CTIconMessageViewHolder)viewHolder).cta1.setVisibility(View.VISIBLE);
                                     ((CTIconMessageViewHolder)viewHolder).cta1.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta1Object));
                                     ((CTIconMessageViewHolder)viewHolder).cta1.setTextColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkColor(cta1Object)));
+                                    ((CTIconMessageViewHolder) viewHolder).cta1.setBackgroundColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkBGColor(cta1Object)));
                                     hideTwoButtons(((CTIconMessageViewHolder)viewHolder).cta1,((CTIconMessageViewHolder)viewHolder).cta2,((CTIconMessageViewHolder)viewHolder).cta3);
                                     if(fragment!=null) {
                                         ((CTIconMessageViewHolder) viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTIconMessageViewHolder) viewHolder).cta1,cta1Object, fragment));
@@ -303,10 +312,12 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                     ((CTIconMessageViewHolder)viewHolder).cta1.setVisibility(View.VISIBLE);
                                     ((CTIconMessageViewHolder)viewHolder).cta1.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta1Object));
                                     ((CTIconMessageViewHolder)viewHolder).cta1.setTextColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkColor(cta1Object)));
+                                    ((CTIconMessageViewHolder) viewHolder).cta1.setBackgroundColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkBGColor(cta1Object)));
                                     cta2Object = iconlinksArray.getJSONObject(1);
                                     ((CTIconMessageViewHolder)viewHolder).cta2.setVisibility(View.VISIBLE);
                                     ((CTIconMessageViewHolder)viewHolder).cta2.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta2Object));
                                     ((CTIconMessageViewHolder)viewHolder).cta2.setTextColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkColor(cta2Object)));
+                                    ((CTIconMessageViewHolder) viewHolder).cta2.setBackgroundColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkBGColor(cta2Object)));
                                     hideOneButton(((CTIconMessageViewHolder)viewHolder).cta1,((CTIconMessageViewHolder)viewHolder).cta2,((CTIconMessageViewHolder)viewHolder).cta3);;
                                     if(fragment!=null) {
                                         ((CTIconMessageViewHolder) viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTIconMessageViewHolder) viewHolder).cta1,cta1Object, fragment));
@@ -321,14 +332,17 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                     ((CTIconMessageViewHolder)viewHolder).cta1.setVisibility(View.VISIBLE);
                                     ((CTIconMessageViewHolder)viewHolder).cta1.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta1Object));
                                     ((CTIconMessageViewHolder)viewHolder).cta1.setTextColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkColor(cta1Object)));
+                                    ((CTIconMessageViewHolder) viewHolder).cta1.setBackgroundColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkBGColor(cta1Object)));
                                     cta2Object = iconlinksArray.getJSONObject(1);
                                     ((CTIconMessageViewHolder)viewHolder).cta2.setVisibility(View.VISIBLE);
                                     ((CTIconMessageViewHolder)viewHolder).cta2.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta2Object));
                                     ((CTIconMessageViewHolder)viewHolder).cta2.setTextColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkColor(cta2Object)));
+                                    ((CTIconMessageViewHolder) viewHolder).cta2.setBackgroundColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkBGColor(cta2Object)));
                                     cta3Object = iconlinksArray.getJSONObject(2);
                                     ((CTIconMessageViewHolder)viewHolder).cta3.setVisibility(View.VISIBLE);
                                     ((CTIconMessageViewHolder)viewHolder).cta3.setText(inboxMessage.getInboxMessageContents().get(0).getLinkText(cta3Object));
                                     ((CTIconMessageViewHolder)viewHolder).cta3.setTextColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkColor(cta3Object)));
+                                    ((CTIconMessageViewHolder) viewHolder).cta3.setBackgroundColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getLinkBGColor(cta3Object)));
                                     if(fragment!=null) {
                                         ((CTIconMessageViewHolder) viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTIconMessageViewHolder) viewHolder).cta1,cta1Object, fragment));
                                         ((CTIconMessageViewHolder) viewHolder).cta2.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTIconMessageViewHolder) viewHolder).cta2,cta2Object, fragment));

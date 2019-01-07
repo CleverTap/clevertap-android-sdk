@@ -187,8 +187,7 @@ class CTInboxController {
             Logger.d("Notification Inbox messages updated");
         }
 
-        //TODO uncomment in the end
-        //this.dbAdapter.cleanUpMessages(this.userId);
+        this.dbAdapter.cleanUpMessages(this.userId);
 
         this.messages = this.dbAdapter.getMessages(this.userId);
         this.unreadMessages = this.dbAdapter.getUnreadMessages(this.userId);

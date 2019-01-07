@@ -98,7 +98,7 @@ class CTMessageDAO {
 
     CTMessageDAO(){}
 
-    private CTMessageDAO(String id, JSONObject jsonData, boolean read, int date, int expires, String userId, String tags, String campaignId){
+    private CTMessageDAO(String id, JSONObject jsonData, boolean read, long date, long expires, String userId, String tags, String campaignId){
         this.id = id;
         this.jsonData = jsonData;
         this.read = read;
@@ -113,8 +113,8 @@ class CTMessageDAO {
     static CTMessageDAO initWithJSON(JSONObject inboxMessage, String userId){
         try {
             String id = inboxMessage.has("_id") ? inboxMessage.getString("_id") : "00";
-            int date = inboxMessage.has("date") ? inboxMessage.getInt("date") : -1;
-            int expires = inboxMessage.has("ttl") ? inboxMessage.getInt("ttl") : -1;
+            long date = inboxMessage.has("date") ? inboxMessage.getInt("date") : System.currentTimeMillis()/1000;
+            long expires = inboxMessage.has("wzrk_ttl") ? inboxMessage.getInt("wzrk_ttl") : -1;
             JSONObject cellObject = inboxMessage.has("msg") ? inboxMessage.getJSONObject("msg") : null;
             String tags = "";
             if(cellObject != null) {
@@ -135,7 +135,7 @@ class CTMessageDAO {
             jsonObject.put("msg",this.jsonData);
             jsonObject.put("isRead",this.read);
             jsonObject.put("date",this.date);
-            jsonObject.put("ttl",this.expires);
+            jsonObject.put("wzrk_ttl",this.expires);
             JSONArray jsonArray = new JSONArray();
             for(int i=0; i<this.tags.size(); i++){
                 jsonArray.put(tags.get(i));

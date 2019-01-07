@@ -38,8 +38,8 @@ public class CTInboxMessage implements Parcelable {
         try {
             this.messageId = jsonObject.has("id") ? jsonObject.getString("id") : "0";
             this.campaignId = jsonObject.has("wzrk_id") ? jsonObject.getString("wzrk_id") : "0_0";
-            this.date = jsonObject.has("date") ? jsonObject.getLong("date") : System.currentTimeMillis();
-            this.expires = jsonObject.has("ttl") ? jsonObject.getLong("ttl") : 1000*60*60*24;
+            this.date = jsonObject.has("date") ? jsonObject.getLong("date") : System.currentTimeMillis()/1000;
+            this.expires = jsonObject.has("wzrk_ttl") ? jsonObject.getLong("wzrk_ttl") : 1000*60*60*24;
             this.isRead = jsonObject.has("isRead") && jsonObject.getBoolean("isRead");
             JSONObject cellObject = jsonObject.has("msg") ? jsonObject.getJSONObject("msg") : null;
             if(cellObject != null){

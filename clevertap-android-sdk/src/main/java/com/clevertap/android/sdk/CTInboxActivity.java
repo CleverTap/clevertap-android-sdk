@@ -20,6 +20,8 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.LinearLayout;
 
+import org.json.JSONObject;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
@@ -213,7 +215,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
      * @param position
      * @param buttonText
      */
-    void handleClick(int position, String buttonText){
+    void handleClick(int position, String buttonText, JSONObject jsonObject){
         try {
             Bundle data = new Bundle();
 
@@ -222,10 +224,22 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
                 data.putString("wzrk_c2a", buttonText);
             didClick(data,inboxMessageArrayList.get(position));
 
-            String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getActionUrl();
-            if (actionUrl != null) {
-                fireUrlThroughIntent(actionUrl, data);
-                return;
+            if (jsonObject != null) {
+                if(inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getLinktype(jsonObject).equalsIgnoreCase("copytext")){
+                    return;
+                }else{
+                    String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getLinkUrl(jsonObject);
+                    if (actionUrl != null) {
+                        fireUrlThroughIntent(actionUrl, data);
+                        return;
+                    }
+                }
+            }else {
+                String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getActionUrl();
+                if (actionUrl != null) {
+                    fireUrlThroughIntent(actionUrl, data);
+                    return;
+                }
             }
         } catch (Throwable t) {
             config.getLogger().debug("Error handling notification button click: " + t.getCause());
