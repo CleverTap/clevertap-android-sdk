@@ -18,6 +18,7 @@ class CTInboxController {
     private String userId;
     private CTUserDAO userDAO;
     private DBAdapter dbAdapter;
+    static boolean exoPlayerPresent = false;
 
     CTInboxController(String accountId, String guid, DBAdapter adapter){
         this.userId = accountId + guid;
@@ -27,6 +28,7 @@ class CTInboxController {
         this.unreadMessages = this.dbAdapter.getUnreadMessages(this.userId);
         this.count = this.messages.size();
         this.unreadCount = this.unreadMessages.size();
+        exoPlayerPresent = checkForExoPlayer();
     }
 
     boolean updateMessages(JSONArray inboxMessages){
@@ -90,27 +92,25 @@ class CTInboxController {
         ArrayList<CTMessageDAO> messageDAOArrayList = new ArrayList<>();
         ArrayList<CTMessageDAO> updateMessageList = new ArrayList<>();
 
-        // TODO why not just have one createOrUpdate loop rather than checking for exists here and splitting into 2 separate arrays ??? very bad practice to not check for exists in the db layer
         for(int i=0;i<inboxMessages.length();i++){
             try {
                 JSONObject inboxMessage = inboxMessages.getJSONObject(i);
                 if(!inboxMessage.has("_id")){
-                    Logger.d("Notification inbox message doesn't have _id, adding for test message");
-                    inboxMessage.put("_id","000"); // TODO move this to test flow handler
+                    Logger.d("Notification inbox message doesn't have _id");
+                    break;
                 }
 
                 CTMessageDAO messageDAO = CTMessageDAO.initWithJSON(inboxMessage, userDAO.getUserId());
 
                 if(messageDAO != null) {
-                    if (getMessageDaoForId(inboxMessage.getString("_id")).getId()!=null) {
-                        if(getMessageDaoForId(inboxMessage.getString("_id")).getId().equals(inboxMessage.getString("_id"))) {
-                            Logger.d("Notification Inbox Message already present, updating values");
-                            updateMessageList.add(messageDAO);
+                    if(!exoPlayerPresent){
+                        if(new CTInboxMessage().initWithJSON(messageDAO.toJSON()).getInboxMessageContents().get(0).mediaIsVideo()){
+                            Logger.d("Dropping inbox messages containing videos since Exoplayer files are missing. For more information checkout CleverTap documentation.");
+                            continue;
                         }
-                    }else{
-                        messageDAOArrayList.add(messageDAO);
-                        Logger.d("Notification Inbox Message not present, adding values");
                     }
+                    messageDAOArrayList.add(messageDAO);
+                    Logger.d("Notification Inbox Message not present, adding values");
                 }
 
             }catch (JSONException e){
@@ -124,12 +124,6 @@ class CTInboxController {
             Logger.d("Notification Inbox messages added");
         }
 
-        if(updateMessageList.size()>0){
-            this.dbAdapter.updateMessagesForUser(updateMessageList);
-            haveUpdates = true;
-            Logger.d("Notification Inbox messages updated");
-        }
-
         this.dbAdapter.cleanUpMessages(this.userId);  // TODO you have to check for TTL even if there are no new user messages coming from the server; same for unread vs read
 
         this.messages = this.dbAdapter.getMessages(this.userId);
@@ -138,5 +132,26 @@ class CTInboxController {
         this.unreadCount = unreadMessages.size();
 
         return haveUpdates;
+    }
+
+
+    private boolean checkForExoPlayer(){
+        boolean exoPlayerPresent = false;
+        Class className = null;
+        try{
+            className = Class.forName("com.google.android.exoplayer2.ExoPlayerFactory");
+            className = Class.forName("com.google.android.exoplayer2.source.hls.HlsMediaSource");
+            className = Class.forName("com.google.android.exoplayer2.ui.PlayerView");
+            Logger.d("ExoPlayer is present");
+            exoPlayerPresent = true;
+        }catch (Throwable t){
+            Logger.d("ExoPlayer library files are missing!!!");
+            Logger.d("Please add ExoPlayer dependencies to render Inbox messages playing video. For more information checkout CleverTap documentation.");
+            if(className!=null)
+                Logger.d("ExoPlayer classes not found "+className.getName());
+            else
+                Logger.d("ExoPlayer classes not found");
+        }
+        return exoPlayerPresent;
     }
 }

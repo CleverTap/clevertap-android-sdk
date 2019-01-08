@@ -98,10 +98,11 @@ public class Constants {
     static final String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME};
     static final long DEFAULT_PUSH_TTL = 1000 * 60 * 60 * 24 * 4;
     static final String RESPONSE_ACK = "ack";
-    static final String JOB_ID = "jobid";
+    static final String PF_JOB_ID = "pfjobid";
     static final int PING_FREQUENCY_VALUE = 240;
     static final String PING_FREQUENCY = "pf";
-
+    static final long INTERVAL_MINUTES = 60 * 1000L;
+    static final String COPY_TYPE = "copy";
     /**
      * Profile command constants.
      */

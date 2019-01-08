@@ -6,12 +6,12 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.LinearLayout;
 
 public class CTInboxSecondTabFragment extends CTInboxTabBaseFragment {
     RecyclerView recyclerView;
@@ -21,20 +21,17 @@ public class CTInboxSecondTabFragment extends CTInboxTabBaseFragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View allView = inflater.inflate(R.layout.inbox_first_tab,container,false);
+        LinearLayout linearLayout = allView.findViewById(R.id.first_tab_linear_layout);
         videoPresent = checkInboxMessagesContainVideo(inboxMessageArrayList);
         //Check if video present to render appropriate recyclerview
-        //TODO this check can be removed and instead use the check while the activity is getting created
-        //TODO Render exoplayerrecyclerview dynamically only if videos are present in the inbox messages
         CTInboxMessageAdapter inboxMessageAdapter;
         if(videoPresent) {
-            exoPlayerRecyclerView = allView.findViewById(R.id.first_tab_exo_recycler_view);
+            exoPlayerRecyclerView = new ExoPlayerRecyclerView(getActivity());
             exoPlayerRecyclerView.setVisibility(View.VISIBLE);
             exoPlayerRecyclerView.setVideoInfoList(inboxMessageArrayList);
             LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
             exoPlayerRecyclerView.setLayoutManager(linearLayoutManager);
-            DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(exoPlayerRecyclerView.getContext(),
-                    linearLayoutManager.getOrientation());
-            exoPlayerRecyclerView.addItemDecoration(dividerItemDecoration);
+            exoPlayerRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
             exoPlayerRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
             inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, getActivity(),this);
@@ -50,14 +47,13 @@ public class CTInboxSecondTabFragment extends CTInboxTabBaseFragment {
                 },1000);
                 firstTime = false;
             }
+            linearLayout.addView(exoPlayerRecyclerView);
         }else{
             recyclerView = allView.findViewById(R.id.first_tab_recycler_view);
             recyclerView.setVisibility(View.VISIBLE);
             LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
             recyclerView.setLayoutManager(linearLayoutManager);
-            DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
-                    linearLayoutManager.getOrientation());
-            recyclerView.addItemDecoration(dividerItemDecoration);
+            recyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
             recyclerView.setItemAnimator(new DefaultItemAnimator());
 
             inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, getActivity(),this);

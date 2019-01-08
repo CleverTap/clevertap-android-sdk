@@ -242,11 +242,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         });
 
         if(this.config.isBackgroundSync() && !this.config.isAnalyticsOnly()) {
-            postAsyncSafely("createJobScheduler", new Runnable() {
+            postAsyncSafely("createOrResetJobScheduler", new Runnable() {
                 @Override
                 public void run() {
                     if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        createJobScheduler(context);
+                        createOrResetJobScheduler(context);
                     }else{
                         createAlarmScheduler(context);
                     }
@@ -1558,7 +1558,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             dbAdapter = new DBAdapter(context,this.config);
             dbAdapter.cleanupStaleEvents(DBAdapter.Table.EVENTS);
             dbAdapter.cleanupStaleEvents(DBAdapter.Table.PROFILE_EVENTS);
-            dbAdapter.cleanUpPushNotifications();
+            //dbAdapter.cleanUpPushNotifications();
         }
         return dbAdapter;
     }
@@ -2120,9 +2120,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 header.put("bk",1);
                 isBgPing = false;
             }
-            if(!getBooleanFromPrefs(Constants.RESPONSE_ACK)){
-                header.put("rtl", getRenderedTargetList());
-            }
+            header.put("rtl", getRenderedTargetList());
+
 
             // Attach ARP
             try {
@@ -2303,12 +2302,44 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                             handlePushNotificationsInResponse(pushNotifications);
                         }
                         if (pushAmpObject.has("pf")) {
-                            int frequency = pushAmpObject.getInt("pf");
-                            setPingFrequency(context, frequency);
+                            try {
+                                int frequency = pushAmpObject.getInt("pf");
+                                if(getAccountId().equalsIgnoreCase("ZWW-WWW-WWRZ")){
+                                    frequency = 15;
+                                }
+                                if (!(frequency == getPingFrequency(context))) {
+                                    setPingFrequency(context, frequency);
+                                    if (this.config.isBackgroundSync() && !this.config.isAnalyticsOnly()) {
+                                        postAsyncSafely("createOrResetJobScheduler", new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                                    createOrResetJobScheduler(context);
+                                                } else {
+                                                    resetAlarmScheduler(context);
+                                                }
+                                            }
+                                        });
+                                    }
+                                }
+                            }catch (Throwable t){
+                                getConfigLogger().verbose("Error handling ping frequency in response : "+ t.getMessage());
+                            }
+
                         }
                         if (pushAmpObject.has("ack")) {
                             boolean ack = pushAmpObject.getBoolean("ack");
-                            StorageHelper.putBoolean(context, storageKeyWithSuffix(Constants.RESPONSE_ACK), ack);  // TODO what is this for ?
+                            if(ack){
+                                JSONArray rtlArray = getRenderedTargetList();
+                                String[] rtlStringArray = new String[0];
+                                if (rtlArray != null) {
+                                    rtlStringArray = new String[rtlArray.length()];
+                                }
+                                for(int i = 0; i < rtlStringArray.length; i++) {
+                                    rtlStringArray[i] = rtlArray.getString(i);
+                                }
+                                this.dbAdapter.updatePushNotificationIds(rtlStringArray);
+                            }
                         }
                     }
                 } catch (Throwable t) {
@@ -4017,7 +4048,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         JSONObject r = new JSONObject();
                         JSONArray inappNotifs = new JSONArray();
                         r.put(Constants.INBOX_JSON_RESPONSE_KEY, inappNotifs);
-                        inappNotifs.put(new JSONObject(extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)));
+                        JSONObject testPushObject = new JSONObject(extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
+                        testPushObject.put("_id",System.currentTimeMillis()/1000);
+                        inappNotifs.put(testPushObject);
                         processInboxResponse(r, context);
                     } catch (Throwable t) {
                         Logger.v("Failed to display inapp notification from push notification payload", t);
@@ -4119,7 +4152,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return fields;
     }
 
-    private JSONObject getWzrkFields(CTInboxMessage root) throws JSONException {
+    private JSONObject getWzrkFields(CTInboxMessage root) {
         return root.getWzrkParams();
     }
 
@@ -5438,7 +5471,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         if (notificationManager != null) {
             notificationManager.notify(notificationId, n);
-            long ttl = extras.getLong("wzrk_ttl",System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL);
+            long ttl = extras.getLong("wzrk_ttl",(System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL)/1000);
             String wzrk_pid = extras.getString("wzrk_pid");
             DBAdapter dbAdapter = loadDBAdapter(context);
             dbAdapter.storePushNotificationId(wzrk_pid,ttl);
@@ -6086,8 +6119,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //Notification Inbox public APIs
-    // TODO make nice JavaDocs things for all the new public methods
 
+    /**
+     * Initializes the inbox controller and updates the {@link CTInboxListener}
+     */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void initializeInbox(){
         if(getConfig().isAnalyticsOnly()){
@@ -6102,6 +6137,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         });
     }
 
+    /**
+     * @return int - count of all Inbox Messages
+     */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public int getInboxMessageCount(){
         synchronized (inboxControllerLock) {
@@ -6114,6 +6152,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+    /**
+     * @return int - count of all unread Messages
+     */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public int getInboxMessageUnreadCount(){
         synchronized (inboxControllerLock) {
@@ -6126,6 +6167,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+    /**
+     * @param messageId String - unique id of the inbox message
+     * @return {@link CTInboxMessage} public object of inbox message
+     */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public CTInboxMessage getInboxMessageForId(String messageId){
         synchronized (inboxControllerLock) {
@@ -6139,6 +6184,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+    /**
+     * @param message {@link CTInboxMessage} public object of inbox message
+     */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void deleteInboxMessage(final CTInboxMessage message){
         postAsyncSafely("deleteInboxMessage", new Runnable() {
@@ -6157,6 +6205,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }});
     }
 
+    /**
+     * @param message {@link CTInboxMessage} public object of inbox message
+     */
     //marks the message as read
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void markReadInboxMessage(final CTInboxMessage message){
@@ -6177,6 +6228,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         });
     }
 
+    /**
+     * @return ArrayList of {@link CTInboxMessage} of unread Inbox Messages
+     */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public ArrayList<CTInboxMessage> getUnreadInboxMessages(){
         ArrayList<CTInboxMessage> inboxMessageArrayList = new ArrayList<>();
@@ -6194,6 +6248,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+    /**
+     * @return ArrayList of {@link CTInboxMessage} of Inbox Messages
+     */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public ArrayList<CTInboxMessage> getAllInboxMessages(){
         ArrayList<CTInboxMessage> inboxMessageArrayList = new ArrayList<>();
@@ -6211,6 +6268,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+    /**
+     * Opens {@link CTInboxActivity} to display Inbox Messages
+     * @param styleConfig {@link CTInboxStyleConfig} configuration of various style parameters for the {@link CTInboxActivity}
+     */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void showAppInbox(CTInboxStyleConfig styleConfig){
         synchronized (inboxControllerLock) {
@@ -6220,14 +6281,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
         }
 
-        ArrayList<CTInboxMessage> inboxMessageArrayList = getAllInboxMessages();
-        Logger.d(getAccountId(),"All inbox messages - "+inboxMessageArrayList.toString());
-        inboxMessageArrayList = checkForVideoMessages(inboxMessageArrayList);  // Move video check to Activity
-        Logger.d(getAccountId(),"All inbox messages after video check - "+inboxMessageArrayList.toString());
         Intent intent = new Intent(context,CTInboxActivity.class);
         intent.putExtra("styleConfig",styleConfig);
         intent.putExtra("config",config);
-        intent.putExtra("messageList",inboxMessageArrayList);  // TODO move getMessages to Activity get CleverTapAI instances and use public method
         try {
             Activity currentActivity = getCurrentActivity();
             if (currentActivity == null) {
@@ -6242,6 +6298,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+    /**
+     * Opens {@link CTInboxActivity} to display Inbox Messages
+     */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void showAppInbox(){
         CTInboxStyleConfig styleConfig = new CTInboxStyleConfig();
@@ -6259,67 +6318,84 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         pushInboxMessageStateEvent(true,inboxMessage,data);
     }
 
-    // TODO is this the right place for this or should it be internal to the InboxController???
-    private ArrayList<CTInboxMessage> checkForVideoMessages(ArrayList<CTInboxMessage> inboxMessageList){
-        boolean exoPlayerPresent = false;
-
-        Class className = null;
-        try{
-            className = Class.forName("com.google.android.exoplayer2.ExoPlayerFactory");
-            className = Class.forName("com.google.android.exoplayer2.source.hls.HlsMediaSource");
-            className = Class.forName("com.google.android.exoplayer2.ui.PlayerView");
-            exoPlayerPresent = true;
-        }catch (Throwable t){
-            Logger.d("ExoPlayer library files are missing!!!");
-            Logger.d("Please add ExoPlayer dependencies to render Inbox messages playing video. For more information checkout CleverTap documentation.");
-            if(className!=null)
-                Logger.d("ExoPlayer classes not found "+className.getName());
-            else
-                Logger.d("ExoPlayer classes not found");
-        }
-        if(!exoPlayerPresent) {
-            for (CTInboxMessage inboxMessage : inboxMessageList) {
-                if (inboxMessage.getInboxMessageContents().get(0).mediaIsVideo()) {
-                    inboxMessageList.remove(inboxMessage);
-                    Logger.d("Dropping inbox messages containing videos since Exoplayer files are missing. For more information checkout CleverTap documentation.");
-                }
-            }
-        }
-        return inboxMessageList;
-    }
 
     private void createAlarmScheduler(Context context){
+        int pingFrequency = getPingFrequency(context);
+        if(pingFrequency != -1) {
+            AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+            Intent intent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
+            intent.setPackage(context.getPackageName());
+            PendingIntent alarmPendingIntent = PendingIntent.getService(context, getAccountId().hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
+            if (alarmManager != null) {
+                alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime(), Constants.INTERVAL_MINUTES * pingFrequency, alarmPendingIntent);
+            }
+        }
+    }
+
+    private void resetAlarmScheduler(Context context){
+        if(getPingFrequency(context) == -1){
+            stopAlarmScheduler(context);
+        }else{
+            stopAlarmScheduler(context);
+            createAlarmScheduler(context);
+        }
+    }
+
+    private void stopAlarmScheduler(Context context){
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-        Intent intent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
-        intent.setPackage(context.getPackageName());
-        PendingIntent alarmPendingIntent = PendingIntent.getService(context,1,intent,PendingIntent.FLAG_UPDATE_CURRENT);
-        if (alarmManager != null) {
-            alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime(),AlarmManager.INTERVAL_HOUR * getPingFrequency(context)/60,alarmPendingIntent);
+        Intent cancelIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
+        cancelIntent.setPackage(context.getPackageName());
+        PendingIntent alarmPendingIntent = PendingIntent.getService(context,getAccountId().hashCode(),cancelIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+        if (alarmManager != null && alarmPendingIntent != null) {
+            alarmManager.cancel(alarmPendingIntent);
         }
     }
 
     @SuppressLint("MissingPermission")
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    private void createJobScheduler(Context context){
+    private void createOrResetJobScheduler(Context context){
+        int pingFrequency = getPingFrequency(context);
         ComponentName componentName = new ComponentName(context, CTBackgroundJobService.class);  // TODO was getting a not in manifest warning here; double check the manifest declaration
         JobScheduler jobScheduler = (JobScheduler)context.getSystemService(JOB_SCHEDULER_SERVICE);
-        int existingJobId = StorageHelper.getInt(context,Constants.JOB_ID,-1);
-        if (jobScheduler != null) {
-            if (!isJobServiceOn(existingJobId, jobScheduler)) {
+        int existingJobId = StorageHelper.getInt(context,Constants.PF_JOB_ID,-1);
 
+
+        if(existingJobId != -1){
+            if (jobScheduler != null) {
+
+                if(pingFrequency == -1){
+                    jobScheduler.cancel(existingJobId);
+                    return;
+                }else{
+                    JobInfo existingJobInfo = getJobInfo(existingJobId,jobScheduler) ;
+                    if(existingJobInfo != null){
+                       boolean isPFSame =  existingJobInfo.getIntervalMillis() == pingFrequency * Constants.INTERVAL_MINUTES;
+                       if(isPFSame){
+                           return;
+                       }
+                    }
+                }
+                jobScheduler.cancel(existingJobId);
+            }
+        }
+        if (jobScheduler != null && pingFrequency > 0) {
                 int jobid = getAccountId().hashCode();
                 JobInfo.Builder builder = new JobInfo.Builder(jobid, componentName);
                 builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
                 builder.setRequiresCharging(false);
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    builder.setPeriodic(getPingFrequency(context) * 60 * 1000, 5 * 60 * 1000);
+                    builder.setPeriodic(pingFrequency * Constants.INTERVAL_MINUTES, 5 * Constants.INTERVAL_MINUTES);
                 } else {
-                    builder.setPeriodic(getPingFrequency(context) * 60 * 1000);
+                    builder.setPeriodic(pingFrequency * 60 * 1000);
                 }
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                     builder.setRequiresBatteryNotLow(true);
+                }
+
+                if(this.deviceInfo.testPermission(context,"android.permission.RECEIVE_BOOT_COMPLETED")){
+                    builder.setPersisted(true);
                 }
 
                 JobInfo jobInfo = builder.build();
@@ -6327,11 +6403,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 int resultCode = jobScheduler.schedule(jobInfo);
                 if (resultCode == JobScheduler.RESULT_SUCCESS) {
                     Logger.d(getAccountId(), "Job scheduled!");
-                    StorageHelper.putInt(context, storageKeyWithSuffix(Constants.JOB_ID), jobid);
+                    StorageHelper.putInt(context, storageKeyWithSuffix(Constants.PF_JOB_ID), jobid);
                 } else {
                     Logger.d(getAccountId(), "Job not scheduled");
                 }
-            }
         }
     }
 
@@ -6410,36 +6485,34 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
                 long lastTS = loadDBAdapter(context).getLastUninstallTimestamp();
 
-                // TODO don't understand this code
-                if(lastTS !=0) {
-                    if (lastTS >= startMs && lastTS <= endMs) {
-                        Logger.v(getAccountId(), "Job Service won't run in default DND hours");
-                        return;
-                    }
+                if (lastTS >= startMs && lastTS <= endMs) {
+                    Logger.v(getAccountId(), "Job Service won't run in default DND hours");
+                    return;
                 }
 
-                // TODO != 0 ???; runs only once a day ????
-                // TODO how do we stop the alarm manager from running if we need to ??
-                // TODO how do we stop the jobScheduler from running if we need to ???
-                if(lastTS != 0 && lastTS > System.currentTimeMillis() - 24*60*60*1000){
+
+                if(lastTS == 0 || lastTS > System.currentTimeMillis() - 24*60*60*1000){
                     try {
                         JSONObject eventObject = new JSONObject();
                         eventObject.put("bk",1);
-                        queueEvent(context, new JSONObject(), Constants.PING_EVENT);
+                        queueEvent(context, eventObject, Constants.PING_EVENT);
 
                         if(parameters == null){
+                            int pingFrequency = getPingFrequency(context);
                             AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
                             Intent cancelIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
                             cancelIntent.setPackage(context.getPackageName());
-                            PendingIntent alarmPendingIntent = PendingIntent.getService(context,1,cancelIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+                            PendingIntent alarmPendingIntent = PendingIntent.getService(context,getAccountId().hashCode(),cancelIntent,PendingIntent.FLAG_UPDATE_CURRENT);
                             if (alarmManager != null) {
                                 alarmManager.cancel(alarmPendingIntent);
                             }
                             Intent alarmIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
                             alarmIntent.setPackage(context.getPackageName());
-                            PendingIntent alarmServicePendingIntent = PendingIntent.getService(context,1,alarmIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+                            PendingIntent alarmServicePendingIntent = PendingIntent.getService(context,getAccountId().hashCode(),alarmIntent,PendingIntent.FLAG_UPDATE_CURRENT);
                             if (alarmManager != null) {
-                                alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() * (getPingFrequency(context)*60*1000),AlarmManager.INTERVAL_HOUR * getPingFrequency(context)/60,alarmServicePendingIntent);
+                                if(pingFrequency != -1) {
+                                    alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + (pingFrequency * Constants.INTERVAL_MINUTES), Constants.INTERVAL_MINUTES * pingFrequency, alarmServicePendingIntent);
+                                }
                             }
                         }
                         //TODO remove after testing
@@ -6458,15 +6531,13 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    private static boolean isJobServiceOn(int jobId, JobScheduler jobScheduler){
-        boolean hasBeenScheduled = false;
-
+    private static JobInfo getJobInfo(int jobId, JobScheduler jobScheduler){
         for(JobInfo jobInfo : jobScheduler.getAllPendingJobs()){
             if(jobInfo.getId() == jobId){
-                hasBeenScheduled = true;
-                break;
+                return jobInfo;
             }
         }
-        return hasBeenScheduled;
+        return  null;
     }
+
 }

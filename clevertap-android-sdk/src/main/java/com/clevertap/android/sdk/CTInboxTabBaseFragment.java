@@ -14,8 +14,6 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-// TODO fix warnings in this file
-
 abstract class CTInboxTabBaseFragment extends Fragment {
 
     interface InboxListener{
@@ -23,10 +21,10 @@ abstract class CTInboxTabBaseFragment extends Fragment {
         void messageDidClick(Context baseContext, CTInboxMessage inboxMessage, Bundle data);
     }
 
-    ArrayList<CTInboxMessage> inboxMessageArrayList;
+    ArrayList<CTInboxMessage> inboxMessageArrayList =  new ArrayList<>();
     CleverTapInstanceConfig config;
     ExoPlayerRecyclerView exoPlayerRecyclerView;
-    boolean videoPresent = false;
+    boolean videoPresent = CTInboxController.exoPlayerPresent;
     CTInboxStyleConfig styleConfig;
     private WeakReference<CTInboxTabBaseFragment.InboxListener> listenerWeakReference;
 
@@ -52,13 +50,17 @@ abstract class CTInboxTabBaseFragment extends Fragment {
         super.onAttach(context);
         Bundle bundle = getArguments();
         if (bundle != null) {
-            inboxMessageArrayList = bundle.getParcelableArrayList("inboxMessages");
+            //inboxMessageArrayList = bundle.getParcelableArrayList("inboxMessages");
             //noinspection ConstantConditions
             Logger.d("Inbox Message List - "+inboxMessageArrayList.toString());
             config = bundle.getParcelable("config");
             styleConfig = bundle.getParcelable("styleConfig");
+            CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(getActivity(),config);
             if (context instanceof CTInboxActivity) {
-                setListener((CTInboxTabBaseFragment.InboxListener) context);
+                setListener((CTInboxTabBaseFragment.InboxListener) getActivity());
+            }
+            if (cleverTapAPI != null) {
+                inboxMessageArrayList = cleverTapAPI.getAllInboxMessages();
             }
         }
     }
@@ -139,7 +141,7 @@ abstract class CTInboxTabBaseFragment extends Fragment {
             didClick(data,position);
 
             if (jsonObject != null) {
-                if(inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getLinktype(jsonObject).equalsIgnoreCase("copytext")){
+                if(inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getLinktype(jsonObject).equalsIgnoreCase(Constants.COPY_TYPE)){
                     return;
                 }else{
                     String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getLinkUrl(jsonObject);

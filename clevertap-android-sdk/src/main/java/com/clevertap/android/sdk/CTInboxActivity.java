@@ -26,8 +26,6 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-// TODO fix the Java Doc stuff in this file
-
 /**
  * CTInboxActivity
  */
@@ -37,12 +35,13 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
         void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data);
     }
 
-    private ArrayList<CTInboxMessage> inboxMessageArrayList;
+    private ArrayList<CTInboxMessage> inboxMessageArrayList = new ArrayList<>();
     private CleverTapInstanceConfig config;
     private WeakReference<InboxActivityListener> listenerWeakReference;
-    private ExoPlayerRecyclerView exoPlayerRecyclerView;  // TODO what if ExoPlayer classes not there
-    private RecyclerView recyclerView;  // TODO you could just declare RecyclerView and cast it to ExoPlayerRecyclerView if ExoPlayer included
+    private ExoPlayerRecyclerView exoPlayerRecyclerView;
+    private RecyclerView recyclerView;
     private boolean firstTime = true;
+    boolean videoPresent = CTInboxController.exoPlayerPresent;
 
     void setListener(InboxActivityListener listener) {
         listenerWeakReference = new WeakReference<>(listener);
@@ -70,9 +69,13 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
             Bundle extras = getIntent().getExtras();
             if(extras == null) throw new IllegalArgumentException();
             styleConfig = extras.getParcelable("styleConfig");
-            inboxMessageArrayList = extras.getParcelableArrayList("messageList");
             config = extras.getParcelable("config");
-            setListener(CleverTapAPI.instanceWithConfig(getApplicationContext(),config));
+            CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(getApplicationContext(), config);
+            //inboxMessageArrayList = extras.getParcelableArrayList("messageList");
+            if (cleverTapAPI != null) {
+                inboxMessageArrayList = cleverTapAPI.getAllInboxMessages();
+                setListener(cleverTapAPI);
+            }
         }catch (Throwable t){
             Logger.v("Cannot find a valid notification inbox bundle to show!", t);
             return;
@@ -133,10 +136,11 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
             viewPager.setVisibility(View.GONE);
             tabLayout.setVisibility(View.GONE);
             //ExoPlayerRecyclerView manages autoplay of videos on scoll and hence only used if Inbox messages contain videos
-            //TODO render ExoPlayerRecyclerView programatically in case ExoPlayer libs are not included in the main app
             CTInboxMessageAdapter inboxMessageAdapter;
-            if(checkInboxMessagesContainVideo(inboxMessageArrayList)) {
-                exoPlayerRecyclerView = findViewById(R.id.activity_exo_recycler_view);
+            videoPresent = checkInboxMessagesContainVideo(inboxMessageArrayList);
+            if(videoPresent) {
+                exoPlayerRecyclerView = new ExoPlayerRecyclerView(getApplicationContext());
+                //exoPlayerRecyclerView = findViewById(R.id.activity_exo_recycler_view);
                 exoPlayerRecyclerView.setVisibility(View.VISIBLE);
                 exoPlayerRecyclerView.setVideoInfoList(inboxMessageArrayList);
                 LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
@@ -158,6 +162,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
                     },1000);
                     firstTime = false;
                 }
+                linearLayout.addView(exoPlayerRecyclerView);
             }else{//Normal Recycler view in case inbox messages don't contain any videos
                 recyclerView = findViewById(R.id.activity_recycler_view);
                 recyclerView.setVisibility(View.VISIBLE);
@@ -176,7 +181,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
     }
 
     boolean checkInboxMessagesContainVideo(ArrayList<CTInboxMessage> inboxMessageArrayList){
-        boolean videoPresent = false;
         for(CTInboxMessage inboxMessage : inboxMessageArrayList){
             if(inboxMessage.getInboxMessageContents().get(0).mediaIsVideo()){
                 videoPresent = true;
@@ -212,8 +216,8 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
 
     /**
      * Handles click of inbox message CTA button
-     * @param position
-     * @param buttonText
+     * @param position int row in the RecyclerView
+     * @param buttonText  String text of the Button
      */
     void handleClick(int position, String buttonText, JSONObject jsonObject){
         try {
@@ -233,7 +237,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
             didClick(data,inboxMessageArrayList.get(position));
 
            if (jsonObject != null) {
-                if(inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getLinktype(jsonObject).equalsIgnoreCase("copytext")){
+                if(inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getLinktype(jsonObject).equalsIgnoreCase(Constants.COPY_TYPE)){
                     return;
                 }else{
                     String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getLinkUrl(jsonObject);
@@ -256,8 +260,8 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
 
     /**
      * Handles click of inbox message carousel view pager
-     * @param position
-     * @param viewPagerPosition
+     * @param position int row in the RecyclerView
+     * @param viewPagerPosition int position of the ViewPager
      */
     void handleViewPagerClick(int position, int viewPagerPosition){
         try {
@@ -286,5 +290,36 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
         } catch (Throwable t) {
             // Ignore
         }
+    }
+
+    @Override
+    public void onPause() {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                if(videoPresent)
+                    exoPlayerRecyclerView.onPausePlayer();
+            }
+        });
+        super.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                if(videoPresent)
+                    exoPlayerRecyclerView.onRestartPlayer();
+            }
+        });
+        super.onResume();
+    }
+
+    @Override
+    public void onDestroy() {
+        if(exoPlayerRecyclerView!=null && videoPresent)
+            exoPlayerRecyclerView.onRelease();
+        super.onDestroy();
     }
 }

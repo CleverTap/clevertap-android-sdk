@@ -70,7 +70,7 @@ class CTInboxButtonClickListener implements View.OnClickListener {
         }else{//Handles button clicks
             if(button != null && buttonObject != null) {
                 if(fragment != null) {
-                    if(inboxMessage.getInboxMessageContents().get(0).getLinktype(buttonObject).equalsIgnoreCase("copytext")) {//Copy to clipboard feature
+                    if(inboxMessage.getInboxMessageContents().get(0).getLinktype(buttonObject).equalsIgnoreCase(Constants.COPY_TYPE)) {//Copy to clipboard feature
                         if(fragment.getActivity() !=null) {
                             copyToClipboard(fragment.getActivity());
                         }
@@ -79,7 +79,7 @@ class CTInboxButtonClickListener implements View.OnClickListener {
                         ((CTInboxTabBaseFragment) fragment).handleClick(this.position, button.getText().toString(),buttonObject);
                     }
                 }else if(activity != null){
-                    if(inboxMessage.getInboxMessageContents().get(0).getLinktype(buttonObject).equalsIgnoreCase("copytext")) {//Copy to clipboard feature
+                    if(inboxMessage.getInboxMessageContents().get(0).getLinktype(buttonObject).equalsIgnoreCase(Constants.COPY_TYPE)) {//Copy to clipboard feature
                         if(fragment.getActivity() !=null) {
                             copyToClipboard(activity.getApplicationContext());
                         }

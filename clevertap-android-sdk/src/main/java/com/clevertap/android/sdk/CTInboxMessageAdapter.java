@@ -4,35 +4,22 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Handler;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentActivity;
-import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.DisplayMetrics;
-import android.view.Display;
-import android.view.GestureDetector;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.load.engine.GlideException;
-import com.bumptech.glide.request.RequestListener;
-import com.bumptech.glide.request.target.Target;
 import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
@@ -58,17 +45,12 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-
-// TODO fix the warnings in this file
-
 class CTInboxMessageAdapter extends RecyclerView.Adapter {
 
     private ArrayList<CTInboxMessage> inboxMessages;
-    private SimpleExoPlayer player; // TODO this is a problem right?
     private Context context;
     private CTInboxMessage inboxMessage;
     private Fragment fragment;
-    private PlayerView playerView;   // TODO problem ??
     private static final int SIMPLE = 0;
     private static final int ICON = 1;
     private static final int CAROUSEL = 2;
@@ -87,17 +69,14 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
         switch (viewType){
             case SIMPLE :
                 view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.inbox_simple_message_layout,viewGroup,false);
-                CTSimpleMessageViewHolder ctSimpleMessageViewHolder = new CTSimpleMessageViewHolder(view);
-                return ctSimpleMessageViewHolder;
+                return new CTSimpleMessageViewHolder(view);
             case ICON:
                 view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.inbox_icon_message_layout,viewGroup,false);
-                CTIconMessageViewHolder ctIconMessageViewHolder = new CTIconMessageViewHolder(view);
-                return ctIconMessageViewHolder;
+                return new CTIconMessageViewHolder(view);
             case CAROUSEL:
             case IMAGE_CAROUSEL:
                 view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.inbox_carousel_layout,viewGroup,false);
-                CTCarouselMessageViewHolder ctCarouselMessageViewHolder = new CTCarouselMessageViewHolder(view);
-                return ctCarouselMessageViewHolder;
+                return new CTCarouselMessageViewHolder(view);
         }
         return null;
     }
@@ -240,7 +219,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     Runnable simpleRunnable = new Runnable() {
                         @Override
                         public void run() {
-                            CTInboxMessage simpleReadMsg = inboxMessages.get(position);
                             if(fragment != null){
                                 ((CTInboxActivity)context).runOnUiThread(new Runnable() {
                                     @Override
@@ -405,7 +383,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     Runnable iconRunnable = new Runnable() {
                         @Override
                         public void run() {
-                            CTInboxMessage iconReadMsg = inboxMessages.get(imagePosition);
                             if(fragment != null){
                                 ((CTInboxActivity)context).runOnUiThread(new Runnable() {
                                     @Override
@@ -492,7 +469,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     Runnable carouselRunnable = new Runnable() {
                         @Override
                         public void run() {
-                            CTInboxMessage carouselReadMsg = inboxMessages.get(carouselPosition);
                             if(fragment != null){
                                 ((CTInboxActivity)context).runOnUiThread(new Runnable() {
                                     @Override
@@ -560,7 +536,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     Runnable runnableImage = new Runnable() {
                         @Override
                         public void run() {
-                            CTInboxMessage imageReadMsg = inboxMessages.get(imageCarouselPos);
                             if(fragment != null){
                                 ((CTInboxActivity)context).runOnUiThread(new Runnable() {
                                     @Override
@@ -619,7 +594,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
 
     /**
      * Logic for timestamp
-     * TODO check why this is not working
      * @param time Epoch date of creation
      * @return String timestamp
      */
@@ -641,18 +615,18 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
     }
 
     private void addVideoView(CTInboxMessageType inboxMessageType, RecyclerView.ViewHolder viewHolder, Context context, int pos){
-        playerView = new PlayerView(context);
+        PlayerView playerView = new PlayerView(context);
         playerView.setTag(pos);
         playerView.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.WRAP_CONTENT));
         playerView.setShowBuffering(true);
         playerView.setUseArtwork(true);
         playerView.setControllerAutoShow(false);
-        playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
+        playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_ZOOM);
         BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
         TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
         TrackSelector trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
         // 2. Create the player
-        player = ExoPlayerFactory.newSimpleInstance(context, trackSelector);
+        SimpleExoPlayer player = ExoPlayerFactory.newSimpleInstance(context, trackSelector);
         // 3. Produces DataSource instances through which media data is loaded.
         DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(context,
                 Util.getUserAgent(context, context.getPackageName()), (TransferListener<? super DataSource>) bandwidthMeter);

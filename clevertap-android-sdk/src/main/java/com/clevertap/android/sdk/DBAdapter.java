@@ -106,7 +106,12 @@ class DBAdapter {
     private static final String CREATE_PUSH_NOTIFICATIONS_TABLE =
             "CREATE TABLE " + Table.PUSH_NOTIFICATIONS.getName() + " (_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     KEY_DATA + " STRING NOT NULL, " +
-                    KEY_CREATED_AT + " INTEGER NOT NULL);";
+                    KEY_CREATED_AT + " INTEGER NOT NULL," +
+                    IS_READ + " INTEGER NOT NULL);";
+
+    private static final String PUSH_NOTIFICATIONS_TIME_INDEX =
+            "CREATE INDEX IF NOT EXISTS time_idx ON " + Table.PUSH_NOTIFICATIONS.getName() +
+                    " (" + KEY_CREATED_AT + ");";
 
     private static final String CREATE_UNINSTALL_TS_TABLE =
             "CREATE TABLE " + Table.UNINSTALL_TS.getName() + " (_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -119,6 +124,7 @@ class DBAdapter {
 
     private final DatabaseHelper dbHelper;
     private CleverTapInstanceConfig config;
+    private boolean rtlDirtyFlag = true;
 
     private static class DatabaseHelper extends SQLiteOpenHelper {
         DatabaseHelper(Context context, String dbName) {
@@ -146,6 +152,7 @@ class DBAdapter {
             db.execSQL(EVENTS_TIME_INDEX);
             db.execSQL(PROFILE_EVENTS_TIME_INDEX);
             db.execSQL(UNINSTALL_TS_INDEX);
+            db.execSQL(PUSH_NOTIFICATIONS_TIME_INDEX);
         }
 
         @SuppressLint("SQLiteString")
@@ -159,7 +166,8 @@ class DBAdapter {
             db.execSQL("DROP TABLE IF EXISTS " + Table.USER_PROFILES.getName());
             db.execSQL("DROP TABLE IF EXISTS " + Table.PUSH_NOTIFICATIONS.getName());
             db.execSQL("DROP TABLE IF EXISTS " + Table.UNINSTALL_TS.getName());
-            // TODO why not dropping the other tables ??
+            db.execSQL("DROP TABLE IF EXISTS " + Table.INBOX_USER.getName());
+            db.execSQL("DROP TABLE IF EXISTS " + Table.INBOX_MESSAGES.getName());
 
             db.execSQL(CREATE_EVENTS_TABLE);
             db.execSQL(CREATE_PROFILE_EVENTS_TABLE);
@@ -171,6 +179,7 @@ class DBAdapter {
             db.execSQL(EVENTS_TIME_INDEX);
             db.execSQL(PROFILE_EVENTS_TIME_INDEX);
             db.execSQL(UNINSTALL_TS_INDEX);
+            db.execSQL(PUSH_NOTIFICATIONS_TIME_INDEX);
 
         }
 
@@ -393,7 +402,7 @@ class DBAdapter {
 
     private void cleanInternal(Table table, long expiration){
 
-        final long time = System.currentTimeMillis() - expiration;
+        final long time = (System.currentTimeMillis() - expiration)/1000;
         final String tName = table.getName();
 
         try {
@@ -484,7 +493,9 @@ class DBAdapter {
             final ContentValues cv = new ContentValues();
             cv.put(KEY_DATA, id);
             cv.put(KEY_CREATED_AT, ttl);
+            cv.put(IS_READ,0);
             db.insert(tableName, null, cv);
+            rtlDirtyFlag = true;
         } catch (final SQLiteException e) {
             getConfigLogger().verbose("Error adding data to table " + tableName + " Recreating DB");
             dbHelper.deleteDatabase();
@@ -518,6 +529,7 @@ class DBAdapter {
     }
 
     String[] fetchPushNotificationIds(){
+        if(!rtlDirtyFlag) return new String[0];
         final String tName = Table.PUSH_NOTIFICATIONS.getName();
         Cursor cursor = null;
         List<String> pushIds = new ArrayList<>();
@@ -525,10 +537,11 @@ class DBAdapter {
         //noinspection TryFinallyCanBeTryWithResources
         try{
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
-            cursor = db.rawQuery("SELECT * FROM " + tName, null);
+            cursor = db.rawQuery("SELECT * FROM " + tName + " WHERE " + IS_READ + " = 0", null);
             if(cursor!=null && cursor.moveToFirst()){
                 pushIds.add(cursor.getString(cursor.getColumnIndex(KEY_DATA)));
             }
+            rtlDirtyFlag = false;
         }catch (final SQLiteException e) {
             getConfigLogger().verbose("Could not fetch records out of database " + tName + ".", e);
         } finally {
@@ -538,6 +551,35 @@ class DBAdapter {
             }
         }
         return pushIds.toArray(new String[0]);
+    }
+
+    void updatePushNotificationIds(String[] ids){
+        if(ids.length == 0){
+            return;
+        }
+
+        if (!this.belowMemThreshold()) {
+            Logger.v("There is not enough space left on the device to store data, data discarded");
+            return;
+        }
+        //noinspection TryFinallyCanBeTryWithResources
+        try {
+            final SQLiteDatabase db = dbHelper.getWritableDatabase();
+            final ContentValues cv = new ContentValues();
+            cv.put(IS_READ, 1);
+            StringBuilder questionMarksBuilder = new StringBuilder();
+            questionMarksBuilder.append("?");
+            for(int i=0; i< ids.length-1; i++){
+                questionMarksBuilder.append(", ?");
+            }
+            db.update(Table.PUSH_NOTIFICATIONS.getName(), cv,  "_id IN ( " + questionMarksBuilder.toString() + " )",ids);
+            rtlDirtyFlag = false;
+        } catch (final SQLiteException e) {
+            getConfigLogger().verbose("Error adding data to table " + Table.PUSH_NOTIFICATIONS.getName() + " Recreating DB");
+            dbHelper.deleteDatabase();
+        } finally {
+            dbHelper.close();
+        }
     }
 
     boolean doesPushNotificationIdExist(String id){
@@ -623,7 +665,8 @@ class DBAdapter {
                 cv.put(EXPIRES, messageDAO.getExpires());
                 cv.put(KEY_CREATED_AT,messageDAO.getDate());
                 cv.put(MESSAGE_USER,messageDAO.getUserId());
-                db.insert(Table.INBOX_MESSAGES.getName(), null, cv);
+                //db.insert(Table.INBOX_MESSAGES.getName(), null, cv);
+                db.insertWithOnConflict(Table.INBOX_MESSAGES.getName(),null,cv,SQLiteDatabase.CONFLICT_REPLACE);
             }
         } catch (final SQLiteException e) {
             getConfigLogger().verbose("Error adding data to table " + Table.INBOX_MESSAGES.getName() + " Recreating DB");
