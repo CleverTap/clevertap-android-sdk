@@ -5,13 +5,10 @@ import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.AttributeSet;
-import android.widget.ImageView;
-
-
-// TODO fix error
+import android.support.v7.widget.AppCompatImageView;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
-class GifImageView extends ImageView implements Runnable {
+class GifImageView extends AppCompatImageView implements Runnable {
 
     private static final String TAG = "GifDecoderView";
     private GifDecoder gifDecoder;

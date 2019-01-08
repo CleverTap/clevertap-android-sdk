@@ -43,7 +43,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
     private ExoPlayerRecyclerView exoPlayerRecyclerView;  // TODO what if ExoPlayer classes not there
     private RecyclerView recyclerView;  // TODO you could just declare RecyclerView and cast it to ExoPlayerRecyclerView if ExoPlayer included
     private boolean firstTime = true;
-    private CleverTapAPI cleverTapAPI;  // TODO get rid of this;  DO NOT create these kinds of dependencies; very bad practice
 
     void setListener(InboxActivityListener listener) {
         listenerWeakReference = new WeakReference<>(listener);
@@ -74,7 +73,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
             inboxMessageArrayList = extras.getParcelableArrayList("messageList");
             config = extras.getParcelable("config");
             setListener(CleverTapAPI.instanceWithConfig(getApplicationContext(),config));
-            cleverTapAPI = CleverTapAPI.instanceWithConfig(getApplicationContext(),config);  // TODO get rid of this
         }catch (Throwable t){
             Logger.v("Cannot find a valid notification inbox bundle to show!", t);
             return;
@@ -288,13 +286,5 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
         } catch (Throwable t) {
             // Ignore
         }
-    }
-
-    /**
-     * Marking specified inboxMessage as Read
-     * @param inboxMessage
-     */
-    void markReadForMessageId(CTInboxMessage inboxMessage){
-        cleverTapAPI.markReadInboxMessage(inboxMessage);  //TODO move this to the listener to handle
     }
 }

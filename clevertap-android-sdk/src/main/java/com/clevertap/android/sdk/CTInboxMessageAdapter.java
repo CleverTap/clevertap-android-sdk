@@ -242,7 +242,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                         public void run() {
                             CTInboxMessage simpleReadMsg = inboxMessages.get(position);
                             if(fragment != null){
-                                ((CTInboxTabBaseFragment)fragment).markReadForMessageId(simpleReadMsg);
                                 ((CTInboxActivity)context).runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -253,7 +252,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                     }
                                 });
                             }else if(context != null){
-                                ((CTInboxActivity)context).markReadForMessageId(simpleReadMsg);
                                 ((CTInboxActivity)context).runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -409,7 +407,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                         public void run() {
                             CTInboxMessage iconReadMsg = inboxMessages.get(imagePosition);
                             if(fragment != null){
-                                ((CTInboxTabBaseFragment)fragment).markReadForMessageId(iconReadMsg);
                                 ((CTInboxActivity)context).runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -420,7 +417,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                     }
                                 });
                             }else if(context != null){
-                                ((CTInboxActivity)context).markReadForMessageId(iconReadMsg);
                                 ((CTInboxActivity)context).runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -498,7 +494,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                         public void run() {
                             CTInboxMessage carouselReadMsg = inboxMessages.get(carouselPosition);
                             if(fragment != null){
-                                ((CTInboxTabBaseFragment)fragment).markReadForMessageId(carouselReadMsg);
                                 ((CTInboxActivity)context).runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -509,7 +504,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                     }
                                 });
                             }else if(context != null){
-                                ((CTInboxActivity)context).markReadForMessageId(carouselReadMsg);
                                 ((CTInboxActivity)context).runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -568,7 +562,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                         public void run() {
                             CTInboxMessage imageReadMsg = inboxMessages.get(imageCarouselPos);
                             if(fragment != null){
-                                ((CTInboxTabBaseFragment)fragment).markReadForMessageId(imageReadMsg);
                                 ((CTInboxActivity)context).runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -579,7 +572,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                     }
                                 });
                             }else if(context != null){
-                                ((CTInboxActivity)context).markReadForMessageId(imageReadMsg);
                                 ((CTInboxActivity)context).runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {

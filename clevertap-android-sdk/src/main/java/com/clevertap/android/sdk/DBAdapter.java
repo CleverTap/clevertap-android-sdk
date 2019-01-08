@@ -16,20 +16,15 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
-
-// TODO fix the warnings in this file
-
 class DBAdapter {
 
     public enum Table {
         EVENTS("events"),
         PROFILE_EVENTS("profileEvents"),
         USER_PROFILES("userProfiles"),
-
         INBOX_USER("inboxUser"),
         INBOX_MESSAGES("inboxMessages"),
         PUSH_NOTIFICATIONS("pushNotifications"),
-        //PUSH_NOTIFICATION_VIEWED("notificationViewed"),
         UNINSTALL_TS("uninstallTimestamp");
 
         Table(String name) {
@@ -140,19 +135,14 @@ class DBAdapter {
         @SuppressLint("SQLiteString")
         @Override
         public void onCreate(SQLiteDatabase db) {
-
             Logger.v("Creating CleverTap DB");
-
             db.execSQL(CREATE_EVENTS_TABLE);
             db.execSQL(CREATE_PROFILE_EVENTS_TABLE);
             db.execSQL(CREATE_USER_PROFILES_TABLE);
             db.execSQL(CREATE_INBOX_USER_TABLE);
-            Logger.v(CREATE_INBOX_USER_TABLE);
             db.execSQL(CREATE_INBOX_MESSAGES_TABLE);
             db.execSQL(CREATE_PUSH_NOTIFICATIONS_TABLE);
-            //db.execSQL(CREATE_NOTIFICATION_VIEWED_TABLE);
             db.execSQL(CREATE_UNINSTALL_TS_TABLE);
-
             db.execSQL(EVENTS_TIME_INDEX);
             db.execSQL(PROFILE_EVENTS_TIME_INDEX);
             db.execSQL(UNINSTALL_TS_INDEX);
@@ -168,8 +158,8 @@ class DBAdapter {
             db.execSQL("DROP TABLE IF EXISTS " + Table.PROFILE_EVENTS.getName());
             db.execSQL("DROP TABLE IF EXISTS " + Table.USER_PROFILES.getName());
             db.execSQL("DROP TABLE IF EXISTS " + Table.PUSH_NOTIFICATIONS.getName());
-            //db.execSQL("DROP TABLE IF EXISTS " + Table.PUSH_NOTIFICATION_VIEWED.getName());
             db.execSQL("DROP TABLE IF EXISTS " + Table.UNINSTALL_TS.getName());
+            // TODO why not dropping the other tables ??
 
             db.execSQL(CREATE_EVENTS_TABLE);
             db.execSQL(CREATE_PROFILE_EVENTS_TABLE);
@@ -177,9 +167,7 @@ class DBAdapter {
             db.execSQL(CREATE_INBOX_USER_TABLE);
             db.execSQL(CREATE_INBOX_MESSAGES_TABLE);
             db.execSQL(CREATE_PUSH_NOTIFICATIONS_TABLE);
-            //db.execSQL(CREATE_NOTIFICATION_VIEWED_TABLE);
             db.execSQL(CREATE_UNINSTALL_TS_TABLE);
-
             db.execSQL(EVENTS_TIME_INDEX);
             db.execSQL(PROFILE_EVENTS_TIME_INDEX);
             db.execSQL(UNINSTALL_TS_INDEX);
@@ -218,7 +206,7 @@ class DBAdapter {
     }
 
     /**
-     * Adds a JSON string representing to the DB.
+     * Adds a JSON string to the DB.
      *
      * @param obj   the JSON to record
      * @param table the table to insert into
@@ -235,6 +223,7 @@ class DBAdapter {
         Cursor cursor = null;
         int count = DB_UPDATE_ERROR;
 
+        //noinspection TryFinallyCanBeTryWithResources
         try {
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
 
@@ -322,6 +311,7 @@ class DBAdapter {
         JSONObject profile = null;
         Cursor cursor = null;
 
+        //noinspection TryFinallyCanBeTryWithResources
         try {
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
 
@@ -347,7 +337,7 @@ class DBAdapter {
     }
 
     /**
-     * Removes all events  from table
+     * Removes all events from table
      *
      * @param table  the table to remove events
      */
@@ -396,7 +386,9 @@ class DBAdapter {
 
 
     void cleanUpPushNotifications(){
-        cleanInternal(Table.PUSH_NOTIFICATIONS,0);//Expiry time is stored in PUSH_NOTIFICATIONS table
+        //In Push_Notifications, KEY_CREATED_AT is stored as a future epoch, i.e. currentTimeMillis() + ttl,
+        //so comparing to the current time for removal is correct
+        cleanInternal(Table.PUSH_NOTIFICATIONS,0);
     }
 
     private void cleanInternal(Table table, long expiration){
@@ -432,6 +424,7 @@ class DBAdapter {
 
         final JSONArray events = new JSONArray();
 
+        //noinspection TryFinallyCanBeTryWithResources
         try {
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
             cursor = db.rawQuery("SELECT * FROM " + tName +
@@ -472,23 +465,15 @@ class DBAdapter {
         return null;
     }
 
-
-    /**
-     * Adds a String representing to the DB.
-     *
-     * @param id the String value of Push Notification Id
-     * @return the number of rows in the table, or DB_OUT_OF_MEMORY_ERROR/DB_UPDATE_ERROR
-     */
     void storePushNotificationId(String id, long ttl) {
 
-        if (id == null) return ;
+        if (id == null) return;
 
         if (!this.belowMemThreshold()) {
             getConfigLogger().verbose("There is not enough space left on the device to store data, data discarded");
-            return ;
+            return;
         }
         final String tableName = Table.PUSH_NOTIFICATIONS.getName();
-
 
         if(ttl <= 0) {
            ttl = System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL;
@@ -506,7 +491,6 @@ class DBAdapter {
         } finally {
             dbHelper.close();
         }
-
     }
 
     private String fetchPushNotificationId(String id){
@@ -514,6 +498,7 @@ class DBAdapter {
         Cursor cursor = null;
         String pushId = "";
 
+        //noinspection TryFinallyCanBeTryWithResources
         try{
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
             cursor = db.rawQuery("SELECT * FROM " + tName +
@@ -537,6 +522,7 @@ class DBAdapter {
         Cursor cursor = null;
         List<String> pushIds = new ArrayList<>();
 
+        //noinspection TryFinallyCanBeTryWithResources
         try{
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
             cursor = db.rawQuery("SELECT * FROM " + tName, null);
@@ -563,18 +549,6 @@ class DBAdapter {
         return dbHelper.belowMemThreshold();
     }
 
-    //Notification Inbox CRUD methods
-    public boolean createUserTable(){
-        try {
-            SQLiteDatabase db = dbHelper.getWritableDatabase();
-            db.execSQL("DROP TABLE IF EXISTS " + Table.USER_PROFILES.getName());
-            db.execSQL(CREATE_INBOX_USER_TABLE);
-            return true;
-        }catch (Throwable t){
-            return false;
-        }
-    }
-
     /**
      * fetches or creates a user with given parameters
      * @param userId String userId
@@ -588,18 +562,14 @@ class DBAdapter {
         final String tName = Table.INBOX_USER.getName();
         CTUserDAO userDAO = null;
         Cursor cursor = null;
-        int count = 0;
-
+        //noinspection TryFinallyCanBeTryWithResources
         try {
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
 
             cursor = db.rawQuery("SELECT * FROM " + tName + " WHERE "+USER_ID+" = ?", new String[]{userId});
 
             if (cursor != null && cursor.moveToFirst()) {
-                userDAO = new CTUserDAO();
-                userDAO.setUserId(userId);
-                userDAO.setGuid(cursor.getString(cursor.getColumnIndex(GUID)));
-                userDAO.setAccountId(cursor.getString(cursor.getColumnIndex(ACCOUNT_ID)));
+                userDAO = new CTUserDAO(cursor.getString(cursor.getColumnIndex(ACCOUNT_ID)), cursor.getString(cursor.getColumnIndex(GUID)), userId);
             }
 
             if(userDAO == null){
@@ -609,16 +579,13 @@ class DBAdapter {
                     cv.put(ACCOUNT_ID,accountId);
                     cv.put(GUID,guid);
                     db.insert(Table.INBOX_USER.getName(), null, cv);
+                    userDAO = new CTUserDAO(accountId, guid, userId);
                 } catch (final SQLiteException e) {
                     getConfigLogger().verbose("Error adding data to table " + Table.INBOX_USER.getName() + " Recreating DB");
                     dbHelper.deleteDatabase();
                 } finally {
                     dbHelper.close();
                 }
-                userDAO = new CTUserDAO();
-                userDAO.setUserId(userId);
-                userDAO.setAccountId(accountId);
-                userDAO.setGuid(guid);
             }
         } catch (final SQLiteException e) {
             getConfigLogger().verbose("Could not fetch records out of database " + tName + ".", e);
@@ -635,17 +602,14 @@ class DBAdapter {
     /**
      * Stores a list of inbox messages
      * @param inboxMessages ArrayList of type {@link CTMessageDAO}
-     * @return int
+     *
      */
-    int storeMessagesForUser(ArrayList<CTMessageDAO> inboxMessages){
+    void storeMessagesForUser(ArrayList<CTMessageDAO> inboxMessages){
         if (!this.belowMemThreshold()) {
             Logger.v("There is not enough space left on the device to store data, data discarded");
-            return DB_OUT_OF_MEMORY_ERROR;
+            return;
         }
-
-        Cursor cursor = null;
-        int count = DB_UPDATE_ERROR;
-
+        //noinspection TryFinallyCanBeTryWithResources
         try {
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
             for(CTMessageDAO messageDAO : inboxMessages) {
@@ -661,40 +625,24 @@ class DBAdapter {
                 cv.put(MESSAGE_USER,messageDAO.getUserId());
                 db.insert(Table.INBOX_MESSAGES.getName(), null, cv);
             }
-            cursor = db.rawQuery("SELECT COUNT(*) FROM " + Table.INBOX_MESSAGES.getName(), null);
-            cursor.moveToFirst();
-            count = cursor.getInt(0);
         } catch (final SQLiteException e) {
             getConfigLogger().verbose("Error adding data to table " + Table.INBOX_MESSAGES.getName() + " Recreating DB");
-
-            if (cursor != null) {
-                cursor.close();
-                cursor = null;
-            }
             dbHelper.deleteDatabase();
         } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
             dbHelper.close();
         }
-        return count;
     }
 
     /**
      * Updates a list on inbox messages
      * @param inboxMessages ArrayList of {@link CTMessageDAO}
-     * @return int
      */
-    int updateMessagesForUser(ArrayList<CTMessageDAO> inboxMessages){
+    void updateMessagesForUser(ArrayList<CTMessageDAO> inboxMessages){
         if (!this.belowMemThreshold()) {
             Logger.v("There is not enough space left on the device to store data, data discarded");
-            return DB_OUT_OF_MEMORY_ERROR;
+            return;
         }
-
-        Cursor cursor = null;
-        int count = DB_UPDATE_ERROR;
-
+        //noinspection TryFinallyCanBeTryWithResources
         try {
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
             for(CTMessageDAO messageDAO : inboxMessages) {
@@ -709,24 +657,12 @@ class DBAdapter {
                 cv.put(MESSAGE_USER,messageDAO.getUserId());
                 db.update(Table.INBOX_MESSAGES.getName(), cv,ID + " = ?",new String[]{messageDAO.getId()});
             }
-            cursor = db.rawQuery("SELECT COUNT(*) FROM " + Table.INBOX_MESSAGES.getName(), null);
-            cursor.moveToFirst();
-            count = cursor.getInt(0);
         } catch (final SQLiteException e) {
             getConfigLogger().verbose("Error adding data to table " + Table.INBOX_MESSAGES.getName() + " Recreating DB");
-
-            if (cursor != null) {
-                cursor.close();
-                cursor = null;
-            }
             dbHelper.deleteDatabase();
         } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
             dbHelper.close();
         }
-        return count;
     }
 
     /**
@@ -741,6 +677,7 @@ class DBAdapter {
         CTMessageDAO messageDAO = new CTMessageDAO();
         Cursor cursor = null;
 
+        //noinspection TryFinallyCanBeTryWithResources
         try {
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
 
@@ -802,6 +739,7 @@ class DBAdapter {
         final String tName = Table.UNINSTALL_TS.getName();
         Cursor cursor = null;
         long timestamp = 0;
+        //noinspection TryFinallyCanBeTryWithResources
         try{
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
             cursor = db.rawQuery("SELECT * FROM " + tName +
@@ -976,7 +914,7 @@ class DBAdapter {
         }
     }
 
-    @SuppressWarnings({"unused"})
+    // TODO isn't there a way to do this directly using SQL delete where expires < current rather than fetch all and loop delete
     void cleanUpMessages(String userId){
         ArrayList<CTMessageDAO> messageDAOArrayList = getMessages(userId);
         for(CTMessageDAO messageDAO : messageDAOArrayList){

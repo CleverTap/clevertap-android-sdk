@@ -29,7 +29,6 @@ abstract class CTInboxTabBaseFragment extends Fragment {
     boolean videoPresent = false;
     CTInboxStyleConfig styleConfig;
     private WeakReference<CTInboxTabBaseFragment.InboxListener> listenerWeakReference;
-    CleverTapAPI cleverTapAPI;
 
     void setListener(InboxListener listener) {
         listenerWeakReference = new WeakReference<>(listener);
@@ -54,10 +53,10 @@ abstract class CTInboxTabBaseFragment extends Fragment {
         Bundle bundle = getArguments();
         if (bundle != null) {
             inboxMessageArrayList = bundle.getParcelableArrayList("inboxMessages");
+            //noinspection ConstantConditions
             Logger.d("Inbox Message List - "+inboxMessageArrayList.toString());
             config = bundle.getParcelable("config");
             styleConfig = bundle.getParcelable("styleConfig");
-            cleverTapAPI = CleverTapAPI.instanceWithConfig(getActivity(),config);
             if (context instanceof CTInboxActivity) {
                 setListener((CTInboxTabBaseFragment.InboxListener) context);
             }
@@ -109,6 +108,7 @@ abstract class CTInboxTabBaseFragment extends Fragment {
     void didClick(Bundle data, int position) {
         InboxListener listener = getListener();
         if (listener != null) {
+            //noinspection ConstantConditions
             listener.messageDidClick(getActivity().getBaseContext(),inboxMessageArrayList.get(position), data);
         }
     }
@@ -116,6 +116,7 @@ abstract class CTInboxTabBaseFragment extends Fragment {
     void didShow(Bundle data, int position) {
         InboxListener listener = getListener();
         if (listener != null) {
+            //noinspection ConstantConditions
             listener.messageDidShow(getActivity().getBaseContext(),inboxMessageArrayList.get(position), data);
         }
     }
@@ -183,15 +184,6 @@ abstract class CTInboxTabBaseFragment extends Fragment {
             startActivity(intent);
         } catch (Throwable t) {
             // Ignore
-        }
-    }
-
-    void markReadForMessageId(CTInboxMessage inboxMessage){
-        if(inboxMessage.isRead()){
-            Logger.v("Message already marked as read - " + inboxMessage.getCampaignId());
-        }else {
-            Logger.v("Marking " + inboxMessage.getCampaignId() + " as read");
-            cleverTapAPI.markReadInboxMessage(inboxMessage);
         }
     }
 }

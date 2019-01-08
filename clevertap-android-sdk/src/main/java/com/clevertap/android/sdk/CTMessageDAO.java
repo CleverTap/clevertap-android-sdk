@@ -103,7 +103,7 @@ class CTMessageDAO {
         this.wzrkParams = wzrk_params;
     }
 
-    CTMessageDAO(){}
+    CTMessageDAO(){}  // TODO bad practice to allow unparameterized constructor; very error prone
 
     private CTMessageDAO(String id, JSONObject jsonData, boolean read, long date, long expires, String userId, String tags, String campaignId, JSONObject wzrkParams){
         this.id = id;
@@ -159,15 +159,14 @@ class CTMessageDAO {
         }
     }
 
-    static JSONObject getWzrkFields(JSONObject root) throws JSONException {
+    private static JSONObject getWzrkFields(JSONObject root) throws JSONException {
         final JSONObject fields = new JSONObject();
-        JSONObject jsonObject = root;
-        Iterator<String> iterator = jsonObject.keys();
+        Iterator<String> iterator = root.keys();
 
         while(iterator.hasNext()){
             String keyName = iterator.next();
             if(keyName.startsWith(Constants.WZRK_PREFIX))
-                fields.put(keyName,jsonObject.get(keyName));
+                fields.put(keyName,root.get(keyName));
         }
 
         return fields;

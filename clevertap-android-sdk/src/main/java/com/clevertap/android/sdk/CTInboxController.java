@@ -12,17 +12,14 @@ import java.util.ArrayList;
  * Controller class which handles Users and Messages for the Notification Inbox
  */
 class CTInboxController {
-    private boolean initialized;
     private int count;
     private int unreadCount;
     private ArrayList<CTMessageDAO> messages,unreadMessages;
     private String userId;
-    CTInboxListener listener;
-    CTInboxPrivateListener privateListener;
     private CTUserDAO userDAO;
     private DBAdapter dbAdapter;
 
-    private CTInboxController(String accountId, String guid, DBAdapter adapter){
+    CTInboxController(String accountId, String guid, DBAdapter adapter){
         this.userId = accountId + guid;
         this.dbAdapter = adapter;
         this.userDAO = this.dbAdapter.fetchOrCreateUser(this.userId, accountId, guid);
@@ -30,64 +27,41 @@ class CTInboxController {
         this.unreadMessages = this.dbAdapter.getUnreadMessages(this.userId);
         this.count = this.messages.size();
         this.unreadCount = this.unreadMessages.size();
-        this.initialized = true;
     }
 
-    static CTInboxController initWithAccountId(String accountId, String guid, DBAdapter adapter){
-        try{
-            return new CTInboxController(accountId, guid, adapter);
-        }catch (Throwable t){
-            return null;
-        }
+    boolean updateMessages(JSONArray inboxMessages){
+        return updateUserMessages(inboxMessages);
     }
 
-    void updateMessages(JSONArray inboxMessages){
-        if(!this.isInitialized()) return;
-
-        boolean haveUpdates = updateUserMessages(inboxMessages);
-        if(haveUpdates){
-            notifyUpdate();
-        }
-    }
-
-    void deleteMessageWithId(String messageId){
+    boolean deleteMessageWithId(String messageId){
         CTMessageDAO messageDAO = getMessageDaoForId(messageId);
-        if(messageDAO!=null){
-            boolean deletedMessage =  this.dbAdapter.deleteMessageForId(messageId);
-            if(deletedMessage) {
-                notifyUpdate();
-            }
+        if (messageDAO == null) {
+            return false;
         }
+        return this.dbAdapter.deleteMessageForId(messageId);
     }
 
-    void markReadForMessageWithId(String messageId){
+    boolean markReadForMessageWithId(String messageId){
         CTMessageDAO messageDAO = getMessageDaoForId(messageId);
-        if(messageDAO != null){
-            boolean marked = this.dbAdapter.markReadMessageForId(messageId);
-            if(marked){
-                notifyUpdate();
-            }
-            this.messages = this.dbAdapter.getMessages(this.userId);
-            this.unreadMessages = this.dbAdapter.getUnreadMessages(this.userId);
-            this.count = messages.size();
-            this.unreadCount = unreadMessages.size();
+        if(messageDAO == null) {
+            return false;
         }
-
+        boolean marked = this.dbAdapter.markReadMessageForId(messageId);
+        this.messages = this.dbAdapter.getMessages(this.userId);
+        this.unreadMessages = this.dbAdapter.getUnreadMessages(this.userId);
+        this.count = messages.size();
+        this.unreadCount = unreadMessages.size();
+        return marked;
     }
 
     JSONObject getMessageForId(String messageId){
-        if(this.isInitialized()) {
-            for(CTMessageDAO messageDAO : messages){
-                if(messageDAO.getId().equals(messageId)){
-                    return messageDAO.toJSON();
-                }
+        for(CTMessageDAO messageDAO : messages){
+            if(messageDAO.getId().equals(messageId)){
+                return messageDAO.toJSON();
             }
-            Logger.d("Inbox Message for message id - "+messageId+" doesn't exist");
-            return null;
         }
-        else {
-            return null;
-        }
+        Logger.d("Inbox Message for message id - "+messageId+" doesn't exist");
+        return null;
     }
 
     private CTMessageDAO getMessageDaoForId(String messageId){
@@ -103,43 +77,11 @@ class CTInboxController {
     }
 
     ArrayList<CTMessageDAO> getMessages(){
-        if(this.isInitialized()){
-            return messages;
-        }else{
-            return null;
-        }
+        return messages;
     }
 
     ArrayList<CTMessageDAO> getUnreadMessages(){
-        if(this.isInitialized()){
-            return unreadMessages;
-        }else{
-            return null;
-        }
-    }
-
-    boolean isInitialized() {
-        return initialized;
-    }
-
-    @SuppressWarnings({"unused"})
-    CTInboxListener getListener() {
-        return listener;
-    }
-
-    private void notifyUpdate(){
-        if(listener!=null){
-            listener.inboxMessagesDidUpdate();
-        }
-        if(privateListener != null){
-            privateListener.privateInboxMessagesDidUpdate();
-        }
-    }
-
-    void notifyInitialized(){
-        if(privateListener != null){
-            privateListener.privateInboxDidInitialize();
-        }
+        return unreadMessages;
     }
 
     private boolean updateUserMessages(JSONArray inboxMessages){
@@ -147,12 +89,14 @@ class CTInboxController {
         boolean haveUpdates = false;
         ArrayList<CTMessageDAO> messageDAOArrayList = new ArrayList<>();
         ArrayList<CTMessageDAO> updateMessageList = new ArrayList<>();
+
+        // TODO why not just have one createOrUpdate loop rather than checking for exists here and splitting into 2 separate arrays ??? very bad practice to not check for exists in the db layer
         for(int i=0;i<inboxMessages.length();i++){
             try {
                 JSONObject inboxMessage = inboxMessages.getJSONObject(i);
                 if(!inboxMessage.has("_id")){
                     Logger.d("Notification inbox message doesn't have _id, adding for test message");
-                    inboxMessage.put("_id","000");
+                    inboxMessage.put("_id","000"); // TODO move this to test flow handler
                 }
 
                 CTMessageDAO messageDAO = CTMessageDAO.initWithJSON(inboxMessage, userDAO.getUserId());
@@ -186,7 +130,7 @@ class CTInboxController {
             Logger.d("Notification Inbox messages updated");
         }
 
-        this.dbAdapter.cleanUpMessages(this.userId);
+        this.dbAdapter.cleanUpMessages(this.userId);  // TODO you have to check for TTL even if there are no new user messages coming from the server; same for unread vs read
 
         this.messages = this.dbAdapter.getMessages(this.userId);
         this.unreadMessages = this.dbAdapter.getUnreadMessages(this.userId);

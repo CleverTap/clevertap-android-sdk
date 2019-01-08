@@ -652,7 +652,7 @@ class CTInAppNotification implements Parcelable {
 
     // intended to only hold an image reference for the life of the parent CTInAppNotification, in order to facilitate parceling
     private static class ImageCache {
-        private static final int MIN_CACHE_SIZE = 1024 * 3; // 3mb minimum (in KB)  // TODO coordinate this minimum with the max gif size we will allow on the dashboard
+        private static final int MIN_CACHE_SIZE = 1024 * 3; // 3mb minimum (in KB)
         private final static int maxMemory = (int) (Runtime.getRuntime().maxMemory())/1024;
         private final static int cacheSize = Math.max((maxMemory / 32), MIN_CACHE_SIZE);
 
@@ -746,7 +746,7 @@ class CTInAppNotification implements Parcelable {
 
     // intended to only hold an gif byte array reference for the life of the parent CTInAppNotification, in order to facilitate parceling
     private static class GifCache {
-        private static final int MIN_CACHE_SIZE = 1024 * 5; // 5mb minimum (in KB)  // TODO coordinate this minimum with the max gif size we will allow on the dashboard
+        private static final int MIN_CACHE_SIZE = 1024 * 5; // 5mb minimum (in KB)
         private final static int maxMemory = (int) (Runtime.getRuntime().maxMemory())/1024;
         private final static int cacheSize = Math.max((maxMemory / 32), MIN_CACHE_SIZE);
 

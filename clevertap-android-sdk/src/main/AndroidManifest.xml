@@ -17,7 +17,7 @@
             android:configChanges="orientation|keyboardHidden"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
-        <!--<activity-->
+        <!--<activity-->  TODO why commented out ??
             <!--android:name="com.clevertap.android.sdk.CTInboxActivity"-->
             <!--android:configChanges="orientation|keyboardHidden"-->
             <!--android:theme="@android:style/Theme.Translucent.NoTitleBar"/>-->

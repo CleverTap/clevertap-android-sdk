@@ -95,8 +95,8 @@ public class Constants {
     static final String KEY_COUNTS_PER_INAPP = "counts_per_inapp";
     static final String INAPP_ID_IN_PAYLOAD = "ti";
     static final int LOCATION_PING_INTERVAL_IN_SECONDS = 10;
-    static final String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME};  // TODO there is only One System Event ?????
-    static final long DEFAULT_PUSH_TTL = 1000 * 60 * 60 * 24 * 4;//TODO agree on value
+    static final String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME};
+    static final long DEFAULT_PUSH_TTL = 1000 * 60 * 60 * 24 * 4;
     static final String RESPONSE_ACK = "ack";
     static final String JOB_ID = "jobid";
     static final int PING_FREQUENCY_VALUE = 240;
