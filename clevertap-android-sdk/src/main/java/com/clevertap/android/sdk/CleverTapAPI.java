@@ -49,7 +49,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.net.URL;
@@ -2354,7 +2353,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     private int getPingFrequency(Context context) {
-        return StorageHelper.getInt(context,storageKeyWithSuffix(Constants.PING_FREQUENCY),Constants.PING_FREQUENCY_VALUE);
+        return StorageHelper.getInt(context,Constants.PING_FREQUENCY,Constants.PING_FREQUENCY_VALUE); //intentional global key because only one Job is running
     }
 
     private void setPingFrequency(Context context, int pingFrequency) {
@@ -6321,19 +6320,19 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     private void createAlarmScheduler(Context context){
         int pingFrequency = getPingFrequency(context);
-        if(pingFrequency != -1) {
+        if(pingFrequency > 0) {
             AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
             Intent intent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
             intent.setPackage(context.getPackageName());
             PendingIntent alarmPendingIntent = PendingIntent.getService(context, getAccountId().hashCode(), intent, PendingIntent.FLAG_UPDATE_CURRENT);
             if (alarmManager != null) {
-                alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime(), Constants.INTERVAL_MINUTES * pingFrequency, alarmPendingIntent);
+                alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime(), Constants.ONE_MIN_IN_MILLIS * pingFrequency, alarmPendingIntent);
             }
         }
     }
 
     private void resetAlarmScheduler(Context context){
-        if(getPingFrequency(context) == -1){
+        if(getPingFrequency(context) <= 0){
             stopAlarmScheduler(context);
         }else{
             stopAlarmScheduler(context);
@@ -6354,59 +6353,58 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @SuppressLint("MissingPermission")
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void createOrResetJobScheduler(Context context){
-        int pingFrequency = getPingFrequency(context);
-        ComponentName componentName = new ComponentName(context, CTBackgroundJobService.class);  // TODO was getting a not in manifest warning here; double check the manifest declaration
         JobScheduler jobScheduler = (JobScheduler)context.getSystemService(JOB_SCHEDULER_SERVICE);
+        if(jobScheduler == null) return;
+        int pingFrequency = getPingFrequency(context);
         int existingJobId = StorageHelper.getInt(context,Constants.PF_JOB_ID,-1);
 
+        if(existingJobId < 0 && pingFrequency < 0) return; //no running job and nothing to create
 
-        if(existingJobId != -1){
-            if (jobScheduler != null) {
-
-                if(pingFrequency == -1){
-                    jobScheduler.cancel(existingJobId);
-                    return;
-                }else{
-                    JobInfo existingJobInfo = getJobInfo(existingJobId,jobScheduler) ;
-                    if(existingJobInfo != null){
-                       boolean isPFSame =  existingJobInfo.getIntervalMillis() == pingFrequency * Constants.INTERVAL_MINUTES;
-                       if(isPFSame){
-                           return;
-                       }
-                    }
-                }
-                jobScheduler.cancel(existingJobId);
-            }
+        if(pingFrequency < 0){ //running job but hard cancel
+            jobScheduler.cancel(existingJobId);
+            StorageHelper.putInt(context, Constants.PF_JOB_ID, -1);
+            return;
         }
-        if (jobScheduler != null && pingFrequency > 0) {
-                int jobid = getAccountId().hashCode();
-                JobInfo.Builder builder = new JobInfo.Builder(jobid, componentName);
-                builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
-                builder.setRequiresCharging(false);
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                    builder.setPeriodic(pingFrequency * Constants.INTERVAL_MINUTES, 5 * Constants.INTERVAL_MINUTES);
-                } else {
-                    builder.setPeriodic(pingFrequency * 60 * 1000);
-                }
+        ComponentName componentName = new ComponentName(context, CTBackgroundJobService.class);
+        boolean needsCreate = (existingJobId < 0 && pingFrequency > 0);
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                    builder.setRequiresBatteryNotLow(true);
-                }
+        //running job, no hard cancel so check for diff in ping frequency and recreate if needed
+        JobInfo existingJobInfo = getJobInfo(existingJobId, jobScheduler);
+        if (existingJobInfo != null && existingJobInfo.getIntervalMillis() != pingFrequency * Constants.ONE_MIN_IN_MILLIS) {
+            jobScheduler.cancel(existingJobId);
+            StorageHelper.putInt(context, Constants.PF_JOB_ID, -1);
+            needsCreate = true;
+        }
 
-                if(this.deviceInfo.testPermission(context,"android.permission.RECEIVE_BOOT_COMPLETED")){
-                    builder.setPersisted(true);
-                }
+        if (needsCreate) {
+            int jobid = getAccountId().hashCode();
+            JobInfo.Builder builder = new JobInfo.Builder(jobid, componentName);
+            builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
+            builder.setRequiresCharging(false);
 
-                JobInfo jobInfo = builder.build();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                builder.setPeriodic(pingFrequency * Constants.ONE_MIN_IN_MILLIS, 5 * Constants.ONE_MIN_IN_MILLIS);
+            } else {
+                builder.setPeriodic(pingFrequency * 60 * 1000);
+            }
 
-                int resultCode = jobScheduler.schedule(jobInfo);
-                if (resultCode == JobScheduler.RESULT_SUCCESS) {
-                    Logger.d(getAccountId(), "Job scheduled!");
-                    StorageHelper.putInt(context, storageKeyWithSuffix(Constants.PF_JOB_ID), jobid);
-                } else {
-                    Logger.d(getAccountId(), "Job not scheduled");
-                }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                builder.setRequiresBatteryNotLow(true);
+            }
+
+            if(this.deviceInfo.testPermission(context,"android.permission.RECEIVE_BOOT_COMPLETED")){
+                builder.setPersisted(true);
+            }
+
+            JobInfo jobInfo = builder.build();
+            int resultCode = jobScheduler.schedule(jobInfo);
+            if (resultCode == JobScheduler.RESULT_SUCCESS) {
+                Logger.d(getAccountId(), "Job scheduled!");
+                StorageHelper.putInt(context, Constants.PF_JOB_ID, jobid);
+            } else {
+                Logger.d(getAccountId(), "Job not scheduled");
+            }
         }
     }
 
@@ -6511,15 +6509,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                             PendingIntent alarmServicePendingIntent = PendingIntent.getService(context,getAccountId().hashCode(),alarmIntent,PendingIntent.FLAG_UPDATE_CURRENT);
                             if (alarmManager != null) {
                                 if(pingFrequency != -1) {
-                                    alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + (pingFrequency * Constants.INTERVAL_MINUTES), Constants.INTERVAL_MINUTES * pingFrequency, alarmServicePendingIntent);
+                                    alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + (pingFrequency * Constants.ONE_MIN_IN_MILLIS), Constants.ONE_MIN_IN_MILLIS * pingFrequency, alarmServicePendingIntent);
                                 }
                             }
-                        }
-                        //TODO remove after testing
-                        if(parameters!=null){
-                            pushEvent("Job Ran");
-                        }else{
-                            pushEvent("Alarm Ran");
                         }
                     } catch (JSONException e) {
                         Logger.v("Unable to raise background Ping event");

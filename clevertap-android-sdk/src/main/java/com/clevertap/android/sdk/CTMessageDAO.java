@@ -122,7 +122,7 @@ class CTMessageDAO {
         try {
             String id = inboxMessage.has("_id") ? inboxMessage.getString("_id") : "00";
             long date = inboxMessage.has("date") ? inboxMessage.getInt("date") : System.currentTimeMillis()/1000;
-            long expires = inboxMessage.has("wzrk_ttl") ? inboxMessage.getInt("wzrk_ttl") : (System.currentTimeMillis() + 24*60*Constants.INTERVAL_MINUTES)/1000;
+            long expires = inboxMessage.has("wzrk_ttl") ? inboxMessage.getInt("wzrk_ttl") : (System.currentTimeMillis() + 24*60*Constants.ONE_MIN_IN_MILLIS)/1000;
             JSONObject cellObject = inboxMessage.has("msg") ? inboxMessage.getJSONObject("msg") : null;
             String tags = "";
             if(cellObject != null) {

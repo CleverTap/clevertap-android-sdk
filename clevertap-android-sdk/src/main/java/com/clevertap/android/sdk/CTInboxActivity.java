@@ -71,7 +71,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
             styleConfig = extras.getParcelable("styleConfig");
             config = extras.getParcelable("config");
             CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(getApplicationContext(), config);
-            //inboxMessageArrayList = extras.getParcelableArrayList("messageList");
             if (cleverTapAPI != null) {
                 inboxMessageArrayList = cleverTapAPI.getAllInboxMessages();
                 setListener(cleverTapAPI);
@@ -137,10 +136,8 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
             tabLayout.setVisibility(View.GONE);
             //ExoPlayerRecyclerView manages autoplay of videos on scoll and hence only used if Inbox messages contain videos
             CTInboxMessageAdapter inboxMessageAdapter;
-            videoPresent = checkInboxMessagesContainVideo(inboxMessageArrayList);
             if(videoPresent) {
                 exoPlayerRecyclerView = new ExoPlayerRecyclerView(getApplicationContext());
-                //exoPlayerRecyclerView = findViewById(R.id.activity_exo_recycler_view);
                 exoPlayerRecyclerView.setVisibility(View.VISIBLE);
                 exoPlayerRecyclerView.setVideoInfoList(inboxMessageArrayList);
                 LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);

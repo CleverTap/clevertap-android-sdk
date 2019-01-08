@@ -101,7 +101,7 @@ public class Constants {
     static final String PF_JOB_ID = "pfjobid";
     static final int PING_FREQUENCY_VALUE = 240;
     static final String PING_FREQUENCY = "pf";
-    static final long INTERVAL_MINUTES = 60 * 1000L;
+    static final long ONE_MIN_IN_MILLIS = 60 * 1000L;
     static final String COPY_TYPE = "copy";
     /**
      * Profile command constants.
