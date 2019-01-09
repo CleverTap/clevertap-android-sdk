@@ -129,6 +129,9 @@ class CTMessageDAO {
                 tags = cellObject.has("tags") ? cellObject.getString("tags") : null;
             }
             String campaignId = inboxMessage.has("wzrk_id") ? inboxMessage.getString("wzrk_id") : "0_0";
+            if(campaignId.equalsIgnoreCase("0_0")){
+                inboxMessage.put("wzrk_id",campaignId);//For test inbox Notification Viewed
+            }
             JSONObject wzrkParams = getWzrkFields(inboxMessage);
             return (id == null) ? null: new CTMessageDAO(id, cellObject, false,date,expires,userId, tags,campaignId,wzrkParams);
         }catch (JSONException e){

@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -22,7 +23,7 @@ public class CTInboxSecondTabFragment extends CTInboxTabBaseFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View allView = inflater.inflate(R.layout.inbox_first_tab,container,false);
         LinearLayout linearLayout = allView.findViewById(R.id.first_tab_linear_layout);
-        videoPresent = checkInboxMessagesContainVideo(inboxMessageArrayList);
+        linearLayout.setBackgroundColor(Color.parseColor(styleConfig.getInboxBackgroundColor()));
         //Check if video present to render appropriate recyclerview
         CTInboxMessageAdapter inboxMessageAdapter;
         if(videoPresent) {

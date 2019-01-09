@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.util.TypedValue;
 import android.view.Display;
 import android.view.View;
 import android.view.ViewGroup;
@@ -161,16 +162,48 @@ public class ExoPlayerRecyclerView extends RecyclerView {
             return;
         }
 
-        CTSimpleMessageViewHolder holder
-                = (CTSimpleMessageViewHolder) child.getTag();
+        ViewHolder holder = null;
+
+        switch (videoInfoList.get(targetPosition).getType()){
+            case IconMessage:
+                holder = (CTIconMessageViewHolder) child.getTag();
+                break;
+            case SimpleMessage:
+                holder = (CTSimpleMessageViewHolder) child.getTag();
+                break;
+        }
+
         if (holder == null) {
             playPosition = -1;
             return;
         }
-        //mCoverImage = holder.mCover;
-        FrameLayout frameLayout = holder.itemView.findViewById(R.id.simple_message_frame_layout);
-        frameLayout.addView(videoSurfaceView);
-        frameLayout.setVisibility(VISIBLE);
+
+        FrameLayout frameLayout = null;
+        switch (videoInfoList.get(targetPosition).getType()){
+            case IconMessage:
+                frameLayout = holder.itemView.findViewById(R.id.icon_message_frame_layout);
+                break;
+            case SimpleMessage:
+                frameLayout = holder.itemView.findViewById(R.id.simple_message_frame_layout);
+                break;
+        }
+
+        if (videoInfoList.get(targetPosition).getOrientation().equalsIgnoreCase("l")) {
+            int width = getResources().getDisplayMetrics().widthPixels;// Get width of the screen
+            int height = Math.round(width * 0.5625f);
+            videoSurfaceView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
+        } else if (videoInfoList.get(targetPosition).getOrientation().equalsIgnoreCase("p")) {
+            int width = getResources().getDisplayMetrics().widthPixels;// Get width of the screen
+            videoSurfaceView.setLayoutParams(new FrameLayout.LayoutParams(width, width));
+            videoSurfaceView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
+        }
+
+        if (frameLayout != null) {
+            if(videoInfoList.get(targetPosition).getInboxMessageContents().get(0).mediaIsVideo() || videoInfoList.get(targetPosition).getInboxMessageContents().get(0).mediaIsAudio()) {
+                frameLayout.addView(videoSurfaceView);
+                frameLayout.setVisibility(VISIBLE);
+            }
+        }
         addedVideo = true;
         rowParent = holder.itemView;
         videoSurfaceView.requestFocus();
@@ -236,7 +269,7 @@ public class ExoPlayerRecyclerView extends RecyclerView {
         player = ExoPlayerFactory.newSimpleInstance(appContext, trackSelector);
         // Bind the player to the view.
         videoSurfaceView.setUseController(true);
-        videoSurfaceView.setShowBuffering(true);
+        //videoSurfaceView.setShowBuffering(true);
         videoSurfaceView.setUseArtwork(true);
         videoSurfaceView.setControllerAutoShow(false);
         videoSurfaceView.setPlayer(player);

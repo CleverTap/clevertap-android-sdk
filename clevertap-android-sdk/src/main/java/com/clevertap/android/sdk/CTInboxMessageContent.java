@@ -281,4 +281,9 @@ public class CTInboxMessageContent implements Parcelable {
         String contentType = this.getContentType();
         return contentType != null && this.media != null && contentType.startsWith("video");
     }
+
+    public boolean mediaIsAudio () {
+        String contentType = this.getContentType();
+        return contentType != null && this.media != null && contentType.startsWith("audio");
+    }
 }

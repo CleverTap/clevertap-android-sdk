@@ -47,9 +47,9 @@ class DBAdapter {
     private static final String IS_READ = "isRead";
     private static final String EXPIRES = "expires";
     private static final String TAGS = "tags";
-    private static final String MESSAGE_USER = "messageUser";
+    private static final String USER_ID = "messageUser";
     private static final String CAMPAIGN = "campaignId";
-    private static final String WZRKPRAMS = "wzrkParams";
+    private static final String WZRKPARAMS = "wzrkParams";
 
     private static final int DB_UPDATE_ERROR = -1;
     private static final int DB_OUT_OF_MEMORY_ERROR = -2;
@@ -74,20 +74,20 @@ class DBAdapter {
                     KEY_DATA + " STRING NOT NULL);";
 
     private static final String CREATE_INBOX_MESSAGES_TABLE =
-            "CREATE TABLE " + Table.INBOX_MESSAGES.getName() + " (_id STRING UNIQUE PRIMARY KEY, " +
+            "CREATE TABLE " + Table.INBOX_MESSAGES.getName() + " (_id STRING NOT NULL, " +
                     KEY_DATA + " TEXT NOT NULL, " +
-                    WZRKPRAMS + " TEXT NOT NULL, " +
-                    CAMPAIGN + " TEXT NOT NULL, " +
+                    WZRKPARAMS + " TEXT NOT NULL, " +
+                    CAMPAIGN + " STRING NOT NULL, " +
                     TAGS + " TEXT NOT NULL, " +
                     IS_READ + " INTEGER NOT NULL DEFAULT 0, " +
                     EXPIRES + " INTEGER NOT NULL, " +
                     KEY_CREATED_AT + " INTEGER NOT NULL, " +
-                    MESSAGE_USER + " TEXT NOT NULL);";
+                    USER_ID + " STRING NOT NULL);";
 
 
-    private static final String INBOX_MESSAGES_USER_INDEX =
-            "CREATE INDEX IF NOT EXISTS user_idx ON " + Table.INBOX_MESSAGES.getName() +
-                    " (" + MESSAGE_USER + ");";
+    private static final String INBOX_MESSAGES_COMP_ID_USERID_INDEX =
+            "CREATE UNIQUE INDEX IF NOT EXISTS userid_id_idx ON " + Table.INBOX_MESSAGES.getName() +
+                    " (" + USER_ID +"," + _ID + ");";
 
     private static final String EVENTS_TIME_INDEX =
             "CREATE INDEX IF NOT EXISTS time_idx ON " + Table.EVENTS.getName() +
@@ -146,7 +146,7 @@ class DBAdapter {
             db.execSQL(PROFILE_EVENTS_TIME_INDEX);
             db.execSQL(UNINSTALL_TS_INDEX);
             db.execSQL(PUSH_NOTIFICATIONS_TIME_INDEX);
-            db.execSQL(INBOX_MESSAGES_USER_INDEX);
+            db.execSQL(INBOX_MESSAGES_COMP_ID_USERID_INDEX);
         }
 
         @SuppressLint("SQLiteString")
@@ -173,7 +173,7 @@ class DBAdapter {
             db.execSQL(PROFILE_EVENTS_TIME_INDEX);
             db.execSQL(UNINSTALL_TS_INDEX);
             db.execSQL(PUSH_NOTIFICATIONS_TIME_INDEX);
-            db.execSQL(INBOX_MESSAGES_USER_INDEX);
+            db.execSQL(INBOX_MESSAGES_COMP_ID_USERID_INDEX);
         }
 
         boolean belowMemThreshold() {
@@ -386,8 +386,6 @@ class DBAdapter {
         cleanInternal(table, DATA_EXPIRATION);
     }
 
-
-    // TODO use this!!!
     void cleanUpPushNotifications(){
         //In Push_Notifications, KEY_CREATED_AT is stored as a future epoch, i.e. currentTimeMillis() + ttl,
         //so comparing to the current time for removal is correct
@@ -651,18 +649,17 @@ class DBAdapter {
                 final ContentValues cv = new ContentValues();
                 cv.put(_ID, messageDAO.getId());
                 cv.put(KEY_DATA, messageDAO.getJsonData().toString());
-                cv.put(WZRKPRAMS, messageDAO.getWzrkParams().toString());
+                cv.put(WZRKPARAMS, messageDAO.getWzrkParams().toString());
                 cv.put(CAMPAIGN,messageDAO.getCampaignId());
                 cv.put(TAGS, messageDAO.getTags());
                 cv.put(IS_READ, messageDAO.isRead());
                 cv.put(EXPIRES, messageDAO.getExpires());
                 cv.put(KEY_CREATED_AT,messageDAO.getDate());
-                cv.put(MESSAGE_USER,messageDAO.getUserId());
+                cv.put(USER_ID,messageDAO.getUserId());
                 db.insertWithOnConflict(Table.INBOX_MESSAGES.getName(),null,cv,SQLiteDatabase.CONFLICT_REPLACE);
             }
         } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error adding data to table " + Table.INBOX_MESSAGES.getName() + " Recreating DB");
-            dbHelper.deleteDatabase();
+            getConfigLogger().verbose("Error adding data to table " + Table.INBOX_MESSAGES.getName());
         } finally {
             dbHelper.close();
         }
@@ -674,18 +671,17 @@ class DBAdapter {
      * @param messageId String messageId
      * @return boolean value based on success of operation
      */
-    boolean deleteMessageForId(String messageId){
-        if(messageId == null) return false;
+    boolean deleteMessageForId(String messageId, String userId){
+        if(messageId == null || userId == null) return false;
 
         final String tName = Table.INBOX_MESSAGES.getName();
 
         try {
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
-            db.delete(tName, _ID + " = " + messageId, null);
+            db.delete(tName, _ID + " = ? AND " + USER_ID + " = ?", new String[]{messageId,userId});
             return true;
         } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error removing stale records from " + tName + ". Recreating DB.", e);
-            deleteDB();
+            getConfigLogger().verbose("Error removing stale records from " + tName, e);
             return false;
         } finally {
             dbHelper.close();
@@ -697,19 +693,18 @@ class DBAdapter {
      * @param messageId String messageId
      * @return boolean value depending on success of operation
      */
-    boolean markReadMessageForId(String messageId){
-        if(messageId == null) return false;
+    boolean markReadMessageForId(String messageId, String userId){
+        if(messageId == null || userId == null) return false;
 
         final String tName = Table.INBOX_MESSAGES.getName();
         try{
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
             ContentValues cv = new ContentValues();
             cv.put(IS_READ,1);
-            db.update(Table.INBOX_MESSAGES.getName(), cv,_ID + " = ?",new String[]{messageId});
+            db.update(Table.INBOX_MESSAGES.getName(), cv,_ID + " = ? AND " + USER_ID + " = ?",new String[]{messageId,userId});
             return true;
         }catch (final SQLiteException e){
-            getConfigLogger().verbose("Error removing stale records from " + tName + ". Recreating DB.", e);
-            deleteDB();
+            getConfigLogger().verbose("Error removing stale records from " + tName, e);
             return false;
         } finally {
             dbHelper.close();
@@ -727,17 +722,17 @@ class DBAdapter {
         ArrayList<CTMessageDAO> messageDAOArrayList = new ArrayList<>();
         try{
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
-            cursor= db.rawQuery("SELECT * FROM "+tName+" WHERE " + MESSAGE_USER+ " = ? ", new String[]{userId});
+            cursor= db.rawQuery("SELECT * FROM "+tName+" WHERE " + USER_ID + " = ? ORDER BY " + KEY_CREATED_AT+ " DESC", new String[]{userId});
             if(cursor != null) {
                 while(cursor.moveToNext()){
                     CTMessageDAO ctMessageDAO = new CTMessageDAO();
                     ctMessageDAO.setId(cursor.getString(cursor.getColumnIndex(_ID)));
                     ctMessageDAO.setJsonData(new JSONObject(cursor.getString(cursor.getColumnIndex(KEY_DATA))));
-                    ctMessageDAO.setWzrkParams(new JSONObject(cursor.getString(cursor.getColumnIndex(WZRKPRAMS))));
+                    ctMessageDAO.setWzrkParams(new JSONObject(cursor.getString(cursor.getColumnIndex(WZRKPARAMS))));
                     ctMessageDAO.setDate(cursor.getLong(cursor.getColumnIndex(KEY_CREATED_AT)));
                     ctMessageDAO.setExpires(cursor.getLong(cursor.getColumnIndex(EXPIRES)));
                     ctMessageDAO.setRead(cursor.getInt(cursor.getColumnIndex(IS_READ)));
-                    ctMessageDAO.setUserId(cursor.getString(cursor.getColumnIndex(MESSAGE_USER)));
+                    ctMessageDAO.setUserId(cursor.getString(cursor.getColumnIndex(USER_ID)));
                     ctMessageDAO.setTags(cursor.getString(cursor.getColumnIndex(TAGS)));
                     ctMessageDAO.setCampaignId(cursor.getString(cursor.getColumnIndex(CAMPAIGN)));
                     messageDAOArrayList.add(ctMessageDAO);
@@ -746,13 +741,10 @@ class DBAdapter {
             }
             return messageDAOArrayList;
         }catch (final SQLiteException e){
-            getConfigLogger().verbose("Error retrieving records from " + tName + ". Recreating DB.", e);
-            deleteDB();
+            getConfigLogger().verbose("Error retrieving records from " + tName, e);
             return null;
         } catch (JSONException e) {
-            e.printStackTrace();
-            getConfigLogger().verbose("Error retrieving records from " + tName + ". Recreating DB.", e);
-            deleteDB();
+            getConfigLogger().verbose("Error retrieving records from " + tName, e.getMessage());
             return null;
         } finally {
             dbHelper.close();

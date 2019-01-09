@@ -45,8 +45,8 @@ class CTInboxController {
     private final Object messagesLock = new Object();
 
     // always call async
-    CTInboxController(String accountId, String guid, DBAdapter adapter, boolean videoSupported) {
-        this.userId = accountId + guid;
+    CTInboxController(String guid, DBAdapter adapter, boolean videoSupported) {
+        this.userId = guid;
         this.dbAdapter = adapter;
         this.messages = this.dbAdapter.getMessages(this.userId);
         this.videoSupported = videoSupported;
@@ -116,7 +116,7 @@ class CTInboxController {
         postAsyncSafely("RunDeleteMessage", new Runnable() {
             @Override
             public void run() {
-                dbAdapter.deleteMessageForId(messageId);
+                dbAdapter.deleteMessageForId(messageId,userId);
             }
         });
         return true;
@@ -135,7 +135,7 @@ class CTInboxController {
         postAsyncSafely("RunMarkMessageRead", new Runnable() {
             @Override
             public void run() {
-                dbAdapter.markReadMessageForId(messageId);
+                dbAdapter.markReadMessageForId(messageId,userId);
             }
         });
         return true;
@@ -194,7 +194,7 @@ class CTInboxController {
             @Override
             public void run() {
                 for (CTMessageDAO message: _toDelete) {
-                    dbAdapter.deleteMessageForId(message.getId());
+                    dbAdapter.deleteMessageForId(message.getId(),userId);
 
                 }
             }

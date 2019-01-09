@@ -1579,7 +1579,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             dbAdapter = new DBAdapter(context,this.config);
             dbAdapter.cleanupStaleEvents(DBAdapter.Table.EVENTS);
             dbAdapter.cleanupStaleEvents(DBAdapter.Table.PROFILE_EVENTS);
-            //dbAdapter.cleanUpPushNotifications();  // TODO why is this commented out ???
+            dbAdapter.cleanUpPushNotifications();
         }
         return dbAdapter;
     }
@@ -2325,10 +2325,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         if (pushAmpObject.has("pf")) {
                             try {
                                 int frequency = pushAmpObject.getInt("pf");
-                                if(getAccountId().equalsIgnoreCase("ZWW-WWW-WWRZ")){
-                                    frequency = 15;
-                                }
-                                if (!(frequency == getPingFrequency(context))) {
+                                if (frequency != getPingFrequency(context)) {
                                     setPingFrequency(context, frequency);
                                     if (this.config.isBackgroundSync() && !this.config.isAnalyticsOnly()) {
                                         postAsyncSafely("createOrResetJobScheduler", new Runnable() {
@@ -4072,7 +4069,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         JSONArray inappNotifs = new JSONArray();
                         r.put(Constants.INBOX_JSON_RESPONSE_KEY, inappNotifs);
                         JSONObject testPushObject = new JSONObject(extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
-                        testPushObject.put("_id",System.currentTimeMillis()/1000);
+                        testPushObject.put("_id",String.valueOf(System.currentTimeMillis()/1000));
                         inappNotifs.put(testPushObject);
                         processInboxResponse(r);
                     } catch (Throwable t) {
@@ -6098,7 +6095,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             if (this.ctInboxController != null) {
                 return;
             }
-            this.ctInboxController = new CTInboxController(getAccountId(), getCleverTapID(), loadDBAdapter(context), haveVideoPlayerSupport);
+            this.ctInboxController = new CTInboxController(getCleverTapID(), loadDBAdapter(context), haveVideoPlayerSupport);
             _notifyInboxInitialized();
         }
     }
@@ -6495,6 +6492,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 }
 
                 Calendar calendar = Calendar.getInstance();
+                long now = calendar.getTimeInMillis();
                 calendar.set(Calendar.HOUR,22);
                 calendar.set(Calendar.MINUTE,0);
                 calendar.set(Calendar.SECOND,0);
@@ -6505,13 +6503,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 calendar.add(Calendar.HOUR,8);
                 long endMs = calendar.getTimeInMillis();
 
-                long lastTS = loadDBAdapter(context).getLastUninstallTimestamp();
-
-                if (lastTS >= startMs && lastTS <= endMs) {
+                if (now >= startMs && now <= endMs) {
                     Logger.v(getAccountId(), "Job Service won't run in default DND hours");
                     return;
                 }
 
+                long lastTS = loadDBAdapter(context).getLastUninstallTimestamp();
 
                 if(lastTS == 0 || lastTS > System.currentTimeMillis() - 24*60*60*1000){
                     try {

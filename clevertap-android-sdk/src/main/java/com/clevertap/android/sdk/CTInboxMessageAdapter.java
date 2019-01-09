@@ -4,7 +4,9 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
@@ -186,7 +188,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                         .into(((CTSimpleMessageViewHolder)viewHolder).mediaImage);
                             } else if(inboxMessages.get(i).getInboxMessageContents().get(0).mediaIsGIF()){
                                 ((CTSimpleMessageViewHolder)viewHolder).mediaImage.setVisibility(View.VISIBLE);
-                                ((CTSimpleMessageViewHolder)viewHolder).mediaImage.setScaleType(ImageView.ScaleType.FIT_XY);
+                                ((CTSimpleMessageViewHolder)viewHolder).mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
                                 Glide.with(((CTSimpleMessageViewHolder)viewHolder).mediaImage.getContext())
                                         .asGif()
                                         .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
@@ -203,19 +205,18 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                     .into(((CTSimpleMessageViewHolder)viewHolder).squareImage);
                         } else if(inboxMessages.get(i).getInboxMessageContents().get(0).mediaIsGIF()){
                             ((CTSimpleMessageViewHolder)viewHolder).squareImage.setVisibility(View.VISIBLE);
-                            ((CTSimpleMessageViewHolder)viewHolder).squareImage.setScaleType(ImageView.ScaleType.FIT_XY);
+                            ((CTSimpleMessageViewHolder)viewHolder).squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
                             Glide.with(((CTSimpleMessageViewHolder)viewHolder).squareImage.getContext())
                                     .asGif()
                                     .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
                                     .into(((CTSimpleMessageViewHolder)viewHolder).squareImage);
-                        }else if(inboxMessages.get(i).getInboxMessageContents().get(0).mediaIsVideo()) {
+                        }else if(inboxMessages.get(i).getInboxMessageContents().get(0).mediaIsVideo() || inboxMessages.get(i).getInboxMessageContents().get(0).mediaIsAudio()) {
                             addVideoView(inboxMessage.getType(),viewHolder, context,i);
                         }
                         break;
                     }
                     final int position = i;
                     //New thread to remove the Read dot, mark message as read and raise Notification Viewed
-                    //TODO check why message is not getting marked as read in DB and Notification Viewed is being raised erratically
                     Runnable simpleRunnable = new Runnable() {
                         @Override
                         public void run() {
@@ -350,12 +351,12 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                         .into(((CTIconMessageViewHolder)viewHolder).mediaImage);
                             } else if(inboxMessages.get(i).getInboxMessageContents().get(0).mediaIsGIF()){
                                 ((CTIconMessageViewHolder)viewHolder).mediaImage.setVisibility(View.VISIBLE);
-                                ((CTIconMessageViewHolder)viewHolder).mediaImage.setScaleType(ImageView.ScaleType.FIT_XY);
+                                ((CTIconMessageViewHolder)viewHolder).mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
                                 Glide.with(((CTIconMessageViewHolder)viewHolder).mediaImage.getContext())
                                         .asGif()
                                         .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
                                         .into(((CTIconMessageViewHolder)viewHolder).mediaImage);
-                            }else if(inboxMessages.get(i).getInboxMessageContents().get(0).mediaIsVideo()) {
+                            }else if(inboxMessages.get(i).getInboxMessageContents().get(0).mediaIsVideo() || inboxMessages.get(i).getInboxMessageContents().get(0).mediaIsAudio()) {
                                 addVideoView(inboxMessage.getType(),viewHolder, context,i);
                             }
                             break;
@@ -367,7 +368,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                     .into(((CTIconMessageViewHolder)viewHolder).squareImage);
                         } else if(inboxMessages.get(i).getInboxMessageContents().get(0).mediaIsGIF()){
                             ((CTIconMessageViewHolder)viewHolder).squareImage.setVisibility(View.VISIBLE);
-                            ((CTIconMessageViewHolder)viewHolder).squareImage.setScaleType(ImageView.ScaleType.FIT_XY);
+                            ((CTIconMessageViewHolder)viewHolder).squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
                             Glide.with(((CTIconMessageViewHolder)viewHolder).squareImage.getContext())
                                     .asGif()
                                     .load(inboxMessages.get(i).getInboxMessageContents().get(0).getMedia())
@@ -379,7 +380,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     }
                     final int imagePosition = i;
                     //New thread to remove the Read dot, mark message as read and raise Notification Viewed
-                    //TODO check why message is not getting marked as read in DB and Notification Viewed is being raised erratically
                     Runnable iconRunnable = new Runnable() {
                         @Override
                         public void run() {
@@ -618,7 +618,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
         PlayerView playerView = new PlayerView(context);
         playerView.setTag(pos);
         playerView.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.WRAP_CONTENT));
-        playerView.setShowBuffering(true);
+        //playerView.setShowBuffering(true);
         playerView.setUseArtwork(true);
         playerView.setControllerAutoShow(false);
         playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_ZOOM);
@@ -638,6 +638,22 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
         playerView.requestFocus();
         playerView.setVisibility(View.VISIBLE);
         playerView.setPlayer(player);
+        playerView.setUseArtwork(true);
+        Drawable artwork = context.getResources().getDrawable(R.drawable.ct_audio);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            playerView.setDefaultArtwork(Utils.drawableToBitmap(artwork));
+        }else{
+            playerView.setDefaultArtwork(Utils.drawableToBitmap(artwork));
+        }
+        if (inboxMessage.getOrientation().equalsIgnoreCase("l")) {
+            int width = context.getResources().getDisplayMetrics().widthPixels;// Get width of the screen
+            int height = Math.round(width * 0.5625f);
+            playerView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
+        } else if (inboxMessage.getOrientation().equalsIgnoreCase("p")) {
+            int width = context.getResources().getDisplayMetrics().widthPixels;// Get width of the screen
+            playerView.setLayoutParams(new FrameLayout.LayoutParams(width, width));
+            playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
+        }
         player.setPlayWhenReady(false);
 
         switch (inboxMessageType){
@@ -646,6 +662,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
 
                 iconMessageViewHolder.iconMessageFrameLayout.addView(playerView);
                 iconMessageViewHolder.iconMessageFrameLayout.setVisibility(View.VISIBLE);
+                break;
             case SimpleMessage:
                 CTSimpleMessageViewHolder simpleMessageViewHolder = (CTSimpleMessageViewHolder) viewHolder;
 

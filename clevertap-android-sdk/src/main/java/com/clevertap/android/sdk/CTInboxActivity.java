@@ -42,6 +42,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
     private RecyclerView recyclerView;
     private boolean firstTime = true;
     boolean videoPresent = CleverTapAPI.haveVideoPlayerSupport;
+    private CTInboxStyleConfig styleConfig;;
 
     void setListener(InboxActivityListener listener) {
         listenerWeakReference = new WeakReference<>(listener);
@@ -64,7 +65,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
 
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
-        CTInboxStyleConfig styleConfig;
         try{
             Bundle extras = getIntent().getExtras();
             if(extras == null) throw new IllegalArgumentException();
@@ -98,6 +98,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
         });
 
         LinearLayout linearLayout = findViewById(R.id.inbox_linear_layout);
+        linearLayout.setBackgroundColor(Color.parseColor(styleConfig.getInboxBackgroundColor()));
         TabLayout tabLayout = linearLayout.findViewById(R.id.tab_layout);
         ViewPager viewPager = linearLayout.findViewById(R.id.view_pager);
         //Tabs are shown only if mentioned in StyleConfig
@@ -294,8 +295,10 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                if(videoPresent)
-                    exoPlayerRecyclerView.onPausePlayer();
+                if(videoPresent) {
+                    if(exoPlayerRecyclerView !=null)
+                        exoPlayerRecyclerView.onPausePlayer();
+                }
             }
         });
         super.onPause();
@@ -306,8 +309,10 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                if(videoPresent)
-                    exoPlayerRecyclerView.onRestartPlayer();
+                if(videoPresent) {
+                    if(exoPlayerRecyclerView !=null)
+                        exoPlayerRecyclerView.onRestartPlayer();
+                }
             }
         });
         super.onResume();

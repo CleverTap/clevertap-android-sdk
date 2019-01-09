@@ -81,8 +81,10 @@ abstract class CTInboxTabBaseFragment extends Fragment {
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                if(videoPresent)
-                    exoPlayerRecyclerView.onPausePlayer();
+                if(videoPresent) {
+                    if (exoPlayerRecyclerView != null)
+                           exoPlayerRecyclerView.onPausePlayer();
+                }
             }
         });
         super.onPause();
@@ -93,8 +95,10 @@ abstract class CTInboxTabBaseFragment extends Fragment {
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                if(videoPresent)
-                    exoPlayerRecyclerView.onRestartPlayer();
+                if(videoPresent) {
+                    if (exoPlayerRecyclerView != null)
+                        exoPlayerRecyclerView.onRestartPlayer();
+                }
             }
         });
         super.onResume();
