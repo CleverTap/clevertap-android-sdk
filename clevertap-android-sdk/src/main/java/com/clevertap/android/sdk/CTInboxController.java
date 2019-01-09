@@ -2,156 +2,203 @@ package com.clevertap.android.sdk;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-
-// TODO handle isRead and TTL cases ????  particlarly when there is no updatedMessages coming from the server
 /**
  * Controller class which handles Users and Messages for the Notification Inbox
  */
 class CTInboxController {
-    private int count;
-    private int unreadCount;
-    private ArrayList<CTMessageDAO> messages,unreadMessages;
-    private String userId;
-    private CTUserDAO userDAO;
-    private DBAdapter dbAdapter;
-    static boolean exoPlayerPresent = false;
+    private static ExecutorService es;
+    private static long EXECUTOR_THREAD_ID = 0;
 
-    CTInboxController(String accountId, String guid, DBAdapter adapter){
+    private static void postAsyncSafely(final String name, final Runnable runnable) {
+        try {
+            final boolean executeSync = Thread.currentThread().getId() == EXECUTOR_THREAD_ID;
+            if (executeSync) {
+                runnable.run();
+            } else {
+                es.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        EXECUTOR_THREAD_ID = Thread.currentThread().getId();
+                        try {
+                           Logger.v("CTInboxController Executor Service: Starting task - " + name);
+                            runnable.run();
+                        } catch (Throwable t) {
+                           Logger.v("CTInboxController Executor Service: Failed to complete the scheduled task", t);
+                        }
+                    }
+                });
+            }
+        } catch (Throwable t) {
+            Logger.v("Failed to submit task to the executor service", t);
+        }
+    }
+
+    private ArrayList<CTMessageDAO> messages;
+    private String userId;
+    private DBAdapter dbAdapter;
+    private boolean videoSupported;
+    private final Object messagesLock = new Object();
+
+    // always call async
+    CTInboxController(String accountId, String guid, DBAdapter adapter, boolean videoSupported) {
         this.userId = accountId + guid;
         this.dbAdapter = adapter;
-        this.userDAO = this.dbAdapter.fetchOrCreateUser(this.userId, accountId, guid);
         this.messages = this.dbAdapter.getMessages(this.userId);
-        this.unreadMessages = this.dbAdapter.getUnreadMessages(this.userId);
-        this.count = this.messages.size();
-        this.unreadCount = this.unreadMessages.size();
-        exoPlayerPresent = checkForExoPlayer();
-    }
-
-    boolean updateMessages(JSONArray inboxMessages){
-        return updateUserMessages(inboxMessages);
-    }
-
-    boolean deleteMessageWithId(String messageId){
-        CTMessageDAO messageDAO = getMessageDaoForId(messageId);
-        if (messageDAO == null) {
-            return false;
+        this.videoSupported = videoSupported;
+        if (es == null) {
+            es = Executors.newFixedThreadPool(1);
         }
-        return this.dbAdapter.deleteMessageForId(messageId);
     }
 
-    boolean markReadForMessageWithId(String messageId){
-        CTMessageDAO messageDAO = getMessageDaoForId(messageId);
-        if(messageDAO == null) {
-            return false;
-        }
-        boolean marked = this.dbAdapter.markReadMessageForId(messageId);
-        this.messages = this.dbAdapter.getMessages(this.userId);
-        this.unreadMessages = this.dbAdapter.getUnreadMessages(this.userId);
-        this.count = messages.size();
-        this.unreadCount = unreadMessages.size();
-        return marked;
-    }
-
-    JSONObject getMessageForId(String messageId){
-        for(CTMessageDAO messageDAO : messages){
-            if(messageDAO.getId().equals(messageId)){
-                return messageDAO.toJSON();
+    private CTMessageDAO findMessageById(String id) {
+        synchronized (messagesLock) {
+            for (CTMessageDAO message : messages) {
+                if (message.getId().equals(id)) {
+                    return message;
+                }
             }
         }
-        Logger.d("Inbox Message for message id - "+messageId+" doesn't exist");
+        Logger.v("Inbox Message for message id - "+id+" not found");
         return null;
     }
 
-    private CTMessageDAO getMessageDaoForId(String messageId){
-        return this.dbAdapter.getMessageForId(messageId);
-    }
-
-    int count(){
-        return count;
-    }
-
-    int unreadCount(){
-        return unreadCount;
-    }
-
-    ArrayList<CTMessageDAO> getMessages(){
-        return messages;
-    }
-
-    ArrayList<CTMessageDAO> getUnreadMessages(){
-        return unreadMessages;
-    }
-
-    private boolean updateUserMessages(JSONArray inboxMessages){
-        userDAO.setNewMessages(inboxMessages);
+    // always call async
+    boolean updateMessages(final JSONArray inboxMessages){
         boolean haveUpdates = false;
-        ArrayList<CTMessageDAO> messageDAOArrayList = new ArrayList<>();
-        ArrayList<CTMessageDAO> updateMessageList = new ArrayList<>();
+        ArrayList<CTMessageDAO> newMessages = new ArrayList<>();
 
         for(int i=0;i<inboxMessages.length();i++){
             try {
-                JSONObject inboxMessage = inboxMessages.getJSONObject(i);
-                if(!inboxMessage.has("_id")){
-                    Logger.d("Notification inbox message doesn't have _id");
-                    break;
+                CTMessageDAO messageDAO = CTMessageDAO.initWithJSON(inboxMessages.getJSONObject(i), this.userId);
+
+                if (messageDAO == null) {
+                    continue;
                 }
 
-                CTMessageDAO messageDAO = CTMessageDAO.initWithJSON(inboxMessage, userDAO.getUserId());
-
-                if(messageDAO != null) {
-                    if(!exoPlayerPresent){
-                        if(new CTInboxMessage().initWithJSON(messageDAO.toJSON()).getInboxMessageContents().get(0).mediaIsVideo()){
-                            Logger.d("Dropping inbox messages containing videos since Exoplayer files are missing. For more information checkout CleverTap documentation.");
-                            continue;
-                        }
-                    }
-                    messageDAOArrayList.add(messageDAO);
-                    Logger.d("Notification Inbox Message not present, adding values");
+                if (!videoSupported && messageDAO.containsVideo()) {
+                    Logger.d("Dropping inbox message containing video as app does not support video. For more information checkout CleverTap documentation.");
+                    continue;
                 }
 
+                newMessages.add(messageDAO);
+
+                Logger.v("Inbox Message for message id - "+messageDAO.getId()+" added");
             }catch (JSONException e){
                 Logger.d("Unable to update notification inbox messages - "+e.getLocalizedMessage());
             }
         }
 
-        if(messageDAOArrayList.size()>0){
-            this.dbAdapter.storeMessagesForUser(messageDAOArrayList);
+        if(newMessages.size() > 0) {
+            this.dbAdapter.upsertMessages(newMessages);
             haveUpdates = true;
-            Logger.d("Notification Inbox messages added");
+            Logger.v("New Notification Inbox messages added");
+            synchronized (messagesLock) {
+                this.messages = this.dbAdapter.getMessages(this.userId);
+                trimMessages();
+            }
         }
-
-        this.dbAdapter.cleanUpMessages(this.userId);  // TODO you have to check for TTL even if there are no new user messages coming from the server; same for unread vs read
-
-        this.messages = this.dbAdapter.getMessages(this.userId);
-        this.unreadMessages = this.dbAdapter.getUnreadMessages(this.userId);
-        this.count = messages.size();
-        this.unreadCount = unreadMessages.size();
-
         return haveUpdates;
     }
 
-
-    private boolean checkForExoPlayer(){
-        boolean exoPlayerPresent = false;
-        Class className = null;
-        try{
-            className = Class.forName("com.google.android.exoplayer2.ExoPlayerFactory");
-            className = Class.forName("com.google.android.exoplayer2.source.hls.HlsMediaSource");
-            className = Class.forName("com.google.android.exoplayer2.ui.PlayerView");
-            Logger.d("ExoPlayer is present");
-            exoPlayerPresent = true;
-        }catch (Throwable t){
-            Logger.d("ExoPlayer library files are missing!!!");
-            Logger.d("Please add ExoPlayer dependencies to render Inbox messages playing video. For more information checkout CleverTap documentation.");
-            if(className!=null)
-                Logger.d("ExoPlayer classes not found "+className.getName());
-            else
-                Logger.d("ExoPlayer classes not found");
+    boolean deleteMessageWithId(final String messageId){
+        CTMessageDAO messageDAO = findMessageById(messageId);
+        if (messageDAO == null) {
+            return false;
         }
-        return exoPlayerPresent;
+        synchronized (messagesLock) {
+            this.messages.remove(messageDAO);
+        }
+        postAsyncSafely("RunDeleteMessage", new Runnable() {
+            @Override
+            public void run() {
+                dbAdapter.deleteMessageForId(messageId);
+            }
+        });
+        return true;
+    }
+
+    boolean markReadForMessageWithId(final String messageId){
+        CTMessageDAO messageDAO = findMessageById(messageId);
+        if (messageDAO == null) {
+            return false;
+        }
+
+        synchronized (messagesLock) {
+           messageDAO.setRead(1);
+        }
+
+        postAsyncSafely("RunMarkMessageRead", new Runnable() {
+            @Override
+            public void run() {
+                dbAdapter.markReadMessageForId(messageId);
+            }
+        });
+        return true;
+    }
+
+    CTMessageDAO getMessageForId(String messageId){
+        return findMessageById(messageId);
+    }
+
+    int count(){
+        return getMessages().size();
+    }
+
+    int unreadCount(){
+        return getUnreadMessages().size();
+    }
+
+    ArrayList<CTMessageDAO> getMessages(){
+        synchronized (messagesLock) {
+            trimMessages();
+            return messages;
+        }
+    }
+
+    ArrayList<CTMessageDAO> getUnreadMessages(){
+        ArrayList<CTMessageDAO> unread = new ArrayList<>();
+        synchronized (messagesLock) {
+            ArrayList<CTMessageDAO> messages = getMessages();
+            for (CTMessageDAO message: messages) {
+                if (message.isRead() == 0) {
+                    unread.add(message);
+                }
+            }
+        }
+        return unread;
+    }
+
+    private void trimMessages() {
+        ArrayList<CTMessageDAO> toDelete = new ArrayList<>();
+        synchronized (messagesLock) {
+            for(CTMessageDAO message: this.messages) {
+                long expires = message.getExpires();
+                boolean expired = (expires > 0 && System.currentTimeMillis()/1000 > expires);
+                if (expired) {
+                    Logger.v("Inbox Message: "+message.getId() + " is expired - removing");
+                    toDelete.add(message);
+                    this.messages.remove(message);
+                }
+            }
+        }
+
+        if (toDelete.size() <= 0) return;
+
+        final ArrayList<CTMessageDAO> _toDelete = toDelete;
+        postAsyncSafely("RunDeleteMessage", new Runnable() {
+            @Override
+            public void run() {
+                for (CTMessageDAO message: _toDelete) {
+                    dbAdapter.deleteMessageForId(message.getId());
+
+                }
+            }
+        });
+
     }
 }

@@ -24,7 +24,7 @@ abstract class CTInboxTabBaseFragment extends Fragment {
     ArrayList<CTInboxMessage> inboxMessageArrayList =  new ArrayList<>();
     CleverTapInstanceConfig config;
     ExoPlayerRecyclerView exoPlayerRecyclerView;
-    boolean videoPresent = CTInboxController.exoPlayerPresent;
+    boolean videoPresent = CleverTapAPI.haveVideoPlayerSupport;
     CTInboxStyleConfig styleConfig;
     private WeakReference<CTInboxTabBaseFragment.InboxListener> listenerWeakReference;
 

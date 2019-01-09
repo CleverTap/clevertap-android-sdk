@@ -57,7 +57,7 @@ class CTInAppNotification implements Parcelable {
     CTInAppNotificationListener listener;
 
     private boolean isTablet;
-
+    private boolean videoSupported;
 
     CTInAppNotification(){}
 
@@ -65,7 +65,8 @@ class CTInAppNotification implements Parcelable {
         void notificationReady(CTInAppNotification inAppNotification);
     }
 
-    CTInAppNotification initWithJSON(JSONObject jsonObject){
+    CTInAppNotification initWithJSON(JSONObject jsonObject, boolean videoSupported){
+        this.videoSupported = videoSupported;
         this.jsonDescription = jsonObject;
         try {
 
@@ -245,18 +246,8 @@ class CTInAppNotification implements Parcelable {
                 listener.notificationReady(this);
             }
         } else if(this.mediaIsVideo() || this.mediaIsAudio()){
-            Class className = null;
-            try{
-                className = Class.forName("com.google.android.exoplayer2.ExoPlayerFactory");
-                className = Class.forName("com.google.android.exoplayer2.source.hls.HlsMediaSource");
-                className = Class.forName("com.google.android.exoplayer2.ui.PlayerView");
-            }catch (Throwable t){
-                Logger.d("ExoPlayer library files are missing!!!");
-                Logger.d("Please add ExoPlayer dependencies to render In-App notifications playing audio/video. For more information checkout CleverTap documentation.");
-                if(className!=null)
-                    this.error = "ExoPlayer classes not found "+className.getName();
-                else
-                    this.error = "ExoPlayer classes not found";
+            if (!this.videoSupported) {
+                this.error = "InApp Video/Audio is not supported";
             }
             listener.notificationReady(this);
         }else {

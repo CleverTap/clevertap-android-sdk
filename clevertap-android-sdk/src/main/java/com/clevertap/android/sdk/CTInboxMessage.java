@@ -35,7 +35,7 @@ public class CTInboxMessage implements Parcelable {
     private JSONObject wzrkParams;
 
 
-    CTInboxMessage initWithJSON(JSONObject jsonObject){
+    CTInboxMessage(JSONObject jsonObject){
         this.data = jsonObject;
         try {
             this.messageId = jsonObject.has("id") ? jsonObject.getString("id") : "0";
@@ -66,11 +66,7 @@ public class CTInboxMessage implements Parcelable {
         } catch (JSONException e) {
             Logger.v("Unable to init CTInboxMessage with JSON - "+e.getLocalizedMessage());
         }
-
-        return this;
     }
-
-    public CTInboxMessage(){}
 
     private CTInboxMessage(Parcel in) {
         try {

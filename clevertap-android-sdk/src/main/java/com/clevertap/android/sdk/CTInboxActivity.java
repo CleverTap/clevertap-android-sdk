@@ -41,7 +41,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
     private ExoPlayerRecyclerView exoPlayerRecyclerView;
     private RecyclerView recyclerView;
     private boolean firstTime = true;
-    boolean videoPresent = CTInboxController.exoPlayerPresent;
+    boolean videoPresent = CleverTapAPI.haveVideoPlayerSupport;
 
     void setListener(InboxActivityListener listener) {
         listenerWeakReference = new WeakReference<>(listener);

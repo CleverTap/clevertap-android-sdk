@@ -74,9 +74,6 @@ import javax.net.ssl.SSLSocketFactory;
 import static android.content.Context.JOB_SCHEDULER_SERVICE;
 import static android.content.Context.NOTIFICATION_SERVICE;
 
-// TODO clean up all the warnings in this file
-// TODO clean up all commented out code
-
 /**
  * <h1>CleverTapAPI</h1>
  * This is the main CleverTapAPI class that manages the SDK instances
@@ -127,6 +124,31 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private static String sdkVersion;  // For Google Play Store/Android Studio analytics
+
+    private static boolean checkForExoPlayer(){
+        boolean exoPlayerPresent = false;
+        Class className = null;
+        try{
+            className = Class.forName("com.google.android.exoplayer2.ExoPlayerFactory");
+            className = Class.forName("com.google.android.exoplayer2.source.hls.HlsMediaSource");
+            className = Class.forName("com.google.android.exoplayer2.ui.PlayerView");
+            Logger.d("ExoPlayer is present");
+            exoPlayerPresent = true;
+        }catch (Throwable t){
+            Logger.d("ExoPlayer library files are missing!!!");
+            Logger.d("Please add ExoPlayer dependencies to render InApp or Inbox messages playing video. For more information checkout CleverTap documentation.");
+            if(className!=null)
+                Logger.d("ExoPlayer classes not found "+className.getName());
+            else
+                Logger.d("ExoPlayer classes not found");
+        }
+        return exoPlayerPresent;
+    }
+
+    static boolean haveVideoPlayerSupport;
+    static {
+        haveVideoPlayerSupport = checkForExoPlayer();
+    }
 
     private DBAdapter dbAdapter;
     private Context context;
@@ -1557,7 +1579,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             dbAdapter = new DBAdapter(context,this.config);
             dbAdapter.cleanupStaleEvents(DBAdapter.Table.EVENTS);
             dbAdapter.cleanupStaleEvents(DBAdapter.Table.PROFILE_EVENTS);
-            //dbAdapter.cleanUpPushNotifications();
+            //dbAdapter.cleanUpPushNotifications();  // TODO why is this commented out ???
         }
         return dbAdapter;
     }
@@ -2283,7 +2305,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             if(!getConfig().isAnalyticsOnly()) {
                 try {
                     getConfigLogger().verbose(getAccountId(), "Processing inbox messages...");
-                    processInboxResponse(response, context);
+                    processInboxResponse(response);
                 } catch (Throwable t) {
                     getConfigLogger().verbose("Notification inbox exception: " + t.getLocalizedMessage());
                 }
@@ -2494,6 +2516,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private final class NotificationPrepareRunnable implements Runnable{
         private final WeakReference<CleverTapAPI> cleverTapAPIWeakReference;
         private final JSONObject jsonObject;
+        private boolean videoSupport = haveVideoPlayerSupport;
 
         NotificationPrepareRunnable (CleverTapAPI cleverTapAPI, JSONObject jsonObject){
             this.cleverTapAPIWeakReference = new WeakReference<>(cleverTapAPI);
@@ -2502,7 +2525,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         @Override
         public void run(){
-            final CTInAppNotification inAppNotification = new CTInAppNotification().initWithJSON(jsonObject);
+            final CTInAppNotification inAppNotification = new CTInAppNotification().initWithJSON(jsonObject, videoSupport);
             if(inAppNotification.getError() != null){
                 getConfigLogger().debug(getAccountId(),"Unable to parse inapp notification "+ inAppNotification.getError());
                 return;
@@ -3513,6 +3536,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         });
     }
 
+    @SuppressWarnings("ConstantConditions")
     private void _pushFacebookUser(JSONObject graphUser) {
         try {
             if (graphUser == null)
@@ -4050,7 +4074,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         JSONObject testPushObject = new JSONObject(extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
                         testPushObject.put("_id",System.currentTimeMillis()/1000);
                         inappNotifs.put(testPushObject);
-                        processInboxResponse(r, context);
+                        processInboxResponse(r);
                     } catch (Throwable t) {
                         Logger.v("Failed to display inapp notification from push notification payload", t);
                     }
@@ -6036,7 +6060,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //NotificationInbox
-    private void processInboxResponse(final JSONObject response, final Context context){
+    private void processInboxResponse(final JSONObject response){
         if(getConfig().isAnalyticsOnly()){
             getConfigLogger().verbose(getAccountId(),"CleverTap instance is configured to analytics only, not processing inbox messages");
             return;
@@ -6074,7 +6098,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             if (this.ctInboxController != null) {
                 return;
             }
-            this.ctInboxController = new CTInboxController(getAccountId(), getCleverTapID(), loadDBAdapter(context));
+            this.ctInboxController = new CTInboxController(getAccountId(), getCleverTapID(), loadDBAdapter(context), haveVideoPlayerSupport);
             _notifyInboxInitialized();
         }
     }
@@ -6143,7 +6167,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     public int getInboxMessageCount(){
         synchronized (inboxControllerLock) {
             if (this.ctInboxController != null) {
-                return ctInboxController.count(); // TODO how are you handling TTL  ??
+                return ctInboxController.count();
             } else {
                 getConfigLogger().debug(getAccountId(),"Notification Inbox not initialized");
                 return -1;
@@ -6158,7 +6182,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     public int getInboxMessageUnreadCount(){
         synchronized (inboxControllerLock) {
             if (this.ctInboxController != null) {
-                return ctInboxController.unreadCount();  // TODO how are you handling TTL  ??
+                return ctInboxController.unreadCount();
             } else {
                 getConfigLogger().debug(getAccountId(), "Notification Inbox not initialized");
                 return -1;
@@ -6174,8 +6198,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     public CTInboxMessage getInboxMessageForId(String messageId){
         synchronized (inboxControllerLock) {
             if (this.ctInboxController != null) {
-                JSONObject messageJson = ctInboxController.getMessageForId(messageId);
-                return new CTInboxMessage().initWithJSON(messageJson);
+                CTMessageDAO message = ctInboxController.getMessageForId(messageId);
+                return (message != null) ? new CTInboxMessage(message.toJSON()) :  null;
             } else {
                 getConfigLogger().debug(getAccountId(), "Notification Inbox not initialized");
                 return null;
@@ -6237,7 +6261,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             if(ctInboxController != null){
                 ArrayList<CTMessageDAO> messageDAOArrayList = ctInboxController.getUnreadMessages();
                 for (CTMessageDAO messageDAO : messageDAOArrayList) {
-                    inboxMessageArrayList.add(new CTInboxMessage().initWithJSON(messageDAO.toJSON()));
+                    inboxMessageArrayList.add(new CTInboxMessage(messageDAO.toJSON()));
                 }
                 return inboxMessageArrayList;
             } else {
@@ -6257,7 +6281,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             if(ctInboxController != null){
                 ArrayList<CTMessageDAO> messageDAOArrayList = ctInboxController.getMessages();
                 for (CTMessageDAO messageDAO : messageDAOArrayList) {
-                    inboxMessageArrayList.add(new CTInboxMessage().initWithJSON(messageDAO.toJSON()));
+                    inboxMessageArrayList.add(new CTInboxMessage(messageDAO.toJSON()));
                 }
                 return inboxMessageArrayList;
             }else{

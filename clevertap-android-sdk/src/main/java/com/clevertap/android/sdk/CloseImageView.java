@@ -8,12 +8,12 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.util.TypedValue;
-import android.widget.ImageView;
+import android.support.v7.widget.AppCompatImageView;
 
 /**
  * Represents the close button.
  */
-final class CloseImageView extends ImageView {
+final class CloseImageView extends AppCompatImageView {
     @SuppressLint("ResourceType")
     public CloseImageView(Context context) {
         super(context);

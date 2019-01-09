@@ -103,7 +103,7 @@ class CTMessageDAO {
         this.wzrkParams = wzrk_params;
     }
 
-     CTMessageDAO(){}  // TODO bad practice to allow unparameterized constructor; very error prone
+    CTMessageDAO(){}  // TODO bad practice to allow unparameterized constructor; very error prone
 
     private CTMessageDAO(String id, JSONObject jsonData, boolean read, long date, long expires, String userId, String tags, String campaignId, JSONObject wzrkParams){
         this.id = id;
@@ -120,7 +120,7 @@ class CTMessageDAO {
 
     static CTMessageDAO initWithJSON(JSONObject inboxMessage, String userId){
         try {
-            String id = inboxMessage.has("_id") ? inboxMessage.getString("_id") : "00";
+            String id = inboxMessage.has("_id") ? inboxMessage.getString("_id") : null;
             long date = inboxMessage.has("date") ? inboxMessage.getInt("date") : System.currentTimeMillis()/1000;
             long expires = inboxMessage.has("wzrk_ttl") ? inboxMessage.getInt("wzrk_ttl") : (System.currentTimeMillis() + 24*60*Constants.ONE_MIN_IN_MILLIS)/1000;
             JSONObject cellObject = inboxMessage.has("msg") ? inboxMessage.getJSONObject("msg") : null;
@@ -130,7 +130,7 @@ class CTMessageDAO {
             }
             String campaignId = inboxMessage.has("wzrk_id") ? inboxMessage.getString("wzrk_id") : "0_0";
             JSONObject wzrkParams = getWzrkFields(inboxMessage);
-            return new CTMessageDAO(id, cellObject, false,date,expires,userId, tags,campaignId,wzrkParams);
+            return (id == null) ? null: new CTMessageDAO(id, cellObject, false,date,expires,userId, tags,campaignId,wzrkParams);
         }catch (JSONException e){
             Logger.d("Unable to parse Notification inbox message to CTMessageDao - "+e.getLocalizedMessage());
             return null;
@@ -170,5 +170,9 @@ class CTMessageDAO {
         }
 
         return fields;
+    }
+
+    boolean containsVideo() {
+       return new CTInboxMessage(this.toJSON()).getInboxMessageContents().get(0).mediaIsVideo();
     }
 }
