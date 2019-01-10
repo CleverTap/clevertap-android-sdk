@@ -5008,7 +5008,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //PN
-    // TODO optimize this function , check if it exists  before you do all this work; don't understand the enumeration of all the keys and then the iterator
     private void handlePushNotificationsInResponse(JSONArray pushNotifications){
         try {
             for (int i = 0; i < pushNotifications.length(); i++) {

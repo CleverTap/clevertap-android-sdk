@@ -103,7 +103,7 @@ class CTMessageDAO {
         this.wzrkParams = wzrk_params;
     }
 
-    CTMessageDAO(){}  // TODO bad practice to allow unparameterized constructor; very error prone
+    CTMessageDAO(){}
 
     private CTMessageDAO(String id, JSONObject jsonData, boolean read, long date, long expires, String userId, String tags, String campaignId, JSONObject wzrkParams){
         this.id = id;
@@ -175,7 +175,8 @@ class CTMessageDAO {
         return fields;
     }
 
-    boolean containsVideo() {
-       return new CTInboxMessage(this.toJSON()).getInboxMessageContents().get(0).mediaIsVideo();
+    boolean containsVideoOrAudio() {
+        CTInboxMessageContent content = new CTInboxMessage(this.toJSON()).getInboxMessageContents().get(0);
+        return (content.mediaIsVideo() || content.mediaIsAudio());
     }
 }
