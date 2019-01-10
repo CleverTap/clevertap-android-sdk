@@ -12,6 +12,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.RecyclerView;
+import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -57,6 +58,9 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
     private static final int ICON = 1;
     private static final int CAROUSEL = 2;
     private static final int IMAGE_CAROUSEL = 3;
+    private SimpleExoPlayer player;
+    //private PlayerView playerView;
+    private ArrayList<PlayerView> playerViewList = new ArrayList<>();
 
     CTInboxMessageAdapter(ArrayList<CTInboxMessage> inboxMessages, Activity activity, Fragment fragment){
         this.inboxMessages = inboxMessages;
@@ -614,9 +618,10 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
         }
     }
 
-    private void addVideoView(CTInboxMessageType inboxMessageType, RecyclerView.ViewHolder viewHolder, Context context, int pos){
+    private void addVideoView(CTInboxMessageType inboxMessageType, RecyclerView.ViewHolder viewHolder, Context context, final int pos){
         PlayerView playerView = new PlayerView(context);
         playerView.setTag(pos);
+        playerViewList.add(playerView);
         playerView.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.WRAP_CONTENT));
         //playerView.setShowBuffering(true);
         playerView.setUseArtwork(true);
@@ -626,7 +631,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
         TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
         TrackSelector trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
         // 2. Create the player
-        SimpleExoPlayer player = ExoPlayerFactory.newSimpleInstance(context, trackSelector);
+        player = ExoPlayerFactory.newSimpleInstance(context, trackSelector);
         // 3. Produces DataSource instances through which media data is loaded.
         DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(context,
                 Util.getUserAgent(context, context.getPackageName()), (TransferListener<? super DataSource>) bandwidthMeter);
@@ -634,7 +639,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
         // 4. Prepare the player with the source.
         player.prepare(hlsMediaSource);
         player.setRepeatMode(Player.REPEAT_MODE_ONE);
-        player.seekTo(1000);
+        //player.seekTo(1000);
         playerView.requestFocus();
         playerView.setVisibility(View.VISIBLE);
         playerView.setPlayer(player);
@@ -662,12 +667,64 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
 
                 iconMessageViewHolder.iconMessageFrameLayout.addView(playerView);
                 iconMessageViewHolder.iconMessageFrameLayout.setVisibility(View.VISIBLE);
+                if(inboxMessages.get(pos).getInboxMessageContents().get(0).mediaIsVideo()) {
+                    ImageView muteIcon = new ImageView(context);
+                    muteIcon.setImageDrawable(context.getResources().getDrawable(R.drawable.volume_off));
+                    int iconWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, context.getResources().getDisplayMetrics());
+                    int iconHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, context.getResources().getDisplayMetrics());
+                    FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(iconWidth, iconHeight);
+                    int iconTop = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, context.getResources().getDisplayMetrics());
+                    int iconRight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, context.getResources().getDisplayMetrics());
+                    layoutParams.setMargins(0, iconTop, iconRight, 0);
+                    layoutParams.gravity = Gravity.END;
+                    muteIcon.setLayoutParams(layoutParams);
+                    muteIcon.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+
+                            float currentVolume = ((SimpleExoPlayer) playerViewList.get(0).getPlayer()).getVolume();
+                            if (currentVolume > 0) {
+                                player.setVolume(0f);
+                            } else if (currentVolume == 0) {
+                                player.setVolume(1);
+                            }
+                        }
+
+                    });
+                    iconMessageViewHolder.iconMessageFrameLayout.addView(muteIcon);
+                }
                 break;
             case SimpleMessage:
                 CTSimpleMessageViewHolder simpleMessageViewHolder = (CTSimpleMessageViewHolder) viewHolder;
 
                 simpleMessageViewHolder.simpleMessageFrameLayout.addView(playerView);
                 simpleMessageViewHolder.simpleMessageFrameLayout.setVisibility(View.VISIBLE);
+                if(inboxMessages.get(pos).getInboxMessageContents().get(0).mediaIsVideo()) {
+                    ImageView muteIcon = new ImageView(context);
+                    muteIcon.setImageDrawable(context.getResources().getDrawable(R.drawable.volume_off));
+                    int iconWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, context.getResources().getDisplayMetrics());
+                    int iconHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, context.getResources().getDisplayMetrics());
+                    FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(iconWidth, iconHeight);
+                    int iconTop = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, context.getResources().getDisplayMetrics());
+                    int iconRight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, context.getResources().getDisplayMetrics());
+                    layoutParams.setMargins(0, iconTop, iconRight, 0);
+                    layoutParams.gravity = Gravity.END;
+                    muteIcon.setLayoutParams(layoutParams);
+                    muteIcon.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+
+                            float currentVolume = ((SimpleExoPlayer) playerViewList.get(0).getPlayer()).getVolume();
+                            if (currentVolume > 0) {
+                                player.setVolume(0f);
+                            } else if (currentVolume == 0) {
+                                player.setVolume(1);
+                            }
+                        }
+
+                    });
+                    simpleMessageViewHolder.simpleMessageFrameLayout.addView(muteIcon);
+                }
                 break;
         }
 
@@ -697,8 +754,10 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     return;
                 ArrayList<CTInboxMessage> filteredMessages = new ArrayList<>();
                 for(CTInboxMessage inboxMessage : inboxMessages){
-                    if(inboxMessage.getTags().contains(tab)){
-                        filteredMessages.add(inboxMessage);
+                    for( String stringTag : inboxMessage.getTags()){
+                        if(stringTag.equalsIgnoreCase(tab)){
+                            filteredMessages.add(inboxMessage);
+                        }
                     }
                 }
                 inboxMessages = filteredMessages;

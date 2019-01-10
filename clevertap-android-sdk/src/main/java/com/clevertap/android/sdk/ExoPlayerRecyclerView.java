@@ -11,11 +11,13 @@ import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.view.Display;
+import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.AbsListView;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.ExoPlayerFactory;
@@ -52,6 +54,7 @@ public class ExoPlayerRecyclerView extends RecyclerView {
     //private ImageView mCoverImage;
     private Context appContext;
     int targetPosition;
+    ImageView muteIcon,muteIcon2;
 
     /**
      * the position of playing video
@@ -202,6 +205,32 @@ public class ExoPlayerRecyclerView extends RecyclerView {
             if(videoInfoList.get(targetPosition).getInboxMessageContents().get(0).mediaIsVideo() || videoInfoList.get(targetPosition).getInboxMessageContents().get(0).mediaIsAudio()) {
                 frameLayout.addView(videoSurfaceView);
                 frameLayout.setVisibility(VISIBLE);
+                if(videoInfoList.get(targetPosition).getInboxMessageContents().get(0).mediaIsVideo()) {
+                    muteIcon = new ImageView(appContext);
+                    muteIcon.setImageDrawable(appContext.getResources().getDrawable(R.drawable.volume_off));//Volume off icon here by default
+                    int iconWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
+                    int iconHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
+                    FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(iconWidth, iconHeight);
+                    int iconTop = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics());
+                    int iconRight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics());
+                    layoutParams.setMargins(0, iconTop, iconRight, 0);
+                    layoutParams.gravity = Gravity.END;
+                    muteIcon.setLayoutParams(layoutParams);
+                    muteIcon.setOnClickListener(new OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            float currentVolume = player.getVolume();
+                            if (currentVolume > 0) {
+                                player.setVolume(0f);
+                                muteIcon.setImageDrawable(appContext.getResources().getDrawable(R.drawable.volume_off));//change to volume off icon
+                            } else if (currentVolume == 0) {
+                                player.setVolume(1);
+                                muteIcon.setImageDrawable(appContext.getResources().getDrawable(R.drawable.volume_on));//change to volume on icon
+                            }
+                        }
+                    });
+                    frameLayout.addView(muteIcon);
+                }
             }
         }
         addedVideo = true;
@@ -223,6 +252,11 @@ public class ExoPlayerRecyclerView extends RecyclerView {
             // Prepare the player with the source.
             player.prepare(hlsMediaSource);
             player.setPlayWhenReady(true);
+            if(videoInfoList.get(targetPosition).getInboxMessageContents().get(0).mediaIsAudio()) {
+                player.setVolume(1f);
+            }else if(videoInfoList.get(targetPosition).getInboxMessageContents().get(0).mediaIsVideo()){
+                player.setVolume(0f);
+            }
         }
 
 

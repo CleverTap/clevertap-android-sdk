@@ -12,6 +12,13 @@
             android:layout_height="match_parent"
             android:id="@+id/first_tab_recycler_view"
             android:visibility="gone"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/first_tab_no_message_view"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:text="No Message(s) to show"/>
     </LinearLayout>
 
 </LinearLayout>

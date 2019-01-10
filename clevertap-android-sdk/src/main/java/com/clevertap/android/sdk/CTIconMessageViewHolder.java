@@ -24,7 +24,7 @@ class CTIconMessageViewHolder extends RecyclerView.ViewHolder {
 
     CTIconMessageViewHolder(@NonNull View itemView) {
         super(itemView);
-
+        itemView.setTag(this);
         title = itemView.findViewById(R.id.messageTitle);
         message = itemView.findViewById(R.id.messageText);
         mediaImage = itemView.findViewById(R.id.media_image);

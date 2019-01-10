@@ -576,9 +576,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         checkTimeoutSession();
         if(!isAppLaunchPushed()) {
             pushAppLaunchedEvent();
+            onTokenRefresh();
         }
         if (!inCurrentSession()) {
-            onTokenRefresh();
+            //onTokenRefresh();
             pushInitialEventsAsync();
         }
         checkPendingInAppNotifications(activity);
@@ -2325,6 +2326,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         if (pushAmpObject.has("pf")) {
                             try {
                                 int frequency = pushAmpObject.getInt("pf");
+                                getConfigLogger().verbose("Ping frequency received - " + frequency);
+                                getConfigLogger().verbose("Stored Ping Frequency - " + getPingFrequency(context));
                                 if (frequency != getPingFrequency(context)) {
                                     setPingFrequency(context, frequency);
                                     if (this.config.isBackgroundSync() && !this.config.isAnalyticsOnly()) {
@@ -2332,8 +2335,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                                             @Override
                                             public void run() {
                                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                                    getConfigLogger().verbose("Creating job");
                                                     createOrResetJobScheduler(context);
                                                 } else {
+                                                    getConfigLogger().verbose("Resetting alarm");
                                                     resetAlarmScheduler(context);
                                                 }
                                             }
@@ -2347,6 +2352,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         }
                         if (pushAmpObject.has("ack")) {
                             boolean ack = pushAmpObject.getBoolean("ack");
+                            getConfigLogger().verbose("Received ACK -" + ack);
                             if(ack){
                                 JSONArray rtlArray = getRenderedTargetList();
                                 String[] rtlStringArray = new String[0];
@@ -2356,6 +2362,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                                 for(int i = 0; i < rtlStringArray.length; i++) {
                                     rtlStringArray[i] = rtlArray.getString(i);
                                 }
+                                getConfigLogger().verbose("Updating RTL values...");
                                 this.dbAdapter.updatePushNotificationIds(rtlStringArray);
                             }
                         }
@@ -5055,6 +5062,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     pushBundle.putString(key,pushObject.getString(key));
                 }
                 if(!pushBundle.isEmpty() && !dbAdapter.doesPushNotificationIdExist(pushObject.getString("wzrk_pid"))){
+                    getConfigLogger().verbose("Creating Push Notification locally");
                     createNotification(context,pushBundle);
                 }else{
                     getConfigLogger().verbose(getAccountId(),"Push Notification already shown, ignoring local notification :"+pushObject.getString("wzrk_pid"));
@@ -5493,6 +5501,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             long ttl = extras.getLong("wzrk_ttl",(System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL)/1000);
             String wzrk_pid = extras.getString("wzrk_pid");
             DBAdapter dbAdapter = loadDBAdapter(context);
+            getConfigLogger().verbose("Storing Push Notification...");
             dbAdapter.storePushNotificationId(wzrk_pid,ttl);
         }
 
@@ -6420,10 +6429,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             JobInfo jobInfo = builder.build();
             int resultCode = jobScheduler.schedule(jobInfo);
             if (resultCode == JobScheduler.RESULT_SUCCESS) {
-                Logger.d(getAccountId(), "Job scheduled!");
+                Logger.d(getAccountId(), "Job scheduled - " +jobid);
                 StorageHelper.putInt(context, Constants.PF_JOB_ID, jobid);
             } else {
-                Logger.d(getAccountId(), "Job not scheduled");
+                Logger.d(getAccountId(), "Job not scheduled - "+jobid);
             }
         }
     }

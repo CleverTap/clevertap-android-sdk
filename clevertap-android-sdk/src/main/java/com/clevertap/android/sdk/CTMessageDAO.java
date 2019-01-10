@@ -105,15 +105,14 @@ class CTMessageDAO {
 
     CTMessageDAO(){}
 
-    private CTMessageDAO(String id, JSONObject jsonData, boolean read, long date, long expires, String userId, String tags, String campaignId, JSONObject wzrkParams){
+    private CTMessageDAO(String id, JSONObject jsonData, boolean read, long date, long expires, String userId, List<String> tags, String campaignId, JSONObject wzrkParams){
         this.id = id;
         this.jsonData = jsonData;
         this.read = read;
         this.date = date;
         this.expires = expires;
         this.userId = userId;
-        if(tags!=null)
-            this.tags = Arrays.asList(tags.split(","));
+        this.tags = tags;
         this.campaignId = campaignId;
         this.wzrkParams = wzrkParams;
     }
@@ -124,16 +123,21 @@ class CTMessageDAO {
             long date = inboxMessage.has("date") ? inboxMessage.getInt("date") : System.currentTimeMillis()/1000;
             long expires = inboxMessage.has("wzrk_ttl") ? inboxMessage.getInt("wzrk_ttl") : (System.currentTimeMillis() + 24*60*Constants.ONE_MIN_IN_MILLIS)/1000;
             JSONObject cellObject = inboxMessage.has("msg") ? inboxMessage.getJSONObject("msg") : null;
-            String tags = "";
+            List<String> tagsList = new ArrayList<>();
             if(cellObject != null) {
-                tags = cellObject.has("tags") ? cellObject.getString("tags") : null;
+                JSONArray tagsArray = cellObject.has("tags") ? cellObject.getJSONArray("tags") : null;
+                if(tagsArray != null){
+                    for(int i=0; i< tagsArray.length(); i++){
+                        tagsList.add(tagsArray.getString(i));
+                    }
+                }
             }
             String campaignId = inboxMessage.has("wzrk_id") ? inboxMessage.getString("wzrk_id") : "0_0";
             if(campaignId.equalsIgnoreCase("0_0")){
                 inboxMessage.put("wzrk_id",campaignId);//For test inbox Notification Viewed
             }
             JSONObject wzrkParams = getWzrkFields(inboxMessage);
-            return (id == null) ? null: new CTMessageDAO(id, cellObject, false,date,expires,userId, tags,campaignId,wzrkParams);
+            return (id == null) ? null: new CTMessageDAO(id, cellObject, false,date,expires,userId, tagsList,campaignId,wzrkParams);
         }catch (JSONException e){
             Logger.d("Unable to parse Notification inbox message to CTMessageDao - "+e.getLocalizedMessage());
             return null;

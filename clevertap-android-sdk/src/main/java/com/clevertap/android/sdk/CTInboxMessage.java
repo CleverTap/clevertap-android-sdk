@@ -43,6 +43,12 @@ public class CTInboxMessage implements Parcelable {
             this.date = jsonObject.has("date") ? jsonObject.getLong("date") : System.currentTimeMillis()/1000;
             this.expires = jsonObject.has("wzrk_ttl") ? jsonObject.getLong("wzrk_ttl") : System.currentTimeMillis() + 1000*60*60*24;
             this.isRead = jsonObject.has("isRead") && jsonObject.getBoolean("isRead");
+            JSONArray tagsArray = jsonObject.has("tags") ? jsonObject.getJSONArray("tags") : null;
+            if(tagsArray != null){
+                for(int i=0; i< tagsArray.length(); i++){
+                    this.tags.add(tagsArray.getString(i));
+                }
+            }
             JSONObject cellObject = jsonObject.has("msg") ? jsonObject.getJSONObject("msg") : null;
             if(cellObject != null){
                 this.type = cellObject.has("type") ? CTInboxMessageType.fromString(cellObject.getString("type")) : CTInboxMessageType.fromString("");
@@ -55,12 +61,6 @@ public class CTInboxMessage implements Parcelable {
                     }
                 }
                 this.orientation = cellObject.has("orientation") ? cellObject.getString("orientation") : "";
-                JSONArray tagsArray = cellObject.has("tags") ? cellObject.getJSONArray("tags") : null;
-                if(tagsArray != null){
-                    for(int i=0; i< tagsArray.length(); i++){
-                        this.tags.add(tagsArray.getString(i));
-                    }
-                }
             }
             this.wzrkParams = jsonObject.has("wzrkParams") ? jsonObject.getJSONObject("wzrkParams") : null;
         } catch (JSONException e) {

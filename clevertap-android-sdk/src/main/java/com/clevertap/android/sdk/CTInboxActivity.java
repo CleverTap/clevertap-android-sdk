@@ -19,6 +19,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import org.json.JSONObject;
 
@@ -99,8 +100,10 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
         linearLayout.setBackgroundColor(Color.parseColor(styleConfig.getInboxBackgroundColor()));
         TabLayout tabLayout = linearLayout.findViewById(R.id.tab_layout);
         ViewPager viewPager = linearLayout.findViewById(R.id.view_pager);
+        TextView noMessageView = findViewById(R.id.no_message_view);
         //Tabs are shown only if mentioned in StyleConfig
         if(styleConfig.isUsingTabs()){
+            viewPager.setVisibility(View.VISIBLE);
             CTInboxTabAdapter inboxTabAdapter = new CTInboxTabAdapter(getSupportFragmentManager());
             tabLayout.setVisibility(View.VISIBLE);
             tabLayout.setSelectedTabIndicatorColor(Color.parseColor(styleConfig.getSelectedTabIndicatorColor()));
@@ -141,7 +144,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
                 exoPlayerRecyclerView.setVideoInfoList(inboxMessageArrayList);
                 LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
                 exoPlayerRecyclerView.setLayoutManager(linearLayoutManager);
-                DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
+                DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(exoPlayerRecyclerView.getContext(),
                         linearLayoutManager.getOrientation());
                 exoPlayerRecyclerView.addItemDecoration(dividerItemDecoration);
                 exoPlayerRecyclerView.setItemAnimator(new DefaultItemAnimator());
@@ -159,6 +162,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
                     firstTime = false;
                 }
                 linearLayout.addView(exoPlayerRecyclerView);
+                noMessageView.setVisibility(View.GONE);
             }else{//Normal Recycler view in case inbox messages don't contain any videos
                 recyclerView = findViewById(R.id.activity_recycler_view);
                 recyclerView.setVisibility(View.VISIBLE);
@@ -172,6 +176,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
                 inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, this,null);
                 recyclerView.setAdapter(inboxMessageAdapter);
                 inboxMessageAdapter.notifyDataSetChanged();
+                noMessageView.setVisibility(View.GONE);
             }
         }
     }
