@@ -525,7 +525,6 @@ class DBAdapter {
             if(cursor!=null && cursor.moveToFirst()){
                 pushIds.add(cursor.getString(cursor.getColumnIndex(KEY_DATA)));
             }
-            rtlDirtyFlag = false;
         }catch (final SQLiteException e) {
             getConfigLogger().verbose("Could not fetch records out of database " + tName + ".", e);
         } finally {

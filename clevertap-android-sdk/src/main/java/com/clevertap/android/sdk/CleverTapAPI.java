@@ -2390,7 +2390,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         String[] pushIds = this.dbAdapter.fetchPushNotificationIds();
         JSONArray renderedTargets = new JSONArray();
         for(int i=0;i<pushIds.length;i++){
-            renderedTargets.put(i);
+            Logger.v("RTL IDs -"+pushIds[i]);
+            renderedTargets.put(pushIds[i]);
         }
         return renderedTargets;
     }
@@ -5498,11 +5499,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         if (notificationManager != null) {
             notificationManager.notify(notificationId, n);
-            long ttl = extras.getLong("wzrk_ttl",(System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL)/1000);
+            String ttl = extras.getString("wzrk_ttl",(System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL)/1000+"");
+            long wzrk_ttl = Long.parseLong(ttl);
             String wzrk_pid = extras.getString("wzrk_pid");
             DBAdapter dbAdapter = loadDBAdapter(context);
-            getConfigLogger().verbose("Storing Push Notification...");
-            dbAdapter.storePushNotificationId(wzrk_pid,ttl);
+            getConfigLogger().verbose("Storing Push Notification..."+wzrk_pid + " - with ttl - "+ttl);
+            dbAdapter.storePushNotificationId(wzrk_pid,wzrk_ttl);
         }
 
     }
@@ -6286,6 +6288,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             if(ctInboxController != null){
                 ArrayList<CTMessageDAO> messageDAOArrayList = ctInboxController.getMessages();
                 for (CTMessageDAO messageDAO : messageDAOArrayList) {
+                    Logger.v("CTMessage Dao - "+messageDAO.toJSON().toString());
                     inboxMessageArrayList.add(new CTInboxMessage(messageDAO.toJSON()));
                 }
                 return inboxMessageArrayList;
