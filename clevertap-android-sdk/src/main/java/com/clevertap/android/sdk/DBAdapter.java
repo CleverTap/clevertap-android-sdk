@@ -152,25 +152,17 @@ class DBAdapter {
         @SuppressLint("SQLiteString")
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+            Logger.v("Upgrading CleverTap DB to version " + newVersion);
 
-            Logger.v("Recreating CleverTap DB on upgrade");
-
-            db.execSQL("DROP TABLE IF EXISTS " + Table.EVENTS.getName());
-            db.execSQL("DROP TABLE IF EXISTS " + Table.PROFILE_EVENTS.getName());
-            db.execSQL("DROP TABLE IF EXISTS " + Table.USER_PROFILES.getName());
+            // For DB Version 2, just adding Push Notifications, Uninstall TS and Inbox Messages tables and related indices
             db.execSQL("DROP TABLE IF EXISTS " + Table.PUSH_NOTIFICATIONS.getName());
             db.execSQL("DROP TABLE IF EXISTS " + Table.UNINSTALL_TS.getName());
             db.execSQL("DROP TABLE IF EXISTS " + Table.INBOX_MESSAGES.getName());
 
-            db.execSQL(CREATE_EVENTS_TABLE);
-            db.execSQL(CREATE_PROFILE_EVENTS_TABLE);
-            db.execSQL(CREATE_USER_PROFILES_TABLE);
             db.execSQL(CREATE_PUSH_NOTIFICATIONS_TABLE);
             db.execSQL(CREATE_UNINSTALL_TS_TABLE);
             db.execSQL(CREATE_INBOX_MESSAGES_TABLE);
 
-            db.execSQL(EVENTS_TIME_INDEX);
-            db.execSQL(PROFILE_EVENTS_TIME_INDEX);
             db.execSQL(UNINSTALL_TS_INDEX);
             db.execSQL(PUSH_NOTIFICATIONS_TIME_INDEX);
             db.execSQL(INBOX_MESSAGES_COMP_ID_USERID_INDEX);
@@ -214,7 +206,7 @@ class DBAdapter {
      * @param table the table to insert into
      * @return the number of rows in the table, or DB_OUT_OF_MEMORY_ERROR/DB_UPDATE_ERROR
      */
-    int storeObject(JSONObject obj, Table table) {
+    synchronized int storeObject(JSONObject obj, Table table) {
         if (!this.belowMemThreshold()) {
             Logger.v("There is not enough space left on the device to store data, data discarded");
             return DB_OUT_OF_MEMORY_ERROR;
@@ -259,7 +251,7 @@ class DBAdapter {
      * @param obj the JSON to record
      * @return the number of rows in the table, or DB_OUT_OF_MEMORY_ERROR/DB_UPDATE_ERROR
      */
-    long storeUserProfile(String id, JSONObject obj) {
+    synchronized long storeUserProfile(String id, JSONObject obj) {
 
         if (id == null) return DB_UPDATE_ERROR;
 
@@ -290,7 +282,7 @@ class DBAdapter {
     /**
      * remove the user profile with id from the db.
      */
-    void removeUserProfile(String id) {
+    synchronized void removeUserProfile(String id) {
 
         if (id == null) return;
         final String tableName = Table.USER_PROFILES.getName();
@@ -305,7 +297,7 @@ class DBAdapter {
         }
     }
 
-    JSONObject fetchUserProfileById(final String id) {
+    synchronized JSONObject fetchUserProfileById(final String id) {
 
         if (id == null) return null;
 
@@ -343,7 +335,7 @@ class DBAdapter {
      *
      * @param table  the table to remove events
      */
-    void removeEvents(Table table) {
+    synchronized void removeEvents(Table table) {
         final String tName = table.getName();
 
         try {
@@ -363,7 +355,7 @@ class DBAdapter {
      * @param lastId the last id to delete
      * @param table  the table to remove events
      */
-    void cleanupEventsFromLastId(String lastId, Table table) {
+    synchronized void cleanupEventsFromLastId(String lastId, Table table) {
         final String tName = table.getName();
 
         try {
@@ -382,11 +374,11 @@ class DBAdapter {
      *
      * @param table the table to remove events
      */
-    void cleanupStaleEvents(Table table) {
+    synchronized void cleanupStaleEvents(Table table) {
         cleanInternal(table, DATA_EXPIRATION);
     }
 
-    void cleanUpPushNotifications(){
+    synchronized void cleanUpPushNotifications(){
         //In Push_Notifications, KEY_CREATED_AT is stored as a future epoch, i.e. currentTimeMillis() + ttl,
         //so comparing to the current time for removal is correct
         cleanInternal(Table.PUSH_NOTIFICATIONS,0);
@@ -418,7 +410,7 @@ class DBAdapter {
      * @param table the table to read from
      * @return JSONObject containing the max row ID and a JSONArray of the JSONObject events or null
      */
-    JSONObject fetchEvents(Table table, final int limit) {
+    synchronized JSONObject fetchEvents(Table table, final int limit) {
         final String tName = table.getName();
         Cursor cursor = null;
         String lastId = null;
@@ -466,7 +458,7 @@ class DBAdapter {
         return null;
     }
 
-    void storePushNotificationId(String id, long ttl) {
+    synchronized void storePushNotificationId(String id, long ttl) {
 
         if (id == null) return;
 
@@ -496,7 +488,7 @@ class DBAdapter {
         }
     }
 
-    private String fetchPushNotificationId(String id){
+    synchronized private String fetchPushNotificationId(String id){
         final String tName = Table.PUSH_NOTIFICATIONS.getName();
         Cursor cursor = null;
         String pushId = "";
@@ -520,7 +512,7 @@ class DBAdapter {
         return pushId;
     }
 
-    String[] fetchPushNotificationIds(){
+    synchronized String[] fetchPushNotificationIds(){
         if(!rtlDirtyFlag) return new String[0];
         final String tName = Table.PUSH_NOTIFICATIONS.getName();
         Cursor cursor = null;
@@ -545,7 +537,7 @@ class DBAdapter {
         return pushIds.toArray(new String[0]);
     }
 
-    void updatePushNotificationIds(String[] ids){
+    synchronized void updatePushNotificationIds(String[] ids){
         if(ids.length == 0){
             return;
         }
@@ -574,7 +566,7 @@ class DBAdapter {
         }
     }
 
-    boolean doesPushNotificationIdExist(String id){
+    synchronized boolean doesPushNotificationIdExist(String id){
         return id.equals(fetchPushNotificationId(id));
     }
 
@@ -587,7 +579,7 @@ class DBAdapter {
      * Adds a String timestamp representing uninstall flag to the DB.
      *
      */
-    void storeUninstallTimestamp() {
+    synchronized void storeUninstallTimestamp() {
 
         if (!this.belowMemThreshold()) {
             getConfigLogger().verbose("There is not enough space left on the device to store data, data discarded");
@@ -609,7 +601,7 @@ class DBAdapter {
 
     }
 
-    long getLastUninstallTimestamp(){
+    synchronized long getLastUninstallTimestamp(){
         final String tName = Table.UNINSTALL_TS.getName();
         Cursor cursor = null;
         long timestamp = 0;
@@ -637,7 +629,7 @@ class DBAdapter {
      * @param inboxMessages ArrayList of type {@link CTMessageDAO}
      *
      */
-    void upsertMessages(ArrayList<CTMessageDAO> inboxMessages){
+    synchronized void upsertMessages(ArrayList<CTMessageDAO> inboxMessages){
         if (!this.belowMemThreshold()) {
             Logger.v("There is not enough space left on the device to store data, data discarded");
             return;
@@ -671,7 +663,7 @@ class DBAdapter {
      * @param messageId String messageId
      * @return boolean value based on success of operation
      */
-    boolean deleteMessageForId(String messageId, String userId){
+    synchronized boolean deleteMessageForId(String messageId, String userId){
         if(messageId == null || userId == null) return false;
 
         final String tName = Table.INBOX_MESSAGES.getName();
@@ -693,7 +685,7 @@ class DBAdapter {
      * @param messageId String messageId
      * @return boolean value depending on success of operation
      */
-    boolean markReadMessageForId(String messageId, String userId){
+    synchronized boolean markReadMessageForId(String messageId, String userId){
         if(messageId == null || userId == null) return false;
 
         final String tName = Table.INBOX_MESSAGES.getName();
@@ -716,7 +708,7 @@ class DBAdapter {
      * @param userId String userid
      * @return ArrayList of {@link CTMessageDAO}
      */
-    ArrayList<CTMessageDAO> getMessages(String userId){
+    synchronized ArrayList<CTMessageDAO> getMessages(String userId){
         final String tName = Table.INBOX_MESSAGES.getName();
         Cursor cursor;
         ArrayList<CTMessageDAO> messageDAOArrayList = new ArrayList<>();

@@ -59,8 +59,6 @@ public abstract class CTInAppBaseFragment extends Fragment {
         inAppNotification = bundle.getParcelable("inApp");
         config = bundle.getParcelable("config");
         generateListener();
-        if (Build.VERSION.SDK_INT != Build.VERSION_CODES.O)
-            parent.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
     }
 
     @Override

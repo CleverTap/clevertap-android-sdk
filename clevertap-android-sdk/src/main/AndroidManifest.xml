@@ -20,6 +20,7 @@
         <activity
             android:name="com.clevertap.android.sdk.CTInboxActivity"
             android:configChanges="orientation|keyboardHidden"
+            android:screenOrientation='portrait'
             android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar"/>
 
         <receiver

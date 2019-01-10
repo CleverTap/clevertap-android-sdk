@@ -4073,7 +4073,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         inappNotifs.put(testPushObject);
                         processInboxResponse(r);
                     } catch (Throwable t) {
-                        Logger.v("Failed to display inapp notification from push notification payload", t);
+                        Logger.v("Failed to process inbox message from push notification payload", t);
                     }
                 }
             };

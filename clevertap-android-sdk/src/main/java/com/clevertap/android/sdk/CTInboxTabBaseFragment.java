@@ -50,30 +50,17 @@ abstract class CTInboxTabBaseFragment extends Fragment {
         super.onAttach(context);
         Bundle bundle = getArguments();
         if (bundle != null) {
-            //inboxMessageArrayList = bundle.getParcelableArrayList("inboxMessages");
             //noinspection ConstantConditions
-            Logger.d("Inbox Message List - "+inboxMessageArrayList.toString());
             config = bundle.getParcelable("config");
             styleConfig = bundle.getParcelable("styleConfig");
-            CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(getActivity(),config);
             if (context instanceof CTInboxActivity) {
                 setListener((CTInboxTabBaseFragment.InboxListener) getActivity());
             }
+            CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(getActivity(),config);
             if (cleverTapAPI != null) {
                 inboxMessageArrayList = cleverTapAPI.getAllInboxMessages();
             }
         }
-    }
-
-    boolean checkInboxMessagesContainVideo(ArrayList<CTInboxMessage> inboxMessageArrayList){
-        boolean videoPresent = false;
-        for(CTInboxMessage inboxMessage : inboxMessageArrayList){
-            if(inboxMessage.getInboxMessageContents().get(0).mediaIsVideo()){
-                videoPresent = true;
-                break;
-            }
-        }
-        return videoPresent;
     }
 
     @Override
@@ -119,6 +106,7 @@ abstract class CTInboxTabBaseFragment extends Fragment {
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
     void didShow(Bundle data, int position) {
         InboxListener listener = getListener();
         if (listener != null) {
@@ -131,7 +119,6 @@ abstract class CTInboxTabBaseFragment extends Fragment {
         try {
             Bundle data = new Bundle();
 
-            //data.putString(Constants.NOTIFICATION_ID_TAG,inboxMessageArrayList.get(position).getCampaignId());
             JSONObject wzrkParams = inboxMessageArrayList.get(position).getWzrkParams();
             Iterator<String> iterator = wzrkParams.keys();
             while(iterator.hasNext()){
@@ -140,25 +127,25 @@ abstract class CTInboxTabBaseFragment extends Fragment {
                     data.putString(keyName,wzrkParams.getString(keyName));
             }
 
-            if(buttonText != null && !buttonText.isEmpty())
+            if (buttonText != null && !buttonText.isEmpty()) {
                 data.putString("wzrk_c2a", buttonText);
+            }
             didClick(data,position);
 
             if (jsonObject != null) {
                 if(inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getLinktype(jsonObject).equalsIgnoreCase(Constants.COPY_TYPE)){
+                    //noinspection UnnecessaryReturnStatement
                     return;
                 }else{
                     String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getLinkUrl(jsonObject);
                     if (actionUrl != null) {
                         fireUrlThroughIntent(actionUrl);
-                        return;
                     }
                 }
             }else {
                 String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getActionUrl();
                 if (actionUrl != null) {
                     fireUrlThroughIntent(actionUrl);
-                    return;
                 }
             }
         } catch (Throwable t) {

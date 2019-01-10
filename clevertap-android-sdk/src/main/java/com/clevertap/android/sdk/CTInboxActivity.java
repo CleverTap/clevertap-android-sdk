@@ -42,7 +42,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
     private RecyclerView recyclerView;
     private boolean firstTime = true;
     boolean videoPresent = CleverTapAPI.haveVideoPlayerSupport;
-    private CTInboxStyleConfig styleConfig;;
 
     void setListener(InboxActivityListener listener) {
         listenerWeakReference = new WeakReference<>(listener);
@@ -61,10 +60,9 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
         return listener;
     }
 
-
-
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
+        CTInboxStyleConfig styleConfig;
         try{
             Bundle extras = getIntent().getExtras();
             if(extras == null) throw new IllegalArgumentException();
@@ -178,16 +176,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
         }
     }
 
-    boolean checkInboxMessagesContainVideo(ArrayList<CTInboxMessage> inboxMessageArrayList){
-        for(CTInboxMessage inboxMessage : inboxMessageArrayList){
-            if(inboxMessage.getInboxMessageContents().get(0).mediaIsVideo()){
-                videoPresent = true;
-                break;
-            }
-        }
-        return videoPresent;
-    }
-
     @Override
     public void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data) {
         didShow(data,inboxMessage);
@@ -236,19 +224,18 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
 
            if (jsonObject != null) {
                 if(inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getLinktype(jsonObject).equalsIgnoreCase(Constants.COPY_TYPE)){
+                    // noinspection UnnecessaryReturnStatement
                     return;
                 }else{
                     String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getLinkUrl(jsonObject);
                     if (actionUrl != null) {
                         fireUrlThroughIntent(actionUrl);
-                        return;
                     }
                 }
             }else {
                 String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getActionUrl();
                 if (actionUrl != null) {
                     fireUrlThroughIntent(actionUrl);
-                    return;
                 }
 }
         } catch (Throwable t) {

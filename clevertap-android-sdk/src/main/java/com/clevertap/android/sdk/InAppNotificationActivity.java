@@ -4,9 +4,12 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.FragmentActivity;
+
 import java.lang.ref.WeakReference;
 
 public final class InAppNotificationActivity extends FragmentActivity implements CTInAppBaseFragment.InAppListener {
@@ -58,6 +61,21 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         } catch (Throwable t) {
             Logger.v("Cannot find a valid notification bundle to show!", t);
             return;
+        }
+
+        try {
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+        } catch (Throwable t) {
+            Logger.d("Error displaying InAppNotification", t);
+            int orientation = this.getResources().getConfiguration().orientation;
+            if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                Logger.d("App in Landscape, dismissing portrait InApp Notification");
+                finish();
+                didDismiss(null);
+                return;
+            } else {
+                Logger.d("App in Portrait, displaying InApp Notification anyway");
+            }
         }
 
         CTInAppBaseFullFragment contentFragment;
