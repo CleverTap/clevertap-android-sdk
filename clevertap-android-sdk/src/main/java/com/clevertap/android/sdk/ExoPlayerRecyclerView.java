@@ -127,6 +127,8 @@ public class ExoPlayerRecyclerView extends RecyclerView {
 
     //play the video in the row
     public void playVideo() {
+        if(videoInfoList.size() == 0) return;
+
         int startPosition = ((LinearLayoutManager) getLayoutManager()).findFirstVisibleItemPosition();
         int endPosition = ((LinearLayoutManager) getLayoutManager()).findLastVisibleItemPosition();
 

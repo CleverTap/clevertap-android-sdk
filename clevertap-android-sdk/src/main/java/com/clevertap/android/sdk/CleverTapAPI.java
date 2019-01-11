@@ -5024,7 +5024,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 if(pushObject.has("wzrk_acct_id"))
                     pushBundle.putString("wzrk_acct_id",pushObject.getString("wzrk_acct_id"));
                 if(pushObject.has("wzrk_acts"))
-                    pushBundle.putString("wzrk_acts",pushObject.getJSONArray("wzrk_acts").toString());
+                    pushBundle.putString("wzrk_acts",pushObject.getString("wzrk_acts"));
                 if(pushObject.has("nm"))
                     pushBundle.putString("nm",pushObject.getString("nm"));
                 if(pushObject.has("nt"))

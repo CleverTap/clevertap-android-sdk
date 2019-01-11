@@ -23,7 +23,6 @@ abstract class CTInboxTabBaseFragment extends Fragment {
 
     ArrayList<CTInboxMessage> inboxMessageArrayList =  new ArrayList<>();
     CleverTapInstanceConfig config;
-    ExoPlayerRecyclerView exoPlayerRecyclerView;
     boolean videoPresent = CleverTapAPI.haveVideoPlayerSupport;
     CTInboxStyleConfig styleConfig;
     private WeakReference<CTInboxTabBaseFragment.InboxListener> listenerWeakReference;
@@ -61,41 +60,6 @@ abstract class CTInboxTabBaseFragment extends Fragment {
                 inboxMessageArrayList = cleverTapAPI.getAllInboxMessages();
             }
         }
-    }
-
-    @Override
-    public void onPause() {
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                if(videoPresent) {
-                    if (exoPlayerRecyclerView != null)
-                           exoPlayerRecyclerView.onPausePlayer();
-                }
-            }
-        });
-        super.onPause();
-    }
-
-    @Override
-    public void onResume() {
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                if(videoPresent) {
-                    if (exoPlayerRecyclerView != null)
-                        exoPlayerRecyclerView.onRestartPlayer();
-                }
-            }
-        });
-        super.onResume();
-    }
-
-    @Override
-    public void onDestroy() {
-        if(exoPlayerRecyclerView!=null && videoPresent)
-            exoPlayerRecyclerView.onRelease();
-        super.onDestroy();
     }
 
     void didClick(Bundle data, int position) {
@@ -178,5 +142,19 @@ abstract class CTInboxTabBaseFragment extends Fragment {
         } catch (Throwable t) {
             // Ignore
         }
+    }
+
+    ArrayList<CTInboxMessage> filterMessages(ArrayList<CTInboxMessage> inboxMessageArrayList,String tab){
+        ArrayList<CTInboxMessage> filteredMessages = new ArrayList<>();
+        for(CTInboxMessage inboxMessage : inboxMessageArrayList){
+            if(inboxMessage.getTags() != null && inboxMessage.getTags().size() > 0) {
+                for (String stringTag : inboxMessage.getTags()) {
+                    if (stringTag.equalsIgnoreCase(tab)) {
+                        filteredMessages.add(inboxMessage);
+                    }
+                }
+            }
+        }
+        return filteredMessages;
     }
 }

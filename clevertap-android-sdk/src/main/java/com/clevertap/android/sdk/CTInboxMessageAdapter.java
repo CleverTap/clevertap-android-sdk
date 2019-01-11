@@ -199,6 +199,8 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                         .into(((CTSimpleMessageViewHolder)viewHolder).mediaImage);
                             }else if(inboxMessages.get(i).getInboxMessageContents().get(0).mediaIsVideo()) {
                                 addVideoView(inboxMessage.getType(),viewHolder, context,i);
+                            }else{
+                                ((CTSimpleMessageViewHolder)viewHolder).mediaImage.setVisibility(View.GONE);
                             }
                             break;
                         case "p" : if(inboxMessages.get(i).getInboxMessageContents().get(0).mediaIsImage()) {
@@ -216,6 +218,8 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                     .into(((CTSimpleMessageViewHolder)viewHolder).squareImage);
                         }else if(inboxMessages.get(i).getInboxMessageContents().get(0).mediaIsVideo() || inboxMessages.get(i).getInboxMessageContents().get(0).mediaIsAudio()) {
                             addVideoView(inboxMessage.getType(),viewHolder, context,i);
+                        }else{
+                            ((CTSimpleMessageViewHolder)viewHolder).squareImage.setVisibility(View.GONE);
                         }
                         break;
                     }
@@ -362,6 +366,8 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                         .into(((CTIconMessageViewHolder)viewHolder).mediaImage);
                             }else if(inboxMessages.get(i).getInboxMessageContents().get(0).mediaIsVideo() || inboxMessages.get(i).getInboxMessageContents().get(0).mediaIsAudio()) {
                                 addVideoView(inboxMessage.getType(),viewHolder, context,i);
+                            }else{
+                                ((CTIconMessageViewHolder)viewHolder).mediaImage.setVisibility(View.GONE);
                             }
                             break;
                         case "p" : if(inboxMessages.get(i).getInboxMessageContents().get(0).mediaIsImage()) {
@@ -379,6 +385,8 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                     .into(((CTIconMessageViewHolder)viewHolder).squareImage);
                         }else if(inboxMessages.get(i).getInboxMessageContents().get(0).mediaIsVideo()) {
                             addVideoView(inboxMessage.getType(),viewHolder, context,i);
+                        }else{
+                            ((CTIconMessageViewHolder)viewHolder).squareImage.setVisibility(View.GONE);
                         }
                             break;
                     }
@@ -458,7 +466,8 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
                         params.setMargins(8, 6, 4, 6);
                         params.gravity = Gravity.CENTER;
-                        ((CTCarouselMessageViewHolder)viewHolder).sliderDots.addView(dots[k],params);
+                        if(((CTCarouselMessageViewHolder)viewHolder).sliderDots.getChildCount() < dotsCount)
+                            ((CTCarouselMessageViewHolder)viewHolder).sliderDots.addView(dots[k],params);
                     }
                     dots[0].setImageDrawable(context.getApplicationContext().getResources().getDrawable(R.drawable.selected_dot));
                     CarouselPageChangeListener carouselPageChangeListener = new CarouselPageChangeListener(viewHolder,dots,inboxMessage);
@@ -526,7 +535,8 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
                         params.setMargins(8, 6, 4, 6);
                         params.gravity = Gravity.CENTER;
-                        ((CTCarouselMessageViewHolder)viewHolder).sliderDots.addView(imageDots[k],params);
+                        if(((CTCarouselMessageViewHolder)viewHolder).sliderDots.getChildCount() < imageDotsCount)
+                            ((CTCarouselMessageViewHolder)viewHolder).sliderDots.addView(imageDots[k],params);
                     }
                     imageDots[0].setImageDrawable(context.getApplicationContext().getResources().getDrawable(R.drawable.selected_dot));
                     CarouselPageChangeListener carouselImagePageChangeListener = new CarouselPageChangeListener(viewHolder,imageDots,inboxMessage);

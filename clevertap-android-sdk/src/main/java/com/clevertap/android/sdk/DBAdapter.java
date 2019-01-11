@@ -480,6 +480,7 @@ class DBAdapter {
             cv.put(IS_READ,0);
             db.insert(tableName, null, cv);
             rtlDirtyFlag = true;
+            Logger.v("Stored PN - "+ id + " with TTL - "+ ttl);
         } catch (final SQLiteException e) {
             getConfigLogger().verbose("Error adding data to table " + tableName + " Recreating DB");
             dbHelper.deleteDatabase();
@@ -501,6 +502,7 @@ class DBAdapter {
             if(cursor!=null && cursor.moveToFirst()){
                 pushId = cursor.getString(cursor.getColumnIndex(KEY_DATA));
             }
+            Logger.v("Fetching PID for check - " + pushId);
         }catch (final SQLiteException e) {
             getConfigLogger().verbose("Could not fetch records out of database " + tName + ".", e);
         } finally {
@@ -514,6 +516,7 @@ class DBAdapter {
 
     synchronized String[] fetchPushNotificationIds(){
         if(!rtlDirtyFlag) return new String[0];
+
         final String tName = Table.PUSH_NOTIFICATIONS.getName();
         Cursor cursor = null;
         List<String> pushIds = new ArrayList<>();
@@ -522,8 +525,12 @@ class DBAdapter {
         try{
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
             cursor = db.rawQuery("SELECT * FROM " + tName + " WHERE " + IS_READ + " = 0", null);
-            if(cursor!=null && cursor.moveToFirst()){
-                pushIds.add(cursor.getString(cursor.getColumnIndex(KEY_DATA)));
+            if(cursor!=null){
+                while(cursor.moveToNext()) {
+                    Logger.v("Fetching PID - " + cursor.getString(cursor.getColumnIndex(KEY_DATA)));
+                    pushIds.add(cursor.getString(cursor.getColumnIndex(KEY_DATA)));
+                }
+                cursor.close();
             }
         }catch (final SQLiteException e) {
             getConfigLogger().verbose("Could not fetch records out of database " + tName + ".", e);
@@ -533,7 +540,7 @@ class DBAdapter {
                 cursor.close();
             }
         }
-        return pushIds.toArray(new String[0]);
+        return pushIds.toArray(new String[pushIds.size()]);
     }
 
     synchronized void updatePushNotificationIds(String[] ids){
@@ -555,7 +562,7 @@ class DBAdapter {
             for(int i=0; i< ids.length-1; i++){
                 questionMarksBuilder.append(", ?");
             }
-            db.update(Table.PUSH_NOTIFICATIONS.getName(), cv,  "_id IN ( " + questionMarksBuilder.toString() + " )",ids);
+            db.update(Table.PUSH_NOTIFICATIONS.getName(), cv,  KEY_DATA+" IN ( " + questionMarksBuilder.toString() + " )",ids);
             rtlDirtyFlag = false;
         } catch (final SQLiteException e) {
             getConfigLogger().verbose("Error adding data to table " + Table.PUSH_NOTIFICATIONS.getName() + " Recreating DB");

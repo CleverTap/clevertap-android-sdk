@@ -15,11 +15,15 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 /**
  * CTInboxAllTabFragment
  */
 public class CTInboxAllTabFragment extends CTInboxTabBaseFragment {
     private boolean firstTime = true;
+    ArrayList<CTInboxMessage> filteredMessages = new ArrayList<>();
+    ExoPlayerRecyclerView exoPlayerRecyclerView;
 
     @Nullable
     @Override
@@ -40,7 +44,6 @@ public class CTInboxAllTabFragment extends CTInboxTabBaseFragment {
                 exoPlayerRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
                 exoPlayerRecyclerView.setItemAnimator(new DefaultItemAnimator());
                 inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, getActivity(), this);
-                inboxMessageAdapter.filterMessages("all");//Filters the messages before rendering the list on tabs
                 exoPlayerRecyclerView.setAdapter(inboxMessageAdapter);
                 inboxMessageAdapter.notifyDataSetChanged();
                 if (firstTime) {
@@ -71,5 +74,40 @@ public class CTInboxAllTabFragment extends CTInboxTabBaseFragment {
             }
         }
         return allView;
+    }
+
+    @Override
+    public void onPause() {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                if(videoPresent) {
+                    if (exoPlayerRecyclerView != null)
+                        exoPlayerRecyclerView.onPausePlayer();
+                }
+            }
+        });
+        super.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                if(videoPresent) {
+                    if (exoPlayerRecyclerView != null)
+                        exoPlayerRecyclerView.onRestartPlayer();
+                }
+            }
+        });
+        super.onResume();
+    }
+
+    @Override
+    public void onDestroy() {
+        if(exoPlayerRecyclerView!=null && videoPresent)
+            exoPlayerRecyclerView.onRelease();
+        super.onDestroy();
     }
 }

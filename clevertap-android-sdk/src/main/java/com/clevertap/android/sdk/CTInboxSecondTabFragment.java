@@ -15,9 +15,13 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+
 public class CTInboxSecondTabFragment extends CTInboxTabBaseFragment {
     RecyclerView recyclerView;
     private boolean firstTime = true;
+    ArrayList<CTInboxMessage> filteredMessages = new ArrayList<>();
+    ExoPlayerRecyclerView exoPlayerRecyclerView;
 
     @Nullable
     @Override
@@ -32,14 +36,15 @@ public class CTInboxSecondTabFragment extends CTInboxTabBaseFragment {
             if(inboxMessageArrayList.size()>0) {
                 exoPlayerRecyclerView = new ExoPlayerRecyclerView(getActivity());
                 exoPlayerRecyclerView.setVisibility(View.VISIBLE);
-                exoPlayerRecyclerView.setVideoInfoList(inboxMessageArrayList);
+                filteredMessages = filterMessages(inboxMessageArrayList,styleConfig.getSecondTab());
+                exoPlayerRecyclerView.setVideoInfoList(filteredMessages);
                 LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
                 exoPlayerRecyclerView.setLayoutManager(linearLayoutManager);
                 exoPlayerRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
                 exoPlayerRecyclerView.setItemAnimator(new DefaultItemAnimator());
 
-                inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, getActivity(), this);
-                inboxMessageAdapter.filterMessages(styleConfig.getSecondTab());//Filters the messages before rendering the list on tabs
+                inboxMessageAdapter = new CTInboxMessageAdapter(filteredMessages, getActivity(), this);
+                //inboxMessageAdapter.filterMessages(styleConfig.getSecondTab());//Filters the messages before rendering the list on tabs
                 exoPlayerRecyclerView.setAdapter(inboxMessageAdapter);
                 inboxMessageAdapter.notifyDataSetChanged();
                 if (firstTime) {
@@ -62,8 +67,8 @@ public class CTInboxSecondTabFragment extends CTInboxTabBaseFragment {
                 recyclerView.setLayoutManager(linearLayoutManager);
                 recyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
                 recyclerView.setItemAnimator(new DefaultItemAnimator());
-
-                inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, getActivity(), this);
+                filteredMessages = filterMessages(inboxMessageArrayList,styleConfig.getFirstTab());
+                inboxMessageAdapter = new CTInboxMessageAdapter(filteredMessages, getActivity(), this);
                 inboxMessageAdapter.filterMessages(styleConfig.getSecondTab());//Filters the messages before rendering the list on tabs
                 recyclerView.setAdapter(inboxMessageAdapter);
                 inboxMessageAdapter.notifyDataSetChanged();
@@ -72,5 +77,40 @@ public class CTInboxSecondTabFragment extends CTInboxTabBaseFragment {
         }
 
         return allView;
+    }
+
+    @Override
+    public void onPause() {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                if(videoPresent) {
+                    if (exoPlayerRecyclerView != null)
+                        exoPlayerRecyclerView.onPausePlayer();
+                }
+            }
+        });
+        super.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                if(videoPresent) {
+                    if (exoPlayerRecyclerView != null)
+                        exoPlayerRecyclerView.onRestartPlayer();
+                }
+            }
+        });
+        super.onResume();
+    }
+
+    @Override
+    public void onDestroy() {
+        if(exoPlayerRecyclerView!=null && videoPresent)
+            exoPlayerRecyclerView.onRelease();
+        super.onDestroy();
     }
 }
