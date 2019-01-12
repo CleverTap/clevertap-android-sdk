@@ -55,9 +55,15 @@ abstract class CTInboxTabBaseFragment extends Fragment {
             if (context instanceof CTInboxActivity) {
                 setListener((CTInboxTabBaseFragment.InboxListener) getActivity());
             }
+            int position = bundle.getInt("position");
             CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(getActivity(),config);
             if (cleverTapAPI != null) {
                 inboxMessageArrayList = cleverTapAPI.getAllInboxMessages();
+                if(position == 1 && !styleConfig.getFirstTab().isEmpty()){
+                    inboxMessageArrayList = cleverTapAPI.filterMessages(inboxMessageArrayList,styleConfig.getFirstTab());
+                }else if( position == 2 && !styleConfig.getSecondTab().isEmpty()){
+                    inboxMessageArrayList = cleverTapAPI.filterMessages(inboxMessageArrayList,styleConfig.getSecondTab());
+                }
             }
         }
     }

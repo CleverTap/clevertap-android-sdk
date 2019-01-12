@@ -6118,6 +6118,25 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         _initializeInbox();
     }
 
+//    private ArrayList<CTInboxMessage> getFirstTabMessages(String tab){
+//        ArrayList<CTInboxMessage> allMessages = getAllInboxMessages();
+//        return filterMessages(allMessages,tab);
+//    }
+
+    ArrayList<CTInboxMessage> filterMessages(ArrayList<CTInboxMessage> inboxMessageArrayList,String tab){
+        ArrayList<CTInboxMessage> filteredMessages = new ArrayList<>();
+        for(CTInboxMessage inboxMessage : inboxMessageArrayList){
+            if(inboxMessage.getTags() != null && inboxMessage.getTags().size() > 0) {
+                for (String stringTag : inboxMessage.getTags()) {
+                    if (stringTag.equalsIgnoreCase(tab)) {
+                        filteredMessages.add(inboxMessage);
+                    }
+                }
+            }
+        }
+        return filteredMessages;
+    }
+
     /**
      * This method sets the CTInboxListener
      * @param notificationInboxListener An {@link CTInboxListener} object

@@ -65,12 +65,13 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         CTInboxStyleConfig styleConfig;
+        CleverTapAPI cleverTapAPI;
         try{
             Bundle extras = getIntent().getExtras();
             if(extras == null) throw new IllegalArgumentException();
             styleConfig = extras.getParcelable("styleConfig");
             config = extras.getParcelable("config");
-            CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(getApplicationContext(), config);
+            cleverTapAPI = CleverTapAPI.instanceWithConfig(getApplicationContext(), config);
             if (cleverTapAPI != null) {
                 inboxMessageArrayList = cleverTapAPI.getAllInboxMessages();
                 setListener(cleverTapAPI);
@@ -116,12 +117,15 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
             bundle.putParcelableArrayList("inboxMessages", inboxMessageArrayList);
             bundle.putParcelable("config", config);
             bundle.putParcelable("styleConfig", styleConfig);
+            bundle.putInt("position",0);
             CTInboxAllTabFragment all = new CTInboxAllTabFragment();
             all.setArguments(bundle);
             inboxTabAdapter.addFragment(all,"ALL");
 
             if(styleConfig.getFirstTab() != null && !styleConfig.getFirstTab().isEmpty()) {
                 CTInboxAllTabFragment first = new CTInboxAllTabFragment();
+                bundle = (Bundle)bundle.clone();
+                bundle.putInt("position",1);
                 first.setArguments(bundle);
                 inboxTabAdapter.addFragment(first,styleConfig.getFirstTab());
                 viewPager.setOffscreenPageLimit(1);
@@ -131,6 +135,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
             if(styleConfig.getSecondTab() != null && !styleConfig.getSecondTab().isEmpty()) {
                 CTInboxAllTabFragment second = new CTInboxAllTabFragment();
                 bundle = (Bundle)bundle.clone();
+                bundle.putInt("position",2);
                 second.setArguments(bundle);
                 inboxTabAdapter.addFragment(second,styleConfig.getSecondTab());
                 viewPager.setOffscreenPageLimit(2);
