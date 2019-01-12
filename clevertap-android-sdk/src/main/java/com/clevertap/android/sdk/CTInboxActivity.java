@@ -10,6 +10,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.DefaultItemAnimator;
@@ -98,40 +99,67 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
 
         LinearLayout linearLayout = findViewById(R.id.inbox_linear_layout);
         linearLayout.setBackgroundColor(Color.parseColor(styleConfig.getInboxBackgroundColor()));
-        TabLayout tabLayout = linearLayout.findViewById(R.id.tab_layout);
-        ViewPager viewPager = linearLayout.findViewById(R.id.view_pager);
+        final TabLayout tabLayout = linearLayout.findViewById(R.id.tab_layout);
+        final ViewPager viewPager = linearLayout.findViewById(R.id.view_pager);
         TextView noMessageView = findViewById(R.id.no_message_view);
         //Tabs are shown only if mentioned in StyleConfig
         if(styleConfig.isUsingTabs()){
             viewPager.setVisibility(View.VISIBLE);
-            CTInboxTabAdapter inboxTabAdapter = new CTInboxTabAdapter(getSupportFragmentManager());
+            final CTInboxTabAdapter inboxTabAdapter = new CTInboxTabAdapter(getSupportFragmentManager());
             tabLayout.setVisibility(View.VISIBLE);
             tabLayout.setSelectedTabIndicatorColor(Color.parseColor(styleConfig.getSelectedTabIndicatorColor()));
             tabLayout.setTabTextColors(Color.parseColor(styleConfig.getUnselectedTabColor()),Color.parseColor(styleConfig.getSelectedTabColor()));
             tabLayout.setBackgroundColor(Color.parseColor(styleConfig.getTabBackgroundColor()));
             tabLayout.addTab(tabLayout.newTab().setText("ALL"));
+
             Bundle bundle = new Bundle();
             bundle.putParcelableArrayList("inboxMessages", inboxMessageArrayList);
             bundle.putParcelable("config", config);
             bundle.putParcelable("styleConfig", styleConfig);
-            CTInboxAllTabFragment ctInboxAllTabFragment = new CTInboxAllTabFragment();
-            ctInboxAllTabFragment.setArguments(bundle);
-            inboxTabAdapter.addFragment(ctInboxAllTabFragment,"ALL");
-            if(styleConfig.getFirstTab() != null) {
-                CTInboxFirstTabFragment ctInboxFirstTabFragment = new CTInboxFirstTabFragment();
-                ctInboxFirstTabFragment.setArguments(bundle);
-                tabLayout.addTab(tabLayout.newTab().setText(styleConfig.getFirstTab()));
-                inboxTabAdapter.addFragment(ctInboxFirstTabFragment, styleConfig.getFirstTab());
+            CTInboxAllTabFragment all = new CTInboxAllTabFragment();
+            all.setArguments(bundle);
+            inboxTabAdapter.addFragment(all,"ALL");
+
+            if(styleConfig.getFirstTab() != null && !styleConfig.getFirstTab().isEmpty()) {
+                CTInboxAllTabFragment first = new CTInboxAllTabFragment();
+                first.setArguments(bundle);
+                inboxTabAdapter.addFragment(first,styleConfig.getFirstTab());
                 viewPager.setOffscreenPageLimit(1);
             }
-            if(styleConfig.getSecondTab() != null) {
-                CTInboxSecondTabFragment ctInboxSecondTabFragment = new CTInboxSecondTabFragment();
-                ctInboxSecondTabFragment.setArguments(bundle);
-                tabLayout.addTab(tabLayout.newTab().setText(styleConfig.getSecondTab()));
-                inboxTabAdapter.addFragment(ctInboxSecondTabFragment, styleConfig.getSecondTab());
+
+
+            if(styleConfig.getSecondTab() != null && !styleConfig.getSecondTab().isEmpty()) {
+                CTInboxAllTabFragment second = new CTInboxAllTabFragment();
+                bundle = (Bundle)bundle.clone();
+                second.setArguments(bundle);
+                inboxTabAdapter.addFragment(second,styleConfig.getSecondTab());
                 viewPager.setOffscreenPageLimit(2);
             }
+
             viewPager.setAdapter(inboxTabAdapter);
+            viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+            tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+                @Override
+                public void onTabSelected(TabLayout.Tab tab) {
+                    CTInboxTabBaseFragment fragment = (CTInboxTabBaseFragment) inboxTabAdapter.getItem(tab.getPosition());
+                    if(((CTInboxAllTabFragment) fragment).exoPlayerRecyclerView!=null){
+                        ((CTInboxAllTabFragment) fragment).exoPlayerRecyclerView.playVideo();
+                    }
+                }
+
+                @Override
+                public void onTabUnselected(TabLayout.Tab tab) {
+                    CTInboxTabBaseFragment fragment = (CTInboxTabBaseFragment) inboxTabAdapter.getItem(tab.getPosition());
+                    if(((CTInboxAllTabFragment) fragment).exoPlayerRecyclerView!=null){
+                        ((CTInboxAllTabFragment) fragment).exoPlayerRecyclerView.stop();
+                    }
+                }
+
+                @Override
+                public void onTabReselected(TabLayout.Tab tab) {
+
+                }
+            });
             tabLayout.setupWithViewPager(viewPager);
         }else{
             viewPager.setVisibility(View.GONE);
@@ -313,7 +341,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
     @Override
     public void onDestroy() {
         if(exoPlayerRecyclerView!=null && videoPresent)
-            exoPlayerRecyclerView.onRelease();
+            exoPlayerRecyclerView.release();
         super.onDestroy();
     }
 }

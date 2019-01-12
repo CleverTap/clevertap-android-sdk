@@ -21,6 +21,7 @@ import java.util.ArrayList;
  * CTInboxAllTabFragment
  */
 public class CTInboxAllTabFragment extends CTInboxTabBaseFragment {
+
     private boolean firstTime = true;
     ArrayList<CTInboxMessage> filteredMessages = new ArrayList<>();
     ExoPlayerRecyclerView exoPlayerRecyclerView;
@@ -107,7 +108,7 @@ public class CTInboxAllTabFragment extends CTInboxTabBaseFragment {
     @Override
     public void onDestroy() {
         if(exoPlayerRecyclerView!=null && videoPresent)
-            exoPlayerRecyclerView.onRelease();
+            exoPlayerRecyclerView.release();
         super.onDestroy();
     }
 }

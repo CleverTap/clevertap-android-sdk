@@ -175,7 +175,7 @@ public class CTInboxStyleConfig implements Parcelable {
     }
 
     boolean isUsingTabs() {
-        return !firstTab.isEmpty() && !secondTab.isEmpty();
+        return !firstTab.isEmpty() || !secondTab.isEmpty();
     }
 
     public String getBackButtonColor() {

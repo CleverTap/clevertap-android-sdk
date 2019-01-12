@@ -6,6 +6,7 @@ import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.support.annotation.NonNull;
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
@@ -48,14 +49,14 @@ public class ExoPlayerRecyclerView extends RecyclerView {
     private List<CTInboxMessage> videoInfoList = new ArrayList<>();
     private int videoSurfaceDefaultHeight = 0;
     private int screenDefaultHeight = 0;
-    SimpleExoPlayer player;
+    static SimpleExoPlayer player;
     //surface view for playing video
     private PlayerView videoSurfaceView;
     //private ImageView mCoverImage;
     private Context appContext;
     int targetPosition;
     ImageView muteIcon,muteIcon2;
-
+    Fragment fragment;
     /**
      * the position of playing video
      */
@@ -127,7 +128,6 @@ public class ExoPlayerRecyclerView extends RecyclerView {
 
     //play the video in the row
     public void playVideo() {
-        if(videoInfoList.size() == 0) return;
 
         int startPosition = ((LinearLayoutManager) getLayoutManager()).findFirstVisibleItemPosition();
         int endPosition = ((LinearLayoutManager) getLayoutManager()).findLastVisibleItemPosition();
@@ -253,14 +253,14 @@ public class ExoPlayerRecyclerView extends RecyclerView {
             HlsMediaSource hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(uriString));
             // Prepare the player with the source.
             player.prepare(hlsMediaSource);
-            player.setPlayWhenReady(true);
             if(videoInfoList.get(targetPosition).getInboxMessageContents().get(0).mediaIsAudio()) {
+                player.setPlayWhenReady(false);
                 player.setVolume(1f);
             }else if(videoInfoList.get(targetPosition).getInboxMessageContents().get(0).mediaIsVideo()){
+                player.setPlayWhenReady(true);
                 player.setVolume(0f);
             }
         }
-
 
     }
 
@@ -339,11 +339,13 @@ public class ExoPlayerRecyclerView extends RecyclerView {
 
             @Override
             public void onChildViewDetachedFromWindow(@NonNull View view) {
+                Logger.d("On Detached");
                 if (addedVideo && rowParent != null && rowParent.equals(view)) {
                     //removeVideoView(videoSurfaceView);
-                    player.stop();
-                    playPosition = -1;
+                    //player.stop(true);
+                    //playPosition = -1;
                     //videoSurfaceView.setVisibility(INVISIBLE);
+                    stop();
                 }
 
             }
@@ -378,8 +380,10 @@ public class ExoPlayerRecyclerView extends RecyclerView {
 
                         break;
                     case Player.STATE_READY:
-                        videoSurfaceView.setVisibility(VISIBLE);
-                        videoSurfaceView.setAlpha(1);
+                        if(videoSurfaceView!=null) {
+                            videoSurfaceView.setVisibility(VISIBLE);
+                            videoSurfaceView.setAlpha(1);
+                        }
                         //mCoverImage.setVisibility(GONE);
 
                         break;
@@ -422,8 +426,11 @@ public class ExoPlayerRecyclerView extends RecyclerView {
 
     public void onPausePlayer() {
         if (videoSurfaceView != null) {
-            removeVideoView(videoSurfaceView);
-            player.release();
+            //removeVideoView(videoSurfaceView);
+            if(player!=null) {
+                player.release();
+                player = null;
+            }
             videoSurfaceView = null;
         }
     }
@@ -436,15 +443,25 @@ public class ExoPlayerRecyclerView extends RecyclerView {
     }
 
     /**
-     * release memory
+     * release content
      */
-    public void onRelease() {
+    public void release() {
 
         if (player != null) {
+            player.stop();
             player.release();
             player = null;
         }
 
         rowParent = null;
     }
+
+    public void stop(){
+        if(player!=null){
+            player.stop();
+            playPosition = -1;
+        }
+    }
+
+
 }

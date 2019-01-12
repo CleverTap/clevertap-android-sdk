@@ -66,6 +66,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
         this.inboxMessages = inboxMessages;
         this.context = activity;
         this.fragment = fragment;
+        this.player = ExoPlayerRecyclerView.player;// This constructor should never be called before ExoplayerRecyclerView is initialized
     }
 
     @NonNull
@@ -630,7 +631,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
 
     private void addVideoView(CTInboxMessageType inboxMessageType, RecyclerView.ViewHolder viewHolder, Context context, final int pos){
         PlayerView playerView = new PlayerView(context);
-        playerView.setTag(pos);
+        //playerView.setTag(pos);
         playerViewList.add(playerView);
         playerView.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.WRAP_CONTENT));
         //playerView.setShowBuffering(true);
@@ -641,15 +642,15 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
         TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
         TrackSelector trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
         // 2. Create the player
-        player = ExoPlayerFactory.newSimpleInstance(context, trackSelector);
-        // 3. Produces DataSource instances through which media data is loaded.
-        DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(context,
-                Util.getUserAgent(context, context.getPackageName()), (TransferListener<? super DataSource>) bandwidthMeter);
-        HlsMediaSource hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(inboxMessage.getInboxMessageContents().get(0).getMedia()));
-        // 4. Prepare the player with the source.
-        player.prepare(hlsMediaSource);
-        player.setRepeatMode(Player.REPEAT_MODE_ONE);
-        //player.seekTo(1000);
+//        player = ExoPlayerFactory.newSimpleInstance(context, trackSelector);
+//        // 3. Produces DataSource instances through which media data is loaded.
+//        DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(context,
+//                Util.getUserAgent(context, context.getPackageName()), (TransferListener<? super DataSource>) bandwidthMeter);
+//        HlsMediaSource hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(inboxMessage.getInboxMessageContents().get(0).getMedia()));
+//        // 4. Prepare the player with the source.
+//        player.prepare(hlsMediaSource);
+//        player.setRepeatMode(Player.REPEAT_MODE_ONE);
+//        //player.seekTo(1000);
         playerView.requestFocus();
         playerView.setVisibility(View.VISIBLE);
         playerView.setPlayer(player);
@@ -670,6 +671,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
             playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
         }
         player.setPlayWhenReady(false);
+
 
         switch (inboxMessageType){
             case IconMessage:
