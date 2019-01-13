@@ -180,7 +180,6 @@ class CTInboxController {
                 if (!videoSupported && message.containsVideoOrAudio()) {
                     Logger.d("Removing inbox message containing video/audio as app does not support video. For more information checkout CleverTap documentation.");
                     toDelete.add(message);
-                    this.messages.remove(message);
                     continue;
                 }
                 long expires = message.getExpires();
@@ -188,23 +187,14 @@ class CTInboxController {
                 if (expired) {
                     Logger.v("Inbox Message: "+message.getId() + " is expired - removing");
                     toDelete.add(message);
-                    this.messages.remove(message);
                 }
+            }
+
+            if (toDelete.size() <= 0) return;
+
+            for (CTMessageDAO message: toDelete) {
+                deleteMessageWithId(message.getId());
             }
         }
-
-        if (toDelete.size() <= 0) return;
-
-        final ArrayList<CTMessageDAO> _toDelete = toDelete;
-        postAsyncSafely("RunDeleteMessage", new Runnable() {
-            @Override
-            public void run() {
-                for (CTMessageDAO message: _toDelete) {
-                    dbAdapter.deleteMessageForId(message.getId(),userId);
-
-                }
-            }
-        });
-
     }
 }

@@ -1,7 +1,5 @@
 package com.clevertap.android.sdk;
 
-import android.content.ClipData;
-import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -20,7 +18,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import org.json.JSONObject;
 
@@ -42,7 +39,7 @@ public class CTInboxListViewFragment extends Fragment {
     private WeakReference<CTInboxListViewFragment.InboxListener> listenerWeakReference;
 
     private boolean firstTime = true;
-    ExoPlayerRecyclerView exoPlayerRecyclerView;
+    MediaRecyclerView mediaRecyclerView;
 
     void setListener(CTInboxListViewFragment.InboxListener listener) {
         listenerWeakReference = new WeakReference<>(listener);
@@ -59,6 +56,20 @@ public class CTInboxListViewFragment extends Fragment {
             Logger.v("InboxListener is null for messages");
         }
         return listener;
+    }
+
+    private ArrayList<CTInboxMessage> filterMessages(ArrayList<CTInboxMessage>messages, String filter){
+        ArrayList<CTInboxMessage> filteredMessages = new ArrayList<>();
+        for(CTInboxMessage inboxMessage : messages){
+            if(inboxMessage.getTags() != null && inboxMessage.getTags().size() > 0) {
+                for (String stringTag : inboxMessage.getTags()) {
+                    if (stringTag.equalsIgnoreCase(filter)) {
+                        filteredMessages.add(inboxMessage);
+                    }
+                }
+            }
+        }
+        return filteredMessages;
     }
 
     @Override
@@ -97,27 +108,27 @@ public class CTInboxListViewFragment extends Fragment {
         noMessageView.setVisibility(View.GONE);
 
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
-        final CTInboxMessageAdapter inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessages, getActivity(), this);
+        final CTInboxMessageAdapter inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessages, this);
 
         if (haveVideoPlayerSupport) {
-            exoPlayerRecyclerView = new ExoPlayerRecyclerView(getActivity(), inboxMessages);
-            exoPlayerRecyclerView.setVisibility(View.VISIBLE);
-            exoPlayerRecyclerView.setLayoutManager(linearLayoutManager);
-            exoPlayerRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
-            exoPlayerRecyclerView.setItemAnimator(new DefaultItemAnimator());
-            exoPlayerRecyclerView.setAdapter(inboxMessageAdapter);
+            mediaRecyclerView = new MediaRecyclerView(getActivity());
+            mediaRecyclerView.setVisibility(View.VISIBLE);
+            mediaRecyclerView.setLayoutManager(linearLayoutManager);
+            mediaRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
+            mediaRecyclerView.setItemAnimator(new DefaultItemAnimator());
+            mediaRecyclerView.setAdapter(inboxMessageAdapter);
             inboxMessageAdapter.notifyDataSetChanged();
 
             if (firstTime) {
                 new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                     @Override
                     public void run() {
-                        exoPlayerRecyclerView.playVideo();
+                        mediaRecyclerView.playVideo();
                     }
                 }, 1000);
                 firstTime = false;
             }
-            linearLayout.addView(exoPlayerRecyclerView);
+            linearLayout.addView(mediaRecyclerView);
 
         } else {
             RecyclerView recyclerView = allView.findViewById(R.id.list_view_recycler_view);
@@ -136,9 +147,8 @@ public class CTInboxListViewFragment extends Fragment {
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                if(haveVideoPlayerSupport) {
-                    if (exoPlayerRecyclerView != null)
-                        exoPlayerRecyclerView.onPausePlayer();
+                if (mediaRecyclerView != null) {
+                    mediaRecyclerView.stop();
                 }
             }
         });
@@ -150,9 +160,8 @@ public class CTInboxListViewFragment extends Fragment {
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {
-                if(haveVideoPlayerSupport) {
-                    if (exoPlayerRecyclerView != null)
-                        exoPlayerRecyclerView.onRestartPlayer();
+                if (mediaRecyclerView != null) {
+                    mediaRecyclerView.playVideo();
                 }
             }
         });
@@ -161,24 +170,7 @@ public class CTInboxListViewFragment extends Fragment {
 
     @Override
     public void onDestroy() {
-        if (exoPlayerRecyclerView!=null && haveVideoPlayerSupport) {
-            exoPlayerRecyclerView.release();
-        }
         super.onDestroy();
-    }
-
-    private ArrayList<CTInboxMessage> filterMessages(ArrayList<CTInboxMessage>messages, String filter){
-        ArrayList<CTInboxMessage> filteredMessages = new ArrayList<>();
-        for(CTInboxMessage inboxMessage : messages){
-            if(inboxMessage.getTags() != null && inboxMessage.getTags().size() > 0) {
-                for (String stringTag : inboxMessage.getTags()) {
-                    if (stringTag.equalsIgnoreCase(filter)) {
-                        filteredMessages.add(inboxMessage);
-                    }
-                }
-            }
-        }
-        return filteredMessages;
     }
 
     void didClick(Bundle data, int position) {

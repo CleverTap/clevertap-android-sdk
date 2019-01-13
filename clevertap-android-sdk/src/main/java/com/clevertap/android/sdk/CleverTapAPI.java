@@ -6117,7 +6117,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
         _initializeInbox();
     }
-
     /**
      * This method sets the CTInboxListener
      * @param notificationInboxListener An {@link CTInboxListener} object
@@ -6342,9 +6341,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     @Override
-    public void messageDidShow(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data) {
-        markReadInboxMessage(inboxMessage);
-        pushInboxMessageStateEvent(false,inboxMessage,data);
+    public void messageDidShow(CTInboxActivity ctInboxActivity, final CTInboxMessage inboxMessage, final Bundle data) {
+        postAsyncSafely("handleMessageDidShow", new Runnable() {
+            @Override
+            public void run() {
+                CTInboxMessage message = getInboxMessageForId(inboxMessage.getMessageId());
+                if (!message.isRead()) {
+                    markReadInboxMessage(inboxMessage);
+                    pushInboxMessageStateEvent(false,inboxMessage, data);
+                }
+            }});
     }
 
     @Override
