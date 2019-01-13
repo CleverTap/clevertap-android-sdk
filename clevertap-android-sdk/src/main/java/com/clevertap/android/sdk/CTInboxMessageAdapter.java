@@ -53,20 +53,20 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
     private ArrayList<CTInboxMessage> inboxMessages;
     private Context context;
     private CTInboxMessage inboxMessage;
-    private Fragment fragment;
+    private CTInboxListViewFragment fragment;
     private static final int SIMPLE = 0;
     private static final int ICON = 1;
     private static final int CAROUSEL = 2;
     private static final int IMAGE_CAROUSEL = 3;
-    private SimpleExoPlayer player;
+    // private SimpleExoPlayer player;
     //private PlayerView playerView;
     private ArrayList<PlayerView> playerViewList = new ArrayList<>();
 
-    CTInboxMessageAdapter(ArrayList<CTInboxMessage> inboxMessages, Activity activity, Fragment fragment){
+    CTInboxMessageAdapter(ArrayList<CTInboxMessage> inboxMessages, Activity activity, CTInboxListViewFragment fragment){
         this.inboxMessages = inboxMessages;
         this.context = activity;
         this.fragment = fragment;
-        this.player = ExoPlayerRecyclerView.player;// This constructor should never be called before ExoplayerRecyclerView is initialized
+        // this.player = ExoPlayerRecyclerView.player;// This constructor should never be called before ExoplayerRecyclerView is initialized
     }
 
     @NonNull
@@ -125,8 +125,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                 hideTwoButtons(((CTSimpleMessageViewHolder) viewHolder).cta1, ((CTSimpleMessageViewHolder) viewHolder).cta2, ((CTSimpleMessageViewHolder) viewHolder).cta3);
                                 if(fragment!=null) {
                                     ((CTSimpleMessageViewHolder) viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTSimpleMessageViewHolder) viewHolder).cta1,cta1Object, fragment));
-                                }else{
-                                    ((CTSimpleMessageViewHolder) viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTSimpleMessageViewHolder) viewHolder).cta1,cta1Object, (Activity) context));
                                 }
                                 break;
                             case 2:
@@ -144,9 +142,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                 if(fragment!=null) {
                                     ((CTSimpleMessageViewHolder) viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTSimpleMessageViewHolder) viewHolder).cta1,cta1Object, fragment));
                                     ((CTSimpleMessageViewHolder) viewHolder).cta2.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTSimpleMessageViewHolder) viewHolder).cta2,cta2Object, fragment));
-                                }else{
-                                    ((CTSimpleMessageViewHolder) viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTSimpleMessageViewHolder) viewHolder).cta1,cta1Object, (Activity) context));
-                                    ((CTSimpleMessageViewHolder) viewHolder).cta2.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTSimpleMessageViewHolder) viewHolder).cta2,cta2Object, (Activity) context));
                                 }
                                 break;
                             case 3:
@@ -169,10 +164,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                     ((CTSimpleMessageViewHolder) viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTSimpleMessageViewHolder) viewHolder).cta1,cta1Object, fragment));
                                     ((CTSimpleMessageViewHolder) viewHolder).cta2.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTSimpleMessageViewHolder) viewHolder).cta2,cta2Object, fragment));
                                     ((CTSimpleMessageViewHolder) viewHolder).cta3.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTSimpleMessageViewHolder) viewHolder).cta3,cta3Object, fragment));
-                                }else{
-                                    ((CTSimpleMessageViewHolder) viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTSimpleMessageViewHolder) viewHolder).cta1,cta1Object, (Activity) context));
-                                    ((CTSimpleMessageViewHolder) viewHolder).cta2.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTSimpleMessageViewHolder) viewHolder).cta2,cta2Object, (Activity) context));
-                                    ((CTSimpleMessageViewHolder) viewHolder).cta3.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTSimpleMessageViewHolder) viewHolder).cta3,cta3Object, (Activity) context));
                                 }
                                 break;
                             }
@@ -234,7 +225,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                     @Override
                                     public void run() {
                                         if(((CTSimpleMessageViewHolder)viewHolder).readDot.getVisibility() == View.VISIBLE) {
-                                            ((CTInboxTabBaseFragment) fragment).didShow(null, position);
+                                            ((CTInboxListViewFragment) fragment).didShow(null, position);
                                         }
                                         ((CTSimpleMessageViewHolder)viewHolder).readDot.setVisibility(View.GONE);
                                     }
@@ -257,8 +248,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     simpleHandler.postDelayed(simpleRunnable,2000);
                     if(fragment!=null) {
                         ((CTSimpleMessageViewHolder) viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, null,null,fragment));
-                    }else{
-                        ((CTSimpleMessageViewHolder) viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage,null, null,(Activity) context));
                     }
                     break;
                 case ICON:
@@ -292,8 +281,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                     hideTwoButtons(((CTIconMessageViewHolder)viewHolder).cta1,((CTIconMessageViewHolder)viewHolder).cta2,((CTIconMessageViewHolder)viewHolder).cta3);
                                     if(fragment!=null) {
                                         ((CTIconMessageViewHolder) viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTIconMessageViewHolder) viewHolder).cta1,cta1Object, fragment));
-                                    }else{
-                                        ((CTIconMessageViewHolder) viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTIconMessageViewHolder) viewHolder).cta1,cta1Object, (Activity) context));
                                     }
                                     break;
                                 case 2:
@@ -311,9 +298,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                     if(fragment!=null) {
                                         ((CTIconMessageViewHolder) viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTIconMessageViewHolder) viewHolder).cta1,cta1Object, fragment));
                                         ((CTIconMessageViewHolder) viewHolder).cta2.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTIconMessageViewHolder) viewHolder).cta2,cta2Object, fragment));
-                                    }else{
-                                        ((CTIconMessageViewHolder) viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTIconMessageViewHolder) viewHolder).cta1,cta1Object, (Activity) context));
-                                        ((CTIconMessageViewHolder) viewHolder).cta2.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTIconMessageViewHolder) viewHolder).cta2,cta2Object, (Activity) context));
                                     }
                                     break;
                                 case 3:
@@ -336,10 +320,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                         ((CTIconMessageViewHolder) viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTIconMessageViewHolder) viewHolder).cta1,cta1Object, fragment));
                                         ((CTIconMessageViewHolder) viewHolder).cta2.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTIconMessageViewHolder) viewHolder).cta2,cta2Object, fragment));
                                         ((CTIconMessageViewHolder) viewHolder).cta3.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTIconMessageViewHolder) viewHolder).cta3,cta3Object, fragment));
-                                    }else{
-                                        ((CTIconMessageViewHolder) viewHolder).cta1.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTIconMessageViewHolder) viewHolder).cta1,cta1Object, (Activity) context));
-                                        ((CTIconMessageViewHolder) viewHolder).cta2.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTIconMessageViewHolder) viewHolder).cta2,cta2Object, (Activity) context));
-                                        ((CTIconMessageViewHolder) viewHolder).cta3.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, ((CTIconMessageViewHolder) viewHolder).cta3,cta3Object, (Activity) context));
                                     }
                                     break;
                             }
@@ -401,7 +381,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                     @Override
                                     public void run() {
                                         if(((CTIconMessageViewHolder)viewHolder).readDot.getVisibility() == View.VISIBLE) {
-                                            ((CTInboxTabBaseFragment) fragment).didShow(null, imagePosition);
+                                            fragment.didShow(null, imagePosition);
                                         }
                                         ((CTIconMessageViewHolder)viewHolder).readDot.setVisibility(View.GONE);
                                     }
@@ -432,8 +412,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     }
                     if(fragment!=null) {
                         ((CTIconMessageViewHolder) viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage, null,null,fragment));
-                    }else{
-                        ((CTIconMessageViewHolder) viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i,inboxMessage,null,null, (Activity) context));
                     }
                     break;
                 case CAROUSEL:
@@ -455,7 +433,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     final int carouselPosition = i;
                     //Loads the viewpager
                     LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) ((CTCarouselMessageViewHolder)viewHolder).imageViewPager.getLayoutParams();
-                    CTCarouselViewPagerAdapter carouselViewPagerAdapter = new CTCarouselViewPagerAdapter(context,inboxMessage,layoutParams,carouselPosition);
+                    CTCarouselViewPagerAdapter carouselViewPagerAdapter = new CTCarouselViewPagerAdapter(context, fragment, inboxMessage,layoutParams,carouselPosition);
                     ((CTCarouselMessageViewHolder)viewHolder).imageViewPager.setAdapter(carouselViewPagerAdapter);
                     //Adds the dots for the carousel
                     int dotsCount = carouselViewPagerAdapter.getCount();
@@ -476,8 +454,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
 
                     if(fragment!=null) {
                         ((CTCarouselMessageViewHolder) viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage,null,fragment,((CTCarouselMessageViewHolder)viewHolder).imageViewPager));
-                    }else{
-                        ((CTCarouselMessageViewHolder) viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage,null, (Activity) context,((CTCarouselMessageViewHolder)viewHolder).imageViewPager));
                     }
 
                     Runnable carouselRunnable = new Runnable() {
@@ -488,7 +464,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                     @Override
                                     public void run() {
                                         if(((CTCarouselMessageViewHolder)viewHolder).readDot.getVisibility() == View.VISIBLE) {
-                                            ((CTInboxTabBaseFragment) fragment).didShow(null, carouselPosition);
+                                            fragment.didShow(null, carouselPosition);
                                         }
                                         ((CTCarouselMessageViewHolder)viewHolder).readDot.setVisibility(View.GONE);
                                     }
@@ -525,7 +501,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     ((CTCarouselMessageViewHolder)viewHolder).readDot.setVisibility(View.GONE);
                     final int imageCarouselPos = i;
                     LinearLayout.LayoutParams layoutImageParams = (LinearLayout.LayoutParams) ((CTCarouselMessageViewHolder)viewHolder).imageViewPager.getLayoutParams();
-                    CTCarouselViewPagerAdapter carouselImageViewPagerAdapter = new CTCarouselViewPagerAdapter(context,inboxMessage,layoutImageParams,imageCarouselPos);
+                    CTCarouselViewPagerAdapter carouselImageViewPagerAdapter = new CTCarouselViewPagerAdapter(context, fragment, inboxMessage,layoutImageParams,imageCarouselPos);
                     ((CTCarouselMessageViewHolder)viewHolder).imageViewPager.setAdapter(carouselImageViewPagerAdapter);
                     int imageDotsCount = carouselImageViewPagerAdapter.getCount();
                     ImageView[] imageDots = new ImageView[imageDotsCount];
@@ -544,8 +520,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     ((CTCarouselMessageViewHolder)viewHolder).imageViewPager.addOnPageChangeListener(carouselImagePageChangeListener);
                     if(fragment!=null) {
                         ((CTCarouselMessageViewHolder) viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage,null,fragment,((CTCarouselMessageViewHolder)viewHolder).imageViewPager));
-                    }else{
-                        ((CTCarouselMessageViewHolder) viewHolder).clickLayout.setOnClickListener(new CTInboxButtonClickListener(i, inboxMessage,null, (Activity) context,((CTCarouselMessageViewHolder)viewHolder).imageViewPager));
                     }
 
                     Runnable runnableImage = new Runnable() {
@@ -556,12 +530,12 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                     @Override
                                     public void run() {
                                         if(((CTCarouselMessageViewHolder)viewHolder).carouselReadDot.getVisibility() == View.VISIBLE) {
-                                            ((CTInboxTabBaseFragment) fragment).didShow(null, imageCarouselPos);
+                                            fragment.didShow(null, imageCarouselPos);
                                         }
                                         ((CTCarouselMessageViewHolder)viewHolder).carouselReadDot.setVisibility(View.GONE);
                                     }
                                 });
-                            }else if(context != null){
+                            }else if(context != null){  // TODO remove the context.didShow stuff
                                 ((CTInboxActivity)context).runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -653,7 +627,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
 //        //player.seekTo(1000);
         playerView.requestFocus();
         playerView.setVisibility(View.VISIBLE);
-        playerView.setPlayer(player);
+        // playerView.setPlayer(player);  // TODO
         playerView.setUseArtwork(true);
         Drawable artwork = context.getResources().getDrawable(R.drawable.ct_audio);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -670,9 +644,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
             playerView.setLayoutParams(new FrameLayout.LayoutParams(width, width));
             playerView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
         }
-        player.setPlayWhenReady(false);
-
-
         switch (inboxMessageType){
             case IconMessage:
                 CTIconMessageViewHolder iconMessageViewHolder = (CTIconMessageViewHolder) viewHolder;
@@ -693,13 +664,15 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     muteIcon.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-
+                            // TODO
+                            /*
                             float currentVolume = ((SimpleExoPlayer) playerViewList.get(0).getPlayer()).getVolume();
                             if (currentVolume > 0) {
                                 player.setVolume(0f);
                             } else if (currentVolume == 0) {
                                 player.setVolume(1);
                             }
+                            */
                         }
 
                     });
@@ -726,12 +699,16 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                         @Override
                         public void onClick(View v) {
 
+                            // TODO
+
+                            /*
                             float currentVolume = ((SimpleExoPlayer) playerViewList.get(0).getPlayer()).getVolume();
                             if (currentVolume > 0) {
                                 player.setVolume(0f);
                             } else if (currentVolume == 0) {
                                 player.setVolume(1);
                             }
+                            */
                         }
 
                     });
@@ -753,36 +730,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
             default:return -1;
         }
     }
-
-    /**
-     * Filters inbox messages for tabs based on tags
-     * @param tab String name of the tab
-     */
-    void filterMessages(final String tab){
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                if(tab.equalsIgnoreCase("all"))
-                    return;
-                ArrayList<CTInboxMessage> filteredMessages = new ArrayList<>();
-                for(CTInboxMessage inboxMessage : inboxMessages){
-                    for( String stringTag : inboxMessage.getTags()){
-                        if(stringTag.equalsIgnoreCase(tab)){
-                            filteredMessages.add(inboxMessage);
-                        }
-                    }
-                }
-                inboxMessages = filteredMessages;
-                ((Activity)context).runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        notifyDataSetChanged();
-                    }
-                });
-            }
-        }).start();
-    }
-
 
     /**
      * Custom PageChangeListener for Carousel

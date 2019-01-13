@@ -20,12 +20,11 @@ class CTInboxButtonClickListener implements View.OnClickListener {
     private int position;
     private CTInboxMessage inboxMessage;
     private Button button;
-    private Fragment fragment;
-    private Activity activity;
+    private CTInboxListViewFragment fragment;
     private ViewPager viewPager;
     private JSONObject buttonObject;
 
-    CTInboxButtonClickListener(int position, CTInboxMessage inboxMessage, Button button, JSONObject jsonObject, Fragment fragment){
+    CTInboxButtonClickListener(int position, CTInboxMessage inboxMessage, Button button, JSONObject jsonObject, CTInboxListViewFragment fragment){
         this.position = position;
         this.inboxMessage = inboxMessage;
         this.button = button;
@@ -33,24 +32,7 @@ class CTInboxButtonClickListener implements View.OnClickListener {
         this.buttonObject = jsonObject;
     }
 
-
-    CTInboxButtonClickListener(int position, CTInboxMessage inboxMessage, Button button, JSONObject jsonObject, Activity activity){
-        this.position = position;
-        this.inboxMessage = inboxMessage;
-        this.button = button;
-        this.activity = activity;
-        this.buttonObject = jsonObject;
-    }
-
-    CTInboxButtonClickListener(int position, CTInboxMessage inboxMessage, Button button, Activity activity, ViewPager viewPager) {
-        this.position = position;
-        this.inboxMessage = inboxMessage;
-        this.button = button;
-        this.activity = activity;
-        this.viewPager = viewPager;
-    }
-
-    CTInboxButtonClickListener(int position, CTInboxMessage inboxMessage, Button button, Fragment fragment, ViewPager viewPager) {
+    CTInboxButtonClickListener(int position, CTInboxMessage inboxMessage, Button button, CTInboxListViewFragment fragment, ViewPager viewPager) {
         this.position = position;
         this.inboxMessage = inboxMessage;
         this.button = button;
@@ -63,9 +45,7 @@ class CTInboxButtonClickListener implements View.OnClickListener {
     public void onClick(View v) {
         if(viewPager != null){//Handles viewpager clicks
             if(fragment != null) {
-                ((CTInboxTabBaseFragment) fragment).handleViewPagerClick(position, viewPager.getCurrentItem());
-            }else if(activity != null){
-                ((CTInboxActivity)activity).handleViewPagerClick(position,viewPager.getCurrentItem());
+                fragment.handleViewPagerClick(position, viewPager.getCurrentItem());
             }
         }else{//Handles button clicks
             if(button != null && buttonObject != null) {
@@ -74,25 +54,12 @@ class CTInboxButtonClickListener implements View.OnClickListener {
                         if(fragment.getActivity() !=null) {
                             copyToClipboard(fragment.getActivity());
                         }
-                        ((CTInboxTabBaseFragment) fragment).handleClick(this.position, button.getText().toString(),buttonObject);
-                    }else{
-                        ((CTInboxTabBaseFragment) fragment).handleClick(this.position, button.getText().toString(),buttonObject);
                     }
-                }else if(activity != null){
-                    if(inboxMessage.getInboxMessageContents().get(0).getLinktype(buttonObject).equalsIgnoreCase(Constants.COPY_TYPE)) {//Copy to clipboard feature
-                        if(fragment.getActivity() !=null) {
-                            copyToClipboard(activity.getApplicationContext());
-                        }
-                        ((CTInboxActivity) activity).handleClick(this.position, button.getText().toString(),buttonObject);
-                    }else{
-                        ((CTInboxActivity) activity).handleClick(this.position, button.getText().toString(),buttonObject);
-                    }
+                    fragment.handleClick(this.position, button.getText().toString(),buttonObject);
                 }
-            }else{
-                if(fragment != null) {
-                    ((CTInboxTabBaseFragment) fragment).handleClick(this.position, null,null);
-                }else if(activity != null){
-                    ((CTInboxActivity) activity).handleClick(this.position, null,null);
+            } else {
+                if (fragment != null) {
+                    fragment.handleClick(this.position, null,null);
                 }
             }
         }

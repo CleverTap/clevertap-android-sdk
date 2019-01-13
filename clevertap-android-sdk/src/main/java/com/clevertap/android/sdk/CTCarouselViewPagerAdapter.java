@@ -19,6 +19,7 @@ import java.util.ArrayList;
 @SuppressWarnings({"FieldCanBeLocal", "unused"})
 public class CTCarouselViewPagerAdapter extends PagerAdapter {
     private Context context;
+    private CTInboxListViewFragment fragment;
     private LayoutInflater layoutInflater;
     private ArrayList<String> carouselImages;
     private View view;
@@ -26,8 +27,9 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
     private CTInboxMessage inboxMessage;
     private int row;
 
-    CTCarouselViewPagerAdapter(Context context, CTInboxMessage inboxMessage, LinearLayout.LayoutParams layoutParams, int row) {
+    CTCarouselViewPagerAdapter(Context context, CTInboxListViewFragment fragment, CTInboxMessage inboxMessage, LinearLayout.LayoutParams layoutParams, int row) {
         this.context = context;
+        this.fragment = fragment;
         this.carouselImages = inboxMessage.getCarouselImages();
         this.layoutParams = layoutParams;
         this.inboxMessage = inboxMessage;
@@ -59,7 +61,7 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
         view.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                ((CTInboxActivity)context).handleViewPagerClick(row,position);
+                fragment.handleViewPagerClick(row,position);
             }
         });
         return view;

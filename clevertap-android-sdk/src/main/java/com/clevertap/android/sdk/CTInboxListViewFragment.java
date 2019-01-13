@@ -1,0 +1,264 @@
+package com.clevertap.android.sdk;
+
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Color;
+import android.net.Uri;
+import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
+import android.support.v7.widget.DefaultItemAnimator;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import org.json.JSONObject;
+
+import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.Iterator;
+
+public class CTInboxListViewFragment extends Fragment {
+
+    interface InboxListener{
+        void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data);
+        void messageDidClick(Context baseContext, CTInboxMessage inboxMessage, Bundle data);
+    }
+
+    ArrayList<CTInboxMessage> inboxMessages =  new ArrayList<>();
+    CleverTapInstanceConfig config;
+    boolean haveVideoPlayerSupport = CleverTapAPI.haveVideoPlayerSupport;
+    CTInboxStyleConfig styleConfig;
+    private WeakReference<CTInboxListViewFragment.InboxListener> listenerWeakReference;
+
+    private boolean firstTime = true;
+    ExoPlayerRecyclerView exoPlayerRecyclerView;
+
+    void setListener(CTInboxListViewFragment.InboxListener listener) {
+        listenerWeakReference = new WeakReference<>(listener);
+    }
+
+    CTInboxListViewFragment.InboxListener getListener() {
+        CTInboxListViewFragment.InboxListener listener = null;
+        try {
+            listener = listenerWeakReference.get();
+        } catch (Throwable t) {
+            // no-op
+        }
+        if (listener == null) {
+            Logger.v("InboxListener is null for messages");
+        }
+        return listener;
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        Bundle bundle = getArguments();
+        if (bundle != null) {
+            //noinspection ConstantConditions
+            config = bundle.getParcelable("config");
+            styleConfig = bundle.getParcelable("styleConfig");
+            final String filter = bundle.getString("filter", null);
+            if (context instanceof CTInboxActivity) {
+                setListener((CTInboxListViewFragment.InboxListener) getActivity());
+            }
+            CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(getActivity(), config);
+            if (cleverTapAPI != null) {
+                ArrayList<CTInboxMessage> allMessages = cleverTapAPI.getAllInboxMessages();
+                inboxMessages = filter != null ? filterMessages(allMessages, filter) : allMessages;
+            }
+        }
+    }
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        View allView = inflater.inflate(R.layout.inbox_list_view,container,false);
+        LinearLayout linearLayout = allView.findViewById(R.id.list_view_linear_layout);
+        linearLayout.setBackgroundColor(Color.parseColor(styleConfig.getInboxBackgroundColor()));
+        TextView noMessageView = allView.findViewById(R.id.list_view_no_message_view);
+
+        if (inboxMessages.size() <= 0) {
+            noMessageView.setVisibility(View.VISIBLE);
+            return allView;
+        }
+
+        noMessageView.setVisibility(View.GONE);
+
+        final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
+        final CTInboxMessageAdapter inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessages, getActivity(), this);
+
+        if (haveVideoPlayerSupport) {
+            exoPlayerRecyclerView = new ExoPlayerRecyclerView(getActivity(), inboxMessages);
+            exoPlayerRecyclerView.setVisibility(View.VISIBLE);
+            exoPlayerRecyclerView.setLayoutManager(linearLayoutManager);
+            exoPlayerRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
+            exoPlayerRecyclerView.setItemAnimator(new DefaultItemAnimator());
+            exoPlayerRecyclerView.setAdapter(inboxMessageAdapter);
+            inboxMessageAdapter.notifyDataSetChanged();
+
+            if (firstTime) {
+                new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        exoPlayerRecyclerView.playVideo();
+                    }
+                }, 1000);
+                firstTime = false;
+            }
+            linearLayout.addView(exoPlayerRecyclerView);
+
+        } else {
+            RecyclerView recyclerView = allView.findViewById(R.id.list_view_recycler_view);
+            recyclerView.setVisibility(View.VISIBLE);
+            recyclerView.setLayoutManager(linearLayoutManager);
+            recyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
+            recyclerView.setItemAnimator(new DefaultItemAnimator());
+            recyclerView.setAdapter(inboxMessageAdapter);
+            inboxMessageAdapter.notifyDataSetChanged();
+        }
+        return allView;
+    }
+
+    @Override
+    public void onPause() {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                if(haveVideoPlayerSupport) {
+                    if (exoPlayerRecyclerView != null)
+                        exoPlayerRecyclerView.onPausePlayer();
+                }
+            }
+        });
+        super.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        new Handler(Looper.getMainLooper()).post(new Runnable() {
+            @Override
+            public void run() {
+                if(haveVideoPlayerSupport) {
+                    if (exoPlayerRecyclerView != null)
+                        exoPlayerRecyclerView.onRestartPlayer();
+                }
+            }
+        });
+        super.onResume();
+    }
+
+    @Override
+    public void onDestroy() {
+        if (exoPlayerRecyclerView!=null && haveVideoPlayerSupport) {
+            exoPlayerRecyclerView.release();
+        }
+        super.onDestroy();
+    }
+
+    private ArrayList<CTInboxMessage> filterMessages(ArrayList<CTInboxMessage>messages, String filter){
+        ArrayList<CTInboxMessage> filteredMessages = new ArrayList<>();
+        for(CTInboxMessage inboxMessage : messages){
+            if(inboxMessage.getTags() != null && inboxMessage.getTags().size() > 0) {
+                for (String stringTag : inboxMessage.getTags()) {
+                    if (stringTag.equalsIgnoreCase(filter)) {
+                        filteredMessages.add(inboxMessage);
+                    }
+                }
+            }
+        }
+        return filteredMessages;
+    }
+
+    void didClick(Bundle data, int position) {
+        CTInboxListViewFragment.InboxListener listener = getListener();
+        if (listener != null) {
+            //noinspection ConstantConditions
+            listener.messageDidClick(getActivity().getBaseContext(), inboxMessages.get(position), data);
+        }
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    void didShow(Bundle data, int position) {
+        CTInboxListViewFragment.InboxListener listener = getListener();
+        if (listener != null) {
+            //noinspection ConstantConditions
+            listener.messageDidShow(getActivity().getBaseContext(), inboxMessages.get(position), data);
+        }
+    }
+
+    void handleClick(int position, String buttonText, JSONObject jsonObject){
+        try {
+            Bundle data = new Bundle();
+            JSONObject wzrkParams = inboxMessages.get(position).getWzrkParams();
+            Iterator<String> iterator = wzrkParams.keys();
+            while(iterator.hasNext()){
+                String keyName = iterator.next();
+                if(keyName.startsWith(Constants.WZRK_PREFIX))
+                    data.putString(keyName,wzrkParams.getString(keyName));
+            }
+
+            if (buttonText != null && !buttonText.isEmpty()) {
+                data.putString("wzrk_c2a", buttonText);
+            }
+            didClick(data,position);
+
+            if (jsonObject != null) {
+                if(inboxMessages.get(position).getInboxMessageContents().get(0).getLinktype(jsonObject).equalsIgnoreCase(Constants.COPY_TYPE)){
+                    //noinspection UnnecessaryReturnStatement
+                    return;
+                }else{
+                    String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(0).getLinkUrl(jsonObject);
+                    if (actionUrl != null) {
+                        fireUrlThroughIntent(actionUrl);
+                    }
+                }
+            }else {
+                String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(0).getActionUrl();
+                if (actionUrl != null) {
+                    fireUrlThroughIntent(actionUrl);
+                }
+            }
+        } catch (Throwable t) {
+            Logger.d("Error handling notification button click: " + t.getCause());
+        }
+    }
+
+    void handleViewPagerClick(int position, int viewPagerPosition){
+        try {
+            Bundle data = new Bundle();
+            JSONObject wzrkParams = inboxMessages.get(position).getWzrkParams();
+            Iterator<String> iterator = wzrkParams.keys();
+            while(iterator.hasNext()){
+                String keyName = iterator.next();
+                if(keyName.startsWith(Constants.WZRK_PREFIX))
+                    data.putString(keyName,wzrkParams.getString(keyName));
+            }
+            didClick(data,position);
+            String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(viewPagerPosition).getActionUrl();
+            fireUrlThroughIntent(actionUrl);
+        }catch (Throwable t){
+            Logger.d("Error handling notification button click: " + t.getCause());
+        }
+    }
+
+    void fireUrlThroughIntent(String url) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            startActivity(intent);
+        } catch (Throwable t) {
+            // Ignore
+        }
+    }
+}

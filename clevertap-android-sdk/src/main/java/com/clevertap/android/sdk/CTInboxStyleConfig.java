@@ -3,8 +3,13 @@ package com.clevertap.android.sdk;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class CTInboxStyleConfig implements Parcelable {
+
+    private final static int MAX_TABS = 2;
 
     private String titleColor;
     private String bodyColor;
@@ -14,8 +19,6 @@ public class CTInboxStyleConfig implements Parcelable {
     private String navBarTitle;
     private String navBarTitleColor;
     private String inboxBackgroundColor;
-    private String firstTab;
-    private String secondTab;
     private boolean usingTabs;
     private String backButtonColor;
     private String selectedTabColor;
@@ -23,18 +26,32 @@ public class CTInboxStyleConfig implements Parcelable {
     private String selectedTabIndicatorColor;
     private String tabBackgroundColor;
 
+    private String[] tabs;
+
     public CTInboxStyleConfig(){
         this.navBarColor = "#FFFFFF";
         this.navBarTitle = "App Inbox";
         this.navBarTitleColor = "#333333";
         this.inboxBackgroundColor = "#D3D4DA";
-        this.firstTab = "";
-        this.secondTab = "";
         this.backButtonColor = "#333333";
         this.selectedTabColor = "#1C84FE";
         this.unselectedTabColor = "#808080";
         this.selectedTabIndicatorColor = "#1C84FE";
         this.tabBackgroundColor = "#FFFFFF";
+        this.tabs = new String[0];
+    }
+
+    CTInboxStyleConfig(CTInboxStyleConfig config){
+        this.navBarColor = config.navBarColor;
+        this.navBarTitle = config.navBarTitle;
+        this.navBarTitleColor = config.navBarTitleColor;
+        this.inboxBackgroundColor = config.inboxBackgroundColor;
+        this.backButtonColor = config.backButtonColor;
+        this.selectedTabColor = config.selectedTabColor;
+        this.unselectedTabColor = config.unselectedTabColor;
+        this.selectedTabIndicatorColor = config.selectedTabIndicatorColor;
+        this.tabBackgroundColor = config.tabBackgroundColor;
+        this.tabs = (config.tabs == null) ? new String[0] : Arrays.copyOf(config.tabs, config.tabs.length);
     }
 
     protected CTInboxStyleConfig(Parcel in) {
@@ -46,8 +63,7 @@ public class CTInboxStyleConfig implements Parcelable {
         navBarTitle = in.readString();
         navBarTitleColor = in.readString();
         inboxBackgroundColor = in.readString();
-        firstTab = in.readString();
-        secondTab = in.readString();
+        tabs = in.createStringArray();
         usingTabs = in.readByte() != 0x00;
         backButtonColor = in.readString();
         selectedTabColor = in.readString();
@@ -71,8 +87,7 @@ public class CTInboxStyleConfig implements Parcelable {
         dest.writeString(navBarTitle);
         dest.writeString(navBarTitleColor);
         dest.writeString(inboxBackgroundColor);
-        dest.writeString(firstTab);
-        dest.writeString(secondTab);
+        dest.writeStringArray(tabs);
         dest.writeByte((byte) (usingTabs ? 0x01 : 0x00));
         dest.writeString(backButtonColor);
         dest.writeString(selectedTabColor);
@@ -157,25 +172,24 @@ public class CTInboxStyleConfig implements Parcelable {
     public void setInboxBackgroundColor(String inboxBackgroundColor) {
         this.inboxBackgroundColor = inboxBackgroundColor;
     }
+    public void setTabs(ArrayList<String>tabs) {
+        if (tabs == null || tabs.size() <= 0) return;
 
-    public String getFirstTab() {
-        return firstTab;
+        ArrayList<String>toAdd;
+        if (tabs.size() > MAX_TABS) {
+            toAdd = new ArrayList<>(tabs.subList(0, MAX_TABS));
+        } else {
+            toAdd = tabs;
+        }
+        this.tabs = toAdd.toArray(new String[0]);
     }
 
-    public void setFirstTab(String firstTab) {
-        this.firstTab = firstTab;
-    }
-
-    public String getSecondTab() {
-        return secondTab;
-    }
-
-    public void setSecondTab(String secondTab) {
-        this.secondTab = secondTab;
+    public ArrayList<String> getTabs() {
+        return this.tabs == null ? new ArrayList<String>() : new ArrayList<>(Arrays.asList(this.tabs));
     }
 
     boolean isUsingTabs() {
-        return !firstTab.isEmpty() || !secondTab.isEmpty();
+        return (tabs != null && tabs.length > 0);
     }
 
     public String getBackButtonColor() {

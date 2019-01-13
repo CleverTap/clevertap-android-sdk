@@ -6118,25 +6118,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         _initializeInbox();
     }
 
-//    private ArrayList<CTInboxMessage> getFirstTabMessages(String tab){
-//        ArrayList<CTInboxMessage> allMessages = getAllInboxMessages();
-//        return filterMessages(allMessages,tab);
-//    }
-
-    ArrayList<CTInboxMessage> filterMessages(ArrayList<CTInboxMessage> inboxMessageArrayList,String tab){
-        ArrayList<CTInboxMessage> filteredMessages = new ArrayList<>();
-        for(CTInboxMessage inboxMessage : inboxMessageArrayList){
-            if(inboxMessage.getTags() != null && inboxMessage.getTags().size() > 0) {
-                for (String stringTag : inboxMessage.getTags()) {
-                    if (stringTag.equalsIgnoreCase(tab)) {
-                        filteredMessages.add(inboxMessage);
-                    }
-                }
-            }
-        }
-        return filteredMessages;
-    }
-
     /**
      * This method sets the CTInboxListener
      * @param notificationInboxListener An {@link CTInboxListener} object
@@ -6331,8 +6312,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
         }
 
+        // make styleConfig immutable
+        final CTInboxStyleConfig _styleConfig = new CTInboxStyleConfig(styleConfig);
+
         Intent intent = new Intent(context,CTInboxActivity.class);
-        intent.putExtra("styleConfig",styleConfig);
+        intent.putExtra("styleConfig", _styleConfig);
         intent.putExtra("config",config);
         try {
             Activity currentActivity = getCurrentActivity();

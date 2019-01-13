@@ -1,49 +1,32 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
-import android.support.v7.widget.DefaultItemAnimator;
-import android.support.v7.widget.DividerItemDecoration;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
-import android.widget.TextView;
-
-import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
-import java.util.Iterator;
 
-/**
- * CTInboxActivity
- */
-public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseFragment.InboxListener {
+public class CTInboxActivity extends FragmentActivity implements CTInboxListViewFragment.InboxListener {
     interface InboxActivityListener{
         void messageDidShow(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data);
         void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data);
     }
-
-    private ArrayList<CTInboxMessage> inboxMessageArrayList = new ArrayList<>();
     private CleverTapInstanceConfig config;
     private WeakReference<InboxActivityListener> listenerWeakReference;
-    private ExoPlayerRecyclerView exoPlayerRecyclerView;
-    private RecyclerView recyclerView;
-    private boolean firstTime = true;
-    boolean videoPresent = CleverTapAPI.haveVideoPlayerSupport;
+
+    private String getFragmentTag() {
+        return config.getAccountId() +":CT_INBOX_LIST_VIEW_FRAGMENT";
+    }
 
     void setListener(InboxActivityListener listener) {
         listenerWeakReference = new WeakReference<>(listener);
@@ -63,6 +46,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
     }
 
     public void onCreate(Bundle savedInstanceState){
+        // TODO what to do if savedInstanceState is not null  ???
         super.onCreate(savedInstanceState);
         CTInboxStyleConfig styleConfig;
         CleverTapAPI cleverTapAPI;
@@ -73,7 +57,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
             config = extras.getParcelable("config");
             cleverTapAPI = CleverTapAPI.instanceWithConfig(getApplicationContext(), config);
             if (cleverTapAPI != null) {
-                inboxMessageArrayList = cleverTapAPI.getAllInboxMessages();
                 setListener(cleverTapAPI);
             }
         }catch (Throwable t){
@@ -102,9 +85,23 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
         linearLayout.setBackgroundColor(Color.parseColor(styleConfig.getInboxBackgroundColor()));
         final TabLayout tabLayout = linearLayout.findViewById(R.id.tab_layout);
         final ViewPager viewPager = linearLayout.findViewById(R.id.view_pager);
-        TextView noMessageView = findViewById(R.id.no_message_view);
-        //Tabs are shown only if mentioned in StyleConfig
-        if(styleConfig.isUsingTabs()){
+
+        Bundle bundle = new Bundle();
+        bundle.putParcelable("config", config);
+        bundle.putParcelable("styleConfig", styleConfig);
+
+        if (!styleConfig.isUsingTabs()) {
+            viewPager.setVisibility(View.GONE);
+            tabLayout.setVisibility(View.GONE);
+            final FrameLayout listViewFragmentLayout = findViewById(R.id.list_view_fragment);
+            listViewFragmentLayout.setVisibility(View.VISIBLE);
+
+            CTInboxListViewFragment listView = new CTInboxListViewFragment();
+            listView.setArguments(bundle);
+            getSupportFragmentManager().beginTransaction()
+                    .add(R.id.list_view_fragment, listView, getFragmentTag())
+                    .commit();
+        } else {
             viewPager.setVisibility(View.VISIBLE);
             final CTInboxTabAdapter inboxTabAdapter = new CTInboxTabAdapter(getSupportFragmentManager());
             tabLayout.setVisibility(View.VISIBLE);
@@ -113,104 +110,51 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
             tabLayout.setBackgroundColor(Color.parseColor(styleConfig.getTabBackgroundColor()));
             tabLayout.addTab(tabLayout.newTab().setText("ALL"));
 
-            Bundle bundle = new Bundle();
-            bundle.putParcelableArrayList("inboxMessages", inboxMessageArrayList);
-            bundle.putParcelable("config", config);
-            bundle.putParcelable("styleConfig", styleConfig);
-            bundle.putInt("position",0);
-            CTInboxAllTabFragment all = new CTInboxAllTabFragment();
-            all.setArguments(bundle);
+            Bundle _allBundle = (Bundle)bundle.clone();
+            _allBundle.putInt("position",0);
+            CTInboxListViewFragment all = new CTInboxListViewFragment();
+            all.setArguments(_allBundle);
             inboxTabAdapter.addFragment(all,"ALL");
 
-            if(styleConfig.getFirstTab() != null && !styleConfig.getFirstTab().isEmpty()) {
-                CTInboxAllTabFragment first = new CTInboxAllTabFragment();
-                bundle = (Bundle)bundle.clone();
-                bundle.putInt("position",1);
-                first.setArguments(bundle);
-                inboxTabAdapter.addFragment(first,styleConfig.getFirstTab());
-                viewPager.setOffscreenPageLimit(1);
-            }
+            ArrayList<String>tabs = styleConfig.getTabs();
 
-
-            if(styleConfig.getSecondTab() != null && !styleConfig.getSecondTab().isEmpty()) {
-                CTInboxAllTabFragment second = new CTInboxAllTabFragment();
-                bundle = (Bundle)bundle.clone();
-                bundle.putInt("position",2);
-                second.setArguments(bundle);
-                inboxTabAdapter.addFragment(second,styleConfig.getSecondTab());
-                viewPager.setOffscreenPageLimit(2);
+            for (int i=0; i<tabs.size(); i++) {
+                String filter = tabs.get(i);
+                int pos = i + 1;
+                Bundle _bundle = (Bundle)bundle.clone();
+                _bundle.putInt("position", pos);
+                _bundle.putString("filter", filter);
+                CTInboxListViewFragment frag = new CTInboxListViewFragment();
+                frag.setArguments(_bundle);
+                inboxTabAdapter.addFragment(frag, filter);
+                viewPager.setOffscreenPageLimit(pos);
             }
 
             viewPager.setAdapter(inboxTabAdapter);
             viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
-            tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {   // TODO do we need this ??
                 @Override
                 public void onTabSelected(TabLayout.Tab tab) {
-                    CTInboxTabBaseFragment fragment = (CTInboxTabBaseFragment) inboxTabAdapter.getItem(tab.getPosition());
-                    if(((CTInboxAllTabFragment) fragment).exoPlayerRecyclerView!=null){
-                        ((CTInboxAllTabFragment) fragment).exoPlayerRecyclerView.playVideo();
+                    CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter.getItem(tab.getPosition());
+                    if(fragment != null && fragment.exoPlayerRecyclerView!=null){
+                        fragment.exoPlayerRecyclerView.playVideo();
                     }
                 }
 
                 @Override
                 public void onTabUnselected(TabLayout.Tab tab) {
-                    CTInboxTabBaseFragment fragment = (CTInboxTabBaseFragment) inboxTabAdapter.getItem(tab.getPosition());
-                    if(((CTInboxAllTabFragment) fragment).exoPlayerRecyclerView!=null){
-                        ((CTInboxAllTabFragment) fragment).exoPlayerRecyclerView.stop();
+                    CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter.getItem(tab.getPosition());
+                    if(fragment != null && fragment.exoPlayerRecyclerView!=null){
+                        fragment.exoPlayerRecyclerView.stop();
                     }
                 }
 
                 @Override
                 public void onTabReselected(TabLayout.Tab tab) {
-
+                    //no-op
                 }
             });
             tabLayout.setupWithViewPager(viewPager);
-        }else{
-            viewPager.setVisibility(View.GONE);
-            tabLayout.setVisibility(View.GONE);
-            //ExoPlayerRecyclerView manages autoplay of videos on scoll and hence only used if Inbox messages contain videos
-            CTInboxMessageAdapter inboxMessageAdapter;
-            if(videoPresent) {
-                exoPlayerRecyclerView = new ExoPlayerRecyclerView(getApplicationContext());
-                exoPlayerRecyclerView.setVisibility(View.VISIBLE);
-                exoPlayerRecyclerView.setVideoInfoList(inboxMessageArrayList);
-                LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-                exoPlayerRecyclerView.setLayoutManager(linearLayoutManager);
-                DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(exoPlayerRecyclerView.getContext(),
-                        linearLayoutManager.getOrientation());
-                exoPlayerRecyclerView.addItemDecoration(dividerItemDecoration);
-                exoPlayerRecyclerView.setItemAnimator(new DefaultItemAnimator());
-
-                inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, this,null);
-                exoPlayerRecyclerView.setAdapter(inboxMessageAdapter);
-                inboxMessageAdapter.notifyDataSetChanged();
-                if (firstTime) {
-                    new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            exoPlayerRecyclerView.playVideo();
-                        }
-                    },1000);
-                    firstTime = false;
-                }
-                linearLayout.addView(exoPlayerRecyclerView);
-                noMessageView.setVisibility(View.GONE);
-            }else{//Normal Recycler view in case inbox messages don't contain any videos
-                recyclerView = findViewById(R.id.activity_recycler_view);
-                recyclerView.setVisibility(View.VISIBLE);
-                LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-                recyclerView.setLayoutManager(linearLayoutManager);
-                DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
-                        linearLayoutManager.getOrientation());
-                recyclerView.addItemDecoration(dividerItemDecoration);
-                recyclerView.setItemAnimator(new DefaultItemAnimator());
-
-                inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessageArrayList, this,null);
-                recyclerView.setAdapter(inboxMessageAdapter);
-                inboxMessageAdapter.notifyDataSetChanged();
-                noMessageView.setVisibility(View.GONE);
-            }
         }
     }
 
@@ -236,117 +180,5 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxTabBaseF
         if (listener != null) {
             listener.messageDidShow(this,inboxMessage, data);
         }
-    }
-
-    /**
-     * Handles click of inbox message CTA button
-     * @param position int row in the RecyclerView
-     * @param buttonText  String text of the Button
-     */
-    void handleClick(int position, String buttonText, JSONObject jsonObject){
-        try {
-            Bundle data = new Bundle();
-
-            //data.putString(Constants.NOTIFICATION_ID_TAG,inboxMessageArrayList.get(position).getCampaignId());
-            JSONObject wzrkParams = inboxMessageArrayList.get(position).getWzrkParams();
-            Iterator<String> iterator = wzrkParams.keys();
-            while(iterator.hasNext()){
-                String keyName = iterator.next();
-                if(keyName.startsWith(Constants.WZRK_PREFIX))
-                    data.putString(keyName,wzrkParams.getString(keyName));
-            }
-
-            if(buttonText != null && !buttonText.isEmpty())
-                data.putString("wzrk_c2a", buttonText);
-            didClick(data,inboxMessageArrayList.get(position));
-
-           if (jsonObject != null) {
-                if(inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getLinktype(jsonObject).equalsIgnoreCase(Constants.COPY_TYPE)){
-                    // noinspection UnnecessaryReturnStatement
-                    return;
-                }else{
-                    String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getLinkUrl(jsonObject);
-                    if (actionUrl != null) {
-                        fireUrlThroughIntent(actionUrl);
-                    }
-                }
-            }else {
-                String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(0).getActionUrl();
-                if (actionUrl != null) {
-                    fireUrlThroughIntent(actionUrl);
-                }
-}
-        } catch (Throwable t) {
-            config.getLogger().debug("Error handling notification button click: " + t.getCause());
-        }
-    }
-
-    /**
-     * Handles click of inbox message carousel view pager
-     * @param position int row in the RecyclerView
-     * @param viewPagerPosition int position of the ViewPager
-     */
-    void handleViewPagerClick(int position, int viewPagerPosition){
-        try {
-            Bundle data = new Bundle();
-
-            JSONObject wzrkParams = inboxMessageArrayList.get(position).getWzrkParams();
-            Iterator<String> iterator = wzrkParams.keys();
-            while(iterator.hasNext()){
-                String keyName = iterator.next();
-                if(keyName.startsWith(Constants.WZRK_PREFIX))
-                    data.putString(keyName,wzrkParams.getString(keyName));
-            }
-
-            didClick(data,inboxMessageArrayList.get(position));
-            String actionUrl = inboxMessageArrayList.get(position).getInboxMessageContents().get(viewPagerPosition).getActionUrl();
-            fireUrlThroughIntent(actionUrl);
-        }catch (Throwable t){
-            config.getLogger().debug("Error handling notification button click: " + t.getCause());
-        }
-    }
-
-    void fireUrlThroughIntent(String url) {
-        try {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
-            startActivity(intent);
-        } catch (Throwable t) {
-            // Ignore
-        }
-    }
-
-    @Override
-    public void onPause() {
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                if(videoPresent) {
-                    if(exoPlayerRecyclerView !=null)
-                        exoPlayerRecyclerView.onPausePlayer();
-                }
-            }
-        });
-        super.onPause();
-    }
-
-    @Override
-    public void onResume() {
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                if(videoPresent) {
-                    if(exoPlayerRecyclerView !=null)
-                        exoPlayerRecyclerView.onRestartPlayer();
-                }
-            }
-        });
-        super.onResume();
-    }
-
-    @Override
-    public void onDestroy() {
-        if(exoPlayerRecyclerView!=null && videoPresent)
-            exoPlayerRecyclerView.release();
-        super.onDestroy();
     }
 }
