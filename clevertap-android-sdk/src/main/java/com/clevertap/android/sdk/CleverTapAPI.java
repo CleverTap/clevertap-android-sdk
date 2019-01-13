@@ -54,6 +54,7 @@ import java.lang.ref.WeakReference;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -63,6 +64,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
@@ -6342,9 +6344,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     @Override
-    public void messageDidShow(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data) {
-        markReadInboxMessage(inboxMessage);
-        pushInboxMessageStateEvent(false,inboxMessage,data);
+    public void messageDidShow(CTInboxActivity ctInboxActivity, final CTInboxMessage inboxMessage, final Bundle data) {
+        postAsyncSafely("handleMessageDidShow", new Runnable() {
+            @Override
+            public void run() {
+                CTInboxMessage message = getInboxMessageForId(inboxMessage.getMessageId());
+                if (!message.isRead()) {
+                    markReadInboxMessage(inboxMessage);
+                    pushInboxMessageStateEvent(false,inboxMessage, data);
+                }
+            }});
     }
 
     @Override
@@ -6505,19 +6514,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     return;
                 }
 
-                Calendar calendar = Calendar.getInstance();
-                long now = calendar.getTimeInMillis();
-                calendar.set(Calendar.HOUR,22);
-                calendar.set(Calendar.MINUTE,0);
-                calendar.set(Calendar.SECOND,0);
-                calendar.set(Calendar.MILLISECOND,0);
+                Calendar now = Calendar.getInstance();
 
-                long startMs = calendar.getTimeInMillis();
+                int hour = now.get(Calendar.HOUR_OF_DAY); // Get hour in 24 hour format
+                int minute = now.get(Calendar.MINUTE);
 
-                calendar.add(Calendar.HOUR,8);
-                long endMs = calendar.getTimeInMillis();
+                Date currentTime = parseTimeToDate(hour + ":" + minute);
+                Date startTime = parseTimeToDate("22:00");
+                Date endTime = parseTimeToDate("06:00");
 
-                if (now >= startMs && now <= endMs) {
+                if (isTimeBetweenDNDTime(startTime,endTime,currentTime)) {
                     Logger.v(getAccountId(), "Job Service won't run in default DND hours");
                     return;
                 }
@@ -6565,6 +6571,37 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
         }
         return  null;
+    }
+
+    private Date parseTimeToDate(String time) {
+
+        final String inputFormat = "HH:mm";
+        SimpleDateFormat inputParser = new SimpleDateFormat(inputFormat, Locale.US);
+        try {
+            return inputParser.parse(time);
+        } catch (java.text.ParseException e) {
+            return new Date(0);
+        }
+    }
+
+    private boolean isTimeBetweenDNDTime(Date startTime, Date stopTime, Date currentTime) {
+        //Start Time
+        Calendar startTimeCalendar = Calendar.getInstance();
+        startTimeCalendar.setTime(startTime);
+        //Current Time
+        Calendar currentTimeCalendar = Calendar.getInstance();
+        currentTimeCalendar.setTime(currentTime);
+        //Stop Time
+        Calendar stopTimeCalendar = Calendar.getInstance();
+        stopTimeCalendar.setTime(stopTime);
+
+        if (stopTime.compareTo(startTime) < 0) {
+            if (currentTimeCalendar.compareTo(stopTimeCalendar) < 0) {
+                currentTimeCalendar.add(Calendar.DATE, 1);
+            }
+            stopTimeCalendar.add(Calendar.DATE, 1);
+        }
+        return currentTimeCalendar.compareTo(startTimeCalendar) >= 0 && currentTimeCalendar.compareTo(stopTimeCalendar) < 0;
     }
 
 }

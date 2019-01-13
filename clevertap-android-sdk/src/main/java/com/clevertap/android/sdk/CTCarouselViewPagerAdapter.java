@@ -52,18 +52,35 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
         layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         //noinspection ConstantConditions
         view = layoutInflater.inflate(R.layout.inbox_carousel_image_layout,container,false);
-        ImageView imageView = view.findViewById(R.id.imageView);
-        imageView.setVisibility(View.VISIBLE);
-        Glide.with(imageView.getContext())
-                .load(carouselImages.get(position))
-                .into(imageView);
-        container.addView(view,layoutParams);
-        view.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                fragment.handleViewPagerClick(row,position);
-            }
-        });
+        if (inboxMessage.getOrientation().equalsIgnoreCase("l")) {
+            ImageView imageView = view.findViewById(R.id.imageView);
+            imageView.setVisibility(View.VISIBLE);
+            Glide.with(imageView.getContext())
+                    .load(carouselImages.get(position))
+                    .into(imageView);
+            container.addView(view,layoutParams);
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    fragment.handleViewPagerClick(row,position);
+                }
+            });
+        }else if (inboxMessage.getOrientation().equalsIgnoreCase("p")){
+            ImageView imageView = view.findViewById(R.id.squareImageView);
+            imageView.setVisibility(View.VISIBLE);
+            Glide.with(imageView.getContext())
+                    .load(carouselImages.get(position))
+                    .into(imageView);
+            container.addView(view,layoutParams);
+            view.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    fragment.handleViewPagerClick(row,position);
+                }
+            });
+        }
+
+
         return view;
     }
 

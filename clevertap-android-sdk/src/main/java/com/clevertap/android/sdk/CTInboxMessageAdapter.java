@@ -107,6 +107,9 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     }else{
                         ((CTSimpleMessageViewHolder)viewHolder).readDot.setVisibility(View.VISIBLE);
                     }
+                    //reset Image/GIF views
+                    ((CTSimpleMessageViewHolder)viewHolder).mediaImage.setVisibility(View.GONE);
+                    ((CTSimpleMessageViewHolder)viewHolder).squareImage.setVisibility(View.GONE);
                     //Shows the CTA layout only if links are present, also handles the display of the CTAs depending on the number
                     JSONArray linksArray = inboxMessage.getInboxMessageContents().get(0).getLinks();
                     if(linksArray != null){
@@ -230,18 +233,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                         ((CTSimpleMessageViewHolder)viewHolder).readDot.setVisibility(View.GONE);
                                     }
                                 });
-                            }else if(context != null){
-                                ((CTInboxActivity)context).runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if(((CTSimpleMessageViewHolder)viewHolder).readDot.getVisibility() == View.VISIBLE) {
-                                            ((CTInboxActivity) context).didShow(null, inboxMessages.get(position));
-                                        }
-                                        ((CTSimpleMessageViewHolder)viewHolder).readDot.setVisibility(View.GONE);
-                                    }
-                                });
                             }
-
                         }
                     };
                     Handler simpleHandler = new Handler();
@@ -264,6 +256,9 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                     }else{
                         ((CTIconMessageViewHolder)viewHolder).readDot.setVisibility(View.VISIBLE);
                     }
+                    //reset image/GIF views
+                    ((CTIconMessageViewHolder)viewHolder).mediaImage.setVisibility(View.GONE);
+                    ((CTIconMessageViewHolder)viewHolder).squareImage.setVisibility(View.GONE);
                     //Shows the CTA layout only if links are present, also handles the display of the CTAs depending on the number
                     JSONArray iconlinksArray = inboxMessage.getInboxMessageContents().get(0).getLinks();
                     if(iconlinksArray != null){
@@ -386,16 +381,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                         ((CTIconMessageViewHolder)viewHolder).readDot.setVisibility(View.GONE);
                                     }
                                 });
-                            }else if(context != null){
-                                ((CTInboxActivity)context).runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if(((CTIconMessageViewHolder)viewHolder).readDot.getVisibility() == View.VISIBLE) {
-                                            ((CTInboxActivity) context).didShow(null, inboxMessages.get(imagePosition));
-                                        }
-                                        ((CTIconMessageViewHolder)viewHolder).readDot.setVisibility(View.GONE);
-                                    }
-                                });
                             }
                         }
                     };
@@ -469,16 +454,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                         ((CTCarouselMessageViewHolder)viewHolder).readDot.setVisibility(View.GONE);
                                     }
                                 });
-                            }else if(context != null){
-                                ((CTInboxActivity)context).runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if(((CTCarouselMessageViewHolder)viewHolder).readDot.getVisibility() == View.VISIBLE) {
-                                            ((CTInboxActivity) context).didShow(null, inboxMessages.get(carouselPosition));
-                                        }
-                                        ((CTCarouselMessageViewHolder)viewHolder).readDot.setVisibility(View.GONE);
-                                    }
-                                });
                             }
                         }
                     };
@@ -531,16 +506,6 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                                     public void run() {
                                         if(((CTCarouselMessageViewHolder)viewHolder).carouselReadDot.getVisibility() == View.VISIBLE) {
                                             fragment.didShow(null, imageCarouselPos);
-                                        }
-                                        ((CTCarouselMessageViewHolder)viewHolder).carouselReadDot.setVisibility(View.GONE);
-                                    }
-                                });
-                            }else if(context != null){  // TODO remove the context.didShow stuff
-                                ((CTInboxActivity)context).runOnUiThread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if(((CTCarouselMessageViewHolder)viewHolder).carouselReadDot.getVisibility() == View.VISIBLE) {
-                                            ((CTInboxActivity) context).didShow(null, inboxMessages.get(imageCarouselPos));
                                         }
                                         ((CTCarouselMessageViewHolder)viewHolder).carouselReadDot.setVisibility(View.GONE);
                                     }
@@ -627,7 +592,7 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
 //        //player.seekTo(1000);
         playerView.requestFocus();
         playerView.setVisibility(View.VISIBLE);
-        // playerView.setPlayer(player);  // TODO
+        //playerView.setPlayer(player);  // TODO
         playerView.setUseArtwork(true);
         Drawable artwork = context.getResources().getDrawable(R.drawable.ct_audio);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
