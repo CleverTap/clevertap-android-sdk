@@ -111,10 +111,17 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
                 activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if(readDot.getVisibility() == View.VISIBLE) {
-                            parent.didShow(null, position);
+                        if (inboxMessage.getType() == CTInboxMessageType.CarouselImageMessage){
+                            if(carouselReadDot.getVisibility() == View.VISIBLE){
+                                parent.didShow(null,position);
+                            }
+                            carouselReadDot.setVisibility(View.GONE);
+                        }else {
+                            if (readDot.getVisibility() == View.VISIBLE) {
+                                parent.didShow(null, position);
+                            }
+                            readDot.setVisibility(View.GONE);
                         }
-                        readDot.setVisibility(View.GONE);
                     }
                 });
             }
