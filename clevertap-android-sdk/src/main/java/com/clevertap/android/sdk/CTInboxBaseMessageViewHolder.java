@@ -50,6 +50,9 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
     LinearLayout ctaLinearLayout;
     FrameLayout frameLayout;
     private boolean hasVideo;
+    private float currentVolume;
+    private ImageView muteIcon;
+    private Context context;
 
     CTInboxBaseMessageViewHolder(@NonNull View itemView) {
         super(itemView);
@@ -59,8 +62,32 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         hasVideo = false;
     }
 
-    void play() {
+    private void setMute(boolean mute) {
         if (this.videoSurfaceView != null && this.videoSurfaceView.getPlayer() != null) {
+            SimpleExoPlayer player = (SimpleExoPlayer) this.videoSurfaceView.getPlayer();
+            float currentVolume = player.getVolume();
+            boolean currentlyMuted = currentVolume <= 0.0F;
+            boolean updateIcon = false;
+            if (mute && !currentlyMuted) {
+                player.setVolume(0f);
+                this.currentVolume = currentVolume;
+                updateIcon = true;
+            } else if (!mute && currentlyMuted) {
+                float volume = this.currentVolume > 0 ? this.currentVolume : 1;
+                player.setVolume(volume);
+                updateIcon = true;
+            }
+            if (updateIcon && muteIcon != null) {
+                int imageId = mute ? R.drawable.volume_off : R.drawable.volume_on;
+                // noinspection ConstantConditions
+                muteIcon.setImageDrawable(context.getResources().getDrawable(imageId));
+            }
+        }
+    }
+
+    void play(boolean muted) {
+        if (this.videoSurfaceView != null && this.videoSurfaceView.getPlayer() != null) {
+            setMute(muted);
             this.videoSurfaceView.getPlayer().setPlayWhenReady(true);
         }
     }
@@ -122,18 +149,15 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
         TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
         TrackSelector trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
-        // 2. Create a local preview player
         final SimpleExoPlayer player = ExoPlayerFactory.newSimpleInstance(context, trackSelector);
-        // 3. Produces DataSource instances through which media data is loaded.
         //noinspection unchecked
         DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(context,
                 Util.getUserAgent(context, context.getPackageName()), (TransferListener<? super DataSource>) bandwidthMeter);
         HlsMediaSource hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(mediaUrl));
-        // 4. Prepare the player with the source.
         player.prepare(hlsMediaSource);
         player.setRepeatMode(Player.REPEAT_MODE_ONE);
         player.setPlayWhenReady(false);
-        //player.seekTo(1000);
+
         player.addListener(new Player.EventListener() {
             @Override
             public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {}
@@ -194,11 +218,14 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         parent.mediaRecyclerView.holderStoppedPlaying(this);
     }
 
-    void addMediaPlayerView(CTInboxMessage inboxMessage, CTInboxListViewFragment parent){
-        Context context = parent.getContext();
+    private void notifyMuteChanged(CTInboxListViewFragment parent, boolean muted) {
+        parent.mediaRecyclerView.holderMuteChanged(this, muted);
+    }
+
+    void addMediaPlayerView(CTInboxMessage inboxMessage, final CTInboxListViewFragment parent){
+        context = parent.getActivity();
         videoSurfaceView = new PlayerView(context);
         videoSurfaceView.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.WRAP_CONTENT));
-        //playerView.setShowBuffering(true);
         videoSurfaceView.setUseArtwork(true);
         videoSurfaceView.setControllerAutoShow(false);
         videoSurfaceView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_ZOOM);
@@ -234,7 +261,7 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         hasVideo = content.mediaIsVideo();
 
         if(content.mediaIsVideo()) {
-            ImageView muteIcon = new ImageView(context);
+            muteIcon = new ImageView(context);
             muteIcon.setImageDrawable(context.getResources().getDrawable(R.drawable.volume_off));
             int iconWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, context.getResources().getDisplayMetrics());
             int iconHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, context.getResources().getDisplayMetrics());
@@ -247,15 +274,10 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
             muteIcon.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    // TODO FIX volume
-                    float currentVolume = 0;
-                    if (currentVolume > 0) {
-                        player.setVolume(0f);
-                    } else if (currentVolume == 0) {
-                        player.setVolume(1);
-                    }
+                    boolean mute = player.getVolume() > 0;
+                    setMute(mute);
+                    notifyMuteChanged(parent, mute);
                 }
-
             });
             frameLayout.addView(muteIcon);
         }
@@ -272,7 +294,7 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
                 }
             }
             Player player = videoSurfaceView.getPlayer();
-            if(player!=null) {
+            if (player != null) {
                 player.release();
                 videoSurfaceView.setPlayer(null);
             }

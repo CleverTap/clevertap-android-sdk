@@ -16,6 +16,7 @@ public class MediaRecyclerView extends RecyclerView {
     private int videoSurfaceDefaultHeight = 0;
     private int screenDefaultHeight = 0;
     int targetPosition;
+    private boolean muted = true;
     private CTInboxBaseMessageViewHolder currentlyPlayingHolder;
 
     // Note only inflate programmatically!
@@ -64,6 +65,11 @@ public class MediaRecyclerView extends RecyclerView {
             currentlyPlayingHolder = null;
         }
     }
+
+    @SuppressWarnings({"UnusedParameters"})
+    void holderMuteChanged(CTInboxBaseMessageViewHolder holder, boolean muted) {
+        this.muted = muted;
+    }
     void stop() {
         if (currentlyPlayingHolder != null) {
             currentlyPlayingHolder.pause();
@@ -110,7 +116,7 @@ public class MediaRecyclerView extends RecyclerView {
             currentlyPlayingHolder.pause();
         }
         if (holder.shouldAutoPlay()) {
-            holder.play();
+            holder.play(this.muted);
             currentlyPlayingHolder = holder;
         }
     }

@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk;
 
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Handler;
@@ -105,7 +106,9 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
         Runnable carouselRunnable = new Runnable() {
             @Override
             public void run() {
-                parent.getActivity().runOnUiThread(new Runnable() {
+                Activity activity = parent.getActivity();
+                if (activity == null) return;
+                activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
                         if(readDot.getVisibility() == View.VISIBLE) {

@@ -40,7 +40,6 @@ public class CTInboxListViewFragment extends Fragment {
 
     private boolean firstTime = true;
     private int tabPosition;
-
     MediaRecyclerView mediaRecyclerView;
 
     private boolean shouldAutoPlayOnFirstLaunch() {
@@ -178,6 +177,7 @@ public class CTInboxListViewFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        mediaRecyclerView.setAdapter(null);
     }
 
     void didClick(Bundle data, int position) {
