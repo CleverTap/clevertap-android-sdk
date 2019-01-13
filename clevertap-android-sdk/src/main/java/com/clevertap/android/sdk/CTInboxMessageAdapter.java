@@ -44,11 +44,9 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
 
     @Override
     public void onBindViewHolder(final @NonNull RecyclerView.ViewHolder viewHolder, int i) {
-
         CTInboxMessage inboxMessage = this.inboxMessages.get(i);
         final CTInboxBaseMessageViewHolder _viewHolder = (CTInboxBaseMessageViewHolder) viewHolder;
         _viewHolder.configureWithMessage(inboxMessage, fragment, i);
-
     }
 
     @Override

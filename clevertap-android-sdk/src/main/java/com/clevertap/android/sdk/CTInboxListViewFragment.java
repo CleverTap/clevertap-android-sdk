@@ -39,7 +39,13 @@ public class CTInboxListViewFragment extends Fragment {
     private WeakReference<CTInboxListViewFragment.InboxListener> listenerWeakReference;
 
     private boolean firstTime = true;
+    private int tabPosition;
+
     MediaRecyclerView mediaRecyclerView;
+
+    private boolean shouldAutoPlayOnFirstLaunch() {
+        return tabPosition <= 0;
+    }
 
     void setListener(CTInboxListViewFragment.InboxListener listener) {
         listenerWeakReference = new WeakReference<>(listener);
@@ -80,6 +86,7 @@ public class CTInboxListViewFragment extends Fragment {
             //noinspection ConstantConditions
             config = bundle.getParcelable("config");
             styleConfig = bundle.getParcelable("styleConfig");
+            tabPosition = bundle.getInt("position", -1);
             final String filter = bundle.getString("filter", null);
             if (context instanceof CTInboxActivity) {
                 setListener((CTInboxListViewFragment.InboxListener) getActivity());
@@ -119,7 +126,7 @@ public class CTInboxListViewFragment extends Fragment {
             mediaRecyclerView.setAdapter(inboxMessageAdapter);
             inboxMessageAdapter.notifyDataSetChanged();
 
-            if (firstTime) {
+            if (firstTime && shouldAutoPlayOnFirstLaunch()) {
                 new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
                     @Override
                     public void run() {
