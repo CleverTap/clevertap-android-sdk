@@ -6119,7 +6119,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
         _initializeInbox();
     }
-
     /**
      * This method sets the CTInboxListener
      * @param notificationInboxListener An {@link CTInboxListener} object
