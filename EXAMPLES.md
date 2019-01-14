@@ -119,7 +119,110 @@ Use `onUserLogin` to maintain multiple distinct user profiles on the same device
     
     cleverTapAPI.onUserLogin(profileUpdate);
 ```
+### Using App Inbox
+
+#### Adding Inbox Dependencies
+
+Add the following dependencies in your app's `build.gradle`
+
+```
+implementation 'com.android.support:appcompat-v7:28.0.0'//MANDATORY for App Inbox
+implementation 'com.android.support:design:28.0.0'//MANDATORY for App Inbox
+implementation 'com.github.bumptech.glide:glide:4.8.0'//MANDATORY for App Inbox
+  
+//Optional ExoPlayer Libraries for Audio/Video Inbox Messages. Audio/Video messages will be dropped without these dependencies
+implementation 'com.google.android.exoplayer:exoplayer:2.8.4'
+implementation 'com.google.android.exoplayer:exoplayer-hls:2.8.4'
+implementation 'com.google.android.exoplayer:exoplayer-ui:2.8.4
+```
+#### Initializing the Inbox
+
+Initializing the Inbox will provide a callback to two methods `inboxDidInitialize()` AND `inboxMessagesDidUpdate()`
+
+```import com.clevertap.android.sdk.CTInboxActivity;
+import com.clevertap.android.sdk.CTInboxListener;
+import com.clevertap.android.sdk.CTInboxStyleConfig;
+import com.clevertap.android.sdk.CleverTapAPI;
+import com.clevertap.android.sdk.CleverTapInstanceConfig;
+
+public class MainActivity extends AppCompatActivity implements CTInboxListener {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+         private CleverTapAPI cleverTapDefaultInstance = CleverTapAPI.getDefaultInstance(this);
+         if (cleverTapDefaultInstance != null) {
+            //Set the Notification Inbox Listener
+            cleverTapDefaultInstance.setCTNotificationInboxListener(this);
+            //Initialize the inbox and wait for callbacks on overridden methods
+            cleverTapDefaultInstance.initializeInbox();
+        }
+    }
+}
+```
+
+#### Configure Styling and Showing the Inbox
+
+Customize the config object and call the Inbox in the `inboxDidInitialize()` method
+Call this method on the button click which opens the CleverTap Inbox for your App
+
+```
+@Override
+public void inboxDidInitialize(){
+    ArrayList<String> tabs = new ArrayList<>();
+    tabs.add("Promotions");
+    tabs.add("Offers");
+    tabs.add("Others");//We support upto 2 tabs only. Additional tabs will be ignored
     
+    CTInboxStyleConfig styleConfig = new CTInboxStyleConfig();
+    styleConfig.setTabs(tabs);//Do not use this if you don't want to use tabs
+    styleConfig.setTabBackgroundColor("#FF0000");//provide Hex code in string ONLY
+    styleConfig.setSelectedTabIndicatorColor("#0000FF");
+    styleConfig.setSelectedTabColor("#000000");
+    styleConfig.setUnselectedTabColor("#FFFFFF");
+    styleConfig.setBackButtonColor("#FF0000");
+    styleConfig.setNavBarTitleColor("#FF0000");
+    styleConfig.setNavBarTitle("MY INBOX");
+    styleConfig.setNavBarColor("#FFFFFF");
+    styleConfig.setInboxBackgroundColor("#00FF00");
+
+    cleverTapDefaultInstance.showAppInbox(styleConfig); //Opens activity tith Tabs
+    //OR
+    cleverTapDefaultInstance.showAppInbox();//Opens Activity with default style config
+}
+```
+### Creating your own App Inbox
+
+You can choose to create your own App Inbox with the help of the following APIs -
+
+```
+//Initialize App Inbox
+cleverTapDefaultInstance.initializeInbox();
+
+//Get Inbox Message Count
+cleverTapDefaultInstance.getInboxMessageCount();
+
+//Get Inbox Unread Count
+cleverTapDefaultInstance.getInboxMessageUnreadCount();
+
+//Get All messages 
+cleverTapDefaultInstance.getAllInboxMessages();
+
+//Get only Unread messages
+cleverTapDefaultInstance.getUnreadInboxMessages();
+
+//Get message object belonging to the given message id only. Message id should be a String
+cleverTapDefaultInstance.getInboxMessageForId(messageId);
+
+//Delete message from the Inbox. Message id should be a String
+cleverTapDefaultInstance.deleteInboxMessage(messageId);
+
+//Mark Message as Read
+cleverTapDefaultInstance.markReadInboxMessage(messageId);
+
+//Callback on Inbox Message update/delete/read (any activity)
+@Override
+public void inboxMessagesDidUpdate() {    }
+```
+
 ### Additional AndroidManifest.xml Configuration to Support Notifications
 
 #### Push Notifications
@@ -164,8 +267,33 @@ CleverTap handles closing the notification with Action buttons. You will have to
              <action android:name="com.clevertap.PUSH_EVENT"/>
          </intent-filter>
      </service>
-```   
+```  
 
+#### Push Amplification
+
+Starting with v3.4.0, the SDK supports Push Amplification. Push Amplification is a capability that allows you to reach users on devices which suppress notifications via GCM/FCM. To allow your app to use CleverTap's Push Amplification via background ping service, add the following fields in your app's `AndroidManifest.xml`
+
+```
+<meta-data
+    android:name="CLEVERTAP_BACKGROUND_SYNC"
+    android:value="1"/>
+      
+<!--use CTBackgroundIntentService to target users below Android 21 (Lollipop)-->
+<service
+    android:name="com.clevertap.android.sdk.CTBackgroundIntentService"
+    android:exported="false"
+    <intent-filter>
+        <action android:name="com.clevertap.BG_EVENT"/>
+    </intent-filter>
+</service>
+
+<!--use CTBackgroundJobService to target users on and above Android 21 (Lollipop)-->
+ <service
+    android:name="com.clevertap.android.sdk.CTBackgroundJobService"
+    android:permission="android.permission.BIND_JOB_SERVICE"
+    android:exported="false"/>
+ ``` 
+ 
 #### In-App Notifications
 
 To support in-app notifications, register the following activity in your AndroidManifest.xml
