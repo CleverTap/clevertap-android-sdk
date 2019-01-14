@@ -5,6 +5,9 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 
+import com.clevertap.android.sdk.CTInboxActivity;
+import com.clevertap.android.sdk.CTInboxListener;
+import com.clevertap.android.sdk.CTInboxStyleConfig;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 
@@ -12,9 +15,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements CTInboxListener {
 
-    private Button event, chargedEvent, eventWithProps, profileEvent;
+    private Button event, chargedEvent, eventWithProps, profileEvent, inbox;
     private CleverTapAPI cleverTapDefaultInstance, cleverTapInstanceTwo;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,6 +27,8 @@ public class MainActivity extends AppCompatActivity {
         chargedEvent = findViewById(R.id.charged_event);
         eventWithProps = findViewById(R.id.event_with_props);
         profileEvent = findViewById(R.id.profile_event);
+        inbox = findViewById(R.id.inbox);
+
         //Set Debug level for CleverTap
         CleverTapAPI.setDebugLevel(3);
 
@@ -31,6 +36,10 @@ public class MainActivity extends AppCompatActivity {
         cleverTapDefaultInstance = CleverTapAPI.getDefaultInstance(this);
         if (cleverTapDefaultInstance != null) {
             cleverTapDefaultInstance.enableDeviceNetworkInfoReporting(false);
+            //Set the Notification Inbox Listener
+            cleverTapDefaultInstance.setCTNotificationInboxListener(this);
+            //Initialize the inbox and wait for callbacks on overridden methods
+            cleverTapDefaultInstance.initializeInbox();
         }
 
         //With CleverTap Android SDK v3.2.0 you can create additional instances to send data to multiple CleverTap accounts
@@ -127,5 +136,36 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }
+
+    @Override
+    public void inboxDidInitialize() {
+        inbox.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ArrayList<String> tabs = new ArrayList<>();
+                tabs.add("Promotions");
+                tabs.add("Offers");
+                tabs.add("Others");//Anything after the first 2 will be ignored
+                CTInboxStyleConfig styleConfig = new CTInboxStyleConfig();
+                styleConfig.setTabs(tabs);//Do not use this if you don't want to use tabs
+                styleConfig.setTabBackgroundColor("#FF0000");
+                styleConfig.setSelectedTabIndicatorColor("#0000FF");
+                styleConfig.setSelectedTabColor("#000000");
+                styleConfig.setUnselectedTabColor("#FFFFFF");
+                styleConfig.setBackButtonColor("#FF0000");
+                styleConfig.setNavBarTitleColor("#FF0000");
+                styleConfig.setNavBarTitle("MY INBOX");
+                styleConfig.setNavBarColor("#FFFFFF");
+                styleConfig.setInboxBackgroundColor("#00FF00");
+                cleverTapDefaultInstance.showAppInbox(styleConfig); //Opens activity With Tabs
+                //cleverTapDefaultInstance.showAppInbox();//Opens Activity with default style configs
+            }
+        });
+    }
+
+    @Override
+    public void inboxMessagesDidUpdate() {
+        inbox.setText("Inbox - Unread - "+ cleverTapDefaultInstance.getInboxMessageUnreadCount() + " Total - " + cleverTapDefaultInstance.getInboxMessageCount());
     }
 }

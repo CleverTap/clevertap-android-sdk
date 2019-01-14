@@ -43,6 +43,10 @@
             android:name="CLEVERTAP_NOTIFICATION_ICON"
             android:value="ic_launcher_round"/>
 
+        <meta-data
+            android:name="CLEVERTAP_BACKGROUND_SYNC"
+            android:value="1"/>
+
         <!-- Add CleverTap Push Notification Services & Install Referrer Receivers-->
         <service
             android:name="com.clevertap.android.sdk.FcmTokenListenerService" android:exported="true">
@@ -69,6 +73,19 @@
                 <action android:name="com.clevertap.PUSH_EVENT"/>
             </intent-filter>
         </service>
+
+        <service
+            android:name="com.clevertap.android.sdk.CTBackgroundIntentService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.clevertap.BG_EVENT"/>
+            </intent-filter>
+        </service>
+
+        <service android:name="com.clevertap.android.sdk.CTBackgroundJobService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="false"/>
+
         <receiver
             android:name="com.clevertap.android.sdk.InstallReferrerBroadcastReceiver"
             android:exported="true">
