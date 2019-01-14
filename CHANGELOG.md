@@ -1,5 +1,11 @@
 ## CHANGE LOG
 
+### Version 3.4.0 (January 14, 2019)
+* Adds support for App Inbox
+* Adds support for Push Amplification
+* Workaround for Android O orientation bug in Native InApps
+* Fixes a bug which led to ANR on 2G network
+
 ### Version 3.3.4 (December 11, 2018)
 * Fixes the bug which raised `App Launched` event in some cases where an event was pushed from the background
 

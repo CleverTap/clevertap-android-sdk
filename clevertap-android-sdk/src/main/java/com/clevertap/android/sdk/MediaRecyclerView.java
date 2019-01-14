@@ -74,7 +74,7 @@ public class MediaRecyclerView extends RecyclerView {
     void stop() {
         if (currentlyPlayingHolder != null) {
             currentlyPlayingHolder.pause();
-            currentlyPlayingHolder.cleanUp();
+            //currentlyPlayingHolder.cleanUp();
             currentlyPlayingHolder = null;
         }
     }

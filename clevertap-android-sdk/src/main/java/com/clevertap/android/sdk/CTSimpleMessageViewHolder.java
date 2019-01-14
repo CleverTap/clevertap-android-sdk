@@ -135,43 +135,47 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
         removeVideoView();
         this.mediaImage.setVisibility(View.GONE);
         this.squareImage.setVisibility(View.GONE);
-        switch (inboxMessage.getOrientation()) {
-            case "l":
-                if (content.mediaIsImage()) {
-                    this.mediaImage.setVisibility(View.VISIBLE);
-                    this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                    Glide.with(this.mediaImage.getContext())
-                            .load(content.getMedia())
-                            .into(this.mediaImage);
-                } else if (content.mediaIsGIF()) {
-                    this.mediaImage.setVisibility(View.VISIBLE);
-                    this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                    Glide.with(this.mediaImage.getContext())
-                            .asGif()
-                            .load(content.getMedia())
-                            .into(this.mediaImage);
-                } else if (content.mediaIsVideo() || content.mediaIsAudio()) {
-                    addMediaPlayerView(inboxMessage);
-                }
-                break;
-            case "p":
-                if (content.mediaIsImage()) {
-                    this.squareImage.setVisibility(View.VISIBLE);
-                    this.squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                    Glide.with(this.squareImage.getContext())
-                            .load(content.getMedia())
-                            .into(this.squareImage);
-                } else if (content.mediaIsGIF()) {
-                    this.squareImage.setVisibility(View.VISIBLE);
-                    this.squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                    Glide.with(this.squareImage.getContext())
-                            .asGif()
-                            .load(content.getMedia())
-                            .into(this.squareImage);
-                } else if (content.mediaIsVideo() || content.mediaIsAudio()) {
-                    addMediaPlayerView(inboxMessage);
-                }
-                break;
+        try {
+            switch (inboxMessage.getOrientation()) {
+                case "l":
+                    if (content.mediaIsImage()) {
+                        this.mediaImage.setVisibility(View.VISIBLE);
+                        this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                        Glide.with(this.mediaImage.getContext())
+                                .load(content.getMedia())
+                                .into(this.mediaImage);
+                    } else if (content.mediaIsGIF()) {
+                        this.mediaImage.setVisibility(View.VISIBLE);
+                        this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                        Glide.with(this.mediaImage.getContext())
+                                .asGif()
+                                .load(content.getMedia())
+                                .into(this.mediaImage);
+                    } else if (content.mediaIsVideo() || content.mediaIsAudio()) {
+                        addMediaPlayerView(inboxMessage);
+                    }
+                    break;
+                case "p":
+                    if (content.mediaIsImage()) {
+                        this.squareImage.setVisibility(View.VISIBLE);
+                        this.squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                        Glide.with(this.squareImage.getContext())
+                                .load(content.getMedia())
+                                .into(this.squareImage);
+                    } else if (content.mediaIsGIF()) {
+                        this.squareImage.setVisibility(View.VISIBLE);
+                        this.squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                        Glide.with(this.squareImage.getContext())
+                                .asGif()
+                                .load(content.getMedia())
+                                .into(this.squareImage);
+                    } else if (content.mediaIsVideo() || content.mediaIsAudio()) {
+                        addMediaPlayerView(inboxMessage);
+                    }
+                    break;
+            }
+        }catch (NoClassDefFoundError error) {
+            Logger.d("CleverTap SDK requires Glide dependency. Please refer CleverTap Documentation for more info");
         }
         //New thread to remove the Read dot, mark message as read and raise Notification Viewed
         Runnable simpleRunnable = new Runnable() {

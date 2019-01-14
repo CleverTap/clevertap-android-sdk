@@ -12,6 +12,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
+import android.widget.TextView;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -87,7 +88,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         linearLayout.setBackgroundColor(Color.parseColor(styleConfig.getInboxBackgroundColor()));
         final TabLayout tabLayout = linearLayout.findViewById(R.id.tab_layout);
         final ViewPager viewPager = linearLayout.findViewById(R.id.view_pager);
-
+        TextView noMessageView = findViewById(R.id.no_message_view);
         Bundle bundle = new Bundle();
         bundle.putParcelable("config", config);
         bundle.putParcelable("styleConfig", styleConfig);
@@ -97,12 +98,17 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             tabLayout.setVisibility(View.GONE);
             final FrameLayout listViewFragmentLayout = findViewById(R.id.list_view_fragment);
             listViewFragmentLayout.setVisibility(View.VISIBLE);
-
-            CTInboxListViewFragment listView = new CTInboxListViewFragment();
-            listView.setArguments(bundle);
-            getSupportFragmentManager().beginTransaction()
-                    .add(R.id.list_view_fragment, listView, getFragmentTag())
-                    .commit();
+            if(cleverTapAPI!= null && cleverTapAPI.getInboxMessageCount() == 0){
+                noMessageView.setBackgroundColor(Color.parseColor(styleConfig.getInboxBackgroundColor()));
+                noMessageView.setVisibility(View.VISIBLE);
+            }else {
+                noMessageView.setVisibility(View.GONE);
+                CTInboxListViewFragment listView = new CTInboxListViewFragment();
+                listView.setArguments(bundle);
+                getSupportFragmentManager().beginTransaction()
+                        .add(R.id.list_view_fragment, listView, getFragmentTag())
+                        .commit();
+            }
         } else {
             viewPager.setVisibility(View.VISIBLE);
             final CTInboxTabAdapter inboxTabAdapter = new CTInboxTabAdapter(getSupportFragmentManager());

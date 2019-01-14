@@ -6314,31 +6314,33 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void showAppInbox(CTInboxStyleConfig styleConfig){
-        synchronized (inboxControllerLock) {
-            if (ctInboxController == null) {
-                getConfigLogger().debug(getAccountId(),"Notification Inbox not initialized");
-                return;
+
+            synchronized (inboxControllerLock) {
+                if (ctInboxController == null) {
+                    getConfigLogger().debug(getAccountId(), "Notification Inbox not initialized");
+                    return;
+                }
             }
-        }
 
-        // make styleConfig immutable
-        final CTInboxStyleConfig _styleConfig = new CTInboxStyleConfig(styleConfig);
+            // make styleConfig immutable
+            final CTInboxStyleConfig _styleConfig = new CTInboxStyleConfig(styleConfig);
 
-        Intent intent = new Intent(context,CTInboxActivity.class);
-        intent.putExtra("styleConfig", _styleConfig);
-        intent.putExtra("config",config);
-        try {
-            Activity currentActivity = getCurrentActivity();
-            if (currentActivity == null) {
-                throw new IllegalStateException("Current activity reference not found");
+            Intent intent = new Intent(context, CTInboxActivity.class);
+            intent.putExtra("styleConfig", _styleConfig);
+            intent.putExtra("config", config);
+            try {
+                Activity currentActivity = getCurrentActivity();
+                if (currentActivity == null) {
+                    throw new IllegalStateException("Current activity reference not found");
+                }
+                currentActivity.startActivity(intent);
+                Logger.d("Displaying Notification Inbox");
+
+            } catch (Throwable t) {
+                Logger.v("Please verify the integration of your app." +
+                        " It is not setup to support Notification Inbox yet.", t);
             }
-            currentActivity.startActivity(intent);
-            Logger.d("Displaying Notification Inbox");
 
-        } catch (Throwable t) {
-            Logger.v("Please verify the integration of your app." +
-                    " It is not setup to support Notification Inbox yet.", t);
-        }
     }
 
     /**
@@ -6527,8 +6529,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 int minute = now.get(Calendar.MINUTE);
 
                 Date currentTime = parseTimeToDate(hour + ":" + minute);
-                Date startTime = parseTimeToDate("22:00");
-                Date endTime = parseTimeToDate("06:00");
+                Date startTime = parseTimeToDate(Constants.DND_START);
+                Date endTime = parseTimeToDate(Constants.DND_STOP);
 
                 if (isTimeBetweenDNDTime(startTime,endTime,currentTime)) {
                     Logger.v(getAccountId(), "Job Service won't run in default DND hours");

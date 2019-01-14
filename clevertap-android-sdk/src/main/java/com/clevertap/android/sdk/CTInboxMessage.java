@@ -267,8 +267,6 @@ public class CTInboxMessage implements Parcelable {
 
     /**
      * Returns a JSONObject of wzrk_* parameters.
-     * If you are implementing your own Inbox, please send these parameters when
-     * you raise Notification Clicked and Notification Viewed //TODO
      * @return JSONObject of wzrk_* parameters
      */
     public JSONObject getWzrkParams() {
