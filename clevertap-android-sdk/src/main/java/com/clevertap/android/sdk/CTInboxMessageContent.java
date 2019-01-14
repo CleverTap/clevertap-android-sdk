@@ -127,70 +127,108 @@ public class CTInboxMessageContent implements Parcelable {
         }
     };
 
+    /**
+     * Returns the title section of the inbox message
+     * @return String
+     */
     public String getTitle() {
         return title;
     }
 
-    public void setTitle(String title) {
+    void setTitle(String title) {
         this.title = title;
     }
 
+    /**
+     * Returns the message section of the inbox message
+     * @return String
+     */
     public String getMessage() {
         return message;
     }
 
-    public void setMessage(String message) {
+    void setMessage(String message) {
         this.message = message;
     }
 
+    /**
+     * Returns the media URL of the inbox message
+     * @return String
+     */
     public String getMedia() {
         return media;
     }
 
-    public void setMedia(String media) {
+    void setMedia(String media) {
         this.media = media;
     }
 
+    /**
+     * Return the action URL of the body of the inbox message
+     * @return String
+     */
     public String getActionUrl() {
         return actionUrl;
     }
 
-    public void setActionUrl(String actionUrl) {
+    void setActionUrl(String actionUrl) {
         this.actionUrl = actionUrl;
     }
 
+    /**
+     * Returns the URL as String for the icon in case of Icon Message template
+     * @return String
+     */
     public String getIcon() {
         return icon;
     }
 
-    public void setIcon(String icon) {
+    void setIcon(String icon) {
         this.icon = icon;
     }
 
+    /**
+     * Returns a JSONArray of Call to Action buttons
+     * @return JSONArray
+     */
     public JSONArray getLinks() {
         return links;
     }
 
-    public void setLinks(JSONArray links) {
+    void setLinks(JSONArray links) {
         this.links = links;
     }
 
+    /**
+     * Returns the hexcode value of the title color as String
+     * @return String
+     */
     public String getTitleColor() {
         return titleColor;
     }
 
-    public void setTitleColor(String titleColor) {
+    void setTitleColor(String titleColor) {
         this.titleColor = titleColor;
     }
 
+    /**
+     * Returns the hexcode value of the message color as String
+     * @return String
+     */
     public String getMessageColor() {
         return messageColor;
     }
 
-    public void setMessageColor(String messageColor) {
+    void setMessageColor(String messageColor) {
         this.messageColor = messageColor;
     }
 
+    /**
+     * Returns the type for the JSONObject of Link provided
+     * @param jsonObject of Link
+     * @return String "copy" for Copy Text
+     *          String "url" for URLs
+     */
     public String getLinktype(JSONObject jsonObject){
         if(jsonObject == null) return null;
         try {
@@ -201,6 +239,11 @@ public class CTInboxMessageContent implements Parcelable {
         }
     }
 
+    /**
+     * Returns the text for the JSONObject of Link provided
+     * @param jsonObject of Link
+     * @return String
+     */
     public String getLinkText(JSONObject jsonObject){
         if(jsonObject == null) return null;
         try {
@@ -211,6 +254,12 @@ public class CTInboxMessageContent implements Parcelable {
         }
     }
 
+    /**
+     * Returns the text for the JSONObject of Link provided
+     * The JSONObject of Link provided should be of the type "copy"
+     * @param jsonObject of Link
+     * @return String
+     */
     public String getLinkCopyText(JSONObject jsonObject){
         if(jsonObject == null) return "";
         try {
@@ -226,6 +275,12 @@ public class CTInboxMessageContent implements Parcelable {
         }
     }
 
+    /**
+     * Returns the text for the JSONObject of Link provided
+     * The JSONObject of Link provided should be of the type "url"
+     * @param jsonObject of Link
+     * @return String
+     */
     public String getLinkUrl(JSONObject jsonObject){
         if(jsonObject == null) return null;
         try {
@@ -243,6 +298,11 @@ public class CTInboxMessageContent implements Parcelable {
         }
     }
 
+    /**
+     * Returns the text color for the JSONObject of Link provided
+     * @param jsonObject of Link
+     * @return String
+     */
     public String getLinkColor(JSONObject jsonObject){
         if(jsonObject == null) return null;
         try {
@@ -253,6 +313,11 @@ public class CTInboxMessageContent implements Parcelable {
         }
     }
 
+    /**
+     * Returns the background color for the JSONObject of Link provided
+     * @param jsonObject of Link
+     * @return String
+     */
     public String getLinkBGColor(JSONObject jsonObject){
         if(jsonObject == null) return null;
         try {
@@ -263,25 +328,49 @@ public class CTInboxMessageContent implements Parcelable {
         }
     }
 
+    /**
+     * Returns the content type of the media
+     * @return String
+     */
     public String getContentType() {
         return contentType;
     }
 
+    /**
+     * Method to check whether media in the {@link CTInboxMessageContent} object is an image.
+     * @return true if the media type is image
+     *          false if the media type is not an image
+     */
     public boolean mediaIsImage() {
         String contentType = this.getContentType();
         return contentType != null && this.media != null && contentType.startsWith("image") && !contentType.equals("image/gif");
     }
 
+    /**
+     * Method to check whether media in the {@link CTInboxMessageContent} object is an GIF.
+     * @return true if the media type is GIF
+     *          false if the media type is not an GIF
+     */
     public boolean mediaIsGIF () {
         String contentType = this.getContentType();
         return contentType != null && this.media != null && contentType.equals("image/gif");
     }
 
+    /**
+     * Method to check whether media in the {@link CTInboxMessageContent} object is a video.
+     * @return true if the media type is video
+     *          false if the media type is not a video
+     */
     public boolean mediaIsVideo () {
         String contentType = this.getContentType();
         return contentType != null && this.media != null && contentType.startsWith("video");
     }
 
+    /**
+     * Method to check whether media in the {@link CTInboxMessageContent} object is an audio.
+     * @return true if the media type is audio
+     *          false if the media type is not an audio
+     */
     public boolean mediaIsAudio () {
         String contentType = this.getContentType();
         return contentType != null && this.media != null && contentType.startsWith("audio");

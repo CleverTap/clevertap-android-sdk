@@ -6152,7 +6152,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     //Notification Inbox public APIs
 
     /**
-     * Initializes the inbox controller and updates the {@link CTInboxListener}
+     * Initializes the inbox controller and sends a callback to the {@link CTInboxListener}
+     * This method needs to be called separately for each instance of {@link CleverTapAPI}
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void initializeInbox(){
@@ -6169,7 +6170,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
-     * @return int - count of all Inbox Messages
+     * Returns the count of all inbox messages for the user
+     * @return int - count of all inbox messages
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public int getInboxMessageCount(){
@@ -6184,7 +6186,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
-     * @return int - count of all unread Messages
+     * Returns the count of total number of unread inbox messages for the user
+     * @return int - count of all unread messages
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public int getInboxMessageUnreadCount(){
@@ -6199,6 +6202,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
+     * Returns the {@link CTInboxMessage} object that belongs to the given message id
      * @param messageId String - unique id of the inbox message
      * @return {@link CTInboxMessage} public object of inbox message
      */
@@ -6216,6 +6220,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
+     * Deletes the given {@link CTInboxMessage} object
      * @param message {@link CTInboxMessage} public object of inbox message
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
@@ -6237,6 +6242,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
+     * Marks the given {@link CTInboxMessage} object as read
      * @param message {@link CTInboxMessage} public object of inbox message
      */
     //marks the message as read
@@ -6260,6 +6266,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
+     * Returns an ArrayList of unread {@link CTInboxMessage} objects
      * @return ArrayList of {@link CTInboxMessage} of unread Inbox Messages
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
@@ -6280,6 +6287,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
+     * Returns an ArrayList of all {@link CTInboxMessage} objects
      * @return ArrayList of {@link CTInboxMessage} of Inbox Messages
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
@@ -6334,7 +6342,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
-     * Opens {@link CTInboxActivity} to display Inbox Messages
+     * Opens {@link CTInboxActivity} to display Inbox Messages with default {@link CTInboxStyleConfig} object
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void showAppInbox(){

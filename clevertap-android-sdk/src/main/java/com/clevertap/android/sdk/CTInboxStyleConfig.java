@@ -6,6 +6,10 @@ import android.os.Parcelable;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+/**
+ * This class has all the parameters required to configure the styling of your {@link CTInboxActivity}
+ * All the setter methods are public and the object of this class is made immutable by {@link CleverTapAPI}
+ */
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class CTInboxStyleConfig implements Parcelable {
 
@@ -145,6 +149,10 @@ public class CTInboxStyleConfig implements Parcelable {
         return navBarColor;
     }
 
+    /**
+     * Sets the color for the top navigation toolbar
+     * @param navBarColor String - hexcode of the color
+     */
     public void setNavBarColor(String navBarColor) {
         this.navBarColor = navBarColor;
     }
@@ -153,6 +161,10 @@ public class CTInboxStyleConfig implements Parcelable {
         return navBarTitle;
     }
 
+    /**
+     * Sets the text for the top navigation toolbar
+     * @param navBarTitle String
+     */
     public void setNavBarTitle(String navBarTitle) {
         this.navBarTitle = navBarTitle;
     }
@@ -161,6 +173,10 @@ public class CTInboxStyleConfig implements Parcelable {
         return navBarTitleColor;
     }
 
+    /**
+     * Sets the color for the title in the top navigation toolbar
+     * @param navBarTitleColor String - hexcode of the color
+     */
     public void setNavBarTitleColor(String navBarTitleColor) {
         this.navBarTitleColor = navBarTitleColor;
     }
@@ -169,9 +185,19 @@ public class CTInboxStyleConfig implements Parcelable {
         return inboxBackgroundColor;
     }
 
+    /**
+     * Sets the background color for the entire inbox
+     * @param inboxBackgroundColor - String - hexcode of the color
+     */
     public void setInboxBackgroundColor(String inboxBackgroundColor) {
         this.inboxBackgroundColor = inboxBackgroundColor;
     }
+
+    /**
+     * Sets the name of the optional two tabs.
+     * The contents of the tabs are filtered based on the name of the tab.
+     * @param tabs ArrayList of Strings
+     */
     public void setTabs(ArrayList<String>tabs) {
         if (tabs == null || tabs.size() <= 0) return;
 
@@ -196,6 +222,10 @@ public class CTInboxStyleConfig implements Parcelable {
         return backButtonColor;
     }
 
+    /**
+     * Sets the color of the back button on the top navigation toolbar
+     * @param backButtonColor  String - hexcode of the color
+     */
     public void setBackButtonColor(String backButtonColor) {
         this.backButtonColor = backButtonColor;
     }
@@ -204,6 +234,10 @@ public class CTInboxStyleConfig implements Parcelable {
         return selectedTabColor;
     }
 
+    /**
+     * Sets the color of the selected tab
+     * @param selectedTabColor String - hexcode of the color
+     */
     public void setSelectedTabColor(String selectedTabColor) {
         this.selectedTabColor = selectedTabColor;
     }
@@ -212,6 +246,10 @@ public class CTInboxStyleConfig implements Parcelable {
         return unselectedTabColor;
     }
 
+    /**
+     * Sets the color of the unselected tab
+     * @param unselectedTabColor String - hexcode of the color
+     */
     public void setUnselectedTabColor(String unselectedTabColor) {
         this.unselectedTabColor = unselectedTabColor;
     }
@@ -220,6 +258,10 @@ public class CTInboxStyleConfig implements Parcelable {
         return selectedTabIndicatorColor;
     }
 
+    /**
+     * Sets the color of the indicator of the selected tab
+     * @param selectedTabIndicatorColor String - hexcode of the color
+     */
     public void setSelectedTabIndicatorColor(String selectedTabIndicatorColor) {
         this.selectedTabIndicatorColor = selectedTabIndicatorColor;
     }
@@ -228,6 +270,10 @@ public class CTInboxStyleConfig implements Parcelable {
         return tabBackgroundColor;
     }
 
+    /**
+     * Sets the background color for the tabs
+     * @param tabBackgroundColor String - hexcode of the color
+     */
     public void setTabBackgroundColor(String tabBackgroundColor) {
         this.tabBackgroundColor = tabBackgroundColor;
     }

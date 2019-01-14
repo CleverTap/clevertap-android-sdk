@@ -16,6 +16,9 @@ import android.widget.LinearLayout;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
+/**
+ * This activity shows the {@link CTInboxMessage} objects as per {@link CTInboxStyleConfig} style parameters
+ */
 public class CTInboxActivity extends FragmentActivity implements CTInboxListViewFragment.InboxListener {
     interface InboxActivityListener{
         void messageDidShow(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data);

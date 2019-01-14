@@ -210,6 +210,10 @@ public class CTInboxMessage implements Parcelable {
         isRead = read;
     }
 
+    /**
+     * Returns a List of tags as set on the CleverTap dashboard
+     * @return List of Strings
+     */
     public List<String> getTags() {
         return tags;
     }
@@ -218,6 +222,12 @@ public class CTInboxMessage implements Parcelable {
         return bgColor;
     }
 
+    /**
+     * Returns an ArrayList of the contents of {@link CTInboxMessage}
+     * For Simple Message and Icon Message templates the size of this ArrayList is by default 1.
+     * For Carousel templates, the size of the ArrayList is the number of slides in the Carousel
+     * @return ArrayList of {@link CTInboxMessageContent} objects
+     */
     public ArrayList<CTInboxMessageContent> getInboxMessageContents() {
         return inboxMessageContents;
     }
@@ -234,6 +244,10 @@ public class CTInboxMessage implements Parcelable {
         return CREATOR;
     }
 
+    /**
+     * Returns an ArrayList of String URLs of the Carousel Images
+     * @return ArrayList of Strings
+     */
     public ArrayList<String> getCarouselImages(){
         ArrayList<String> carouselImages = new ArrayList<>();
         for(CTInboxMessageContent ctInboxMessageContent: getInboxMessageContents()){
@@ -242,10 +256,21 @@ public class CTInboxMessage implements Parcelable {
         return carouselImages;
     }
 
+    /**
+     * Returns the orientation of the media.
+     * @return Returns "l" for landscape
+     *          Returns "p" for portrait
+     */
     public String getOrientation() {
         return orientation;
     }
 
+    /**
+     * Returns a JSONObject of wzrk_* parameters.
+     * If you are implementing your own Inbox, please send these parameters when
+     * you raise Notification Clicked and Notification Viewed //TODO
+     * @return JSONObject of wzrk_* parameters
+     */
     public JSONObject getWzrkParams() {
         return wzrkParams == null ? new JSONObject() : wzrkParams;
     }

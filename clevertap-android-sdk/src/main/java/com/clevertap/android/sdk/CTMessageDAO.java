@@ -124,7 +124,7 @@ class CTMessageDAO {
             long expires = inboxMessage.has("wzrk_ttl") ? inboxMessage.getInt("wzrk_ttl") : (System.currentTimeMillis() + 24*60*Constants.ONE_MIN_IN_MILLIS)/1000;
             JSONObject cellObject = inboxMessage.has("msg") ? inboxMessage.getJSONObject("msg") : null;
             List<String> tagsList = new ArrayList<>();
-            if(cellObject != null) {
+            if(cellObject != null) {//Part of "msg" object
                 JSONArray tagsArray = cellObject.has("tags") ? cellObject.getJSONArray("tags") : null;
                 if(tagsArray != null){
                     for(int i=0; i< tagsArray.length(); i++){
