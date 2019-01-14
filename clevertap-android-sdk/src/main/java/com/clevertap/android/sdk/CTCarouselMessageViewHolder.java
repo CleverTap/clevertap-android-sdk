@@ -41,6 +41,9 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
     @Override
     void configureWithMessage(final CTInboxMessage inboxMessage, final CTInboxListViewFragment parent, final int position) {
         super.configureWithMessage(inboxMessage, parent, position);
+        final CTInboxListViewFragment parentWeak = getParent();
+        // noinspection ConstantConditions
+        final Context appContext = parent.getActivity().getApplicationContext();
         CTInboxMessageContent content = inboxMessage.getInboxMessageContents().get(0);
         if (inboxMessage.getType() == CTInboxMessageType.CarouselImageMessage) {
             this.title.setVisibility(View.GONE);
@@ -53,7 +56,7 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
             }
             String carouselImageDisplayTimestamp  = calculateDisplayTimestamp(inboxMessage.getDate());
             this.carouselTimestamp.setText(carouselImageDisplayTimestamp);
-            this.carouselTimestamp.setTextColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getTitleColor()));
+            this.carouselTimestamp.setTextColor(Color.parseColor(content.getTitleColor()));
             this.timestamp.setVisibility(View.GONE);
             this.readDot.setVisibility(View.GONE);
         } else {
@@ -73,14 +76,14 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
             this.timestamp.setVisibility(View.VISIBLE);
             String carouselDisplayTimestamp  = calculateDisplayTimestamp(inboxMessage.getDate());
             this.timestamp.setText(carouselDisplayTimestamp);
-            this.timestamp.setTextColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getTitleColor()));
+            this.timestamp.setTextColor(Color.parseColor(content.getTitleColor()));
         }
 
         this.clickLayout.setBackgroundColor(Color.parseColor(inboxMessage.getBgColor()));
 
         //Loads the viewpager
         LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) this.imageViewPager.getLayoutParams();
-        CTCarouselViewPagerAdapter carouselViewPagerAdapter = new CTCarouselViewPagerAdapter(parent.getActivity(), parent, inboxMessage,layoutParams,position);
+        CTCarouselViewPagerAdapter carouselViewPagerAdapter = new CTCarouselViewPagerAdapter(appContext, parent, inboxMessage,layoutParams,position);
         this.imageViewPager.setAdapter(carouselViewPagerAdapter);
         //Adds the dots for the carousel
         int dotsCount = carouselViewPagerAdapter.getCount();
@@ -89,7 +92,7 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
             dots[k] = new ImageView(parent.getActivity());
             dots[k].setVisibility(View.VISIBLE);
             // noinspection ConstantConditions
-            dots[k].setImageDrawable(parent.getActivity().getApplicationContext().getResources().getDrawable(R.drawable.unselected_dot));
+            dots[k].setImageDrawable(appContext.getResources().getDrawable(R.drawable.unselected_dot));
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
             params.setMargins(8, 6, 4, 6);
             params.gravity = Gravity.CENTER;
@@ -98,10 +101,10 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
         }
         // noinspection ConstantConditions
         dots[0].setImageDrawable(parent.getActivity().getApplicationContext().getResources().getDrawable(R.drawable.selected_dot));
-        CTCarouselMessageViewHolder.CarouselPageChangeListener carouselPageChangeListener = new CTCarouselMessageViewHolder.CarouselPageChangeListener(parent.getActivity(), this, dots, inboxMessage);
+        CTCarouselMessageViewHolder.CarouselPageChangeListener carouselPageChangeListener = new CTCarouselMessageViewHolder.CarouselPageChangeListener(parent.getActivity().getApplicationContext(), this, dots, inboxMessage);
         this.imageViewPager.addOnPageChangeListener(carouselPageChangeListener);
 
-        this.clickLayout.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage,null, parent, this.imageViewPager));
+        this.clickLayout.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage,null, parentWeak, this.imageViewPager));
 
         Runnable carouselRunnable = new Runnable() {
             @Override
@@ -113,12 +116,16 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
                     public void run() {
                         if (inboxMessage.getType() == CTInboxMessageType.CarouselImageMessage){
                             if(carouselReadDot.getVisibility() == View.VISIBLE){
-                                parent.didShow(null,position);
+                                if (parentWeak != null) {
+                                    parentWeak.didShow(null, position);
+                                }
                             }
                             carouselReadDot.setVisibility(View.GONE);
-                        }else {
+                        } else {
                             if (readDot.getVisibility() == View.VISIBLE) {
-                                parent.didShow(null, position);
+                                if (parentWeak != null) {
+                                    parentWeak.didShow(null, position);
+                                }
                             }
                             readDot.setVisibility(View.GONE);
                         }
@@ -154,9 +161,9 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
         @Override
         public void onPageSelected(int position) {
             for (ImageView dot : this.dots) {
-                dot.setImageDrawable(context.getApplicationContext().getResources().getDrawable(R.drawable.unselected_dot));
+                dot.setImageDrawable(context.getResources().getDrawable(R.drawable.unselected_dot));
             }
-            dots[position].setImageDrawable(context.getApplicationContext().getResources().getDrawable(R.drawable.selected_dot));
+            dots[position].setImageDrawable(context.getResources().getDrawable(R.drawable.selected_dot));
             viewHolder.title.setText(inboxMessage.getInboxMessageContents().get(position).getTitle());
             viewHolder.title.setTextColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(position).getTitleColor()));
             viewHolder.message.setText(inboxMessage.getInboxMessageContents().get(position).getMessage());

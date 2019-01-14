@@ -46,7 +46,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     }
 
     public void onCreate(Bundle savedInstanceState){
-        // TODO what to do if savedInstanceState is not null  ???
         super.onCreate(savedInstanceState);
         CTInboxStyleConfig styleConfig;
         CleverTapAPI cleverTapAPI;

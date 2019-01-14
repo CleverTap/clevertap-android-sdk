@@ -155,6 +155,12 @@ public class CTInboxListViewFragment extends Fragment {
             public void run() {
                 if (mediaRecyclerView != null) {
                     mediaRecyclerView.stop();
+                    for (int childCount = mediaRecyclerView.getChildCount(), i = 0; i < childCount; ++i) {
+                        final CTInboxBaseMessageViewHolder holder = (CTInboxBaseMessageViewHolder) mediaRecyclerView.getChildViewHolder(mediaRecyclerView.getChildAt(i));
+                        if (holder != null) {
+                            holder.cleanUp();
+                        }
+                    }
                 }
             }
         });
@@ -177,7 +183,15 @@ public class CTInboxListViewFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mediaRecyclerView.setAdapter(null);
+        if (mediaRecyclerView != null) {
+            for (int childCount = mediaRecyclerView.getChildCount(), i = 0; i < childCount; ++i) {
+                final CTInboxBaseMessageViewHolder holder = (CTInboxBaseMessageViewHolder) mediaRecyclerView.getChildViewHolder(mediaRecyclerView.getChildAt(i));
+                if (holder != null) {
+                    holder.cleanUp();
+                }
+            }
+            mediaRecyclerView.setAdapter(null);
+        }
     }
 
     void didClick(Bundle data, int position) {

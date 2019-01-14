@@ -70,9 +70,12 @@ public class MediaRecyclerView extends RecyclerView {
     void holderMuteChanged(CTInboxBaseMessageViewHolder holder, boolean muted) {
         this.muted = muted;
     }
+
     void stop() {
         if (currentlyPlayingHolder != null) {
             currentlyPlayingHolder.pause();
+            currentlyPlayingHolder.cleanUp();
+            currentlyPlayingHolder = null;
         }
     }
     void playVideo() {

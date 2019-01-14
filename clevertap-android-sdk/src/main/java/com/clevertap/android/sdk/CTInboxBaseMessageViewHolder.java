@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -39,6 +40,7 @@ import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.upstream.TransferListener;
 import com.google.android.exoplayer2.util.Util;
 
+import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -54,12 +56,21 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
     private ImageView muteIcon;
     private Context context;
 
+    private Player.EventListener playerListener;
+
+    private WeakReference<CTInboxListViewFragment> parentWeakReference;
+
+    CTInboxListViewFragment getParent() {
+        return parentWeakReference.get();
+    }
+
     CTInboxBaseMessageViewHolder(@NonNull View itemView) {
         super(itemView);
     }
 
     void configureWithMessage(final CTInboxMessage inboxMessage, final CTInboxListViewFragment parent, final int position) {
         hasVideo = false;
+        parentWeakReference = new WeakReference<>(parent);
     }
 
     private void setMute(boolean mute) {
@@ -78,9 +89,20 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
                 updateIcon = true;
             }
             if (updateIcon && muteIcon != null) {
-                int imageId = mute ? R.drawable.volume_off : R.drawable.volume_on;
+                final int imageId = mute ? R.drawable.volume_off : R.drawable.volume_on;
                 // noinspection ConstantConditions
-                muteIcon.setImageDrawable(context.getResources().getDrawable(imageId));
+                CTInboxListViewFragment parent = getParent();
+                if (parent != null) {
+                    Activity activity = parent.getActivity();
+                    if (activity != null) {
+                        activity.runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                muteIcon.setImageDrawable(context.getResources().getDrawable(imageId));
+                            }
+                        });
+                    }
+                }
             }
         }
     }
@@ -100,6 +122,10 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
 
     boolean shouldAutoPlay() {
         return hasVideo;
+    }
+
+    void cleanUp() {
+        cleanUpVideoView();
     }
 
     /**
@@ -145,7 +171,7 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         tertiaryButton.setLayoutParams(tertiaryLayoutParams);
     }
 
-    private SimpleExoPlayer createAndConfigurePlayer(Context context, String mediaUrl, final CTInboxListViewFragment parent) {
+    private SimpleExoPlayer createAndConfigurePlayer(Context context, String mediaUrl) {
         BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
         TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
         TrackSelector trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
@@ -158,7 +184,8 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         player.setRepeatMode(Player.REPEAT_MODE_ONE);
         player.setPlayWhenReady(false);
 
-        player.addListener(new Player.EventListener() {
+        final WeakReference<CTInboxBaseMessageViewHolder> thisWeak = new WeakReference<>(this);
+        playerListener = new Player.EventListener() {
             @Override
             public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {}
 
@@ -176,13 +203,20 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
                         break;
                     case Player.STATE_ENDED:
                         player.seekTo(0);
-                        notifyStopped(parent);
+                        if (thisWeak.get() != null) {
+                            thisWeak.get().notifyStopped();
+                        }
+
                         break;
                     case Player.STATE_IDLE:
-                        notifyStopped(parent);
+                        if (thisWeak.get() != null) {
+                            thisWeak.get().notifyStopped();
+                        }
                         break;
                     case Player.STATE_READY:
-                        notifyPlaying(parent);
+                        if (thisWeak.get() != null) {
+                            thisWeak.get().notifyPlaying();
+                        }
                         break;
                     default:
                         break;
@@ -206,31 +240,44 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
 
             @Override
             public void onSeekProcessed() {}
-        });
+        };
+        player.addListener(playerListener);
         return player;
     }
 
-    private void notifyPlaying(CTInboxListViewFragment parent) {
-        parent.mediaRecyclerView.holderStartedPlaying(this);
+    private void notifyPlaying() {
+        CTInboxListViewFragment parent = getParent();
+        if (parent != null) {
+            parent.mediaRecyclerView.holderStartedPlaying(this);
+        }
     }
 
-    private void notifyStopped(CTInboxListViewFragment parent) {
-        parent.mediaRecyclerView.holderStoppedPlaying(this);
+    private void notifyStopped() {
+        CTInboxListViewFragment parent = getParent();
+        if (parent != null) {
+            parent.mediaRecyclerView.holderStoppedPlaying(this);
+        }
     }
 
-    private void notifyMuteChanged(CTInboxListViewFragment parent, boolean muted) {
-        parent.mediaRecyclerView.holderMuteChanged(this, muted);
+    private void notifyMuteChanged(boolean muted) {
+        CTInboxListViewFragment parent = getParent();
+        if (parent != null) {
+            parent.mediaRecyclerView.holderMuteChanged(this, muted);
+        }
     }
 
-    void addMediaPlayerView(CTInboxMessage inboxMessage, final CTInboxListViewFragment parent){
-        context = parent.getActivity();
-        videoSurfaceView = new PlayerView(context);
+    void addMediaPlayerView(CTInboxMessage inboxMessage){
+        CTInboxListViewFragment parent = getParent();
+        // noinspection Constant Conditions
+        Context appContext = parent.getContext().getApplicationContext();
+        context = appContext;
+        videoSurfaceView = new PlayerView(appContext);
         videoSurfaceView.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.WRAP_CONTENT));
         videoSurfaceView.setUseArtwork(true);
-        videoSurfaceView.setControllerAutoShow(false);
+        videoSurfaceView.setControllerAutoShow(true);
         videoSurfaceView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_ZOOM);
         String mediaUrl = inboxMessage.getInboxMessageContents().get(0).getMedia();
-        final SimpleExoPlayer player = createAndConfigurePlayer(context, mediaUrl, parent);
+        final SimpleExoPlayer player = createAndConfigurePlayer(appContext, mediaUrl);
         videoSurfaceView.requestFocus();
         videoSurfaceView.setVisibility(View.VISIBLE);
         videoSurfaceView.setPlayer(player);
@@ -261,8 +308,9 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         hasVideo = content.mediaIsVideo();
 
         if(content.mediaIsVideo()) {
-            muteIcon = new ImageView(context);
-            muteIcon.setImageDrawable(context.getResources().getDrawable(R.drawable.volume_off));
+            muteIcon = new ImageView(appContext);
+            // noinspection ConstantConditions
+            muteIcon.setImageDrawable(appContext.getResources().getDrawable(R.drawable.volume_off));
             int iconWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, context.getResources().getDisplayMetrics());
             int iconHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, context.getResources().getDisplayMetrics());
             FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(iconWidth, iconHeight);
@@ -276,16 +324,24 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
                 public void onClick(View v) {
                     boolean mute = player.getVolume() > 0;
                     setMute(mute);
-                    notifyMuteChanged(parent, mute);
+                    notifyMuteChanged(mute);
                 }
             });
             frameLayout.addView(muteIcon);
         }
     }
 
-    void removeVideoView() {
-        frameLayout.setVisibility(View.GONE);
+    private void cleanUpVideoView() {
         if (videoSurfaceView != null) {
+            Player player = videoSurfaceView.getPlayer();
+            if (player != null) {
+                if (playerListener != null) {
+                    player.removeListener(playerListener);
+                    playerListener = null;
+                }
+                player.release();
+                videoSurfaceView.setPlayer(null);
+            }
             ViewGroup parent = (ViewGroup) videoSurfaceView.getParent();
             if (parent != null) {
                 int index = parent.indexOfChild(videoSurfaceView);
@@ -293,13 +349,12 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
                     parent.removeViewAt(index);
                 }
             }
-            Player player = videoSurfaceView.getPlayer();
-            if (player != null) {
-                player.release();
-                videoSurfaceView.setPlayer(null);
-            }
             videoSurfaceView = null;
         }
+    }
 
+    void removeVideoView() {
+        frameLayout.setVisibility(View.GONE);
+        cleanUpVideoView();
     }
 }

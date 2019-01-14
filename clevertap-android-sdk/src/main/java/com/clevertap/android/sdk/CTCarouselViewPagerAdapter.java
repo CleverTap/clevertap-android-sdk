@@ -11,6 +11,7 @@ import android.widget.LinearLayout;
 
 import com.bumptech.glide.Glide;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 /**
@@ -19,21 +20,25 @@ import java.util.ArrayList;
 @SuppressWarnings({"FieldCanBeLocal", "unused"})
 public class CTCarouselViewPagerAdapter extends PagerAdapter {
     private Context context;
-    private CTInboxListViewFragment fragment;
     private LayoutInflater layoutInflater;
     private ArrayList<String> carouselImages;
     private View view;
     private LinearLayout.LayoutParams layoutParams;
     private CTInboxMessage inboxMessage;
     private int row;
+    private WeakReference<CTInboxListViewFragment> parentWeakReference;
 
-    CTCarouselViewPagerAdapter(Context context, CTInboxListViewFragment fragment, CTInboxMessage inboxMessage, LinearLayout.LayoutParams layoutParams, int row) {
+    CTCarouselViewPagerAdapter(Context context, CTInboxListViewFragment parent, CTInboxMessage inboxMessage, LinearLayout.LayoutParams layoutParams, int row) {
         this.context = context;
-        this.fragment = fragment;
+        this.parentWeakReference = new WeakReference<>(parent);
         this.carouselImages = inboxMessage.getCarouselImages();
         this.layoutParams = layoutParams;
         this.inboxMessage = inboxMessage;
         this.row = row;
+    }
+
+    CTInboxListViewFragment getParent() {
+        return parentWeakReference.get();
     }
 
     @Override
@@ -62,7 +67,10 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    fragment.handleViewPagerClick(row,position);
+                    CTInboxListViewFragment parent = getParent();
+                    if (parent != null) {
+                        parent.handleViewPagerClick(row,position);
+                    }
                 }
             });
         }else if (inboxMessage.getOrientation().equalsIgnoreCase("p")){
@@ -75,7 +83,10 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    fragment.handleViewPagerClick(row,position);
+                    CTInboxListViewFragment parent = getParent();
+                    if (parent != null) {
+                        parent.handleViewPagerClick(row,position);
+                    }
                 }
             });
         }

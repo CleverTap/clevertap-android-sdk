@@ -50,23 +50,24 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
     @Override
     void configureWithMessage(final CTInboxMessage inboxMessage, final CTInboxListViewFragment parent, final int position) {
         super.configureWithMessage(inboxMessage, parent, position);
-        this.title.setText(inboxMessage.getInboxMessageContents().get(0).getTitle());
-        this.title.setTextColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getTitleColor()));
-        this.message.setText(inboxMessage.getInboxMessageContents().get(0).getMessage());
-        this.message.setTextColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getMessageColor()));
+        final CTInboxListViewFragment parentWeak = getParent();
+        CTInboxMessageContent content = inboxMessage.getInboxMessageContents().get(0);
+
+        this.title.setText(content.getTitle());
+        this.title.setTextColor(Color.parseColor(content.getTitleColor()));
+        this.message.setText(content.getMessage());
+        this.message.setTextColor(Color.parseColor(content.getMessageColor()));
         this.bodyRelativeLayout.setBackgroundColor(Color.parseColor(inboxMessage.getBgColor()));
         String displayTimestamp  = calculateDisplayTimestamp(inboxMessage.getDate());
         this.timestamp.setText(displayTimestamp);
-        this.timestamp.setTextColor(Color.parseColor(inboxMessage.getInboxMessageContents().get(0).getTitleColor()));
+        this.timestamp.setTextColor(Color.parseColor(content.getTitleColor()));
         if(inboxMessage.isRead()){
             this.readDot.setVisibility(View.GONE);
         }else{
             this.readDot.setVisibility(View.VISIBLE);
         }
-
-        CTInboxMessageContent content = inboxMessage.getInboxMessageContents().get(0);
         //Shows the CTA layout only if links are present, also handles the display of the CTAs depending on the number
-        JSONArray linksArray = inboxMessage.getInboxMessageContents().get(0).getLinks();
+        JSONArray linksArray = content.getLinks();
         if(linksArray != null){
             this.ctaLinearLayout.setVisibility(View.VISIBLE);
             int size = linksArray.length();
@@ -80,8 +81,8 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         this.cta1.setTextColor(Color.parseColor(content.getLinkColor(cta1Object)));
                         this.cta1.setBackgroundColor(Color.parseColor(content.getLinkBGColor(cta1Object)));
                         hideTwoButtons(this.cta1, this.cta2, this.cta3);
-                        if(parent != null) {
-                            this.cta1.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta1,cta1Object, parent));
+                        if(parentWeak != null) {
+                            this.cta1.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta1.getText().toString(),cta1Object, parentWeak));
                         }
                         break;
                     case 2:
@@ -96,9 +97,9 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         this.cta2.setTextColor(Color.parseColor(content.getLinkColor(cta2Object)));
                         this.cta2.setBackgroundColor(Color.parseColor(content.getLinkBGColor(cta2Object)));
                         hideOneButton(this.cta1,this.cta2,this.cta3);
-                        if(parent != null) {
-                            this.cta1.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta1,cta1Object, parent));
-                            this.cta2.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta2,cta2Object, parent));
+                        if(parentWeak != null) {
+                            this.cta1.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta1.getText().toString(),cta1Object, parentWeak));
+                            this.cta2.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta2.getText().toString(),cta2Object, parentWeak));
                         }
                         break;
                     case 3:
@@ -117,10 +118,10 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         this.cta3.setText(content.getLinkText(cta3Object));
                         this.cta3.setTextColor(Color.parseColor(content.getLinkColor(cta3Object)));
                         this.cta3.setBackgroundColor(Color.parseColor(content.getLinkBGColor(cta3Object)));
-                        if(parent != null) {
-                            this.cta1.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta1,cta1Object, parent));
-                            this.cta2.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta2,cta2Object, parent));
-                            this.cta3.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta3,cta3Object, parent));
+                        if(parentWeak != null) {
+                            this.cta1.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta1.getText().toString(),cta1Object, parentWeak));
+                            this.cta2.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta2.getText().toString(),cta2Object, parentWeak));
+                            this.cta3.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta3.getText().toString(),cta3Object, parentWeak));
                         }
                         break;
                 }
@@ -140,7 +141,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                     this.mediaImage.setVisibility(View.VISIBLE);
                     this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
                     Glide.with(this.mediaImage.getContext())
-                            .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
+                            .load(content.getMedia())
                             .into(this.mediaImage);
                 } else if (content.mediaIsGIF()) {
                     this.mediaImage.setVisibility(View.VISIBLE);
@@ -150,7 +151,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                             .load(content.getMedia())
                             .into(this.mediaImage);
                 } else if (content.mediaIsVideo() || content.mediaIsAudio()) {
-                    addMediaPlayerView(inboxMessage, parent);
+                    addMediaPlayerView(inboxMessage);
                 }
                 break;
             case "p":
@@ -158,17 +159,17 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                     this.squareImage.setVisibility(View.VISIBLE);
                     this.squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
                     Glide.with(this.squareImage.getContext())
-                            .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
+                            .load(content.getMedia())
                             .into(this.squareImage);
                 } else if (content.mediaIsGIF()) {
                     this.squareImage.setVisibility(View.VISIBLE);
                     this.squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
                     Glide.with(this.squareImage.getContext())
                             .asGif()
-                            .load(inboxMessage.getInboxMessageContents().get(0).getMedia())
+                            .load(content.getMedia())
                             .into(this.squareImage);
                 } else if (content.mediaIsVideo() || content.mediaIsAudio()) {
-                    addMediaPlayerView(inboxMessage, parent);
+                    addMediaPlayerView(inboxMessage);
                 }
                 break;
         }
@@ -176,6 +177,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
         Runnable simpleRunnable = new Runnable() {
             @Override
             public void run() {
+                final CTInboxListViewFragment parent = getParent();
                 if(parent != null){
                     Activity activity = parent.getActivity();
                     if (activity == null) return;
@@ -194,8 +196,8 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
         };
         Handler simpleHandler = new Handler();
         simpleHandler.postDelayed(simpleRunnable,2000);
-        if(parent != null) {
-            this.clickLayout.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, null,null, parent));
+        if(parentWeak != null) {
+            this.clickLayout.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, null,null, parentWeak));
         }
 
     }
