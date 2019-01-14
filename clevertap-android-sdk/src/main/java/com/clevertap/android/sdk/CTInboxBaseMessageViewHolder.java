@@ -274,7 +274,7 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         videoSurfaceView = new PlayerView(appContext);
         videoSurfaceView.setLayoutParams(new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,FrameLayout.LayoutParams.WRAP_CONTENT));
         videoSurfaceView.setUseArtwork(true);
-        videoSurfaceView.setControllerAutoShow(true);
+        videoSurfaceView.setControllerAutoShow(false);
         videoSurfaceView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_ZOOM);
         String mediaUrl = inboxMessage.getInboxMessageContents().get(0).getMedia();
         final SimpleExoPlayer player = createAndConfigurePlayer(appContext, mediaUrl);
