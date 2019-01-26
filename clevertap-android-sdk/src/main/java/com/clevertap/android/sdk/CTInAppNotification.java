@@ -525,6 +525,10 @@ class CTInAppNotification implements Parcelable {
         return contentType != null && this.mediaUrl != null && contentType.startsWith("audio");
     }
 
+    boolean isInAppHTML(){
+        return this.getInAppType().equals(CTInAppType.CTInAppTypeInterstitialHTML) || this.getInAppType().equals(CTInAppType.CTInAppTypeHalfInterstitialHTML) || this.getInAppType().equals(CTInAppType.CTInAppTypeCoverHTML);
+    }
+
     private CTInAppNotification(Parcel in) {
         try {
             id = in.readString();

@@ -64,15 +64,14 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         }
 
         try {
-            if(!inAppNotification.getInAppType().toString().contains("Html"))
-            {
+            if(!inAppNotification.isInAppHTML()){
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
             }
         } catch (Throwable t) {
             Logger.d("Error displaying InAppNotification", t);
             int orientation = this.getResources().getConfiguration().orientation;
             if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                if(inAppNotification.getInAppType().toString().contains("Html")) {
+                if(inAppNotification.isInAppHTML()) {
                     Logger.d("App in Landscape, allowing HTML InApp Notifications");
                 }
                 else {

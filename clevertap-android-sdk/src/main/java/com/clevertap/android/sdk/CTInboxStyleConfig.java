@@ -2,6 +2,7 @@ package com.clevertap.android.sdk;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.design.widget.TabLayout;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,7 +43,9 @@ public class CTInboxStyleConfig implements Parcelable {
         this.unselectedTabColor = "#808080";
         this.selectedTabIndicatorColor = "#1C84FE";
         this.tabBackgroundColor = "#FFFFFF";
-        this.tabs = new String[0];
+        if(baseOnTabSelectedListenerIsPresent()) {
+            this.tabs = new String[0];
+        }
     }
 
     CTInboxStyleConfig(CTInboxStyleConfig config){
@@ -55,7 +58,9 @@ public class CTInboxStyleConfig implements Parcelable {
         this.unselectedTabColor = config.unselectedTabColor;
         this.selectedTabIndicatorColor = config.selectedTabIndicatorColor;
         this.tabBackgroundColor = config.tabBackgroundColor;
-        this.tabs = (config.tabs == null) ? new String[0] : Arrays.copyOf(config.tabs, config.tabs.length);
+        if(baseOnTabSelectedListenerIsPresent()) {
+            this.tabs = (config.tabs == null) ? new String[0] : Arrays.copyOf(config.tabs, config.tabs.length);
+        }
     }
 
     protected CTInboxStyleConfig(Parcel in) {
@@ -201,13 +206,15 @@ public class CTInboxStyleConfig implements Parcelable {
     public void setTabs(ArrayList<String>tabs) {
         if (tabs == null || tabs.size() <= 0) return;
 
-        ArrayList<String>toAdd;
-        if (tabs.size() > MAX_TABS) {
-            toAdd = new ArrayList<>(tabs.subList(0, MAX_TABS));
-        } else {
-            toAdd = tabs;
+        if(baseOnTabSelectedListenerIsPresent()) {
+            ArrayList<String> toAdd;
+            if (tabs.size() > MAX_TABS) {
+                toAdd = new ArrayList<>(tabs.subList(0, MAX_TABS));
+            } else {
+                toAdd = tabs;
+            }
+            this.tabs = toAdd.toArray(new String[0]);
         }
-        this.tabs = toAdd.toArray(new String[0]);
     }
 
     public ArrayList<String> getTabs() {
@@ -276,5 +283,49 @@ public class CTInboxStyleConfig implements Parcelable {
      */
     public void setTabBackgroundColor(String tabBackgroundColor) {
         this.tabBackgroundColor = tabBackgroundColor;
+    }
+
+    /**
+     * CleverTap Android SDK targets to Android 28 (Pie), hence the support libraries like
+     * support-appcompat, support-v4 and support-design also point to version 28.0.0.
+     * In this version of support-design, TabLayout.OnTabSelectedListener extends TabLayout.BaseOnTabSelectedListener.
+     * While in previous versions of the support-design library (27.1.1 and below),
+     * TabLayout.OnTabSelectedListener was a standalone interface. So if your app is targeting to
+     * Android 26 or Android 27, the support-design library is missing a crucial interface needed to show
+     * Tabs on the App Inbox. To ensure that this doesn't cause your app to crash, this method checks for
+     * TabLayout.BaseOnTabSelectedListener before setting Tabs as a part of your App Inbox.
+     * @return boolean value to convey whether TabLayout.BaseOnTabSelectedListener is present or not
+     *         true if TabLayout.BaseOnTabSelectedListener is present
+     *         false if TabLayout.BaseOnTabSelectedListener is not present
+     */
+    private boolean baseOnTabSelectedListenerIsPresent() {
+
+        TabLayout.OnTabSelectedListener test = new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
+            }
+        };
+        try {
+            if (test instanceof TabLayout.BaseOnTabSelectedListener) {
+                return true;
+            } else {
+                return false;
+            }
+        }catch (NoClassDefFoundError e){
+            Logger.d("BaseOnTabSelectedListener not found! Please upgrade com.android.support:design library to v28.0.0 or above for Tabs to work properly. Dropping given tabs to avoid app crash");
+            return false;
+        }
+
     }
 }

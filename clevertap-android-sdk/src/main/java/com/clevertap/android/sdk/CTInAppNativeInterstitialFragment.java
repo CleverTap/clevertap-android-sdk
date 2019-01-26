@@ -137,15 +137,6 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
             initFullScreenDialog();
             prepareMedia();
             playMedia();
-            fullScreenIcon.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (!exoPlayerFullscreen)
-                        openFullscreenDialog();
-                    else
-                        closeFullscreenDialog();
-                }
-            });
         }
         else if (inAppNotification.mediaIsAudio()) {
             prepareMedia();
@@ -212,6 +203,15 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         playerView = new PlayerView(getActivity().getBaseContext());
         fullScreenIcon = new ImageView(getActivity().getBaseContext());
         fullScreenIcon.setImageDrawable(getActivity().getBaseContext().getResources().getDrawable(R.drawable.ic_fullscreen_expand));
+        fullScreenIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!exoPlayerFullscreen)
+                    openFullscreenDialog();
+                else
+                    closeFullscreenDialog();
+            }
+        });
         if(inAppNotification.isTablet() && isTablet()) {
 
             int playerWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 408, getResources().getDisplayMetrics());
@@ -296,6 +296,9 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         super.onPause();
         if(gifImageView != null) {
             gifImageView.clear();
+        }
+        if(exoPlayerFullscreen){
+            closeFullscreenDialog();
         }
         if (player != null) {
             mediaPosition = player.getCurrentPosition();
