@@ -16,15 +16,38 @@ public class CTInboxStyleConfig implements Parcelable {
 
     private final static int MAX_TABS = 2;
 
-    private String titleColor;
-    private String bodyColor;
-    private String ctaColor;
-    private String layoutColor;
+    /**
+     * CleverTap Android SDK targets to Android 28 (Pie), hence the support libraries
+     * support-appcompat, support-v4 and support-design also point to version 28.0.0.
+     * In this version of support-design, TabLayout.OnTabSelectedListener extends TabLayout.BaseOnTabSelectedListener.
+     * While in previous versions of the support-design library (27.1.1 and below),
+     * TabLayout.OnTabSelectedListener was a standalone interface. So if your app is targeting to
+     * Android 26 or Android 27, the support-design library is missing a crucial interface needed to show
+     * Tabs on the App Inbox. To ensure that this doesn't cause your app to crash, this method checks for
+     * TabLayout.BaseOnTabSelectedListener before setting Tabs as a part of your App Inbox.
+     */
+    private static boolean platformSupportsTabs;
+    static {
+        try {
+            TabLayout.OnTabSelectedListener test = new TabLayout.OnTabSelectedListener() {
+                @Override
+                public void onTabSelected(TabLayout.Tab tab) {}
+                @Override
+                public void onTabUnselected(TabLayout.Tab tab) {}
+                @Override
+                public void onTabReselected(TabLayout.Tab tab) {}
+            };
+            // noinspection ConstantConditions
+            platformSupportsTabs = test instanceof TabLayout.BaseOnTabSelectedListener;
+        } catch (Throwable t){
+            // no-op
+        }
+    }
+
     private String navBarColor;
     private String navBarTitle;
     private String navBarTitleColor;
     private String inboxBackgroundColor;
-    private boolean usingTabs;
     private String backButtonColor;
     private String selectedTabColor;
     private String unselectedTabColor;
@@ -43,9 +66,7 @@ public class CTInboxStyleConfig implements Parcelable {
         this.unselectedTabColor = "#808080";
         this.selectedTabIndicatorColor = "#1C84FE";
         this.tabBackgroundColor = "#FFFFFF";
-        if(baseOnTabSelectedListenerIsPresent()) {
-            this.tabs = new String[0];
-        }
+        this.tabs = new String[0];
     }
 
     CTInboxStyleConfig(CTInboxStyleConfig config){
@@ -58,22 +79,15 @@ public class CTInboxStyleConfig implements Parcelable {
         this.unselectedTabColor = config.unselectedTabColor;
         this.selectedTabIndicatorColor = config.selectedTabIndicatorColor;
         this.tabBackgroundColor = config.tabBackgroundColor;
-        if(baseOnTabSelectedListenerIsPresent()) {
-            this.tabs = (config.tabs == null) ? new String[0] : Arrays.copyOf(config.tabs, config.tabs.length);
-        }
+        this.tabs = (config.tabs == null) ? new String[0] : Arrays.copyOf(config.tabs, config.tabs.length);
     }
 
     protected CTInboxStyleConfig(Parcel in) {
-        titleColor = in.readString();
-        bodyColor = in.readString();
-        ctaColor = in.readString();
-        layoutColor = in.readString();
         navBarColor = in.readString();
         navBarTitle = in.readString();
         navBarTitleColor = in.readString();
         inboxBackgroundColor = in.readString();
         tabs = in.createStringArray();
-        usingTabs = in.readByte() != 0x00;
         backButtonColor = in.readString();
         selectedTabColor = in.readString();
         unselectedTabColor = in.readString();
@@ -88,16 +102,11 @@ public class CTInboxStyleConfig implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(titleColor);
-        dest.writeString(bodyColor);
-        dest.writeString(ctaColor);
-        dest.writeString(layoutColor);
         dest.writeString(navBarColor);
         dest.writeString(navBarTitle);
         dest.writeString(navBarTitleColor);
         dest.writeString(inboxBackgroundColor);
         dest.writeStringArray(tabs);
-        dest.writeByte((byte) (usingTabs ? 0x01 : 0x00));
         dest.writeString(backButtonColor);
         dest.writeString(selectedTabColor);
         dest.writeString(unselectedTabColor);
@@ -118,37 +127,6 @@ public class CTInboxStyleConfig implements Parcelable {
         }
     };
 
-    String getTitleColor() {
-        return titleColor;
-    }
-
-    void setTitleColor(String titleColor) {
-        this.titleColor = titleColor;
-    }
-
-    String getBodyColor() {
-        return bodyColor;
-    }
-
-    void setBodyColor(String bodyColor) {
-        this.bodyColor = bodyColor;
-    }
-
-    String getCtaColor() {
-        return ctaColor;
-    }
-
-    void setCtaColor(String ctaColor) {
-        this.ctaColor = ctaColor;
-    }
-
-    String getLayoutColor() {
-        return layoutColor;
-    }
-
-    void setLayoutColor(String layoutColor) {
-        this.layoutColor = layoutColor;
-    }
 
     public String getNavBarColor() {
         return navBarColor;
@@ -206,7 +184,7 @@ public class CTInboxStyleConfig implements Parcelable {
     public void setTabs(ArrayList<String>tabs) {
         if (tabs == null || tabs.size() <= 0) return;
 
-        if(baseOnTabSelectedListenerIsPresent()) {
+        if (platformSupportsTabs) {
             ArrayList<String> toAdd;
             if (tabs.size() > MAX_TABS) {
                 toAdd = new ArrayList<>(tabs.subList(0, MAX_TABS));
@@ -214,6 +192,8 @@ public class CTInboxStyleConfig implements Parcelable {
                 toAdd = tabs;
             }
             this.tabs = toAdd.toArray(new String[0]);
+        } else {
+            Logger.d("Please upgrade com.android.support:design library to v28.0.0 to enable Tabs for App Inbox, dropping Tabs");
         }
     }
 
@@ -283,49 +263,5 @@ public class CTInboxStyleConfig implements Parcelable {
      */
     public void setTabBackgroundColor(String tabBackgroundColor) {
         this.tabBackgroundColor = tabBackgroundColor;
-    }
-
-    /**
-     * CleverTap Android SDK targets to Android 28 (Pie), hence the support libraries like
-     * support-appcompat, support-v4 and support-design also point to version 28.0.0.
-     * In this version of support-design, TabLayout.OnTabSelectedListener extends TabLayout.BaseOnTabSelectedListener.
-     * While in previous versions of the support-design library (27.1.1 and below),
-     * TabLayout.OnTabSelectedListener was a standalone interface. So if your app is targeting to
-     * Android 26 or Android 27, the support-design library is missing a crucial interface needed to show
-     * Tabs on the App Inbox. To ensure that this doesn't cause your app to crash, this method checks for
-     * TabLayout.BaseOnTabSelectedListener before setting Tabs as a part of your App Inbox.
-     * @return boolean value to convey whether TabLayout.BaseOnTabSelectedListener is present or not
-     *         true if TabLayout.BaseOnTabSelectedListener is present
-     *         false if TabLayout.BaseOnTabSelectedListener is not present
-     */
-    private boolean baseOnTabSelectedListenerIsPresent() {
-
-        TabLayout.OnTabSelectedListener test = new TabLayout.OnTabSelectedListener() {
-            @Override
-            public void onTabSelected(TabLayout.Tab tab) {
-
-            }
-
-            @Override
-            public void onTabUnselected(TabLayout.Tab tab) {
-
-            }
-
-            @Override
-            public void onTabReselected(TabLayout.Tab tab) {
-
-            }
-        };
-        try {
-            if (test instanceof TabLayout.BaseOnTabSelectedListener) {
-                return true;
-            } else {
-                return false;
-            }
-        }catch (NoClassDefFoundError e){
-            Logger.d("BaseOnTabSelectedListener not found! Please upgrade com.android.support:design library to v28.0.0 or above for Tabs to work properly. Dropping given tabs to avoid app crash");
-            return false;
-        }
-
     }
 }

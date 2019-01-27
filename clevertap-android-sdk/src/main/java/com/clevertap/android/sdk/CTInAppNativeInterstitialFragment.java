@@ -206,10 +206,11 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         fullScreenIcon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (!exoPlayerFullscreen)
+                if (!exoPlayerFullscreen) {
                     openFullscreenDialog();
-                else
+                } else {
                     closeFullscreenDialog();
+                }
             }
         });
         if(inAppNotification.isTablet() && isTablet()) {
