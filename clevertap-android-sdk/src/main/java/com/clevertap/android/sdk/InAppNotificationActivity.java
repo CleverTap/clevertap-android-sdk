@@ -273,7 +273,15 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     }
 
     @Override
+    public void finish() {
+        super.finish();
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+    }
+
+    @Override
     public void onBackPressed() {
+        super.onBackPressed();
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         finish();
         didDismiss(null);
     }
