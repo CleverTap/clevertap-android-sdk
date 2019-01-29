@@ -104,6 +104,8 @@ public class Constants {
     static final String COPY_TYPE = "copy";
     static final String DND_START = "22:00";
     static final String DND_STOP = "06:00";
+    static final String VIDEO_THUMBNAIL = "thumbnail";
+    static final String AUDIO_THUMBNAIL = "ct_audio";
     /**
      * Profile command constants.
      */

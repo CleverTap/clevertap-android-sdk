@@ -131,7 +131,7 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
             this.ctaLinearLayout.setVisibility(View.GONE);
         }
 
-        removeVideoView();
+        //removeVideoView();
         this.mediaImage.setVisibility(View.GONE);
         this.squareImage.setVisibility(View.GONE);
         try {
@@ -150,8 +150,32 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
                                 .asGif()
                                 .load(content.getMedia())
                                 .into(this.mediaImage);
-                    } else if (content.mediaIsVideo() || content.mediaIsAudio()) {
-                        addMediaPlayerView(inboxMessage);
+                    } else if (content.mediaIsVideo()) {
+                        if(!content.getPosterUrl().isEmpty()) {
+                            this.mediaImage.setVisibility(View.VISIBLE);
+                            this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                            Glide.with(this.mediaImage.getContext())
+                                    .load(content.getPosterUrl())
+                                    .into(this.mediaImage);
+                        }else{
+                            this.mediaImage.setVisibility(View.VISIBLE);
+                            this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                            int drawableId = getThumbnailImage(Constants.VIDEO_THUMBNAIL);
+                            if(drawableId != -1) {
+                                Glide.with(this.mediaImage.getContext())
+                                        .load(drawableId)
+                                        .into(this.mediaImage);
+                            }
+                        }
+                    }else if(content.mediaIsAudio()){
+                        this.mediaImage.setVisibility(View.VISIBLE);
+                        this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                        int drawableId = getThumbnailImage(Constants.AUDIO_THUMBNAIL);
+                        if(drawableId != -1) {
+                            Glide.with(this.mediaImage.getContext())
+                                    .load(drawableId)
+                                    .into(this.mediaImage);
+                        }
                     }
                     break;
                 case "p":
@@ -168,9 +192,34 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
                                 .asGif()
                                 .load(content.getMedia())
                                 .into(this.squareImage);
-                    } else if (content.mediaIsVideo() || content.mediaIsAudio()) {
-                        addMediaPlayerView(inboxMessage);
+                    } else if (content.mediaIsVideo()) {
+                        if(!content.getPosterUrl().isEmpty()) {
+                            this.squareImage.setVisibility(View.VISIBLE);
+                            this.squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                            Glide.with(this.squareImage.getContext())
+                                    .load(content.getPosterUrl())
+                                    .into(this.squareImage);
+                        }else{
+                            this.squareImage.setVisibility(View.VISIBLE);
+                            this.squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                            int drawableId = getThumbnailImage(Constants.VIDEO_THUMBNAIL);
+                            if(drawableId != -1) {
+                                Glide.with(this.squareImage.getContext())
+                                        .load(drawableId)
+                                        .into(this.squareImage);
+                            }
+                        }
+                    }else if(content.mediaIsAudio()){
+                        this.squareImage.setVisibility(View.VISIBLE);
+                        this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                        int drawableId = getThumbnailImage(Constants.AUDIO_THUMBNAIL);
+                        if(drawableId != -1) {
+                            Glide.with(this.squareImage.getContext())
+                                    .load(drawableId)
+                                    .into(this.squareImage);
+                        }
                     }
+                    break;
             }
         }catch (NoClassDefFoundError error) {
             Logger.d("CleverTap SDK requires Glide dependency. Please refer CleverTap Documentation for more info");

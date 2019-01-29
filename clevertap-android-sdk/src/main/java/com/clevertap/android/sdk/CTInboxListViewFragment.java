@@ -40,7 +40,8 @@ public class CTInboxListViewFragment extends Fragment {
 
     private boolean firstTime = true;
     private int tabPosition;
-    MediaRecyclerView mediaRecyclerView;
+
+    MediaPlayerRecyclerView mediaRecyclerView;
 
     private boolean shouldAutoPlayOnFirstLaunch() {
         return tabPosition <= 0;
@@ -117,7 +118,8 @@ public class CTInboxListViewFragment extends Fragment {
         final CTInboxMessageAdapter inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessages, this);
 
         if (haveVideoPlayerSupport) {
-            mediaRecyclerView = new MediaRecyclerView(getActivity());
+            mediaRecyclerView = new MediaPlayerRecyclerView(getActivity());
+            mediaRecyclerView.setVideoInfoList(inboxMessages);
             mediaRecyclerView.setVisibility(View.VISIBLE);
             mediaRecyclerView.setLayoutManager(linearLayoutManager);
             mediaRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
@@ -150,47 +152,25 @@ public class CTInboxListViewFragment extends Fragment {
 
     @Override
     public void onPause() {
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                if (mediaRecyclerView != null) {
-                    mediaRecyclerView.stop();
-                    for (int childCount = mediaRecyclerView.getChildCount(), i = 0; i < childCount; ++i) {
-                        final CTInboxBaseMessageViewHolder holder = (CTInboxBaseMessageViewHolder) mediaRecyclerView.getChildViewHolder(mediaRecyclerView.getChildAt(i));
-                        if (holder != null) {
-                            holder.cleanUp();
-                        }
-                    }
-                }
-            }
-        });
         super.onPause();
+        if(mediaRecyclerView!=null){
+            mediaRecyclerView.onPausePlayer();
+        }
     }
 
     @Override
     public void onResume() {
-        new Handler(Looper.getMainLooper()).post(new Runnable() {
-            @Override
-            public void run() {
-                if (mediaRecyclerView != null) {
-                    mediaRecyclerView.playVideo();
-                }
-            }
-        });
         super.onResume();
+        if(mediaRecyclerView!=null){
+            mediaRecyclerView.onRestartPlayer();
+        }
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (mediaRecyclerView != null) {
-            for (int childCount = mediaRecyclerView.getChildCount(), i = 0; i < childCount; ++i) {
-                final CTInboxBaseMessageViewHolder holder = (CTInboxBaseMessageViewHolder) mediaRecyclerView.getChildViewHolder(mediaRecyclerView.getChildAt(i));
-                if (holder != null) {
-                    holder.cleanUp();
-                }
-            }
-            mediaRecyclerView.setAdapter(null);
+        if(mediaRecyclerView!=null){
+            mediaRecyclerView.release();
         }
     }
 

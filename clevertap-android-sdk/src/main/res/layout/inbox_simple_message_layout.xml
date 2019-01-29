@@ -13,12 +13,6 @@
             android:id="@+id/media_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
-            <FrameLayout
-                android:id="@+id/simple_message_frame_layout"
-                android:layout_width="match_parent"
-                android:visibility="gone"
-                android:layout_height="wrap_content">
-            </FrameLayout>
             <com.clevertap.android.sdk.RectangleImageView
                 android:id="@+id/media_image"
                 android:layout_width="match_parent"
@@ -31,6 +25,12 @@
                 android:layout_height="wrap_content"
                 android:scaleType="centerCrop"
                 android:visibility="gone"/>
+            <FrameLayout
+                android:id="@+id/simple_message_frame_layout"
+                android:layout_width="match_parent"
+                android:visibility="gone"
+                android:layout_height="wrap_content">
+            </FrameLayout>
         </RelativeLayout>
         <RelativeLayout
             android:id="@+id/body_relative_layout"

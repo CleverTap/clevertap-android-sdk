@@ -60,12 +60,6 @@
         android:layout_width="match_parent"
         android:layout_below="@id/body_relative_layout"
         android:layout_height="wrap_content">
-        <FrameLayout
-            android:id="@+id/icon_message_frame_layout"
-            android:layout_width="match_parent"
-            android:visibility="gone"
-            android:layout_height="wrap_content">
-        </FrameLayout>
         <com.clevertap.android.sdk.RectangleImageView
             android:id="@+id/media_image"
             android:layout_width="match_parent"
@@ -76,6 +70,12 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:visibility="gone"/>
+        <FrameLayout
+            android:id="@+id/icon_message_frame_layout"
+            android:layout_width="match_parent"
+            android:visibility="gone"
+            android:layout_height="wrap_content">
+        </FrameLayout>
     </RelativeLayout>
     <LinearLayout
         android:id="@+id/timestamp_linear_layout"

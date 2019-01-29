@@ -24,6 +24,7 @@ public class CTInboxMessageContent implements Parcelable {
     private String icon;
     private JSONArray links;
     private String contentType;
+    private String posterUrl;
 
     CTInboxMessageContent(){}
 
@@ -47,6 +48,7 @@ public class CTInboxMessageContent implements Parcelable {
             if(mediaObject != null){
                 this.media = mediaObject.has("url") ? mediaObject.getString("url") : "";
                 this.contentType = mediaObject.has("content_type") ? mediaObject.getString("content_type") : "";
+                this.posterUrl = mediaObject.has("poster") ? mediaObject.getString("poster") : "";
             }
 
             JSONObject actionObject = contentObject.has("action") ? contentObject.getJSONObject("action") : null;
@@ -87,6 +89,7 @@ public class CTInboxMessageContent implements Parcelable {
             Logger.v("Unable to init CTInboxMessageContent with Parcel - "+e.getLocalizedMessage());
         }
         contentType = in.readString();
+        posterUrl = in.readString();
     }
 
     @Override
@@ -112,6 +115,7 @@ public class CTInboxMessageContent implements Parcelable {
             dest.writeString(links.toString());
         }
         dest.writeString(contentType);
+        dest.writeString(posterUrl);
     }
 
     @SuppressWarnings("unused")
@@ -221,6 +225,18 @@ public class CTInboxMessageContent implements Parcelable {
 
     void setMessageColor(String messageColor) {
         this.messageColor = messageColor;
+    }
+
+    /**
+     * Returns URL for the thumbnail of the video
+     * @return String
+     */
+    public String getPosterUrl() {
+        return posterUrl;
+    }
+
+    public void setPosterUrl(String posterUrl) {
+        this.posterUrl = posterUrl;
     }
 
     /**
