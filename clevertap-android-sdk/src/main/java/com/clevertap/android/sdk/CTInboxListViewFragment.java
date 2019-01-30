@@ -119,13 +119,14 @@ public class CTInboxListViewFragment extends Fragment {
 
         if (haveVideoPlayerSupport) {
             mediaRecyclerView = new MediaPlayerRecyclerView(getActivity());
-            mediaRecyclerView.setVideoInfoList(inboxMessages);
             mediaRecyclerView.setVisibility(View.VISIBLE);
             mediaRecyclerView.setLayoutManager(linearLayoutManager);
             mediaRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
             mediaRecyclerView.setItemAnimator(new DefaultItemAnimator());
             mediaRecyclerView.setAdapter(inboxMessageAdapter);
             inboxMessageAdapter.notifyDataSetChanged();
+
+            linearLayout.addView(mediaRecyclerView);
 
             if (firstTime && shouldAutoPlayOnFirstLaunch()) {
                 new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
@@ -136,7 +137,6 @@ public class CTInboxListViewFragment extends Fragment {
                 }, 1000);
                 firstTime = false;
             }
-            linearLayout.addView(mediaRecyclerView);
 
         } else {
             RecyclerView recyclerView = allView.findViewById(R.id.list_view_recycler_view);
@@ -169,7 +169,7 @@ public class CTInboxListViewFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if(mediaRecyclerView!=null){
+        if(mediaRecyclerView != null){
             mediaRecyclerView.release();
         }
     }

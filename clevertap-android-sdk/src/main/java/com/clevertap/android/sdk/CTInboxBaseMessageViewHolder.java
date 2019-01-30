@@ -1,15 +1,13 @@
 package com.clevertap.android.sdk;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
+import android.content.res.Resources;
 import android.graphics.Color;
-import android.graphics.drawable.Drawable;
-import android.media.MediaMetadataRetriever;
 import android.net.Uri;
-import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.v7.widget.RecyclerView;
+import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Gravity;
 import android.view.View;
@@ -20,27 +18,12 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 
-import com.bumptech.glide.Glide;
-import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.ExoPlayerFactory;
-import com.google.android.exoplayer2.PlaybackParameters;
-import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.Timeline;
-import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
-import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.TrackSelection;
-import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
-import com.google.android.exoplayer2.trackselection.TrackSelector;
-import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.PlayerView;
-import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
-import com.google.android.exoplayer2.upstream.TransferListener;
 import com.google.android.exoplayer2.util.Util;
 
 import java.lang.ref.WeakReference;
@@ -48,8 +31,6 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
-
-    private PlayerView videoSurfaceView;
     @SuppressWarnings({"unused", "WeakerAccess"})
     RelativeLayout relativeLayout,clickLayout,bodyRelativeLayout;
     LinearLayout ctaLinearLayout;
@@ -57,9 +38,11 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
     Context context;
     ImageView mediaImage,squareImage;
 
-    private Player.EventListener playerListener;
-
     private WeakReference<CTInboxListViewFragment> parentWeakReference;
+
+    private CTInboxMessage message;
+    private CTInboxMessageContent firstContentItem;
+    private boolean requiresMediaPlayer;
 
     CTInboxListViewFragment getParent() {
         return parentWeakReference.get();
@@ -72,6 +55,9 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
     void configureWithMessage(final CTInboxMessage inboxMessage, final CTInboxListViewFragment parent, final int position) {
         context = parent.getContext();
         parentWeakReference = new WeakReference<>(parent);
+        message = inboxMessage;
+        firstContentItem = message.getInboxMessageContents().get(0);
+        requiresMediaPlayer = firstContentItem.mediaIsAudio() || firstContentItem.mediaIsVideo();
     }
 
     /**
@@ -91,7 +77,8 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         }else if(diff > 24*60*60 && diff < 48*60*60){
             return "Yesterday";
         }else {
-            @SuppressLint("SimpleDateFormat") SimpleDateFormat sdf = new SimpleDateFormat("dd MMM");
+            @SuppressLint("SimpleDateFormat")
+            SimpleDateFormat sdf = new SimpleDateFormat("dd MMM");
             return sdf.format(new Date(time));
         }
     }
@@ -117,37 +104,95 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         tertiaryButton.setLayoutParams(tertiaryLayoutParams);
     }
 
-    private void cleanUpVideoView() {
-        if (videoSurfaceView != null) {
-            Player player = videoSurfaceView.getPlayer();
-            if (player != null) {
-                if (playerListener != null) {
-                    player.removeListener(playerListener);
-                    playerListener = null;
-                }
-                player.release();
-                videoSurfaceView.setPlayer(null);
-            }
-            ViewGroup parent = (ViewGroup) videoSurfaceView.getParent();
-            if (parent != null) {
-                int index = parent.indexOfChild(videoSurfaceView);
-                if (index >= 0) {
-                    parent.removeViewAt(index);
-                }
-            }
-            videoSurfaceView = null;
+    private FrameLayout getLayoutForMediaPlayer() {
+        return frameLayout;
+    }
+
+    boolean needsMediaPlayer () {
+        return requiresMediaPlayer;
+    }
+
+    // TODO What to do about rotation
+
+    boolean addMediaPlayer(PlayerView videoSurfaceView) {
+        if (!requiresMediaPlayer) {
+            return false;
         }
-    }
+        FrameLayout frameLayout = getLayoutForMediaPlayer();
+        if (frameLayout == null) {
+            return false;
+        }
+        frameLayout.removeAllViews();
 
-    void removeVideoView() {
-        frameLayout.setVisibility(View.GONE);
-        cleanUpVideoView();
-    }
+        final Resources resources = context.getResources();
+        final DisplayMetrics displayMetrics = resources.getDisplayMetrics();
+        int width = resources.getDisplayMetrics().widthPixels;
+        int height = message.getOrientation().equalsIgnoreCase("l") ? Math.round(width * 0.5625f) : width;
+        videoSurfaceView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
 
+        frameLayout.addView(videoSurfaceView);
+        int color = Color.BLACK;
+        frameLayout.setBackgroundColor(color);
+
+        final SimpleExoPlayer player = (SimpleExoPlayer) videoSurfaceView.getPlayer();
+        float currentVolume = player.getVolume();
+        if (firstContentItem.mediaIsVideo()) {
+            final ImageView muteIcon = new ImageView(context);
+            if (currentVolume > 0) {
+                muteIcon.setImageDrawable(context.getResources().getDrawable(R.drawable.volume_on));
+            } else {
+                muteIcon.setImageDrawable(context.getResources().getDrawable(R.drawable.volume_off));
+            }
+
+            int iconWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, displayMetrics);
+            int iconHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, displayMetrics);
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(iconWidth, iconHeight);
+            int iconTop = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, displayMetrics);
+            int iconRight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, displayMetrics);
+            layoutParams.setMargins(0, iconTop, iconRight, 0);
+            layoutParams.gravity = Gravity.END;
+            muteIcon.setLayoutParams(layoutParams);
+            muteIcon.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    float currentVolume = player.getVolume();
+                    if (currentVolume > 0) {
+                        player.setVolume(0f);
+                        muteIcon.setImageDrawable(resources.getDrawable(R.drawable.volume_off));
+                    } else if (currentVolume == 0) {
+                        player.setVolume(1);
+                        muteIcon.setImageDrawable(resources.getDrawable(R.drawable.volume_on));
+                    }
+                }
+            });
+            frameLayout.addView(muteIcon);
+        }
+        frameLayout.setVisibility(View.VISIBLE);
+
+        videoSurfaceView.requestFocus();
+        videoSurfaceView.setShowBuffering(true);
+        DefaultBandwidthMeter defaultBandwidthMeter = new DefaultBandwidthMeter();
+        DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(context,
+                Util.getUserAgent(context, context.getPackageName()), defaultBandwidthMeter);
+        String uriString = firstContentItem.getMedia();
+        if (uriString != null) {
+            HlsMediaSource hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(uriString));
+            // Prepare the player with the source.
+            player.prepare(hlsMediaSource);
+            if(firstContentItem.mediaIsAudio()) {
+                player.setPlayWhenReady(false);
+                player.setVolume(1f);
+            }else if(firstContentItem.mediaIsVideo()){
+                player.setPlayWhenReady(true);
+                player.setVolume(currentVolume);
+            }
+        }
+        return true;
+    }
     int getThumbnailImage(String image){
         if (context != null) {
             return context.getResources().getIdentifier(image,"drawable",context.getPackageName());
-        }else{
+        } else {
             return -1;
         }
     }

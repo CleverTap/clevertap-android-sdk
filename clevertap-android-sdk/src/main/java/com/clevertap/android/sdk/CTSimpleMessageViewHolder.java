@@ -66,6 +66,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
         }else{
             this.readDot.setVisibility(View.VISIBLE);
         }
+        frameLayout.setVisibility(View.GONE);
         //Shows the CTA layout only if links are present, also handles the display of the CTAs depending on the number
         JSONArray linksArray = content.getLinks();
         if(linksArray != null){
@@ -131,10 +132,10 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
         }else{
             this.ctaLinearLayout.setVisibility(View.GONE);
         }
-        //Loads the media based on orientation and media type
-        removeVideoView();
         this.mediaImage.setVisibility(View.GONE);
+        this.mediaImage.setBackgroundColor(Color.TRANSPARENT);
         this.squareImage.setVisibility(View.GONE);
+        this.squareImage.setBackgroundColor(Color.TRANSPARENT);
         try {
             switch (inboxMessage.getOrientation()) {
                 case "l":
@@ -158,7 +159,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                             Glide.with(this.mediaImage.getContext())
                                     .load(content.getPosterUrl())
                                     .into(this.mediaImage);
-                        }else{
+                        } else {
                             this.mediaImage.setVisibility(View.VISIBLE);
                             this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
                             int drawableId = getThumbnailImage(Constants.VIDEO_THUMBNAIL);
@@ -171,6 +172,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                     }else if(content.mediaIsAudio()){
                         this.mediaImage.setVisibility(View.VISIBLE);
                         this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                        this.mediaImage.setBackgroundColor(Color.BLACK);
                         int drawableId = getThumbnailImage(Constants.AUDIO_THUMBNAIL);
                         if(drawableId != -1) {
                             Glide.with(this.mediaImage.getContext())
@@ -196,13 +198,14 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                     } else if (content.mediaIsVideo()) {
                         if(!content.getPosterUrl().isEmpty()) {
                             this.squareImage.setVisibility(View.VISIBLE);
-                            this.squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                            this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
                             Glide.with(this.squareImage.getContext())
                                     .load(content.getPosterUrl())
                                     .into(this.squareImage);
                         }else{
                             this.squareImage.setVisibility(View.VISIBLE);
-                            this.squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                            this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                            this.squareImage.setBackgroundColor(Color.BLACK);
                             int drawableId = getThumbnailImage(Constants.VIDEO_THUMBNAIL);
                             if(drawableId != -1) {
                                 Glide.with(this.squareImage.getContext())
@@ -213,6 +216,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                     }else if(content.mediaIsAudio()){
                         this.squareImage.setVisibility(View.VISIBLE);
                         this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                        this.squareImage.setBackgroundColor(Color.BLACK);
                         int drawableId = getThumbnailImage(Constants.AUDIO_THUMBNAIL);
                         if(drawableId != -1) {
                             Glide.with(this.squareImage.getContext())
