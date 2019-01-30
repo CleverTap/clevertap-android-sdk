@@ -112,6 +112,17 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         return requiresMediaPlayer;
     }
 
+    void playerReady() {
+        FrameLayout frameLayout = getLayoutForMediaPlayer();
+        frameLayout.setVisibility(View.VISIBLE);
+        // TODO remove the spinner
+    }
+
+    void playerLoading() {
+        Logger.d("PLAYER LOADING");
+        // TODO show some spinner
+    }
+
     // TODO What to do about rotation
 
     boolean addMediaPlayer(PlayerView videoSurfaceView) {
@@ -123,6 +134,7 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
             return false;
         }
         frameLayout.removeAllViews();
+        frameLayout.setVisibility(View.GONE); // Gets set visible in playerReady
 
         final Resources resources = context.getResources();
         final DisplayMetrics displayMetrics = resources.getDisplayMetrics();
@@ -167,8 +179,6 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
             });
             frameLayout.addView(muteIcon);
         }
-        frameLayout.setVisibility(View.VISIBLE);
-
         videoSurfaceView.requestFocus();
         videoSurfaceView.setShowBuffering(true);
         DefaultBandwidthMeter defaultBandwidthMeter = new DefaultBandwidthMeter();

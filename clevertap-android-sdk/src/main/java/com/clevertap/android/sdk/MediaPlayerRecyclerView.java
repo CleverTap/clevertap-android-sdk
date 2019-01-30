@@ -47,7 +47,7 @@ public class MediaPlayerRecyclerView extends RecyclerView {
     private int playPosition = -1;
 
     private boolean addedVideo = false;
-    private View rowParent;
+    private CTInboxBaseMessageViewHolder rowParent;
 
     /**
      * {@inheritDoc}
@@ -153,7 +153,7 @@ public class MediaPlayerRecyclerView extends RecyclerView {
 
         addedVideo = holder.addMediaPlayer(videoSurfaceView);
         if (addedVideo) {
-            rowParent = holder.itemView;
+            rowParent = holder;
         }
     }
 
@@ -222,7 +222,7 @@ public class MediaPlayerRecyclerView extends RecyclerView {
             public void onChildViewAttachedToWindow(@NonNull View view) {}
             @Override
             public void onChildViewDetachedFromWindow(@NonNull View view) {
-                if (addedVideo && rowParent != null && rowParent.equals(view)) {
+                if (addedVideo && rowParent != null && rowParent.itemView.equals(view)) {
                     stop();
                 }
             }
@@ -233,6 +233,9 @@ public class MediaPlayerRecyclerView extends RecyclerView {
                 switch (playbackState) {
 
                     case Player.STATE_BUFFERING:
+                        if (rowParent != null) {
+                            rowParent.playerLoading();
+                        }
                         break;
                     case Player.STATE_ENDED:
                         player.seekTo(0);
@@ -240,6 +243,9 @@ public class MediaPlayerRecyclerView extends RecyclerView {
                     case Player.STATE_IDLE:
                         break;
                     case Player.STATE_READY:
+                        if (rowParent != null) {
+                            rowParent.playerReady();
+                        }
                         break;
                     default:
                         break;
