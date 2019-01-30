@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
@@ -37,7 +38,7 @@ public class CTInboxListViewFragment extends Fragment {
     boolean haveVideoPlayerSupport = CleverTapAPI.haveVideoPlayerSupport;
     CTInboxStyleConfig styleConfig;
     private WeakReference<CTInboxListViewFragment.InboxListener> listenerWeakReference;
-
+    LinearLayout linearLayout;
     private boolean firstTime = true;
     private int tabPosition;
 
@@ -103,7 +104,7 @@ public class CTInboxListViewFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View allView = inflater.inflate(R.layout.inbox_list_view,container,false);
-        LinearLayout linearLayout = allView.findViewById(R.id.list_view_linear_layout);
+        linearLayout = allView.findViewById(R.id.list_view_linear_layout);
         linearLayout.setBackgroundColor(Color.parseColor(styleConfig.getInboxBackgroundColor()));
         TextView noMessageView = allView.findViewById(R.id.list_view_no_message_view);
 
@@ -252,6 +253,46 @@ public class CTInboxListViewFragment extends Fragment {
             startActivity(intent);
         } catch (Throwable t) {
             // Ignore
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if(mediaRecyclerView.getLayoutManager()!=null) {
+            outState.putParcelable("recyclerLayoutState", mediaRecyclerView.getLayoutManager().onSaveInstanceState());
+        }
+    }
+
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        if(savedInstanceState != null) {
+            Parcelable savedRecyclerLayoutState = savedInstanceState.getParcelable("recyclerLayoutState");
+            if (mediaRecyclerView != null) {
+                linearLayout.removeAllViews();
+                final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
+                final CTInboxMessageAdapter inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessages, this);
+                mediaRecyclerView.setLayoutManager(linearLayoutManager);
+                mediaRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
+                mediaRecyclerView.setItemAnimator(new DefaultItemAnimator());
+                mediaRecyclerView.setAdapter(inboxMessageAdapter);
+                inboxMessageAdapter.notifyDataSetChanged();
+                if(mediaRecyclerView.getLayoutManager()!=null) {
+                    mediaRecyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
+                }
+                linearLayout.addView(mediaRecyclerView);
+
+                if (firstTime && shouldAutoPlayOnFirstLaunch()) {
+                    new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            mediaRecyclerView.playVideo();
+                        }
+                    }, 1000);
+                    firstTime = false;
+                }
+            }
         }
     }
 }

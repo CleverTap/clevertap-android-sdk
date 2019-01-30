@@ -37,6 +37,7 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
     FrameLayout frameLayout;
     Context context;
     ImageView mediaImage,squareImage;
+    FrameLayout progressBarFrameLayout;
 
     private WeakReference<CTInboxListViewFragment> parentWeakReference;
 
@@ -115,12 +116,12 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
     void playerReady() {
         FrameLayout frameLayout = getLayoutForMediaPlayer();
         frameLayout.setVisibility(View.VISIBLE);
-        // TODO remove the spinner
+        progressBarFrameLayout.setVisibility(View.GONE);
     }
 
     void playerLoading() {
-        Logger.d("PLAYER LOADING");
-        // TODO show some spinner
+        Logger.d("Player Loading...");
+        progressBarFrameLayout.setVisibility(View.VISIBLE);
     }
 
     // TODO What to do about rotation
@@ -179,8 +180,9 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
             });
             frameLayout.addView(muteIcon);
         }
+
         videoSurfaceView.requestFocus();
-        videoSurfaceView.setShowBuffering(true);
+        videoSurfaceView.setShowBuffering(false);
         DefaultBandwidthMeter defaultBandwidthMeter = new DefaultBandwidthMeter();
         DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(context,
                 Util.getUserAgent(context, context.getPackageName()), defaultBandwidthMeter);
@@ -190,6 +192,7 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
             // Prepare the player with the source.
             player.prepare(hlsMediaSource);
             if(firstContentItem.mediaIsAudio()) {
+                videoSurfaceView.showController();//show controller for audio as it is not autoplay
                 player.setPlayWhenReady(false);
                 player.setVolume(1f);
             }else if(firstContentItem.mediaIsVideo()){

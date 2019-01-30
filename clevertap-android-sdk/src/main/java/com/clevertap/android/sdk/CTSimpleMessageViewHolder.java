@@ -1,12 +1,14 @@
 package com.clevertap.android.sdk;
 
 import android.app.Activity;
+import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
@@ -45,6 +47,8 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
         clickLayout = itemView.findViewById(R.id.click_relative_layout);
         ctaLinearLayout = itemView.findViewById(R.id.cta_linear_layout);
         bodyRelativeLayout = itemView.findViewById(R.id.body_relative_layout);
+        progressBarFrameLayout = itemView.findViewById(R.id.simple_progress_frame_layout);
+
     }
 
     @Override
@@ -136,6 +140,12 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
         this.mediaImage.setBackgroundColor(Color.TRANSPARENT);
         this.squareImage.setVisibility(View.GONE);
         this.squareImage.setBackgroundColor(Color.TRANSPARENT);
+        //Set the height and width of Progress Bar Frame to match the thumbnail size
+        final Resources resources = context.getResources();
+        int width = resources.getDisplayMetrics().widthPixels;
+        int height = inboxMessage.getOrientation().equalsIgnoreCase("l") ? Math.round(width * 0.5625f) : width;
+        this.progressBarFrameLayout.setLayoutParams(new RelativeLayout.LayoutParams(width, height));
+        this.progressBarFrameLayout.setVisibility(View.GONE);
         try {
             switch (inboxMessage.getOrientation()) {
                 case "l":
@@ -153,6 +163,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                                 .load(content.getMedia())
                                 .into(this.mediaImage);
                     } else if (content.mediaIsVideo()) {
+                        this.progressBarFrameLayout.setVisibility(View.VISIBLE);
                         if(!content.getPosterUrl().isEmpty()) {
                             this.mediaImage.setVisibility(View.VISIBLE);
                             this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
@@ -170,6 +181,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                             }
                         }
                     }else if(content.mediaIsAudio()){
+                        this.progressBarFrameLayout.setVisibility(View.VISIBLE);
                         this.mediaImage.setVisibility(View.VISIBLE);
                         this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
                         this.mediaImage.setBackgroundColor(Color.BLACK);
@@ -196,6 +208,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                                 .load(content.getMedia())
                                 .into(this.squareImage);
                     } else if (content.mediaIsVideo()) {
+                        this.progressBarFrameLayout.setVisibility(View.VISIBLE);
                         if(!content.getPosterUrl().isEmpty()) {
                             this.squareImage.setVisibility(View.VISIBLE);
                             this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
@@ -214,6 +227,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                             }
                         }
                     }else if(content.mediaIsAudio()){
+                        this.progressBarFrameLayout.setVisibility(View.VISIBLE);
                         this.squareImage.setVisibility(View.VISIBLE);
                         this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
                         this.squareImage.setBackgroundColor(Color.BLACK);

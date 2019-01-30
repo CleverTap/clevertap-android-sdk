@@ -51,8 +51,7 @@
                 android:layout_marginLeft="20dp"
                 android:layout_marginTop="5dp"
                 android:layout_marginRight="20dp"
-                android:textColor="@android:color/darker_gray"
-                android:layout_below="@+id/messageTitle"/>
+                android:textColor="@android:color/darker_gray" />
         </LinearLayout>
     </LinearLayout>
     <RelativeLayout
@@ -75,6 +74,17 @@
             android:layout_width="match_parent"
             android:visibility="gone"
             android:layout_height="wrap_content">
+        </FrameLayout>
+        <FrameLayout
+            android:id="@+id/icon_progress_frame_layout"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:visibility="gone">
+            <ProgressBar
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal|center_vertical"
+                android:visibility="visible"/>
         </FrameLayout>
     </RelativeLayout>
     <LinearLayout

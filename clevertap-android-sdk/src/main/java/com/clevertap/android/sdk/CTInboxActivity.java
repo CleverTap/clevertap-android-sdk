@@ -145,7 +145,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
                 public void onTabSelected(TabLayout.Tab tab) {
                     CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter.getItem(tab.getPosition());
                     if(fragment != null && fragment.mediaRecyclerView !=null){
-                        fragment.mediaRecyclerView.playVideo();
+                        fragment.mediaRecyclerView.onRestartPlayer();
                     }
                 }
 
@@ -153,7 +153,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
                 public void onTabUnselected(TabLayout.Tab tab) {
                     CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter.getItem(tab.getPosition());
                     if(fragment != null && fragment.mediaRecyclerView != null){
-                        fragment.mediaRecyclerView.stop();
+                        fragment.mediaRecyclerView.onPausePlayer();
                     }
                 }
 
