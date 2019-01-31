@@ -6,6 +6,7 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.support.v4.view.ViewPager;
 import android.support.v7.widget.Toolbar;
@@ -16,11 +17,18 @@ import android.widget.TextView;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * This activity shows the {@link CTInboxMessage} objects as per {@link CTInboxStyleConfig} style parameters
  */
 public class CTInboxActivity extends FragmentActivity implements CTInboxListViewFragment.InboxListener {
+
+    CTInboxTabAdapter inboxTabAdapter;
+    TabLayout tabLayout;
+    ViewPager viewPager;
+    CTInboxStyleConfig styleConfig;
+
     interface InboxActivityListener{
         void messageDidShow(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data);
         void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data);
@@ -51,7 +59,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
-        CTInboxStyleConfig styleConfig;
         CleverTapAPI cleverTapAPI;
         try{
             Bundle extras = getIntent().getExtras();
@@ -86,8 +93,8 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
         LinearLayout linearLayout = findViewById(R.id.inbox_linear_layout);
         linearLayout.setBackgroundColor(Color.parseColor(styleConfig.getInboxBackgroundColor()));
-        final TabLayout tabLayout = linearLayout.findViewById(R.id.tab_layout);
-        final ViewPager viewPager = linearLayout.findViewById(R.id.view_pager);
+        tabLayout = linearLayout.findViewById(R.id.tab_layout);
+        viewPager = linearLayout.findViewById(R.id.view_pager);
         TextView noMessageView = findViewById(R.id.no_message_view);
         Bundle bundle = new Bundle();
         bundle.putParcelable("config", config);
@@ -111,20 +118,20 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             }
         } else {
             viewPager.setVisibility(View.VISIBLE);
-            final CTInboxTabAdapter inboxTabAdapter = new CTInboxTabAdapter(getSupportFragmentManager());
+            ArrayList<String>tabs = styleConfig.getTabs();
+            inboxTabAdapter = new CTInboxTabAdapter(getSupportFragmentManager(),tabs.size()+1);
             tabLayout.setVisibility(View.VISIBLE);
+            tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
+            tabLayout.setTabMode(TabLayout.MODE_FIXED);
             tabLayout.setSelectedTabIndicatorColor(Color.parseColor(styleConfig.getSelectedTabIndicatorColor()));
             tabLayout.setTabTextColors(Color.parseColor(styleConfig.getUnselectedTabColor()),Color.parseColor(styleConfig.getSelectedTabColor()));
             tabLayout.setBackgroundColor(Color.parseColor(styleConfig.getTabBackgroundColor()));
-            tabLayout.addTab(tabLayout.newTab().setText("ALL"));
 
             Bundle _allBundle = (Bundle)bundle.clone();
             _allBundle.putInt("position",0);
             CTInboxListViewFragment all = new CTInboxListViewFragment();
             all.setArguments(_allBundle);
-            inboxTabAdapter.addFragment(all,"ALL");
-
-            ArrayList<String>tabs = styleConfig.getTabs();
+            inboxTabAdapter.addFragment(all,"ALL",0);
 
             for (int i=0; i<tabs.size(); i++) {
                 String filter = tabs.get(i);
@@ -134,26 +141,27 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
                 _bundle.putString("filter", filter);
                 CTInboxListViewFragment frag = new CTInboxListViewFragment();
                 frag.setArguments(_bundle);
-                inboxTabAdapter.addFragment(frag, filter);
+                inboxTabAdapter.addFragment(frag, filter,pos);
                 viewPager.setOffscreenPageLimit(pos);
             }
 
             viewPager.setAdapter(inboxTabAdapter);
+            inboxTabAdapter.notifyDataSetChanged();
             viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
             tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
                 @Override
                 public void onTabSelected(TabLayout.Tab tab) {
                     CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter.getItem(tab.getPosition());
-                    if(fragment != null && fragment.mediaRecyclerView !=null){
-                        fragment.mediaRecyclerView.onRestartPlayer();
+                    if(fragment != null && fragment.getMediaRecyclerView() !=null){
+                        fragment.getMediaRecyclerView().onRestartPlayer();
                     }
                 }
 
                 @Override
                 public void onTabUnselected(TabLayout.Tab tab) {
                     CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter.getItem(tab.getPosition());
-                    if(fragment != null && fragment.mediaRecyclerView != null){
-                        fragment.mediaRecyclerView.onPausePlayer();
+                    if(fragment != null && fragment.getMediaRecyclerView() != null){
+                        fragment.getMediaRecyclerView().onPausePlayer();
                     }
                 }
 
@@ -188,5 +196,19 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         if (listener != null) {
             listener.messageDidShow(this,inboxMessage, data);
         }
+    }
+
+    @Override
+    protected void onDestroy() {
+        if(styleConfig.isUsingTabs()) {
+            List<Fragment> allFragments = getSupportFragmentManager().getFragments();
+            for (Fragment fragment : allFragments) {
+                if (fragment instanceof CTInboxListViewFragment) {
+                    Logger.d("Removing fragment - " + fragment.toString());
+                    getSupportFragmentManager().getFragments().remove(fragment);
+                }
+            }
+        }
+        super.onDestroy();
     }
 }

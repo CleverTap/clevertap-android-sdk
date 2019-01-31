@@ -43,6 +43,7 @@ public class CTInboxListViewFragment extends Fragment {
     private int tabPosition;
 
     MediaPlayerRecyclerView mediaRecyclerView;
+    RecyclerView recyclerView;
 
     private boolean shouldAutoPlayOnFirstLaunch() {
         return tabPosition <= 0;
@@ -120,6 +121,8 @@ public class CTInboxListViewFragment extends Fragment {
 
         if (haveVideoPlayerSupport) {
             mediaRecyclerView = new MediaPlayerRecyclerView(getActivity());
+            Logger.d("ListView added - "+ mediaRecyclerView.toString());
+            setMediaRecyclerView(mediaRecyclerView);
             mediaRecyclerView.setVisibility(View.VISIBLE);
             mediaRecyclerView.setLayoutManager(linearLayoutManager);
             mediaRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
@@ -140,7 +143,7 @@ public class CTInboxListViewFragment extends Fragment {
             }
 
         } else {
-            RecyclerView recyclerView = allView.findViewById(R.id.list_view_recycler_view);
+            recyclerView = allView.findViewById(R.id.list_view_recycler_view);
             recyclerView.setVisibility(View.VISIBLE);
             recyclerView.setLayoutManager(linearLayoutManager);
             recyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
@@ -256,11 +259,27 @@ public class CTInboxListViewFragment extends Fragment {
         }
     }
 
+    MediaPlayerRecyclerView getMediaRecyclerView() {
+        return this.mediaRecyclerView;
+    }
+
+    void setMediaRecyclerView(MediaPlayerRecyclerView mediaRecyclerView) {
+        this.mediaRecyclerView = mediaRecyclerView;
+    }
+
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        if(mediaRecyclerView.getLayoutManager()!=null) {
-            outState.putParcelable("recyclerLayoutState", mediaRecyclerView.getLayoutManager().onSaveInstanceState());
+        if(mediaRecyclerView != null) {
+            if (mediaRecyclerView.getLayoutManager() != null) {
+                outState.putParcelable("recyclerLayoutState", mediaRecyclerView.getLayoutManager().onSaveInstanceState());
+            }
+        }
+
+        if(recyclerView != null) {
+            if (recyclerView.getLayoutManager() != null) {
+                outState.putParcelable("recyclerLayoutState", recyclerView.getLayoutManager().onSaveInstanceState());
+            }
         }
     }
 
@@ -270,27 +289,14 @@ public class CTInboxListViewFragment extends Fragment {
         if(savedInstanceState != null) {
             Parcelable savedRecyclerLayoutState = savedInstanceState.getParcelable("recyclerLayoutState");
             if (mediaRecyclerView != null) {
-                linearLayout.removeAllViews();
-                final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
-                final CTInboxMessageAdapter inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessages, this);
-                mediaRecyclerView.setLayoutManager(linearLayoutManager);
-                mediaRecyclerView.addItemDecoration(new VerticalSpaceItemDecoration(18));
-                mediaRecyclerView.setItemAnimator(new DefaultItemAnimator());
-                mediaRecyclerView.setAdapter(inboxMessageAdapter);
-                inboxMessageAdapter.notifyDataSetChanged();
                 if(mediaRecyclerView.getLayoutManager()!=null) {
                     mediaRecyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
                 }
-                linearLayout.addView(mediaRecyclerView);
-
-                if (firstTime && shouldAutoPlayOnFirstLaunch()) {
-                    new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            mediaRecyclerView.playVideo();
-                        }
-                    }, 1000);
-                    firstTime = false;
+            }
+            
+            if (recyclerView != null) {
+                if(recyclerView.getLayoutManager()!=null) {
+                    recyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
                 }
             }
         }
