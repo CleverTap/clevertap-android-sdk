@@ -113,19 +113,23 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         return requiresMediaPlayer;
     }
 
+    boolean shouldAutoPlay() {
+        return firstContentItem.mediaIsVideo();
+    }
+
     void playerReady() {
         FrameLayout frameLayout = getLayoutForMediaPlayer();
         frameLayout.setVisibility(View.VISIBLE);
-        progressBarFrameLayout.setVisibility(View.GONE);
+        if (progressBarFrameLayout != null) {
+            progressBarFrameLayout.setVisibility(View.GONE);
+        }
     }
 
-    void playerLoading() {
-        Logger.d("Player Loading...");
-        progressBarFrameLayout.setVisibility(View.VISIBLE);
+    void playerRemoved() {
+        if (progressBarFrameLayout != null) {
+            progressBarFrameLayout.setVisibility(View.GONE);
+        }
     }
-
-    // TODO What to do about rotation
-
     boolean addMediaPlayer(PlayerView videoSurfaceView) {
         if (!requiresMediaPlayer) {
             return false;
@@ -146,6 +150,10 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         frameLayout.addView(videoSurfaceView);
         int color = Color.BLACK;
         frameLayout.setBackgroundColor(color);
+
+        if (progressBarFrameLayout != null) {
+            progressBarFrameLayout.setVisibility(View.VISIBLE);
+        }
 
         final SimpleExoPlayer player = (SimpleExoPlayer) videoSurfaceView.getPlayer();
         float currentVolume = player.getVolume();

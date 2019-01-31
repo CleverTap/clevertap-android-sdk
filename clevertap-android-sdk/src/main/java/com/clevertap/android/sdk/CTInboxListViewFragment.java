@@ -154,7 +154,7 @@ public class CTInboxListViewFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-        if(mediaRecyclerView!=null){
+        if(mediaRecyclerView != null){
             mediaRecyclerView.onPausePlayer();
         }
     }
@@ -162,7 +162,7 @@ public class CTInboxListViewFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if(mediaRecyclerView!=null){
+        if(mediaRecyclerView != null){
             mediaRecyclerView.onRestartPlayer();
         }
     }

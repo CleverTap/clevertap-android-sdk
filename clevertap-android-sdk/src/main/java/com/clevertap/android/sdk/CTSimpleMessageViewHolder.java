@@ -163,7 +163,6 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                                 .load(content.getMedia())
                                 .into(this.mediaImage);
                     } else if (content.mediaIsVideo()) {
-                        this.progressBarFrameLayout.setVisibility(View.VISIBLE);
                         if(!content.getPosterUrl().isEmpty()) {
                             this.mediaImage.setVisibility(View.VISIBLE);
                             this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
@@ -181,7 +180,6 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                             }
                         }
                     }else if(content.mediaIsAudio()){
-                        this.progressBarFrameLayout.setVisibility(View.VISIBLE);
                         this.mediaImage.setVisibility(View.VISIBLE);
                         this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
                         this.mediaImage.setBackgroundColor(Color.BLACK);
@@ -208,7 +206,6 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                                 .load(content.getMedia())
                                 .into(this.squareImage);
                     } else if (content.mediaIsVideo()) {
-                        this.progressBarFrameLayout.setVisibility(View.VISIBLE);
                         if(!content.getPosterUrl().isEmpty()) {
                             this.squareImage.setVisibility(View.VISIBLE);
                             this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
@@ -227,7 +224,6 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                             }
                         }
                     }else if(content.mediaIsAudio()){
-                        this.progressBarFrameLayout.setVisibility(View.VISIBLE);
                         this.squareImage.setVisibility(View.VISIBLE);
                         this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
                         this.squareImage.setBackgroundColor(Color.BLACK);
