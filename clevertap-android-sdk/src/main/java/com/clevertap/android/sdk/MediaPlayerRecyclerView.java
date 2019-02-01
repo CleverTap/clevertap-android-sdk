@@ -124,6 +124,9 @@ public class MediaPlayerRecyclerView extends RecyclerView {
             public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
                 switch (playbackState) {
                     case Player.STATE_BUFFERING:
+                        if(playingHolder != null){
+                            playingHolder.playerBuffering();;
+                        }
                         break;
                     case Player.STATE_ENDED:
                         player.seekTo(0);

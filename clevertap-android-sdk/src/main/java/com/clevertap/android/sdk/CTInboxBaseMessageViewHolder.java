@@ -130,6 +130,12 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
             progressBarFrameLayout.setVisibility(View.GONE);
         }
     }
+
+    void playerBuffering(){
+        if (progressBarFrameLayout != null) {
+            progressBarFrameLayout.setVisibility(View.VISIBLE);
+        }
+    }
     boolean addMediaPlayer(PlayerView videoSurfaceView) {
         if (!requiresMediaPlayer) {
             return false;
@@ -148,8 +154,7 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         videoSurfaceView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
 
         frameLayout.addView(videoSurfaceView);
-        int color = Color.BLACK;
-        frameLayout.setBackgroundColor(color);
+        frameLayout.setBackgroundColor(Color.parseColor(message.getBgColor()));
 
         if (progressBarFrameLayout != null) {
             progressBarFrameLayout.setVisibility(View.VISIBLE);

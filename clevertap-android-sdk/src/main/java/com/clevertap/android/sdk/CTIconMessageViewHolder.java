@@ -135,9 +135,9 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
         }
 
         this.mediaImage.setVisibility(View.GONE);
-        this.mediaImage.setBackgroundColor(Color.TRANSPARENT);
+        this.mediaImage.setBackgroundColor(Color.parseColor(inboxMessage.getBgColor()));
         this.squareImage.setVisibility(View.GONE);
-        this.squareImage.setBackgroundColor(Color.TRANSPARENT);
+        this.squareImage.setBackgroundColor(Color.parseColor(inboxMessage.getBgColor()));
         //Set the height and width of Progress Bar Frame to match the thumbnail size
         final Resources resources = context.getResources();
         int width = resources.getDisplayMetrics().widthPixels;

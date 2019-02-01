@@ -137,9 +137,9 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
             this.ctaLinearLayout.setVisibility(View.GONE);
         }
         this.mediaImage.setVisibility(View.GONE);
-        this.mediaImage.setBackgroundColor(Color.TRANSPARENT);
+        this.mediaImage.setBackgroundColor(Color.parseColor(inboxMessage.getBgColor()));
         this.squareImage.setVisibility(View.GONE);
-        this.squareImage.setBackgroundColor(Color.TRANSPARENT);
+        this.squareImage.setBackgroundColor(Color.parseColor(inboxMessage.getBgColor()));
         //Set the height and width of Progress Bar Frame to match the thumbnail size
         final Resources resources = context.getResources();
         int width = resources.getDisplayMetrics().widthPixels;
@@ -215,7 +215,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         }else{
                             this.squareImage.setVisibility(View.VISIBLE);
                             this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                            this.squareImage.setBackgroundColor(Color.BLACK);
+                            //this.squareImage.setBackgroundColor(Color.BLACK);
                             int drawableId = getThumbnailImage(Constants.VIDEO_THUMBNAIL);
                             if(drawableId != -1) {
                                 Glide.with(this.squareImage.getContext())
