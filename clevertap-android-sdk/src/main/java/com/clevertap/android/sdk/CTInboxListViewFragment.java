@@ -121,7 +121,6 @@ public class CTInboxListViewFragment extends Fragment {
 
         if (haveVideoPlayerSupport) {
             mediaRecyclerView = new MediaPlayerRecyclerView(getActivity());
-            Logger.d("ListView added - "+ mediaRecyclerView.toString());
             setMediaRecyclerView(mediaRecyclerView);
             mediaRecyclerView.setVisibility(View.VISIBLE);
             mediaRecyclerView.setLayoutManager(linearLayoutManager);
@@ -293,7 +292,7 @@ public class CTInboxListViewFragment extends Fragment {
                     mediaRecyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
                 }
             }
-            
+
             if (recyclerView != null) {
                 if(recyclerView.getLayoutManager()!=null) {
                     recyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);

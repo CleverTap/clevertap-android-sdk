@@ -109,12 +109,20 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
                 noMessageView.setBackgroundColor(Color.parseColor(styleConfig.getInboxBackgroundColor()));
                 noMessageView.setVisibility(View.VISIBLE);
             }else {
+                boolean fragmentExists = false;
                 noMessageView.setVisibility(View.GONE);
-                CTInboxListViewFragment listView = new CTInboxListViewFragment();
-                listView.setArguments(bundle);
-                getSupportFragmentManager().beginTransaction()
-                        .add(R.id.list_view_fragment, listView, getFragmentTag())
-                        .commit();
+                for(Fragment fragment : getSupportFragmentManager().getFragments()){
+                    if(fragment.getTag()!=null && !fragment.getTag().equalsIgnoreCase(getFragmentTag())){
+                        fragmentExists = true;
+                    }
+                }
+                if(!fragmentExists){
+                    CTInboxListViewFragment listView = new CTInboxListViewFragment();
+                    listView.setArguments(bundle);
+                    getSupportFragmentManager().beginTransaction()
+                            .add(R.id.list_view_fragment, listView, getFragmentTag())
+                            .commit();
+                }
             }
         } else {
             viewPager.setVisibility(View.VISIBLE);
