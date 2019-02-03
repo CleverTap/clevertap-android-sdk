@@ -38,6 +38,7 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
     Context context;
     ImageView mediaImage,squareImage;
     FrameLayout progressBarFrameLayout;
+    private ImageView muteIcon;
 
     private WeakReference<CTInboxListViewFragment> parentWeakReference;
 
@@ -109,6 +110,10 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         return frameLayout;
     }
 
+    int getImageBackgroundColor() {
+        return Color.TRANSPARENT;
+    }
+
     boolean needsMediaPlayer () {
         return requiresMediaPlayer;
     }
@@ -120,6 +125,9 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
     void playerReady() {
         FrameLayout frameLayout = getLayoutForMediaPlayer();
         frameLayout.setVisibility(View.VISIBLE);
+        if (muteIcon != null) {
+            muteIcon.setVisibility(View.VISIBLE);
+        }
         if (progressBarFrameLayout != null) {
             progressBarFrameLayout.setVisibility(View.GONE);
         }
@@ -128,6 +136,13 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
     void playerRemoved() {
         if (progressBarFrameLayout != null) {
             progressBarFrameLayout.setVisibility(View.GONE);
+        }
+        if (muteIcon != null) {
+            muteIcon.setVisibility(View.GONE);
+        }
+        FrameLayout frameLayout = getLayoutForMediaPlayer();
+        if (frameLayout != null) {
+            frameLayout.removeAllViews();
         }
     }
 
@@ -163,7 +178,8 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         final SimpleExoPlayer player = (SimpleExoPlayer) videoSurfaceView.getPlayer();
         float currentVolume = player.getVolume();
         if (firstContentItem.mediaIsVideo()) {
-            final ImageView muteIcon = new ImageView(context);
+            muteIcon = new ImageView(context);
+            muteIcon.setVisibility(View.GONE);
             if (currentVolume > 0) {
                 muteIcon.setImageDrawable(context.getResources().getDrawable(R.drawable.volume_on));
             } else {

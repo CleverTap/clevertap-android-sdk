@@ -182,7 +182,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                     }else if(content.mediaIsAudio()){
                         this.mediaImage.setVisibility(View.VISIBLE);
                         this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                        this.mediaImage.setBackgroundColor(Color.BLACK);
+                        this.mediaImage.setBackgroundColor(getImageBackgroundColor());
                         int drawableId = getThumbnailImage(Constants.AUDIO_THUMBNAIL);
                         if(drawableId != -1) {
                             Glide.with(this.mediaImage.getContext())
@@ -215,7 +215,6 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         }else{
                             this.squareImage.setVisibility(View.VISIBLE);
                             this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                            //this.squareImage.setBackgroundColor(Color.BLACK);
                             int drawableId = getThumbnailImage(Constants.VIDEO_THUMBNAIL);
                             if(drawableId != -1) {
                                 Glide.with(this.squareImage.getContext())
@@ -226,7 +225,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                     }else if(content.mediaIsAudio()){
                         this.squareImage.setVisibility(View.VISIBLE);
                         this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                        this.squareImage.setBackgroundColor(Color.BLACK);
+                        this.squareImage.setBackgroundColor(getImageBackgroundColor());
                         int drawableId = getThumbnailImage(Constants.AUDIO_THUMBNAIL);
                         if(drawableId != -1) {
                             Glide.with(this.squareImage.getContext())
