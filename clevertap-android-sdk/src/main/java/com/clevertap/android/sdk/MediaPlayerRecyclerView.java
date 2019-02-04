@@ -129,7 +129,13 @@ public class MediaPlayerRecyclerView extends RecyclerView {
                         }
                         break;
                     case Player.STATE_ENDED:
-                        player.seekTo(0);
+                        if (player != null) {
+                            player.seekTo(0);
+                            player.setPlayWhenReady(false);
+                            if (videoSurfaceView != null) {
+                                videoSurfaceView.showController();
+                            }
+                        }
                         break;
                     case Player.STATE_IDLE:
                         break;
