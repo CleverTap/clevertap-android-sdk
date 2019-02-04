@@ -28,7 +28,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     TabLayout tabLayout;
     ViewPager viewPager;
     CTInboxStyleConfig styleConfig;
-
+    static int orientation;
     interface InboxActivityListener{
         void messageDidShow(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data);
         void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data);
@@ -69,6 +69,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             if (cleverTapAPI != null) {
                 setListener(cleverTapAPI);
             }
+            orientation = getResources().getConfiguration().orientation;
         }catch (Throwable t){
             Logger.v("Cannot find a valid notification inbox bundle to show!", t);
             return;

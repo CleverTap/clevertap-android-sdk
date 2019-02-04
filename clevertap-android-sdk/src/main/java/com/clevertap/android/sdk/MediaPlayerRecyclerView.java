@@ -125,7 +125,7 @@ public class MediaPlayerRecyclerView extends RecyclerView {
                 switch (playbackState) {
                     case Player.STATE_BUFFERING:
                         if(playingHolder != null){
-                            playingHolder.playerBuffering();;
+                            playingHolder.playerBuffering();
                         }
                         break;
                     case Player.STATE_ENDED:
@@ -178,15 +178,17 @@ public class MediaPlayerRecyclerView extends RecyclerView {
                 continue;
             }
             CTInboxBaseMessageViewHolder holder = (CTInboxBaseMessageViewHolder) child.getTag();
-            if (!holder.needsMediaPlayer()) {
-                continue;
-            }
-            Rect rect = new Rect();
-            boolean measured = holder.itemView.getGlobalVisibleRect(rect);
-            int height =  measured ? rect.height() : 0;
-            if (height > bestHeight) {
-                bestHeight = height;
-                bestHolder = holder;
+            if(holder != null) {
+                if (!holder.needsMediaPlayer()) {
+                    continue;
+                }
+                Rect rect = new Rect();
+                boolean measured = holder.itemView.getGlobalVisibleRect(rect);
+                int height = measured ? rect.height() : 0;
+                if (height > bestHeight) {
+                    bestHeight = height;
+                    bestHolder = holder;
+                }
             }
         }
         return bestHolder;

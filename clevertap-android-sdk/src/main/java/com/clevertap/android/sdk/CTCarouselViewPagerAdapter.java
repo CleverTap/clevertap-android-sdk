@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -63,6 +64,9 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
                 imageView.setVisibility(View.VISIBLE);
                 Glide.with(imageView.getContext())
                         .load(carouselImages.get(position))
+                        .apply(new RequestOptions()
+                                .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
+                                .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
                         .into(imageView);
                 container.addView(view, layoutParams);
                 view.setOnClickListener(new View.OnClickListener() {
@@ -79,6 +83,9 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
                 imageView.setVisibility(View.VISIBLE);
                 Glide.with(imageView.getContext())
                         .load(carouselImages.get(position))
+                        .apply(new RequestOptions()
+                                .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
+                                .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
                         .into(imageView);
                 container.addView(view, layoutParams);
                 view.setOnClickListener(new View.OnClickListener() {

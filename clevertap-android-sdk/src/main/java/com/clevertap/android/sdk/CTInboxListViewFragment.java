@@ -2,6 +2,7 @@ package com.clevertap.android.sdk;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -14,6 +15,8 @@ import android.support.v4.app.Fragment;
 import android.support.v7.widget.DefaultItemAnimator;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.TypedValue;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -118,6 +121,13 @@ public class CTInboxListViewFragment extends Fragment {
 
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
         final CTInboxMessageAdapter inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessages, this);
+
+        if(CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE){
+            int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, Constants.LIST_VIEW_WIDTH, getResources().getDisplayMetrics());
+            LinearLayout.LayoutParams layoutParams = new LinearLayout.LayoutParams(width, ViewGroup.LayoutParams.MATCH_PARENT);
+            layoutParams.gravity = Gravity.CENTER;
+            linearLayout.setLayoutParams(layoutParams);
+        }
 
         if (haveVideoPlayerSupport) {
             mediaRecyclerView = new MediaPlayerRecyclerView(getActivity());

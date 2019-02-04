@@ -104,8 +104,10 @@ public class Constants {
     static final String COPY_TYPE = "copy";
     static final String DND_START = "22:00";
     static final String DND_STOP = "06:00";
-    static final String VIDEO_THUMBNAIL = "ct_audio"; // TODO swap in a transparent background video placeholder image
+    static final String VIDEO_THUMBNAIL = "ct_video_1";
     static final String AUDIO_THUMBNAIL = "ct_audio";
+    static final String IMAGE_PLACEHOLDER = "ct_image";
+    static final int LIST_VIEW_WIDTH = 450;
     /**
      * Profile command constants.
      */

@@ -2,6 +2,7 @@ package com.clevertap.android.sdk;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.net.Uri;
@@ -164,7 +165,14 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
 
         final Resources resources = context.getResources();
         final DisplayMetrics displayMetrics = resources.getDisplayMetrics();
-        int width = resources.getDisplayMetrics().widthPixels;
+
+        int width;
+        if(CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+             width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, Constants.LIST_VIEW_WIDTH, resources.getDisplayMetrics());
+        }else {
+            width = resources.getDisplayMetrics().widthPixels;
+        }
+
         int height = message.getOrientation().equalsIgnoreCase("l") ? Math.round(width * 0.5625f) : width;
         videoSurfaceView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
 
@@ -230,12 +238,5 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
             }
         }
         return true;
-    }
-    int getThumbnailImage(String image){
-        if (context != null) {
-            return context.getResources().getIdentifier(image,"drawable",context.getPackageName());
-        } else {
-            return -1;
-        }
     }
 }

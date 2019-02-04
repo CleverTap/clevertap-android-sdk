@@ -1,10 +1,12 @@
 package com.clevertap.android.sdk;
 
 import android.app.Activity;
+import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.util.TypedValue;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -13,6 +15,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.request.RequestOptions;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -140,7 +143,12 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
         this.squareImage.setBackgroundColor(Color.parseColor(inboxMessage.getBgColor()));
         //Set the height and width of Progress Bar Frame to match the thumbnail size
         final Resources resources = context.getResources();
-        int width = resources.getDisplayMetrics().widthPixels;
+        int width;
+        if(CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, Constants.LIST_VIEW_WIDTH, resources.getDisplayMetrics());
+        }else {
+            width = resources.getDisplayMetrics().widthPixels;
+        }
         int height = inboxMessage.getOrientation().equalsIgnoreCase("l") ? Math.round(width * 0.5625f) : width;
         this.progressBarFrameLayout.setLayoutParams(new RelativeLayout.LayoutParams(width, height));
         this.progressBarFrameLayout.setVisibility(View.GONE);
@@ -152,6 +160,9 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
                         Glide.with(this.mediaImage.getContext())
                                 .load(content.getMedia())
+                                .apply(new RequestOptions()
+                                        .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
+                                        .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
                                 .into(this.mediaImage);
                     } else if (content.mediaIsGIF()) {
                         this.mediaImage.setVisibility(View.VISIBLE);
@@ -159,6 +170,9 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         Glide.with(this.mediaImage.getContext())
                                 .asGif()
                                 .load(content.getMedia())
+                                .apply(new RequestOptions()
+                                        .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
+                                        .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
                                 .into(this.mediaImage);
                     } else if (content.mediaIsVideo()) {
                         if(!content.getPosterUrl().isEmpty()) {
@@ -166,11 +180,14 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
                             this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
                             Glide.with(this.mediaImage.getContext())
                                     .load(content.getPosterUrl())
+                                    .apply(new RequestOptions()
+                                            .placeholder(Utils.getThumbnailImage(context,Constants.VIDEO_THUMBNAIL))
+                                            .error(Utils.getThumbnailImage(context,Constants.VIDEO_THUMBNAIL)))
                                     .into(this.mediaImage);
                         }else{
                             this.mediaImage.setVisibility(View.VISIBLE);
                             this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                            int drawableId = getThumbnailImage(Constants.VIDEO_THUMBNAIL);
+                            int drawableId = Utils.getThumbnailImage(context,Constants.VIDEO_THUMBNAIL);
                             if(drawableId != -1) {
                                 Glide.with(this.mediaImage.getContext())
                                         .load(drawableId)
@@ -181,7 +198,7 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         this.mediaImage.setVisibility(View.VISIBLE);
                         this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
                         this.mediaImage.setBackgroundColor(getImageBackgroundColor());
-                        int drawableId = getThumbnailImage(Constants.AUDIO_THUMBNAIL);
+                        int drawableId = Utils.getThumbnailImage(context,Constants.AUDIO_THUMBNAIL);
                         if(drawableId != -1) {
                             Glide.with(this.mediaImage.getContext())
                                     .load(drawableId)
@@ -195,6 +212,9 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         this.squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
                         Glide.with(this.squareImage.getContext())
                                 .load(content.getMedia())
+                                .apply(new RequestOptions()
+                                        .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
+                                        .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
                                 .into(this.squareImage);
                     } else if (content.mediaIsGIF()) {
                         this.squareImage.setVisibility(View.VISIBLE);
@@ -202,6 +222,9 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         Glide.with(this.squareImage.getContext())
                                 .asGif()
                                 .load(content.getMedia())
+                                .apply(new RequestOptions()
+                                        .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
+                                        .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
                                 .into(this.squareImage);
                     } else if (content.mediaIsVideo()) {
                         if(!content.getPosterUrl().isEmpty()) {
@@ -209,12 +232,15 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
                             this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
                             Glide.with(this.squareImage.getContext())
                                     .load(content.getPosterUrl())
+                                    .apply(new RequestOptions()
+                                            .placeholder(Utils.getThumbnailImage(context,Constants.VIDEO_THUMBNAIL))
+                                            .error(Utils.getThumbnailImage(context,Constants.VIDEO_THUMBNAIL)))
                                     .into(this.squareImage);
                         }else{
                             this.squareImage.setVisibility(View.VISIBLE);
                             this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
                             this.squareImage.setBackgroundColor(getImageBackgroundColor());
-                            int drawableId = getThumbnailImage(Constants.VIDEO_THUMBNAIL);
+                            int drawableId = Utils.getThumbnailImage(context,Constants.VIDEO_THUMBNAIL);
                             if(drawableId != -1) {
                                 Glide.with(this.squareImage.getContext())
                                         .load(drawableId)
@@ -225,7 +251,7 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         this.squareImage.setVisibility(View.VISIBLE);
                         this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
                         this.squareImage.setBackgroundColor(getImageBackgroundColor() );
-                        int drawableId = getThumbnailImage(Constants.AUDIO_THUMBNAIL);
+                        int drawableId = Utils.getThumbnailImage(context,Constants.AUDIO_THUMBNAIL);
                         if(drawableId != -1) {
                             Glide.with(this.squareImage.getContext())
                                     .load(drawableId)
@@ -264,6 +290,9 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
                 iconImage.setVisibility(View.VISIBLE);
                 Glide.with(iconImage.getContext())
                         .load(content.getIcon())
+                        .apply(new RequestOptions()
+                                .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
+                                .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
                         .into(iconImage);
             } else {
                 iconImage.setVisibility(View.GONE);

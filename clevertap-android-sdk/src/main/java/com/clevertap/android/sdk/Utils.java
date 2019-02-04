@@ -211,4 +211,12 @@ final class Utils {
             }
         }
     }
+
+    static int getThumbnailImage(Context context, String image){
+        if (context != null) {
+            return context.getResources().getIdentifier(image,"drawable",context.getPackageName());
+        } else {
+            return -1;
+        }
+    }
 }
