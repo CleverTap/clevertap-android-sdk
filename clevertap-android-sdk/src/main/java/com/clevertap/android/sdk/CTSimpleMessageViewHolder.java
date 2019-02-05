@@ -168,7 +168,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                                 .into(this.mediaImage);
                     } else if (content.mediaIsGIF()) {
                         this.mediaImage.setVisibility(View.VISIBLE);
-                        this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                        this.mediaImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
                         Glide.with(this.mediaImage.getContext())
                                 .asGif()
                                 .load(content.getMedia())
@@ -220,7 +220,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                                 .into(this.squareImage);
                     } else if (content.mediaIsGIF()) {
                         this.squareImage.setVisibility(View.VISIBLE);
-                        this.squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                        this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
                         Glide.with(this.squareImage.getContext())
                                 .asGif()
                                 .load(content.getMedia())
