@@ -213,7 +213,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             List<Fragment> allFragments = getSupportFragmentManager().getFragments();
             for (Fragment fragment : allFragments) {
                 if (fragment instanceof CTInboxListViewFragment) {
-                    Logger.d("Removing fragment - " + fragment.toString());
+                    Logger.v("Removing fragment - " + fragment.toString());
                     getSupportFragmentManager().getFragments().remove(fragment);
                 }
             }
