@@ -1,5 +1,9 @@
 ## CHANGE LOG
 
+### Version 3.4.2 (February 6, 2019)
+* Improved callback support for App Inbox
+* Fixed Carousel dots rendering issue
+
 ### Version 3.4.1 (February 5, 2019)
 * Adds support for Landscape mode in custom HTML InApps and App Inbox
 * Performance improvements for App Inbox
