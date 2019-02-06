@@ -6090,8 +6090,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     // always call async
     private void _processInboxMessages(JSONArray messages) {
-        _initializeInbox();
         synchronized (inboxControllerLock) {
+            if (this.ctInboxController == null) {
+                _initializeInbox();
+            }
             if (this.ctInboxController != null) {
                 boolean update = this.ctInboxController.updateMessages(messages);
                 if (update) {
@@ -6105,6 +6107,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private void _initializeInbox() {
         synchronized (inboxControllerLock) {
             if (this.ctInboxController != null) {
+                _notifyInboxInitialized();
                 return;
             }
             this.ctInboxController = new CTInboxController(getCleverTapID(), loadDBAdapter(context), haveVideoPlayerSupport);
