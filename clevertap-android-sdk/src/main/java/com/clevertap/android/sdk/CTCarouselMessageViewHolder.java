@@ -86,7 +86,11 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
         CTCarouselViewPagerAdapter carouselViewPagerAdapter = new CTCarouselViewPagerAdapter(appContext, parent, inboxMessage,layoutParams,position);
         this.imageViewPager.setAdapter(carouselViewPagerAdapter);
         //Adds the dots for the carousel
-        int dotsCount = carouselViewPagerAdapter.getCount();
+        //int dotsCount = carouselViewPagerAdapter.getCount();
+        int dotsCount = inboxMessage.getInboxMessageContents().size();
+        if(this.sliderDots.getChildCount()>0){
+            this.sliderDots.removeAllViews();
+        }
         ImageView[] dots = new ImageView[dotsCount];
         for(int k=0;k<dotsCount;k++){
             dots[k] = new ImageView(parent.getActivity());
@@ -151,6 +155,7 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
             this.viewHolder = viewHolder;
             this.dots = dots;
             this.inboxMessage = inboxMessage;
+            this.dots[0].setImageDrawable(context.getResources().getDrawable(R.drawable.selected_dot));
         }
 
         @Override
