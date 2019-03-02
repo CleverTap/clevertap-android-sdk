@@ -108,13 +108,13 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
             try {
                 formData = UriHelper.getAllKeyValuePairs(url, false);
 
-                if (formData != null && formData.containsKey("wzrk_c2a")) {
-                    final String c2a = formData.getString("wzrk_c2a");
+                if (formData != null && formData.containsKey(Constants.KEY_C2A)) {
+                    final String c2a = formData.getString(Constants.KEY_C2A);
                     if (c2a != null) {
                         final String[] parts = c2a.split("__dl__");
                         if (parts.length == 2) {
                             // Decode it here as wzrk_c2a is not decoded by UriHelper
-                            formData.putString("wzrk_c2a", URLDecoder.decode(parts[0], "UTF-8"));
+                            formData.putString(Constants.KEY_C2A, URLDecoder.decode(parts[0], "UTF-8"));
                             url = parts[1];
                         }
                     }

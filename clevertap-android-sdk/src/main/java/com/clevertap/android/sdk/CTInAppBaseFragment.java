@@ -56,8 +56,8 @@ public abstract class CTInAppBaseFragment extends Fragment {
         super.onAttach(activity);
         parent = activity;
         Bundle bundle = getArguments();
-        inAppNotification = bundle.getParcelable("inApp");
-        config = bundle.getParcelable("config");
+        inAppNotification = bundle.getParcelable(Constants.INAPP_KEY);
+        config = bundle.getParcelable(Constants.KEY_CONFIG);
         generateListener();
     }
 
@@ -111,7 +111,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
             Bundle data = new Bundle();
 
             data.putString(Constants.NOTIFICATION_ID_TAG,inAppNotification.getCampaignId());
-            data.putString("wzrk_c2a", button.getText());
+            data.putString(Constants.KEY_C2A, button.getText());
             didClick(data);
 
             String actionUrl = button.getActionUrl();

@@ -23,8 +23,9 @@ public class CleverTapInstanceConfig implements Parcelable {
     private boolean createdPostAppLaunch;
     private boolean sslPinning;
     private boolean backgroundSync;
+    private String customId;
 
-    private CleverTapInstanceConfig(Context context, String accountId, String accountToken, String accountRegion, boolean isDefault){
+    private CleverTapInstanceConfig(Context context, String accountId, String accountToken, String accountRegion, boolean isDefault, String customId){
         this.accountId = accountId;
         this.accountToken = accountToken;
         this.accountRegion = accountRegion;
@@ -34,6 +35,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.debugLevel = CleverTapAPI.LogLevel.INFO.intValue();
         this.logger = new Logger(this.debugLevel);
         this.createdPostAppLaunch = false;
+        this.customId = customId;
 
         ManifestInfo manifest = ManifestInfo.getInstance(context);
         this.useGoogleAdId = manifest.useGoogleAdId();
@@ -58,39 +60,42 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.createdPostAppLaunch = config.createdPostAppLaunch;
         this.sslPinning = config.sslPinning;
         this.backgroundSync = config.backgroundSync;
+        this.customId = config.customId;
     }
 
     private CleverTapInstanceConfig(String jsonString) throws Throwable {
         try{
             JSONObject configJsonObject = new JSONObject(jsonString);
-            if(configJsonObject.has("accountId"))
-                this.accountId = configJsonObject.getString("accountId");
-            if(configJsonObject.has("accountToken"))
-                this.accountToken = configJsonObject.getString("accountToken");
-            if(configJsonObject.has("accountRegion"))
-                this.accountRegion = configJsonObject.getString("accountRegion");
+            if(configJsonObject.has(Constants.KEY_ACCOUNT_ID))
+                this.accountId = configJsonObject.getString(Constants.KEY_ACCOUNT_ID);
+            if(configJsonObject.has(Constants.KEY_ACCOUNT_TOKEN))
+                this.accountToken = configJsonObject.getString(Constants.KEY_ACCOUNT_TOKEN);
+            if(configJsonObject.has(Constants.KEY_ACCOUNT_REGION))
+                this.accountRegion = configJsonObject.getString(Constants.KEY_ACCOUNT_REGION);
             if(configJsonObject.has("gcmSenderId"))
                 this.gcmSenderId = configJsonObject.getString("gcmSenderId");
-            if(configJsonObject.has("analyticsOnly"))
-                this.analyticsOnly = configJsonObject.getBoolean("analyticsOnly");
-            if(configJsonObject.has("isDefaultInstance"))
-                this.isDefaultInstance = configJsonObject.getBoolean("isDefaultInstance");
-            if(configJsonObject.has("useGoogleAdId"))
-                this.useGoogleAdId = configJsonObject.getBoolean("useGoogleAdId");
-            if(configJsonObject.has("disableAppLaunchedEvent"))
-                this.disableAppLaunchedEvent = configJsonObject.getBoolean("disableAppLaunchedEvent");
-            if(configJsonObject.has("personalization"))
-                this.personalization = configJsonObject.getBoolean("personalization");
-            if(configJsonObject.has("debugLevel")) {
-                this.debugLevel = configJsonObject.getInt("debugLevel");
+            if(configJsonObject.has(Constants.KEY_ANALYTICS_ONLY))
+                this.analyticsOnly = configJsonObject.getBoolean(Constants.KEY_ANALYTICS_ONLY);
+            if(configJsonObject.has(Constants.KEY_DEFAULT_INSTANCE))
+                this.isDefaultInstance = configJsonObject.getBoolean(Constants.KEY_DEFAULT_INSTANCE);
+            if(configJsonObject.has(Constants.KEY_USE_GOOGLE_AD_ID))
+                this.useGoogleAdId = configJsonObject.getBoolean(Constants.KEY_USE_GOOGLE_AD_ID);
+            if(configJsonObject.has(Constants.KEY_DISABLE_APP_LAUNCHED))
+                this.disableAppLaunchedEvent = configJsonObject.getBoolean(Constants.KEY_DISABLE_APP_LAUNCHED);
+            if(configJsonObject.has(Constants.KEY_PERSONALIZATION))
+                this.personalization = configJsonObject.getBoolean(Constants.KEY_PERSONALIZATION);
+            if(configJsonObject.has(Constants.KEY_DEBUG_LEVEL)) {
+                this.debugLevel = configJsonObject.getInt(Constants.KEY_DEBUG_LEVEL);
                 this.logger = new Logger(this.debugLevel);
             }
-            if(configJsonObject.has("createdPostAppLaunch"))
-                this.createdPostAppLaunch = configJsonObject.getBoolean("createdPostAppLaunch");
-            if(configJsonObject.has("sslPinning"))
-                this.sslPinning = configJsonObject.getBoolean("sslPinning");
-            if(configJsonObject.has("backgroundSync"))
-                this.backgroundSync = configJsonObject.getBoolean("backgroundSync");
+            if(configJsonObject.has(Constants.KEY_CREATED_POST_APP_LAUNCH))
+                this.createdPostAppLaunch = configJsonObject.getBoolean(Constants.KEY_CREATED_POST_APP_LAUNCH);
+            if(configJsonObject.has(Constants.KEY_SSL_PINNING))
+                this.sslPinning = configJsonObject.getBoolean(Constants.KEY_SSL_PINNING);
+            if(configJsonObject.has(Constants.KEY_BACKGROUND_SYNC))
+                this.backgroundSync = configJsonObject.getBoolean(Constants.KEY_BACKGROUND_SYNC);
+            if(configJsonObject.has(Constants.KEY_CUSTOM_ID))
+                this.customId = configJsonObject.getString(Constants.KEY_CUSTOM_ID);
         } catch (Throwable t){
             Logger.v("Error constructing CleverTapInstanceConfig from JSON: " + jsonString +": ", t.getCause());
             throw(t);
@@ -111,6 +116,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         createdPostAppLaunch = in.readByte() != 0x00;
         sslPinning = in.readByte() != 0x00;
         backgroundSync = in.readByte() != 0x00;
+        customId = in.readString();
     }
 
     @SuppressWarnings("unused")
@@ -120,7 +126,7 @@ public class CleverTapInstanceConfig implements Parcelable {
             Logger.i("CleverTap accountId and accountToken cannot be null");
             return null;
         }
-        return new CleverTapInstanceConfig(context, accountId, accountToken, null,false);
+        return new CleverTapInstanceConfig(context, accountId, accountToken, null,false,null);
     }
 
     @SuppressWarnings({"unused"})
@@ -130,7 +136,7 @@ public class CleverTapInstanceConfig implements Parcelable {
             Logger.i("CleverTap accountId and accountToken cannot be null");
             return null;
         }
-        return new CleverTapInstanceConfig(context, accountId, accountToken, accountRegion,false);
+        return new CleverTapInstanceConfig(context, accountId, accountToken, accountRegion,false,null);
     }
 
     // for internal use only!
@@ -146,7 +152,11 @@ public class CleverTapInstanceConfig implements Parcelable {
     // convenience to construct the internal only default config
     @SuppressWarnings({"unused", "WeakerAccess"})
     protected static CleverTapInstanceConfig createDefaultInstance(Context context, @NonNull String accountId, @NonNull String accountToken, String accountRegion) {
-        return new CleverTapInstanceConfig(context, accountId, accountToken, accountRegion, true);
+        return new CleverTapInstanceConfig(context, accountId, accountToken, accountRegion, true,null);
+    }
+
+    protected static CleverTapInstanceConfig createDefaultInstance(Context context, @NonNull String accountId, @NonNull String accountToken, String accountRegion, String customId){
+        return new CleverTapInstanceConfig(context, accountId, accountToken, accountRegion, true,customId);
     }
 
     public String getAccountId() {
@@ -243,6 +253,10 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.backgroundSync = backgroundSync;
     }
 
+    public String getCustomId() {
+        return customId;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -263,6 +277,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         dest.writeByte((byte) (sslPinning ? 0x01 : 0x00));
         dest.writeByte((byte) (createdPostAppLaunch ? 0x01 : 0x00));
         dest.writeByte((byte) (backgroundSync ? 0x01 : 0x00));
+        dest.writeString(customId);
     }
 
     @SuppressWarnings("unused")
@@ -281,19 +296,20 @@ public class CleverTapInstanceConfig implements Parcelable {
     String toJSONString() {
         JSONObject configJsonObject = new JSONObject();
         try{
-            configJsonObject.put("accountId", getAccountId());
-            configJsonObject.put("accountToken", getAccountToken());
-            configJsonObject.put("accountRegion", getAccountRegion());
+            configJsonObject.put(Constants.KEY_ACCOUNT_ID, getAccountId());
+            configJsonObject.put(Constants.KEY_ACCOUNT_TOKEN, getAccountToken());
+            configJsonObject.put(Constants.KEY_ACCOUNT_REGION, getAccountRegion());
             configJsonObject.put("gcmSenderId", getGCMSenderId());
-            configJsonObject.put("analyticsOnly", isAnalyticsOnly());
-            configJsonObject.put("isDefaultInstance", isDefaultInstance());
-            configJsonObject.put("useGoogleAdId", isUseGoogleAdId());
-            configJsonObject.put("disableAppLaunchedEvent", isDisableAppLaunchedEvent());
-            configJsonObject.put("personalization", isPersonalizationEnabled());
-            configJsonObject.put("debugLevel", getDebugLevel());
-            configJsonObject.put("createdPostAppLaunch", isCreatedPostAppLaunch());
-            configJsonObject.put("sslPinning", isSslPinningEnabled());
-            configJsonObject.put("backgroundSync", isBackgroundSync());
+            configJsonObject.put(Constants.KEY_ANALYTICS_ONLY, isAnalyticsOnly());
+            configJsonObject.put(Constants.KEY_DEFAULT_INSTANCE, isDefaultInstance());
+            configJsonObject.put(Constants.KEY_USE_GOOGLE_AD_ID, isUseGoogleAdId());
+            configJsonObject.put(Constants.KEY_DISABLE_APP_LAUNCHED, isDisableAppLaunchedEvent());
+            configJsonObject.put(Constants.KEY_PERSONALIZATION, isPersonalizationEnabled());
+            configJsonObject.put(Constants.KEY_DEBUG_LEVEL, getDebugLevel());
+            configJsonObject.put(Constants.KEY_CREATED_POST_APP_LAUNCH, isCreatedPostAppLaunch());
+            configJsonObject.put(Constants.KEY_SSL_PINNING, isSslPinningEnabled());
+            configJsonObject.put(Constants.KEY_BACKGROUND_SYNC, isBackgroundSync());
+            configJsonObject.put(Constants.KEY_CUSTOM_ID, getCustomId());
             return configJsonObject.toString();
         }catch (Throwable e){
             Logger.v("Unable to convert config to JSON : ",e.getCause());

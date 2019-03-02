@@ -15,8 +15,9 @@ public class Constants {
     static final String LABEL_DISABLE_APP_LAUNCH = "CLEVERTAP_DISABLE_APP_LAUNCHED";
     static final String LABEL_SSL_PINNING = "CLEVERTAP_SSL_PINNING";
     static final String LABEL_BACKGROUND_SYNC = "CLEVERTAP_BACKGROUND_SYNC";
+    static final String LABEL_CUSTOM_ID = "CLEVERTAP_USE_CUSTOM_ID";
+    static final String LABEL_USE_GOOGLE_AD_ID = "LABEL_USE_GOOGLE_AD_ID";
     static final String CLEVERTAP_OPTOUT = "ct_optout";
-    static final String CLEVERTAP_USE_GOOGLE_AD_ID = "CLEVERTAP_USE_GOOGLE_AD_ID";
     static final String CLEVERTAP_STORAGE_TAG = "WizRocket";
     static final String CLEVERTAP_LOG_TAG = "CleverTap";
     static final int SESSION_LENGTH_MINS = 20;
@@ -54,7 +55,7 @@ public class Constants {
     static final String INAPP_MAX_DISPLAY_COUNT = "mdc";
     static final String INAPP_MAX_PER_SESSION = "imc";
     static final String INAPP_WINDOW = "w";
-    static final String PREFS_INAPP_KEY = "inApp";
+    static final String INAPP_KEY = "inApp";
     static final int INAPP_CLOSE_IV_WIDTH = 40;
     static final String DEBUG_KEY = "d";
     static final String NOTIFICATION_ID_TAG = "wzrk_id";
@@ -108,6 +109,22 @@ public class Constants {
     static final String AUDIO_THUMBNAIL = "ct_audio";
     static final String IMAGE_PLACEHOLDER = "ct_image";
     static final int LIST_VIEW_WIDTH = 450;
+    //Keys used by the SDK
+    static final String KEY_ACCOUNT_ID = "accountId";
+    static final String KEY_ACCOUNT_TOKEN = "accountToken";
+    static final String KEY_ACCOUNT_REGION = "accountRegion";
+    static final String KEY_ANALYTICS_ONLY = "analyticsOnly";
+    static final String KEY_DEFAULT_INSTANCE = "isDefaultInstance";
+    static final String KEY_USE_GOOGLE_AD_ID = "useGoogleAdId";
+    static final String KEY_DISABLE_APP_LAUNCHED = "disableAppLaunchedEvent";
+    static final String KEY_PERSONALIZATION = "personalization";
+    static final String KEY_DEBUG_LEVEL = "debugLevel";
+    static final String KEY_CREATED_POST_APP_LAUNCH = "createdPostAppLaunch";
+    static final String KEY_SSL_PINNING = "sslPinning";
+    static final String KEY_BACKGROUND_SYNC = "backgroundSync";
+    static final String KEY_CUSTOM_ID = "customId";
+    static final String KEY_CONFIG = "config";
+    static final String KEY_C2A = "wzrk_c2a";
     /**
      * Profile command constants.
      */

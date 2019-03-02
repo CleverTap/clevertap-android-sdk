@@ -71,8 +71,8 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
             try {
                 formData = UriHelper.getAllKeyValuePairs(url, false);
 
-                if (formData != null && formData.containsKey("wzrk_c2a")) {
-                    final String c2a = formData.getString("wzrk_c2a");
+                if (formData != null && formData.containsKey(Constants.KEY_C2A)) {
+                    final String c2a = formData.getString(Constants.KEY_C2A);
                     if (c2a != null) {
                         final String[] parts = c2a.split("__dl__");
                         if (parts.length == 2) {

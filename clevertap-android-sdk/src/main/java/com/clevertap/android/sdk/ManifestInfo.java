@@ -17,6 +17,7 @@ class ManifestInfo {
     private static String excludedActivities;
     private static boolean sslPinning;
     private static boolean backgroundSync;
+    private static String useCustomID;
 
     private static String _getManifestStringValueForKey(Bundle manifest, String name) {
         try {
@@ -50,11 +51,13 @@ class ManifestInfo {
         if (gcmSenderId != null) {
             gcmSenderId = gcmSenderId.replace("id:", "");
         }
-        useADID = "1".equals(_getManifestStringValueForKey(metaData, Constants.CLEVERTAP_USE_GOOGLE_AD_ID));
+        useADID = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_USE_GOOGLE_AD_ID));
         appLaunchedDisabled = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_DISABLE_APP_LAUNCH));
         excludedActivities = _getManifestStringValueForKey(metaData,Constants.LABEL_INAPP_EXCLUDE);
         sslPinning = "1".equals(_getManifestStringValueForKey(metaData,Constants.LABEL_SSL_PINNING));
         backgroundSync = "1".equals(_getManifestStringValueForKey(metaData,Constants.LABEL_BACKGROUND_SYNC));
+        if(useCustomID == null)
+            useCustomID = _getManifestStringValueForKey(metaData,Constants.LABEL_CUSTOM_ID);
     }
 
     synchronized static ManifestInfo getInstance(Context context){
@@ -98,6 +101,10 @@ class ManifestInfo {
 
     boolean isBackgroundSync() {
         return backgroundSync;
+    }
+
+    String useCustomId(){
+        return useCustomID;
     }
 
     static void changeCredentials(String id, String token, String region){
