@@ -37,7 +37,8 @@ public class Constants {
     static final int PUSH_DELAY_MS = 1000;
     static final String INAPP_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inapp";
     static final String INBOX_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inbox";
-    static final String INAPP_DATA_TAG = "html";
+    static final String INAPP_HTML_TAG = "html";
+    static final String INAPP_DATA_TAG = "d";
     static final String INAPP_X_PERCENT = "xp";
     static final String INAPP_Y_PERCENT = "yp";
     static final String INAPP_X_DP = "xdp";
@@ -125,6 +126,23 @@ public class Constants {
     static final String KEY_CUSTOM_ID = "customId";
     static final String KEY_CONFIG = "config";
     static final String KEY_C2A = "wzrk_c2a";
+    static final String KEY_EFC = "efc";
+    static final String KEY_TLC = "tlc";
+    static final String KEY_TDC = "tdc";
+    static final String KEY_KV = "kv";
+    static final String KEY_TYPE = "type";
+    static final String KEY_IS_TABLET = "tablet";
+    static final String KEY_BG = "bg";
+    static final String KEY_TITLE = "title";
+    static final String KEY_TEXT = "text";
+    static final String KEY_COLOR = "color";
+    static final String KEY_MESSAGE= "message";
+    static final String KEY_HIDE_CLOSE = "close";
+    static final String KEY_MEDIA = "media";
+    static final String KEY_CONTENT_TYPE = "content_type";
+    static final String KEY_URL = "url";
+    static final String KEY_BUTTONS = "buttons";
+    static final String KEY_CUSTOM_HTML = "custom-html";
     /**
      * Profile command constants.
      */

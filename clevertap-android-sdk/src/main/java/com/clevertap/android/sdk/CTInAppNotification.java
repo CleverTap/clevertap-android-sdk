@@ -58,6 +58,7 @@ class CTInAppNotification implements Parcelable {
 
     private boolean isTablet;
     private boolean videoSupported;
+    private String customInAppUrl;
 
     CTInAppNotification(){}
 
@@ -70,9 +71,9 @@ class CTInAppNotification implements Parcelable {
         this.jsonDescription = jsonObject;
         try {
 
-            this.type = jsonObject.has("type") ? jsonObject.getString("type") : null;
+            this.type = jsonObject.has(Constants.KEY_TYPE) ? jsonObject.getString(Constants.KEY_TYPE) : null;
 
-            if(this.type ==null || this.type.equals("custom-html")){
+            if(this.type ==null || this.type.equals(Constants.KEY_CUSTOM_HTML)){
                 legacyConfigureWithJson(jsonObject);
             }else{
                 configureWithJson(jsonObject);
@@ -94,15 +95,17 @@ class CTInAppNotification implements Parcelable {
         try {
             this.id = jsonObject.has(Constants.INAPP_ID_IN_PAYLOAD) ? jsonObject.getString(Constants.INAPP_ID_IN_PAYLOAD) : "";
             this.campaignId = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject.getString(Constants.NOTIFICATION_ID_TAG) : "";
-            this.excludeFromCaps = jsonObject.has("efc") && jsonObject.getInt("efc") == 1;
-            this.totalLifetimeCount = jsonObject.has("tlc") ? jsonObject.getInt("tlc") : -1;
-            this.totalDailyCount = jsonObject.has("tdc") ? jsonObject.getInt("tdc") : -1;
+            this.excludeFromCaps = jsonObject.has(Constants.KEY_EFC) && jsonObject.getInt(Constants.KEY_EFC) == 1;
+            this.totalLifetimeCount = jsonObject.has(Constants.KEY_TLC) ? jsonObject.getInt(Constants.KEY_TLC) : -1;
+            this.totalDailyCount = jsonObject.has(Constants.KEY_TDC) ? jsonObject.getInt(Constants.KEY_TDC) : -1;
 
-            JSONObject data = jsonObject.has("d") ? jsonObject.getJSONObject("d") : null;
+            JSONObject data = jsonObject.has(Constants.INAPP_DATA_TAG) ? jsonObject.getJSONObject(Constants.INAPP_DATA_TAG) : null;
             if (data != null) {
-                this.html = data.getString(Constants.INAPP_DATA_TAG);
+                this.html = data.getString(Constants.INAPP_HTML_TAG);
 
-                this.customExtras = data.has("kv") ? data.getJSONObject("kv") : null;
+                this.customInAppUrl = data.has(Constants.KEY_URL) ? data.getString(Constants.KEY_URL) : "";
+
+                this.customExtras = data.has(Constants.KEY_KV) ? data.getJSONObject(Constants.KEY_KV) : null;
                 if (this.customExtras == null)
                     this.customExtras = new JSONObject();
 
@@ -140,28 +143,28 @@ class CTInAppNotification implements Parcelable {
         try {
             this.id = jsonObject.has(Constants.INAPP_ID_IN_PAYLOAD) ? jsonObject.getString(Constants.INAPP_ID_IN_PAYLOAD) : "";
             this.campaignId = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject.getString(Constants.NOTIFICATION_ID_TAG) : "";
-            this.type = jsonObject.getString("type");
-            this.excludeFromCaps = jsonObject.has("efc") && jsonObject.getInt("efc") == 1;
-            this.totalLifetimeCount = jsonObject.has("tlc") ? jsonObject.getInt("tlc") : -1;
-            this.totalDailyCount = jsonObject.has("tdc") ? jsonObject.getInt("tdc") : -1;
+            this.type = jsonObject.getString(Constants.KEY_TYPE);
+            this.excludeFromCaps = jsonObject.has(Constants.KEY_EFC) && jsonObject.getInt(Constants.KEY_EFC) == 1;
+            this.totalLifetimeCount = jsonObject.has(Constants.KEY_TLC) ? jsonObject.getInt(Constants.KEY_TLC) : -1;
+            this.totalDailyCount = jsonObject.has(Constants.KEY_TDC) ? jsonObject.getInt(Constants.KEY_TDC) : -1;
             this.inAppType = CTInAppType.fromString(this.type);
-            this.isTablet = jsonObject.has("tablet") && jsonObject.getBoolean("tablet");
-            this.backgroundColor = jsonObject.has("bg") ? jsonObject.getString("bg") : "";
-            JSONObject titleObject = jsonObject.has("title") ? jsonObject.getJSONObject("title") : null;
+            this.isTablet = jsonObject.has(Constants.KEY_IS_TABLET) && jsonObject.getBoolean(Constants.KEY_IS_TABLET);
+            this.backgroundColor = jsonObject.has(Constants.KEY_BG) ? jsonObject.getString(Constants.KEY_BG) : "";
+            JSONObject titleObject = jsonObject.has(Constants.KEY_TITLE) ? jsonObject.getJSONObject(Constants.KEY_TITLE) : null;
             if(titleObject != null) {
-                this.title = titleObject.has("text") ? titleObject.getString("text") : "";
-                this.titleColor = titleObject.has("color") ? titleObject.getString("color") : "";
+                this.title = titleObject.has(Constants.KEY_TEXT) ? titleObject.getString(Constants.KEY_TEXT) : "";
+                this.titleColor = titleObject.has(Constants.KEY_COLOR) ? titleObject.getString(Constants.KEY_COLOR) : "";
             }
-            JSONObject msgObject = jsonObject.has("message") ? jsonObject.getJSONObject("message") : null;
+            JSONObject msgObject = jsonObject.has(Constants.KEY_MESSAGE) ? jsonObject.getJSONObject(Constants.KEY_MESSAGE) : null;
             if(msgObject != null) {
-                this.message = msgObject.has("text") ? msgObject.getString("text") : "";
-                this.messageColor = msgObject.has("color") ? msgObject.getString("color") : "";
+                this.message = msgObject.has(Constants.KEY_TEXT) ? msgObject.getString(Constants.KEY_TEXT) : "";
+                this.messageColor = msgObject.has(Constants.KEY_COLOR) ? msgObject.getString(Constants.KEY_COLOR) : "";
             }
-            this.hideCloseButton = jsonObject.has("close") && jsonObject.getBoolean("close");
-            JSONObject media = jsonObject.has("media") ? jsonObject.getJSONObject("media") : null;
+            this.hideCloseButton = jsonObject.has(Constants.KEY_HIDE_CLOSE) && jsonObject.getBoolean(Constants.KEY_HIDE_CLOSE);
+            JSONObject media = jsonObject.has(Constants.KEY_MEDIA) ? jsonObject.getJSONObject(Constants.KEY_MEDIA) : null;
             if(media!=null){
-                this.contentType = media.has("content_type") ? media.getString("content_type") : "";
-                String mediaUrl = media.has("url") ? media.getString("url") : "";
+                this.contentType = media.has(Constants.KEY_CONTENT_TYPE) ? media.getString(Constants.KEY_CONTENT_TYPE) : "";
+                String mediaUrl = media.has(Constants.KEY_URL) ? media.getString(Constants.KEY_URL) : "";
                 if(!mediaUrl.isEmpty()){
                     if(this.contentType.startsWith("image")){
                         this.imageUrl = mediaUrl;
@@ -175,7 +178,7 @@ class CTInAppNotification implements Parcelable {
                     }
                 }
             }
-            JSONArray buttonArray = jsonObject.has("buttons") ? jsonObject.getJSONArray("buttons") : null;
+            JSONArray buttonArray = jsonObject.has(Constants.KEY_BUTTONS) ? jsonObject.getJSONArray(Constants.KEY_BUTTONS) : null;
             if(buttonArray  != null) {
                 for (int i = 0; i < buttonArray.length(); i++) {
                     CTInAppNotificationButton inAppNotificationButton = new CTInAppNotificationButton().initWithJSON(buttonArray.getJSONObject(i));
@@ -280,7 +283,7 @@ class CTInAppNotification implements Parcelable {
                 return false;
 
             // Check that html is set
-            if (!(isKeyValid(d, Constants.INAPP_DATA_TAG, String.class)))
+            if (!(isKeyValid(d, Constants.INAPP_HTML_TAG, String.class)))
                 return false;
 
             // Check that pos contains the right value
@@ -465,6 +468,10 @@ class CTInAppNotification implements Parcelable {
         return buttons;
     }
 
+    String getCustomInAppUrl() {
+        return customInAppUrl;
+    }
+
     Bitmap getImage() {
         return ImageCache.getBitmap(getImageCacheKey());
     }
@@ -568,6 +575,7 @@ class CTInAppNotification implements Parcelable {
             hideCloseButton = in.readByte() != 0x00;
             buttonCount = in.readInt();
             isTablet = in.readByte() != 0x00;
+            customInAppUrl = in.readString();
 
         }catch (JSONException e){
             // no-op
@@ -629,7 +637,7 @@ class CTInAppNotification implements Parcelable {
         dest.writeByte((byte) (hideCloseButton ? 0x01 : 0x00));
         dest.writeInt(buttonCount);
         dest.writeByte((byte) (isTablet ? 0x01 : 0x00));
-
+        dest.writeString(customInAppUrl);
     }
 
     @SuppressWarnings("unused")
