@@ -1,8 +1,10 @@
 package com.clevertap.android.sdk;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.res.Configuration;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
@@ -38,6 +40,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
         super.onCreate(savedInstanceState);
     }
 
+    @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
     private View displayHTMLView(LayoutInflater inflater, ViewGroup container){
         View inAppView;
         try {
@@ -52,6 +55,18 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
             webView = new CTInAppWebView(getActivity().getBaseContext(), inAppNotification.getWidth(), inAppNotification.getHeight(), inAppNotification.getWidthPercentage(), inAppNotification.getHeightPercentage());
             InAppWebViewClient webViewClient = new InAppWebViewClient();
             webView.setWebViewClient(webViewClient);
+
+            //Allowing enabling of Javascript from Android 4.2 onwards
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                if (inAppNotification.isJsEnabled()) {
+                    webView.getSettings().setJavaScriptEnabled(true);
+                    webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(false);
+                    webView.getSettings().setAllowContentAccess(false);
+                    webView.getSettings().setAllowFileAccess(false);
+                    webView.getSettings().setAllowFileAccessFromFileURLs(false);
+                    webView.addJavascriptInterface(new CTWebInterface(getActivity(),config),"CleverTap");
+                }
+            }
 
             if (isDarkenEnabled())
                 rl.setBackgroundDrawable(new ColorDrawable(0xBB000000));
@@ -155,21 +170,26 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
     private void reDrawInApp() {
         webView.updateDimension();
 
-        int mHeight = webView.dim.y;
-        int mWidth = webView.dim.x;
+        if(!inAppNotification.isInAppUrl()) {
+            int mHeight = webView.dim.y;
+            int mWidth = webView.dim.x;
 
-        float d = getResources().getDisplayMetrics().density;
-        mHeight /= d;
-        mWidth /= d;
+            float d = getResources().getDisplayMetrics().density;
+            mHeight /= d;
+            mWidth /= d;
 
-        String html = inAppNotification.getHtml();
+            String html = inAppNotification.getHtml();
 
-        String style = "<style>body{width:" + mWidth + "px; height: " + mHeight + "px}</style>";
-        html = html.replaceFirst("<head>", "<head>" + style);
-        Logger.v("Density appears to be " + d);
+            String style = "<style>body{width:" + mWidth + "px; height: " + mHeight + "px}</style>";
+            html = html.replaceFirst("<head>", "<head>" + style);
+            Logger.v("Density appears to be " + d);
 
-        webView.setInitialScale((int) (d * 100));
-        webView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
+            webView.setInitialScale((int) (d * 100));
+            webView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
+        }else{
+            String url = inAppNotification.getCustomInAppUrl();
+            webView.loadUrl(url);
+        }
     }
 
     @Override

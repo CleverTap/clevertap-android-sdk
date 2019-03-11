@@ -12,6 +12,8 @@ import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.telephony.TelephonyManager;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
@@ -19,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -218,5 +221,19 @@ final class Utils {
         } else {
             return -1;
         }
+    }
+
+    static ArrayList<String> convertJSONArrayToArrayList(JSONArray array){
+        ArrayList<String> listdata = new ArrayList<String>();
+        if (array != null) {
+            for (int i = 0; i< array.length(); i++){
+                try {
+                    listdata.add(array.getString(i));
+                } catch (JSONException e) {
+                    Logger.v("Could not convert JSONArray to ArrayList - " + e.getMessage());
+                }
+            }
+        }
+        return listdata;
     }
 }

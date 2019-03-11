@@ -59,6 +59,8 @@ class CTInAppNotification implements Parcelable {
     private boolean isTablet;
     private boolean videoSupported;
     private String customInAppUrl;
+    private boolean jsEnabled;
+    private boolean isInAppUrl;
 
     CTInAppNotification(){}
 
@@ -98,6 +100,8 @@ class CTInAppNotification implements Parcelable {
             this.excludeFromCaps = jsonObject.has(Constants.KEY_EFC) && jsonObject.getInt(Constants.KEY_EFC) == 1;
             this.totalLifetimeCount = jsonObject.has(Constants.KEY_TLC) ? jsonObject.getInt(Constants.KEY_TLC) : -1;
             this.totalDailyCount = jsonObject.has(Constants.KEY_TDC) ? jsonObject.getInt(Constants.KEY_TDC) : -1;
+            this.jsEnabled = jsonObject.getBoolean(Constants.INAPP_JS_ENABLED);
+            this.isInAppUrl = jsonObject.getBoolean(Constants.INAPP_IS_URL);
 
             JSONObject data = jsonObject.has(Constants.INAPP_DATA_TAG) ? jsonObject.getJSONObject(Constants.INAPP_DATA_TAG) : null;
             if (data != null) {
@@ -472,6 +476,14 @@ class CTInAppNotification implements Parcelable {
         return customInAppUrl;
     }
 
+    boolean isJsEnabled() {
+        return jsEnabled;
+    }
+
+    public boolean isInAppUrl() {
+        return isInAppUrl;
+    }
+
     Bitmap getImage() {
         return ImageCache.getBitmap(getImageCacheKey());
     }
@@ -576,6 +588,8 @@ class CTInAppNotification implements Parcelable {
             buttonCount = in.readInt();
             isTablet = in.readByte() != 0x00;
             customInAppUrl = in.readString();
+            jsEnabled = in.readByte() != 0x00;
+            isInAppUrl = in.readByte() != 0x00;
 
         }catch (JSONException e){
             // no-op
@@ -638,6 +652,8 @@ class CTInAppNotification implements Parcelable {
         dest.writeInt(buttonCount);
         dest.writeByte((byte) (isTablet ? 0x01 : 0x00));
         dest.writeString(customInAppUrl);
+        dest.writeByte((byte) (jsEnabled ? 0x01 : 0x00));
+        dest.writeByte((byte) (isInAppUrl ? 0x01 : 0x00));
     }
 
     @SuppressWarnings("unused")

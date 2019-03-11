@@ -57,7 +57,9 @@ public class Constants {
     static final String INAPP_MAX_PER_SESSION = "imc";
     static final String INAPP_WINDOW = "w";
     static final String INAPP_KEY = "inApp";
+    static final String INAPP_IS_URL = "iu";
     static final int INAPP_CLOSE_IV_WIDTH = 40;
+    static final String INAPP_JS_ENABLED = "js";
     static final String DEBUG_KEY = "d";
     static final String NOTIFICATION_ID_TAG = "wzrk_id";
     static final String DEEP_LINK_KEY = "wzrk_dl";

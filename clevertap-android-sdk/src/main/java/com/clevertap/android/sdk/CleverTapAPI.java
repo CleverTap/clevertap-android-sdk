@@ -83,6 +83,7 @@ import static android.content.Context.NOTIFICATION_SERVICE;
 public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationListener,
         InAppNotificationActivity.InAppActivityListener,
         CTInAppBaseFragment.InAppListener,
+        CTWebInterface.CTWebListener,
         CTInboxActivity.InboxActivityListener {
 
     @SuppressWarnings({"unused"})
@@ -540,7 +541,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param cleverTapID Custom CleverTapID passed by the app
      * @return The {@link CleverTapInstanceConfig} object
      */
-    private static CleverTapInstanceConfig getDefaultConfig(Context context, String cleverTapID){
+    public static CleverTapInstanceConfig getDefaultConfig(Context context, String cleverTapID){
         ManifestInfo manifest = ManifestInfo.getInstance(context);
         String accountId = manifest.getAccountId();
         String accountToken = manifest.getAcountToken();
@@ -554,7 +555,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             Logger.i("Account Region not specified in the AndroidManifest - using default region");
         }
 
-        if(useCustomIdValue != null){
+        if(useCustomIdValue != null && useCustomIdValue.equals("1")){
             if(cleverTapID == null){
                 Logger.i("CleverTap SDK has been directed to use custom CleverTap ID but custom ID passed is NULL. Please provide a valid custom ID.");
                 return null;
@@ -2252,11 +2253,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             getConfigLogger().verbose(getAccountId(), "Problem processing queue response, response is null");
             return;
         }
-
+        String responseStub = "{ \"arp\": { \"j_n\": 0, \"i_n\": 132, \"d_ts\": 1552285989, \"dh\": -1506910951, \"v\": 1, \"j_s\": \"{ }\", \"id\": \"ZWW-WWW-WWRZ\", \"wdt\": 2, \"hgt\": 4 }, \"inapp_stale\": [], \"imc\": 200, \"imp\": 500, \"inapp_notifs\": [ { \"type\": \"custom-html\", \"adonis\": false, \"format\": \"custom-html\", \"layout_type\": \"interstitial\", \"iu\" : true, \"js\" : true, \"d\": { \"html\": \"<!DOCTYPE html>\\n<html>\\n<head>\\n\\t<title></title>\\n</head>\\n<body>\\n<style type=\\\"text/css\\\">body {\\nbackground-color: #d24dff\\n}\\n</style>\\n<p>HELLO TESTING CUSTOM INAPP</p>\\n</body>\\n</html>\\n\", \"url\":\"https://shahharsh093.github.io/inappjs.html\" }, \"adonisMeta\": {}, \"display\": {}, \"w\": { \"dk\": true, \"sc\": true, \"pos\": \"c\", \"xp\": 90, \"yp\": 85, \"mdc\": 1000 }, \"og\": \"<html>\\n<head>\\n\\t<title></title>\\n</head>\\n<body>\\n<style type=\\\"text/css\\\">body {\\nbackground-color: #d24dff\\n}\\n</style>\\n<p>HELLO TESTING CUSTOM INAPP</p>\\n</body>\\n</html>\\n\", \"previewHTML\": \"<!DOCTYPE html>\\n<html>\\n<head>\\n\\t<title></title>\\n</head>\\n<body>\\n<style type=\\\"text/css\\\">body {\\nbackground-color: #d24dff\\n}\\n</style>\\n<p>HELLO TESTING CUSTOM INAPP</p>\\n</body>\\n</html>\\n\", \"is_native\": true, \"wzrk_id\": \"1551876865_20190311\", \"wzrk_pivot\": \"wzrk_default\", \"ti\": 1551876865, \"efc\": 1 } ], \"pushamp_notifs\": { \"list\": [], \"ack\": true, \"pf\": 240 } }";
         try {
-            getConfigLogger().verbose(getAccountId(), "Trying to process response: " + responseStr);
+            getConfigLogger().verbose(getAccountId(), "Trying to process response: " + responseStub);
 
-            JSONObject response = new JSONObject(responseStr);
+            //JSONObject response = new JSONObject(responseStr);
+            JSONObject response = new JSONObject(responseStub);
             try {
                 if(!this.config.isAnalyticsOnly())
                     processInAppResponse(response, context);
@@ -2500,7 +2502,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             runOnNotificationQueue(new Runnable() {
                 @Override
                 public void run() {
-                    _showNotificationIfAvailable(context);
+                     _showNotificationIfAvailable(context);
                 }
             });
         } catch (Throwable t) {
@@ -6700,4 +6702,49 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return currentTimeCalendar.compareTo(startTimeCalendar) >= 0 && currentTimeCalendar.compareTo(stopTimeCalendar) < 0;
     }
 
+    //CTWebInterface Overriden Methods
+    @Override
+    public void pushEventFromJS(String eventName) {
+        pushEvent(eventName);
+    }
+
+    @Override
+    public void pushEventWithPropertiesFromJS(String eventName, Map<String, Object> eventActions) {
+        pushEvent(eventName,eventActions);
+    }
+
+    @Override
+    public void pushProfileFromJS(Map<String,Object> profile) {
+        pushProfile(profile);
+    }
+
+    @Override
+    public void addMultiValueForKeyFromJS(String key, String value) {
+        addMultiValueForKey(key,value);
+    }
+
+    @Override
+    public void addMultiValuesForKeyFromJS(String key, ArrayList<String> values) {
+        addMultiValuesForKey(key,values);
+    }
+
+    @Override
+    public void removeMultiValueForKeyFromJS(String key, String value) {
+        removeMultiValueForKey(key,value);
+    }
+
+    @Override
+    public void removeMultiValuesForKeyFromJS(String key, ArrayList<String> values) {
+        removeMultiValuesForKey(key,values);
+    }
+
+    @Override
+    public void removeValueForKeyFromJS(String key) {
+        removeValueForKey(key);
+    }
+
+    @Override
+    public void setMultiValuesForKeyFromJS(String key, ArrayList<String> values) {
+        setMultiValuesForKey(key,values);
+    }
 }

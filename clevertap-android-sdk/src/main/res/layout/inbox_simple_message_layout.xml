@@ -55,6 +55,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft="20dp"
+                android:layout_marginStart="20dp"
                 android:maxLines="1"
                 android:layout_marginTop="20dp"
                 android:layout_marginEnd="20dp"
@@ -69,8 +70,10 @@
                 android:text="Message"
                 android:maxLines="3"
                 android:layout_marginLeft="20dp"
+                android:layout_marginStart="20dp"
                 android:layout_marginTop="5dp"
                 android:layout_marginRight="20dp"
+                android:layout_marginEnd="20dp"
                 android:textColor="@android:color/darker_gray"
                 android:layout_below="@+id/messageTitle"/>
             <LinearLayout
