@@ -2253,12 +2253,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             getConfigLogger().verbose(getAccountId(), "Problem processing queue response, response is null");
             return;
         }
-        String responseStub = "{ \"arp\": { \"j_n\": 0, \"i_n\": 132, \"d_ts\": 1552285989, \"dh\": -1506910951, \"v\": 1, \"j_s\": \"{ }\", \"id\": \"ZWW-WWW-WWRZ\", \"wdt\": 2, \"hgt\": 4 }, \"inapp_stale\": [], \"imc\": 200, \"imp\": 500, \"inapp_notifs\": [ { \"type\": \"custom-html\", \"adonis\": false, \"format\": \"custom-html\", \"layout_type\": \"interstitial\", \"iu\" : true, \"js\" : true, \"d\": { \"html\": \"<!DOCTYPE html>\\n<html>\\n<head>\\n\\t<title></title>\\n</head>\\n<body>\\n<style type=\\\"text/css\\\">body {\\nbackground-color: #d24dff\\n}\\n</style>\\n<p>HELLO TESTING CUSTOM INAPP</p>\\n</body>\\n</html>\\n\", \"url\":\"https://shahharsh093.github.io/inappjs.html\" }, \"adonisMeta\": {}, \"display\": {}, \"w\": { \"dk\": true, \"sc\": true, \"pos\": \"c\", \"xp\": 90, \"yp\": 85, \"mdc\": 1000 }, \"og\": \"<html>\\n<head>\\n\\t<title></title>\\n</head>\\n<body>\\n<style type=\\\"text/css\\\">body {\\nbackground-color: #d24dff\\n}\\n</style>\\n<p>HELLO TESTING CUSTOM INAPP</p>\\n</body>\\n</html>\\n\", \"previewHTML\": \"<!DOCTYPE html>\\n<html>\\n<head>\\n\\t<title></title>\\n</head>\\n<body>\\n<style type=\\\"text/css\\\">body {\\nbackground-color: #d24dff\\n}\\n</style>\\n<p>HELLO TESTING CUSTOM INAPP</p>\\n</body>\\n</html>\\n\", \"is_native\": true, \"wzrk_id\": \"1551876865_20190311\", \"wzrk_pivot\": \"wzrk_default\", \"ti\": 1551876865, \"efc\": 1 } ], \"pushamp_notifs\": { \"list\": [], \"ack\": true, \"pf\": 240 } }";
         try {
-            getConfigLogger().verbose(getAccountId(), "Trying to process response: " + responseStub);
+            getConfigLogger().verbose(getAccountId(), "Trying to process response: " + responseStr);
 
-            //JSONObject response = new JSONObject(responseStr);
-            JSONObject response = new JSONObject(responseStub);
+            JSONObject response = new JSONObject(responseStr);
             try {
                 if(!this.config.isAnalyticsOnly())
                     processInAppResponse(response, context);
