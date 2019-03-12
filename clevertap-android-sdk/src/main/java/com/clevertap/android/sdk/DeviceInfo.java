@@ -79,7 +79,7 @@ class DeviceInfo {
     protected void initDeviceID() {
         getDeviceCachedInfo();  // put this here to avoid running on main thread
 
-        if(config.getCustomId() == null) {
+        if(config.getCustomCleverTapId() == null) {
             // generate a provisional while we do the rest async
             generateProvisionalGUID();
             // grab and cache the googleAdID in any event if available
@@ -93,8 +93,8 @@ class DeviceInfo {
                 generateDeviceID();
             }
         }else{
-            getConfigLogger().info(config.getAccountId(),"Updating CleverTapID to given custom ID : "+config.getCustomId());
-            forceUpdateDeviceId(config.getCustomId());
+            getConfigLogger().info(config.getAccountId(),"Updating CleverTapID to given custom ID : "+config.getCustomCleverTapId());
+            forceUpdateDeviceId(config.getCustomCleverTapId());
         }
 
     }

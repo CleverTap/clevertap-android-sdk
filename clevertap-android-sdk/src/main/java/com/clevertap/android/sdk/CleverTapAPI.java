@@ -4747,7 +4747,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                             if(cleverTapID == null) {
                                 g = _deviceInfo.forceNewDeviceID();
                             }else{
-                                getConfigLogger().info(getAccountId(),"Updating CleverTapID to given custom ID : "+config.getCustomId());
+                                getConfigLogger().info(getAccountId(),"Updating CleverTapID to given custom ID : "+config.getCustomCleverTapId());
                                 g = _deviceInfo.forceUpdateDeviceId(cleverTapID);
                             }
                             notifyUserProfileInitialized(g);
@@ -5262,44 +5262,20 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     try {
                         getConfigLogger().debug(getAccountId(), "Handling notification: " + extras.toString());
                         dbAdapter = loadDBAdapter(context);
-                        if(extras.getString("wzrk_pid") != null) {
-                            if (dbAdapter.doesPushNotificationIdExist(extras.getString("wzrk_pid"))){
-                                getConfigLogger().debug(getAccountId(),"Push Notification Already rendered, not showing again");
+                        if(extras.getString(Constants.WZRK_PUSH_ID) != null) {
+                            if (dbAdapter.doesPushNotificationIdExist(extras.getString(Constants.WZRK_PUSH_ID))){
+                                getConfigLogger().debug(getAccountId(),"Push Notification already rendered, not showing again");
                                 return;
                             }
                         }
-                        // Check if this is a test notification
-                        if (extras.containsKey(Constants.DEBUG_KEY)
-                                && "y".equals(extras.getString(Constants.DEBUG_KEY))) {
-                            int r = (int) (Math.random() * 10);
-                            if (r != 8) {
-                                // Discard acknowledging this notif
-                                return;
-                            }
-                            JSONObject event = new JSONObject();
-                            try {
-                                JSONObject actions = new JSONObject();
-                                for (String x : extras.keySet()) {
-                                    Object value = extras.get(x);
-                                    actions.put(x, value);
-                                }
-                                event.put("evtName", "wzrk_d");
-                                event.put("evtData", actions);
-                                queueEvent(context, event, Constants.RAISED_EVENT);
-                            } catch (JSONException ignored) {
-                                // Won't happen
-                            }
-                            // Drop further processing
-                            return;
-                        }
-                        String notifMessage = extras.getString("nm");
+                        String notifMessage = extras.getString(Constants.NOTIF_MSG);
                         notifMessage = (notifMessage != null) ? notifMessage : "";
                         if (notifMessage.isEmpty()) {
                             getConfigLogger().verbose(getAccountId(),"Push notification message is empty, not rendering");
                             loadDBAdapter(context).storeUninstallTimestamp();
                             return;
                         }
-                        String notifTitle = extras.getString("nt", "");
+                        String notifTitle = extras.getString(Constants.NOTIF_TITLE, "");
                         notifTitle = notifTitle.isEmpty() ? context.getApplicationInfo().name : notifTitle;
                         triggerNotification(context, extras, notifMessage, notifTitle, notificationId);
                     } catch (Throwable t) {
@@ -5316,20 +5292,20 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     private void triggerNotification(Context context, Bundle extras, String notifMessage, String notifTitle, int notificationId){
-        String icoPath = extras.getString("ico");
+        String icoPath = extras.getString(Constants.NOTIF_ICON);
         Intent launchIntent = new Intent(context, CTPushNotificationReceiver.class);
 
         PendingIntent pIntent;
 
         // Take all the properties from the notif and add it to the intent
         launchIntent.putExtras(extras);
-        launchIntent.removeExtra("wzrk_acts");
+        launchIntent.removeExtra(Constants.WZRK_ACTIONS);
         launchIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         pIntent = PendingIntent.getBroadcast(context, (int) System.currentTimeMillis(),
                 launchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         NotificationCompat.Style style;
-        String bigPictureUrl = extras.getString("wzrk_bp");
+        String bigPictureUrl = extras.getString(Constants.WZRK_BIG_PICTURE);
         if (bigPictureUrl != null && bigPictureUrl.startsWith("http")) {
             try {
                 Bitmap bpMap = Utils.getNotificationBitmap(bigPictureUrl, false, context);
@@ -5338,8 +5314,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 if (bpMap == null)
                     throw new Exception("Failed to fetch big picture!");
 
-                if(extras.containsKey("wzrk_nms")){
-                    String summaryText = extras.getString("wzrk_nms");
+                if(extras.containsKey(Constants.WZRK_MSG_SUMMARY)){
+                    String summaryText = extras.getString(Constants.WZRK_MSG_SUMMARY);
                     style = new NotificationCompat.BigPictureStyle()
                             .setSummaryText(summaryText)
                             .bigPicture(bpMap);
@@ -5369,12 +5345,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
 
         int priorityInt = NotificationCompat.PRIORITY_DEFAULT;
-        String priority = extras.getString("pr");
+        String priority = extras.getString(Constants.NOTIF_PRIORITY);
         if (priority != null) {
-            if (priority.equals("high")) {
+            if (priority.equals(Constants.PRIORITY_HIGH)) {
                 priorityInt = NotificationCompat.PRIORITY_HIGH;
             }
-            if (priority.equals("max")) {
+            if (priority.equals(Constants.PRIORITY_MAX)) {
                 priorityInt = NotificationCompat.PRIORITY_MAX;
             }
         }
@@ -5382,7 +5358,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         // if we have not user set notificationID then try collapse key
         if (notificationId == Constants.EMPTY_NOTIFICATION_ID) {
             try {
-                Object collapse_key = extras.get("wzrk_ck");
+                Object collapse_key = extras.get(Constants.WZRK_COLLAPSE);
                 if(collapse_key != null) {
                     if (collapse_key instanceof Number) {
                         notificationId = ((Number) collapse_key).intValue();
@@ -5412,14 +5388,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         NotificationCompat.Builder nb;
 
         if (context.getApplicationInfo().targetSdkVersion >= Build.VERSION_CODES.O){
-            String channelId = extras.getString("wzrk_cid", "");
+            String channelId = extras.getString(Constants.WZRK_CHANNEL_ID, "");
             if (channelId.isEmpty()) {
                 getConfigLogger().debug(getAccountId(), "ChannelId is empty for notification: " + extras.toString());
             }
             nb = new NotificationCompat.Builder(context,channelId);
 
             // choices here are Notification.BADGE_ICON_NONE = 0, Notification.BADGE_ICON_SMALL = 1, Notification.BADGE_ICON_LARGE = 2.  Default is  Notification.BADGE_ICON_LARGE
-            String badgeIconParam = extras.getString("wzrk_bi", null);
+            String badgeIconParam = extras.getString(Constants.WZRK_BADGE_ICON, null);
             if (badgeIconParam != null) {
                 try {
                     int badgeIconType = Integer.parseInt(badgeIconParam);
@@ -5431,7 +5407,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 }
             }
 
-            String badgeCountParam = extras.getString("wzrk_bc", null);
+            String badgeCountParam = extras.getString(Constants.WZRK_BADGE_COUNT, null);
             if (badgeCountParam != null) {
                 try {
                     int badgeCount = Integer.parseInt(badgeCountParam);
@@ -5442,15 +5418,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     // no-op
                 }
             }
-            if(extras.containsKey("wzrk_st")){
-                nb.setSubText(extras.getString("wzrk_st"));
+            if(extras.containsKey(Constants.WZRK_SUBTITLE)){
+                nb.setSubText(extras.getString(Constants.WZRK_SUBTITLE));
             }
         } else {
             nb = new NotificationCompat.Builder(context);
         }
 
-        if(extras.containsKey("wzrk_clr")){
-            int color = Color.parseColor(extras.getString("wzrk_clr"));
+        if(extras.containsKey(Constants.WZRK_COLOR)){
+            int color = Color.parseColor(extras.getString(Constants.WZRK_COLOR));
             nb.setColor(color);
             nb.setColorized(true);
         }
@@ -5466,10 +5442,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         nb.setLargeIcon(Utils.getNotificationBitmap(icoPath, true, context));
 
         try {
-            if (extras.containsKey("wzrk_sound")) {
+            if (extras.containsKey(Constants.WZRK_SOUND)) {
                 Uri soundUri = null;
 
-                Object o = extras.get("wzrk_sound");
+                Object o = extras.get(Constants.WZRK_SOUND);
 
                 if ((o instanceof Boolean && (Boolean) o)) {
                     soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
@@ -5496,7 +5472,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         // add actions if any
         JSONArray actions = null;
-        String actionsString = extras.getString("wzrk_acts");
+        String actionsString = extras.getString(Constants.WZRK_ACTIONS);
         if (actionsString != null) {
             try {
                 actions = new JSONArray(actionsString);
@@ -5514,7 +5490,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     JSONObject action = actions.getJSONObject(i);
                     String label = action.optString("l");
                     String dl = action.optString("dl");
-                    String ico = action.optString("ico");
+                    String ico = action.optString(Constants.NOTIF_ICON);
                     String id = action.optString("id");
                     boolean autoCancel = action.optBoolean("ac", true);
                     if (label.isEmpty() || id.isEmpty()) {
@@ -5550,7 +5526,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
                     if (actionLaunchIntent != null) {
                         actionLaunchIntent.putExtras(extras);
-                        actionLaunchIntent.removeExtra("wzrk_acts");
+                        actionLaunchIntent.removeExtra(Constants.WZRK_ACTIONS);
                         actionLaunchIntent.putExtra("actionId", id);
                         actionLaunchIntent.putExtra("autoCancel", autoCancel);
                         actionLaunchIntent.putExtra("wzrk_c2a", id);
@@ -5585,12 +5561,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         if (notificationManager != null) {
             notificationManager.notify(notificationId, n);
-            String ttl = extras.getString("wzrk_ttl",(System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL)/1000+"");
+            String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE,(System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL)/1000+"");
             long wzrk_ttl = Long.parseLong(ttl);
-            String wzrk_pid = extras.getString("wzrk_pid");
+            String wzrk_pid = extras.getString(Constants.WZRK_PUSH_ID);
             DBAdapter dbAdapter = loadDBAdapter(context);
             getConfigLogger().verbose("Storing Push Notification..."+wzrk_pid + " - with ttl - "+ttl);
             dbAdapter.storePushNotificationId(wzrk_pid,wzrk_ttl);
+            if(config != null && config.getRaiseNotificationViewed()){
+                pushNotificationViewedEvent(extras);
+            }
         }
 
     }

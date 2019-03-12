@@ -16,7 +16,8 @@ public class Constants {
     static final String LABEL_SSL_PINNING = "CLEVERTAP_SSL_PINNING";
     static final String LABEL_BACKGROUND_SYNC = "CLEVERTAP_BACKGROUND_SYNC";
     static final String LABEL_CUSTOM_ID = "CLEVERTAP_USE_CUSTOM_ID";
-    static final String LABEL_USE_GOOGLE_AD_ID = "LABEL_USE_GOOGLE_AD_ID";
+    static final String LABEL_USE_GOOGLE_AD_ID = "CLEVERTAP_USE_GOOGLE_AD_ID";
+    static final String LABEL_RAISE_NOTIFICATION_VIEWED = "CLEVERTAP_RAISE_NOTIFICATION_VIEWED";
     static final String CLEVERTAP_OPTOUT = "ct_optout";
     static final String CLEVERTAP_STORAGE_TAG = "WizRocket";
     static final String CLEVERTAP_LOG_TAG = "CleverTap";
@@ -145,6 +146,25 @@ public class Constants {
     static final String KEY_URL = "url";
     static final String KEY_BUTTONS = "buttons";
     static final String KEY_CUSTOM_HTML = "custom-html";
+    static final String KEY_RAISE_NOTIFICATION_VIEWED = "getRaiseNotificationViewed";
+    static final String WZRK_PUSH_ID = "wzrk_pid";
+    static final String NOTIF_MSG = "nm";
+    static final String NOTIF_TITLE = "nt";
+    static final String NOTIF_ICON = "ico";
+    static final String WZRK_ACTIONS = "wzrk_acts";
+    static final String WZRK_BIG_PICTURE = "wzrk_bp";
+    static final String WZRK_MSG_SUMMARY = "wzrk_nms";
+    static final String NOTIF_PRIORITY = "pr";
+    static final String PRIORITY_HIGH = "high";
+    static final String PRIORITY_MAX = "max";
+    static final String WZRK_COLLAPSE = "wzrk_ck";
+    static final String WZRK_CHANNEL_ID = "wzrk_cid";
+    static final String WZRK_BADGE_ICON = "wzrk_bi";
+    static final String WZRK_BADGE_COUNT = "wzrk_bc";
+    static final String WZRK_SUBTITLE = "wzrk_st";
+    static final String WZRK_COLOR = "wzrk_clr";
+    static final String WZRK_SOUND = "wzrk_sound";
+    static final String WZRK_TIME_TO_LIVE = "wzrk_ttl";
     /**
      * Profile command constants.
      */
@@ -154,6 +174,7 @@ public class Constants {
 
     static final String COMMAND_DELETE = "$delete";
     static final String GUID_PREFIX_GOOGLE_AD_ID = "__g";
+    static final String CUSTOM_CLEVERTAP_ID_PREFIX = "$";
 
     // valid profile identifier keys
     static final Set<String> PROFILE_IDENTIFIER_KEYS = new HashSet<>(Arrays.asList(

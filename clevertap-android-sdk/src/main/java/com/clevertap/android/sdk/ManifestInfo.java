@@ -18,6 +18,7 @@ class ManifestInfo {
     private static boolean sslPinning;
     private static boolean backgroundSync;
     private static String useCustomID;
+    private static boolean raiseNotificationViewed;
 
     private static String _getManifestStringValueForKey(Bundle manifest, String name) {
         try {
@@ -56,8 +57,10 @@ class ManifestInfo {
         excludedActivities = _getManifestStringValueForKey(metaData,Constants.LABEL_INAPP_EXCLUDE);
         sslPinning = "1".equals(_getManifestStringValueForKey(metaData,Constants.LABEL_SSL_PINNING));
         backgroundSync = "1".equals(_getManifestStringValueForKey(metaData,Constants.LABEL_BACKGROUND_SYNC));
-        if(useCustomID == null)
-            useCustomID = _getManifestStringValueForKey(metaData,Constants.LABEL_CUSTOM_ID);
+        if(useCustomID == null) {
+            useCustomID = _getManifestStringValueForKey(metaData, Constants.LABEL_CUSTOM_ID);
+        }
+        raiseNotificationViewed = "1".equals(_getManifestStringValueForKey(metaData,Constants.LABEL_RAISE_NOTIFICATION_VIEWED));
     }
 
     synchronized static ManifestInfo getInstance(Context context){
@@ -105,6 +108,10 @@ class ManifestInfo {
 
     String useCustomId(){
         return useCustomID;
+    }
+
+    boolean raiseNotificationViewed(){
+        return raiseNotificationViewed;
     }
 
     static void changeCredentials(String id, String token, String region){
