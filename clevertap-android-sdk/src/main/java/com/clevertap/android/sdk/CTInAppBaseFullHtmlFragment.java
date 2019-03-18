@@ -56,16 +56,15 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
             InAppWebViewClient webViewClient = new InAppWebViewClient();
             webView.setWebViewClient(webViewClient);
 
-            //Allowing enabling of Javascript from Android 4.2 onwards
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-                if (inAppNotification.isJsEnabled()) {
-                    webView.getSettings().setJavaScriptEnabled(true);
-                    webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(false);
-                    webView.getSettings().setAllowContentAccess(false);
-                    webView.getSettings().setAllowFileAccess(false);
+            if (inAppNotification.isJsEnabled()) {
+                webView.getSettings().setJavaScriptEnabled(true);
+                webView.getSettings().setJavaScriptCanOpenWindowsAutomatically(false);
+                webView.getSettings().setAllowContentAccess(false);
+                webView.getSettings().setAllowFileAccess(false);
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                     webView.getSettings().setAllowFileAccessFromFileURLs(false);
-                    webView.addJavascriptInterface(new CTWebInterface(getActivity(),config),"CleverTap");
                 }
+                webView.addJavascriptInterface(new CTWebInterface(CleverTapAPI.instanceWithConfig(getActivity(),config)),"CleverTap");
             }
 
             if (isDarkenEnabled())
@@ -170,7 +169,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
     private void reDrawInApp() {
         webView.updateDimension();
 
-        if(!inAppNotification.isInAppUrl()) {
+        if(inAppNotification.getCustomInAppUrl().isEmpty()) {
             int mHeight = webView.dim.y;
             int mWidth = webView.dim.x;
 

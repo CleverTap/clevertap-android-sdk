@@ -25,6 +25,7 @@ public class CleverTapInstanceConfig implements Parcelable {
     private boolean backgroundSync;
     private String customId;
     private boolean raiseNotificationViewed;
+    private boolean enableCustomCleverTapId;
 
     private CleverTapInstanceConfig(Context context, String accountId, String accountToken, String accountRegion, boolean isDefault, String customId){
         this.accountId = accountId;
@@ -38,6 +39,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.createdPostAppLaunch = false;
         if(customId != null) {
             this.customId = Constants.CUSTOM_CLEVERTAP_ID_PREFIX+customId;
+            this.enableCustomCleverTapId = true;
         }
 
         ManifestInfo manifest = ManifestInfo.getInstance(context);
@@ -66,6 +68,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.backgroundSync = config.backgroundSync;
         this.customId = config.customId;
         this.raiseNotificationViewed = config.raiseNotificationViewed;
+        this.enableCustomCleverTapId = config.enableCustomCleverTapId;
     }
 
     private CleverTapInstanceConfig(String jsonString) throws Throwable {
@@ -103,6 +106,8 @@ public class CleverTapInstanceConfig implements Parcelable {
                 this.customId = configJsonObject.getString(Constants.KEY_CUSTOM_ID);
             if(configJsonObject.has(Constants.KEY_RAISE_NOTIFICATION_VIEWED))
                 this.raiseNotificationViewed = configJsonObject.getBoolean(Constants.KEY_RAISE_NOTIFICATION_VIEWED);
+            if(configJsonObject.has(Constants.KEY_ENABLE_CUSTOM_CT_ID))
+                this.enableCustomCleverTapId = configJsonObject.getBoolean(Constants.KEY_ENABLE_CUSTOM_CT_ID);
         } catch (Throwable t){
             Logger.v("Error constructing CleverTapInstanceConfig from JSON: " + jsonString +": ", t.getCause());
             throw(t);
@@ -125,6 +130,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         backgroundSync = in.readByte() != 0x00;
         customId = in.readString();
         raiseNotificationViewed = in.readByte() != 0x00;
+        enableCustomCleverTapId = in.readByte() != 0x00;
     }
 
     @SuppressWarnings("unused")
@@ -277,6 +283,10 @@ public class CleverTapInstanceConfig implements Parcelable {
         return raiseNotificationViewed;
     }
 
+    public boolean getEnableCustomCleverTapId() {
+        return enableCustomCleverTapId;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -299,6 +309,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         dest.writeByte((byte) (backgroundSync ? 0x01 : 0x00));
         dest.writeString(customId);
         dest.writeByte((byte) (raiseNotificationViewed ? 0x01 : 0x00));
+        dest.writeByte((byte) (enableCustomCleverTapId ? 0x01 : 0x00));
     }
 
     @SuppressWarnings("unused")
@@ -332,6 +343,7 @@ public class CleverTapInstanceConfig implements Parcelable {
             configJsonObject.put(Constants.KEY_BACKGROUND_SYNC, isBackgroundSync());
             configJsonObject.put(Constants.KEY_CUSTOM_ID, getCustomCleverTapId());
             configJsonObject.put(Constants.KEY_RAISE_NOTIFICATION_VIEWED, getRaiseNotificationViewed());
+            configJsonObject.put(Constants.KEY_ENABLE_CUSTOM_CT_ID, getEnableCustomCleverTapId());
             return configJsonObject.toString();
         }catch (Throwable e){
             Logger.v("Unable to convert config to JSON : ",e.getCause());

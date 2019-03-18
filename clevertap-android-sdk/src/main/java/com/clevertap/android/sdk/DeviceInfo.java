@@ -10,6 +10,7 @@ import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
+import android.os.Handler;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.telephony.TelephonyManager;
@@ -33,6 +34,8 @@ class DeviceInfo {
     private boolean adIdRun = false;
     private static final String OS_NAME = "Android";
     private DeviceCachedInfo cachedInfo;
+    private Handler handler;
+    private SyncListener sl ;
 
     static DeviceInfo initWithConfig(Context context, CleverTapInstanceConfig config){
         return new DeviceInfo(context, config);
@@ -41,6 +44,9 @@ class DeviceInfo {
     private DeviceInfo(Context context, CleverTapInstanceConfig config) {
         this.context = context;
         this.config = config;
+        this.handler = new Handler();
+        sl = CleverTapAPI.instanceWithConfig(context, config).getSyncListener();
+
     }
 
     String getGoogleAdID() {
@@ -77,26 +83,38 @@ class DeviceInfo {
     // don't run on main thread
     @SuppressWarnings({"WeakerAccess"})
     protected void initDeviceID() {
-        getDeviceCachedInfo();  // put this here to avoid running on main thread
-
-        if(config.getCustomCleverTapId() == null) {
-            // generate a provisional while we do the rest async
-            generateProvisionalGUID();
-            // grab and cache the googleAdID in any event if available
-            // if we already have a deviceID we won't user ad id as the guid
-            cacheGoogleAdID();
-
-            // if we already have a device ID use it and just notify
-            // otherwise generate one, either from ad id if available or the provisional
-            String deviceID = getDeviceID();
-            if (deviceID == null || deviceID.trim().length() <= 2) {
-                generateDeviceID();
+        Runnable deviceCacheInfoRunnable = new Runnable() {
+            @Override
+            public void run() {
+                getDeviceCachedInfo();  // put this here to avoid running on main thread
             }
-        }else{
-            getConfigLogger().info(config.getAccountId(),"Updating CleverTapID to given custom ID : "+config.getCustomCleverTapId());
-            forceUpdateDeviceId(config.getCustomCleverTapId());
-        }
+        };
 
+        handler.post(deviceCacheInfoRunnable);
+
+        if(ManifestInfo.getInstance(context).useCustomId() && !CleverTapAPI.deviceIdExists){
+            getConfigLogger().info(config.getAccountId(), "Updating CleverTapID to given custom ID : " + config.getCustomCleverTapId());
+            forceUpdateDeviceId(config.getCustomCleverTapId());
+        }else{
+            Runnable deviceIDRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    // generate a provisional while we do the rest async
+                    generateProvisionalGUID();
+                    // grab and cache the googleAdID in any event if available
+                    // if we already have a deviceID we won't user ad id as the guid
+                    cacheGoogleAdID();
+
+                    // if we already have a device ID use it and just notify
+                    // otherwise generate one, either from ad id if available or the provisional
+                    String deviceID = getDeviceID();
+                    if (deviceID == null || deviceID.trim().length() <= 2) {
+                        generateDeviceID();
+                    }
+                }
+            };
+            handler.post(deviceIDRunnable);
+        }
     }
 
     private synchronized void cacheGoogleAdID() {
@@ -147,6 +165,9 @@ class DeviceInfo {
 
         if (generatedDeviceID != null && generatedDeviceID.trim().length() > 2) {
             forceUpdateDeviceId(generatedDeviceID);
+            if(sl != null){
+                sl.profileDidInitialize(generatedDeviceID);
+            }
         } else {
             getConfigLogger().verbose(this.config.getAccountId(),"Unable to generate device ID");
         }
@@ -167,6 +188,16 @@ class DeviceInfo {
             } else {
                 return StorageHelper.getString(this.context, getDeviceIdStorageKey(), null);
             }
+        }
+    }
+
+    static boolean deviceIDExists(Context context, CleverTapInstanceConfig config){
+        String deviceId = StorageHelper.getString(context,Constants.DEVICE_ID_TAG+":"+config.getAccountId(),null);
+        if(deviceId != null) {
+            return true;
+        }else{
+            String oldDeviceId =  StorageHelper.getString(context, Constants.DEVICE_ID_TAG, null);
+            return oldDeviceId != null;
         }
     }
 

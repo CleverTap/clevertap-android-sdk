@@ -80,7 +80,9 @@ public class Constants {
     static final String NETWORK_INFO = "NetworkInfo";
     static final String PRIMARY_DOMAIN = "wzrkt.com";
     static final String KEY_DOMAIN_NAME = "comms_dmn";
+    static final String SPIKY_KEY_DOMAIN_NAME = "comms_dmn_spiky";
     static final String HEADER_DOMAIN_NAME = "X-WZRK-RD";
+    static final String SPIKY_HEADER_DOMAIN_NAME = "X-WZRK-SPIKY-RD";
     static final String HEADER_MUTE = "X-WZRK-MUTE";
     static final String NAMESPACE_IJ = "IJ";
     static final String KEY_LAST_TS = "comms_last_ts";
@@ -100,7 +102,7 @@ public class Constants {
     static final String KEY_COUNTS_PER_INAPP = "counts_per_inapp";
     static final String INAPP_ID_IN_PAYLOAD = "ti";
     static final int LOCATION_PING_INTERVAL_IN_SECONDS = 10;
-    static final String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME};
+    static final String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME,NOTIFICATION_VIEWED_EVENT_NAME};
     static final long DEFAULT_PUSH_TTL = 1000 * 60 * 60 * 24 * 4;
     static final String PF_JOB_ID = "pfjobid";
     static final int PING_FREQUENCY_VALUE = 240;
@@ -147,6 +149,7 @@ public class Constants {
     static final String KEY_BUTTONS = "buttons";
     static final String KEY_CUSTOM_HTML = "custom-html";
     static final String KEY_RAISE_NOTIFICATION_VIEWED = "getRaiseNotificationViewed";
+    static final String KEY_ENABLE_CUSTOM_CT_ID = "getEnableCustomCleverTapId";
     static final String WZRK_PUSH_ID = "wzrk_pid";
     static final String NOTIF_MSG = "nm";
     static final String NOTIF_TITLE = "nt";
@@ -165,6 +168,7 @@ public class Constants {
     static final String WZRK_COLOR = "wzrk_clr";
     static final String WZRK_SOUND = "wzrk_sound";
     static final String WZRK_TIME_TO_LIVE = "wzrk_ttl";
+    static final String WZRK_RNV = "wzrk_rnv";
     /**
      * Profile command constants.
      */
@@ -174,7 +178,7 @@ public class Constants {
 
     static final String COMMAND_DELETE = "$delete";
     static final String GUID_PREFIX_GOOGLE_AD_ID = "__g";
-    static final String CUSTOM_CLEVERTAP_ID_PREFIX = "$";
+    static final String CUSTOM_CLEVERTAP_ID_PREFIX = "__m";
 
     // valid profile identifier keys
     static final Set<String> PROFILE_IDENTIFIER_KEYS = new HashSet<>(Arrays.asList(

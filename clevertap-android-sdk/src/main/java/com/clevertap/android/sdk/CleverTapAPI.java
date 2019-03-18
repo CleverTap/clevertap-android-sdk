@@ -83,7 +83,6 @@ import static android.content.Context.NOTIFICATION_SERVICE;
 public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationListener,
         InAppNotificationActivity.InAppActivityListener,
         CTInAppBaseFragment.InAppListener,
-        CTWebInterface.CTWebListener,
         CTInboxActivity.InboxActivityListener {
 
     @SuppressWarnings({"unused"})
@@ -100,6 +99,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         public int intValue() { return value; }
     }
+
+    private enum EventGroup {
+
+        REGULAR(""),
+        PUSH_NOTIFICATION_VIEWED("-spiky");
+
+        private final String httpResource;
+        EventGroup(String httpResource) { this.httpResource = httpResource; }
+    }
+
 
     /**
      * @deprecated Use {@link #pushChargedEvent(HashMap chargeDetails, ArrayList items)}
@@ -152,6 +161,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     static {
         haveVideoPlayerSupport = checkForExoPlayer();
     }
+    static boolean deviceIdExists = false;
 
     private DBAdapter dbAdapter;
     private Context context;
@@ -179,6 +189,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private ExecutorService es;
     private ExecutorService ns;
     private Runnable commsRunnable = null;
+    private Runnable pushNotificationViewedRunnable = null;
     private Validator validator;
     private final Object optOutFlagLock = new Object();
     private boolean currentUserOptedOut = false;
@@ -224,10 +235,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         this.deviceInfo = DeviceInfo.initWithConfig(context, config);
         this.validator = new Validator();
         this.inAppFCManager = new InAppFCManager(context, config);
+
+        initializeDeviceInfo();
         postAsyncSafely("CleverTapAPI#initializeDeviceInfo", new Runnable() {
             @Override
             public void run() {
-                initializeDeviceInfo();
                 if (config.isDefaultInstance()) {
                     manifestAsyncValidation();
                 }
@@ -486,6 +498,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     public static CleverTapAPI getDefaultInstance(Context context, String cleverTapID){
         // For Google Play Store/Android Studio tracking
         sdkVersion = BuildConfig.SDK_VERSION_STRING;
+        if(cleverTapID != null) {
+            CleverTapInstanceConfig tempConfig = CleverTapInstanceConfig.createDefaultInstance(context, ManifestInfo.getInstance(context).getAccountId(), ManifestInfo.getInstance(context).getAcountToken(), ManifestInfo.getInstance(context).getAccountRegion());
+            if(DeviceInfo.deviceIDExists(context,tempConfig)){
+                Logger.d("CleverTap ID already exists for this instance. Custom CleverTap ID will be ignored for this device.");
+                deviceIdExists = true;
+            }
+        }
+
         if(defaultConfig != null){
             return instanceWithConfig(context,defaultConfig);
         }else {
@@ -546,7 +566,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         String accountId = manifest.getAccountId();
         String accountToken = manifest.getAcountToken();
         String accountRegion = manifest.getAccountRegion();
-        String useCustomIdValue = manifest.useCustomId();
         if(accountId == null || accountToken == null) {
             Logger.i("Account ID or Account token is missing from AndroidManifest.xml, unable to create default instance");
             return null;
@@ -555,7 +574,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             Logger.i("Account Region not specified in the AndroidManifest - using default region");
         }
 
-        if(useCustomIdValue != null && useCustomIdValue.equals("1")){
+        if(manifest.useCustomId() && !deviceIdExists){
             if(cleverTapID == null){
                 Logger.i("CleverTap SDK has been directed to use custom CleverTap ID but custom ID passed is NULL. Please provide a valid custom ID.");
                 return null;
@@ -564,8 +583,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 Logger.i("CleverTap SDK has been directed to use custom CleverTap ID but custom ID passed is empty. Please provide a valid custom ID.");
                 return null;
             }
+            if(cleverTapID.length() > 64){
+                Logger.i("Custom ID passed is greater than 64 characters. Please provide a valid custom ID. Cannot create CleverTap Instance.");
+                return null;
+            }
+            if(!cleverTapID.matches("[a-zA-Z0-9]*")){
+                Logger.i("Custom ID cannot contain special characters. Please provide a valid custom ID. Cannot create CleverTap Instance.");
+                return null;
+            }
 
-            return CleverTapInstanceConfig.createDefaultInstance(context,accountId,accountToken,accountRegion,cleverTapID);
+            return CleverTapInstanceConfig.createDefaultInstance(context,accountId,accountToken,accountRegion,cleverTapID.trim());
         }else {
             return CleverTapInstanceConfig.createDefaultInstance(context,accountId,accountToken,accountRegion);
         }
@@ -1426,7 +1453,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (isMuted()) {
             return;
         }
-        processEvent(context, event, eventType);
+        try {
+            if(event.has("evtName")) {
+                if (event.getString("evtName").equals(Constants.NOTIFICATION_VIEWED_EVENT_NAME))
+                    processPushNotificationViewedEvent(context, event, eventType);
+                else
+                    processEvent(context, event, eventType);
+            }
+        }catch (JSONException e){
+            getConfigLogger().verbose(getAccountId(),"Couldn't parse event JSON : " + e.getLocalizedMessage());
+        }
     }
 
     //Util
@@ -1494,6 +1530,27 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
         }
     }
+
+        private void processPushNotificationViewedEvent(final Context context, final JSONObject event, final int eventType){
+        synchronized (eventLock){
+            try{
+                int session = getCurrentSession();
+                event.put("s",session);
+                event.put("type","event");
+                event.put("ep", System.currentTimeMillis() / 1000);
+                // Report any pending validation error
+                ValidationResult vr = popValidationResult();
+                if (vr != null) {
+                    event.put(Constants.ERROR_KEY, getErrorObject(vr));
+                }
+                queuePushNotificationViewedEventToDB(context,event,eventType);
+                schedulePushNotificationViewedQueueFlush(context);
+            }catch (Throwable t){
+                getConfigLogger().verbose(getAccountId(),"Failed to queue notification viewed event: "+ event.toString(),t);
+            }
+        }
+    }
+
 
     //Session
     private int getLastSessionLength() {
@@ -1608,6 +1665,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         queueEventInternal(context,event,table);
     }
 
+    private void queuePushNotificationViewedEventToDB(final Context context, final JSONObject event, final int eventType){
+        queueEventInternal(context,event,DBAdapter.Table.PUSH_NOTIFICATION_VIEWED);
+    }
+
+
     private void queueEventInternal(final Context context, final JSONObject event, DBAdapter.Table table) {
         synchronized (eventLock) {
             DBAdapter adapter = loadDBAdapter(context);
@@ -1626,6 +1688,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             dbAdapter = new DBAdapter(context,this.config);
             dbAdapter.cleanupStaleEvents(DBAdapter.Table.EVENTS);
             dbAdapter.cleanupStaleEvents(DBAdapter.Table.PROFILE_EVENTS);
+            dbAdapter.cleanupStaleEvents(DBAdapter.Table.PUSH_NOTIFICATION_VIEWED);
             dbAdapter.cleanUpPushNotifications();
         }
         return dbAdapter;
@@ -1639,13 +1702,26 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+    private void schedulePushNotificationViewedQueueFlush(final Context context){
+        if (pushNotificationViewedRunnable == null)
+            pushNotificationViewedRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    flushQueueAsync(context,EventGroup.PUSH_NOTIFICATION_VIEWED);
+                }
+            };
+        getHandlerUsingMainLooper().removeCallbacks(pushNotificationViewedRunnable);
+        getHandlerUsingMainLooper().post(pushNotificationViewedRunnable);
+    }
+
+
     //Event
     private void scheduleQueueFlush(final Context context) {
         if (commsRunnable == null)
             commsRunnable = new Runnable() {
                 @Override
                 public void run() {
-                    flushQueueAsync(context);
+                    flushQueueAsync(context,EventGroup.REGULAR);
                 }
             };
         // Cancel any outstanding send runnables, and issue a new delayed one
@@ -1655,16 +1731,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         getConfigLogger().verbose(getAccountId(), "Scheduling delayed queue flush on main event loop");
     }
 
-    private void flushQueueAsync(final Context context) {
+    private void flushQueueAsync(final Context context, final EventGroup eventGroup) {
         postAsyncSafely("CommsManager#flushQueueAsync", new Runnable() {
             @Override
             public void run() {
-                flushQueueSync(context);
+                flushQueueSync(context,eventGroup);
             }
         });
     }
 
-    private void flushQueueSync(final Context context) {
+    private void flushQueueSync(final Context context, final EventGroup eventGroup) {
         if (!isNetworkOnline(context)) {
             getConfigLogger().verbose(getAccountId(), "Network connectivity unavailable. Will retry later");
             return;
@@ -1675,17 +1751,17 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             return;
         }
 
-        if (needsHandshakeForDomain()) {
+        if (needsHandshakeForDomain(eventGroup)) {
             mResponseFailureCount = 0;
             setDomain(context, null);
-            performHandshakeForDomain(context, new Runnable() {
+            performHandshakeForDomain(context,eventGroup, new Runnable() {
                 @Override
                 public void run() {
-                    flushDBQueue(context);
+                    flushDBQueue(context,eventGroup);
                 }
             });
         } else {
-            flushDBQueue(context);
+            flushDBQueue(context,eventGroup);
         }
     }
 
@@ -1707,23 +1783,31 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //Networking
-    private boolean needsHandshakeForDomain() {
-        final String domain = getDomainFromPrefsOrMetadata();
+    private boolean needsHandshakeForDomain(final EventGroup eventGroup) {
+        final String domain = getDomainFromPrefsOrMetadata(eventGroup);
         return domain == null || mResponseFailureCount > 5;
     }
 
-    private String getDomainFromPrefsOrMetadata() {
+    private String getDomainFromPrefsOrMetadata(final EventGroup eventGroup) {
         try {
             final String region = this.config.getAccountRegion();
             if (region != null && region.trim().length() > 0) {
                 // Always set this to 0 so that the handshake is not performed during a HTTP failure
                 mResponseFailureCount = 0;
-                return region.trim().toLowerCase() + "." + Constants.PRIMARY_DOMAIN;
+                if(eventGroup.equals(EventGroup.PUSH_NOTIFICATION_VIEWED)) {
+                    return region.trim().toLowerCase() + eventGroup.httpResource + "." + Constants.PRIMARY_DOMAIN;
+                }else{
+                    return region.trim().toLowerCase() + "." + Constants.PRIMARY_DOMAIN;
+                }
             }
         } catch (Throwable t) {
             // Ignore
         }
-        return getStringFromPrefs(Constants.KEY_DOMAIN_NAME, null);
+        if(eventGroup.equals(EventGroup.PUSH_NOTIFICATION_VIEWED)){
+            return getStringFromPrefs(Constants.SPIKY_KEY_DOMAIN_NAME,null);
+        }else {
+            return getStringFromPrefs(Constants.KEY_DOMAIN_NAME, null);
+        }
     }
 
     private void setDomain(final Context context, String domainName) {
@@ -1731,12 +1815,17 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         StorageHelper.putString(context, storageKeyWithSuffix(Constants.KEY_DOMAIN_NAME), domainName);
     }
 
-    private void performHandshakeForDomain(final Context context, final Runnable handshakeSuccessCallback) {
+    private void setSpikyDomain(final Context context, String spikyDomainName){
+        getConfigLogger().verbose(getAccountId(), "Setting spiky domain to " + spikyDomainName);
+        StorageHelper.putString(context, storageKeyWithSuffix(Constants.SPIKY_KEY_DOMAIN_NAME), spikyDomainName);
+    }
+
+    private void performHandshakeForDomain(final Context context,final EventGroup eventGroup, final Runnable handshakeSuccessCallback) {
         if (isMuted()) {
             return;
         }
 
-        final String endpoint = getEndpoint(true);
+        final String endpoint = getEndpoint(true,eventGroup);
         if (endpoint == null) {
             getConfigLogger().verbose(getAccountId(), "Unable to perform handshake, endpoint is null");
         }
@@ -1772,8 +1861,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
-    private String getEndpoint(final boolean defaultToHandshakeURL) {
-        String domain = getDomain(defaultToHandshakeURL);
+    private String getEndpoint(final boolean defaultToHandshakeURL, final EventGroup eventGroup) {
+        String domain = getDomain(defaultToHandshakeURL,eventGroup);
         if (domain == null) {
             getConfigLogger().verbose(getAccountId(), "Unable to configure endpoint, domain is null");
             return null;
@@ -1788,7 +1877,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         String endpoint = "https://" + domain + "?os=Android&t=" + this.deviceInfo.getSdkVersion();
         endpoint += "&z=" + accountId;
 
-        final boolean needsHandshake = needsHandshakeForDomain();
+        final boolean needsHandshake = needsHandshakeForDomain(eventGroup);
         // Don't attach ts if its handshake
         if (needsHandshake) {
             return endpoint;
@@ -1840,8 +1929,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return  sslSocketFactory;
     }
 
-    private String getDomain(boolean defaultToHandshakeURL) {
-        String domain = getDomainFromPrefsOrMetadata();
+    private String getDomain(boolean defaultToHandshakeURL, final EventGroup eventGroup) {
+        String domain = getDomainFromPrefsOrMetadata(eventGroup);
 
         final boolean emptyDomain = domain == null || domain.trim().length() == 0;
         if (emptyDomain && !defaultToHandshakeURL) {
@@ -1879,8 +1968,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             return true;
         }
 
+        final String spikyDomainName = conn.getHeaderField(Constants.SPIKY_HEADER_DOMAIN_NAME);
+        if (spikyDomainName == null || spikyDomainName.trim().length() == 0) {
+            return true;
+        }
+
         setMuted(context, false);
         setDomain(context, domainName);
+        setSpikyDomain(context,spikyDomainName);
         return true;
     }
 
@@ -1967,7 +2062,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         StorageHelper.putInt(context, storageKeyWithSuffix(Constants.KEY_LAST_TS), 0);
     }
 
-    private void flushDBQueue(final Context context){
+    private void flushDBQueue(final Context context, final EventGroup eventGroup){
         getConfigLogger().verbose(getAccountId(), "Somebody has invoked me to send the queue to CleverTap servers");
 
         QueueCursor cursor;
@@ -1976,7 +2071,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         while (loadMore) {
 
-            cursor = getQueuedEvents(context,50, previousCursor);
+            cursor = getQueuedEvents(context,50, previousCursor, eventGroup);
 
             if (cursor == null || cursor.isEmpty()) {
                 getConfigLogger().verbose(getAccountId(), "No events in the queue, bailing");
@@ -1991,13 +2086,17 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 break;
             }
 
-            loadMore = sendQueue(context, queue);
+            loadMore = sendQueue(context,eventGroup, queue);
         }
     }
 
     @SuppressWarnings("SameParameterValue")
-    private QueueCursor getQueuedEvents(final Context context, final int batchSize, final QueueCursor previousCursor) {
-        return getQueuedDBEvents(context, batchSize, previousCursor);
+    private QueueCursor getQueuedEvents(final Context context, final int batchSize, final QueueCursor previousCursor, final EventGroup eventGroup) {
+        if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED){
+            return getPushNotificationViewedQueuedEvents(context,batchSize,previousCursor);
+        }else{
+            return getQueuedDBEvents(context, batchSize, previousCursor);
+        }
     }
 
     private QueueCursor getQueuedDBEvents(final Context context, final int batchSize, final QueueCursor previousCursor) {
@@ -2005,7 +2104,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         synchronized (eventLock){
             QueueCursor newCursor = getQueueCursor(context,DBAdapter.Table.EVENTS,batchSize,previousCursor);
 
-            if ( newCursor.isEmpty() && newCursor.getTableName().equals(DBAdapter.Table.EVENTS)){
+            if (newCursor.isEmpty() && newCursor.getTableName().equals(DBAdapter.Table.EVENTS)){
                 newCursor = getQueueCursor(context,DBAdapter.Table.PROFILE_EVENTS,batchSize,null);
             }
 
@@ -2053,10 +2152,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+    private QueueCursor getPushNotificationViewedQueuedEvents(final Context context, final int batchSize, final QueueCursor previousCursor){
+        return getQueueCursor(context, DBAdapter.Table.PUSH_NOTIFICATION_VIEWED,batchSize,previousCursor);
+    }
+
     /**
      * @return true if the network request succeeded. Anything non 200 results in a false.
      */
-    private boolean sendQueue(final Context context, final JSONArray queue) {
+    private boolean sendQueue(final Context context,final EventGroup eventGroup, final JSONArray queue) {
 
         if (queue == null || queue.length() <= 0) return false;
 
@@ -2067,7 +2170,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         HttpsURLConnection conn = null;
         try {
-            final String endpoint = getEndpoint(false);
+            final String endpoint = getEndpoint(false,eventGroup);
 
             // This is just a safety check, which would only arise
             // if upstream didn't adhere to the protocol (sent nothing during the initial handshake)
@@ -4729,7 +4832,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         forcePushDeviceToken(false);
 
                         // try and flush and then reset the queues
-                        flushQueueSync(context);
+                        flushQueueSync(context,EventGroup.REGULAR);
                         clearQueues(context);
 
                         // clear out the old data
@@ -4866,7 +4969,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void flush() {
-        flushQueueAsync(context);
+        flushQueueAsync(context,EventGroup.REGULAR);
     }
 
     //Push
@@ -5567,8 +5670,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             DBAdapter dbAdapter = loadDBAdapter(context);
             getConfigLogger().verbose("Storing Push Notification..."+wzrk_pid + " - with ttl - "+ttl);
             dbAdapter.storePushNotificationId(wzrk_pid,wzrk_ttl);
-            if(config != null && config.getRaiseNotificationViewed()){
-                pushNotificationViewedEvent(extras);
+            String wzrk_rnv = extras.getString(Constants.WZRK_RNV,"");
+            if(!wzrk_rnv.isEmpty()){
+                if(config !=null && config.getRaiseNotificationViewed() && wzrk_rnv.equals("true")){
+                    pushNotificationViewedEvent(extras);
+                }
+            }else {
+                if (config != null && config.getRaiseNotificationViewed()) {
+                    pushNotificationViewedEvent(extras);
+                }
             }
         }
 
@@ -6677,51 +6787,5 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             stopTimeCalendar.add(Calendar.DATE, 1);
         }
         return currentTimeCalendar.compareTo(startTimeCalendar) >= 0 && currentTimeCalendar.compareTo(stopTimeCalendar) < 0;
-    }
-
-    //CTWebInterface Overriden Methods
-    @Override
-    public void pushEventFromJS(String eventName) {
-        pushEvent(eventName);
-    }
-
-    @Override
-    public void pushEventWithPropertiesFromJS(String eventName, Map<String, Object> eventActions) {
-        pushEvent(eventName,eventActions);
-    }
-
-    @Override
-    public void pushProfileFromJS(Map<String,Object> profile) {
-        pushProfile(profile);
-    }
-
-    @Override
-    public void addMultiValueForKeyFromJS(String key, String value) {
-        addMultiValueForKey(key,value);
-    }
-
-    @Override
-    public void addMultiValuesForKeyFromJS(String key, ArrayList<String> values) {
-        addMultiValuesForKey(key,values);
-    }
-
-    @Override
-    public void removeMultiValueForKeyFromJS(String key, String value) {
-        removeMultiValueForKey(key,value);
-    }
-
-    @Override
-    public void removeMultiValuesForKeyFromJS(String key, ArrayList<String> values) {
-        removeMultiValuesForKey(key,values);
-    }
-
-    @Override
-    public void removeValueForKeyFromJS(String key) {
-        removeValueForKey(key);
-    }
-
-    @Override
-    public void setMultiValuesForKeyFromJS(String key, ArrayList<String> values) {
-        setMultiValuesForKey(key,values);
     }
 }

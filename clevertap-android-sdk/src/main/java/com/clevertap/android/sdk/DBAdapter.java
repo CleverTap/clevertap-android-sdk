@@ -24,7 +24,8 @@ class DBAdapter {
         USER_PROFILES("userProfiles"),
         INBOX_MESSAGES("inboxMessages"),
         PUSH_NOTIFICATIONS("pushNotifications"),
-        UNINSTALL_TS("uninstallTimestamp");
+        UNINSTALL_TS("uninstallTimestamp"),
+        PUSH_NOTIFICATION_VIEWED("notificationViewed");
 
         Table(String name) {
             tableName = name;
@@ -57,7 +58,7 @@ class DBAdapter {
     public static final int DB_UNDEFINED_CODE = -3;
 
     private static final String DATABASE_NAME = "clevertap";
-    private static final int DATABASE_VERSION = 2;
+    private static final int DATABASE_VERSION = 3;
 
     private static final String CREATE_EVENTS_TABLE =
             "CREATE TABLE " + Table.EVENTS.getName() + " (_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
@@ -115,6 +116,15 @@ class DBAdapter {
             "CREATE INDEX IF NOT EXISTS time_idx ON " + Table.UNINSTALL_TS.getName() +
                     " (" + KEY_CREATED_AT + ");";
 
+    private static final String CREATE_NOTIFICATION_VIEWED_TABLE =
+            "CREATE TABLE " + Table.PUSH_NOTIFICATIONS.getName() + " (_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                    KEY_DATA + " STRING NOT NULL, " +
+                    KEY_CREATED_AT + " INTEGER NOT NULL);";
+
+    private static final String NOTIFICATION_VIEWED_INDEX =
+            "CREATE INDEX IF NOT EXISTS time_idx ON " + Table.PUSH_NOTIFICATION_VIEWED.getName() +
+                    " (" + KEY_CREATED_AT + ");";
+
 
     private final DatabaseHelper dbHelper;
     private CleverTapInstanceConfig config;
@@ -142,30 +152,44 @@ class DBAdapter {
             db.execSQL(CREATE_INBOX_MESSAGES_TABLE);
             db.execSQL(CREATE_PUSH_NOTIFICATIONS_TABLE);
             db.execSQL(CREATE_UNINSTALL_TS_TABLE);
+            db.execSQL(CREATE_NOTIFICATION_VIEWED_TABLE);
             db.execSQL(EVENTS_TIME_INDEX);
             db.execSQL(PROFILE_EVENTS_TIME_INDEX);
             db.execSQL(UNINSTALL_TS_INDEX);
             db.execSQL(PUSH_NOTIFICATIONS_TIME_INDEX);
             db.execSQL(INBOX_MESSAGES_COMP_ID_USERID_INDEX);
+            db.execSQL(NOTIFICATION_VIEWED_INDEX);
         }
 
         @SuppressLint("SQLiteString")
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             Logger.v("Upgrading CleverTap DB to version " + newVersion);
+            switch (oldVersion){
+                case 1 :
+                    // For DB Version 2, just adding Push Notifications, Uninstall TS and Inbox Messages tables and related indices
+                    db.execSQL("DROP TABLE IF EXISTS " + Table.PUSH_NOTIFICATIONS.getName());
+                    db.execSQL("DROP TABLE IF EXISTS " + Table.UNINSTALL_TS.getName());
+                    db.execSQL("DROP TABLE IF EXISTS " + Table.INBOX_MESSAGES.getName());
+                    db.execSQL("DROP TABLE IF EXISTS " + Table.PUSH_NOTIFICATION_VIEWED.getName());
 
-            // For DB Version 2, just adding Push Notifications, Uninstall TS and Inbox Messages tables and related indices
-            db.execSQL("DROP TABLE IF EXISTS " + Table.PUSH_NOTIFICATIONS.getName());
-            db.execSQL("DROP TABLE IF EXISTS " + Table.UNINSTALL_TS.getName());
-            db.execSQL("DROP TABLE IF EXISTS " + Table.INBOX_MESSAGES.getName());
+                    db.execSQL(CREATE_PUSH_NOTIFICATIONS_TABLE);
+                    db.execSQL(CREATE_UNINSTALL_TS_TABLE);
+                    db.execSQL(CREATE_INBOX_MESSAGES_TABLE);
+                    db.execSQL(CREATE_NOTIFICATION_VIEWED_TABLE);
 
-            db.execSQL(CREATE_PUSH_NOTIFICATIONS_TABLE);
-            db.execSQL(CREATE_UNINSTALL_TS_TABLE);
-            db.execSQL(CREATE_INBOX_MESSAGES_TABLE);
-
-            db.execSQL(UNINSTALL_TS_INDEX);
-            db.execSQL(PUSH_NOTIFICATIONS_TIME_INDEX);
-            db.execSQL(INBOX_MESSAGES_COMP_ID_USERID_INDEX);
+                    db.execSQL(UNINSTALL_TS_INDEX);
+                    db.execSQL(PUSH_NOTIFICATIONS_TIME_INDEX);
+                    db.execSQL(INBOX_MESSAGES_COMP_ID_USERID_INDEX);
+                    db.execSQL(NOTIFICATION_VIEWED_INDEX);
+                    break;
+                case 2 :
+                    // For DB Version 3, just adding Push Notification Viewed table and index
+                    db.execSQL("DROP TABLE IF EXISTS " + Table.PUSH_NOTIFICATION_VIEWED.getName());
+                    db.execSQL(CREATE_NOTIFICATION_VIEWED_TABLE);
+                    db.execSQL(NOTIFICATION_VIEWED_INDEX);
+                    break;
+            }
         }
 
         boolean belowMemThreshold() {
