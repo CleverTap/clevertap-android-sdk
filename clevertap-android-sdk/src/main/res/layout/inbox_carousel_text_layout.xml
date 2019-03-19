@@ -53,5 +53,58 @@
                     android:layout_marginEnd="20dp" />
             </LinearLayout>
         </LinearLayout>
+        <TextView
+            android:id="@+id/messageTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:layout_marginStart="20dp"
+            android:maxLines="1"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="20dp"
+            android:text="Title"
+            android:textStyle="bold"
+            android:textColor="@android:color/black"
+            android:layout_marginRight="20dp"
+            android:layout_below="@+id/carousel_linear_layout"/>
+        <TextView
+            android:id="@+id/messageText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Message"
+            android:maxLines="3"
+            android:layout_marginLeft="20dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="5dp"
+            android:layout_marginRight="20dp"
+            android:layout_marginEnd="20dp"
+            android:textColor="@android:color/darker_gray"
+            android:layout_below="@+id/messageTitle"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/messageText"
+            android:orientation="horizontal"
+            android:layout_marginTop="20dp"
+            android:layout_marginBottom="10dp"
+            android:gravity="end">
+            <TextView
+                android:id="@+id/timestamp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:layout_marginRight="10dp"
+                android:text="timestamp"
+                android:textColor="@android:color/darker_gray"
+                android:layout_marginEnd="10dp" />
+            <ImageView
+                android:id="@+id/read_circle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/read_circle"
+                android:layout_gravity="center"
+                android:layout_marginRight="20dp"
+                android:layout_marginEnd="20dp" />
+        </LinearLayout>
     </RelativeLayout>
 </RelativeLayout>

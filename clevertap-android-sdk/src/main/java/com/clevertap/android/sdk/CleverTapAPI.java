@@ -235,11 +235,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         this.deviceInfo = DeviceInfo.initWithConfig(context, config);
         this.validator = new Validator();
         this.inAppFCManager = new InAppFCManager(context, config);
-
         initializeDeviceInfo();
         postAsyncSafely("CleverTapAPI#initializeDeviceInfo", new Runnable() {
             @Override
             public void run() {
+
                 if (config.isDefaultInstance()) {
                     manifestAsyncValidation();
                 }
@@ -1967,15 +1967,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (domainName == null || domainName.trim().length() == 0) {
             return true;
         }
-
-        final String spikyDomainName = conn.getHeaderField(Constants.SPIKY_HEADER_DOMAIN_NAME);
-        if (spikyDomainName == null || spikyDomainName.trim().length() == 0) {
-            return true;
-        }
+//TODO uncomment once Spiky backend changes are done
+//        final String spikyDomainName = conn.getHeaderField(Constants.SPIKY_HEADER_DOMAIN_NAME);
+//        if (spikyDomainName == null || spikyDomainName.trim().length() == 0) {
+//            return true;
+//        }
 
         setMuted(context, false);
         setDomain(context, domainName);
-        setSpikyDomain(context,spikyDomainName);
+        //setSpikyDomain(context,spikyDomainName);
         return true;
     }
 
@@ -4942,7 +4942,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     @SuppressWarnings("SameParameterValue")
     private void pushDeviceToken(final boolean register, final boolean force) {
-        if (enabledPushTypes == null) return;
+        if (enabledPushTypes == null) {
+            //Fixed onUserlogin issue where token was not getting unregistered when enabledPushTypes was not set
+            enabledPushTypes = this.deviceInfo.getEnabledPushTypes();
+        }
         for (PushType pushType : enabledPushTypes) {
             switch (pushType) {
                 case GCM:

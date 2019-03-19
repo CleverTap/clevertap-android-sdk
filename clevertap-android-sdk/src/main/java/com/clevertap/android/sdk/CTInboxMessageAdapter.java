@@ -35,9 +35,11 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
                 view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.inbox_icon_message_layout,viewGroup,false);
                 return new CTIconMessageViewHolder(view);
             case CAROUSEL:
+                view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.inbox_carousel_text_layout,viewGroup,false);
+                return new CTCarouselMessageViewHolder(view);
             case IMAGE_CAROUSEL:
                 view = LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.inbox_carousel_layout,viewGroup,false);
-                return new CTCarouselMessageViewHolder(view);
+                return new CTCarouselImageViewHolder(view);
         }
         return null;
     }

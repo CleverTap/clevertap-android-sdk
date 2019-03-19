@@ -45,7 +45,7 @@ class DeviceInfo {
         this.context = context;
         this.config = config;
         this.handler = new Handler();
-        sl = CleverTapAPI.instanceWithConfig(context, config).getSyncListener();
+        //sl = CleverTapAPI.instanceWithConfig(context, config).getSyncListener();
 
     }
 

@@ -117,7 +117,7 @@ class DBAdapter {
                     " (" + KEY_CREATED_AT + ");";
 
     private static final String CREATE_NOTIFICATION_VIEWED_TABLE =
-            "CREATE TABLE " + Table.PUSH_NOTIFICATIONS.getName() + " (_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+            "CREATE TABLE " + Table.PUSH_NOTIFICATION_VIEWED.getName() + " (_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     KEY_DATA + " STRING NOT NULL, " +
                     KEY_CREATED_AT + " INTEGER NOT NULL);";
 
@@ -168,7 +168,7 @@ class DBAdapter {
             switch (oldVersion){
                 case 1 :
                     // For DB Version 2, just adding Push Notifications, Uninstall TS and Inbox Messages tables and related indices
-                    db.execSQL("DROP TABLE IF EXISTS " + Table.PUSH_NOTIFICATIONS.getName());
+                    //db.execSQL("DROP TABLE IF EXISTS " + Table.PUSH_NOTIFICATIONS.getName());
                     db.execSQL("DROP TABLE IF EXISTS " + Table.UNINSTALL_TS.getName());
                     db.execSQL("DROP TABLE IF EXISTS " + Table.INBOX_MESSAGES.getName());
                     db.execSQL("DROP TABLE IF EXISTS " + Table.PUSH_NOTIFICATION_VIEWED.getName());
