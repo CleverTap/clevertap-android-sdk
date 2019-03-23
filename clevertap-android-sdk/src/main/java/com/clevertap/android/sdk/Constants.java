@@ -169,6 +169,9 @@ public class Constants {
     static final String WZRK_SOUND = "wzrk_sound";
     static final String WZRK_TIME_TO_LIVE = "wzrk_ttl";
     static final String WZRK_RNV = "wzrk_rnv";
+    static final String BLACK = "#000000";
+    static final String WHITE = "#FFFFFF";
+    static final String BLUE = "#0000FF";
     /**
      * Profile command constants.
      */

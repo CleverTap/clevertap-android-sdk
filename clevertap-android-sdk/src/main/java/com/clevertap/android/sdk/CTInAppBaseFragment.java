@@ -27,6 +27,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
     CleverTapInstanceConfig config;
     private WeakReference<CTInAppBaseFragment.InAppListener> listenerWeakReference;
     CloseImageView closeImageView = null;
+    int currentOrientation;
 
     Activity parent;
     AtomicBoolean isCleanedUp = new AtomicBoolean();
@@ -58,6 +59,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
         Bundle bundle = getArguments();
         inAppNotification = bundle.getParcelable(Constants.INAPP_KEY);
         config = bundle.getParcelable(Constants.KEY_CONFIG);
+        currentOrientation = getResources().getConfiguration().orientation;
         generateListener();
     }
 

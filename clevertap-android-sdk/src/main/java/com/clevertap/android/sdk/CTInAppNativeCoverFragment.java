@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk;
 
 import android.annotation.SuppressLint;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Build;
@@ -56,7 +57,11 @@ public class CTInAppNativeCoverFragment extends CTInAppBaseFullNativeFragment {
 
         ArrayList<CTInAppNotificationButton> buttons = inAppNotification.getButtons();
         if(buttons.size() ==1){
-            mainButton.setVisibility(View.INVISIBLE);
+            if(currentOrientation == Configuration.ORIENTATION_LANDSCAPE){
+                mainButton.setVisibility(View.GONE);
+            }else if(currentOrientation == Configuration.ORIENTATION_PORTRAIT){
+                mainButton.setVisibility(View.INVISIBLE);
+            }
             setupInAppButton(secondaryButton,buttons.get(0),0);
         }
         else if (!buttons.isEmpty()) {

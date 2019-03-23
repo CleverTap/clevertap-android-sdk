@@ -94,9 +94,9 @@ class CTInAppNotificationButton implements Parcelable {
         try{
             this.jsonDescription = jsonObject;
             this.text = jsonObject.has("text") ? jsonObject.getString("text") : "";
-            this.textColor = jsonObject.has("color") ? jsonObject.getString("color") : "";
-            this.backgroundColor = jsonObject.has("bg") ? jsonObject.getString("bg") : "";
-            this.borderColor = jsonObject.has("border") ? jsonObject.getString("border") : "";
+            this.textColor = jsonObject.has("color") ? jsonObject.getString("color") : Constants.BLUE;
+            this.backgroundColor = jsonObject.has("bg") ? jsonObject.getString("bg") : Constants.WHITE;
+            this.borderColor = jsonObject.has("border") ? jsonObject.getString("border") : Constants.WHITE;
             this.borderRadius = jsonObject.has("radius") ? jsonObject.getString("radius") : "";
 
             JSONObject actions = jsonObject.has("actions") ? jsonObject.getJSONObject("actions") : null;

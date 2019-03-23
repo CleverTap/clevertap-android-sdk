@@ -14,7 +14,7 @@
 
         <activity
             android:name="com.clevertap.android.sdk.InAppNotificationActivity"
-            android:configChanges="orientation|keyboardHidden"
+            android:configChanges="keyboardHidden"
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <activity

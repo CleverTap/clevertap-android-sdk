@@ -60,6 +60,10 @@ class CTInAppNotification implements Parcelable {
     private boolean videoSupported;
     private String customInAppUrl;
     private boolean jsEnabled;
+    private boolean isPortrait;
+    private boolean isLandscape;
+    private String landscapeImageUrl;
+    private String _landscapeImageCacheKey;
 
     CTInAppNotification(){}
 
@@ -151,16 +155,18 @@ class CTInAppNotification implements Parcelable {
             this.totalDailyCount = jsonObject.has(Constants.KEY_TDC) ? jsonObject.getInt(Constants.KEY_TDC) : -1;
             this.inAppType = CTInAppType.fromString(this.type);
             this.isTablet = jsonObject.has(Constants.KEY_IS_TABLET) && jsonObject.getBoolean(Constants.KEY_IS_TABLET);
-            this.backgroundColor = jsonObject.has(Constants.KEY_BG) ? jsonObject.getString(Constants.KEY_BG) : "";
+            this.backgroundColor = jsonObject.has(Constants.KEY_BG) ? jsonObject.getString(Constants.KEY_BG) : Constants.WHITE;
+            this.isPortrait = !jsonObject.has("isPortrait") || jsonObject.getBoolean("isPortrait");
+            this.isLandscape = jsonObject.has("isLandscape") && jsonObject.getBoolean("isLandscape");
             JSONObject titleObject = jsonObject.has(Constants.KEY_TITLE) ? jsonObject.getJSONObject(Constants.KEY_TITLE) : null;
             if(titleObject != null) {
                 this.title = titleObject.has(Constants.KEY_TEXT) ? titleObject.getString(Constants.KEY_TEXT) : "";
-                this.titleColor = titleObject.has(Constants.KEY_COLOR) ? titleObject.getString(Constants.KEY_COLOR) : "";
+                this.titleColor = titleObject.has(Constants.KEY_COLOR) ? titleObject.getString(Constants.KEY_COLOR) : Constants.BLACK;
             }
             JSONObject msgObject = jsonObject.has(Constants.KEY_MESSAGE) ? jsonObject.getJSONObject(Constants.KEY_MESSAGE) : null;
             if(msgObject != null) {
                 this.message = msgObject.has(Constants.KEY_TEXT) ? msgObject.getString(Constants.KEY_TEXT) : "";
-                this.messageColor = msgObject.has(Constants.KEY_COLOR) ? msgObject.getString(Constants.KEY_COLOR) : "";
+                this.messageColor = msgObject.has(Constants.KEY_COLOR) ? msgObject.getString(Constants.KEY_COLOR) : Constants.BLACK;
             }
             this.hideCloseButton = jsonObject.has(Constants.KEY_HIDE_CLOSE) && jsonObject.getBoolean(Constants.KEY_HIDE_CLOSE);
             JSONObject media = jsonObject.has(Constants.KEY_MEDIA) ? jsonObject.getJSONObject(Constants.KEY_MEDIA) : null;
@@ -509,6 +515,17 @@ class CTInAppNotification implements Parcelable {
         return imageUrl;
     }
 
+    public boolean isPortrait() {
+        return isPortrait;
+    }
+
+    public boolean isLandscape() {
+        return isLandscape;
+    }
+
+    public String getLandscapeImageUrl() {
+        return landscapeImageUrl;
+    }
 
     boolean isHideCloseButton() {
         return hideCloseButton;
@@ -583,6 +600,10 @@ class CTInAppNotification implements Parcelable {
             isTablet = in.readByte() != 0x00;
             customInAppUrl = in.readString();
             jsEnabled = in.readByte() != 0x00;
+            isPortrait = in.readByte() != 0x00;
+            isLandscape = in.readByte() != 0x00;
+            landscapeImageUrl = in.readString();
+            _landscapeImageCacheKey = in.readString();
 
         }catch (JSONException e){
             // no-op
@@ -646,6 +667,10 @@ class CTInAppNotification implements Parcelable {
         dest.writeByte((byte) (isTablet ? 0x01 : 0x00));
         dest.writeString(customInAppUrl);
         dest.writeByte((byte) (jsEnabled ? 0x01 : 0x00));
+        dest.writeByte((byte) (isPortrait ? 0x01 : 0x00));
+        dest.writeByte((byte) (isLandscape ? 0x01 : 0x00));
+        dest.writeString(landscapeImageUrl);
+        dest.writeString(_landscapeImageCacheKey);
     }
 
     @SuppressWarnings("unused")

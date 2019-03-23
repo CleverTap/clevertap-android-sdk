@@ -20,7 +20,7 @@
             <com.clevertap.android.sdk.CTCarouselViewPager
                 android:id="@+id/image_carousel_viewpager"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="200dp" />
             <LinearLayout
                 android:id="@+id/sliderDots"
                 android:orientation="horizontal"
