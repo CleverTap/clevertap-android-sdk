@@ -19,6 +19,7 @@ class ManifestInfo {
     private static boolean backgroundSync;
     private static boolean useCustomID;
     private static boolean raiseNotificationViewed;
+    private static String fcmSenderId;
 
     private static String _getManifestStringValueForKey(Bundle manifest, String name) {
         try {
@@ -59,6 +60,7 @@ class ManifestInfo {
         backgroundSync = "1".equals(_getManifestStringValueForKey(metaData,Constants.LABEL_BACKGROUND_SYNC));
         useCustomID = "1".equals(_getManifestStringValueForKey(metaData,Constants.LABEL_CUSTOM_ID));
         raiseNotificationViewed = "1".equals(_getManifestStringValueForKey(metaData,Constants.LABEL_RAISE_NOTIFICATION_VIEWED));
+        fcmSenderId = _getManifestStringValueForKey(metaData, Constants.LABEL_FCM_SENDER_ID);
     }
 
     synchronized static ManifestInfo getInstance(Context context){
@@ -82,6 +84,10 @@ class ManifestInfo {
 
     String getGCMSenderId(){
         return gcmSenderId;
+    }
+
+    String getFCMSenderId() {
+        return fcmSenderId;
     }
 
     boolean useGoogleAdId(){

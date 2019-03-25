@@ -335,6 +335,9 @@ class DeviceInfo {
         return ManifestInfo.getInstance(this.context).getGCMSenderId();
     }
 
+    String getFCMSenderID(){
+        return  ManifestInfo.getInstance(this.context).getFCMSenderId();
+    }
 
     Boolean isWifiConnected() {
         Boolean ret = null;

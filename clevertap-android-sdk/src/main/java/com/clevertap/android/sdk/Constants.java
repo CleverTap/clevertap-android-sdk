@@ -70,6 +70,7 @@ public class Constants {
     static final String SESSION_ID_LAST = "lastSessionId";
     static final String LAST_SESSION_EPOCH = "sexe";
     static final String LABEL_SENDER_ID = "GCM_SENDER_ID";
+    static final String LABEL_FCM_SENDER_ID = "FCM_SENDER_ID";
     static final int MAX_KEY_LENGTH = 120;
     static final int MAX_VALUE_LENGTH = 512;
     static final int MAX_MULTI_VALUE_ARRAY_LENGTH = 100;
@@ -129,6 +130,7 @@ public class Constants {
     static final String KEY_SSL_PINNING = "sslPinning";
     static final String KEY_BACKGROUND_SYNC = "backgroundSync";
     static final String KEY_CUSTOM_ID = "customId";
+    static final String KEY_FCM_SENDER_ID = "fcmSenderId";
     static final String KEY_CONFIG = "config";
     static final String KEY_C2A = "wzrk_c2a";
     static final String KEY_EFC = "efc";
