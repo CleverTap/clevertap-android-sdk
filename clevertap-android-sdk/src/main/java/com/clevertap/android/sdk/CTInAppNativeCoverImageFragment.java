@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk;
 
 import android.annotation.SuppressLint;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -22,11 +23,23 @@ public class CTInAppNativeCoverImageFragment extends CTInAppBaseFullFragment {
 
         RelativeLayout relativeLayout = fl.findViewById(R.id.cover_image_relative_layout);
         ImageView imageView = relativeLayout.findViewById(R.id.cover_image);
-        if(inAppNotification.getImage()!=null) {
-            imageView.setImageBitmap(inAppNotification.getImage());
-            imageView.setTag(0);
-            imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
+        switch (currentOrientation){
+            case Configuration.ORIENTATION_PORTRAIT:
+                if(inAppNotification.getImage()!=null) {
+                    imageView.setImageBitmap(inAppNotification.getImage());
+                    imageView.setTag(0);
+                    imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
+                }
+                break;
+            case Configuration.ORIENTATION_LANDSCAPE:
+                if(inAppNotification.getLandscapeImage()!=null) {
+                    imageView.setImageBitmap(inAppNotification.getLandscapeImage());
+                    imageView.setTag(0);
+                    imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
+                }
+                break;
         }
+
 
         @SuppressLint("ResourceType")
         CloseImageView closeImageView = fl.findViewById(199272);

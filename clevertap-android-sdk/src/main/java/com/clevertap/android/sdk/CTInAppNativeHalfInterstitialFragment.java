@@ -46,81 +46,88 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
         @SuppressLint("ResourceType") final CloseImageView closeImageView = fl.findViewById(199272);
 
         relativeLayout = fl.findViewById(R.id.half_interstitial_relative_layout);
-        if(currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
-            relativeLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                @Override
-                public void onGlobalLayout() {
-                    RelativeLayout relativeLayout1 = fl.findViewById(R.id.half_interstitial_relative_layout);
-                    FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1.getLayoutParams();
-                    if (inAppNotification.isTablet() && isTablet()) {
-                        layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 1.3f);
-                    } else {
-                        if (isTablet()) {
-                            layoutParams.setMargins(90, 240, 90, 0);
-                            layoutParams.width = (relativeLayout1.getMeasuredWidth()) - 90;
-                            layoutHeight = layoutParams.height = (int) (layoutParams.width * 1.3f);
-                            relativeLayout1.setLayoutParams(layoutParams);
-                            FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(closeImageView.getWidth(), closeImageView.getHeight());
-                            closeLp.gravity = Gravity.TOP | Gravity.END;
-                            closeLp.setMargins(0, 220, 70, 0);
-                            closeImageView.setLayoutParams(closeLp);
-                        } else {
-                            layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 1.3f);
-                            relativeLayout1.setLayoutParams(layoutParams);
-                        }
-                    }
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                        relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                    } else {
-                        relativeLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                    }
-                }
-            });
-        }else if (currentOrientation == Configuration.ORIENTATION_LANDSCAPE){
-            relativeLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                @Override
-                public void onGlobalLayout() {
-                    RelativeLayout relativeLayout1 = fl.findViewById(R.id.half_interstitial_relative_layout);
-                    FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1.getLayoutParams();
-                    if (inAppNotification.isTablet() && isTablet()) {
-                        layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 1.3f);
-                    } else {
-                        if (isTablet()) {
-                            layoutParams.setMargins(90, 240, 90, 0);
-                            layoutParams.width = (relativeLayout1.getMeasuredWidth()) - 90;
-                            layoutHeight = layoutParams.height = (int) (layoutParams.width * 1.3f);
-                            relativeLayout1.setLayoutParams(layoutParams);
-                            FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(closeImageView.getWidth(), closeImageView.getHeight());
-                            closeLp.gravity = Gravity.TOP | Gravity.END;
-                            closeLp.setMargins(0, 220, 70, 0);
-                            closeImageView.setLayoutParams(closeLp);
-                        } else {
-                            layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 0.75f);
-                            relativeLayout1.setLayoutParams(layoutParams);
-                        }
-                    }
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                        relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                    } else {
-                        relativeLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                    }
-                }
-            });
-        }
         relativeLayout.setBackgroundColor(Color.parseColor(inAppNotification.getBackgroundColor()));
+
+        switch (currentOrientation){
+            case Configuration.ORIENTATION_PORTRAIT:
+                relativeLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
+                        RelativeLayout relativeLayout1 = fl.findViewById(R.id.half_interstitial_relative_layout);
+                        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1.getLayoutParams();
+                        if (inAppNotification.isTablet() && isTablet()) {
+                            layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 1.3f);
+                        } else {
+                            if (isTablet()) {
+                                layoutParams.setMargins(90, 240, 90, 0);
+                                layoutParams.width = (relativeLayout1.getMeasuredWidth()) - 90;
+                                layoutHeight = layoutParams.height = (int) (layoutParams.width * 1.3f);
+                                relativeLayout1.setLayoutParams(layoutParams);
+                                FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(closeImageView.getWidth(), closeImageView.getHeight());
+                                closeLp.gravity = Gravity.TOP | Gravity.END;
+                                closeLp.setMargins(0, 220, 70, 0);
+                                closeImageView.setLayoutParams(closeLp);
+                            } else {
+                                layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 1.3f);
+                                relativeLayout1.setLayoutParams(layoutParams);
+                            }
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                            relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        } else {
+                            relativeLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                        }
+                    }
+                });
+                if (inAppNotification.getImage() != null) {
+                    ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
+                    imageView.setImageBitmap(inAppNotification.getImage());
+                }
+                break;
+            case Configuration.ORIENTATION_LANDSCAPE:
+                relativeLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
+                        RelativeLayout relativeLayout1 = fl.findViewById(R.id.half_interstitial_relative_layout);
+                        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1.getLayoutParams();
+                        if (inAppNotification.isTablet() && isTablet()) {
+                            layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 1.3f);
+                        } else {
+                            if (isTablet()) {
+                                layoutParams.setMargins(90, 240, 90, 0);
+                                layoutParams.width = (relativeLayout1.getMeasuredWidth()) - 90;
+                                layoutHeight = layoutParams.height = (int) (layoutParams.width * 1.3f);
+                                relativeLayout1.setLayoutParams(layoutParams);
+                                FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(closeImageView.getWidth(), closeImageView.getHeight());
+                                closeLp.gravity = Gravity.TOP | Gravity.END;
+                                closeLp.setMargins(0, 220, 70, 0);
+                                closeImageView.setLayoutParams(closeLp);
+                            } else {
+                                layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 0.75f);
+                                relativeLayout1.setLayoutParams(layoutParams);
+                            }
+                        }
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                            relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                        } else {
+                            relativeLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                        }
+                    }
+                });
+                if (inAppNotification.getLandscapeImage() != null) {
+                    ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
+                    imageView.setImageBitmap(inAppNotification.getLandscapeImage());
+                }
+                break;
+
+        }
+
+
         LinearLayout linearLayout = relativeLayout.findViewById(R.id.half_interstitial_linear_layout);
         Button mainButton = linearLayout.findViewById(R.id.half_interstitial_button1);
         inAppButtons.add(mainButton);
         Button secondaryButton = linearLayout.findViewById(R.id.half_interstitial_button2);
         inAppButtons.add(secondaryButton);
-
-
-        Bitmap image = inAppNotification.getImage();
-        if (image != null) {
-            ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
-            imageView.setImageBitmap(inAppNotification.getImage());
-        }
-
 
         TextView textView1 = relativeLayout.findViewById(R.id.half_interstitial_title);
         textView1.setText(inAppNotification.getTitle());

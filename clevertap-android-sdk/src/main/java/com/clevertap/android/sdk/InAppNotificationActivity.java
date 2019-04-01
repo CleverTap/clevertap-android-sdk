@@ -63,6 +63,24 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             return;
         }
 
+        //Allow rotation for all InApps if Landscape version is present
+        if (inAppNotification.isPortrait() && !inAppNotification.isLandscape()) {
+            try {
+                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+            } catch (Throwable t) {
+                Logger.d("Error displaying InAppNotification", t);
+                int orientation = this.getResources().getConfiguration().orientation;
+                if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                    Logger.d("App in Landscape, dismissing portrait InApp Notification");
+                    finish();
+                    didDismiss(null);
+                    return;
+                } else {
+                    Logger.d("App in Portrait, displaying InApp Notification anyway");
+                }
+            }
+        }
+
         CTInAppBaseFullFragment contentFragment;
         if (savedInstanceState == null) {
             contentFragment = createContentFragment();

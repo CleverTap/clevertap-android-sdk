@@ -39,11 +39,22 @@ public class CTInAppNativeCoverFragment extends CTInAppBaseFullNativeFragment {
         inAppButtons.add(mainButton);
         Button secondaryButton = linearLayout.findViewById(R.id.cover_button2);
         inAppButtons.add(secondaryButton);
-
-        Bitmap image = inAppNotification.getImage();
-        if (image != null) {
-            ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
-            imageView.setImageBitmap(inAppNotification.getImage());
+        ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
+        switch (currentOrientation){
+            case Configuration.ORIENTATION_PORTRAIT:
+                if(inAppNotification.getImage()!=null) {
+                    imageView.setImageBitmap(inAppNotification.getImage());
+                    imageView.setTag(0);
+                    imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
+                }
+                break;
+            case Configuration.ORIENTATION_LANDSCAPE:
+                if(inAppNotification.getLandscapeImage()!=null) {
+                    imageView.setImageBitmap(inAppNotification.getLandscapeImage());
+                    imageView.setTag(0);
+                    imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
+                }
+                break;
         }
 
         TextView textView1 = relativeLayout.findViewById(R.id.cover_title);

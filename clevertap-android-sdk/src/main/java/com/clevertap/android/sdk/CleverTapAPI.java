@@ -1971,18 +1971,25 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
 
         final String domainName = conn.getHeaderField(Constants.HEADER_DOMAIN_NAME);
+        Logger.v("Getting domain from header - " + domainName);
         if (domainName == null || domainName.trim().length() == 0) {
             return true;
         }
-//TODO uncomment once Spiky backend changes are done
-//        final String spikyDomainName = conn.getHeaderField(Constants.SPIKY_HEADER_DOMAIN_NAME);
+
+        final String spikyDomainName = conn.getHeaderField(Constants.SPIKY_HEADER_DOMAIN_NAME);
+        Logger.v("Getting spiky domain from header - " + spikyDomainName);
 //        if (spikyDomainName == null || spikyDomainName.trim().length() == 0) {
 //            return true;
 //        }
 
         setMuted(context, false);
         setDomain(context, domainName);
-        //setSpikyDomain(context,spikyDomainName);
+        Logger.v("Setting spiky domain from header as -" + spikyDomainName);
+        if (spikyDomainName == null) {
+            setSpikyDomain(context,domainName);
+        } else {
+            setSpikyDomain(context, spikyDomainName);
+        }
         return true;
     }
 
