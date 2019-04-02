@@ -7,6 +7,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
 
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/click_relative_layout">
         <LinearLayout
             android:id="@+id/body_relative_layout"
             android:layout_width="match_parent"
@@ -36,7 +40,7 @@
                     android:id="@+id/icon_message_frame_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:visibility="gone"></FrameLayout>
+                    android:visibility="gone"/>
 
                 <FrameLayout
                     android:id="@+id/icon_progress_frame_layout"
@@ -110,41 +114,44 @@
                     android:textColor="@android:color/darker_gray" />
             </RelativeLayout>
         </LinearLayout>
-
-        <LinearLayout
-            android:id="@+id/timestamp_linear_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_above="@id/cta_linear_layout"
-            android:gravity="end"
-            android:orientation="horizontal">
-
-            <TextView
-                android:id="@+id/timestamp"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:id="@+id/timestamp_linear_layout"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="10dp"
-                android:layout_marginRight="10dp"
+                android:layout_marginTop="-20dp"
+                android:layout_below="@id/body_relative_layout"
                 android:gravity="end"
-                android:text="timestamp"
-                android:textColor="@android:color/darker_gray" />
+                android:orientation="horizontal">
 
-            <ImageView
-                android:id="@+id/read_circle"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginEnd="20dp"
-                android:layout_marginRight="20dp"
-                android:src="@drawable/read_circle" />
-        </LinearLayout>
+                <TextView
+                    android:id="@+id/timestamp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="10dp"
+                    android:layout_marginRight="10dp"
+                    android:gravity="end"
+                    android:text="timestamp"
+                    android:textColor="@android:color/darker_gray" />
+
+                <ImageView
+                    android:id="@+id/read_circle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginEnd="20dp"
+                    android:layout_marginRight="20dp"
+                    android:src="@drawable/read_circle" />
+            </LinearLayout>
+        </RelativeLayout>
+
         <LinearLayout
             android:id="@+id/cta_linear_layout"
             android:layout_width="match_parent"
             android:layout_height="44dp"
-            android:layout_below="@+id/body_relative_layout"
+            android:layout_below="@+id/click_relative_layout"
             android:background="@android:color/white"
             android:orientation="horizontal"
+            android:visibility="visible"
             android:weightSum="6">
 
             <Button

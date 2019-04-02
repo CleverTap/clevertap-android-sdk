@@ -2,22 +2,22 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
-    <LinearLayout
+    <RelativeLayout
+        android:layout_width="wrap_content"
         android:id="@+id/body_relative_layout"
+        android:layout_height="wrap_content">
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:weightSum="2"
+        android:id="@+id/template_layout"
         android:baselineAligned="false">
-        <RelativeLayout
-            android:id="@+id/media_layout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1">
             <com.clevertap.android.sdk.CTCarouselViewPager
                 android:id="@+id/image_carousel_viewpager"
                 android:layout_width="match_parent"
+                android:layout_weight="1"
                 android:layout_height="wrap_content" />
-        </RelativeLayout>
+
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -70,7 +70,7 @@
                     android:layout_height="wrap_content"
                     android:layout_alignParentRight="true">
                     <TextView
-                        android:id="@+id/timestamp1"
+                        android:id="@+id/timestamp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="10dp"
@@ -97,6 +97,7 @@
         android:layout_height="44dp"
         android:background="@android:color/white"
         android:orientation="horizontal"
+        android:layout_below="@+id/template_layout"
         android:weightSum="6">
 
         <Button
@@ -135,4 +136,5 @@
             android:textSize="14sp"
             android:visibility="gone" />
     </LinearLayout>
+    </RelativeLayout>
 </LinearLayout>

@@ -30,6 +30,7 @@ public class Constants {
     static final int PROFILE_EVENT = 3;
     static final int RAISED_EVENT = 4;
     static final int DATA_EVENT = 5;
+    static final int NV_EVENT = 6;
     static final String ICON_BASE_URL = "http://static.wizrocket.com/android/ico/";
     static final String NOTIFICATION_CLICKED_EVENT_NAME = "Notification Clicked";
     static final String NOTIFICATION_VIEWED_EVENT_NAME = "Notification Viewed";

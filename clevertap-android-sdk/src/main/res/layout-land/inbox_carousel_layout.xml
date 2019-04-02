@@ -8,13 +8,24 @@
         android:orientation="vertical"
         android:layout_height="wrap_content"
         android:baselineAligned="false">
-        <com.clevertap.android.sdk.CTCarouselViewPager
-            android:id="@+id/image_carousel_viewpager"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:id="@+id/carousel_linear_layout"
+            android:layout_marginLeft="160dp"
+            android:layout_marginRight="160dp"
+            android:layout_marginStart="160dp"
+            android:layout_marginEnd="160dp"
+            android:layout_above="@id/timestamp_relative_layout"
+            android:layout_height="wrap_content">
+            <com.clevertap.android.sdk.CTCarouselViewPager
+                android:id="@+id/image_carousel_viewpager"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
         <RelativeLayout
             android:layout_width="match_parent"
-            android:layout_below="@+id/image_carousel_viewpager"
+            android:layout_alignParentBottom="true"
+            android:id="@+id/timestamp_relative_layout"
             android:layout_height="wrap_content">
             <LinearLayout
                 android:id="@+id/sliderDots"
@@ -23,11 +34,6 @@
                 android:layout_centerHorizontal="true"
                 android:layout_marginTop="6dp"
                 android:layout_height="wrap_content">
-                <ImageView
-                    android:id="@+id/read_circle1"
-                    android:src="@drawable/read_circle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content" />
             </LinearLayout>
             <LinearLayout
                 android:layout_width="wrap_content"
@@ -35,7 +41,7 @@
                 android:layout_height="wrap_content"
                 android:layout_alignParentRight="true">
                 <TextView
-                    android:id="@+id/timestamp1"
+                    android:id="@+id/carousel_timestamp"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginEnd="10dp"
@@ -43,7 +49,7 @@
                     android:text="timestamp"
                     android:textColor="@android:color/darker_gray" />
                 <ImageView
-                    android:id="@+id/read_circle"
+                    android:id="@+id/carousel_read_circle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"

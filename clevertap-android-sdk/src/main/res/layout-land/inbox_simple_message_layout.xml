@@ -7,10 +7,17 @@
     android:id="@+id/simple_message_relative_layout">
     <RelativeLayout
         android:id="@+id/click_relative_layout"
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content">
+        <LinearLayout
+            android:orientation="horizontal"
+            android:weightSum="2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:baselineAligned="false">
         <RelativeLayout
             android:id="@+id/media_layout"
+            android:layout_weight="1"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
             <com.clevertap.android.sdk.RectangleImageView
@@ -48,8 +55,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@android:color/white"
-            android:layout_below="@+id/media_layout">
+            android:layout_weight="1"
+            android:background="@android:color/white">
             <TextView
                 android:id="@+id/messageTitle"
                 android:layout_width="match_parent"
@@ -109,6 +116,7 @@
                 android:layout_below="@+id/timestamp_linear_layout"
                 android:background="@android:color/darker_gray"/>
         </RelativeLayout>
+        </LinearLayout>
     </RelativeLayout>
     <LinearLayout
         android:id="@+id/cta_linear_layout"

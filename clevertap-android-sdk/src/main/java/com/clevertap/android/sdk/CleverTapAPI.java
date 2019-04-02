@@ -1460,15 +1460,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (isMuted()) {
             return;
         }
-        try {
-            if(event.has("evtName")) {
-                if (event.getString("evtName").equals(Constants.NOTIFICATION_VIEWED_EVENT_NAME))
-                    processPushNotificationViewedEvent(context, event, eventType);
-                else
-                    processEvent(context, event, eventType);
-            }
-        }catch (JSONException e){
-            getConfigLogger().verbose(getAccountId(),"Couldn't parse event JSON : " + e.getLocalizedMessage());
+        if (eventType == Constants.NV_EVENT) {
+            getConfigLogger().verbose(getAccountId(),"Pushing Notification Viewed event onto separate queue");
+            processPushNotificationViewedEvent(context, event, Constants.RAISED_EVENT);
+        }
+        else {
+            processEvent(context, event, eventType);
         }
     }
 
@@ -1945,7 +1942,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
 
         if (emptyDomain) {
-            domain = Constants.PRIMARY_DOMAIN + "/hello";
+            domain = "eu1."+Constants.PRIMARY_DOMAIN + "/hello";
         } else {
             domain += "/a1";
         }
@@ -4566,7 +4563,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         } catch (Throwable ignored) {
             //no-op
         }
-        queueEvent(context, event, Constants.RAISED_EVENT);
+        queueEvent(context, event, Constants.NV_EVENT);
     }
 
     /**

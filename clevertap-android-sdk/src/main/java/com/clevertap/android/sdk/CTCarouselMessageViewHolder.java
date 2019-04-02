@@ -32,9 +32,9 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
         title = itemView.findViewById(R.id.messageTitle);
         message = itemView.findViewById(R.id.messageText);
         timestamp = itemView.findViewById(R.id.timestamp);
-        carouselTimestamp = itemView.findViewById(R.id.carousel_timestamp);
+        //carouselTimestamp = itemView.findViewById(R.id.carousel_timestamp);
         readDot = itemView.findViewById(R.id.read_circle);
-        carouselReadDot = itemView.findViewById(R.id.carousel_read_circle);
+        //carouselReadDot = itemView.findViewById(R.id.carousel_read_circle);
         clickLayout = itemView.findViewById(R.id.body_relative_layout);
     }
 
@@ -45,29 +45,29 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
         // noinspection ConstantConditions
         final Context appContext = parent.getActivity().getApplicationContext();
         CTInboxMessageContent content = inboxMessage.getInboxMessageContents().get(0);
-        if (inboxMessage.getType() == CTInboxMessageType.CarouselImageMessage) {
-            this.title.setVisibility(View.GONE);
-            this.message.setVisibility(View.GONE);
-            this.carouselTimestamp.setVisibility(View.VISIBLE);
-            if(inboxMessage.isRead()){
-                this.carouselReadDot.setVisibility(View.GONE);
-            }else{
-                this.carouselReadDot.setVisibility(View.VISIBLE);
-            }
-            String carouselImageDisplayTimestamp  = calculateDisplayTimestamp(inboxMessage.getDate());
-            this.carouselTimestamp.setText(carouselImageDisplayTimestamp);
-            this.carouselTimestamp.setTextColor(Color.parseColor(content.getTitleColor()));
-            this.timestamp.setVisibility(View.GONE);
-            this.readDot.setVisibility(View.GONE);
-        } else {
+//        if (inboxMessage.getType() == CTInboxMessageType.CarouselImageMessage) {
+//            this.title.setVisibility(View.GONE);
+//            this.message.setVisibility(View.GONE);
+//            this.carouselTimestamp.setVisibility(View.VISIBLE);
+//            if(inboxMessage.isRead()){
+//                this.carouselReadDot.setVisibility(View.GONE);
+//            }else{
+//                this.carouselReadDot.setVisibility(View.VISIBLE);
+//            }
+//            String carouselImageDisplayTimestamp  = calculateDisplayTimestamp(inboxMessage.getDate());
+//            this.carouselTimestamp.setText(carouselImageDisplayTimestamp);
+//            this.carouselTimestamp.setTextColor(Color.parseColor(content.getTitleColor()));
+//            this.timestamp.setVisibility(View.GONE);
+//            this.readDot.setVisibility(View.GONE);
+//        } else {
             this.title.setVisibility(View.VISIBLE);
             this.message.setVisibility(View.VISIBLE);
             this.title.setText(content.getTitle());
             this.title.setTextColor(Color.parseColor(content.getTitleColor()));
             this.message.setText(content.getMessage());
             this.message.setTextColor(Color.parseColor(content.getMessageColor()));
-            this.carouselTimestamp.setVisibility(View.GONE);
-            this.carouselReadDot.setVisibility(View.GONE);
+            //this.carouselTimestamp.setVisibility(View.GONE);
+            //this.carouselReadDot.setVisibility(View.GONE);
             if(inboxMessage.isRead()){
                 this.readDot.setVisibility(View.GONE);
             }else{
@@ -77,7 +77,7 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
             String carouselDisplayTimestamp  = calculateDisplayTimestamp(inboxMessage.getDate());
             this.timestamp.setText(carouselDisplayTimestamp);
             this.timestamp.setTextColor(Color.parseColor(content.getTitleColor()));
-        }
+        //}
 
         this.clickLayout.setBackgroundColor(Color.parseColor(inboxMessage.getBgColor()));
 
