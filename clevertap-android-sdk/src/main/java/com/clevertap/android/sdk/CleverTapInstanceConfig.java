@@ -23,6 +23,7 @@ public class CleverTapInstanceConfig implements Parcelable {
     private boolean createdPostAppLaunch;
     private boolean sslPinning;
     private boolean backgroundSync;
+    private String fcmSenderId;
 
     private CleverTapInstanceConfig(Context context, String accountId, String accountToken, String accountRegion, boolean isDefault){
         this.accountId = accountId;
@@ -41,6 +42,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.gcmSenderId = manifest.getGCMSenderId();
         this.sslPinning = manifest.isSSLPinningEnabled();
         this.backgroundSync = manifest.isBackgroundSync();
+        this.fcmSenderId = manifest.getFCMSenderId();
     }
 
     CleverTapInstanceConfig(CleverTapInstanceConfig config){
@@ -58,6 +60,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.createdPostAppLaunch = config.createdPostAppLaunch;
         this.sslPinning = config.sslPinning;
         this.backgroundSync = config.backgroundSync;
+        this.fcmSenderId = config.fcmSenderId;
     }
 
     private CleverTapInstanceConfig(String jsonString) throws Throwable {
@@ -91,6 +94,8 @@ public class CleverTapInstanceConfig implements Parcelable {
                 this.sslPinning = configJsonObject.getBoolean("sslPinning");
             if(configJsonObject.has("backgroundSync"))
                 this.backgroundSync = configJsonObject.getBoolean("backgroundSync");
+            if(configJsonObject.has("fcmSenderId"))
+                this.fcmSenderId = configJsonObject.getString("fcmSenderId");
         } catch (Throwable t){
             Logger.v("Error constructing CleverTapInstanceConfig from JSON: " + jsonString +": ", t.getCause());
             throw(t);
@@ -111,6 +116,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         createdPostAppLaunch = in.readByte() != 0x00;
         sslPinning = in.readByte() != 0x00;
         backgroundSync = in.readByte() != 0x00;
+        fcmSenderId = in.readString();
     }
 
     @SuppressWarnings("unused")
@@ -243,6 +249,10 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.backgroundSync = backgroundSync;
     }
 
+    public String getFcmSenderId() {
+        return fcmSenderId;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -263,6 +273,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         dest.writeByte((byte) (sslPinning ? 0x01 : 0x00));
         dest.writeByte((byte) (createdPostAppLaunch ? 0x01 : 0x00));
         dest.writeByte((byte) (backgroundSync ? 0x01 : 0x00));
+        dest.writeString(fcmSenderId);
     }
 
     @SuppressWarnings("unused")
@@ -294,6 +305,7 @@ public class CleverTapInstanceConfig implements Parcelable {
             configJsonObject.put("createdPostAppLaunch", isCreatedPostAppLaunch());
             configJsonObject.put("sslPinning", isSslPinningEnabled());
             configJsonObject.put("backgroundSync", isBackgroundSync());
+            configJsonObject.put("fcmSenderId", getFcmSenderId());
             return configJsonObject.toString();
         }catch (Throwable e){
             Logger.v("Unable to convert config to JSON : ",e.getCause());

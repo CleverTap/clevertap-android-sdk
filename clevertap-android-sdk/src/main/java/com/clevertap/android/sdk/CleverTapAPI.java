@@ -44,6 +44,8 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 import com.google.android.gms.iid.InstanceID;
 import com.google.android.gms.plus.model.people.Person;
 import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.messaging.FirebaseMessaging;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -719,6 +721,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //Push
     private void doFCMRefresh() {
+        final DeviceInfo _deviceInfo = this.deviceInfo;
         postAsyncSafely("FcmManager#doFCMRefresh", new Runnable() {
             @Override
             public void run() {
@@ -728,7 +731,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         return;
                     }
 
-                    String freshToken = FCMGetFreshToken();
+                    String freshToken = FCMGetFreshToken(_deviceInfo.getFCMSenderID());
                     if (freshToken == null) return;
 
                     cacheFCMToken(freshToken);
@@ -783,11 +786,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     /**
      * request token from FCM
      */
-    private String FCMGetFreshToken() {
-        getConfigLogger().verbose(getAccountId(), "FcmManager: Requesting a FCM token");
+    private String FCMGetFreshToken(final String senderId) {
         String token = null;
         try {
-            token = FirebaseInstanceId.getInstance().getToken();
+            if(senderId != null){
+                getConfigLogger().verbose(getAccountId(), "FcmManager: Requesting a FCM token with Sender Id - "+senderId);
+                token = FirebaseInstanceId.getInstance().getToken(senderId, FirebaseMessaging.INSTANCE_ID_SCOPE);
+            }else {
+                getConfigLogger().verbose(getAccountId(), "FcmManager: Requesting a FCM token");
+                token = FirebaseInstanceId.getInstance().getToken();
+            }
             getConfigLogger().info(getAccountId(),"FCM token: "+token);
         } catch (Throwable t) {
             getConfigLogger().verbose(getAccountId(), "FcmManager: Error requesting FCM token", t);

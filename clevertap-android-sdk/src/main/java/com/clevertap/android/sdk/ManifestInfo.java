@@ -17,6 +17,7 @@ class ManifestInfo {
     private static String excludedActivities;
     private static boolean sslPinning;
     private static boolean backgroundSync;
+    private static String fcmSenderId;
 
     private static String _getManifestStringValueForKey(Bundle manifest, String name) {
         try {
@@ -55,6 +56,10 @@ class ManifestInfo {
         excludedActivities = _getManifestStringValueForKey(metaData,Constants.LABEL_INAPP_EXCLUDE);
         sslPinning = "1".equals(_getManifestStringValueForKey(metaData,Constants.LABEL_SSL_PINNING));
         backgroundSync = "1".equals(_getManifestStringValueForKey(metaData,Constants.LABEL_BACKGROUND_SYNC));
+        fcmSenderId = _getManifestStringValueForKey(metaData, Constants.LABEL_FCM_SENDER_ID);
+        if (fcmSenderId != null) {
+            fcmSenderId = fcmSenderId.replace("id:", "");
+        }
     }
 
     synchronized static ManifestInfo getInstance(Context context){
@@ -98,6 +103,10 @@ class ManifestInfo {
 
     boolean isBackgroundSync() {
         return backgroundSync;
+    }
+
+    String getFCMSenderId() {
+        return fcmSenderId;
     }
 
     static void changeCredentials(String id, String token, String region){

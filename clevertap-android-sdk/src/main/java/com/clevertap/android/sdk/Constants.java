@@ -15,6 +15,7 @@ public class Constants {
     static final String LABEL_DISABLE_APP_LAUNCH = "CLEVERTAP_DISABLE_APP_LAUNCHED";
     static final String LABEL_SSL_PINNING = "CLEVERTAP_SSL_PINNING";
     static final String LABEL_BACKGROUND_SYNC = "CLEVERTAP_BACKGROUND_SYNC";
+    static final String LABEL_FCM_SENDER_ID = "FCM_SENDER_ID";
     static final String CLEVERTAP_OPTOUT = "ct_optout";
     static final String CLEVERTAP_USE_GOOGLE_AD_ID = "CLEVERTAP_USE_GOOGLE_AD_ID";
     static final String CLEVERTAP_STORAGE_TAG = "WizRocket";
