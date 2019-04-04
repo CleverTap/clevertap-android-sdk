@@ -1,5 +1,8 @@
 ## CHANGE LOG
 
+### Version 3.4.3 (April 4, 2019)
+* Adds support for specifying custom FCM Sender ID to request token
+
 ### Version 3.4.2 (February 6, 2019)
 * Improved callback support for App Inbox
 * Fixed Carousel dots rendering issue

@@ -269,6 +269,13 @@ CleverTap handles closing the notification with Action buttons. You will have to
      </service>
 ```  
 
+Starting with v3.4.3, the CleverTap SDK supports specifying a custom FCM Sender ID. The SDK will now request for a token with the specified FCM Sender ID if it is present in the `AndroidManifest.xml`. If the FCM Sender ID is not present in the `AndroidManifest.xml` file, then the SDK will request for the token in the default manner which uses the app's `google-services.json` file. To use a custom FCM Sender ID, add the following field in your app's `AndroidManifest.xml`
+```xml
+    <meta-data
+        android:name="FCM_SENDER_ID"
+        android:value="id:1234567890"/>
+```
+
 #### Push Amplification
 
 Starting with v3.4.0, the SDK supports Push Amplification. Push Amplification is a capability that allows you to reach users on devices which suppress notifications via GCM/FCM. To allow your app to use CleverTap's Push Amplification via background ping service, add the following fields in your app's `AndroidManifest.xml`
