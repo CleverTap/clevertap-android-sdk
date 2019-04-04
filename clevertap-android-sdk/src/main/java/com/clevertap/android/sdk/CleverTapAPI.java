@@ -786,12 +786,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     /**
      * request token from FCM
      */
-    private String FCMGetFreshToken(final String senderId) {
+    private String FCMGetFreshToken(final String senderID) {
         String token = null;
         try {
-            if(senderId != null){
-                getConfigLogger().verbose(getAccountId(), "FcmManager: Requesting a FCM token with Sender Id - "+senderId);
-                token = FirebaseInstanceId.getInstance().getToken(senderId, FirebaseMessaging.INSTANCE_ID_SCOPE);
+            if(senderID != null){
+                getConfigLogger().verbose(getAccountId(), "FcmManager: Requesting a FCM token with Sender Id - "+senderID);
+                token = FirebaseInstanceId.getInstance().getToken(senderID, FirebaseMessaging.INSTANCE_ID_SCOPE);
             }else {
                 getConfigLogger().verbose(getAccountId(), "FcmManager: Requesting a FCM token");
                 token = FirebaseInstanceId.getInstance().getToken();
