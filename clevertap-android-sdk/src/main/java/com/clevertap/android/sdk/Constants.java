@@ -18,6 +18,7 @@ public class Constants {
     static final String LABEL_CUSTOM_ID = "CLEVERTAP_USE_CUSTOM_ID";
     static final String LABEL_USE_GOOGLE_AD_ID = "CLEVERTAP_USE_GOOGLE_AD_ID";
     static final String LABEL_RAISE_NOTIFICATION_VIEWED = "CLEVERTAP_RAISE_NOTIFICATION_VIEWED";
+    static final String LABEL_FCM_SENDER_ID = "FCM_SENDER_ID";
     static final String CLEVERTAP_OPTOUT = "ct_optout";
     static final String CLEVERTAP_STORAGE_TAG = "WizRocket";
     static final String CLEVERTAP_LOG_TAG = "CleverTap";
@@ -71,7 +72,6 @@ public class Constants {
     static final String SESSION_ID_LAST = "lastSessionId";
     static final String LAST_SESSION_EPOCH = "sexe";
     static final String LABEL_SENDER_ID = "GCM_SENDER_ID";
-    static final String LABEL_FCM_SENDER_ID = "FCM_SENDER_ID";
     static final int MAX_KEY_LENGTH = 120;
     static final int MAX_VALUE_LENGTH = 512;
     static final int MAX_MULTI_VALUE_ARRAY_LENGTH = 100;

@@ -61,6 +61,9 @@ class ManifestInfo {
         useCustomID = "1".equals(_getManifestStringValueForKey(metaData,Constants.LABEL_CUSTOM_ID));
         raiseNotificationViewed = "1".equals(_getManifestStringValueForKey(metaData,Constants.LABEL_RAISE_NOTIFICATION_VIEWED));
         fcmSenderId = _getManifestStringValueForKey(metaData, Constants.LABEL_FCM_SENDER_ID);
+        if (fcmSenderId != null) {
+            fcmSenderId = fcmSenderId.replace("id:", "");
+        }
     }
 
     synchronized static ManifestInfo getInstance(Context context){
@@ -114,7 +117,7 @@ class ManifestInfo {
         return useCustomID;
     }
 
-    boolean raiseNotificationViewed(){
+    boolean raiseNotificationViewed() {
         return raiseNotificationViewed;
     }
 
