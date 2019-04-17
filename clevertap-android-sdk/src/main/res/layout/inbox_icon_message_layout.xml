@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
     <LinearLayout
-        android:id="@+id/body_relative_layout"
+        android:id="@+id/body_linear_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal">
@@ -61,7 +61,7 @@
     <RelativeLayout
         android:id="@+id/media_layout"
         android:layout_width="match_parent"
-        android:layout_below="@id/body_relative_layout"
+        android:layout_below="@id/body_linear_layout"
         android:layout_height="wrap_content">
         <com.clevertap.android.sdk.RectangleImageView
             android:id="@+id/media_image"

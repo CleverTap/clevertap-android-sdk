@@ -33,8 +33,8 @@ import java.util.Date;
 
 class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
     @SuppressWarnings({"unused", "WeakerAccess"})
-    RelativeLayout relativeLayout,clickLayout,bodyRelativeLayout;
-    LinearLayout ctaLinearLayout;
+    RelativeLayout relativeLayout,clickLayout;
+    LinearLayout ctaLinearLayout,bodyRelativeLayout;
     FrameLayout frameLayout;
     Context context;
     ImageView mediaImage,squareImage;
@@ -167,14 +167,20 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         final DisplayMetrics displayMetrics = resources.getDisplayMetrics();
 
         int width;
+        int height;
         if(CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-             //width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, Constants.LIST_VIEW_WIDTH, resources.getDisplayMetrics());
-            width = resources.getDisplayMetrics().widthPixels/2;
+            if(message.getOrientation().equalsIgnoreCase("l")){
+                width = resources.getDisplayMetrics().widthPixels/2;
+                height = Math.round(width * 0.5625f);
+            }else{
+                height = resources.getDisplayMetrics().heightPixels;
+                width = height;
+            }
         }else {
             width = resources.getDisplayMetrics().widthPixels;
+            height = message.getOrientation().equalsIgnoreCase("l") ? Math.round(width * 0.5625f) : width;
         }
 
-        int height = message.getOrientation().equalsIgnoreCase("l") ? Math.round(width * 0.5625f) : width;
         videoSurfaceView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
 
         frameLayout.addView(videoSurfaceView);

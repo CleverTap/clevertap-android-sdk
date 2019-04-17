@@ -3,24 +3,20 @@
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent">
     <RelativeLayout
-        android:id="@+id/body_relative_layout"
-        android:layout_width="match_parent"
+        android:id="@+id/body_linear_layout"
+        android:layout_width="wrap_content"
         android:orientation="vertical"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:baselineAligned="false">
         <LinearLayout
             android:layout_width="wrap_content"
             android:id="@+id/carousel_linear_layout"
-            android:layout_marginLeft="160dp"
-            android:layout_marginRight="160dp"
-            android:layout_marginStart="160dp"
-            android:layout_marginEnd="160dp"
             android:layout_above="@id/timestamp_relative_layout"
-            android:layout_height="wrap_content">
+            android:layout_height="match_parent">
             <com.clevertap.android.sdk.CTCarouselViewPager
                 android:id="@+id/image_carousel_viewpager"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="match_parent" />
         </LinearLayout>
         <RelativeLayout
             android:layout_width="match_parent"

@@ -1548,7 +1548,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 if (vr != null) {
                     event.put(Constants.ERROR_KEY, getErrorObject(vr));
                 }
+                getConfigLogger().verbose(getAccountId(),"Pushing Notification Viewed event onto DB");
                 queuePushNotificationViewedEventToDB(context,event,eventType);
+                getConfigLogger().verbose(getAccountId(),"Pushing Notification Viewed event onto queue flush");
                 schedulePushNotificationViewedQueueFlush(context);
             }catch (Throwable t){
                 getConfigLogger().verbose(getAccountId(),"Failed to queue notification viewed event: "+ event.toString(),t);
@@ -1712,6 +1714,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             pushNotificationViewedRunnable = new Runnable() {
                 @Override
                 public void run() {
+                    getConfigLogger().verbose(getAccountId(),"Pushing Notification Viewed event onto queue flush async");
                     flushQueueAsync(context,EventGroup.PUSH_NOTIFICATION_VIEWED);
                 }
             };
@@ -1740,6 +1743,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         postAsyncSafely("CommsManager#flushQueueAsync", new Runnable() {
             @Override
             public void run() {
+                getConfigLogger().verbose(getAccountId(),"Pushing Notification Viewed event onto queue flush sync");
                 flushQueueSync(context,eventGroup);
             }
         });
@@ -1766,6 +1770,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 }
             });
         } else {
+            getConfigLogger().verbose(getAccountId(),"Pushing Notification Viewed event onto queue DB flush");
             flushDBQueue(context,eventGroup);
         }
     }
@@ -1943,7 +1948,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
 
         if (emptyDomain) {
-            domain = "eu1."+Constants.PRIMARY_DOMAIN + "/hello";
+            domain = Constants.PRIMARY_DOMAIN + "/hello";
         } else {
             domain += "/a1";
         }
@@ -1976,9 +1981,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         final String spikyDomainName = conn.getHeaderField(Constants.SPIKY_HEADER_DOMAIN_NAME);
         Logger.v("Getting spiky domain from header - " + spikyDomainName);
-//        if (spikyDomainName == null || spikyDomainName.trim().length() == 0) {
-//            return true;
-//        }
 
         setMuted(context, false);
         setDomain(context, domainName);
@@ -2105,8 +2107,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @SuppressWarnings("SameParameterValue")
     private QueueCursor getQueuedEvents(final Context context, final int batchSize, final QueueCursor previousCursor, final EventGroup eventGroup) {
         if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED){
+            getConfigLogger().verbose(getAccountId(),"Returning Queued Notification Viewed events");
             return getPushNotificationViewedQueuedEvents(context,batchSize,previousCursor);
         }else{
+            getConfigLogger().verbose(getAccountId(),"Returning Queued events");
             return getQueuedDBEvents(context, batchSize, previousCursor);
         }
     }
@@ -5688,11 +5692,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             String wzrk_rnv = extras.getString(Constants.WZRK_RNV,"");
             if(!wzrk_rnv.isEmpty()){
                 if(config !=null && config.getRaiseNotificationViewed() && wzrk_rnv.equals("true")){
+                    Logger.v("Raising Notification Viewed as per NB");
                     pushNotificationViewedEvent(extras);
-                }
-            }else {
-                if (config != null && config.getRaiseNotificationViewed()) {
-                    pushNotificationViewedEvent(extras);
+                }else{
+                    Logger.v("Not raising Notification Viewed");
                 }
             }
         }

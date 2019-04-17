@@ -27,7 +27,7 @@ public class CTCarouselImageViewHolder extends CTInboxBaseMessageViewHolder {
         sliderDots = itemView.findViewById(R.id.sliderDots);
         carouselTimestamp = itemView.findViewById(R.id.carousel_timestamp);
         carouselReadDot = itemView.findViewById(R.id.carousel_read_circle);
-        clickLayout = itemView.findViewById(R.id.body_relative_layout);
+        clickLayout = itemView.findViewById(R.id.body_linear_layout);
     }
 
     @Override

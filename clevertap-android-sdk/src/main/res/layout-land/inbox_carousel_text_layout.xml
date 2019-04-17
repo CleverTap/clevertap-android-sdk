@@ -4,7 +4,7 @@
     android:layout_height="match_parent">
     <RelativeLayout
         android:layout_width="wrap_content"
-        android:id="@+id/body_relative_layout"
+        android:id="@+id/body_linear_layout"
         android:layout_height="wrap_content">
     <LinearLayout
         android:layout_width="match_parent"
@@ -14,10 +14,9 @@
         android:baselineAligned="false">
             <com.clevertap.android.sdk.CTCarouselViewPager
                 android:id="@+id/image_carousel_viewpager"
-                android:layout_width="match_parent"
+                android:layout_width="wrap_content"
                 android:layout_weight="1"
                 android:layout_height="wrap_content" />
-
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

@@ -6,7 +6,6 @@ import android.content.res.Resources;
 import android.graphics.Color;
 import android.os.Handler;
 import android.support.annotation.NonNull;
-import android.util.TypedValue;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -50,7 +49,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
         squareImage = itemView.findViewById(R.id.square_media_image);
         clickLayout = itemView.findViewById(R.id.click_relative_layout);
         ctaLinearLayout = itemView.findViewById(R.id.cta_linear_layout);
-        bodyRelativeLayout = itemView.findViewById(R.id.body_relative_layout);
+        bodyRelativeLayout = itemView.findViewById(R.id.body_linear_layout);
         progressBarFrameLayout = itemView.findViewById(R.id.simple_progress_frame_layout);
         mediaLayout = itemView.findViewById(R.id.media_layout);
 
@@ -149,13 +148,21 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
         //Set the height and width of Progress Bar Frame to match the thumbnail size
         final Resources resources = context.getResources();
         int width;
+        int height;
         if(CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             //width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, Constants.LIST_VIEW_WIDTH, resources.getDisplayMetrics());
-            width = resources.getDisplayMetrics().widthPixels/2;
+            if(inboxMessage.getOrientation().equalsIgnoreCase("l")){
+                width = resources.getDisplayMetrics().widthPixels/2;
+                height = Math.round(width * 0.5625f);
+            }else{
+                height = resources.getDisplayMetrics().heightPixels;
+                width = height;
+            }
         }else {
             width = resources.getDisplayMetrics().widthPixels;
+            height = inboxMessage.getOrientation().equalsIgnoreCase("l") ? Math.round(width * 0.5625f) : width;
         }
-        int height = inboxMessage.getOrientation().equalsIgnoreCase("l") ? Math.round(width * 0.5625f) : width;
+
         this.progressBarFrameLayout.setLayoutParams(new RelativeLayout.LayoutParams(width, height));
         this.progressBarFrameLayout.setVisibility(View.GONE);
         try {

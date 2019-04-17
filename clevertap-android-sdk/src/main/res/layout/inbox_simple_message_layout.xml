@@ -43,8 +43,8 @@
                     android:visibility="visible"/>
             </FrameLayout>
         </RelativeLayout>
-        <RelativeLayout
-            android:id="@+id/body_relative_layout"
+        <LinearLayout
+            android:id="@+id/body_linear_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
@@ -108,7 +108,7 @@
                 android:layout_height="1dp"
                 android:layout_below="@+id/timestamp_linear_layout"
                 android:background="@android:color/darker_gray"/>
-        </RelativeLayout>
+        </LinearLayout>
     </RelativeLayout>
     <LinearLayout
         android:id="@+id/cta_linear_layout"
