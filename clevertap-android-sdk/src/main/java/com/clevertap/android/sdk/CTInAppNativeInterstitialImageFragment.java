@@ -83,7 +83,7 @@ public class CTInAppNativeInterstitialImageFragment extends CTInAppBaseFullFragm
                 relativeLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                     @Override
                     public void onGlobalLayout() {
-                        RelativeLayout relativeLayout1 = fl.findViewById(R.id.interstitial_relative_layout);
+                        RelativeLayout relativeLayout1 = fl.findViewById(R.id.interstitial_image_relative_layout);
                         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1.getLayoutParams();
                         if (inAppNotification.isTablet() && isTablet()) {
                             layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 1.78f);

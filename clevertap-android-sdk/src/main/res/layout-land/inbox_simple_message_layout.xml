@@ -28,22 +28,22 @@
                     <com.clevertap.android.sdk.HorizontalRectangleImageView
                         android:id="@+id/media_image"
                         android:layout_width="wrap_content"
-                        android:scaleType="centerCrop"
+                        android:scaleType="fitCenter"
                         android:layout_centerInParent="true"
                         android:layout_height="match_parent"
                         android:visibility="visible" />
 
                     <com.clevertap.android.sdk.HorizontalSquareImageView
                         android:id="@+id/square_media_image"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:scaleType="centerCrop"
                         android:layout_centerInParent="true"
-                        android:layout_height="match_parent"
+                        android:layout_height="wrap_content"
                         android:visibility="gone" />
 
                     <FrameLayout
                         android:id="@+id/simple_message_frame_layout"
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_centerInParent="true"
                         android:layout_height="wrap_content"
                         android:visibility="gone"/>

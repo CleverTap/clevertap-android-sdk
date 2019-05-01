@@ -11,10 +11,10 @@
         android:id="@+id/interstitial_image_relative_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="45dp"
-        android:layout_marginLeft="80dp"
-        android:layout_marginRight="80dp"
-        android:layout_marginBottom="45dp"
+        android:layout_marginRight="85dp"
+        android:layout_marginLeft="85dp"
+        android:layout_marginBottom="60dp"
+        android:layout_marginTop="60dp"
         >
 
         <ImageView
@@ -28,11 +28,11 @@
 
     </RelativeLayout>
     <com.clevertap.android.sdk.CloseImageView
-        android:layout_width="30dp"
-        android:layout_height="30dp"
+        android:layout_width="40dp"
+        android:layout_height="40dp"
         android:layout_gravity="top|end"
         android:layout_marginRight="65dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginTop="40dp"
         android:adjustViewBounds="true"
         android:layout_marginEnd="65dp" />
 </FrameLayout>

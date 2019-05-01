@@ -40,6 +40,7 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
     ImageView mediaImage,squareImage;
     FrameLayout progressBarFrameLayout;
     private ImageView muteIcon;
+    RelativeLayout mediaLayout;
 
     private WeakReference<CTInboxListViewFragment> parentWeakReference;
 
@@ -170,10 +171,14 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         int height;
         if(CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             if(message.getOrientation().equalsIgnoreCase("l")){
-                width = resources.getDisplayMetrics().widthPixels/2;
+                //width = resources.getDisplayMetrics().widthPixels/2;
+                //height = Math.round(width * 0.5625f);
+                width = this.mediaLayout.getMeasuredWidth();
                 height = Math.round(width * 0.5625f);
             }else{
-                height = resources.getDisplayMetrics().heightPixels;
+                //height = frameLayout.getLayoutParams().height;
+                //width = height;
+                height = this.mediaLayout.getMeasuredHeight();
                 width = height;
             }
         }else {
@@ -181,7 +186,7 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
             height = message.getOrientation().equalsIgnoreCase("l") ? Math.round(width * 0.5625f) : width;
         }
 
-        videoSurfaceView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
+        videoSurfaceView.setLayoutParams(new FrameLayout.LayoutParams(width,height));
 
         frameLayout.addView(videoSurfaceView);
         frameLayout.setBackgroundColor(Color.parseColor(message.getBgColor()));

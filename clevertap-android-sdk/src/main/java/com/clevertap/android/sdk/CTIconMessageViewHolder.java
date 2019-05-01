@@ -26,12 +26,11 @@ import org.json.JSONObject;
  */
 class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
 
-    private ImageView readDot, mediaImage,iconImage,squareImage;
+    private ImageView readDot,iconImage;
     private Button cta1,cta2,cta3;
     private TextView title,message,timestamp;
     private RelativeLayout clickLayout;
     private LinearLayout ctaLinearLayout;
-    private RelativeLayout mediaLayout;
 
     CTIconMessageViewHolder(@NonNull View itemView) {
         super(itemView);
@@ -144,17 +143,6 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
         this.squareImage.setVisibility(View.GONE);
         this.squareImage.setBackgroundColor(Color.parseColor(inboxMessage.getBgColor()));
         this.mediaLayout.setVisibility(View.GONE);
-        //Set the height and width of Progress Bar Frame to match the thumbnail size
-        final Resources resources = context.getResources();
-        int width;
-        if(CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            //width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, Constants.LIST_VIEW_WIDTH, resources.getDisplayMetrics());
-            width = resources.getDisplayMetrics().widthPixels/2;
-        }else {
-            width = resources.getDisplayMetrics().widthPixels;
-        }
-        int height = inboxMessage.getOrientation().equalsIgnoreCase("l") ? Math.round(width * 0.5625f) : width;
-        this.progressBarFrameLayout.setLayoutParams(new RelativeLayout.LayoutParams(width, height));
         this.progressBarFrameLayout.setVisibility(View.GONE);
         try {
             switch (inboxMessage.getOrientation()) {
@@ -277,6 +265,20 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
         }catch (NoClassDefFoundError error) {
             Logger.d("CleverTap SDK requires Glide dependency. Please refer CleverTap Documentation for more info");
         }
+
+        //Set the height and width of Progress Bar Frame to match the thumbnail size
+        final Resources resources = context.getResources();
+        int width;
+        int height;
+        if(CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            height = this.mediaLayout.getMeasuredHeight();
+            width = this.mediaLayout.getMeasuredWidth();
+        }else {
+            width = resources.getDisplayMetrics().widthPixels;
+            height = inboxMessage.getOrientation().equalsIgnoreCase("l") ? Math.round(width * 0.5625f) : width;
+        }
+        this.progressBarFrameLayout.setLayoutParams(new RelativeLayout.LayoutParams(width, height));
+
         //New thread to remove the Read dot, mark message as read and raise Notification Viewed
         Runnable iconRunnable = new Runnable() {
             @Override

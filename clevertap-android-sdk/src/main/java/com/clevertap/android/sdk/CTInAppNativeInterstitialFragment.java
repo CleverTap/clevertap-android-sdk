@@ -173,7 +173,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                         }
                     }
                 });
-                if (inAppNotification.mediaIsImage()) {
+                if (inAppNotification.landscapeMediaIsImage()) {
                     Bitmap image = inAppNotification.getLandscapeImage();
                     if (image != null) {
                         ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
@@ -181,7 +181,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                         imageView.setImageBitmap(inAppNotification.getLandscapeImage());
                     }
                 }
-                else if (inAppNotification.mediaIsGIF()) {
+                else if (inAppNotification.landscapeMediaIsGIF()) {
                     if (inAppNotification.getLandscapeGifByteArray() != null) {
                         gifImageView = relativeLayout.findViewById(R.id.gifImage);
                         gifImageView.setVisibility(View.VISIBLE);
@@ -189,12 +189,12 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                         gifImageView.startAnimation();
                     }
                 }
-                else if (inAppNotification.mediaIsVideo()) {
+                else if (inAppNotification.landscapeMediaIsVideo()) {
                     initFullScreenDialog();
                     prepareMedia();
                     playMedia();
                 }
-                else if (inAppNotification.mediaIsAudio()) {
+                else if (inAppNotification.landscapeMediaIsAudio()) {
                     prepareMedia();
                     playMedia();
                     disableFullScreenButton();
@@ -330,7 +330,12 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         // 3. Produces DataSource instances through which media data is loaded.
         DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(getActivity().getBaseContext(),
                 Util.getUserAgent(getActivity().getBaseContext(), getActivity().getApplication().getPackageName()), (TransferListener<? super DataSource>) bandwidthMeter);
-        HlsMediaSource hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(inAppNotification.getMediaUrl()));
+        HlsMediaSource hlsMediaSource = null;
+        if(currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
+            hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(inAppNotification.getMediaUrl()));
+        }else if(currentOrientation == Configuration.ORIENTATION_LANDSCAPE){
+            hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(inAppNotification.getLandscapeMediaUrl()));
+        }
         // 4. Prepare the player with the source.
         player.prepare(hlsMediaSource);
         player.setRepeatMode(Player.REPEAT_MODE_ONE);

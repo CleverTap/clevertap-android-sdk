@@ -179,7 +179,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
 
             String html = inAppNotification.getHtml();
 
-            String style = "<style>body{width:" + mWidth + "px; height: " + mHeight + "px}</style>";
+            String style = "<style>body{width:" + mWidth + "px; height: " + mHeight + "px; margin: 0; padding:0;}</style>";
             html = html.replaceFirst("<head>", "<head>" + style);
             Logger.v("Density appears to be " + d);
 

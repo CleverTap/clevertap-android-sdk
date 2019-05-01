@@ -39,6 +39,7 @@ class CTInAppNotification implements Parcelable {
     private String contentType;
     private String landscapeContentType;
     private String mediaUrl;
+    private String landscapeMediaUrl;
 
     private String title;
     private String titleColor;
@@ -104,7 +105,7 @@ class CTInAppNotification implements Parcelable {
             this.excludeFromCaps = jsonObject.has(Constants.KEY_EFC) && jsonObject.getInt(Constants.KEY_EFC) == 1;
             this.totalLifetimeCount = jsonObject.has(Constants.KEY_TLC) ? jsonObject.getInt(Constants.KEY_TLC) : -1;
             this.totalDailyCount = jsonObject.has(Constants.KEY_TDC) ? jsonObject.getInt(Constants.KEY_TDC) : -1;
-            this.jsEnabled = jsonObject.getBoolean(Constants.INAPP_JS_ENABLED);
+            this.jsEnabled = jsonObject.has(Constants.INAPP_JS_ENABLED) && jsonObject.getBoolean(Constants.INAPP_JS_ENABLED);
 
             JSONObject data = jsonObject.has(Constants.INAPP_DATA_TAG) ? jsonObject.getJSONObject(Constants.INAPP_DATA_TAG) : null;
             if (data != null) {
@@ -157,8 +158,8 @@ class CTInAppNotification implements Parcelable {
             this.inAppType = CTInAppType.fromString(this.type);
             this.isTablet = jsonObject.has(Constants.KEY_IS_TABLET) && jsonObject.getBoolean(Constants.KEY_IS_TABLET);
             this.backgroundColor = jsonObject.has(Constants.KEY_BG) ? jsonObject.getString(Constants.KEY_BG) : Constants.WHITE;
-            this.isPortrait = !jsonObject.has("handle_portrait") || jsonObject.getBoolean("handle_portrait");
-            this.isLandscape = jsonObject.has("handle_landscape") && jsonObject.getBoolean("handle_landscape");
+            this.isPortrait = !jsonObject.has(Constants.KEY_PORTRAIT) || jsonObject.getBoolean(Constants.KEY_PORTRAIT);
+            this.isLandscape = jsonObject.has(Constants.KEY_LANDSCAPE) && jsonObject.getBoolean(Constants.KEY_LANDSCAPE);
             JSONObject titleObject = jsonObject.has(Constants.KEY_TITLE) ? jsonObject.getJSONObject(Constants.KEY_TITLE) : null;
             if(titleObject != null) {
                 this.title = titleObject.has(Constants.KEY_TEXT) ? titleObject.getString(Constants.KEY_TEXT) : "";
@@ -188,10 +189,10 @@ class CTInAppNotification implements Parcelable {
                 }
             }
 
-            JSONObject media_landscape = jsonObject.has("media_landscape") ? jsonObject.getJSONObject("media_landscape") : null;
+            JSONObject media_landscape = jsonObject.has(Constants.KEY_MEDIA_LANDSCAPE) ? jsonObject.getJSONObject(Constants.KEY_MEDIA_LANDSCAPE) : null;
             if(media_landscape!=null){
                 this.landscapeContentType = media_landscape.has(Constants.KEY_CONTENT_TYPE) ? media_landscape.getString(Constants.KEY_CONTENT_TYPE) : "";
-                String mediaUrl = media_landscape.has("url_landscape") ? media_landscape.getString("url_landscape") : "";
+                String mediaUrl = media_landscape.has(Constants.KEY_URL) ? media_landscape.getString(Constants.KEY_URL) : "";
                 if(!mediaUrl.isEmpty()){
                     if(this.landscapeContentType.startsWith("image")){
                         this.landscapeImageUrl = mediaUrl;
@@ -201,7 +202,7 @@ class CTInAppNotification implements Parcelable {
                             this._landscapeImageCacheKey = UUID.randomUUID().toString();
                         }
                     } else {
-                        this.mediaUrl = mediaUrl;
+                        this.landscapeMediaUrl = mediaUrl;
                     }
                 }
             }
@@ -218,23 +219,46 @@ class CTInAppNotification implements Parcelable {
             switch(this.inAppType){
                 case CTInAppTypeFooter:
                 case CTInAppTypeHeader:
-                    if(mediaIsGIF() || mediaIsAudio() || mediaIsVideo()){
-                        this.imageUrl = null;
-                        Logger.d("Unable to download to media. Wrong media type for template");
+                    if(isPortrait()) {
+                        if (mediaIsGIF() || mediaIsAudio() || mediaIsVideo()) {
+                            this.imageUrl = null;
+                            Logger.d("Unable to download to media. Wrong media type for template");
+                        }
+                    }
+                    if(isLandscape()){
+                        if (landscapeMediaIsGIF() || landscapeMediaIsAudio() || landscapeMediaIsVideo()) {
+                            this.landscapeImageUrl = null;
+                            Logger.d("Unable to download to media. Wrong media type for template");
+                        }
                     }
                     break;
                 case CTInAppTypeCover:
                 case CTInAppTypeHalfInterstitial:
-                    if(mediaIsGIF() || mediaIsAudio() || mediaIsVideo()){
-                        this.imageUrl = null;
-                        Logger.d("Unable to download to media. Wrong media type for template");
+                    if(isPortrait()) {
+                        if (mediaIsGIF() || mediaIsAudio() || mediaIsVideo()) {
+                            this.imageUrl = null;
+                            Logger.d("Unable to download to media. Wrong media type for template");
+                        }
+                    }
+                    if(isLandscape()){
+                        if(landscapeMediaIsGIF() || landscapeMediaIsAudio() || landscapeMediaIsVideo()){
+                            this.landscapeImageUrl = null;
+                            Logger.d("Unable to download to media. Wrong media type for template");
+                        }
                     }
                     break;
                 case CTInAppTypeCoverImageOnly:
                 case CTInAppTypeHalfInterstitialImageOnly:
                 case CTInAppTypeInterstitialImageOnly:
-                    if(mediaIsGIF() || mediaIsAudio() || mediaIsVideo() || !mediaIsImage()){
-                        this.error = "Wrong media type for template";
+                    if(isPortrait()) {
+                        if (mediaIsGIF() || mediaIsAudio() || mediaIsVideo() || !mediaIsImage()) {
+                            this.error = "Wrong media type for template";
+                        }
+                    }
+                    if(isLandscape()){
+                        if (landscapeMediaIsGIF() || landscapeMediaIsAudio() || landscapeMediaIsVideo() || !landscapeMediaIsImage()) {
+                            this.error = "Wrong media type for template";
+                        }
                     }
                     break;
             }
@@ -245,87 +269,95 @@ class CTInAppNotification implements Parcelable {
 
     void prepareForDisplay() {
 
-        if (this.mediaIsGIF()) {
-            GifCache.init();
-            if(this.isPortrait() && this.isLandscape()) {
-                if (this.getGifByteArray() != null && this.getLandscapeGifByteArray() != null) {
-                    listener.notificationReady(this);
-                    return;
-                }
-            }else if(this.isPortrait()){
+        if(isPortrait()){
+            if (this.mediaIsGIF()) {
+                GifCache.init();
                 if (this.getGifByteArray() != null) {
                     listener.notificationReady(this);
                     return;
                 }
-            } else if(this.isLandscape()){
-                if (this.getLandscapeGifByteArray() != null) {
-                    listener.notificationReady(this);
-                    return;
-                }
-            }
-            Logger.v("CTInAppNotification: downloading GIF :" + this.imageUrl);
-            byte[] gifByteArray = Utils.getByteArrayFromImageURL(this.imageUrl);
-            if(gifByteArray != null){
-                Logger.v("GIF Downloaded from url: " + this.imageUrl);
-                if(!GifCache.addByteArray(this.getImageCacheKey(), gifByteArray)){
-                    this.error = "Error processing GIF";
-                }
-            }
-            Logger.v("CTInAppNotification: downloading GIF for landscape:" + this.landscapeImageUrl);
-            byte[] gifLandscapeByteArray = Utils.getByteArrayFromImageURL(this.landscapeImageUrl);
-            if(gifLandscapeByteArray != null){
-                Logger.v("GIF Downloaded from url: " + this.landscapeImageUrl);
-                if(!GifCache.addByteArray(this.getLandscapeImageCacheKey(), gifLandscapeByteArray)){
-                    this.error = "Error processing GIF";
-                }
-            }
-            listener.notificationReady(this);
 
-        } else if (this.mediaIsImage()) {
-            ImageCache.init();
-            if(this.isPortrait() && this.isLandscape()) {
-                if (this.getImage() != null && this.getLandscapeImage() !=null) {
-                    listener.notificationReady(this);
-                    return;
+                if(this.imageUrl != null) {
+                    Logger.v("CTInAppNotification: downloading GIF :" + this.imageUrl);
+                    byte[] gifByteArray = Utils.getByteArrayFromImageURL(this.imageUrl);
+                    if (gifByteArray != null) {
+                        Logger.v("GIF Downloaded from url: " + this.imageUrl);
+                        if (!GifCache.addByteArray(this.getImageCacheKey(), gifByteArray)) {
+                            this.error = "Error processing GIF";
+                        }
+                    }
                 }
-            }else if(this.isPortrait()){
+                //listener.notificationReady(this);
+            }else if (this.mediaIsImage()) {
+                ImageCache.init();
                 if (this.getImage() != null) {
                     listener.notificationReady(this);
                     return;
                 }
-            } else if(this.isLandscape()){
+
+                if(this.imageUrl !=null) {
+                    Logger.v("CTInAppNotification: downloading Image :" + this.imageUrl);
+                    Bitmap imageBitmap = Utils.getBitmapFromURL(this.imageUrl);
+                    if (imageBitmap != null) {
+                        Logger.v("Image Downloaded from url: " + this.imageUrl);
+                        if (!ImageCache.addBitmap(this.getImageCacheKey(), imageBitmap)) {
+                            this.error = "Error processing image";
+                        }
+                    }
+                }
+                //listener.notificationReady(this);
+            }
+            else if(this.mediaIsVideo() || this.mediaIsAudio()){
+                if (!this.videoSupported) {
+                    this.error = "InApp Video/Audio is not supported";
+                }
+                //listener.notificationReady(this);
+            }
+        }
+
+        if(isLandscape()){
+            if (this.landscapeMediaIsGIF()) {
+                GifCache.init();
+                if (this.getLandscapeGifByteArray() != null) {
+                    listener.notificationReady(this);
+                    return;
+                }
+                if(this.landscapeImageUrl != null) {
+                    Logger.v("CTInAppNotification: downloading GIF for landscape:" + this.landscapeImageUrl);
+                    byte[] gifLandscapeByteArray = Utils.getByteArrayFromImageURL(this.landscapeImageUrl);
+                    if (gifLandscapeByteArray != null) {
+                        Logger.v("GIF Downloaded from url: " + this.landscapeImageUrl);
+                        if (!GifCache.addByteArray(this.getLandscapeImageCacheKey(), gifLandscapeByteArray)) {
+                            this.error = "Error processing GIF";
+                        }
+                    }
+                }
+                //listener.notificationReady(this);
+            }else if (this.landscapeMediaIsImage()) {
+                ImageCache.init();
                 if (this.getLandscapeImage() !=null) {
                     listener.notificationReady(this);
                     return;
                 }
-            }
-            Logger.v("CTInAppNotification: downloading Image :" + this.imageUrl);
-            Bitmap imageBitmap = Utils.getBitmapFromURL(this.imageUrl);
-            if (imageBitmap != null) {
-                Logger.v("Image Downloaded from url: " + this.imageUrl);
-                if (!ImageCache.addBitmap(this.getImageCacheKey(), imageBitmap)) {
-                    this.error = "Error processing image";
+                if(this.landscapeImageUrl != null) {
+                    Logger.v("CTInAppNotification: downloading Image for landscape:" + this.landscapeImageUrl);
+                    Bitmap imageLandscapeBitmap = Utils.getBitmapFromURL(this.landscapeImageUrl);
+                    if (imageLandscapeBitmap != null) {
+                        Logger.v("Image Downloaded from url: " + this.landscapeImageUrl);
+                        if (!ImageCache.addBitmap(this.getLandscapeImageCacheKey(), imageLandscapeBitmap)) {
+                            this.error = "Error processing image";
+                        }
+                    }
                 }
-            }
-
-            Logger.v("CTInAppNotification: downloading Image for landscape:" + this.landscapeImageUrl);
-            Bitmap imageLandscapeBitmap = Utils.getBitmapFromURL(this.landscapeImageUrl);
-            if (imageLandscapeBitmap != null) {
-                Logger.v("Image Downloaded from url: " + this.landscapeImageUrl);
-                if (!ImageCache.addBitmap(this.getLandscapeImageCacheKey(), imageLandscapeBitmap)) {
-                    this.error = "Error processing image";
+                //listener.notificationReady(this);
+            }else if(this.landscapeMediaIsVideo() || this.landscapeMediaIsAudio()){
+                if (!this.videoSupported) {
+                    this.error = "InApp Video/Audio is not supported";
                 }
+                //listener.notificationReady(this);
             }
-
-            listener.notificationReady(this);
-        } else if(this.mediaIsVideo() || this.mediaIsAudio()){
-            if (!this.videoSupported) {
-                this.error = "InApp Video/Audio is not supported";
-            }
-            listener.notificationReady(this);
-        }else {
-            listener.notificationReady(this);
         }
+        listener.notificationReady(this);
     }
 
     private boolean validateNotifBundle(Bundle notif) {
@@ -505,6 +537,10 @@ class CTInAppNotification implements Parcelable {
         return mediaUrl;
     }
 
+    String getLandscapeMediaUrl() {
+        return landscapeMediaUrl;
+    }
+
     String getTitle() {
         return title;
     }
@@ -524,6 +560,10 @@ class CTInAppNotification implements Parcelable {
     @SuppressWarnings({"WeakerAccess"})
     String getContentType() {
         return contentType;
+    }
+
+    String getLandscapeContentType() {
+        return landscapeContentType;
     }
 
     String getBackgroundColor() {
@@ -582,6 +622,13 @@ class CTInAppNotification implements Parcelable {
                 GifCache.removeByteArray(getImageCacheKey());
             }
         }
+        if(this.landscapeImageUrl != null){
+            if(!this.landscapeContentType.equals(("image/gif"))){
+                ImageCache.removeBitmap(getLandscapeImageCacheKey());
+            }else{
+                GifCache.removeByteArray(getLandscapeImageCacheKey());
+            }
+        }
     }
 
     @SuppressWarnings({"unused"})
@@ -629,6 +676,26 @@ class CTInAppNotification implements Parcelable {
         return contentType != null && this.mediaUrl != null && contentType.startsWith("audio");
     }
 
+    boolean landscapeMediaIsImage() {
+        String contentType = this.getLandscapeContentType();
+        return contentType != null && this.landscapeImageUrl != null && contentType.startsWith("image") && !contentType.equals("image/gif");
+    }
+
+    boolean landscapeMediaIsGIF () {
+        String contentType = this.getLandscapeContentType();
+        return contentType != null && this.landscapeImageUrl != null && contentType.equals("image/gif");
+    }
+
+    boolean landscapeMediaIsVideo () {
+        String contentType = this.getLandscapeContentType();
+        return contentType != null && this.landscapeMediaUrl != null && contentType.startsWith("video");
+    }
+
+    boolean landscapeMediaIsAudio () {
+        String contentType = this.getLandscapeContentType();
+        return contentType != null && this.landscapeMediaUrl != null && contentType.startsWith("audio");
+    }
+
     boolean isInAppHTML(){
         return this.getInAppType().equals(CTInAppType.CTInAppTypeInterstitialHTML) || this.getInAppType().equals(CTInAppType.CTInAppTypeHalfInterstitialHTML) || this.getInAppType().equals(CTInAppType.CTInAppTypeCoverHTML);
     }
@@ -656,9 +723,11 @@ class CTInAppNotification implements Parcelable {
             actionExtras = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
             type = in.readString();
             contentType = in.readString();
+            landscapeContentType = in.readString();
             imageUrl = in.readString();
             _imageCacheKey = in.readString();
             mediaUrl = in.readString();
+            landscapeMediaUrl = in.readString();
             title = in.readString();
             titleColor = in.readString();
             backgroundColor = in.readString();
@@ -727,9 +796,11 @@ class CTInAppNotification implements Parcelable {
         }
         dest.writeString(type);
         dest.writeString(contentType);
+        dest.writeString(landscapeContentType);
         dest.writeString(imageUrl);
         dest.writeString(_imageCacheKey);
         dest.writeString(mediaUrl);
+        dest.writeString(landscapeMediaUrl);
         dest.writeString(title);
         dest.writeString(titleColor);
         dest.writeString(backgroundColor);
@@ -762,7 +833,7 @@ class CTInAppNotification implements Parcelable {
 
     // intended to only hold an image reference for the life of the parent CTInAppNotification, in order to facilitate parceling
     private static class ImageCache {
-        private static final int MIN_CACHE_SIZE = 1024 * 3; // 3mb minimum (in KB)
+        private static final int MIN_CACHE_SIZE = 1024 * 10; // 10mb minimum (in KB)
         private final static int maxMemory = (int) (Runtime.getRuntime().maxMemory())/1024;
         private final static int cacheSize = Math.max((maxMemory / 32), MIN_CACHE_SIZE);
 

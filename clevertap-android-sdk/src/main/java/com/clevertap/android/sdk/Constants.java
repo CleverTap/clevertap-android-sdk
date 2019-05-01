@@ -62,7 +62,7 @@ public class Constants {
     static final String INAPP_KEY = "inApp";
     static final String INAPP_IS_URL = "iu";
     static final int INAPP_CLOSE_IV_WIDTH = 40;
-    static final String INAPP_JS_ENABLED = "js";
+    static final String INAPP_JS_ENABLED = "isJsEnabled";
     static final String DEBUG_KEY = "d";
     static final String NOTIFICATION_ID_TAG = "wzrk_id";
     static final String DEEP_LINK_KEY = "wzrk_dl";
@@ -147,6 +147,9 @@ public class Constants {
     static final String KEY_MESSAGE= "message";
     static final String KEY_HIDE_CLOSE = "close";
     static final String KEY_MEDIA = "media";
+    static final String KEY_MEDIA_LANDSCAPE = "mediaLandscape";
+    static final String KEY_PORTRAIT = "hasPortrait";
+    static final String KEY_LANDSCAPE = "hasLandscape";
     static final String KEY_CONTENT_TYPE = "content_type";
     static final String KEY_URL = "url";
     static final String KEY_BUTTONS = "buttons";
@@ -184,7 +187,7 @@ public class Constants {
 
     static final String COMMAND_DELETE = "$delete";
     static final String GUID_PREFIX_GOOGLE_AD_ID = "__g";
-    static final String CUSTOM_CLEVERTAP_ID_PREFIX = "__m";
+    static final String CUSTOM_CLEVERTAP_ID_PREFIX = "__";
 
     // valid profile identifier keys
     static final Set<String> PROFILE_IDENTIFIER_KEYS = new HashSet<>(Arrays.asList(
