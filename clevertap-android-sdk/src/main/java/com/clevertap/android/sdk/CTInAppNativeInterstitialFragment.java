@@ -114,28 +114,28 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                         }
                     }
                 });
-                if (inAppNotification.mediaIsImage()) {
-                    Bitmap image = inAppNotification.getImage();
+                if (inAppNotification.getMediaList().get(0).isImage()) {
+                    Bitmap image = inAppNotification.getImage(inAppNotification.getMediaList().get(0));
                     if (image != null) {
                         ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
                         imageView.setVisibility(View.VISIBLE);
-                        imageView.setImageBitmap(inAppNotification.getImage());
+                        imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getMediaList().get(0)));
                     }
                 }
-                else if (inAppNotification.mediaIsGIF()) {
-                    if (inAppNotification.getGifByteArray() != null) {
+                else if (inAppNotification.getMediaList().get(0).isGIF()) {
+                    if (inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)) != null) {
                         gifImageView = relativeLayout.findViewById(R.id.gifImage);
                         gifImageView.setVisibility(View.VISIBLE);
-                        gifImageView.setBytes(inAppNotification.getGifByteArray());
+                        gifImageView.setBytes(inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)));
                         gifImageView.startAnimation();
                     }
                 }
-                else if (inAppNotification.mediaIsVideo()) {
+                else if (inAppNotification.getMediaList().get(0).isVideo()) {
                     initFullScreenDialog();
                     prepareMedia();
                     playMedia();
                 }
-                else if (inAppNotification.mediaIsAudio()) {
+                else if (inAppNotification.getMediaList().get(0).isAudio()) {
                     prepareMedia();
                     playMedia();
                     disableFullScreenButton();
@@ -173,28 +173,28 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                         }
                     }
                 });
-                if (inAppNotification.landscapeMediaIsImage()) {
-                    Bitmap image = inAppNotification.getLandscapeImage();
+                if (inAppNotification.getMediaList().get(0).isImage()) {
+                    Bitmap image = inAppNotification.getImage(inAppNotification.getMediaList().get(0));
                     if (image != null) {
                         ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
                         imageView.setVisibility(View.VISIBLE);
-                        imageView.setImageBitmap(inAppNotification.getLandscapeImage());
+                        imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getMediaList().get(0)));
                     }
                 }
-                else if (inAppNotification.landscapeMediaIsGIF()) {
-                    if (inAppNotification.getLandscapeGifByteArray() != null) {
+                else if (inAppNotification.getMediaList().get(0).isGIF()) {
+                    if (inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)) != null) {
                         gifImageView = relativeLayout.findViewById(R.id.gifImage);
                         gifImageView.setVisibility(View.VISIBLE);
-                        gifImageView.setBytes(inAppNotification.getLandscapeGifByteArray());
+                        gifImageView.setBytes(inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)));
                         gifImageView.startAnimation();
                     }
                 }
-                else if (inAppNotification.landscapeMediaIsVideo()) {
+                else if (inAppNotification.getMediaList().get(0).isVideo()) {
                     initFullScreenDialog();
                     prepareMedia();
                     playMedia();
                 }
-                else if (inAppNotification.landscapeMediaIsAudio()) {
+                else if (inAppNotification.getMediaList().get(0).isAudio()) {
                     prepareMedia();
                     playMedia();
                     disableFullScreenButton();
@@ -331,11 +331,11 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(getActivity().getBaseContext(),
                 Util.getUserAgent(getActivity().getBaseContext(), getActivity().getApplication().getPackageName()), (TransferListener<? super DataSource>) bandwidthMeter);
         HlsMediaSource hlsMediaSource = null;
-        if(currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
-            hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(inAppNotification.getMediaUrl()));
-        }else if(currentOrientation == Configuration.ORIENTATION_LANDSCAPE){
-            hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(inAppNotification.getLandscapeMediaUrl()));
-        }
+//        if(currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
+//            hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(inAppNotification.getMediaList().get(0).getMediaUrl()));
+//        }else if(currentOrientation == Configuration.ORIENTATION_LANDSCAPE){
+            hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(inAppNotification.getMediaList().get(0).getMediaUrl()));
+        //}
         // 4. Prepare the player with the source.
         player.prepare(hlsMediaSource);
         player.setRepeatMode(Player.REPEAT_MODE_ONE);
@@ -346,13 +346,13 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     public void onStart() {
         super.onStart();
         if(gifImageView != null){
-            if(currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
-                gifImageView.setBytes(inAppNotification.getGifByteArray());
+            //if(currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
+                gifImageView.setBytes(inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)));
                 gifImageView.startAnimation();
-            }else if(currentOrientation ==  Configuration.ORIENTATION_LANDSCAPE){
-                gifImageView.setBytes(inAppNotification.getLandscapeGifByteArray());
-                gifImageView.startAnimation();
-            }
+//            }else if(currentOrientation ==  Configuration.ORIENTATION_LANDSCAPE){
+//                gifImageView.setBytes(inAppNotification.getLandscapeGifByteArray());
+//                gifImageView.startAnimation();
+//            }
         }
     }
 
@@ -389,7 +389,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     @Override
     public void onResume() {
         super.onResume();
-        if(player == null && (inAppNotification.mediaIsVideo() || inAppNotification.mediaIsAudio())){
+        if(player == null && (inAppNotification.getMediaList().get(0).isVideo() || inAppNotification.getMediaList().get(0).isAudio())){
             prepareMedia();
             playMedia();
         }

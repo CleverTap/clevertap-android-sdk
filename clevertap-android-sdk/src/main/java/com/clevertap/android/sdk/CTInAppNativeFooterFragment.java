@@ -45,7 +45,7 @@ public class CTInAppNativeFooterFragment extends CTInAppBasePartialNativeFragmen
         Button secondaryButton = linearLayout3.findViewById(R.id.footer_button_2);
         inAppButtons.add(secondaryButton);
 
-        Bitmap image = inAppNotification.getImage();
+        Bitmap image = inAppNotification.getImage(inAppNotification.getMediaList().get(0));
         ImageView imageView = linearLayout1.findViewById(R.id.footer_icon);
         if (image != null) {
             imageView.setImageBitmap(image);

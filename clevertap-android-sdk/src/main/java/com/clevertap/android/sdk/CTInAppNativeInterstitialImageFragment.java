@@ -73,11 +73,11 @@ public class CTInAppNativeInterstitialImageFragment extends CTInAppBaseFullFragm
                         }
                     }
                 });
-                if(inAppNotification.getImage()!=null) {
-                    imageView.setImageBitmap(inAppNotification.getImage());
-                    imageView.setTag(0);
-                    imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
-                }
+//                if(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation))!=null) {
+//                    imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
+//                    imageView.setTag(0);
+//                    imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
+//                }
                 break;
             case Configuration.ORIENTATION_LANDSCAPE:
                 relativeLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -109,12 +109,18 @@ public class CTInAppNativeInterstitialImageFragment extends CTInAppBaseFullFragm
                         }
                     }
                 });
-                if(inAppNotification.getLandscapeImage()!=null) {
-                    imageView.setImageBitmap(inAppNotification.getLandscapeImage());
-                    imageView.setTag(0);
-                    imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
-                }
+//                if(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation))!=null) {
+//                    imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
+//                    imageView.setTag(0);
+//                    imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
+//                }
                 break;
+        }
+
+        if(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation))!=null) {
+            imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
+            imageView.setTag(0);
+            imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
         }
 
         closeImageView.setOnClickListener(new View.OnClickListener() {

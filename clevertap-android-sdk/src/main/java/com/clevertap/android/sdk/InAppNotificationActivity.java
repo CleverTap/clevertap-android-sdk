@@ -64,6 +64,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         }
 
         //Allow rotation for all InApps if Landscape version is present
+        //
         if (inAppNotification.isPortrait() && !inAppNotification.isLandscape()) {
             try {
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);

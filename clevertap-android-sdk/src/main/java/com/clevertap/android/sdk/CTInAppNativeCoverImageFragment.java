@@ -23,23 +23,28 @@ public class CTInAppNativeCoverImageFragment extends CTInAppBaseFullFragment {
 
         RelativeLayout relativeLayout = fl.findViewById(R.id.cover_image_relative_layout);
         ImageView imageView = relativeLayout.findViewById(R.id.cover_image);
-        switch (currentOrientation){
-            case Configuration.ORIENTATION_PORTRAIT:
-                if(inAppNotification.getImage()!=null) {
-                    imageView.setImageBitmap(inAppNotification.getImage());
-                    imageView.setTag(0);
-                    imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
-                }
-                break;
-            case Configuration.ORIENTATION_LANDSCAPE:
-                if(inAppNotification.getLandscapeImage()!=null) {
-                    imageView.setImageBitmap(inAppNotification.getLandscapeImage());
-                    imageView.setTag(0);
-                    imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
-                }
-                break;
-        }
+//        switch (currentOrientation){
+//            case Configuration.ORIENTATION_PORTRAIT:
+//                if(inAppNotification.getImage()!=null) {
+//                    imageView.setImageBitmap(inAppNotification.getImage());
+//                    imageView.setTag(0);
+//                    imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
+//                }
+//                break;
+//            case Configuration.ORIENTATION_LANDSCAPE:
+//                if(inAppNotification.getLandscapeImage()!=null) {
+//                    imageView.setImageBitmap(inAppNotification.getLandscapeImage());
+//                    imageView.setTag(0);
+//                    imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
+//                }
+//                break;
+//        }
 
+        if(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation))!=null) {
+            imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
+            imageView.setTag(0);
+            imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
+        }
 
         @SuppressLint("ResourceType")
         CloseImageView closeImageView = fl.findViewById(199272);

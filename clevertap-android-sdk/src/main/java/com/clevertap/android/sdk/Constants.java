@@ -130,7 +130,6 @@ public class Constants {
     static final String KEY_CREATED_POST_APP_LAUNCH = "createdPostAppLaunch";
     static final String KEY_SSL_PINNING = "sslPinning";
     static final String KEY_BACKGROUND_SYNC = "backgroundSync";
-    static final String KEY_CUSTOM_ID = "customId";
     static final String KEY_FCM_SENDER_ID = "fcmSenderId";
     static final String KEY_CONFIG = "config";
     static final String KEY_C2A = "wzrk_c2a";
@@ -187,7 +186,7 @@ public class Constants {
 
     static final String COMMAND_DELETE = "$delete";
     static final String GUID_PREFIX_GOOGLE_AD_ID = "__g";
-    static final String CUSTOM_CLEVERTAP_ID_PREFIX = "__";
+    static final String CUSTOM_CLEVERTAP_ID_PREFIX = "__h";
 
     // valid profile identifier keys
     static final Set<String> PROFILE_IDENTIFIER_KEYS = new HashSet<>(Arrays.asList(

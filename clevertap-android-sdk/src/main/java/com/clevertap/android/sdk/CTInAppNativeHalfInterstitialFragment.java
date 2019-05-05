@@ -79,10 +79,10 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
                         }
                     }
                 });
-                if (inAppNotification.getImage() != null) {
-                    ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
-                    imageView.setImageBitmap(inAppNotification.getImage());
-                }
+//                if (inAppNotification.getImage() != null) {
+//                    ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
+//                    imageView.setImageBitmap(inAppNotification.getImage());
+//                }
                 break;
             case Configuration.ORIENTATION_LANDSCAPE:
                 relativeLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -114,14 +114,18 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
                         }
                     }
                 });
-                if (inAppNotification.getLandscapeImage() != null) {
-                    ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
-                    imageView.setImageBitmap(inAppNotification.getLandscapeImage());
-                }
+//                if (inAppNotification.getLandscapeImage() != null) {
+//                    ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
+//                    imageView.setImageBitmap(inAppNotification.getLandscapeImage());
+//                }
                 break;
 
         }
 
+        if (inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)) != null) {
+            ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
+            imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
+        }
 
         LinearLayout linearLayout = relativeLayout.findViewById(R.id.half_interstitial_linear_layout);
         Button mainButton = linearLayout.findViewById(R.id.half_interstitial_button1);
