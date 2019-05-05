@@ -497,20 +497,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         sdkVersion = BuildConfig.SDK_VERSION_STRING;
 
         if(ManifestInfo.getInstance(context).useCustomId()){
-            if(cleverTapID == null){
-                Logger.i("CleverTap SDK has been directed to use custom CleverTap ID but custom ID passed is NULL. Please provide a valid custom ID.");
-                return null;
-            }
-            if(cleverTapID.isEmpty()){
-                Logger.i("CleverTap SDK has been directed to use custom CleverTap ID but custom ID passed is empty. Please provide a valid custom ID.");
-                return null;
-            }
-            if(cleverTapID.length() > 64){
-                Logger.i("Custom ID passed is greater than 64 characters. Please provide a valid custom ID. Cannot create CleverTap Instance.");
-                return null;
-            }
-            if(!cleverTapID.matches("[a-zA-Z0-9]*")){
-                Logger.i("Custom ID cannot contain special characters. Please provide a valid custom ID. Cannot create CleverTap Instance.");
+            if(!validateCTID(cleverTapID)){
                 return null;
             }
         }
@@ -599,6 +586,26 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         return CleverTapInstanceConfig.createDefaultInstance(context,accountId,accountToken,accountRegion);
 
+    }
+
+    private static boolean validateCTID(String cleverTapID){
+        if(cleverTapID == null){
+            Logger.i("CleverTap SDK has been directed to use custom CleverTap ID but custom ID passed is NULL. Please provide a valid custom ID.");
+            return false;
+        }
+        if(cleverTapID.isEmpty()){
+            Logger.i("CleverTap SDK has been directed to use custom CleverTap ID but custom ID passed is empty. Please provide a valid custom ID.");
+            return false;
+        }
+        if(cleverTapID.length() > 64){
+            Logger.i("Custom ID passed is greater than 64 characters. Please provide a valid custom ID. Cannot create CleverTap Instance.");
+            return false;
+        }
+        if(!cleverTapID.matches("[a-zA-Z0-9]*")){
+            Logger.i("Custom ID cannot contain special characters. Please provide a valid custom ID. Cannot create CleverTap Instance.");
+            return false;
+        }
+        return true;
     }
 
     //Lifecycle
@@ -4777,6 +4784,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @SuppressWarnings("unused")
     public void onUserLogin(final Map<String, Object> profile, final String cleverTapID) {
         if (profile == null) return;
+
+        if(ManifestInfo.getInstance(context).useCustomId()){
+            if(!validateCTID(cleverTapID)){
+                return;
+            }
+        }
 
         try {
             final String currentGUID = getCleverTapID();
