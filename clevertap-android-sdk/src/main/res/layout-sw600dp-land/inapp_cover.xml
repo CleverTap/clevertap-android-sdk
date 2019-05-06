@@ -52,10 +52,9 @@
             android:orientation="horizontal"
             android:visibility="visible"
             android:layout_below="@+id/cover_message"
-            android:layout_marginTop="15dp"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
-            android:layout_marginBottom="54dp"
+            android:layout_marginBottom="48dp"
             >
 
             <Button
@@ -70,9 +69,9 @@
                 android:layout_width="264dp"
                 android:layout_height="42dp"
                 android:textSize="20sp"
-                android:layout_marginLeft="10dp"
+                android:layout_marginLeft="30dp"
                 android:visibility="invisible"
-                android:layout_marginStart="10dp" />
+                android:layout_marginStart="30dp" />
         </LinearLayout>
     </RelativeLayout>
     <com.clevertap.android.sdk.CloseImageView

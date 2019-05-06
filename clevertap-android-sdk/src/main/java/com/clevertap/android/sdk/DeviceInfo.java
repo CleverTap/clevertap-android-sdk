@@ -85,10 +85,10 @@ class DeviceInfo {
             return;
         }
 
-        getConfigLogger().info(config.getAccountId(), "Updating CleverTapID to given custom ID : " + cleverTapID);
-        forceUpdateDeviceId(cleverTapID);
-
-        if(ManifestInfo.getInstance(context).useGoogleAdId()) {
+        if(cleverTapID!=null) {
+            getConfigLogger().info(config.getAccountId(), "Updating CleverTapID to given custom ID : " + cleverTapID);
+            forceUpdateDeviceId(Constants.CUSTOM_CLEVERTAP_ID_PREFIX+cleverTapID);
+        } else if(ManifestInfo.getInstance(context).useGoogleAdId()) {
             Runnable deviceIDRunnable = new Runnable() {
                 @Override
                 public void run() {
