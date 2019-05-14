@@ -17,7 +17,6 @@ public abstract class CTInAppBasePartialFragment extends CTInAppBaseFragment {
     @Override
     public void onPause() {
         super.onPause();
-        didDismiss(null);
     }
 
     @Override

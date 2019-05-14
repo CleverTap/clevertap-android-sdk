@@ -10,6 +10,12 @@ final class StorageHelper {
         persist(editor);
     }
 
+    static void removeString(Context context, String key){
+        SharedPreferences prefs = getPreferences(context);
+        SharedPreferences.Editor editor = prefs.edit().remove(key);
+        persist(editor);
+    }
+
     static String getString(Context context, String key, String defaultValue) {
         return getPreferences(context).getString(key, defaultValue);
     }

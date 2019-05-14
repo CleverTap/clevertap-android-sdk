@@ -64,7 +64,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                     webView.getSettings().setAllowFileAccessFromFileURLs(false);
                 }
-                webView.addJavascriptInterface(new CTWebInterface(getActivity(),config),"CleverTap");
+                webView.addJavascriptInterface(new CTWebInterface(CleverTapAPI.instanceWithConfig(getActivity(),config)),"CleverTap");
             }
 
             if (isDarkenEnabled())

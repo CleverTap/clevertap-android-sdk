@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk;
 
 import android.annotation.SuppressLint;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Build;
@@ -43,11 +44,15 @@ public class CTInAppNativeHeaderFragment extends CTInAppBasePartialNativeFragmen
         Button secondaryButton = linearLayout3.findViewById(R.id.header_button_2);
         inAppButtons.add(secondaryButton);
 
-        Bitmap image = inAppNotification.getImage(inAppNotification.getMediaList().get(0));
         ImageView imageView = linearLayout1.findViewById(R.id.header_icon);
-        if (image != null) {
-            imageView.setImageBitmap(image);
-        }else{
+        if(!inAppNotification.getMediaList().isEmpty()) {
+            Bitmap image = inAppNotification.getImage(inAppNotification.getMediaList().get(0));
+            if (image != null) {
+                imageView.setImageBitmap(image);
+            } else {
+                imageView.setVisibility(View.GONE);
+            }
+        }else {
             imageView.setVisibility(View.GONE);
         }
 

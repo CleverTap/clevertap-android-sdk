@@ -53,7 +53,7 @@
                     android:layout_marginLeft="10dp"
                     android:layout_marginEnd="20dp"
                     android:layout_marginRight="20dp"
-                    android:src="@drawable/read_circle" />
+                    android:src="@drawable/ct_read_circle" />
             </LinearLayout>
         </RelativeLayout>
     </RelativeLayout>

@@ -269,7 +269,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
 
         playerView = new PlayerView(getActivity().getBaseContext());
         fullScreenIcon = new ImageView(getActivity().getBaseContext());
-        fullScreenIcon.setImageDrawable(getActivity().getBaseContext().getResources().getDrawable(R.drawable.ic_fullscreen_expand));
+        fullScreenIcon.setImageDrawable(getActivity().getBaseContext().getResources().getDrawable(R.drawable.ct_ic_fullscreen_expand));
         fullScreenIcon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -331,11 +331,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(getActivity().getBaseContext(),
                 Util.getUserAgent(getActivity().getBaseContext(), getActivity().getApplication().getPackageName()), (TransferListener<? super DataSource>) bandwidthMeter);
         HlsMediaSource hlsMediaSource = null;
-//        if(currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
-//            hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(inAppNotification.getMediaList().get(0).getMediaUrl()));
-//        }else if(currentOrientation == Configuration.ORIENTATION_LANDSCAPE){
-            hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(inAppNotification.getMediaList().get(0).getMediaUrl()));
-        //}
+        hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(inAppNotification.getMediaList().get(0).getMediaUrl()));
         // 4. Prepare the player with the source.
         player.prepare(hlsMediaSource);
         player.setRepeatMode(Player.REPEAT_MODE_ONE);
@@ -346,13 +342,8 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     public void onStart() {
         super.onStart();
         if(gifImageView != null){
-            //if(currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
-                gifImageView.setBytes(inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)));
-                gifImageView.startAnimation();
-//            }else if(currentOrientation ==  Configuration.ORIENTATION_LANDSCAPE){
-//                gifImageView.setBytes(inAppNotification.getLandscapeGifByteArray());
-//                gifImageView.startAnimation();
-//            }
+            gifImageView.setBytes(inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)));
+            gifImageView.startAnimation();
         }
     }
 
@@ -445,7 +436,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         ((RelativeLayout) relativeLayout.findViewById(R.id.interstitial_relative_layout)).addView(videoFrameLayout);
         exoPlayerFullscreen = false;
         fullScreenDialog.dismiss();
-        fullScreenIcon.setImageDrawable(ContextCompat.getDrawable(getActivity().getApplicationContext(), R.drawable.ic_fullscreen_expand));
+        fullScreenIcon.setImageDrawable(ContextCompat.getDrawable(getActivity().getApplicationContext(), R.drawable.ct_ic_fullscreen_expand));
     }
 
     private void disableFullScreenButton(){

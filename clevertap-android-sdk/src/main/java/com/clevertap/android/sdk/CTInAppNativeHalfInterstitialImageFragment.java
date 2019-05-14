@@ -87,13 +87,13 @@ public class CTInAppNativeHalfInterstitialImageFragment extends CTInAppBaseFullF
                             layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 1.3f);
                         } else {
                             if (isTablet()) {
-                                layoutParams.setMargins(90, 240, 90, 0);
-                                layoutParams.width = (relativeLayout1.getMeasuredWidth()) - 90;
-                                layoutHeight = layoutParams.height = (int) (layoutParams.width * 1.3f);
+                                layoutParams.setMargins(200, 40, 190, 0);
+                                layoutParams.height = relativeLayout1.getMeasuredHeight() - 40;
+                                layoutParams.width = (int) (layoutParams.height *1.3f);
                                 relativeLayout1.setLayoutParams(layoutParams);
                                 FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(closeImageView.getWidth(), closeImageView.getHeight());
                                 closeLp.gravity = Gravity.TOP | Gravity.END;
-                                closeLp.setMargins(0, 220, 70, 0);
+                                closeLp.setMargins(0, 20, 220, 0);
                                 closeImageView.setLayoutParams(closeLp);
                             } else {
                                 layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 0.75f);
@@ -107,19 +107,15 @@ public class CTInAppNativeHalfInterstitialImageFragment extends CTInAppBaseFullF
                         }
                     }
                 });
-//                if(inAppNotification.getLandscapeImage()!=null) {
-//                    imageView.setImageBitmap(inAppNotification.getLandscapeImage());
-//                    imageView.setTag(0);
-//                    imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
-//                }
                 break;
 
         }
-
-        if(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation))!=null) {
-            imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
-            imageView.setTag(0);
-            imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
+        if(inAppNotification.getInAppMediaForOrientation(currentOrientation) != null) {
+            if (inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)) != null) {
+                imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
+                imageView.setTag(0);
+                imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
+            }
         }
 
         closeImageView.setOnClickListener(new View.OnClickListener() {

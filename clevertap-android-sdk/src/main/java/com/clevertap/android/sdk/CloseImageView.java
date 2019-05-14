@@ -45,7 +45,7 @@ final class CloseImageView extends AppCompatImageView {
         try {
 
             Context context = getContext();
-            int resourceID = context.getResources().getIdentifier("close", "drawable", context.getPackageName());
+            int resourceID = context.getResources().getIdentifier("ct_close", "drawable", context.getPackageName());
             Bitmap closeBitmap = BitmapFactory.decodeResource(context.getResources(), resourceID, null);
 
             if (closeBitmap != null) {

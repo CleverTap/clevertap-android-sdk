@@ -82,7 +82,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         toolbar.setTitle(styleConfig.getNavBarTitle());
         toolbar.setTitleTextColor(Color.parseColor(styleConfig.getNavBarTitleColor()));
         toolbar.setBackgroundColor(Color.parseColor(styleConfig.getNavBarColor()));
-        Drawable drawable = getResources().getDrawable(R.drawable.ic_arrow_back_white_24dp);
+        Drawable drawable = getResources().getDrawable(R.drawable.ct_ic_arrow_back_white_24dp);
         drawable.setColorFilter(Color.parseColor(styleConfig.getBackButtonColor()),PorterDuff.Mode.SRC_IN);
         toolbar.setNavigationIcon(drawable);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {

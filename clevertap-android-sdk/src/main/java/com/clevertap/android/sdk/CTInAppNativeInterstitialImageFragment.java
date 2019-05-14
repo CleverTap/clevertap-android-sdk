@@ -73,11 +73,6 @@ public class CTInAppNativeInterstitialImageFragment extends CTInAppBaseFullFragm
                         }
                     }
                 });
-//                if(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation))!=null) {
-//                    imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
-//                    imageView.setTag(0);
-//                    imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
-//                }
                 break;
             case Configuration.ORIENTATION_LANDSCAPE:
                 relativeLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
@@ -89,13 +84,15 @@ public class CTInAppNativeInterstitialImageFragment extends CTInAppBaseFullFragm
                             layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 1.78f);
                         } else {
                             if (isTablet()) {
-                                layoutParams.setMargins(85, 60, 85, 0);
-                                layoutParams.width = (relativeLayout1.getMeasuredWidth()) - 85;
-                                layoutHeight = layoutParams.height = (int) (layoutParams.width * 1.78f);
+                                layoutParams.setMargins(120, 40, 85, 0);
+                                layoutParams.width = (relativeLayout1.getMeasuredWidth()) - 75;
+                                layoutHeight = layoutParams.height = (int) (layoutParams.width * 0.5625f);
+                                //layoutParams.height = relativeLayout1.getMeasuredHeight();
+                                //layoutParams.width = (int) (layoutParams.height * 1.78f);
                                 relativeLayout1.setLayoutParams(layoutParams);
                                 FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(closeImageView.getWidth(), closeImageView.getHeight());
                                 closeLp.gravity = Gravity.TOP | Gravity.END;
-                                closeLp.setMargins(0, 40, 65, 0);
+                                closeLp.setMargins(0, 20, 90, 0);
                                 closeImageView.setLayoutParams(closeLp);
                             } else {
                                 layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 0.5625f);
@@ -109,20 +106,16 @@ public class CTInAppNativeInterstitialImageFragment extends CTInAppBaseFullFragm
                         }
                     }
                 });
-//                if(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation))!=null) {
-//                    imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
-//                    imageView.setTag(0);
-//                    imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
-//                }
                 break;
         }
 
-        if(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation))!=null) {
-            imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
-            imageView.setTag(0);
-            imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
+        if(inAppNotification.getInAppMediaForOrientation(currentOrientation) != null) {
+            if (inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)) != null) {
+                imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
+                imageView.setTag(0);
+                imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
+            }
         }
-
         closeImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

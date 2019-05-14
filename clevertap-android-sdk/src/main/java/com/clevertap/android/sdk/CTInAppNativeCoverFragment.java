@@ -40,27 +40,13 @@ public class CTInAppNativeCoverFragment extends CTInAppBaseFullNativeFragment {
         Button secondaryButton = linearLayout.findViewById(R.id.cover_button2);
         inAppButtons.add(secondaryButton);
         ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
-//        switch (currentOrientation){
-//            case Configuration.ORIENTATION_PORTRAIT:
-//                if(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation("portrait"))!=null) {
-//                    imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation("portrait")));
-//                    imageView.setTag(0);
-//                    imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
-//                }
-//                break;
-//            case Configuration.ORIENTATION_LANDSCAPE:
-//                if(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation("landscape"))!=null) {
-//                    imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation("landscape")));
-//                    imageView.setTag(0);
-//                    imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
-//                }
-//                break;
-//        }
 
-        if(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation))!=null) {
-            imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
-            imageView.setTag(0);
-            imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
+        if(inAppNotification.getInAppMediaForOrientation(currentOrientation) != null) {
+            if (inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)) != null) {
+                imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
+                imageView.setTag(0);
+                imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
+            }
         }
 
         TextView textView1 = relativeLayout.findViewById(R.id.cover_title);

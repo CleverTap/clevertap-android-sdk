@@ -236,4 +236,24 @@ final class Utils {
         }
         return listdata;
     }
+
+    static boolean validateCTID(String cleverTapID){
+        if(cleverTapID == null){
+            Logger.i("CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is NULL.");
+            return false;
+        }
+        if(cleverTapID.isEmpty()){
+            Logger.i("CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is empty.");
+            return false;
+        }
+        if(cleverTapID.length() > 64){
+            Logger.i("Custom CleverTap ID passed is greater than 64 characters. ");
+            return false;
+        }
+        if(!cleverTapID.matches("[a-zA-Z0-9{}:()_!@#$%&-]*")){
+            Logger.i("Custom CleverTap ID cannot contain special characters apart from {,},:,(,),_,!,@,#,$,&,% and - ");
+            return false;
+        }
+        return true;
+    }
 }

@@ -18,14 +18,8 @@ public class CTWebInterface {
 
     private WeakReference<CleverTapAPI> weakReference;
 
-    public CTWebInterface(Context context, CleverTapInstanceConfig config){
-        CleverTapAPI cleverTapAPI;
-        if(config != null){
-            cleverTapAPI = CleverTapAPI.instanceWithConfig(context,config);
-        }else{
-            cleverTapAPI = CleverTapAPI.getDefaultInstance(context);
-        }
-        this.weakReference = new WeakReference<>(cleverTapAPI);
+    public CTWebInterface(CleverTapAPI instance){
+        this.weakReference = new WeakReference<>(instance);
     }
 
 

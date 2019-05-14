@@ -46,7 +46,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.backgroundSync = manifest.isBackgroundSync();
         this.raiseNotificationViewed = manifest.raiseNotificationViewed();
         this.fcmSenderId = manifest.getFCMSenderId();
-        this.enableCustomCleverTapId = manifest.useCustomId();//TODO make all instances use custom CTID if manifest has it??
+        this.enableCustomCleverTapId = manifest.useCustomId();
     }
 
     CleverTapInstanceConfig(CleverTapInstanceConfig config){

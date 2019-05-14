@@ -15,9 +15,10 @@ public final class ActivityLifecycleCallback {
     /**
      * Enables lifecycle callbacks for Android devices
      * @param application App's Application object
+     * @param cleverTapID Custom CleverTap ID
      */
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
-    public static synchronized void register(android.app.Application application) {
+    public static synchronized void register(android.app.Application application, final String cleverTapID) {
         if (application == null) {
             Logger.i("Application instance is null/system API is too old");
             return;
@@ -34,7 +35,11 @@ public final class ActivityLifecycleCallback {
 
                     @Override
                     public void onActivityCreated(Activity activity, Bundle bundle) {
-                        CleverTapAPI.onActivityCreated(activity);
+                        if(cleverTapID != null) {
+                            CleverTapAPI.onActivityCreated(activity,cleverTapID);
+                        }else{
+                            CleverTapAPI.onActivityCreated(activity);
+                        }
                     }
 
                     @Override
@@ -42,7 +47,11 @@ public final class ActivityLifecycleCallback {
 
                     @Override
                     public void onActivityResumed(Activity activity) {
-                       CleverTapAPI.onActivityResumed(activity);
+                        if(cleverTapID != null) {
+                            CleverTapAPI.onActivityResumed(activity,cleverTapID);
+                        }else{
+                            CleverTapAPI.onActivityResumed(activity);
+                        }
                     }
 
                     @Override
@@ -62,5 +71,14 @@ public final class ActivityLifecycleCallback {
 
         );
         Logger.i("Activity Lifecycle Callback successfully registered");
+    }
+
+    /**
+     * Enables lifecycle callbacks for Android devices
+     * @param application App's Application object
+     */
+    @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
+    public static synchronized void register(android.app.Application application) {
+        register(application,null);
     }
 }

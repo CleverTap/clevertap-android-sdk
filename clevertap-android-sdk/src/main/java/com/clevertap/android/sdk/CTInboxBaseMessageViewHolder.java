@@ -201,9 +201,9 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
             muteIcon = new ImageView(context);
             muteIcon.setVisibility(View.GONE);
             if (currentVolume > 0) {
-                muteIcon.setImageDrawable(context.getResources().getDrawable(R.drawable.volume_on));
+                muteIcon.setImageDrawable(context.getResources().getDrawable(R.drawable.ct_volume_on));
             } else {
-                muteIcon.setImageDrawable(context.getResources().getDrawable(R.drawable.volume_off));
+                muteIcon.setImageDrawable(context.getResources().getDrawable(R.drawable.ct_volume_off));
             }
 
             int iconWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, displayMetrics);
@@ -220,10 +220,10 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
                     float currentVolume = player.getVolume();
                     if (currentVolume > 0) {
                         player.setVolume(0f);
-                        muteIcon.setImageDrawable(resources.getDrawable(R.drawable.volume_off));
+                        muteIcon.setImageDrawable(resources.getDrawable(R.drawable.ct_volume_off));
                     } else if (currentVolume == 0) {
                         player.setVolume(1);
-                        muteIcon.setImageDrawable(resources.getDrawable(R.drawable.volume_on));
+                        muteIcon.setImageDrawable(resources.getDrawable(R.drawable.ct_volume_on));
                     }
                 }
             });

@@ -24,6 +24,7 @@ public class Constants {
     static final String CLEVERTAP_LOG_TAG = "CleverTap";
     static final int SESSION_LENGTH_MINS = 20;
     static final String DEVICE_ID_TAG = "deviceId";
+    static final String FALLBACK_ID_TAG = "fallbackId";
     static final SimpleDateFormat FB_DOB_DATE_FORMAT = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
     static final SimpleDateFormat GP_DOB_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
     static final int PAGE_EVENT = 1;
@@ -187,7 +188,7 @@ public class Constants {
     static final String COMMAND_DELETE = "$delete";
     static final String GUID_PREFIX_GOOGLE_AD_ID = "__g";
     static final String CUSTOM_CLEVERTAP_ID_PREFIX = "__h";
-
+    static final String ERROR_PROFILE_PREFIX = "__i";
     // valid profile identifier keys
     static final Set<String> PROFILE_IDENTIFIER_KEYS = new HashSet<>(Arrays.asList(
             "Identity", "Email", "FBID", "GPID"));

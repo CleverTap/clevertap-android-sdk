@@ -3,6 +3,7 @@ package com.clevertap.android.sdk;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlarmManager;
+import android.app.Fragment;
 import android.app.FragmentTransaction;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -139,6 +140,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private static String sdkVersion;  // For Google Play Store/Android Studio analytics
 
+    /**
+     * Method to check whether app has ExoPlayer dependencies
+     * @return boolean - true/false depending on app's availability of ExoPlayer dependencies
+     */
     private static boolean checkForExoPlayer(){
         boolean exoPlayerPresent = false;
         Class className = null;
@@ -163,7 +168,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     static {
         haveVideoPlayerSupport = checkForExoPlayer();
     }
-    static boolean deviceIdExists = false;
 
     private DBAdapter dbAdapter;
     private Context context;
@@ -311,11 +315,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return config.getAccountId();
     }
 
+    static void onActivityCreated(Activity activity){
+        onActivityCreated(activity,null);
+    }
     // static lifecycle callbacks
-    static void onActivityCreated(Activity activity) {
+    static void onActivityCreated(Activity activity, String cleverTapID) {
         // make sure we have at least the default instance created here.
         if (instances == null) {
-            CleverTapAPI.createInstanceIfAvailable(activity, null);
+            CleverTapAPI.createInstanceIfAvailable(activity, null,cleverTapID);
         }
 
         if (instances == null) {
@@ -388,9 +395,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     @SuppressWarnings("WeakerAccess")
-    public static void onActivityResumed(Activity activity) {
+    public static void onActivityResumed(Activity activity){
+        onActivityResumed(activity,null);
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    public static void onActivityResumed(Activity activity, String cleverTapID) {
         if (instances == null) {
-            CleverTapAPI.createInstanceIfAvailable(activity, null);
+            CleverTapAPI.createInstanceIfAvailable(activity, null,cleverTapID);
         }
 
         CleverTapAPI.setAppForeground(true);
@@ -439,7 +451,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     // other static handlers
-
     static void handleNotificationClicked(Context context,Bundle notification) {
         if (notification == null) return;
 
@@ -496,23 +507,28 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         // For Google Play Store/Android Studio tracking
         sdkVersion = BuildConfig.SDK_VERSION_STRING;
 
+        //Show logging as per Manifest flag
         if(ManifestInfo.getInstance(context).useCustomId()){
-            if(!validateCTID(cleverTapID)){
-                return null;
+            if(cleverTapID == null){
+                Logger.i("CLEVERTAP_USE_CUSTOM_ID has been specified in the AndroidManifest.xml CleverTap SDK will create a fallback device ID");
+            }
+        }else{
+            if(cleverTapID != null){
+                Logger.i("CLEVERTAP_USE_CUSTOM_ID has not been specified in the AndroidManifest.xml. Custom CleverTap ID passed will not be used.");
             }
         }
 
+        //Create defaultConfig nonetheless
         if(defaultConfig != null){
             return instanceWithConfig(context,defaultConfig,cleverTapID);
         }
         else {
-            defaultConfig = getDefaultConfig(context,cleverTapID);
-            if(defaultConfig != null){
+            defaultConfig = getDefaultConfig(context);
+            if (defaultConfig != null) {
                 return instanceWithConfig(context,defaultConfig,cleverTapID);
-            }else {
-                return null;
             }
         }
+        return null;
     }
 
     /**
@@ -533,7 +549,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param config The {@link CleverTapInstanceConfig} object
      * @return The {@link CleverTapAPI} object
      */
-
+    @SuppressWarnings("WeakerAccess")
     public static CleverTapAPI instanceWithConfig(Context context, CleverTapInstanceConfig config){
         return instanceWithConfig(context,config,null);
     }
@@ -557,9 +573,37 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
         CleverTapAPI instance = instances.get(config.getAccountId());
         if (instance == null){
-            instance = new CleverTapAPI(context, config, cleverTapID);
+            instance = new CleverTapAPI(context, config, cleverTapID);//Pass custom CTID to constructor
             instances.put(config.getAccountId(), instance);
             instance.notifyUserProfileInitialized();
+        }
+        else if(instance.getCleverTapID().contains(Constants.ERROR_PROFILE_PREFIX) && cleverTapID != null){ //If Instance is created with NULL guid, update with correct guid if provided again
+            final CleverTapAPI finalInstance = instance;
+            final Context queueContext = context;
+            final String updatedCTID = cleverTapID;
+            //Check if given CTID is valid or not and Manifest allows us to use it
+            if(ManifestInfo.getInstance(context).useCustomId()) {
+                if(Utils.validateCTID(updatedCTID)) {
+                    Logger.i("Updating device ID after flushing events for the fallback device ID");
+                    instance.postAsyncSafely("flushingQueues", new Runnable() {
+                        @Override
+                        public void run() {
+                            finalInstance.flushQueueSync(queueContext, EventGroup.REGULAR);
+                            finalInstance.flushQueueSync(queueContext, EventGroup.PUSH_NOTIFICATION_VIEWED);
+                            finalInstance.clearQueues(queueContext);
+                            finalInstance.setCurrentUserOptedOut(false);
+                            finalInstance.getLocalDataStore().changeUser();
+                            finalInstance.destroySession();
+                            activityCount = 1;
+                            finalInstance.deviceInfo.forceUpdateDeviceId(Constants.CUSTOM_CLEVERTAP_ID_PREFIX + updatedCTID);
+                            finalInstance.resetInbox();
+                            finalInstance.setCurrentUserOptOutStateFromStorage();
+                            finalInstance.forcePushDeviceToken(true);
+                            finalInstance.notifyUserProfileInitialized();
+                        }
+                    });
+                }
+            }
         }
         return instance;
     }
@@ -568,10 +612,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Creates default {@link CleverTapInstanceConfig} object and returns it
      *
      * @param context The Android context
-     * @param cleverTapID Custom CleverTapID passed by the app
      * @return The {@link CleverTapInstanceConfig} object
      */
-     private static CleverTapInstanceConfig getDefaultConfig(Context context, String cleverTapID){
+     private static CleverTapInstanceConfig getDefaultConfig(Context context){
         ManifestInfo manifest = ManifestInfo.getInstance(context);
         String accountId = manifest.getAccountId();
         String accountToken = manifest.getAcountToken();
@@ -586,26 +629,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         return CleverTapInstanceConfig.createDefaultInstance(context,accountId,accountToken,accountRegion);
 
-    }
-
-    private static boolean validateCTID(String cleverTapID){
-        if(cleverTapID == null){
-            Logger.i("CleverTap SDK has been directed to use custom CleverTap ID but custom ID passed is NULL. Please provide a valid custom ID.");
-            return false;
-        }
-        if(cleverTapID.isEmpty()){
-            Logger.i("CleverTap SDK has been directed to use custom CleverTap ID but custom ID passed is empty. Please provide a valid custom ID.");
-            return false;
-        }
-        if(cleverTapID.length() > 64){
-            Logger.i("Custom ID passed is greater than 64 characters. Please provide a valid custom ID. Cannot create CleverTap Instance.");
-            return false;
-        }
-        if(!cleverTapID.matches("[a-zA-Z0-9]*")){
-            Logger.i("Custom ID cannot contain special characters. Please provide a valid custom ID. Cannot create CleverTap Instance.");
-            return false;
-        }
-        return true;
     }
 
     //Lifecycle
@@ -662,9 +685,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             onTokenRefresh();
         }
         if (!inCurrentSession()) {
-            //onTokenRefresh();
             pushInitialEventsAsync();
         }
+        checkExistingInAppNotifications(activity);
         checkPendingInAppNotifications(activity);
     }
 
@@ -686,6 +709,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         try {
             event.put("evtName", Constants.APP_LAUNCHED_EVENT);
             event.put("evtData", getAppLaunchedFields());
+            addErrorToEvent(event,"App Launched from erroneous profile - " +getCleverTapID());
+
         } catch (Throwable t) {
             // We won't get here
         }
@@ -740,6 +765,26 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         } else {
             Logger.d("In-app notifications will not be shown for this activity ("
                     + (activity != null ? activity.getLocalClassName() : "") + ")");
+        }
+    }
+
+    private void checkExistingInAppNotifications(Activity activity){
+        final boolean canShow = canShowInAppOnActivity();
+        if(canShow){
+            if(currentlyDisplayingInApp != null){
+                Fragment inAppFragment = activity.getFragmentManager().getFragment(new Bundle(),currentlyDisplayingInApp.getType());
+                if(getCurrentActivity() != null) {
+                    FragmentTransaction fragmentTransaction = getCurrentActivity().getFragmentManager().beginTransaction();
+                    Bundle bundle = new Bundle();
+                    bundle.putParcelable("inApp", currentlyDisplayingInApp);
+                    bundle.putParcelable("config", config);
+                    inAppFragment.setArguments(bundle);
+                    fragmentTransaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
+                    fragmentTransaction.add(android.R.id.content, inAppFragment, currentlyDisplayingInApp.getType());
+                    Logger.v(config.getAccountId(), "calling InAppFragment " + currentlyDisplayingInApp.getCampaignId());
+                    fragmentTransaction.commit();
+                }
+            }
         }
     }
 
@@ -1258,9 +1303,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public String getCleverTapID() {
-        return this.deviceInfo.getDeviceID();
+        return this.deviceInfo.getDeviceID() != null ? this.deviceInfo.getDeviceID() : this.deviceInfo.getFallBackDeviceID();
     }
 
+    private String getFallbackDeviceID(){
+        return this.deviceInfo.getFallBackDeviceID();
+    }
     /**
      * Returns a unique CleverTap identifier suitable for use with install attribution providers.
      *
@@ -1268,7 +1316,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @SuppressWarnings("unused")
     public String getCleverTapAttributionIdentifier() {
-        return this.deviceInfo.getAttributionID();
+        return this.deviceInfo.getAttributionID() != null ? this.deviceInfo.getAttributionID() : this.deviceInfo.getFallBackDeviceID();
     }
 
     /**
@@ -1654,6 +1702,19 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             // Won't reach here
         }
         return error;
+    }
+
+    private void addErrorToEvent(JSONObject event, String error){
+        if(getCleverTapID().contains(Constants.ERROR_PROFILE_PREFIX)) {
+            try {
+                ValidationResult validationResult = new ValidationResult();
+                validationResult.setErrorCode(514);
+                validationResult.setErrorDesc(error);
+                event.put(Constants.ERROR_KEY, getErrorObject(validationResult));
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
@@ -2281,7 +2342,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             if (deviceId != null && !deviceId.equals("")) {
                 header.put("g", deviceId);
             } else {
-                getConfigLogger().verbose(getAccountId(), "CRITICAL: Couldn't finalise on a device ID!");
+                getConfigLogger().verbose(getAccountId(), "CRITICAL: Couldn't finalise on a device ID! Using error device ID instead!");
             }
 
             header.put("type", "meta");
@@ -2888,7 +2949,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 bundle.putParcelable("config",config);
                 inAppFragment.setArguments(bundle);
                 fragmentTransaction.setCustomAnimations(android.R.animator.fade_in,android.R.animator.fade_out);
-                fragmentTransaction.add(android.R.id.content,inAppFragment);
+                fragmentTransaction.add(android.R.id.content,inAppFragment,inAppNotification.getType());
                 Logger.v(config.getAccountId(),"calling InAppFragment " + inAppNotification.getCampaignId());
                 fragmentTransaction.commit();
 
@@ -3261,7 +3322,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     private void cacheGUIDForIdentifier(String guid, String key, String identifier) {
-        if (guid == null || key == null || identifier == null) return;
+        if (guid == null || key == null || identifier == null) {
+            //TODO log something
+            return;
+        }
 
         String cacheKey = key + "_" + identifier;
         JSONObject cache = getCachedGUIDs();
@@ -4783,13 +4847,54 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @SuppressWarnings("unused")
     public void onUserLogin(final Map<String, Object> profile, final String cleverTapID) {
-        if (profile == null) return;
-
         if(ManifestInfo.getInstance(context).useCustomId()){
-            if(!validateCTID(cleverTapID)){
-                return;
+            if(cleverTapID == null){
+                Logger.i("CLEVERTAP_USE_CUSTOM_ID has been specified in the AndroidManifest.xml Please call onUserlogin() and pass a custom CleverTap ID");
+            }
+        }else{
+            if(cleverTapID != null){
+                Logger.i("CLEVERTAP_USE_CUSTOM_ID has not been specified in the AndroidManifest.xml Please call CleverTapAPI.defaultInstance() without a custom CleverTap ID");
             }
         }
+        _onUserLogin(profile,cleverTapID);
+    }
+
+    /**
+     * Creates a separate and distinct user profile identified by one or more of Identity,
+     * Email, FBID or GPID values,
+     * and populated with the key-values included in the profile map argument.
+     * <p>
+     * If your app is used by multiple users, you can use this method to assign them each a
+     * unique profile to track them separately.
+     * <p>
+     * If instead you wish to assign multiple Identity, Email, FBID and/or GPID values to the same
+     * user profile,
+     * use profile.push rather than this method.
+     * <p>
+     * If none of Identity, Email, FBID or GPID is included in the profile map,
+     * all profile map values will be associated with the current user profile.
+     * <p>
+     * When initially installed on this device, your app is assigned an "anonymous" profile.
+     * The first time you identify a user on this device (whether via onUserLogin or profilePush),
+     * the "anonymous" history on the device will be associated with the newly identified user.
+     * <p>
+     * Then, use this method to switch between subsequent separate identified users.
+     * <p>
+     * Please note that switching from one identified user to another is a costly operation
+     * in that the current session for the previous user is automatically closed
+     * and data relating to the old user removed, and a new session is started
+     * for the new user and data for that user refreshed via a network call to CleverTap.
+     * In addition, any global frequency caps are reset as part of the switch.
+     *
+     * @param profile The map keyed by the type of identity, with the value as the identity
+     */
+    @SuppressWarnings("unused")
+    public void onUserLogin(final Map<String, Object> profile) {
+        onUserLogin(profile,null);
+    }
+
+    private void _onUserLogin(final Map<String, Object> profile, final String cleverTapID){
+        if (profile == null) return;
 
         try {
             final String currentGUID = getCleverTapID();
@@ -4816,18 +4921,21 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 }
             }
 
-            // if no valid identifier provided or there are no identified users on the device; just push on the current profile
-            if (!haveIdentifier || isAnonymousDevice()) {
-                getConfigLogger().debug(getAccountId(), "onUserLogin: no identifier provided or device is anonymous, pushing on current user profile");
-                pushProfile(profile);
-                return;
-            }
+            //Check if GUID is present to avoid onUserLogin for error profiles
+            if(deviceInfo.getDeviceID() != null) {
+                // if no valid identifier provided or there are no identified users on the device; just push on the current profile
+                if (!haveIdentifier || isAnonymousDevice()) {
+                    getConfigLogger().debug(getAccountId(), "onUserLogin: no identifier provided or device is anonymous, pushing on current user profile");
+                    pushProfile(profile);
+                    return;
+                }
 
-            // if identifier maps to current guid, push on current profile
-            if (cachedGUID != null && cachedGUID.equals(currentGUID)) {
-                getConfigLogger().debug(getAccountId(), "onUserLogin: " + profile.toString() + " maps to current device id " + currentGUID + " pushing on current profile");
-                pushProfile(profile);
-                return;
+                // if identifier maps to current guid, push on current profile
+                if (cachedGUID != null && cachedGUID.equals(currentGUID)) {
+                    getConfigLogger().debug(getAccountId(), "onUserLogin: " + profile.toString() + " maps to current device id " + currentGUID + " pushing on current profile");
+                    pushProfile(profile);
+                    return;
+                }
             }
 
             // stringify profile to use as dupe blocker
@@ -4864,6 +4972,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
                         // try and flush and then reset the queues
                         flushQueueSync(context,EventGroup.REGULAR);
+                        flushQueueSync(context,EventGroup.PUSH_NOTIFICATION_VIEWED);
                         clearQueues(context);
 
                         // clear out the old data
@@ -4877,14 +4986,42 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                             _deviceInfo.forceUpdateDeviceId(guid);
                             notifyUserProfileInitialized(guid);
                         } else {
-                            String g;
+                            String gguid = null;
                             if(cleverTapID == null) {
-                                g = _deviceInfo.forceNewDeviceID();
+                                if(ManifestInfo.getInstance(context).useCustomId()) {
+                                    if(getFallbackDeviceID() != null) {
+                                        gguid = getFallbackDeviceID();
+                                    }else{
+                                        _deviceInfo.generateFallbackDeviceID();
+                                        gguid = _deviceInfo.getFallBackDeviceID();
+                                    }
+                                    if(deviceInfo.getDeviceID() != null){
+                                        deviceInfo.removeDeviceID();
+                                    }
+                                }else {
+                                    gguid = _deviceInfo.forceNewDeviceID();
+                                }
                             }else{
-                                getConfigLogger().info(getAccountId(),"Updating CleverTapID to given custom ID : "+cleverTapID);
-                                g = _deviceInfo.forceUpdateDeviceId(cleverTapID);
+                                if(ManifestInfo.getInstance(context).useCustomId()) {
+                                    if(Utils.validateCTID(cleverTapID)) {
+                                        getConfigLogger().info(getAccountId(), "Updating CleverTapID to given custom ID : " + cleverTapID);
+                                        gguid = _deviceInfo.forceUpdateDeviceId(Constants.CUSTOM_CLEVERTAP_ID_PREFIX+cleverTapID);
+                                    }else{
+                                        if(_deviceInfo.getFallBackDeviceID() != null) {
+                                            gguid = _deviceInfo.getFallBackDeviceID();
+                                        }else{
+                                            _deviceInfo.generateFallbackDeviceID();
+                                            gguid = _deviceInfo.getFallBackDeviceID();
+                                        }
+                                        if(deviceInfo.getDeviceID() != null){
+                                            deviceInfo.removeDeviceID();
+                                        }
+                                    }
+                                }else {
+                                    gguid = _deviceInfo.forceNewDeviceID();
+                                }
                             }
-                            notifyUserProfileInitialized(g);
+                            notifyUserProfileInitialized(gguid);
                         }
                         setCurrentUserOptOutStateFromStorage(); // be sure to call this after the guid is updated
                         forcePushAppLaunchedEvent();
@@ -4903,40 +5040,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         } catch (Throwable t) {
             getConfigLogger().verbose(getAccountId(), "onUserLogin failed", t);
         }
-    }
 
-    /**
-     * Creates a separate and distinct user profile identified by one or more of Identity,
-     * Email, FBID or GPID values,
-     * and populated with the key-values included in the profile map argument.
-     * <p>
-     * If your app is used by multiple users, you can use this method to assign them each a
-     * unique profile to track them separately.
-     * <p>
-     * If instead you wish to assign multiple Identity, Email, FBID and/or GPID values to the same
-     * user profile,
-     * use profile.push rather than this method.
-     * <p>
-     * If none of Identity, Email, FBID or GPID is included in the profile map,
-     * all profile map values will be associated with the current user profile.
-     * <p>
-     * When initially installed on this device, your app is assigned an "anonymous" profile.
-     * The first time you identify a user on this device (whether via onUserLogin or profilePush),
-     * the "anonymous" history on the device will be associated with the newly identified user.
-     * <p>
-     * Then, use this method to switch between subsequent separate identified users.
-     * <p>
-     * Please note that switching from one identified user to another is a costly operation
-     * in that the current session for the previous user is automatically closed
-     * and data relating to the old user removed, and a new session is started
-     * for the new user and data for that user refreshed via a network call to CleverTap.
-     * In addition, any global frequency caps are reset as part of the switch.
-     *
-     * @param profile The map keyed by the type of identity, with the value as the identity
-     */
-    @SuppressWarnings("unused")
-    public void onUserLogin(final Map<String, Object> profile) {
-        onUserLogin(profile,null);
     }
 
     private String getGUIDForIdentifier(String key, String identifier) {
@@ -5199,11 +5303,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
-    private static @Nullable CleverTapAPI createInstanceIfAvailable(Context context, String _accountId){
+    private static CleverTapAPI createInstanceIfAvailable(Context context, String _accountId){
+       return createInstanceIfAvailable(context,_accountId,null);
+    }
+
+    private static @Nullable CleverTapAPI createInstanceIfAvailable(Context context, String _accountId, String cleverTapID){
         try {
             if (_accountId == null) {
                 try {
-                    return CleverTapAPI.getDefaultInstance(context);
+                    return CleverTapAPI.getDefaultInstance(context,cleverTapID);
                 } catch (Throwable t) {
                     Logger.v("Error creating shared Instance: ", t.getCause());
                     return null;
@@ -5213,7 +5321,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             if(!configJson.isEmpty()) {
                 CleverTapInstanceConfig config = CleverTapInstanceConfig.createInstance(configJson);
                 Logger.v("Inflated Instance Config: " +configJson);
-                return config != null ? CleverTapAPI.instanceWithConfig(context, config) : null;
+                return config != null ? CleverTapAPI.instanceWithConfig(context, config, cleverTapID) : null;
             } else {
                 try {
                     CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
@@ -5283,6 +5391,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     pushBundle.putString("wzrk_pid",pushObject.getString("wzrk_pid"));
                 if(pushObject.has("wzrk_ttl"))
                     pushBundle.putLong("wzrk_ttl",pushObject.getLong("wzrk_ttl"));
+                if(pushObject.has("wzrk_rnv"))
+                    pushBundle.putString("wzrk_rnv",pushObject.getString("wzrk_rnv"));
                 Iterator iterator = pushObject.keys();
                 while(iterator.hasNext()){
                     String key = iterator.next().toString();
@@ -6319,8 +6429,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 _notifyInboxInitialized();
                 return;
             }
-            this.ctInboxController = new CTInboxController(getCleverTapID(), loadDBAdapter(context), haveVideoPlayerSupport);
-            _notifyInboxInitialized();
+            if(getCleverTapID() != null) {
+                this.ctInboxController = new CTInboxController(getCleverTapID(), loadDBAdapter(context), haveVideoPlayerSupport);
+                _notifyInboxInitialized();
+            }else{
+                getConfigLogger().info("CRITICAL : No device ID found!");
+            }
         }
     }
 
