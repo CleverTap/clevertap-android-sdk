@@ -229,7 +229,11 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         if(!content.getPosterUrl().isEmpty()) {
                             this.mediaLayout.setVisibility(View.VISIBLE);
                             this.squareImage.setVisibility(View.VISIBLE);
-                            this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                            if(CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE){
+                                this.squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                            }else {
+                                this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                            }
                             Glide.with(this.squareImage.getContext())
                                     .load(content.getPosterUrl())
                                     .apply(new RequestOptions()
@@ -239,7 +243,11 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         }else{
                             this.mediaLayout.setVisibility(View.VISIBLE);
                             this.squareImage.setVisibility(View.VISIBLE);
-                            this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                            if(CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE){
+                                this.squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                            }else {
+                                this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
+                            }
                             int drawableId = Utils.getThumbnailImage(context,Constants.VIDEO_THUMBNAIL);
                             if(drawableId != -1) {
                                 Glide.with(this.squareImage.getContext())
@@ -269,8 +277,8 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
         int width ;
         int height;
         if(CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                height = this.mediaLayout.getMeasuredHeight();
-                width = this.mediaLayout.getMeasuredWidth();
+                height = resources.getDisplayMetrics().heightPixels/2;
+                width = resources.getDisplayMetrics().widthPixels/2;
         }else {
             width = resources.getDisplayMetrics().widthPixels;
             height = inboxMessage.getOrientation().equalsIgnoreCase("l") ? Math.round(width * 0.5625f) : width;

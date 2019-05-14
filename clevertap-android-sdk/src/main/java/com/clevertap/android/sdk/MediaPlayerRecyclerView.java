@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
@@ -77,7 +78,11 @@ public class MediaPlayerRecyclerView extends RecyclerView {
         appContext = context.getApplicationContext();
         videoSurfaceView = new PlayerView(appContext);
         videoSurfaceView.setBackgroundColor(Color.TRANSPARENT);
-        videoSurfaceView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
+        if(CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            videoSurfaceView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FILL);
+        }else{
+            videoSurfaceView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
+        }
         videoSurfaceView.setUseArtwork(true);
         Drawable artwork = context.getResources().getDrawable(R.drawable.ct_audio);
         videoSurfaceView.setDefaultArtwork(Utils.drawableToBitmap(artwork));

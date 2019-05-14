@@ -39,6 +39,8 @@ import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 
 
+import com.bumptech.glide.request.BaseRequestOptions;
+import com.bumptech.glide.request.RequestOptions;
 import com.clevertap.android.sdk.exceptions.CleverTapMetaDataNotFoundException;
 import com.clevertap.android.sdk.exceptions.CleverTapPermissionsNotSatisfied;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
@@ -167,6 +169,19 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     static boolean haveVideoPlayerSupport;
     static {
         haveVideoPlayerSupport = checkForExoPlayer();
+    }
+
+    static boolean platformSupportsGlide = false;
+    static {
+        try {
+            RequestOptions requestOptions = new RequestOptions();
+
+            // noinspection ConstantConditions
+            platformSupportsGlide = requestOptions instanceof BaseRequestOptions;
+        } catch (Throwable t){
+            // no-op
+            platformSupportsGlide = false;
+        }
     }
 
     private DBAdapter dbAdapter;

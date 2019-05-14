@@ -88,7 +88,7 @@
                 android:layout_width="208dp"
                 android:layout_height="42dp"
                 android:textSize="16sp"
-                android:visibility="visible" />
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/interstitial_button2"
@@ -96,7 +96,7 @@
                 android:layout_height="42dp"
                 android:textSize="16sp"
                 android:layout_marginLeft="10dp"
-                android:visibility="visible"
+                android:visibility="gone"
                 android:layout_marginStart="10dp" />
         </LinearLayout>
     </RelativeLayout>
