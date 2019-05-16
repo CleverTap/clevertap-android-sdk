@@ -39,8 +39,8 @@ import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 
 
-import com.bumptech.glide.request.BaseRequestOptions;
-import com.bumptech.glide.request.RequestOptions;
+//import com.bumptech.glide.request.BaseRequestOptions;
+//import com.bumptech.glide.request.RequestOptions;
 import com.clevertap.android.sdk.exceptions.CleverTapMetaDataNotFoundException;
 import com.clevertap.android.sdk.exceptions.CleverTapPermissionsNotSatisfied;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
@@ -169,19 +169,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     static boolean haveVideoPlayerSupport;
     static {
         haveVideoPlayerSupport = checkForExoPlayer();
-    }
-
-    static boolean platformSupportsGlide = false;
-    static {
-        try {
-            RequestOptions requestOptions = new RequestOptions();
-
-            // noinspection ConstantConditions
-            platformSupportsGlide = requestOptions instanceof BaseRequestOptions;
-        } catch (Throwable t){
-            // no-op
-            platformSupportsGlide = false;
-        }
     }
 
     private DBAdapter dbAdapter;
@@ -1721,14 +1708,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     private void addErrorToEvent(JSONObject event, String error){
         if(getCleverTapID().contains(Constants.ERROR_PROFILE_PREFIX)) {
-            try {
-                ValidationResult validationResult = new ValidationResult();
-                validationResult.setErrorCode(514);
-                validationResult.setErrorDesc(error);
-                event.put(Constants.ERROR_KEY, getErrorObject(validationResult));
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
+            ValidationResult validationResult = new ValidationResult();
+            validationResult.setErrorCode(514);
+            validationResult.setErrorDesc(error);
+            pushValidationResult(validationResult);
         }
     }
 
@@ -3276,7 +3259,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     //Profile
     private void pushBasicProfile(JSONObject baseProfile) {
         try {
-            String guid = getCleverTapID();
+            String guid = this.deviceInfo.getDeviceID();
 
             JSONObject profileEvent = new JSONObject();
 
@@ -3327,6 +3310,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
                 JSONObject event = new JSONObject();
                 event.put("profile", profileEvent);
+                addErrorToEvent(event,"Basic Profile push from erroneous profile - " +getCleverTapID());
                 queueEvent(context, event, Constants.PROFILE_EVENT);
             } catch (JSONException e) {
                 getConfigLogger().verbose(getAccountId(), "FATAL: Creating basic profile update event failed!");
@@ -3338,7 +3322,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     private void cacheGUIDForIdentifier(String guid, String key, String identifier) {
         if (guid == null || key == null || identifier == null) {
-            //TODO log something
             return;
         }
 
@@ -4364,6 +4347,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
             event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
             event.put("evtData", notif);
+            addErrorToEvent(event,"Notification Clicked pushed from erroneous profile - " +getCleverTapID());
             queueEvent(context, event, Constants.RAISED_EVENT);
 
             try {
@@ -4656,6 +4640,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         } catch (Throwable ignored) {
             //no-op
         }
+        addErrorToEvent(event,"Notification Viewed pushed from erroneous profile - " +getCleverTapID());
         queueEvent(context, event, Constants.NV_EVENT);
     }
 
@@ -5175,6 +5160,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             data.put("type", type.toString());
             event.put("data", data);
             getConfigLogger().verbose(getAccountId(), "DataHandler: pushing device token with action " + action + " and type " + type.toString());
+            addErrorToEvent(event,"FCM Device Token pushed from erroneous profile - " +getCleverTapID());
             queueEvent(context, event, Constants.DATA_EVENT);
         } catch (JSONException e) {
             // we won't get here

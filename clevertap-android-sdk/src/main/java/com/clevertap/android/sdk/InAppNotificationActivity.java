@@ -23,6 +23,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     private CTInAppNotification inAppNotification;
     private CleverTapInstanceConfig config;
     private WeakReference<InAppActivityListener> listenerWeakReference;
+    private static boolean isAlertVisible = false;
 
     void setListener(InAppActivityListener listener) {
         listenerWeakReference = new WeakReference<>(listener);
@@ -112,6 +113,8 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                         .add(android.R.id.content, contentFragment, getFragmentTag())
                         .commit();
             }
+        }else if(isAlertVisible){
+            createContentFragment();
         }
     }
 
@@ -255,6 +258,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                 }
                 //noinspection ConstantConditions
                 alertDialog.show();
+                isAlertVisible = true;
                 didShow(null);
                 break;
             }
@@ -281,6 +285,9 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     }
 
     void didDismiss(Bundle data) {
+        if(isAlertVisible){
+            isAlertVisible  = false;
+        }
         finish();
         InAppActivityListener listener = getListener();
         if (listener != null) {

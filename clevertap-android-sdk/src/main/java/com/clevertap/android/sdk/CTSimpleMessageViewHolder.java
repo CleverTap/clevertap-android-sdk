@@ -151,34 +151,58 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         this.mediaLayout.setVisibility(View.VISIBLE);
                         this.mediaImage.setVisibility(View.VISIBLE);
                         this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                        Glide.with(this.mediaImage.getContext())
-                                .load(content.getMedia())
-                                .apply(new RequestOptions()
-                                        .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
-                                        .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
-                                .into(this.mediaImage);
+                        try {
+                            Glide.with(this.mediaImage.getContext())
+                                    .load(content.getMedia())
+                                    .apply(new RequestOptions()
+                                            .placeholder(Utils.getThumbnailImage(context, Constants.IMAGE_PLACEHOLDER))
+                                            .error(Utils.getThumbnailImage(context, Constants.IMAGE_PLACEHOLDER)))
+                                    .into(this.mediaImage);
+                        }catch (NoSuchMethodError error){
+                            Logger.d("CleverTap SDK requires Glide v4.9.0 or above. Please refer CleverTap Documentation for more info");
+                            Glide.with(this.mediaImage.getContext())
+                                    .load(content.getMedia())
+                                    .into(this.mediaImage);
+                        }
                     } else if (content.mediaIsGIF()) {
                         this.mediaLayout.setVisibility(View.VISIBLE);
                         this.mediaImage.setVisibility(View.VISIBLE);
                         this.mediaImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                        Glide.with(this.mediaImage.getContext())
-                                .asGif()
-                                .load(content.getMedia())
-                                .apply(new RequestOptions()
-                                        .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
-                                        .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
-                                .into(this.mediaImage);
+                        try {
+                            Glide.with(this.mediaImage.getContext())
+                                    .asGif()
+                                    .load(content.getMedia())
+                                    .apply(new RequestOptions()
+                                            .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
+                                            .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
+                                    .into(this.mediaImage);
+                        }catch (NoSuchMethodError error){
+                            Logger.d("CleverTap SDK requires Glide v4.9.0 or above. Please refer CleverTap Documentation for more info");
+                            Glide.with(this.mediaImage.getContext())
+                                    .asGif()
+                                    .load(content.getMedia())
+                                    .into(this.mediaImage);
+                        }
+
                     } else if (content.mediaIsVideo()) {
                         if(!content.getPosterUrl().isEmpty()) {
                             this.mediaLayout.setVisibility(View.VISIBLE);
                             this.mediaImage.setVisibility(View.VISIBLE);
                             this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                            Glide.with(this.mediaImage.getContext())
-                                    .load(content.getPosterUrl())
-                                    .apply(new RequestOptions()
-                                            .placeholder(Utils.getThumbnailImage(context,Constants.VIDEO_THUMBNAIL))
-                                            .error(Utils.getThumbnailImage(context,Constants.VIDEO_THUMBNAIL)))
-                                    .into(this.mediaImage);
+                            try {
+                                Glide.with(this.mediaImage.getContext())
+                                        .load(content.getPosterUrl())
+                                        .apply(new RequestOptions()
+                                                .placeholder(Utils.getThumbnailImage(context,Constants.VIDEO_THUMBNAIL))
+                                                .error(Utils.getThumbnailImage(context,Constants.VIDEO_THUMBNAIL)))
+                                        .into(this.mediaImage);
+                            }catch (NoSuchMethodError error){
+                                Logger.d("CleverTap SDK requires Glide v4.9.0 or above. Please refer CleverTap Documentation for more info");
+                                Glide.with(this.mediaImage.getContext())
+                                        .load(content.getPosterUrl())
+                                        .into(this.mediaImage);
+                            }
+
                         } else {
                             this.mediaLayout.setVisibility(View.VISIBLE);
                             this.mediaImage.setVisibility(View.VISIBLE);
@@ -208,23 +232,38 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         this.mediaLayout.setVisibility(View.VISIBLE);
                         this.squareImage.setVisibility(View.VISIBLE);
                         this.squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                        Glide.with(this.squareImage.getContext())
-                                .load(content.getMedia())
-                                .apply(new RequestOptions()
-                                        .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
-                                        .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
-                                .into(this.squareImage);
+                        try{
+                            Glide.with(this.squareImage.getContext())
+                                    .load(content.getMedia())
+                                    .apply(new RequestOptions()
+                                            .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
+                                            .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
+                                    .into(this.squareImage);
+                        }catch (NoSuchMethodError error){
+                            Logger.d("CleverTap SDK requires Glide v4.9.0 or above. Please refer CleverTap Documentation for more info");
+                            Glide.with(this.squareImage.getContext())
+                                    .load(content.getMedia())
+                                    .into(this.squareImage);
+                        }
                     } else if (content.mediaIsGIF()) {
                         this.mediaLayout.setVisibility(View.VISIBLE);
                         this.squareImage.setVisibility(View.VISIBLE);
                         this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
-                        Glide.with(this.squareImage.getContext())
-                                .asGif()
-                                .load(content.getMedia())
-                                .apply(new RequestOptions()
-                                        .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
-                                        .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
-                                .into(this.squareImage);
+                        try {
+                            Glide.with(this.squareImage.getContext())
+                                    .asGif()
+                                    .load(content.getMedia())
+                                    .apply(new RequestOptions()
+                                            .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
+                                            .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
+                                    .into(this.squareImage);
+                        }catch (NoSuchMethodError error){
+                            Logger.d("CleverTap SDK requires Glide v4.9.0 or above. Please refer CleverTap Documentation for more info");
+                            Glide.with(this.squareImage.getContext())
+                                    .asGif()
+                                    .load(content.getMedia())
+                                    .into(this.squareImage);
+                        }
                     } else if (content.mediaIsVideo()) {
                         if(!content.getPosterUrl().isEmpty()) {
                             this.mediaLayout.setVisibility(View.VISIBLE);
@@ -234,12 +273,20 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                             }else {
                                 this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
                             }
-                            Glide.with(this.squareImage.getContext())
-                                    .load(content.getPosterUrl())
-                                    .apply(new RequestOptions()
-                                            .placeholder(Utils.getThumbnailImage(context,Constants.VIDEO_THUMBNAIL))
-                                            .error(Utils.getThumbnailImage(context,Constants.VIDEO_THUMBNAIL)))
-                                    .into(this.squareImage);
+                            try {
+                                Glide.with(this.squareImage.getContext())
+                                        .load(content.getPosterUrl())
+                                        .apply(new RequestOptions()
+                                                .placeholder(Utils.getThumbnailImage(context,Constants.VIDEO_THUMBNAIL))
+                                                .error(Utils.getThumbnailImage(context,Constants.VIDEO_THUMBNAIL)))
+                                        .into(this.squareImage);
+                            }catch (NoSuchMethodError error){
+                                Logger.d("CleverTap SDK requires Glide v4.9.0 or above. Please refer CleverTap Documentation for more info");
+                                Glide.with(this.squareImage.getContext())
+                                        .load(content.getPosterUrl())
+                                        .into(this.squareImage);
+                            }
+
                         }else{
                             this.mediaLayout.setVisibility(View.VISIBLE);
                             this.squareImage.setVisibility(View.VISIBLE);

@@ -79,10 +79,6 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
                         }
                     }
                 });
-//                if (inAppNotification.getImage() != null) {
-//                    ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
-//                    imageView.setImageBitmap(inAppNotification.getImage());
-//                }
                 break;
             case Configuration.ORIENTATION_LANDSCAPE:
                 relativeLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {

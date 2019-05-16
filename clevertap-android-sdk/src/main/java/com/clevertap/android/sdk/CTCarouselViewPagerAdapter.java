@@ -63,12 +63,20 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
             if (inboxMessage.getOrientation().equalsIgnoreCase("l")) {
                 ImageView imageView = view.findViewById(R.id.imageView);
                 imageView.setVisibility(View.VISIBLE);
-                Glide.with(imageView.getContext())
-                        .load(carouselImages.get(position))
-                        .apply(new RequestOptions()
-                                .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
-                                .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
-                        .into(imageView);
+                try{
+                    Glide.with(imageView.getContext())
+                            .load(carouselImages.get(position))
+                            .apply(new RequestOptions()
+                                    .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
+                                    .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
+                            .into(imageView);
+                }catch (NoSuchMethodError error){
+                    Logger.d("CleverTap SDK requires Glide v4.9.0 or above. Please refer CleverTap Documentation for more info");
+                    Glide.with(imageView.getContext())
+                            .load(carouselImages.get(position))
+                            .into(imageView);
+                }
+
                 container.addView(view, layoutParams);
                 view.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -82,12 +90,20 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
             } else if (inboxMessage.getOrientation().equalsIgnoreCase("p")) {
                 ImageView imageView = view.findViewById(R.id.squareImageView);
                 imageView.setVisibility(View.VISIBLE);
-                Glide.with(imageView.getContext())
-                        .load(carouselImages.get(position))
-                        .apply(new RequestOptions()
-                                .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
-                                .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
-                        .into(imageView);
+                try {
+                    Glide.with(imageView.getContext())
+                            .load(carouselImages.get(position))
+                            .apply(new RequestOptions()
+                                    .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
+                                    .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
+                            .into(imageView);
+                }catch (NoSuchMethodError error){
+                    Logger.d("CleverTap SDK requires Glide v4.9.0 or above. Please refer CleverTap Documentation for more info");
+                    Glide.with(imageView.getContext())
+                            .load(carouselImages.get(position))
+                            .into(imageView);
+                }
+
                 container.addView(view, layoutParams);
                 view.setOnClickListener(new View.OnClickListener() {
                     @Override
