@@ -711,7 +711,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         try {
             event.put("evtName", Constants.APP_LAUNCHED_EVENT);
             event.put("evtData", getAppLaunchedFields());
-            addErrorToEvent(event,"App Launched from erroneous profile - " +getCleverTapID());
+            addErrorToEvent("App Launched from erroneous profile - " +getCleverTapID());
 
         } catch (Throwable t) {
             // We won't get here
@@ -1706,7 +1706,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return error;
     }
 
-    private void addErrorToEvent(JSONObject event, String error){
+    private void addErrorToEvent(String error){
         if(getCleverTapID().contains(Constants.ERROR_PROFILE_PREFIX)) {
             ValidationResult validationResult = new ValidationResult();
             validationResult.setErrorCode(514);
@@ -3310,7 +3310,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
                 JSONObject event = new JSONObject();
                 event.put("profile", profileEvent);
-                addErrorToEvent(event,"Basic Profile push from erroneous profile - " +getCleverTapID());
+                addErrorToEvent("Profile pushed from erroneous profile - " +getCleverTapID());
                 queueEvent(context, event, Constants.PROFILE_EVENT);
             } catch (JSONException e) {
                 getConfigLogger().verbose(getAccountId(), "FATAL: Creating basic profile update event failed!");
@@ -4347,7 +4347,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
             event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
             event.put("evtData", notif);
-            addErrorToEvent(event,"Notification Clicked pushed from erroneous profile - " +getCleverTapID());
+            addErrorToEvent("Notification Clicked pushed from erroneous profile - " +getCleverTapID());
             queueEvent(context, event, Constants.RAISED_EVENT);
 
             try {
@@ -4640,7 +4640,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         } catch (Throwable ignored) {
             //no-op
         }
-        addErrorToEvent(event,"Notification Viewed pushed from erroneous profile - " +getCleverTapID());
+        addErrorToEvent("Notification Viewed pushed from erroneous profile - " +getCleverTapID());
         queueEvent(context, event, Constants.NV_EVENT);
     }
 
@@ -5160,7 +5160,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             data.put("type", type.toString());
             event.put("data", data);
             getConfigLogger().verbose(getAccountId(), "DataHandler: pushing device token with action " + action + " and type " + type.toString());
-            addErrorToEvent(event,"FCM Device Token pushed from erroneous profile - " +getCleverTapID());
+            addErrorToEvent("FCM Device Token pushed from erroneous profile - " +getCleverTapID());
             queueEvent(context, event, Constants.DATA_EVENT);
         } catch (JSONException e) {
             // we won't get here
