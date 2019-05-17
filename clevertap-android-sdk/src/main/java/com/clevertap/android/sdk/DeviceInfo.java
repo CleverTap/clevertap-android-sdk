@@ -11,7 +11,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Handler;
-import android.os.Looper;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.telephony.TelephonyManager;
@@ -40,14 +39,14 @@ class DeviceInfo {
     DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID) {
         this.context = context;
         this.config = config;
-        this.handler = new Handler(Looper.myLooper());
-        Runnable deviceCacheInfoRunnable = new Runnable() {
+        this.handler = new Handler();
+        Thread deviceInfoCacheThread = new Thread(new Runnable() {
             @Override
             public void run() {
-                getDeviceCachedInfo();  // put this here to avoid running on main thread
+                getDeviceCachedInfo();
             }
-        };
-        handler.post(deviceCacheInfoRunnable);
+        });
+        deviceInfoCacheThread.start();
         initDeviceID(cleverTapID);
     }
 
@@ -88,42 +87,45 @@ class DeviceInfo {
         }
 
         //Validate the provided Custom CTID
-        boolean isCustomCTIDValid = false;
         if(ManifestInfo.getInstance(context).useCustomId()) {
-            isCustomCTIDValid = Utils.validateCTID(cleverTapID);
+            if(Utils.validateCTID(cleverTapID)){
+                getConfigLogger().info(config.getAccountId(), "Updating CleverTap ID to given custom CleverTap ID : " + cleverTapID);
+                forceUpdateDeviceId(Constants.CUSTOM_CLEVERTAP_ID_PREFIX+cleverTapID);
+            }else{
+                Logger.i("Since passed Custom CleverTap ID is not valid. Falling back to the error device id.");
+                if(getFallBackDeviceID() == null) {
+                    Logger.i("CleverTap will create a fallback device ID");
+                    generateFallbackDeviceID();
+                }
+            }
+            return;
         }
 
-        //If validation is passed, update the GUID to provided custom CTID
-        if(isCustomCTIDValid) {
-            getConfigLogger().info(config.getAccountId(), "Updating CleverTap ID to given custom CleverTap ID : " + cleverTapID);
-            forceUpdateDeviceId(Constants.CUSTOM_CLEVERTAP_ID_PREFIX+cleverTapID);
-        } else {
-            Runnable deviceIDRunnable = new Runnable() {
-                @Override
-                public void run() {
-                // grab and cache the googleAdID in any event if available
-                cacheGoogleAdID();
-                //If Manifest flag is present then dont use Google Ad ID and create fallback ID
-                if(ManifestInfo.getInstance(context).useCustomId()){
-                    Logger.i("Since passed Custom CleverTap ID is not valid. Falling back to the error device id.");
-                    if(getFallBackDeviceID() == null) {
-                        Logger.i("CleverTap will create a fallback device ID");
-                        generateFallbackDeviceID();
-                    }else{
-                        Logger.i("Fallback device ID "+ getFallBackDeviceID() +" already exists, will not create a new fallback device ID");
-                        updateFallbackID(getFallBackDeviceID());
-                    }
-                }else {
-                    //Generate Device ID
-                    generateDeviceID();
-                }
-                }
-            };
-            handler.post(deviceIDRunnable);
+        if(!ManifestInfo.getInstance(context).useGoogleAdId()){
+            generateDeviceID();
+            return;
         }
+
+        // fetch the googleAdID to generate GUID
+        //has to be called on background thread
+        Thread generateGUIDFromAdIDThread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                fetchGoogleAdID();
+                generateDeviceID();
+
+                SyncListener sl = CleverTapAPI.instanceWithConfig(context,config).getSyncListener();
+                if(sl!=null){
+                    Logger.v("Calling profile did initialize");
+                    sl.profileDidInitialize(getDeviceID());
+                }
+            }
+        });
+        generateGUIDFromAdIDThread.start();
+
     }
 
-    private synchronized void cacheGoogleAdID() {
+    private synchronized void fetchGoogleAdID() {
 
         if(this.config.isUseGoogleAdId() && googleAdID == null && !adIdRun) {
             String advertisingID = null;
@@ -143,7 +145,7 @@ class DeviceInfo {
                 Method getAdId = adInfo.getClass().getMethod("getId");
                 advertisingID = (String) getAdId.invoke(adInfo);
             } catch (Throwable t) {
-                getConfigLogger().verbose(config.getAccountId(), "Failed to get Advertising ID: " + t.toString());
+                getConfigLogger().verbose(config.getAccountId(), "Failed to get Advertising ID: " + t.toString() + t.getCause().toString());
             }
             if (advertisingID != null && advertisingID.trim().length() > 2) {
                 synchronized (adIDLock) {
@@ -182,6 +184,7 @@ class DeviceInfo {
 
         if (generatedDeviceID.trim().length() > 2) {
             forceUpdateDeviceId(generatedDeviceID);
+
         } else {
             getConfigLogger().verbose(this.config.getAccountId(),"Unable to generate device ID");
         }

@@ -87,8 +87,6 @@ public class CTInAppNativeInterstitialImageFragment extends CTInAppBaseFullFragm
                                 layoutParams.setMargins(120, 40, 85, 0);
                                 layoutParams.width = (relativeLayout1.getMeasuredWidth()) - 75;
                                 layoutHeight = layoutParams.height = (int) (layoutParams.width * 0.5625f);
-                                //layoutParams.height = relativeLayout1.getMeasuredHeight();
-                                //layoutParams.width = (int) (layoutParams.height * 1.78f);
                                 relativeLayout1.setLayoutParams(layoutParams);
                                 FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(closeImageView.getWidth(), closeImageView.getHeight());
                                 closeLp.gravity = Gravity.TOP | Gravity.END;

@@ -1,21 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
-    android:layout_height="match_parent">
-
-    <RelativeLayout
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent">
+    android:layout_height="wrap_content">
 
         <RelativeLayout
             android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:id="@+id/click_relative_layout"
-            android:layout_above="@id/cta_linear_layout">
+            android:layout_height="wrap_content"
+            android:id="@+id/click_relative_layout">
         <LinearLayout
             android:id="@+id/body_linear_layout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:weightSum="2">
 
             <RelativeLayout
@@ -24,19 +19,17 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1">
 
-                <com.clevertap.android.sdk.HorizontalRectangleImageView
+                <com.clevertap.android.sdk.RectangleImageView
                     android:id="@+id/media_image"
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:src="@drawable/ct_video_1"
-                    android:layout_centerInParent="true"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
                     android:scaleType="fitCenter"
                     android:visibility="gone" />
 
                 <com.clevertap.android.sdk.HorizontalSquareImageView
                     android:id="@+id/square_media_image"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_width="wrap_content"
+                    android:layout_height="200dp"
                     android:layout_centerInParent="true"
                     android:scaleType="centerCrop"
                     android:visibility="gone" />
@@ -202,5 +195,5 @@
                 android:textSize="14sp"
                 android:visibility="gone" />
         </LinearLayout>
-    </RelativeLayout>
+
 </LinearLayout>

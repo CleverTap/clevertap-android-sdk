@@ -61,7 +61,6 @@ public class Constants {
     static final String INAPP_MAX_PER_SESSION = "imc";
     static final String INAPP_WINDOW = "w";
     static final String INAPP_KEY = "inApp";
-    static final String INAPP_IS_URL = "iu";
     static final int INAPP_CLOSE_IV_WIDTH = 40;
     static final String INAPP_JS_ENABLED = "isJsEnabled";
     static final String DEBUG_KEY = "d";
@@ -117,7 +116,6 @@ public class Constants {
     static final String VIDEO_THUMBNAIL = "ct_video_1";
     static final String AUDIO_THUMBNAIL = "ct_audio";
     static final String IMAGE_PLACEHOLDER = "ct_image";
-    static final int LIST_VIEW_WIDTH = 450;
     //Keys used by the SDK
     static final String KEY_ACCOUNT_ID = "accountId";
     static final String KEY_ACCOUNT_TOKEN = "accountToken";

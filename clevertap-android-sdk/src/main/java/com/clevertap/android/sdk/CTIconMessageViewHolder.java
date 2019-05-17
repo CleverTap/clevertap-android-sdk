@@ -329,8 +329,6 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
         int width;
         int height;
         if(CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-//            height = this.mediaLayout.getMeasuredHeight();
-//            width = this.mediaLayout.getMeasuredWidth();
             height = resources.getDisplayMetrics().heightPixels/2;;
             width = resources.getDisplayMetrics().widthPixels/2;
         }else {

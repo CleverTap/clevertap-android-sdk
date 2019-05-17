@@ -171,10 +171,10 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         int height;
         if(CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             if(message.getOrientation().equalsIgnoreCase("l")){
-                width = this.mediaLayout.getMeasuredWidth();
-                height = Math.round(width * 0.5625f);
+                width = Math.round(this.mediaImage.getMeasuredHeight() * 1.76f);
+                height = this.mediaImage.getMeasuredHeight();
             }else{
-                height = this.mediaLayout.getMeasuredHeight();
+                height = this.squareImage.getMeasuredHeight();
                 width = height;
             }
         }else {

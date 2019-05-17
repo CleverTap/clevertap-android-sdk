@@ -54,7 +54,6 @@ public class CTCarouselImageViewHolder extends CTInboxBaseMessageViewHolder {
         CTCarouselViewPagerAdapter carouselViewPagerAdapter = new CTCarouselViewPagerAdapter(appContext, parent, inboxMessage,layoutParams,position);
         this.imageViewPager.setAdapter(carouselViewPagerAdapter);
         //Adds the dots for the carousel
-        //int dotsCount = carouselViewPagerAdapter.getCount();
         int dotsCount = inboxMessage.getInboxMessageContents().size();
         if(this.sliderDots.getChildCount()>0){
             this.sliderDots.removeAllViews();
