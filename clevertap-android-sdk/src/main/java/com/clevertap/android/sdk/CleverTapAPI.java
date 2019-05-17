@@ -4983,16 +4983,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         String gguid = null;
                         if(cleverTapID == null) {
                             if(ManifestInfo.getInstance(context).useCustomId()) {
-                                if(getFallbackDeviceID() != null) {
-                                    gguid = getFallbackDeviceID();
-                                }else{
-                                    _deviceInfo.generateFallbackDeviceID();
-                                    gguid = _deviceInfo.getFallBackDeviceID();
-                                }
-                                if(deviceInfo.getDeviceID() != null){
-                                    deviceInfo.removeDeviceID();
-                                }
-                                addErrorToEvent("Attempted to set invalid custom CleverTap ID - "+cleverTapID+" fallback to default error device ID : " + getFallbackDeviceID());
+                                setFallBackDeviceIDForProfile(_deviceInfo,gguid,null);
                             }else {
                                 gguid = _deviceInfo.forceNewDeviceID();
                             }
@@ -5002,16 +4993,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                                     getConfigLogger().info(getAccountId(), "Updating CleverTapID to given custom ID : " + cleverTapID);
                                     gguid = _deviceInfo.forceUpdateDeviceId(Constants.CUSTOM_CLEVERTAP_ID_PREFIX+cleverTapID);
                                 }else{
-                                    if(_deviceInfo.getFallBackDeviceID() != null) {
-                                        gguid = _deviceInfo.getFallBackDeviceID();
-                                    }else{
-                                        _deviceInfo.generateFallbackDeviceID();
-                                        gguid = _deviceInfo.getFallBackDeviceID();
-                                    }
-                                    if(deviceInfo.getDeviceID() != null){
-                                        deviceInfo.removeDeviceID();
-                                    }
-                                    addErrorToEvent("Attempted to set invalid custom CleverTap ID - "+cleverTapID+" fallback to default error device ID : " + getFallbackDeviceID());
+                                    setFallBackDeviceIDForProfile(_deviceInfo,gguid,cleverTapID);
                                 }
                             }else {
                                 gguid = _deviceInfo.forceNewDeviceID();
@@ -5034,6 +5016,19 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 }
             }
         });
+    }
+
+    private void setFallBackDeviceIDForProfile(DeviceInfo _deviceInfo, String gguid, String cleverTapID ){
+        if(getFallbackDeviceID() != null) {
+            gguid = getFallbackDeviceID();
+        }else{
+            _deviceInfo.generateFallbackDeviceID();
+            gguid = _deviceInfo.getFallBackDeviceID();
+        }
+        if(deviceInfo.getDeviceID() != null){
+            deviceInfo.removeDeviceID();
+        }
+        addErrorToEvent("Attempted to set invalid custom CleverTap ID - "+cleverTapID+" fallback to default error device ID : " + getFallbackDeviceID());
     }
 
     private String getGUIDForIdentifier(String key, String identifier) {
