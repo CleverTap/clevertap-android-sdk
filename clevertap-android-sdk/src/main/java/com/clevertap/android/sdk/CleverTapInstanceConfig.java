@@ -220,6 +220,10 @@ public class CleverTapInstanceConfig implements Parcelable {
         return disableAppLaunchedEvent;
     }
 
+    public void setDisableAppLaunchedEvent(boolean disableAppLaunchedEvent) {
+        this.disableAppLaunchedEvent = disableAppLaunchedEvent;
+    }
+
     boolean isSslPinningEnabled() {
         return sslPinning;
     }
@@ -269,8 +273,12 @@ public class CleverTapInstanceConfig implements Parcelable {
         return raiseNotificationViewed;
     }
 
-    public boolean getEnableCustomCleverTapId() {
+    boolean getEnableCustomCleverTapId() {
         return enableCustomCleverTapId;
+    }
+
+    public void setEnableCustomCleverTapId(boolean enableCustomCleverTapId) {
+        this.enableCustomCleverTapId = enableCustomCleverTapId;
     }
 
     public String getFCMSenderId() {

@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk;
 
-import android.content.Context;
 import android.webkit.JavascriptInterface;
 
 import org.json.JSONArray;
@@ -8,8 +7,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
-import java.util.ArrayList;
-import java.util.Map;
 
 /**
  * This class helps WebViews to interact with CleverTapAPI via pre-defined methods

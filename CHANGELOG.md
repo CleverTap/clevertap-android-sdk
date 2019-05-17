@@ -1,5 +1,13 @@
 ## CHANGE LOG
 
+### Version 3.5.0 (May 17, 2019)
+* Adds the ability to set a custom Device ID (CleverTap ID)
+* Adds the ability to record Notification Viewed event for Push Notifications
+* Adds support to record events in a WebView
+* Enables Javascript in Custom HTML In-Apps
+* In-Apps and App Inbox Landscape layout improvements
+* Bug fixes and performance improvements
+
 ### Version 3.4.3 (April 4, 2019)
 * Adds support for specifying custom FCM Sender ID to request token
 

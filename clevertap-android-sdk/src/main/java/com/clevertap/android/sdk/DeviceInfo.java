@@ -10,7 +10,6 @@ import android.content.pm.PackageManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
-import android.os.Handler;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.telephony.TelephonyManager;
@@ -34,12 +33,10 @@ class DeviceInfo {
     private boolean adIdRun = false;
     private static final String OS_NAME = "Android";
     private DeviceCachedInfo cachedInfo;
-    private Handler handler;
 
     DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID) {
         this.context = context;
         this.config = config;
-        this.handler = new Handler();
         Thread deviceInfoCacheThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -76,32 +73,23 @@ class DeviceInfo {
     @SuppressWarnings({"WeakerAccess"})
     private void initDeviceID(String cleverTapID) {
 
-
-        String deviceID = getDeviceID();
+        String deviceID = _getDeviceID();
         if(deviceID != null && deviceID.trim().length() > 2){
-            getConfigLogger().info(config.getAccountId(),"CleverTap ID already present for profile");
+            getConfigLogger().verbose(config.getAccountId(),"CleverTap ID already present for profile");
             if(cleverTapID != null) {
-                getConfigLogger().info(config.getAccountId(),"Discarding custom CleverTap ID - " + cleverTapID);
+                getConfigLogger().info(config.getAccountId(),"CleverTap ID already present for profile. Discarding custom CleverTap ID - " + cleverTapID);
+                //TODO Log this to dashboard??
+                CleverTapAPI.addValidationResultForInstanceCreation("Inside initDeviceID - CleverTap ID already present for profile. Discarding custom CleverTap ID - " + cleverTapID);
             }
             return;
         }
 
-        //Validate the provided Custom CTID
-        if(ManifestInfo.getInstance(context).useCustomId()) {
-            if(Utils.validateCTID(cleverTapID)){
-                getConfigLogger().info(config.getAccountId(), "Updating CleverTap ID to given custom CleverTap ID : " + cleverTapID);
-                forceUpdateDeviceId(Constants.CUSTOM_CLEVERTAP_ID_PREFIX+cleverTapID);
-            }else{
-                Logger.i("Since passed Custom CleverTap ID is not valid. Falling back to the error device id.");
-                if(getFallBackDeviceID() == null) {
-                    Logger.i("CleverTap will create a fallback device ID");
-                    generateFallbackDeviceID();
-                }
-            }
+        if(this.config.getEnableCustomCleverTapId()) {
+            forceUpdateCustomCleverTapID(cleverTapID);
             return;
         }
 
-        if(!ManifestInfo.getInstance(context).useGoogleAdId()){
+        if(this.config.isUseGoogleAdId()){
             generateDeviceID();
             return;
         }
@@ -113,21 +101,31 @@ class DeviceInfo {
             public void run() {
                 fetchGoogleAdID();
                 generateDeviceID();
-
-                SyncListener sl = CleverTapAPI.instanceWithConfig(context,config).getSyncListener();
-                if(sl!=null){
-                    Logger.v("Calling profile did initialize");
-                    sl.profileDidInitialize(getDeviceID());
-                }
+                CleverTapAPI.instanceWithConfig(context,config).deviceIDCreated(getDeviceID());
             }
         });
         generateGUIDFromAdIDThread.start();
+    }
 
+    void forceUpdateCustomCleverTapID(String cleverTapID){
+        if(Utils.validateCTID(cleverTapID)){
+            getConfigLogger().info(config.getAccountId(), "Setting CleverTap ID to custom CleverTap ID : " + cleverTapID);
+            forceUpdateDeviceId(Constants.CUSTOM_CLEVERTAP_ID_PREFIX+cleverTapID);
+        }else if(getFallBackDeviceID() == null) {
+            generateFallbackDeviceID();
+            removeDeviceID();
+        }
+        getConfigLogger().info(config.getAccountId(),"Custom CleverTap ID - "+cleverTapID+" is not valid. Falling back to the error device id - "+ getFallBackDeviceID());
+        //TODO Log this to dashboard??
+        CleverTapAPI.addValidationResultForInstanceCreation("Inside forceUpdateCustomCleverTapID - Custom CleverTap ID - "+cleverTapID+" is not valid. Falling back to the error device id - "+ getFallBackDeviceID());
+    }
+
+    boolean isErrorDeviceId(){
+        return getDeviceID() != null && getDeviceID().startsWith(Constants.ERROR_PROFILE_PREFIX);
     }
 
     private synchronized void fetchGoogleAdID() {
-
-        if(this.config.isUseGoogleAdId() && googleAdID == null && !adIdRun) {
+        if(getGoogleAdID() == null && !adIdRun) {
             String advertisingID = null;
             try {
                 adIdRun = true;
@@ -155,7 +153,7 @@ class DeviceInfo {
         }
     }
 
-    synchronized void generateFallbackDeviceID(){
+    private synchronized void generateFallbackDeviceID(){
         synchronized (deviceIDLock) {
             String fallbackDeviceID = Constants.ERROR_PROFILE_PREFIX + UUID.randomUUID().toString().replace("-", "");
             if (fallbackDeviceID.trim().length() > 2) {
@@ -168,36 +166,26 @@ class DeviceInfo {
 
     private synchronized void generateDeviceID() {
         String generatedDeviceID;
-
-        // try google ad id first
-        // if no ad id then make provisional guid permanent
-        if (googleAdID != null && ManifestInfo.getInstance(context).useGoogleAdId()) {
-            synchronized (adIDLock) {
-                generatedDeviceID = Constants.GUID_PREFIX_GOOGLE_AD_ID + googleAdID;
-            }
-        } else {
+        String adId = getGoogleAdID();
+        if (adId != null) {
+            generatedDeviceID = Constants.GUID_PREFIX_GOOGLE_AD_ID + adId;
+        }else{
             synchronized (deviceIDLock) {
                 generatedDeviceID = generateGUID();
-                getConfigLogger().verbose(this.config.getAccountId(),"Made provisional ID permanent");
             }
         }
-
-        if (generatedDeviceID.trim().length() > 2) {
-            forceUpdateDeviceId(generatedDeviceID);
-
-        } else {
-            getConfigLogger().verbose(this.config.getAccountId(),"Unable to generate device ID");
-        }
+        forceUpdateDeviceId(generatedDeviceID);
     }
 
     String getAttributionID() {
-        String deviceID = getDeviceID();
-        synchronized (deviceIDLock) {
-            return (deviceID != null && deviceID.trim().length() > 2) ? deviceID : null;
-        }
+        return getDeviceID();
     }
 
     String getDeviceID() {
+        return _getDeviceID() != null ? _getDeviceID() : getFallBackDeviceID();
+    }
+
+    private String _getDeviceID(){
         synchronized (deviceIDLock) {
             if (this.config.isDefaultInstance()) {
                 String _new = StorageHelper.getString(this.context, getDeviceIdStorageKey(), null);
@@ -208,11 +196,11 @@ class DeviceInfo {
         }
     }
 
-    void removeDeviceID(){
+    private void removeDeviceID(){
         StorageHelper.removeString(this.context, getDeviceIdStorageKey());
     }
 
-    String getFallBackDeviceID(){
+    private String getFallBackDeviceID(){
         return StorageHelper.getString(this.context, getFallbackIdStorageKey(), null);
     }
 
@@ -220,10 +208,9 @@ class DeviceInfo {
         return GUID_PREFIX + UUID.randomUUID().toString().replace("-", "");
     }
 
-
-    String forceNewDeviceID() {
+    void forceNewDeviceID() {
         String deviceID = generateGUID();
-        return forceUpdateDeviceId(deviceID);
+        forceUpdateDeviceId(deviceID);
     }
 
     private String getDeviceIdStorageKey() {
@@ -234,10 +221,9 @@ class DeviceInfo {
         return Constants.FALLBACK_ID_TAG +":"+this.config.getAccountId();
     }
 
-    String updateFallbackID(String fallbackId){
+    private void updateFallbackID(String fallbackId){
         getConfigLogger().verbose(this.config.getAccountId(),"Updating the fallback id - " + fallbackId);
         StorageHelper.putString(context, getFallbackIdStorageKey(), fallbackId);
-        return fallbackId;
     }
 
     /**
@@ -249,12 +235,11 @@ class DeviceInfo {
      * @param id      The new device ID
      */
     @SuppressLint("CommitPrefEdits")
-    String forceUpdateDeviceId(String id) {
+    void forceUpdateDeviceId(String id) {
         getConfigLogger().verbose(this.config.getAccountId(),"Force updating the device ID to " + id);
         synchronized (deviceIDLock) {
             StorageHelper.putString(context, getDeviceIdStorageKey(), id);
         }
-        return id;
     }
     /**
      * Tests whether a particular permission is available or not.

@@ -150,13 +150,13 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                             layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 1.78f);
                         } else {
                             if (isTablet()) {
-                                layoutParams.setMargins(85, 60, 85, 0);
-                                layoutParams.width = (relativeLayout1.getMeasuredWidth()) - 85;
-                                layoutHeight = layoutParams.height = (int) (layoutParams.width * 1.78f);
+                                layoutParams.setMargins(120, 40, 85, 0);
+                                layoutParams.width = (relativeLayout1.getMeasuredWidth()) - 75;
+                                layoutHeight = layoutParams.height = (int) (layoutParams.width * 0.5625f);
                                 relativeLayout1.setLayoutParams(layoutParams);
                                 FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(closeImageView.getWidth(), closeImageView.getHeight());
                                 closeLp.gravity = Gravity.TOP | Gravity.END;
-                                closeLp.setMargins(0, 40, 65, 0);
+                                closeLp.setMargins(0, 20, 90, 0);
                                 closeImageView.setLayoutParams(closeLp);
                             } else {
                                 layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 0.5625f);

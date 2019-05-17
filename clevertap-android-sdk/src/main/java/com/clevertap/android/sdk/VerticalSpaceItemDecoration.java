@@ -8,7 +8,7 @@ public class VerticalSpaceItemDecoration extends RecyclerView.ItemDecoration {
 
     private final int verticalSpaceHeight;
 
-    public VerticalSpaceItemDecoration(int verticalSpaceHeight) {
+    VerticalSpaceItemDecoration(int verticalSpaceHeight) {
         this.verticalSpaceHeight = verticalSpaceHeight;
     }
 
