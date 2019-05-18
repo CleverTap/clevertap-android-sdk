@@ -73,13 +73,25 @@ class DeviceInfo {
     @SuppressWarnings({"WeakerAccess"})
     private void initDeviceID(String cleverTapID) {
 
+        //Show logging as per Manifest flag
+        if(config.getEnableCustomCleverTapId()){
+            if(cleverTapID == null){
+                config.getLogger().info("CLEVERTAP_USE_CUSTOM_ID has been specified in the AndroidManifest.xml/Instance Configuration. CleverTap SDK will create a fallback device ID");
+                CleverTapAPI.addValidationResultForInstanceCreation("CLEVERTAP_USE_CUSTOM_ID has been specified in the AndroidManifest.xml/Instance Configuration. CleverTap SDK will create a fallback device ID");
+            }
+        }else{
+            if(cleverTapID != null){
+                config.getLogger().info("CLEVERTAP_USE_CUSTOM_ID has not been specified in the AndroidManifest.xml. Custom CleverTap ID passed will not be used.");
+                CleverTapAPI.addValidationResultForInstanceCreation("CLEVERTAP_USE_CUSTOM_ID has not been specified in the AndroidManifest.xml. Custom CleverTap ID passed will not be used.");
+            }
+        }
+
         String deviceID = _getDeviceID();
         if(deviceID != null && deviceID.trim().length() > 2){
             getConfigLogger().verbose(config.getAccountId(),"CleverTap ID already present for profile");
             if(cleverTapID != null) {
-                getConfigLogger().info(config.getAccountId(),"CleverTap ID already present for profile. Discarding custom CleverTap ID - " + cleverTapID);
-                //TODO Log this to dashboard??
-                CleverTapAPI.addValidationResultForInstanceCreation("Inside initDeviceID - CleverTap ID already present for profile. Discarding custom CleverTap ID - " + cleverTapID);
+                getConfigLogger().info(config.getAccountId(),"CleverTap ID - "+deviceID+" already exists. Unable to set custom CleverTap ID - " + cleverTapID);
+                CleverTapAPI.addValidationResultForInstanceCreation("CleverTap ID - "+deviceID+" already exists. Unable to set custom CleverTap ID - " + cleverTapID);
             }
             return;
         }
@@ -111,13 +123,12 @@ class DeviceInfo {
         if(Utils.validateCTID(cleverTapID)){
             getConfigLogger().info(config.getAccountId(), "Setting CleverTap ID to custom CleverTap ID : " + cleverTapID);
             forceUpdateDeviceId(Constants.CUSTOM_CLEVERTAP_ID_PREFIX+cleverTapID);
-        }else if(getFallBackDeviceID() == null) {
-            generateFallbackDeviceID();
+        }else {
+            setOrGenerateFallbackDeviceID();
             removeDeviceID();
+            getConfigLogger().info(config.getAccountId(),"Attempted to set invalid custom CleverTap ID - "+cleverTapID+", falling back to default error CleverTap ID - "+getFallBackDeviceID());
+            CleverTapAPI.addValidationResultForInstanceCreation("Attempted to set invalid custom CleverTap ID - "+cleverTapID+", falling back to default error CleverTap ID - "+getFallBackDeviceID());
         }
-        getConfigLogger().info(config.getAccountId(),"Custom CleverTap ID - "+cleverTapID+" is not valid. Falling back to the error device id - "+ getFallBackDeviceID());
-        //TODO Log this to dashboard??
-        CleverTapAPI.addValidationResultForInstanceCreation("Inside forceUpdateCustomCleverTapID - Custom CleverTap ID - "+cleverTapID+" is not valid. Falling back to the error device id - "+ getFallBackDeviceID());
     }
 
     boolean isErrorDeviceId(){
@@ -153,13 +164,15 @@ class DeviceInfo {
         }
     }
 
-    private synchronized void generateFallbackDeviceID(){
-        synchronized (deviceIDLock) {
-            String fallbackDeviceID = Constants.ERROR_PROFILE_PREFIX + UUID.randomUUID().toString().replace("-", "");
-            if (fallbackDeviceID.trim().length() > 2) {
-                updateFallbackID(fallbackDeviceID);
-            } else {
-                getConfigLogger().verbose(this.config.getAccountId(),"Unable to generate fallback error device ID");
+    private synchronized void setOrGenerateFallbackDeviceID(){
+        if(getFallBackDeviceID() == null) {
+            synchronized (deviceIDLock) {
+                String fallbackDeviceID = Constants.ERROR_PROFILE_PREFIX + UUID.randomUUID().toString().replace("-", "");
+                if (fallbackDeviceID.trim().length() > 2) {
+                    updateFallbackID(fallbackDeviceID);
+                } else {
+                    getConfigLogger().verbose(this.config.getAccountId(), "Unable to generate fallback error device ID");
+                }
             }
         }
     }

@@ -515,18 +515,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         // For Google Play Store/Android Studio tracking
         sdkVersion = BuildConfig.SDK_VERSION_STRING;
 
-        //Show logging as per Manifest flag
-        if(ManifestInfo.getInstance(context).useCustomId()){
-            if(cleverTapID == null){
-                Logger.i("CLEVERTAP_USE_CUSTOM_ID has been specified in the AndroidManifest.xml CleverTap SDK will create a fallback device ID");
-            }
-        }else{
-            if(cleverTapID != null){
-                Logger.i("CLEVERTAP_USE_CUSTOM_ID has not been specified in the AndroidManifest.xml. Custom CleverTap ID passed will not be used.");
-            }
-        }
-
-        //Create defaultConfig nonetheless
         if(defaultConfig != null){
             return instanceWithConfig(context,defaultConfig,cleverTapID);
         }
@@ -589,7 +577,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             instances.put(config.getAccountId(), instance);
             if(instance.getCleverTapID() != null) {
                 instance.notifyUserProfileInitialized();
-                //TODO figure out logging
                 instanceValidationResults.put(config.getAccountId(),validationResultArrayList);
                 for(ValidationResult vr : validationResultArrayList){
                     instance.pushValidationResult(vr);
