@@ -5,11 +5,32 @@
     CleverTapAPI clevertap = CleverTapAPI.getDefaultInstance(getApplicationContext());
 ```
 
+### Creating Default Instance by specifying custom CleverTap ID
+
+* Add the following to `AndroidManifest.xml` file
+```xml
+<meta-data
+        android:name="CLEVERTAP_USE_CUSTOM_ID"
+        android:value="1"/>
+```
+
+* Register the ActivityLifecycleCallback with a unique custom CleverTap ID per user
+
+```java
+    ActivityLifecycleCallback.register(this,"uniqueCustomClevertapIDForUser");
+```
+
+* Or, create a default instance with a unique custom CleverTap ID per users
+
+```java
+    CleverTapAPI cleverTapAPI = CleverTapAPI.getDefaultInstance(getApplicationContext(),"uniqueCustomClevertapIDForUser");
+```
+
 ### Record Events
 ```java
    clevertap.pushEvent(“Event Name”);
-``` 
-   
+```
+
 * Record an Event with properties  
 ```java
     HashMap<String, Object> prodViewedAction = new HashMap<String, Object>();
@@ -17,40 +38,40 @@
     prodViewedAction.put("Category", "Mens Accessories");
     prodViewedAction.put("Price", 59.99);
     prodViewedAction.put("Date", new java.util.Date());
-    
+
     clevertap.pushEvent("Product viewed", prodViewedAction);
 ```
-    
+
 * Record a Charged (purchase made) Event  
 ```java
     HashMap<String, Object> chargeDetails = new HashMap<String, Object>();
     chargeDetails.put("Amount", 300);
     chargeDetails.put("Payment Mode", "Credit card");
     chargeDetails.put("Charged ID", 24052013);
-    
+
     HashMap<String, Object> item1 = new HashMap<String, Object>();
     item1.put("Product category", "books");
     item1.put("Book name", "The Millionaire next door");
     item1.put("Quantity", 1);
-    
+
     HashMap<String, Object> item2 = new HashMap<String, Object>();
     item2.put("Product category", "books");
     item2.put("Book name", "Achieving inner zen");
     item2.put("Quantity", 1);
-    
+
     HashMap<String, Object> item3 = new HashMap<String, Object>();
     item3.put("Product category", "books");
     item3.put("Book name", "Chuck it, let's do it");
     item3.put("Quantity", 5);
-    
+
     ArrayList<HashMap<String, Object>> items = new ArrayList<HashMap<String, Object>>();
     items.add(item1);
     items.add(item2);
     items.add(item3);
-    
+
     clevertap.pushChargedEvent(chargeDetails, items);
 ```
-    
+
 ### Record User Profile properties
 ```java
     // each of the below fields are optional
@@ -66,29 +87,29 @@
     profileUpdate.put("Married", "Y");                          // Can be either Y or N
     profileUpdate.put("DOB", new Date());                       // Date of Birth. Set the Date object to the appropriate value first
     profileUpdate.put("Age", 28);                               // Not required if DOB is set
-    profileUpdate.put("Tz", "Asia/Kolkata");                    //an abbreviation such as "PST", a full name such as "America/Los_Angeles", 
+    profileUpdate.put("Tz", "Asia/Kolkata");                    //an abbreviation such as "PST", a full name such as "America/Los_Angeles",
                                                                 //or a custom ID such as "GMT-8:00"
     profileUpdate.put("Photo", "www.foobar.com/image.jpeg");    // URL to the Image
-    
+
     // optional fields. controls whether the user will be sent email, push etc.
     profileUpdate.put("MSG-email", false);                      // Disable email notifications
     profileUpdate.put("MSG-push", true);                        // Enable push notifications
     profileUpdate.put("MSG-sms", false);                        // Disable SMS notifications
-    
+
     ArrayList<String> stuff = new ArrayList<String>();
     stuff.add("bag");
     stuff.add("shoes");
     profileUpdate.put("MyStuff", stuff);                        //ArrayList of Strings
-    
+
     String[] otherStuff = {"Jeans","Perfume"};
     profileUpdate.put("MyStuff", otherStuff);                   //String Array
-    
+
     clevertap.pushProfile(profileUpdate);
 ```
 
 ### Handling Multiple Device Users
 
-Use `onUserLogin` to maintain multiple distinct user profiles on the same device 
+Use `onUserLogin` to maintain multiple distinct user profiles on the same device
 ```java
     // each of the below fields are optional
     // with the exception of one of Identity, Email, FBID or GPID
@@ -101,22 +122,22 @@ Use `onUserLogin` to maintain multiple distinct user profiles on the same device
     profileUpdate.put("Employed", "Y");           // Can be either Y or N
     profileUpdate.put("Education", "Graduate");   // Can be either Graduate, College or School
     profileUpdate.put("Married", "Y");            // Can be either Y or N
-    
+
     profileUpdate.put("DOB", new Date());         // Date of Birth. Set the Date object to the appropriate value first
     profileUpdate.put("Age", 28);                 // Not required if DOB is set
     // optional fields. controls whether the user will be sent email, push etc.
     profileUpdate.put("MSG-email", false);        // Disable email notifications
     profileUpdate.put("MSG-push", true);          // Enable push notifications
     profileUpdate.put("MSG-sms", false);          // Disable SMS notifications
-    
+
     ArrayList<String> stuff = new ArrayList<String>();
     stuff.add("bag");
     stuff.add("shoes");
     profileUpdate.put("MyStuff", stuff);                        //ArrayList of Strings
-    
+
     String[] otherStuff = {"Jeans","Perfume"};
     profileUpdate.put("MyStuff", otherStuff);                   //String Array
-    
+
     cleverTapAPI.onUserLogin(profileUpdate);
 ```
 ### Using App Inbox
@@ -128,8 +149,8 @@ Add the following dependencies in your app's `build.gradle`
 ```
 implementation 'com.android.support:appcompat-v7:28.0.0'//MANDATORY for App Inbox
 implementation 'com.android.support:design:28.0.0'//MANDATORY for App Inbox
-implementation 'com.github.bumptech.glide:glide:4.8.0'//MANDATORY for App Inbox
-  
+implementation 'com.github.bumptech.glide:glide:4.9.0'//MANDATORY for App Inbox
+
 //Optional ExoPlayer Libraries for Audio/Video Inbox Messages. Audio/Video messages will be dropped without these dependencies
 implementation 'com.google.android.exoplayer:exoplayer:2.8.4'
 implementation 'com.google.android.exoplayer:exoplayer-hls:2.8.4'
@@ -171,7 +192,7 @@ public void inboxDidInitialize(){
     tabs.add("Promotions");
     tabs.add("Offers");
     tabs.add("Others");//We support upto 2 tabs only. Additional tabs will be ignored
-    
+
     CTInboxStyleConfig styleConfig = new CTInboxStyleConfig();
     styleConfig.setTabs(tabs);//Do not use this if you don't want to use tabs
     styleConfig.setTabBackgroundColor("#FF0000");//provide Hex code in string ONLY
@@ -203,7 +224,7 @@ cleverTapDefaultInstance.getInboxMessageCount();
 //Get Inbox Unread Count
 cleverTapDefaultInstance.getInboxMessageUnreadCount();
 
-//Get All messages 
+//Get All messages
 cleverTapDefaultInstance.getAllInboxMessages();
 
 //Get only Unread messages
@@ -235,7 +256,7 @@ If using FCM, inside the `<application></application>` tags, register the follow
             <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
         </intent-filter>
     </service>
-    
+
     <service
         android:name="com.clevertap.android.sdk.FcmMessageListenerService">
         <intent-filter>
@@ -243,7 +264,7 @@ If using FCM, inside the `<application></application>` tags, register the follow
         </intent-filter>
     </service>
 ```
-    
+
 To set a custom notification icon (only for small icon), add the following meta data entry in your AndroidManifest.xml
 ```xml
     <meta-data
@@ -284,7 +305,7 @@ Starting with v3.4.0, the SDK supports Push Amplification. Push Amplification is
 <meta-data
     android:name="CLEVERTAP_BACKGROUND_SYNC"
     android:value="1"/>
-      
+
 <!--use CTBackgroundIntentService to target users below Android 21 (Lollipop)-->
 <service
     android:name="com.clevertap.android.sdk.CTBackgroundIntentService"
@@ -299,8 +320,8 @@ Starting with v3.4.0, the SDK supports Push Amplification. Push Amplification is
     android:name="com.clevertap.android.sdk.CTBackgroundJobService"
     android:permission="android.permission.BIND_JOB_SERVICE"
     android:exported="false"/>
- ``` 
- 
+ ```
+
 #### In-App Notifications
 
 To support in-app notifications, register the following activity in your AndroidManifest.xml
@@ -309,12 +330,12 @@ To support in-app notifications, register the following activity in your Android
         android:name="com.clevertap.android.sdk.InAppNotificationActivity"
         android:theme="@android:style/Theme.Translucent.NoTitleBar"
         android:configChanges="orientation|keyboardHidden"/>
-    
+
     <meta-data
         android:name="CLEVERTAP_INAPP_EXCLUDE"
         android:value="YourSplashActivity1, YourSplashActivity2" />
    ```
-   
+
 #### Tracking the Install Referrer
 
 Add the following between the `<application></application>` tags. This will enable you to capture UTM parameters for app installs

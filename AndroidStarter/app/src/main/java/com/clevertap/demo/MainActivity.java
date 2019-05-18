@@ -1,5 +1,6 @@
 package com.clevertap.demo;
 
+import android.content.Intent;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -17,7 +18,7 @@ import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity implements CTInboxListener {
 
-    private Button event, chargedEvent, eventWithProps, profileEvent, inbox;
+    private Button event, chargedEvent, eventWithProps, profileEvent, inbox,web;
     private CleverTapAPI cleverTapDefaultInstance, cleverTapInstanceTwo;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +29,7 @@ public class MainActivity extends AppCompatActivity implements CTInboxListener {
         eventWithProps = findViewById(R.id.event_with_props);
         profileEvent = findViewById(R.id.profile_event);
         inbox = findViewById(R.id.inbox);
+        web = findViewById(R.id.web);
 
         //Set Debug level for CleverTap
         CleverTapAPI.setDebugLevel(3);
@@ -136,6 +138,12 @@ public class MainActivity extends AppCompatActivity implements CTInboxListener {
             }
         });
 
+        web.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(MainActivity.this,WebViewActivity.class));
+            }
+        });
     }
 
     @Override

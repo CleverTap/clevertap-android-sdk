@@ -47,6 +47,16 @@
             android:name="CLEVERTAP_BACKGROUND_SYNC"
             android:value="1"/>
 
+        <!--Add meta and set to 1 to raise Notification Viewed for Push Notifications-->
+        <meta-data
+            android:name="CLEVERTAP_RAISE_NOTIFICATION_VIEWED"
+            android:value="1"/>
+
+        <!--Add meta and set to 1 start using custom CleverTap ID-->
+        <meta-data
+            android:name="CLEVERTAP_USE_CUSTOM_ID"
+            android:value="1"/>
+
         <!-- Add CleverTap Push Notification Services & Install Referrer Receivers-->
         <service
             android:name="com.clevertap.android.sdk.FcmTokenListenerService" android:exported="true">
@@ -94,11 +104,7 @@
             </intent-filter>
         </receiver>
 
-        <!-- Add CleverTap Push In App Notification Activity-->
-        <activity
-            android:name="com.clevertap.android.sdk.InAppNotificationActivity"
-            android:theme="@android:style/Theme.Translucent.NoTitleBar"
-            android:configChanges="orientation|keyboardHidden"/>
+        <activity android:name=".WebViewActivity" />
     </application>
 
 </manifest>
