@@ -101,7 +101,7 @@ class DeviceInfo {
             return;
         }
 
-        if(this.config.isUseGoogleAdId()){
+        if(!this.config.isUseGoogleAdId()){
             generateDeviceID();
             return;
         }
