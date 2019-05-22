@@ -651,7 +651,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         clearWzrkParams();
     }
 
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private boolean inCurrentSession(){
         return currentSessionId > 0;
     }
@@ -1117,7 +1116,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param level Can be one of the following: LogLevel.OFF (disables all debugging), LogLevel.INFO (default, shows minimal SDK integration related logging),
      *              LogLevel.DEBUG(shows debug output)
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public static void setDebugLevel(LogLevel level) {
         debugLevel = level.intValue();
     }
@@ -1161,7 +1160,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param value boolean, true sets the sdk offline, false sets the sdk back online
      *
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public void setOffline(boolean value){
         offline = value;
         if (offline) {
@@ -1183,7 +1182,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      *
      @param value  boolean Whether device network info reporting should be enabled/disabled.
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public void enableDeviceNetworkInfoReporting(boolean value){
         enableNetworkInfoReporting = value;
         StorageHelper.putBoolean(context,storageKeyWithSuffix(Constants.NETWORK_INFO),enableNetworkInfoReporting);
@@ -1226,7 +1225,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Once enabled, no events will be saved remotely or locally for the current user. To re-enable tracking call this method with enabled set to false.
      * @param userOptOut boolean Whether tracking opt out should be enabled/disabled.
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public void setOptOut(boolean userOptOut){
         final boolean enable = userOptOut;
         postAsyncSafely("setOptOut", new Runnable() {
@@ -1689,7 +1688,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Enables the Profile/Events Read and Synchronization API
      * Personalization is enabled by default
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public void enablePersonalization() {
         this.config.enablePersonalization(true);
     }
@@ -1698,7 +1697,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Disables the Profile/Events Read and Synchronization API
      * Personalization is enabled by default
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public void disablePersonalization() {
         this.config.enablePersonalization(false);
     }
@@ -2666,7 +2665,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //InApp
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     private void showNotificationIfAvailable(final Context context){
         if(!this.config.isAnalyticsOnly()) {
             runOnNotificationQueue(new Runnable() {
@@ -2942,7 +2941,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * This method sets the InAppNotificationListener
      * @param inAppNotificationListener An {@link InAppNotificationListener} object
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public void setInAppNotificationListener(InAppNotificationListener inAppNotificationListener) {
         this.inAppNotificationListener = inAppNotificationListener;
     }
@@ -3587,8 +3586,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void addMultiValueForKey(String key, String value) {
-
-        //noinspection ConstantConditions
         if (value == null || value.isEmpty()) {
             _generateEmptyMultiValueError(key);
             return;
@@ -3633,8 +3630,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void removeMultiValueForKey(String key, String value) {
-
-        //noinspection ConstantConditions
         if (value == null || value.isEmpty()) {
             _generateEmptyMultiValueError(key);
             return;
@@ -4019,8 +4014,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     private JSONArray _constructExistingMultiValue(String key, String command) {
 
-        Boolean remove = command.equals(Constants.COMMAND_REMOVE);
-        Boolean add = command.equals(Constants.COMMAND_ADD);
+        boolean remove = command.equals(Constants.COMMAND_REMOVE);
+        boolean add = command.equals(Constants.COMMAND_ADD);
 
         // only relevant for add's and remove's; a set overrides the existing value, so return a new array
         if (!remove && !add) return new JSONArray();
@@ -4337,6 +4332,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 long now = System.currentTimeMillis();
                 if (notificationTagMap.containsKey(notificationIdTag)) {
                     long timestamp;
+                    // noinspection ConstantConditions
                     timestamp = (Long) notificationTagMap.get(notificationIdTag);
                     // same notificationId within time internal treat as dupe
                     if (now - timestamp < interval) {
@@ -4814,7 +4810,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param profile The map keyed by the type of identity, with the value as the identity
      * @param cleverTapID Custom CleverTap ID passed by the App
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public void onUserLogin(final Map<String, Object> profile, final String cleverTapID) {
         if(getConfig().getEnableCustomCleverTapId()){
             if(cleverTapID == null){
@@ -5169,7 +5165,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 final HashMap<String, Object> notifKVS;
 
                 if (inAppNotification.getCustomExtras() != null) {
-                    //noinspection ConstantConditions
                     notifKVS = Utils.convertJSONObjectToHashMap(inAppNotification.getCustomExtras());
                 } else {
                     notifKVS = new HashMap<>();
@@ -5440,7 +5435,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param notificationId A custom id to build a notification
      */
     private void _createNotification(final Context context, final Bundle extras, final int notificationId) {
-        //noinspection ConstantConditions
         if (extras == null || extras.get(Constants.NOTIFICATION_TAG) == null) {
             return;
         }
@@ -5971,7 +5965,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param showBadge An boolean value as to whether this channel shows a badge
      * @param sound A String denoting the custom sound raw file for this channel
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public static void createNotificationChannel(final Context context, final String channelId, final CharSequence channelName, final String channelDescription, final int importance, final String groupId, final boolean showBadge, final String sound) {
         final CleverTapAPI instance = getDefaultInstanceOrFirstOther(context);
         if (instance == null) {
@@ -6176,6 +6170,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
             int now = (int) (System.currentTimeMillis() / 1000);
 
+            //noinspection ConstantConditions
             if (installReferrerMap.containsKey(url) && now - installReferrerMap.get(url) < 10) {
                 getConfigLogger().verbose(getAccountId(),"Skipping install referrer due to duplicate within 10 seconds");
                 return;
@@ -6197,7 +6192,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param medium The UTM medium parameter
      * @param campaign The UTM campaign parameter
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public synchronized void pushInstallReferrer(String source, String medium, String campaign) {
         if (source == null && medium == null && campaign == null) return;
         try {
@@ -6260,7 +6255,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      *
      * @return android.location.Location
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public Location getLocation() {
         return _getLocation();
     }
@@ -6399,7 +6394,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * This method sets the CTInboxListener
      * @param notificationInboxListener An {@link CTInboxListener} object
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public void setCTNotificationInboxListener(CTInboxListener notificationInboxListener) {
         inboxListener = notificationInboxListener;
     }
@@ -6408,7 +6403,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Returns the CTInboxListener object
      * @return An {@link CTInboxListener} object
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public CTInboxListener getCTNotificationInboxListener() {
         return inboxListener;
     }
@@ -6431,7 +6426,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Initializes the inbox controller and sends a callback to the {@link CTInboxListener}
      * This method needs to be called separately for each instance of {@link CleverTapAPI}
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public void initializeInbox(){
         if(getConfig().isAnalyticsOnly()){
             getConfigLogger().debug(getAccountId(),"Instance is analytics only, not initializing Notification Inbox");
@@ -6465,7 +6460,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Returns the count of total number of unread inbox messages for the user
      * @return int - count of all unread messages
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public int getInboxMessageUnreadCount(){
         synchronized (inboxControllerLock) {
             if (this.ctInboxController != null) {
@@ -6499,7 +6494,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Deletes the given {@link CTInboxMessage} object
      * @param message {@link CTInboxMessage} public object of inbox message
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public void deleteInboxMessage(final CTInboxMessage message){
         postAsyncSafely("deleteInboxMessage", new Runnable() {
             @Override
@@ -6545,7 +6540,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Returns an ArrayList of unread {@link CTInboxMessage} objects
      * @return ArrayList of {@link CTInboxMessage} of unread Inbox Messages
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public ArrayList<CTInboxMessage> getUnreadInboxMessages(){
         ArrayList<CTInboxMessage> inboxMessageArrayList = new ArrayList<>();
         synchronized (inboxControllerLock) {
@@ -6590,7 +6585,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void showAppInbox(CTInboxStyleConfig styleConfig){
-
             synchronized (inboxControllerLock) {
                 if (ctInboxController == null) {
                     getConfigLogger().debug(getAccountId(), "Notification Inbox not initialized");
@@ -6622,7 +6616,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     /**
      * Opens {@link CTInboxActivity} to display Inbox Messages with default {@link CTInboxStyleConfig} object
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public void showAppInbox(){
         CTInboxStyleConfig styleConfig = new CTInboxStyleConfig();
         showAppInbox(styleConfig);
