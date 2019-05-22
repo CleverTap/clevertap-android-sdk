@@ -152,7 +152,6 @@ public class Constants {
     static final String KEY_URL = "url";
     static final String KEY_BUTTONS = "buttons";
     static final String KEY_CUSTOM_HTML = "custom-html";
-    static final String KEY_RAISE_NOTIFICATION_VIEWED = "getRaiseNotificationViewed";
     static final String KEY_ENABLE_CUSTOM_CT_ID = "getEnableCustomCleverTapId";
     static final String WZRK_PUSH_ID = "wzrk_pid";
     static final String NOTIF_MSG = "nm";

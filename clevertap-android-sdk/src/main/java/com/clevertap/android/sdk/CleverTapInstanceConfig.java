@@ -23,7 +23,6 @@ public class CleverTapInstanceConfig implements Parcelable {
     private boolean createdPostAppLaunch;
     private boolean sslPinning;
     private boolean backgroundSync;
-    private boolean raiseNotificationViewed;
     private boolean enableCustomCleverTapId;
     private String fcmSenderId;
 
@@ -44,7 +43,6 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.gcmSenderId = manifest.getGCMSenderId();
         this.sslPinning = manifest.isSSLPinningEnabled();
         this.backgroundSync = manifest.isBackgroundSync();
-        this.raiseNotificationViewed = manifest.raiseNotificationViewed();
         this.fcmSenderId = manifest.getFCMSenderId();
         this.enableCustomCleverTapId = manifest.useCustomId();
     }
@@ -64,7 +62,6 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.createdPostAppLaunch = config.createdPostAppLaunch;
         this.sslPinning = config.sslPinning;
         this.backgroundSync = config.backgroundSync;
-        this.raiseNotificationViewed = config.raiseNotificationViewed;
         this.enableCustomCleverTapId = config.enableCustomCleverTapId;
         this.fcmSenderId = config.fcmSenderId;
     }
@@ -100,8 +97,6 @@ public class CleverTapInstanceConfig implements Parcelable {
                 this.sslPinning = configJsonObject.getBoolean(Constants.KEY_SSL_PINNING);
             if(configJsonObject.has(Constants.KEY_BACKGROUND_SYNC))
                 this.backgroundSync = configJsonObject.getBoolean(Constants.KEY_BACKGROUND_SYNC);
-            if(configJsonObject.has(Constants.KEY_RAISE_NOTIFICATION_VIEWED))
-                this.raiseNotificationViewed = configJsonObject.getBoolean(Constants.KEY_RAISE_NOTIFICATION_VIEWED);
             if(configJsonObject.has(Constants.KEY_ENABLE_CUSTOM_CT_ID))
                 this.enableCustomCleverTapId = configJsonObject.getBoolean(Constants.KEY_ENABLE_CUSTOM_CT_ID);
             if(configJsonObject.has(Constants.KEY_FCM_SENDER_ID))
@@ -126,7 +121,6 @@ public class CleverTapInstanceConfig implements Parcelable {
         createdPostAppLaunch = in.readByte() != 0x00;
         sslPinning = in.readByte() != 0x00;
         backgroundSync = in.readByte() != 0x00;
-        raiseNotificationViewed = in.readByte() != 0x00;
         enableCustomCleverTapId = in.readByte() != 0x00;
         fcmSenderId = in.readString();
     }
@@ -220,6 +214,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         return disableAppLaunchedEvent;
     }
 
+    @SuppressWarnings({"unused"})
     public void setDisableAppLaunchedEvent(boolean disableAppLaunchedEvent) {
         this.disableAppLaunchedEvent = disableAppLaunchedEvent;
     }
@@ -242,12 +237,12 @@ public class CleverTapInstanceConfig implements Parcelable {
         return debugLevel;
     }
 
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public void setDebugLevel(CleverTapAPI.LogLevel debugLevel) {
         this.debugLevel = debugLevel.intValue();
     }
 
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public void setDebugLevel(int debugLevel) {
         this.debugLevel = debugLevel;
     }
@@ -260,27 +255,21 @@ public class CleverTapInstanceConfig implements Parcelable {
         return backgroundSync;
     }
 
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public void setBackgroundSync(boolean backgroundSync) {
         this.backgroundSync = backgroundSync;
-    }
-
-    public void setRaiseNotificationViewed(boolean raiseNotificationViewed) {
-        this.raiseNotificationViewed = raiseNotificationViewed;
-    }
-
-    boolean getRaiseNotificationViewed() {
-        return raiseNotificationViewed;
     }
 
     boolean getEnableCustomCleverTapId() {
         return enableCustomCleverTapId;
     }
 
+    @SuppressWarnings({"unused"})
     public void setEnableCustomCleverTapId(boolean enableCustomCleverTapId) {
         this.enableCustomCleverTapId = enableCustomCleverTapId;
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public String getFCMSenderId() {
         return fcmSenderId;
     }
@@ -305,7 +294,6 @@ public class CleverTapInstanceConfig implements Parcelable {
         dest.writeByte((byte) (sslPinning ? 0x01 : 0x00));
         dest.writeByte((byte) (createdPostAppLaunch ? 0x01 : 0x00));
         dest.writeByte((byte) (backgroundSync ? 0x01 : 0x00));
-        dest.writeByte((byte) (raiseNotificationViewed ? 0x01 : 0x00));
         dest.writeByte((byte) (enableCustomCleverTapId ? 0x01 : 0x00));
         dest.writeString(fcmSenderId);
     }
@@ -339,7 +327,6 @@ public class CleverTapInstanceConfig implements Parcelable {
             configJsonObject.put(Constants.KEY_CREATED_POST_APP_LAUNCH, isCreatedPostAppLaunch());
             configJsonObject.put(Constants.KEY_SSL_PINNING, isSslPinningEnabled());
             configJsonObject.put(Constants.KEY_BACKGROUND_SYNC, isBackgroundSync());
-            configJsonObject.put(Constants.KEY_RAISE_NOTIFICATION_VIEWED, getRaiseNotificationViewed());
             configJsonObject.put(Constants.KEY_ENABLE_CUSTOM_CT_ID, getEnableCustomCleverTapId());
             configJsonObject.put(Constants.KEY_FCM_SENDER_ID, getFCMSenderId());
             return configJsonObject.toString();

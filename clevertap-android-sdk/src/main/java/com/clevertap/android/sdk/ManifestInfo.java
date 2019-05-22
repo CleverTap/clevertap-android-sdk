@@ -18,7 +18,6 @@ class ManifestInfo {
     private static boolean sslPinning;
     private static boolean backgroundSync;
     private static boolean useCustomID;
-    private static boolean raiseNotificationViewed;
     private static String fcmSenderId;
 
     private static String _getManifestStringValueForKey(Bundle manifest, String name) {
@@ -59,7 +58,6 @@ class ManifestInfo {
         sslPinning = "1".equals(_getManifestStringValueForKey(metaData,Constants.LABEL_SSL_PINNING));
         backgroundSync = "1".equals(_getManifestStringValueForKey(metaData,Constants.LABEL_BACKGROUND_SYNC));
         useCustomID = "1".equals(_getManifestStringValueForKey(metaData,Constants.LABEL_CUSTOM_ID));
-        raiseNotificationViewed = "1".equals(_getManifestStringValueForKey(metaData,Constants.LABEL_RAISE_NOTIFICATION_VIEWED));
         fcmSenderId = _getManifestStringValueForKey(metaData, Constants.LABEL_FCM_SENDER_ID);
         if (fcmSenderId != null) {
             fcmSenderId = fcmSenderId.replace("id:", "");
@@ -115,10 +113,6 @@ class ManifestInfo {
 
     boolean useCustomId(){
         return useCustomID;
-    }
-
-    boolean raiseNotificationViewed() {
-        return raiseNotificationViewed;
     }
 
     static void changeCredentials(String id, String token, String region){

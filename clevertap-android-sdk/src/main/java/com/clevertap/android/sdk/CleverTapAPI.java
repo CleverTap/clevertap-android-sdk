@@ -125,8 +125,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private static final Boolean pendingValidationResultsLock = true;
     private static CleverTapInstanceConfig defaultConfig;
     private static HashMap<String, CleverTapAPI> instances;
-    static HashMap<String,ArrayList> instanceValidationResults;
-    static ArrayList<ValidationResult> validationResultArrayList = new ArrayList<>();
+    private static HashMap<String,ArrayList> instanceValidationResults;  // TODO Darshan
+    private static ArrayList<ValidationResult> validationResultArrayList = new ArrayList<>();  // TODO Darshan
     private static boolean appForeground = false;
     private static int activityCount = 0;
     private String currentScreenName = "";
@@ -578,7 +578,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             if(instance.getCleverTapID() != null) {
                 instance.notifyUserProfileInitialized();
                 instanceValidationResults.put(config.getAccountId(),validationResultArrayList);
-                for(ValidationResult vr : validationResultArrayList){
+                for(ValidationResult vr : validationResultArrayList) {
                     instance.pushValidationResult(vr);
                 }
             }
@@ -1586,7 +1586,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     event.put(Constants.ERROR_KEY, getErrorObject(vr));
                 }
                 getConfigLogger().verbose(getAccountId(),"Pushing Notification Viewed event onto DB");
-                queuePushNotificationViewedEventToDB(context,event, Constants.RAISED_EVENT);
+                queuePushNotificationViewedEventToDB(context, event);
                 getConfigLogger().verbose(getAccountId(),"Pushing Notification Viewed event onto queue flush");
                 schedulePushNotificationViewedQueueFlush(context);
             }catch (Throwable t){
@@ -1644,7 +1644,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Record a Screen View event
      * @param screenName String, the name of the screen
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public void recordScreen(String screenName){
         if(screenName == null || (!currentScreenName.isEmpty() && currentScreenName.equals(screenName))) return;
         getConfigLogger().debug(getAccountId(), "Screen changed to " + screenName);
@@ -1709,7 +1709,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         queueEventInternal(context,event,table);
     }
 
-    private void queuePushNotificationViewedEventToDB(final Context context, final JSONObject event, final int eventType){
+    private void queuePushNotificationViewedEventToDB(final Context context, final JSONObject event){
         queueEventInternal(context,event,DBAdapter.Table.PUSH_NOTIFICATION_VIEWED);
     }
 
@@ -4600,6 +4600,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             return;
         }
 
+        getConfigLogger().debug("Recording Notification Viewed event for notification:  " + extras.toString());
+
         JSONObject event = new JSONObject();
         try {
             JSONObject notif = getWzrkFields(extras);
@@ -5484,7 +5486,25 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
-    private void triggerNotification(Context context, Bundle extras, String notifMessage, String notifTitle, int notificationId){
+    private void triggerNotification(Context context, Bundle extras, String notifMessage, String notifTitle, int notificationId) {
+        NotificationManager notificationManager =
+                (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+
+        if (notificationManager == null) {
+            String notificationManagerError = "Unable to render notification, Notification Manager is null.";
+            getConfigLogger().debug(getAccountId(), notificationManagerError);
+            return;
+        }
+
+        String channelId = extras.getString(Constants.WZRK_CHANNEL_ID, "");
+        boolean requiresChannelId = context.getApplicationInfo().targetSdkVersion >= Build.VERSION_CODES.O;
+        if (requiresChannelId && channelId.isEmpty()) {
+            String channelIdError = "Unable to render notification, channelId is required but is not provided in the notification payload: " + extras.toString();
+            getConfigLogger().debug(getAccountId(), channelIdError);
+            pushValidationResult(new ValidationResult(512, channelIdError));
+            return;
+        }
+
         String icoPath = extras.getString(Constants.NOTIF_ICON);
         Intent launchIntent = new Intent(context, CTPushNotificationReceiver.class);
 
@@ -5503,7 +5523,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             try {
                 Bitmap bpMap = Utils.getNotificationBitmap(bigPictureUrl, false, context);
 
-                //noinspection ConstantConditions
                 if (bpMap == null)
                     throw new Exception("Failed to fetch big picture!");
 
@@ -5548,7 +5567,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
         }
 
-        // if we have not user set notificationID then try collapse key
+        // if we have no user set notificationID then try collapse key
         if (notificationId == Constants.EMPTY_NOTIFICATION_ID) {
             try {
                 Object collapse_key = extras.get(Constants.WZRK_COLLAPSE);
@@ -5579,13 +5598,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
 
         NotificationCompat.Builder nb;
-
-        if (context.getApplicationInfo().targetSdkVersion >= Build.VERSION_CODES.O){
-            String channelId = extras.getString(Constants.WZRK_CHANNEL_ID, "");
-            if (channelId.isEmpty()) {
-                getConfigLogger().debug(getAccountId(), "ChannelId is empty for notification: " + extras.toString());
-            }
-            nb = new NotificationCompat.Builder(context,channelId);
+        if (requiresChannelId) {
+            nb = new NotificationCompat.Builder(context, channelId);
 
             // choices here are Notification.BADGE_ICON_NONE = 0, Notification.BADGE_ICON_SMALL = 1, Notification.BADGE_ICON_LARGE = 2.  Default is  Notification.BADGE_ICON_LARGE
             String badgeIconParam = extras.getString(Constants.WZRK_BADGE_ICON, null);
@@ -5746,39 +5760,24 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
 
         Notification n = nb.build();
+        notificationManager.notify(notificationId, n);
+        getConfigLogger().debug(getAccountId(), "Rendered notification: " + n.toString());
 
-        getConfigLogger().debug(getAccountId(), "Building notification: " + n.toString() + ", with notificationId: " + String.valueOf(notificationId));
+        String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE,(System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL)/1000+"");
+        long wzrk_ttl = Long.parseLong(ttl);
+        String wzrk_pid = extras.getString(Constants.WZRK_PUSH_ID);
+        DBAdapter dbAdapter = loadDBAdapter(context);
+        getConfigLogger().verbose("Storing Push Notification..."+wzrk_pid + " - with ttl - "+ttl);
+        dbAdapter.storePushNotificationId(wzrk_pid,wzrk_ttl);
 
-        NotificationManager notificationManager =
-                (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
-
-        if (notificationManager != null) {
-            notificationManager.notify(notificationId, n);
-            String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE,(System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL)/1000+"");
-            long wzrk_ttl = Long.parseLong(ttl);
-            String wzrk_pid = extras.getString(Constants.WZRK_PUSH_ID);
-            DBAdapter dbAdapter = loadDBAdapter(context);
-            getConfigLogger().verbose("Storing Push Notification..."+wzrk_pid + " - with ttl - "+ttl);
-            dbAdapter.storePushNotificationId(wzrk_pid,wzrk_ttl);
-            String wzrk_rnv = extras.getString(Constants.WZRK_RNV,"");
-            String cid = extras.getString(Constants.WZRK_CHANNEL_ID, "");
-            if(!wzrk_rnv.isEmpty()){
-                if(getConfig() !=null && getConfig().getRaiseNotificationViewed() && wzrk_rnv.equals("true")){
-                    if (context.getApplicationInfo().targetSdkVersion >= Build.VERSION_CODES.O && !cid.isEmpty()){
-                        getConfigLogger().verbose("Raising Notification Viewed as per NB");
-                        pushNotificationViewedEvent(extras);
-                    }else if(context.getApplicationInfo().targetSdkVersion < Build.VERSION_CODES.O) {
-                        getConfigLogger().verbose("Raising Notification Viewed as per NB");
-                        pushNotificationViewedEvent(extras);
-                    }else{
-                        getConfigLogger().verbose("Not raising Notification Viewed");
-                    }
-                }else{
-                    getConfigLogger().verbose("Not raising Notification Viewed");
-                }
-            }
+        boolean notificationViewedEnabled = "true".equals(extras.getString(Constants.WZRK_RNV,""));
+        if (!notificationViewedEnabled) {
+            String notificationViewedError = "Recording of Notification Viewed is disabled in the CleverTap Dashboard for notification payload: " + extras.toString();
+            getConfigLogger().debug(notificationViewedError);
+            pushValidationResult(new ValidationResult(512, notificationViewedError));
+            return;
         }
-
+        pushNotificationViewedEvent(extras);
     }
 
     @SuppressWarnings("SameParameterValue")
