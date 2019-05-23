@@ -28,13 +28,13 @@
             android:textSize="30sp"
             android:textStyle="bold"
             android:textColor="@android:color/black"
-            android:layout_marginTop="54dp"
+            android:layout_marginTop="60dp"
             android:layout_centerHorizontal="true"
             />
 
         <TextView
             android:id="@+id/cover_message"
-            android:layout_width="262dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:gravity="center"
             android:textSize="18sp"
@@ -42,7 +42,10 @@
             android:layout_marginTop="40dp"
             android:textColor="@android:color/black"
             android:layout_centerHorizontal="true"
-            />
+            android:layout_marginStart="74dp"
+            android:layout_marginLeft="74dp"
+            android:layout_marginRight="74dp"
+            android:layout_marginEnd="74dp"/>
 
         <LinearLayout
             android:id="@+id/cover_linear_layout"
@@ -52,25 +55,25 @@
             android:orientation="horizontal"
             android:visibility="visible"
             android:layout_below="@+id/cover_message"
-            android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
-            android:layout_marginBottom="48dp"
+            android:layout_marginBottom="60dp"
+            android:layout_marginTop="250dp"
             >
 
             <Button
                 android:id="@+id/cover_button1"
-                android:layout_width="264dp"
-                android:layout_height="42dp"
+                android:layout_width="340dp"
+                android:layout_height="70dp"
                 android:textSize="20sp"
-                android:visibility="invisible" />
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/cover_button2"
-                android:layout_width="264dp"
-                android:layout_height="42dp"
+                android:layout_width="340dp"
+                android:layout_height="70dp"
                 android:textSize="20sp"
                 android:layout_marginLeft="30dp"
-                android:visibility="invisible"
+                android:visibility="gone"
                 android:layout_marginStart="30dp" />
         </LinearLayout>
     </RelativeLayout>

@@ -30,8 +30,8 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_gravity="top|end"
-        android:layout_marginRight="115dp"
+        android:layout_marginRight="137dp"
         android:layout_marginTop="15dp"
         android:adjustViewBounds="true"
-        android:layout_marginEnd="115dp"/>
+        android:layout_marginEnd="137dp"/>
 </FrameLayout>

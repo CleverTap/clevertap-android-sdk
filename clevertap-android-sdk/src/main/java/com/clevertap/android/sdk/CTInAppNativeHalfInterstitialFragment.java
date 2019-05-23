@@ -28,6 +28,7 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
     private RelativeLayout relativeLayout;
     @SuppressWarnings({"unused"})
     private int layoutHeight = 0;
+    private int layoutWidth = 0;
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @Nullable
     @Override
@@ -99,7 +100,8 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
                                 closeLp.setMargins(0, 20, 220, 0);
                                 closeImageView.setLayoutParams(closeLp);
                             } else {
-                                layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 0.75f);
+                                layoutWidth = layoutParams.width = (int) (relativeLayout1.getMeasuredHeight() * 1.3f);
+                                layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
                                 relativeLayout1.setLayoutParams(layoutParams);
                             }
                         }

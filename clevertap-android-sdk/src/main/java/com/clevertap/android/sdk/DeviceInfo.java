@@ -25,7 +25,6 @@ class DeviceInfo {
     private Context context;
     private CleverTapInstanceConfig config;
     private static final String GUID_PREFIX = "__";
-    //private String provisionalGUID = null;
     private final Object deviceIDLock = new Object();
     private final Object adIDLock = new Object();
     private String googleAdID = null;
@@ -33,6 +32,11 @@ class DeviceInfo {
     private boolean adIdRun = false;
     private static final String OS_NAME = "Android";
     private DeviceCachedInfo cachedInfo;
+    private ArrayList<ValidationResult> validationResults = new ArrayList<>();
+
+    ArrayList<ValidationResult> getValidationResults() {
+        return validationResults;
+    }
 
     DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID) {
         this.context = context;
@@ -77,12 +81,12 @@ class DeviceInfo {
         if(config.getEnableCustomCleverTapId()){
             if(cleverTapID == null){
                 config.getLogger().info("CLEVERTAP_USE_CUSTOM_ID has been specified in the AndroidManifest.xml/Instance Configuration. CleverTap SDK will create a fallback device ID");
-                CleverTapAPI.addValidationResultForInstanceCreation("CLEVERTAP_USE_CUSTOM_ID has been specified in the AndroidManifest.xml/Instance Configuration. CleverTap SDK will create a fallback device ID");
+                recordDeviceError("CLEVERTAP_USE_CUSTOM_ID has been specified in the AndroidManifest.xml/Instance Configuration. CleverTap SDK will create a fallback device ID");
             }
         }else{
             if(cleverTapID != null){
                 config.getLogger().info("CLEVERTAP_USE_CUSTOM_ID has not been specified in the AndroidManifest.xml. Custom CleverTap ID passed will not be used.");
-                CleverTapAPI.addValidationResultForInstanceCreation("CLEVERTAP_USE_CUSTOM_ID has not been specified in the AndroidManifest.xml. Custom CleverTap ID passed will not be used.");
+                recordDeviceError("CLEVERTAP_USE_CUSTOM_ID has not been specified in the AndroidManifest.xml. Custom CleverTap ID passed will not be used.");
             }
         }
 
@@ -91,7 +95,7 @@ class DeviceInfo {
             getConfigLogger().verbose(config.getAccountId(),"CleverTap ID already present for profile");
             if(cleverTapID != null) {
                 getConfigLogger().info(config.getAccountId(),"CleverTap ID - "+deviceID+" already exists. Unable to set custom CleverTap ID - " + cleverTapID);
-                CleverTapAPI.addValidationResultForInstanceCreation("CleverTap ID - "+deviceID+" already exists. Unable to set custom CleverTap ID - " + cleverTapID);
+                recordDeviceError("CleverTap ID - "+deviceID+" already exists. Unable to set custom CleverTap ID - " + cleverTapID);
             }
             return;
         }
@@ -127,8 +131,14 @@ class DeviceInfo {
             setOrGenerateFallbackDeviceID();
             removeDeviceID();
             getConfigLogger().info(config.getAccountId(),"Attempted to set invalid custom CleverTap ID - "+cleverTapID+", falling back to default error CleverTap ID - "+getFallBackDeviceID());
-            CleverTapAPI.addValidationResultForInstanceCreation("Attempted to set invalid custom CleverTap ID - "+cleverTapID+", falling back to default error CleverTap ID - "+getFallBackDeviceID());
         }
+    }
+
+    private void recordDeviceError(String errorDescription){
+        ValidationResult validationResult = new ValidationResult();
+        validationResult.setErrorCode(514);
+        validationResult.setErrorDesc(errorDescription);
+        validationResults.add(validationResult);
     }
 
     boolean isErrorDeviceId(){

@@ -21,6 +21,7 @@ public class CTInAppNativeInterstitialImageFragment extends CTInAppBaseFullFragm
     private RelativeLayout relativeLayout;
     @SuppressWarnings({"unused"})
     private int layoutHeight = 0;
+    private int layoutWidth = 0;
 
     @Nullable
     @Override
@@ -85,15 +86,16 @@ public class CTInAppNativeInterstitialImageFragment extends CTInAppBaseFullFragm
                         } else {
                             if (isTablet()) {
                                 layoutParams.setMargins(120, 40, 85, 0);
-                                layoutParams.width = (relativeLayout1.getMeasuredWidth()) - 75;
-                                layoutHeight = layoutParams.height = (int) (layoutParams.width * 0.5625f);
+                                layoutParams.height = (relativeLayout.getMeasuredHeight()) - 75;
+                                layoutWidth = layoutParams.width = (int)(layoutParams.height * 1.78f);
                                 relativeLayout1.setLayoutParams(layoutParams);
                                 FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(closeImageView.getWidth(), closeImageView.getHeight());
                                 closeLp.gravity = Gravity.TOP | Gravity.END;
                                 closeLp.setMargins(0, 20, 90, 0);
                                 closeImageView.setLayoutParams(closeLp);
                             } else {
-                                layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 0.5625f);
+                                layoutWidth = layoutParams.width = (int) (relativeLayout1.getMeasuredHeight() * 1.78f);
+                                layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
                                 relativeLayout1.setLayoutParams(layoutParams);
                             }
                         }

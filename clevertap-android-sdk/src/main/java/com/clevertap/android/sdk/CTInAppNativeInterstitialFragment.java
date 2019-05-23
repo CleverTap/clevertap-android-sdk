@@ -3,6 +3,7 @@ package com.clevertap.android.sdk;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.res.Configuration;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -58,6 +59,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     private FrameLayout videoFrameLayout;
     @SuppressWarnings({"unused"})
     private int layoutHeight = 0;
+    private int layoutWidth = 0;
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @Nullable
@@ -147,21 +149,21 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                         RelativeLayout relativeLayout1 = fl.findViewById(R.id.interstitial_relative_layout);
                         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1.getLayoutParams();
                         if (inAppNotification.isTablet() && isTablet()) {
-                            layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 1.78f);
+                            //layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 1.78f);
+                            layoutWidth = layoutParams.width = (int) (relativeLayout1.getMeasuredHeight() * 1.78f);
                         } else {
                             if (isTablet()) {
                                 layoutParams.setMargins(120, 40, 85, 0);
-                                layoutParams.width = (relativeLayout1.getMeasuredWidth()) - 75;
-                                layoutHeight = layoutParams.height = (int) (layoutParams.width * 0.5625f);
+                                layoutParams.height = (relativeLayout1.getMeasuredHeight()) - 75;
+                                layoutWidth = layoutParams.width = (int)(layoutParams.height * 1.78f);
                                 relativeLayout1.setLayoutParams(layoutParams);
                                 FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(closeImageView.getWidth(), closeImageView.getHeight());
                                 closeLp.gravity = Gravity.TOP | Gravity.END;
                                 closeLp.setMargins(0, 20, 90, 0);
                                 closeImageView.setLayoutParams(closeLp);
                             } else {
-                                layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 0.5625f);
-                                Logger.d("Layout height = " + layoutHeight);
-                                Logger.d("Layout width = " + relativeLayout1.getMeasuredWidth());
+                                layoutWidth = layoutParams.width = (int) (relativeLayout1.getMeasuredHeight() * 1.78f);
+                                layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
                                 relativeLayout1.setLayoutParams(layoutParams);
                             }
                         }

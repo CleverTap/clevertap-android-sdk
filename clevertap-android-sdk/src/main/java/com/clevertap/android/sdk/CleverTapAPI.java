@@ -125,8 +125,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private static final Boolean pendingValidationResultsLock = true;
     private static CleverTapInstanceConfig defaultConfig;
     private static HashMap<String, CleverTapAPI> instances;
-    private static HashMap<String,ArrayList> instanceValidationResults;  // TODO Darshan
-    private static ArrayList<ValidationResult> validationResultArrayList = new ArrayList<>();  // TODO Darshan
     private static boolean appForeground = false;
     private static int activityCount = 0;
     private String currentScreenName = "";
@@ -142,12 +140,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private static String sdkVersion;  // For Google Play Store/Android Studio analytics
 
-    static void addValidationResultForInstanceCreation(String errorDescription){
-        ValidationResult validationResult = new ValidationResult();
-        validationResult.setErrorCode(514);
-        validationResult.setErrorDesc(errorDescription);
-        validationResultArrayList.add(validationResult);
-    }
     /**
      * Method to check whether app has ExoPlayer dependencies
      * @return boolean - true/false depending on app's availability of ExoPlayer dependencies
@@ -567,9 +559,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (instances == null) {
             instances = new HashMap<>();
         }
-        if(instanceValidationResults == null){
-            instanceValidationResults = new HashMap<>();
-        }
 
         CleverTapAPI instance = instances.get(config.getAccountId());
         if (instance == null){
@@ -577,10 +566,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             instances.put(config.getAccountId(), instance);
             if(instance.getCleverTapID() != null) {
                 instance.notifyUserProfileInitialized();
-                instanceValidationResults.put(config.getAccountId(),validationResultArrayList);
-                for(ValidationResult vr : validationResultArrayList) {
-                    instance.pushValidationResult(vr);
-                }
+                instance.recordDeviceIDErrors();
             }
         } else if(instance.isErrorDeviceId() && instance.getConfig().getEnableCustomCleverTapId() && Utils.validateCTID(cleverTapID)) {
             instance.asyncProfileSwitchUser(null,null,cleverTapID);
@@ -609,6 +595,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         return CleverTapInstanceConfig.createDefaultInstance(context,accountId,accountToken,accountRegion);
 
+    }
+
+    private void recordDeviceIDErrors(){
+         if(this.isErrorDeviceId()){
+             for(ValidationResult validationResult : this.deviceInfo.getValidationResults()){
+                 pushValidationResult(validationResult);
+             }
+         }
     }
 
     //Lifecycle
@@ -4971,6 +4965,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         processingUserLoginIdentifier = null;
                     }
                     resetInbox();
+                    recordDeviceIDErrors();
                 } catch (Throwable t) {
                     getConfigLogger().verbose(getAccountId(), "Reset Profile error", t);
                 }

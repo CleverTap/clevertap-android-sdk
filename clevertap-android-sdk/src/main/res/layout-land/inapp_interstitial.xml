@@ -11,40 +11,41 @@
         android:id="@+id/interstitial_relative_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="45dp"
+        android:layout_marginTop="35dp"
         android:layout_marginLeft="80dp"
         android:layout_marginRight="80dp"
-        android:layout_marginBottom="45dp"
+        android:layout_marginBottom="35dp"
         >
 
         <TextView
             android:id="@+id/interstitial_title"
-            android:layout_width="240dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
             android:gravity="center"
             android:textStyle="bold"
             android:textColor="@android:color/black"
-            android:textSize="22sp"
-            android:layout_marginTop="12dp"
-            android:maxLines="1" />
+            android:textSize="21sp"
+            android:layout_marginTop="10dp"
+            android:maxLines="1"
+            android:text="Nam efficitur tortor metus."/>
 
         <ImageView
             android:id="@+id/backgroundImage"
-            android:layout_width="240dp"
-            android:layout_height="134dp"
+            android:layout_width="214dp"
+            android:layout_height="120dp"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="7dp"
             android:scaleType="centerCrop"
             android:layout_below="@+id/interstitial_title"
             android:visibility="invisible"/>
 
         <com.clevertap.android.sdk.GifImageView
             android:id="@+id/gifImage"
-            android:layout_width="240dp"
-            android:layout_height="134dp"
+            android:layout_width="214dp"
+            android:layout_height="120dp"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="7dp"
             android:scaleType="centerCrop"
             android:layout_below="@+id/interstitial_title"
             android:visibility="gone"/>
@@ -52,7 +53,7 @@
         <FrameLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="7dp"
             android:visibility="gone"
             android:id="@+id/video_frame"
             android:layout_below="@id/interstitial_title"
@@ -61,14 +62,19 @@
 
         <TextView
             android:id="@+id/interstitial_message"
-            android:layout_width="440dp"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="10dp"
             android:layout_below="@+id/backgroundImage"
             android:gravity="center"
-            android:textSize="18sp"
-            android:maxLines="3"
+            android:textSize="17sp"
+            android:maxLines="2"
+            android:layout_marginLeft="35dp"
+            android:layout_marginStart="35dp"
+            android:layout_marginRight="35dp"
+            android:layout_marginEnd="35dp"
+            android:text="Etiam ullamcorper sapien pellentesque commodo faucibus. Nam eget nulla sed."
             android:textColor="@android:color/black" />
 
         <LinearLayout
@@ -76,27 +82,25 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@id/interstitial_message"
-            android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
             android:orientation="horizontal"
-            android:gravity="bottom"
-            android:layout_marginBottom="8dp"
+            android:layout_marginTop="12dp"
             android:visibility="visible">
 
             <Button
                 android:id="@+id/interstitial_button1"
-                android:layout_width="208dp"
-                android:layout_height="42dp"
+                android:layout_width="206dp"
+                android:layout_height="40dp"
                 android:textSize="16sp"
-                android:visibility="gone" />
+                android:visibility="visible" />
 
             <Button
                 android:id="@+id/interstitial_button2"
-                android:layout_width="208dp"
-                android:layout_height="42dp"
+                android:layout_width="206dp"
+                android:layout_height="40dp"
                 android:textSize="16sp"
-                android:layout_marginLeft="10dp"
-                android:visibility="gone"
+                android:layout_marginLeft="18dp"
+                android:visibility="visible"
                 android:layout_marginStart="10dp" />
         </LinearLayout>
     </RelativeLayout>
@@ -104,8 +108,8 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_gravity="top|end"
-        android:layout_marginRight="65dp"
+        android:layout_marginRight="45dp"
         android:layout_marginTop="30dp"
         android:adjustViewBounds="true"
-        android:layout_marginEnd="65dp" />
+        android:layout_marginEnd="45dp" />
 </FrameLayout>

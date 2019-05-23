@@ -20,6 +20,7 @@ public class CTInAppNativeHalfInterstitialImageFragment extends CTInAppBaseFullF
     private RelativeLayout relativeLayout;
     @SuppressWarnings({"unused"})
     private int layoutHeight = 0;
+    private int layoutWidth = 0;
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
@@ -91,7 +92,8 @@ public class CTInAppNativeHalfInterstitialImageFragment extends CTInAppBaseFullF
                                 closeLp.setMargins(0, 20, 220, 0);
                                 closeImageView.setLayoutParams(closeLp);
                             } else {
-                                layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 0.75f);
+                                layoutWidth = layoutParams.width = (int) (relativeLayout1.getMeasuredHeight() * 1.3f);
+                                layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
                                 relativeLayout1.setLayoutParams(layoutParams);
                             }
                         }
