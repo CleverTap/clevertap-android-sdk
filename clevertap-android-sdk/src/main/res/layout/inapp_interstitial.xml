@@ -34,7 +34,7 @@
             android:layout_width="240dp"
             android:layout_height="134dp"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="8dp"
             android:scaleType="centerCrop"
             android:layout_below="@+id/interstitial_title"
             android:visibility="invisible"/>
@@ -44,7 +44,7 @@
             android:layout_width="240dp"
             android:layout_height="134dp"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="8dp"
             android:scaleType="centerCrop"
             android:layout_below="@+id/interstitial_title"
             android:visibility="gone"/>

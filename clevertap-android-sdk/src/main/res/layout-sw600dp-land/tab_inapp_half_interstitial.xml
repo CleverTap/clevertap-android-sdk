@@ -10,12 +10,12 @@
         android:id="@+id/half_interstitial_relative_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginLeft="240dp"
-        android:layout_marginStart="240dp"
-        android:layout_marginRight="240dp"
-        android:layout_marginEnd="240dp"
-        android:layout_marginTop="60dp"
-        android:layout_marginBottom="60dp"
+        android:layout_marginLeft="262dp"
+        android:layout_marginStart="262dp"
+        android:layout_marginRight="262dp"
+        android:layout_marginEnd="262dp"
+        android:layout_marginTop="105dp"
+        android:layout_marginBottom="105dp"
         >
 
         <ImageView
@@ -32,9 +32,9 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="50dp"
+            android:layout_marginTop="54dp"
             android:gravity="center"
-            android:textSize="21sp"
+            android:textSize="36sp"
             android:maxLines="1"
             android:textStyle="bold"
             android:textColor="@android:color/black"/>
@@ -45,34 +45,39 @@
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
             android:layout_below="@+id/half_interstitial_title"
-            android:layout_marginTop="30dp"
+            android:layout_marginTop="36dp"
+            android:layout_marginLeft="40dp"
+            android:layout_marginStart="40dp"
+            android:layout_marginRight="40dp"
+            android:layout_marginEnd="40dp"
             android:maxLines="3"
             android:gravity="center"
-            android:textSize="16sp"/>
+            android:textSize="24sp"/>
 
         <LinearLayout
             android:id="@+id/half_interstitial_linear_layout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
-            android:layout_marginBottom="26dp"
-            android:layout_marginTop="198dp"
+            android:layout_marginBottom="58dp"
+            android:layout_marginTop="145dp"
+            android:gravity="bottom"
             android:layout_below="@+id/half_interstitial_message"
-            android:gravity="center"
+            android:layout_alignParentBottom="true"
             android:orientation="horizontal"
             android:visibility="visible">
 
             <Button
                 android:id="@+id/half_interstitial_button1"
-                android:layout_width="200dp"
-                android:layout_height="70dp"
+                android:layout_width="342dp"
+                android:layout_height="85dp"
                 android:textSize="16sp"
                 android:visibility="visible" />
 
             <Button
                 android:id="@+id/half_interstitial_button2"
-                android:layout_width="200dp"
-                android:layout_height="70dp"
+                android:layout_width="342dp"
+                android:layout_height="85dp"
                 android:textSize="16sp"
                 android:layout_marginLeft="25dp"
                 android:visibility="visible"
@@ -83,8 +88,8 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_gravity="top|end"
-        android:layout_marginRight="220dp"
-        android:layout_marginTop="40dp"
+        android:layout_marginRight="242dp"
+        android:layout_marginTop="85dp"
         android:adjustViewBounds="true"
-        android:layout_marginEnd="40dp" />
+        android:layout_marginEnd="242dp" />
 </FrameLayout>

@@ -55,6 +55,7 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/cover_message"
             android:layout_centerHorizontal="true"
+            android:layout_alignParentBottom="true"
             android:layout_marginTop="102dp"
             android:gravity="center"
             android:orientation="horizontal"

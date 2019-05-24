@@ -18,6 +18,7 @@ import android.view.WindowManager;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.UUID;
 
 class DeviceInfo {
@@ -35,7 +36,9 @@ class DeviceInfo {
     private ArrayList<ValidationResult> validationResults = new ArrayList<>();
 
     ArrayList<ValidationResult> getValidationResults() {
-        return validationResults;
+        ArrayList<ValidationResult> tempValidationResults = (ArrayList<ValidationResult>) validationResults.clone();
+        validationResults.clear();
+        return tempValidationResults;
     }
 
     DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID) {
@@ -131,6 +134,7 @@ class DeviceInfo {
             setOrGenerateFallbackDeviceID();
             removeDeviceID();
             getConfigLogger().info(config.getAccountId(),"Attempted to set invalid custom CleverTap ID - "+cleverTapID+", falling back to default error CleverTap ID - "+getFallBackDeviceID());
+            recordDeviceError("Attempted to set invalid custom CleverTap ID - "+cleverTapID+", falling back to default error CleverTap ID - "+getFallBackDeviceID());
         }
     }
 

@@ -11,10 +11,10 @@
         android:id="@+id/interstitial_relative_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="60dp"
-        android:layout_marginLeft="85dp"
-        android:layout_marginRight="85dp"
-        android:layout_marginBottom="60dp"
+        android:layout_marginTop="112dp"
+        android:layout_marginLeft="124dp"
+        android:layout_marginRight="124dp"
+        android:layout_marginBottom="112dp"
         >
 
         <TextView
@@ -22,7 +22,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="30dp"
+            android:layout_marginTop="22dp"
             android:gravity="center"
             android:textStyle="bold"
             android:textColor="@android:color/black"
@@ -32,20 +32,20 @@
 
         <ImageView
             android:id="@+id/backgroundImage"
-            android:layout_width="314dp"
-            android:layout_height="176dp"
+            android:layout_width="458dp"
+            android:layout_height="256dp"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="22dp"
             android:scaleType="centerCrop"
             android:layout_below="@+id/interstitial_title"
             android:visibility="invisible"/>
 
         <com.clevertap.android.sdk.GifImageView
             android:id="@+id/gifImage"
-            android:layout_width="314dp"
-            android:layout_height="176dp"
+            android:layout_width="458dp"
+            android:layout_height="256dp"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="20dp"
+            android:layout_marginTop="22dp"
             android:scaleType="centerCrop"
             android:layout_below="@+id/interstitial_title"
             android:visibility="gone"/>
@@ -64,16 +64,16 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="24dp"
+            android:layout_marginTop="22dp"
             android:layout_below="@+id/backgroundImage"
             android:gravity="center"
             android:textSize="18sp"
             android:maxLines="3"
             android:textColor="@android:color/black"
-            android:layout_marginLeft="34dp"
-            android:layout_marginStart="34dp"
-            android:layout_marginRight="34dp"
-            android:layout_marginEnd="34dp"
+            android:layout_marginLeft="94dp"
+            android:layout_marginStart="94dp"
+            android:layout_marginRight="94dp"
+            android:layout_marginEnd="94dp"
             />
 
         <LinearLayout
@@ -85,22 +85,22 @@
             android:orientation="horizontal"
             android:gravity="center"
             android:visibility="visible"
-            android:layout_marginTop="24dp">
+            android:layout_marginTop="22dp">
 
             <Button
                 android:id="@+id/interstitial_button1"
-                android:layout_width="340dp"
-                android:layout_height="70dp"
+                android:layout_width="442dp"
+                android:layout_height="85dp"
                 android:textSize="16sp"
-                android:visibility="visible" />
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/interstitial_button2"
-                android:layout_width="340dp"
-                android:layout_height="70dp"
+                android:layout_width="442dp"
+                android:layout_height="85dp"
                 android:textSize="16sp"
                 android:layout_marginLeft="25dp"
-                android:visibility="visible"
+                android:visibility="gone"
                 android:layout_marginStart="25dp" />
         </LinearLayout>
     </RelativeLayout>
@@ -108,8 +108,8 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_gravity="top|end"
-        android:layout_marginRight="65dp"
-        android:layout_marginTop="40dp"
+        android:layout_marginRight="104dp"
+        android:layout_marginTop="92dp"
         android:adjustViewBounds="true"
-        android:layout_marginEnd="65dp" />
+        android:layout_marginEnd="104dp" />
 </FrameLayout>

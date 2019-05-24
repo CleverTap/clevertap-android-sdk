@@ -9,12 +9,12 @@
         android:id="@+id/half_interstitial_image_relative_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginLeft="130dp"
-        android:layout_marginStart="130dp"
-        android:layout_marginRight="130dp"
-        android:layout_marginEnd="130dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="20dp">
+        android:layout_marginLeft="124dp"
+        android:layout_marginStart="124dp"
+        android:layout_marginRight="124dp"
+        android:layout_marginEnd="124dp"
+        android:layout_marginTop="33dp"
+        android:layout_marginBottom="33dp">
 
         <ImageView
             android:id="@+id/half_interstitial_image"
@@ -30,8 +30,8 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_gravity="top|end"
-        android:layout_marginRight="137dp"
-        android:layout_marginTop="15dp"
+        android:layout_marginRight="132dp"
+        android:layout_marginTop="24dp"
         android:adjustViewBounds="true"
-        android:layout_marginEnd="137dp"/>
+        android:layout_marginEnd="132dp"/>
 </FrameLayout>

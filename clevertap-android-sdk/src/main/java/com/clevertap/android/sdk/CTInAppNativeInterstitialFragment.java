@@ -148,10 +148,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                     public void onGlobalLayout() {
                         RelativeLayout relativeLayout1 = fl.findViewById(R.id.interstitial_relative_layout);
                         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1.getLayoutParams();
-                        if (inAppNotification.isTablet() && isTablet()) {
-                            //layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 1.78f);
-                            layoutWidth = layoutParams.width = (int) (relativeLayout1.getMeasuredHeight() * 1.78f);
-                        } else {
+                        if (!inAppNotification.isTablet() || !isTablet()) {
                             if (isTablet()) {
                                 layoutParams.setMargins(120, 40, 85, 0);
                                 layoutParams.height = (relativeLayout1.getMeasuredHeight()) - 75;

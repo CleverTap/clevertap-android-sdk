@@ -79,9 +79,7 @@ public class CTInAppNativeHalfInterstitialImageFragment extends CTInAppBaseFullF
                     public void onGlobalLayout() {
                         RelativeLayout relativeLayout1 = fl.findViewById(R.id.half_interstitial_image_relative_layout);
                         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1.getLayoutParams();
-                        if (inAppNotification.isTablet() && isTablet()) {
-                            layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 1.3f);
-                        } else {
+                        if (!inAppNotification.isTablet() || !isTablet()) {
                             if (isTablet()) {
                                 layoutParams.setMargins(200, 40, 190, 0);
                                 layoutParams.height = relativeLayout1.getMeasuredHeight() - 40;

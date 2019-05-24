@@ -27,8 +27,7 @@
             android:textColor="@android:color/black"
             android:textSize="21sp"
             android:layout_marginTop="10dp"
-            android:maxLines="1"
-            android:text="Nam efficitur tortor metus."/>
+            android:maxLines="1" />
 
         <ImageView
             android:id="@+id/backgroundImage"
@@ -65,7 +64,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="12dp"
             android:layout_below="@+id/backgroundImage"
             android:gravity="center"
             android:textSize="17sp"
@@ -74,7 +73,6 @@
             android:layout_marginStart="35dp"
             android:layout_marginRight="35dp"
             android:layout_marginEnd="35dp"
-            android:text="Etiam ullamcorper sapien pellentesque commodo faucibus. Nam eget nulla sed."
             android:textColor="@android:color/black" />
 
         <LinearLayout
@@ -92,7 +90,7 @@
                 android:layout_width="206dp"
                 android:layout_height="40dp"
                 android:textSize="16sp"
-                android:visibility="visible" />
+                android:visibility="gone" />
 
             <Button
                 android:id="@+id/interstitial_button2"
@@ -100,7 +98,7 @@
                 android:layout_height="40dp"
                 android:textSize="16sp"
                 android:layout_marginLeft="18dp"
-                android:visibility="visible"
+                android:visibility="gone"
                 android:layout_marginStart="10dp" />
         </LinearLayout>
     </RelativeLayout>
@@ -108,8 +106,8 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_gravity="top|end"
-        android:layout_marginRight="45dp"
-        android:layout_marginTop="30dp"
+        android:layout_marginRight="55dp"
+        android:layout_marginTop="20dp"
         android:adjustViewBounds="true"
-        android:layout_marginEnd="45dp" />
+        android:layout_marginEnd="55dp" />
 </FrameLayout>

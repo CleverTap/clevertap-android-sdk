@@ -598,10 +598,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     private void recordDeviceIDErrors(){
-         if(this.isErrorDeviceId()){
-             for(ValidationResult validationResult : this.deviceInfo.getValidationResults()){
-                 pushValidationResult(validationResult);
-             }
+         for(ValidationResult validationResult : this.deviceInfo.getValidationResults()){
+             pushValidationResult(validationResult);
          }
     }
 
@@ -5486,12 +5484,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
 
         String channelId = extras.getString(Constants.WZRK_CHANNEL_ID, "");
-        boolean requiresChannelId = context.getApplicationInfo().targetSdkVersion >= Build.VERSION_CODES.O;
-        if (requiresChannelId && channelId.isEmpty()) {
-            String channelIdError = "Unable to render notification, channelId is required but is not provided in the notification payload: " + extras.toString();
-            getConfigLogger().debug(getAccountId(), channelIdError);
-            pushValidationResult(new ValidationResult(512, channelIdError));
-            return;
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            if (channelId.isEmpty() || notificationManager.getNotificationChannel(channelId) == null) {
+                String channelIdError = "Unable to render notification, channelId is required but is wrong/not provided in the notification payload: " + extras.toString();
+                getConfigLogger().debug(getAccountId(), channelIdError);
+                pushValidationResult(new ValidationResult(512, channelIdError));
+                return;
+            }
         }
 
         String icoPath = extras.getString(Constants.NOTIF_ICON);
@@ -5587,7 +5587,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
 
         NotificationCompat.Builder nb;
-        if (requiresChannelId) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             nb = new NotificationCompat.Builder(context, channelId);
 
             // choices here are Notification.BADGE_ICON_NONE = 0, Notification.BADGE_ICON_SMALL = 1, Notification.BADGE_ICON_LARGE = 2.  Default is  Notification.BADGE_ICON_LARGE
