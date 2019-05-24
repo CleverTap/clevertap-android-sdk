@@ -5484,10 +5484,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
 
         String channelId = extras.getString(Constants.WZRK_CHANNEL_ID, "");
+        boolean requiresChannelId = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (channelId.isEmpty() || notificationManager.getNotificationChannel(channelId) == null) {
-                String channelIdError = "Unable to render notification, channelId is required but is wrong/not provided in the notification payload: " + extras.toString();
+            String channelIdError = null;
+            if (channelId.isEmpty()) {
+                channelIdError = "Unable to render notification, channelId is required but not provided in the notification payload: " + extras.toString();
+            } else if (notificationManager.getNotificationChannel(channelId) == null) {
+                channelIdError = "Unable to render notification, channelId: " + channelId +  " not registered by the app.";
+            }
+            if (channelIdError != null) {
                 getConfigLogger().debug(getAccountId(), channelIdError);
                 pushValidationResult(new ValidationResult(512, channelIdError));
                 return;
@@ -5587,7 +5593,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
 
         NotificationCompat.Builder nb;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (requiresChannelId) {
             nb = new NotificationCompat.Builder(context, channelId);
 
             // choices here are Notification.BADGE_ICON_NONE = 0, Notification.BADGE_ICON_SMALL = 1, Notification.BADGE_ICON_LARGE = 2.  Default is  Notification.BADGE_ICON_LARGE
