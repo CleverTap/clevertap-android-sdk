@@ -29,7 +29,7 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
-    implementation (name: 'clevertap-android-sdk-3.5.0', ext: 'aar') //CleverTap Android SDK, make sure the AAR file is in the libs folder
+    implementation (name: 'clevertap-android-sdk-3.5.1', ext: 'aar') //CleverTap Android SDK, make sure the AAR file is in the libs folder
     implementation 'com.google.firebase:firebase-messaging:17.3.0' //Needed for FCM
     implementation 'com.google.android.gms:play-services-ads:15.0.1' //Needed to use Google Ad Ids
     //ExoPlayer Libraries for Audio/Video InApp Notifications

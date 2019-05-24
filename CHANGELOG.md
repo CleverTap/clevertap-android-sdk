@@ -1,6 +1,11 @@
 ## CHANGE LOG
 
+### Version 3.5.1 (May 24, 2019)
+* Removes requirement for Manifest entry to enable automatic recording of Push Notification Viewed event
+* Fixes certain Landscape InApp Notification display issues
+
 ### Version 3.5.0 (May 17, 2019)
+* For raising Notification Viewed event in Push Notifications and using In-Apps in Landscape mode, please use CleverTap SDK v3.5.1
 * Adds the ability to set a custom Device ID (CleverTap ID)
 * Adds the ability to record Notification Viewed event for Push Notifications
 * Adds support to record events in a WebView
