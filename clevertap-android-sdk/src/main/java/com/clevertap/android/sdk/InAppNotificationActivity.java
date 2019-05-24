@@ -54,7 +54,10 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        int orientation = this.getResources().getConfiguration().orientation;
+        if(orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        }
         try {
             Bundle notif = getIntent().getExtras();
             if (notif == null) throw new IllegalArgumentException();
@@ -72,7 +75,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
             } catch (Throwable t) {
                 Logger.d("Error displaying InAppNotification", t);
-                int orientation = this.getResources().getConfiguration().orientation;
+
                 if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
                     Logger.d("App in Landscape, dismissing portrait InApp Notification");
                     finish();
@@ -89,7 +92,6 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                 setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
             } catch (Throwable t) {
                 Logger.d("Error displaying InAppNotification", t);
-                int orientation = this.getResources().getConfiguration().orientation;
                 if (orientation == Configuration.ORIENTATION_PORTRAIT) {
                     Logger.d("App in Portrait, dismissing landscape InApp Notification");
                     finish();
