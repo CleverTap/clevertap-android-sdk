@@ -11,7 +11,7 @@
         <LinearLayout
             android:layout_width="wrap_content"
             android:id="@+id/carousel_linear_layout"
-            android:layout_above="@id/timestamp_relative_layout"
+            android:layout_above="@+id/timestamp_relative_layout"
             android:layout_height="match_parent">
             <com.clevertap.android.sdk.CTCarouselViewPager
                 android:id="@+id/image_carousel_viewpager"
