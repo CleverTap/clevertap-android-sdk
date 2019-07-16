@@ -27,7 +27,7 @@ import java.util.Iterator;
 
 import javax.net.ssl.HttpsURLConnection;
 
-final class Utils {
+public final class Utils {
     static long getMemoryConsumption() {
         long free = Runtime.getRuntime().freeMemory();
         long total = Runtime.getRuntime().totalMemory();
@@ -221,6 +221,15 @@ final class Utils {
         } else {
             return -1;
         }
+    }
+
+    public static String optionalStringKey(JSONObject o, String k)
+            throws JSONException {
+        if (o.has(k) && !o.isNull(k)) {
+            return o.getString(k);
+        }
+
+        return null;
     }
 
     static ArrayList<String> convertJSONArrayToArrayList(JSONArray array){

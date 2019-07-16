@@ -19,6 +19,7 @@ class ManifestInfo {
     private static boolean backgroundSync;
     private static boolean useCustomID;
     private static String fcmSenderId;
+    private static String packageName;
 
     private static String _getManifestStringValueForKey(Bundle manifest, String name) {
         try {
@@ -62,6 +63,7 @@ class ManifestInfo {
         if (fcmSenderId != null) {
             fcmSenderId = fcmSenderId.replace("id:", "");
         }
+        packageName = _getManifestStringValueForKey(metaData,Constants.LABEL_PACKAGE_NAME);
     }
 
     synchronized static ManifestInfo getInstance(Context context){
@@ -113,6 +115,10 @@ class ManifestInfo {
 
     boolean useCustomId(){
         return useCustomID;
+    }
+
+    String getPackageName() {
+        return packageName;
     }
 
     static void changeCredentials(String id, String token, String region){

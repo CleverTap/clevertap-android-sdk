@@ -137,7 +137,7 @@ class CTInAppNotification implements Parcelable {
                         this.inAppType = CTInAppType.CTInAppTypeHalfInterstitialHTML;
                 }
             }
-        }catch (JSONException e){
+        } catch (JSONException e){
             this.error = "Invalid JSON";
         }
     }

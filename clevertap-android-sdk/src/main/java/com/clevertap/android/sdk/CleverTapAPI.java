@@ -38,7 +38,8 @@ import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 
-
+import com.clevertap.android.sdk.ab_testing.CTABTestController;
+import com.clevertap.android.sdk.ab_testing.CTABTestListener;
 import com.clevertap.android.sdk.exceptions.CleverTapMetaDataNotFoundException;
 import com.clevertap.android.sdk.exceptions.CleverTapPermissionsNotSatisfied;
 import com.google.android.gms.gcm.GoogleCloudMessaging;
@@ -86,8 +87,7 @@ import static android.content.Context.NOTIFICATION_SERVICE;
 public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationListener,
         InAppNotificationActivity.InAppActivityListener,
         CTInAppBaseFragment.InAppListener,
-        CTInboxActivity.InboxActivityListener{
-
+        CTInboxActivity.InboxActivityListener, CTABTestListener {
     @SuppressWarnings({"unused"})
     public enum LogLevel{
         OFF(-1),
@@ -187,7 +187,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private int lastVisitTime;
     private final HashMap<String,Object> notificationIdTagMap = new HashMap<>();
     private final HashMap<String,Object> notificationViewedIdTagMap = new HashMap<>();
-    private DeviceInfo deviceInfo;
+    DeviceInfo deviceInfo;
     private DevicePushTokenRefreshListener tokenRefreshListener;
     private boolean appLaunchPushed = false;
     private final Object appLaunchPushedLock = new Object();
@@ -216,8 +216,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private final Boolean eventLock = true;
     private boolean offline = false;
     private CTInboxController ctInboxController;
+    private CTABTestController ctABTestController;  // TODO
     private final Object inboxControllerLock = new Object();
     private CTInboxListener inboxListener;
+    private CTABTestListener ctabTestListener;
     private boolean isBgPing = false;
 
     @Deprecated
@@ -263,6 +265,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         this.session = new SessionHandler(this);
 
         setLastVisitTime();
+
+        // Default (flag is set in the config init) or first non-default instance gets the ABTestController
+        if(!config.isDefaultInstance()){
+            if(instances == null || instances.size() <= 0) {
+                config.setEnableABTesting(true);
+            }
+        }
+        initABTesting();
+
         postAsyncSafely("setStatesAsync", new Runnable() {
             @Override
             public void run() {
@@ -296,7 +307,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             });
         }
         Logger.i("CleverTap SDK initialized with accountId: "+ config.getAccountId() + " accountToken: " + config.getAccountToken() + " accountRegion: " + config.getAccountRegion());
-
     }
 
     private LocalDataStore getLocalDataStore() {
@@ -2562,6 +2572,18 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     }
                 } catch (Throwable t) {
                     //Ignore
+                }
+            }
+
+            //Handle ABTesting response
+            if(!getConfig().isAnalyticsOnly()){
+                try{
+                    if(response.has("abtest")){
+                        getConfigLogger().verbose(getAccountId(), "Processing ABTest experiments...");
+                        processIncomingExperiments(response);
+                    }
+                }catch (Throwable t){
+                    getConfigLogger().verbose("Error handling AB Testing response : "+ t.getMessage());
                 }
             }
 
@@ -4963,6 +4985,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         processingUserLoginIdentifier = null;
                     }
                     resetInbox();
+                    resetABTesting();
                     recordDeviceIDErrors();
                 } catch (Throwable t) {
                     getConfigLogger().verbose(getAccountId(), "Reset Profile error", t);
@@ -6882,5 +6905,299 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             stopTimeCalendar.add(Calendar.DATE, 1);
         }
         return currentTimeCalendar.compareTo(startTimeCalendar) >= 0 && currentTimeCalendar.compareTo(stopTimeCalendar) < 0;
+    }
+
+    //ABTesting
+
+    // TODO
+    private static boolean isUIEditorEnabled = true;
+
+    @SuppressWarnings("unused")
+    public static void setUIEditorEnabled(boolean enabled) {
+        isUIEditorEnabled = enabled;
+    }
+
+    @Override
+    public void ABExperimentsUpdated() {
+        final SyncListener sl;
+        try {
+            sl = getSyncListener();
+            if (sl != null) {
+                sl.ABExperimentsUpdated();
+            }
+        } catch (Throwable t) {
+            // Ignore
+        }
+    }
+
+    @SuppressWarnings({"unused"})
+    public void registerBooleanVariable(String name) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return;
+        }
+        ctABTestController.registerBooleanVariable(name);
+    }
+
+    @SuppressWarnings({"unused"})
+    public void registerDoubleVariable(String name) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return;
+        }
+        ctABTestController.registerDoubleVariable(name);
+    }
+
+    @SuppressWarnings({"unused"})
+    public void registerIntegerVariable(String name) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return;
+        }
+        ctABTestController.registerIntegerVariable(name);
+    }
+
+    @SuppressWarnings({"unused"})
+    public void registerStringVariable(String name) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return;
+        }
+        ctABTestController.registerStringVariable(name);
+    }
+
+    @SuppressWarnings({"unused"})
+    public void registerListOfBooleanVariable(String name) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return;
+        }
+        ctABTestController.registerListOfBooleanVariable(name);
+    }
+
+    @SuppressWarnings({"unused"})
+    public void registerListOfDoubleVariable(String name) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return;
+        }
+        ctABTestController.registerListOfDoubleVariable(name);
+    }
+
+    @SuppressWarnings({"unused"})
+    public void registerListOfIntegerVariable(String name) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return;
+        }
+        ctABTestController.registerListOfIntegerVariable(name);
+    }
+
+    @SuppressWarnings({"unused"})
+    public void registerListOfStringVariable(String name) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return;
+        }
+        ctABTestController.registerListOfStringVariable(name);
+    }
+
+    @SuppressWarnings({"unused"})
+    public void registerMapOfBooleanVariable(String name) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return;
+        }
+        ctABTestController.registerMapOfBooleanVariable(name);
+    }
+
+    @SuppressWarnings({"unused"})
+    public void registerMapOfDoubleVariable(String name) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return;
+        }
+        ctABTestController.registerMapOfDoubleVariable(name);
+    }
+
+    @SuppressWarnings({"unused"})
+    public void registerMapOfIntegerVariable(String name) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return;
+        }
+        ctABTestController.registerMapOfIntegerVariable(name);
+    }
+
+    @SuppressWarnings({"unused"})
+    public void registerMapOfStringVariable(String name) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return;
+        }
+        ctABTestController.registerMapOfStringVariable(name);
+    }
+
+    @SuppressWarnings({"unused"})
+    public Boolean getBooleanVariable(String name, Boolean defaultValue) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return defaultValue;
+        }
+        return ctABTestController.getBooleanVariable(name, defaultValue);
+    }
+
+    @SuppressWarnings({"unused"})
+    public Double getDoubleVariable(String name, Double defaultValue) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return defaultValue;
+        }
+        return ctABTestController.getDoubleVariable(name, defaultValue);
+    }
+
+    @SuppressWarnings({"unused"})
+    public Integer getIntegerVariable(String name, Integer defaultValue) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return defaultValue;
+        }
+        return ctABTestController.getIntegerVariable(name, defaultValue);
+    }
+
+    @SuppressWarnings({"unused"})
+    public String getStringVariable(String name, String defaultValue) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return defaultValue;
+        }
+        return ctABTestController.getStringVariable(name, defaultValue);
+    }
+
+    @SuppressWarnings({"unused"})
+    public List<Boolean> getListOfBooleanVariable(String name, List<Boolean> defaultValue) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return defaultValue;
+        }
+        return ctABTestController.getListOfBooleanVariable(name, defaultValue);
+
+    }
+
+    @SuppressWarnings({"unused"})
+    public List<Double> getListOfDoubleVariable(String name, List<Double> defaultValue) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return defaultValue;
+        }
+        return ctABTestController.getListOfDoubleVariable(name, defaultValue);
+
+    }
+
+    @SuppressWarnings({"unused"})
+    public List<Integer> getListOfIntegerVariable(String name, List<Integer> defaultValue) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return defaultValue;
+        }
+        return ctABTestController.getListOfIntegerVariable(name, defaultValue);
+    }
+
+    @SuppressWarnings({"unused"})
+    public List<String> getListOfStringVariable(String name, List<String> defaultValue) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return defaultValue;
+        }
+        return ctABTestController.getListOfStringVariable(name, defaultValue);
+    }
+
+    @SuppressWarnings({"unused"})
+    public Map<String, Boolean> getMapOfBooleanVariable(String name, Map<String, Boolean> defaultValue) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return defaultValue;
+        }
+        return ctABTestController.getMapOfBooleanVariable(name, defaultValue);
+    }
+
+    @SuppressWarnings({"unused"})
+    public Map<String, Double> getMapOfDoubleVariable(String name, Map<String, Double> defaultValue) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return defaultValue;
+        }
+        return ctABTestController.getMapOfDoubleVariable(name, defaultValue);
+    }
+
+    @SuppressWarnings({"unused"})
+    public Map<String, Integer> getMapOfIntegerVariable(String name, Map<String, Integer> defaultValue) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return defaultValue;
+        }
+        return ctABTestController.getMapOfIntegerVariable(name, defaultValue);
+    }
+
+    @SuppressWarnings({"unused"})
+    public Map<String, String> getMapOfStringVariable(String name, Map<String, String> defaultValue) {
+        if (ctABTestController == null) {
+            getConfigLogger().verbose(getAccountId(),"ABTesting is not enabled for this instance");
+            return defaultValue;
+        }
+        return ctABTestController.getMapOfStringVariable(name, defaultValue);
+    }
+
+    public Map<String, String> getDeviceInfo() {
+        final Map<String, String> deviceInfo = new HashMap<>();
+        deviceInfo.put("build", String.valueOf(this.deviceInfo.getBuild()));
+        deviceInfo.put("versionName",this.deviceInfo.getVersionName());
+        deviceInfo.put("osName", this.deviceInfo.getOsName());
+        deviceInfo.put("osVersion", this.deviceInfo.getOsVersion());
+        deviceInfo.put("manufacturer",this.deviceInfo.getManufacturer());
+        deviceInfo.put("model", this.deviceInfo.getModel());
+        deviceInfo.put("sdkVersion", String.valueOf(this.deviceInfo.getSdkVersion()));
+        deviceInfo.put("height", String.valueOf(this.deviceInfo.getHeight()));
+        deviceInfo.put("width", String.valueOf(this.deviceInfo.getWidth()));
+        deviceInfo.put("dpi", String.valueOf(this.deviceInfo.getDPI()));
+        return deviceInfo;
+    }
+
+    private void initABTesting(){
+        if (!config.isAnalyticsOnly()) {
+            if (!config.isABTestingEnabled()) {
+                getConfigLogger().debug(config.getAccountId(), "AB Testing is not enabled for this instance");
+                return;
+            }
+            config.setEnableUIEditor(isUIEditorEnabled);
+            if (ctABTestController == null) {
+                ctABTestController = new CTABTestController(context, config, getCleverTapID(), this); // TODO what if guid is null?
+                getConfigLogger().verbose(config.getAccountId(), "AB Testing initialized");
+            }
+        }
+    }
+
+    private void resetABTesting(){
+        if (!this.config.isAnalyticsOnly()) {
+            if (!config.isABTestingEnabled()) {
+                getConfigLogger().debug(config.getAccountId(), "AB Testing is not enabled for this instance");
+                return;
+            }
+        }
+        if (ctABTestController != null) {
+            ctABTestController.resetWithGuid(getCleverTapID());
+        }
+    }
+
+    private void processIncomingExperiments(JSONObject experiments){
+        try {
+            //TODO handle AB Testing response from LC
+            JSONArray experimentsArray = experiments.getJSONArray("experiments");
+            if (this.ctABTestController != null) {
+                ctABTestController.updateExperiments(experimentsArray);
+            }
+        } catch (JSONException e) {
+            getConfigLogger().debug(config.getAccountId(), "Error parsing AB Testing response " + e.getLocalizedMessage());
+        }
     }
 }

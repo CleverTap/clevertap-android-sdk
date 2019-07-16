@@ -19,6 +19,8 @@ import android.view.WindowManager;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 class DeviceInfo {
@@ -470,7 +472,7 @@ class DeviceInfo {
         return getDeviceCachedInfo().notificationsEnabled;
     }
 
-    private class DeviceCachedInfo{
+    private class DeviceCachedInfo {
 
         private int build;
         private String versionName;
@@ -487,6 +489,7 @@ class DeviceInfo {
         private double width;
         private int dpi;
         private boolean notificationsEnabled;
+        private Map<String,String> deviceInfoMap = new HashMap<>();
 
         DeviceCachedInfo() {
             versionName = getVersionName();
@@ -504,6 +507,22 @@ class DeviceInfo {
             width = getWidth();
             dpi = getDPI();
             notificationsEnabled = getNotificationEnabledForUser();
+            if(!deviceInfoMap.isEmpty()){
+                deviceInfoMap.put("AppVersion",versionName);
+                deviceInfoMap.put("OSName",osName);
+                deviceInfoMap.put("OSVersion",osVersion);
+                deviceInfoMap.put("Manufacturer",manufacturer);
+                deviceInfoMap.put("Model",model);
+                deviceInfoMap.put("Carrier",carrier);
+                deviceInfoMap.put("NetworkType",networkType);
+                deviceInfoMap.put("Bluetooth",bluetoothVersion);
+                deviceInfoMap.put("CountryCode",countryCode);
+                deviceInfoMap.put("Build",String.valueOf(build));
+                deviceInfoMap.put("SDKVersion",String.valueOf(sdkVersion));
+                deviceInfoMap.put("Height",String.valueOf(height));
+                deviceInfoMap.put("Width",String.valueOf(width));
+                deviceInfoMap.put("DPI",String.valueOf(dpi));
+            }
         }
 
         private String getVersionName() {
