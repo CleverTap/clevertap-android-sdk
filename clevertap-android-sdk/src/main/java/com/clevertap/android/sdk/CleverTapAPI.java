@@ -40,8 +40,7 @@ import android.support.v4.app.NotificationCompat;
 
 import com.clevertap.android.sdk.ab_testing.CTABTestController;
 import com.clevertap.android.sdk.ab_testing.CTABTestListener;
-import com.clevertap.android.sdk.exceptions.CleverTapMetaDataNotFoundException;
-import com.clevertap.android.sdk.exceptions.CleverTapPermissionsNotSatisfied;
+
 import com.google.android.gms.plus.model.people.Person;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -110,12 +109,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         EventGroup(String httpResource) { this.httpResource = httpResource; }
     }
 
-
-    /**
-     * @deprecated Use {@link #pushChargedEvent(HashMap chargeDetails, ArrayList items)}
-     */
-    @Deprecated
-    public static final String CHARGED_EVENT = "Charged";
     @SuppressWarnings("unused")
     public static final String NOTIFICATION_TAG = "wzrk_pn";
 
@@ -217,17 +210,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private CTABTestController ctABTestController;  // TODO
     private final Object inboxControllerLock = new Object();
     private CTInboxListener inboxListener;
-    private CTABTestListener ctabTestListener;
+    private CTABTestListener ctabTestListener; // TODO
     private boolean isBgPing = false;
-
-    @Deprecated
-    public final EventHandler event;
-    @Deprecated
-    public final ProfileHandler profile;
-    @Deprecated
-    public final DataHandler data;
-    @Deprecated
-    public final SessionHandler session;
 
 
     // Initialize
@@ -256,11 +240,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if(now - initialAppEnteredForegroundTime > 5){
             this.config.setCreatedPostAppLaunch();
         }
-
-        this.event = new EventHandler(this);
-        this.profile = new ProfileHandler(this);
-        this.data = new DataHandler(this);
-        this.session = new SessionHandler(this);
 
         setLastVisitTime();
 
@@ -491,19 +470,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
-     * Returns an instance of the CleverTap SDK.
-     *
-     * @param context The Android context
-     * @return The {@link CleverTapAPI} object
-     * @deprecated use {@link CleverTapAPI#getDefaultInstance(Context context)}
-     */
-    public static @Nullable CleverTapAPI getInstance(Context context) throws CleverTapMetaDataNotFoundException, CleverTapPermissionsNotSatisfied {
-        // For Google Play Store/Android Studio tracking
-        sdkVersion = BuildConfig.SDK_VERSION_STRING;
-        return getDefaultInstance(context);
-    }
-
-    /**
      * Returns the default shared instance of the CleverTap SDK.
      *
      * @param context The Android context
@@ -545,7 +511,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param config The {@link CleverTapInstanceConfig} object
      * @return The {@link CleverTapAPI} object
      */
-    @SuppressWarnings("WeakerAccess")
     public static CleverTapAPI instanceWithConfig(Context context, CleverTapInstanceConfig config){
         return instanceWithConfig(context,config,null);
     }
@@ -4107,20 +4072,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         getConfigLogger().debug(getAccountId(), "Invalid multi-value property key " + key + " profile multi value operation aborted");
     }
 
-    //Event
-    /**
-     * Pushes the notification details to CleverTap.
-     *
-     * @param extras The {@link Bundle} object that contains the
-     *               notification details
-     * @deprecated use pushNotificationClickedEvent(extras) instead
-     */
-    @Deprecated
-    public void pushNotificationEvent(final Bundle extras) {
-        pushNotificationClickedEvent(extras);
-    }
-
-
     /**
      * Pushes the Notification Clicked event to CleverTap.
      *
@@ -4981,7 +4932,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             data.put("id", token);
             data.put("type", type.toString());
             event.put("data", data);
-            getConfigLogger().verbose(getAccountId(), "DataHandler: pushing device token with action " + action + " and type " + type.toString());
+            getConfigLogger().verbose(getAccountId(), "Pushing device token with action " + action + " and type " + type.toString());
             queueEvent(context, event, Constants.DATA_EVENT);
         } catch (JSONException e) {
             // we won't get here
@@ -6163,14 +6114,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void setLocation(Location location) {
-        _setLocation(location);
-    }
-
-    /**
-     * @deprecated use {@link #setLocation(Location)} ()} instead.
-     */
-    @Deprecated
-    public void updateLocation(Location location) {
         _setLocation(location);
     }
 
