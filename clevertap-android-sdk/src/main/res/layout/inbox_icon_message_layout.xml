@@ -40,7 +40,6 @@
                 android:maxLines="1"
                 android:layout_marginTop="10dp"
                 android:layout_marginEnd="20dp"
-                android:text="Title"
                 android:textStyle="bold"
                 android:textColor="@android:color/black"
                 android:layout_marginRight="20dp" />
@@ -48,7 +47,6 @@
                 android:id="@+id/messageText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Message"
                 android:maxLines="3"
                 android:layout_marginLeft="10dp"
                 android:layout_marginStart="10dp"
@@ -104,7 +102,6 @@
             android:layout_height="wrap_content"
             android:gravity="end"
             android:layout_marginRight="10dp"
-            android:text="timestamp"
             android:textColor="@android:color/darker_gray"
             android:layout_marginEnd="10dp" />
         <ImageView
@@ -138,7 +135,6 @@
             android:layout_height="match_parent"
             android:textSize="14sp"
             android:padding="2dp"
-            android:text="CTA1"
             android:textColor="@android:color/holo_blue_light"
             android:visibility="visible"
             android:background="@android:color/white"/>
@@ -150,7 +146,6 @@
             android:textSize="14sp"
             android:padding="2dp"
             android:visibility="gone"
-            android:text="CTA2"
             android:textColor="@android:color/holo_blue_light"
             android:background="@android:color/white"/>
         <Button
@@ -161,7 +156,6 @@
             android:textSize="14sp"
             android:padding="2dp"
             android:visibility="gone"
-            android:text="CTA3"
             android:textColor="@android:color/holo_blue_light"
             android:background="@android:color/white"/>
     </LinearLayout>

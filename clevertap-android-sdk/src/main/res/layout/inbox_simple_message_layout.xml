@@ -59,7 +59,6 @@
                 android:maxLines="1"
                 android:layout_marginTop="20dp"
                 android:layout_marginEnd="20dp"
-                android:text="Message title"
                 android:textStyle="bold"
                 android:textColor="@android:color/black"
                 android:layout_marginRight="20dp" />
@@ -67,20 +66,17 @@
                 android:id="@+id/messageText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Message"
                 android:maxLines="3"
                 android:layout_marginLeft="20dp"
                 android:layout_marginStart="20dp"
                 android:layout_marginTop="5dp"
                 android:layout_marginRight="20dp"
                 android:layout_marginEnd="20dp"
-                android:textColor="@android:color/darker_gray"
-                android:layout_below="@+id/messageTitle"/>
+                android:textColor="@android:color/darker_gray" />
             <LinearLayout
                 android:id="@+id/timestamp_linear_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_below="@+id/messageText"
                 android:orientation="horizontal"
                 android:layout_marginTop="20dp"
                 android:layout_marginBottom="10dp"
@@ -91,7 +87,6 @@
                     android:layout_height="wrap_content"
                     android:gravity="end"
                     android:layout_marginRight="10dp"
-                    android:text="timestamp"
                     android:textColor="@android:color/darker_gray"
                     android:layout_marginEnd="10dp" />
                 <ImageView
@@ -106,7 +101,6 @@
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
-                android:layout_below="@+id/timestamp_linear_layout"
                 android:background="@android:color/darker_gray"/>
         </LinearLayout>
     </RelativeLayout>
@@ -125,7 +119,6 @@
             android:layout_height="match_parent"
             android:textSize="14sp"
             android:padding="2dp"
-            android:text="CTA1"
             android:textColor="@android:color/holo_blue_light"
             android:visibility="gone"
             android:background="@android:color/white"/>
@@ -137,7 +130,6 @@
             android:textSize="14sp"
             android:padding="2dp"
             android:visibility="gone"
-            android:text="CTA2"
             android:textColor="@android:color/holo_blue_light"
             android:background="@android:color/white"/>
         <Button
@@ -148,7 +140,6 @@
             android:textSize="14sp"
             android:padding="2dp"
             android:visibility="gone"
-            android:text="CTA3"
             android:textColor="@android:color/holo_blue_light"
             android:background="@android:color/white"/>
     </LinearLayout>

@@ -32,7 +32,6 @@
                 android:layout_marginEnd="20dp"
                 android:layout_marginRight="20dp"
                 android:maxLines="2"
-                android:text="Title"
                 android:textColor="@android:color/black"
                 android:textStyle="bold" />
             <TextView
@@ -46,7 +45,6 @@
                 android:layout_marginEnd="20dp"
                 android:layout_marginRight="20dp"
                 android:maxLines="3"
-                android:text="Message"
                 android:textColor="@android:color/darker_gray" />
             <RelativeLayout
                 android:layout_gravity="bottom|end"
@@ -74,7 +72,6 @@
                         android:layout_height="wrap_content"
                         android:layout_marginEnd="10dp"
                         android:layout_marginRight="10dp"
-                        android:text="timestamp"
                         android:textColor="@android:color/darker_gray" />
                     <ImageView
                         android:id="@+id/read_circle"
@@ -106,7 +103,6 @@
             android:layout_weight="2"
             android:background="@android:color/white"
             android:padding="2dp"
-            android:text="CTA1"
             android:textColor="@android:color/holo_blue_light"
             android:textSize="14sp"
             android:visibility="gone" />
@@ -118,7 +114,6 @@
             android:layout_weight="2"
             android:background="@android:color/white"
             android:padding="2dp"
-            android:text="CTA2"
             android:textColor="@android:color/holo_blue_light"
             android:textSize="14sp"
             android:visibility="gone" />
@@ -130,7 +125,6 @@
             android:layout_weight="2"
             android:background="@android:color/white"
             android:padding="2dp"
-            android:text="CTA3"
             android:textColor="@android:color/holo_blue_light"
             android:textSize="14sp"
             android:visibility="gone" />
