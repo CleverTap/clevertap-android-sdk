@@ -49,7 +49,6 @@ final class ResourceIds {
         }
 
         for (Map.Entry<String, Integer> idMapping : idNameToId.entrySet()) {
-            Logger.v("resourceId - "+idMapping.getKey());
             idToIdName.put(idMapping.getValue(), idMapping.getKey());
         }
     }
