@@ -1,8 +1,7 @@
 package com.clevertap.android.sdk;
 
 public enum PushType {
-    FCM("fcm"),
-    GCM("gcm");
+    FCM("fcm");
 
     private final String type;
 
@@ -14,8 +13,6 @@ public enum PushType {
     static PushType fromString(String type) {
         if ("fcm".equals(type)) {
             return PushType.FCM;
-        } else if ("gcm".equals(type)) {
-            return PushType.GCM;
         } else {
             return null;
         }

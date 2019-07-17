@@ -42,8 +42,6 @@ import com.clevertap.android.sdk.ab_testing.CTABTestController;
 import com.clevertap.android.sdk.ab_testing.CTABTestListener;
 import com.clevertap.android.sdk.exceptions.CleverTapMetaDataNotFoundException;
 import com.clevertap.android.sdk.exceptions.CleverTapPermissionsNotSatisfied;
-import com.google.android.gms.gcm.GoogleCloudMessaging;
-import com.google.android.gms.iid.InstanceID;
 import com.google.android.gms.plus.model.people.Person;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -810,16 +808,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
         if (enabledPushTypes == null) return;
         for (PushType pushType : enabledPushTypes) {
-            switch (pushType) {
-                case GCM:
-                    doGCMRefresh();
-                    break;
-                case FCM:
-                    doFCMRefresh();
-                    break;
-                default:
-                    //no-op
-                    break;
+            if (pushType == PushType.FCM) {
+                doFCMRefresh();
+                break;
             }
         }
     }
@@ -857,37 +848,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //Push
-    private void doGCMRefresh() {
-        final DeviceInfo _deviceInfo = this.deviceInfo;
-        postAsyncSafely("GcmManager#doGCMRefresh", new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if(getConfig().isAnalyticsOnly()){
-                        getConfigLogger().debug(getAccountId(),"Instance is set for Analytics only, will not request push token");
-                        return;
-                    }
-                    String freshToken = GCMGetFreshToken(_deviceInfo.getGCMSenderID());
-                    if (freshToken == null) return;
-
-                    cacheGCMToken(freshToken);
-
-                    // better safe to always force a push from here
-                    pushGCMDeviceToken(freshToken, true, true);
-
-                    try {
-                        deviceTokenDidRefresh(freshToken, PushType.GCM);
-                    } catch (Throwable t) {
-                        //no-op
-                    }
-                } catch (Throwable t) {
-                    getConfigLogger().verbose(getAccountId(),"GcmManager: GCM Token error", t);
-                }
-            }
-        });
-    }
-
-    //Push
     /**
      * request token from FCM
      */
@@ -908,22 +868,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return token;
     }
 
-    //Push
-    /**
-     * request token from GCM
-     */
-    private String GCMGetFreshToken(final String senderID) {
-        getConfigLogger().verbose(getAccountId(), "GcmManager: Requesting a GCM token for Sender ID - " + senderID);
-        String token = null;
-        try {
-            token = InstanceID.getInstance(context)
-                    .getToken(senderID, GoogleCloudMessaging.INSTANCE_ID_SCOPE, null);
-            getConfigLogger().info(getAccountId(), "GCM token : " + token);
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getAccountId(), "GcmManager: Error requesting GCM token", t);
-        }
-        return token;
-    }
 
     //Push
     private void cacheFCMToken(String token) {
@@ -942,22 +886,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //Push
-    private void cacheGCMToken(String token) {
-        try {
-            if (token == null || alreadyHaveGCMToken(token)) return;
-
-            final SharedPreferences prefs = getPreferences();
-            if (prefs == null) return;
-
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putString(storageKeyWithSuffix(Constants.GCM_PROPERTY_REG_ID), token);
-            StorageHelper.persist(editor);
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getAccountId(), "GcmManager: Unable to cache GCM Token", t);
-        }
-    }
-
-    //Push
     private boolean alreadyHaveFCMToken(final String newToken) {
         if (newToken == null) return false;
         String cachedToken = getCachedFCMToken();
@@ -965,22 +893,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //Push
-    private boolean alreadyHaveGCMToken(final String newToken) {
-        if (newToken == null) return false;
-        String cachedToken = getCachedGCMToken();
-        return (cachedToken != null && cachedToken.equals(newToken));
-    }
-
-    //Push
     private String getCachedFCMToken() {
         SharedPreferences prefs = getPreferences();
         return (prefs == null) ? null : getStringFromPrefs(Constants.FCM_PROPERTY_REG_ID, null);
-    }
-
-    //Push
-    private String getCachedGCMToken() {
-        SharedPreferences prefs = getPreferences();
-        return (prefs == null) ? null : getStringFromPrefs(Constants.GCM_PROPERTY_REG_ID, null);
     }
 
     //Preferences
@@ -1040,25 +955,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //Push
-    private void pushGCMDeviceToken(String token, final boolean register, final boolean forceUpdate) {
-        synchronized (tokenLock) {
-            if (havePushedDeviceToken && !forceUpdate) {
-                getConfigLogger().debug(getAccountId(), "GcmManager: skipping device token push - already sent.");
-                return;
-            }
-
-            try {
-                token = (token != null) ? token : getCachedGCMToken();
-                if (token == null) return;
-                pushDeviceToken(context, token, register, PushType.GCM);
-                havePushedDeviceToken = true;
-            } catch (Throwable t) {
-                getConfigLogger().verbose(getAccountId(), "GcmManager: pushing device token failed", t);
-            }
-        }
-    }
-
-    //Push
     private void pushFCMDeviceToken(String token, final boolean register, final boolean forceUpdate) {
         synchronized (tokenLock) {
             if (havePushedDeviceToken && !forceUpdate) {
@@ -1078,6 +974,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //Push
+    @SuppressWarnings("SameParameterValue")
     private void deviceTokenDidRefresh(String token, PushType type) {
         if (tokenRefreshListener != null) {
             getConfigLogger().debug(getAccountId(), "Notifying devicePushTokenDidRefresh: " + token);
@@ -1313,14 +1210,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @SuppressWarnings("unused")
     public String getDevicePushToken(final PushType type) {
-        switch (type) {
-            case GCM:
-                return getCachedGCMToken();
-            case FCM:
-                return getCachedFCMToken();
-            default:
-                return null;
+        if (type == PushType.FCM) {
+            return getCachedFCMToken();
         }
+        return null;
     }
 
     //Util
@@ -2341,7 +2234,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             header.put("tk", token);
             header.put("l_ts", getLastRequestTimestamp());
             header.put("f_ts", getFirstRequestTimestamp());
-            header.put("ddnd",!(this.deviceInfo.getNotificationsEnabledForUser() && (getCachedGCMToken() != null || getCachedFCMToken() != null)));
+            header.put("ddnd",!(this.deviceInfo.getNotificationsEnabledForUser() && (getCachedFCMToken() != null)));
             if(isBgPing){
                 header.put("bk",1);
                 isBgPing = false;
@@ -5029,20 +4922,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @SuppressWarnings("SameParameterValue")
     private void pushDeviceToken(final boolean register, final boolean force) {
         if (enabledPushTypes == null) {
-            //Fixed onUserlogin issue where token was not getting unregistered when enabledPushTypes was not set
             enabledPushTypes = this.deviceInfo.getEnabledPushTypes();
         }
         for (PushType pushType : enabledPushTypes) {
-            switch (pushType) {
-                case GCM:
-                    pushGCMDeviceToken(null, register, force);
-                    break;
-                case FCM:
-                    pushFCMDeviceToken(null, register, force);
-                    break;
-                default:
-                    //no-op
-                    break;
+            if (pushType == PushType.FCM) {
+                pushFCMDeviceToken(null, register, force);
             }
         }
     }
@@ -5064,20 +4948,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     //Push
 
     /**
-     * Sends the GCM registration ID to CleverTap.
-     *
-     * @param gcmId    The GCM registration ID
-     * @param register Boolean indicating whether to register
-     *                 or not for receiving push messages from CleverTap.
-     *                 Set this to true to receive push messages from CleverTap,
-     *                 and false to not receive any messages from CleverTap.
-     */
-    @SuppressWarnings("WeakerAccess")
-    public void pushGcmRegistrationId(String gcmId, boolean register) {
-        pushDeviceToken(gcmId, register, PushType.GCM);
-    }
-
-    /**
      * Sends the FCM registration ID to CleverTap.
      *
      * @param fcmId    The FCM registration ID
@@ -5095,6 +4965,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * For internal use, don't call the public API internally
      *
      */
+    @SuppressWarnings("SameParameterValue")
     private void pushDeviceToken(final String token, final boolean register, final PushType type) {
         pushDeviceToken(this.context, token, register, type);
     }
@@ -6812,7 +6683,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         postAsyncSafely("runningJobService", new Runnable() {
             @Override
             public void run() {
-                if(getCachedFCMToken() == null && getCachedGCMToken() == null){
+                if(getCachedFCMToken() == null ) {
                     Logger.v(getAccountId(),"Token is not present, not running the Job");
                     return;
                 }

@@ -43,42 +43,20 @@ final class ManifestValidator {
         ArrayList<PushType> enabledPushTypes = deviceInfo.getEnabledPushTypes();
         if (enabledPushTypes == null) return;
         for (PushType pushType : enabledPushTypes) {
-            switch (pushType) {
-                case GCM:
-                    try {
-                        // use class name string directly here to avoid class not found issues on class import, because we only use one of FCM or GCM
-                        validateServiceInManifest((Application) context.getApplicationContext(), "com.clevertap.android.sdk.GcmMessageListenerService");
-                        validateServiceInManifest((Application) context.getApplicationContext(), "com.clevertap.android.sdk.GcmTokenListenerService");
+            //no-op
+            if (pushType == PushType.FCM) {
+                try {
+                    // use class name string directly here to avoid class not found issues on class import, because we only use one of FCM or GCM
+                    validateServiceInManifest((Application) context.getApplicationContext(), "com.clevertap.android.sdk.FcmMessageListenerService");
+                    validateServiceInManifest((Application) context.getApplicationContext(), "com.clevertap.android.sdk.FcmTokenListenerService");
 
-                    }
-                    catch (Exception e){
-                        Logger.v("Receiver/Service issue : " + e.toString());
+                } catch (Exception e) {
+                    Logger.v("Receiver/Service issue : " + e.toString());
 
-                    }
-                    catch(Error error){
-                        Logger.v("FATAL : "+error.getMessage());
+                } catch (Error error) {
+                    Logger.v("FATAL : " + error.getMessage());
 
-                    }
-                    break;
-                case FCM:
-                    try {
-                        // use class name string directly here to avoid class not found issues on class import, because we only use one of FCM or GCM
-                        validateServiceInManifest((Application) context.getApplicationContext(), "com.clevertap.android.sdk.FcmMessageListenerService");
-                        validateServiceInManifest((Application) context.getApplicationContext(), "com.clevertap.android.sdk.FcmTokenListenerService");
-
-                    }
-                    catch (Exception e){
-                        Logger.v("Receiver/Service issue : " + e.toString());
-
-                    }
-                    catch(Error error){
-                        Logger.v("FATAL : "+error.getMessage());
-
-                    }
-                    break;
-                default:
-                    //no-op
-                    break;
+                }
             }
         }
 

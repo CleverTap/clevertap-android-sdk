@@ -18,7 +18,6 @@ import android.view.WindowManager;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -38,6 +37,7 @@ class DeviceInfo {
     private ArrayList<ValidationResult> validationResults = new ArrayList<>();
 
     ArrayList<ValidationResult> getValidationResults() {
+        // noinspection unchecked
         ArrayList<ValidationResult> tempValidationResults = (ArrayList<ValidationResult>) validationResults.clone();
         validationResults.clear();
         return tempValidationResults;
@@ -79,7 +79,6 @@ class DeviceInfo {
         return  this.config.getLogger();
     }
 
-    @SuppressWarnings({"WeakerAccess"})
     private void initDeviceID(String cleverTapID) {
 
         //Show logging as per Manifest flag
@@ -308,20 +307,7 @@ class DeviceInfo {
 
     private static ArrayList<PushType> enabledPushTypes = null;
     private static Boolean isFirebasePresent = null;
-    private static Boolean areGoogleServicesAvailable = null;
     private static final String FIREBASE_CLASS_NAME = "com.google.firebase.messaging.FirebaseMessaging";
-
-    private boolean isGCMAvailable() {
-        if (getGCMSenderID() == null) {
-           Logger.d("GCM Sender ID unknown, will be unable to request GCM token");
-           return false;
-        }
-        if (!isGooglePlayServicesAvailable()) {
-            Logger.d("Google Play Services unavailable, will be unable to request GCM token");
-            return false;
-        }
-        return true;
-    }
 
     private boolean isFCMAvailable() {
         if (isFirebasePresent == null) {
@@ -341,37 +327,14 @@ class DeviceInfo {
         if (enabledPushTypes == null) {
             enabledPushTypes = new ArrayList<>();
 
-            // only return one of fcm and gcm , preferring fcm
+            // only return fcm
             boolean fcmAvail = isFCMAvailable();
             if (fcmAvail) {
                 enabledPushTypes.add(PushType.FCM);
             }
 
-            if (!fcmAvail && isGCMAvailable()) {
-                enabledPushTypes.add(PushType.GCM);
-            }
-
         }
         return enabledPushTypes;
-    }
-
-    private Boolean isGooglePlayServicesAvailable() {
-        if (areGoogleServicesAvailable == null) {
-            try {
-                Class.forName("com.google.android.gms.common.GooglePlayServicesUtil");
-                areGoogleServicesAvailable = true;
-                Logger.d("Google Play services available");
-            } catch (Throwable t) {
-                Logger.v("Error checking for Google Play Services: " + t.getMessage());
-                areGoogleServicesAvailable = false;
-            }
-        }
-        return areGoogleServicesAvailable;
-    }
-
-
-    String getGCMSenderID() {
-        return ManifestInfo.getInstance(this.context).getGCMSenderId();
     }
 
     String getFCMSenderID(){
