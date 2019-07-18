@@ -178,7 +178,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private int lastVisitTime;
     private final HashMap<String,Object> notificationIdTagMap = new HashMap<>();
     private final HashMap<String,Object> notificationViewedIdTagMap = new HashMap<>();
-    DeviceInfo deviceInfo;
+    private DeviceInfo deviceInfo;
     private DevicePushTokenRefreshListener tokenRefreshListener;
     private boolean appLaunchPushed = false;
     private final Object appLaunchPushedLock = new Object();
@@ -822,7 +822,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             if(senderID != null){
                 getConfigLogger().verbose(getAccountId(), "FcmManager: Requesting a FCM token with Sender Id - "+senderID);
                 token = FirebaseInstanceId.getInstance().getToken(senderID, FirebaseMessaging.INSTANCE_ID_SCOPE);
-            }else {
+            } else {
                 getConfigLogger().verbose(getAccountId(), "FcmManager: Requesting a FCM token");
                 token = FirebaseInstanceId.getInstance().getToken();
             }
@@ -2104,6 +2104,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             getConfigLogger().debug(getAccountId(), "Send queue contains " + queue.length() + " items: " + req);
             getConfigLogger().debug(getAccountId(), "Sending queue to: " + endpoint);
             conn.setDoOutput(true);
+            // noinspection all
             conn.getOutputStream().write(req.getBytes("UTF-8"));
 
             final int responseCode = conn.getResponseCode();
@@ -2125,6 +2126,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
 
             if (processIncomingHeaders(context, conn)) {
+                // noinspection all
                 BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
 
                 StringBuilder sb = new StringBuilder();
@@ -3223,7 +3225,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     pushValidationResult(vr);
                 }
 
-                if (key == null || key.isEmpty()) {
+                if (key.isEmpty()) {
                     ValidationResult keyError = new ValidationResult();
                     keyError.setErrorCode(512);
                     final String keyErr = "Profile push key is empty";
@@ -3372,7 +3374,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Returns the total number of times the app has been launched
      * @return Total number of app launches in int
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public int getTotalVisits() {
         EventDetail ed = getLocalDataStore().getEventDetail(Constants.APP_LAUNCHED_EVENT);
         if (ed != null) return ed.getCount();
@@ -3384,7 +3386,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Returns the number of screens which have been displayed by the app
      * @return Total number of screens which have been displayed by the app
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public int getScreenCount() {
         return CleverTapAPI.activityCount;
     }
@@ -3393,7 +3395,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Returns the time elapsed by the user on the app
      * @return Time elapsed by user on the app in int
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public int getTimeElapsed() {
         int currentSession = getCurrentSession();
         if (currentSession == 0) return -1;
@@ -3406,7 +3408,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Returns the timestamp of the previous visit
      * @return Timestamp of previous visit in int
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public int getPreviousVisitTime() {
         return lastVisitTime;
     }
@@ -3415,7 +3417,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Returns a UTMDetail object which consists of UTM parameters like source, medium & campaign
      * @return The {@link UTMDetail} object
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public UTMDetail getUTMDetails() {
         UTMDetail ud = new UTMDetail();
         ud.setSource(source);
@@ -3602,7 +3604,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      *
      * @param graphUser The object returned from Facebook
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public void pushFacebookUser(final JSONObject graphUser) {
         postAsyncSafely("pushFacebookUser", new Runnable() {
             @Override
@@ -3727,7 +3729,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param person The {@link com.google.android.gms.plus.model.people.Person} object
      * @see com.google.android.gms.plus.model.people.Person
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"all"})
     public void pushGooglePlusPerson(final com.google.android.gms.plus.model.people.Person person) {
         postAsyncSafely("pushGooglePlusPerson", new Runnable() {
             @Override
@@ -3737,6 +3739,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         });
     }
 
+    @SuppressWarnings("all")
     private void _pushGooglePlusPerson(com.google.android.gms.plus.model.people.Person person) {
         if (person == null) {
             return;
@@ -3831,7 +3834,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param name String
      * @return {@link JSONArray}, String or null
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public Object getProperty(String name) {
         if (!this.config.isPersonalizationEnabled()) return null;
         return getLocalDataStore().getProfileProperty(name);
@@ -4251,7 +4254,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param items         An {@link ArrayList} which contains up to 15 {@link HashMap} objects,
      *                      where each HashMap object describes a particular item purchased
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public void pushChargedEvent(HashMap<String, Object> chargeDetails,
                      ArrayList<HashMap<String, Object>> items) {
 
@@ -4556,7 +4559,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param event The event name for which you want the Event details
      * @return The {@link EventDetail} object
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public EventDetail getDetails(String event) {
         return getLocalDataStore().getEventDetail(event);
     }
@@ -4565,7 +4568,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Returns a Map of event names and corresponding event details of all the events raised
      * @return A Map of Event Name and its corresponding EventDetail object
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public Map<String, EventDetail> getHistory() {
         return getLocalDataStore().getEventHistory(context);
     }
@@ -4575,7 +4578,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param event The event name for which you want the first time timestamp
      * @return The timestamp in int
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public int getFirstTime(String event) {
         EventDetail eventDetail = getLocalDataStore().getEventDetail(event);
         if (eventDetail != null) return eventDetail.getFirstTime();
@@ -4588,7 +4591,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param event The event name for which you want the last time timestamp
      * @return The timestamp in int
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public int getLastTime(String event) {
         EventDetail eventDetail = getLocalDataStore().getEventDetail(event);
         if (eventDetail != null) return eventDetail.getLastTime();
@@ -4601,7 +4604,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param event The event for which you want to get the total count
      * @return Total count in int
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public int getCount(String event) {
         EventDetail eventDetail = getLocalDataStore().getEventDetail(event);
         if (eventDetail != null) return eventDetail.getCount();
@@ -4616,7 +4619,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param errorMessage The error message
      * @param errorCode    The error code
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public void pushError(final String errorMessage, final int errorCode) {
         final HashMap<String, Object> props = new HashMap<>();
         props.put("Error Message", errorMessage);
@@ -4907,7 +4910,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      *                 Set this to true to receive push messages from CleverTap,
      *                 and false to not receive any messages from CleverTap.
      */
-    @SuppressWarnings("WeakerAccess")
+    @SuppressWarnings("unused")
     public void pushFcmRegistrationId(String fcmId, boolean register) {
         pushDeviceToken(fcmId, register, PushType.FCM);
     }
@@ -5469,6 +5472,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 nb.setSubText(extras.getString(Constants.WZRK_SUBTITLE));
             }
         } else {
+            // noinspection all
             nb = new NotificationCompat.Builder(context);
         }
 
