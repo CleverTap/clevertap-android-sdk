@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk;
 
+import android.support.annotation.NonNull;
+
 public enum PushType {
     FCM("fcm");
 
@@ -18,6 +20,7 @@ public enum PushType {
         }
     }
 
+    @NonNull
     @Override
     public String toString() {
         return type;

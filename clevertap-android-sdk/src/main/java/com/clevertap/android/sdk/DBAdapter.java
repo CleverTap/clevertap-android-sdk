@@ -191,6 +191,7 @@ class DBAdapter {
             }
         }
 
+        @SuppressLint("UsableSpace")
         boolean belowMemThreshold() {
             //noinspection SimplifiableIfStatement
             if (databaseFile.exists()) {
@@ -240,7 +241,6 @@ class DBAdapter {
         Cursor cursor = null;
         int count = DB_UPDATE_ERROR;
 
-        //noinspection TryFinallyCanBeTryWithResources
         try {
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
 
@@ -328,7 +328,6 @@ class DBAdapter {
         JSONObject profile = null;
         Cursor cursor = null;
 
-        //noinspection TryFinallyCanBeTryWithResources
         try {
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
 
@@ -440,7 +439,6 @@ class DBAdapter {
 
         final JSONArray events = new JSONArray();
 
-        //noinspection TryFinallyCanBeTryWithResources
         try {
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
             cursor = db.rawQuery("SELECT * FROM " + tName +
@@ -517,7 +515,6 @@ class DBAdapter {
         Cursor cursor = null;
         String pushId = "";
 
-        //noinspection TryFinallyCanBeTryWithResources
         try{
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
             cursor = db.rawQuery("SELECT * FROM " + tName +
@@ -544,7 +541,6 @@ class DBAdapter {
         Cursor cursor = null;
         List<String> pushIds = new ArrayList<>();
 
-        //noinspection TryFinallyCanBeTryWithResources
         try{
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
             cursor = db.rawQuery("SELECT * FROM " + tName + " WHERE " + IS_READ + " = 0", null);
@@ -563,7 +559,7 @@ class DBAdapter {
                 cursor.close();
             }
         }
-        return pushIds.toArray(new String[pushIds.size()]);
+        return pushIds.toArray(new String[0]);
     }
 
     synchronized void updatePushNotificationIds(String[] ids){
@@ -575,7 +571,7 @@ class DBAdapter {
             Logger.v("There is not enough space left on the device to store data, data discarded");
             return;
         }
-        //noinspection TryFinallyCanBeTryWithResources
+
         try {
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
             final ContentValues cv = new ContentValues();
@@ -634,8 +630,8 @@ class DBAdapter {
         final String tName = Table.UNINSTALL_TS.getName();
         Cursor cursor = null;
         long timestamp = 0;
-        //noinspection TryFinallyCanBeTryWithResources
-        try{
+
+        try {
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
             cursor = db.rawQuery("SELECT * FROM " + tName +
                     " ORDER BY " + KEY_CREATED_AT + " DESC LIMIT 1",null);
@@ -663,7 +659,7 @@ class DBAdapter {
             Logger.v("There is not enough space left on the device to store data, data discarded");
             return;
         }
-        //noinspection TryFinallyCanBeTryWithResources
+
         try {
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
             for(CTMessageDAO messageDAO : inboxMessages) {
@@ -692,6 +688,7 @@ class DBAdapter {
      * @param messageId String messageId
      * @return boolean value based on success of operation
      */
+    @SuppressWarnings("UnusedReturnValue")
     synchronized boolean deleteMessageForId(String messageId, String userId){
         if(messageId == null || userId == null) return false;
 
@@ -714,6 +711,7 @@ class DBAdapter {
      * @param messageId String messageId
      * @return boolean value depending on success of operation
      */
+    @SuppressWarnings("UnusedReturnValue")
     synchronized boolean markReadMessageForId(String messageId, String userId){
         if(messageId == null || userId == null) return false;
 

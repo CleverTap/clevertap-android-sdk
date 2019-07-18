@@ -73,7 +73,6 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
         for(int k=0;k<dotsCount;k++){
             dots[k] = new ImageView(parent.getActivity());
             dots[k].setVisibility(View.VISIBLE);
-            // noinspection ConstantConditions
             dots[k].setImageDrawable(appContext.getResources().getDrawable(R.drawable.ct_unselected_dot));
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
             params.setMargins(8, 6, 4, 6);
@@ -81,7 +80,6 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
             if(this.sliderDots.getChildCount() < dotsCount)
                 this.sliderDots.addView(dots[k],params);
         }
-        // noinspection ConstantConditions
         dots[0].setImageDrawable(parent.getActivity().getApplicationContext().getResources().getDrawable(R.drawable.ct_selected_dot));
         CTCarouselMessageViewHolder.CarouselPageChangeListener carouselPageChangeListener = new CTCarouselMessageViewHolder.CarouselPageChangeListener(parent.getActivity().getApplicationContext(), this, dots, inboxMessage);
         this.imageViewPager.addOnPageChangeListener(carouselPageChangeListener);

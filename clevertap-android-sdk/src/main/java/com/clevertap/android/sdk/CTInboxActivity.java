@@ -78,7 +78,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         setContentView(R.layout.inbox_activity);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
-        //noinspection ConstantConditions
         toolbar.setTitle(styleConfig.getNavBarTitle());
         toolbar.setTitleTextColor(Color.parseColor(styleConfig.getNavBarTitleColor()));
         toolbar.setBackgroundColor(Color.parseColor(styleConfig.getNavBarColor()));

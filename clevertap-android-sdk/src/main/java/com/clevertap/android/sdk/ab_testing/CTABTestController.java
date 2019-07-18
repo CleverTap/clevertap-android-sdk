@@ -849,7 +849,6 @@ public class CTABTestController {
             if (cachedDeviceInfo == null) {
                 JSONObject data = new JSONObject();
                 try {
-                    // noinspection ConstantConditions
                     Map<String, String> deviceInfo = CleverTapAPI.instanceWithConfig(context, config).getDeviceInfo();
                     for (final Map.Entry<String, String> entry : deviceInfo.entrySet()) {
                         data.put(entry.getKey(), entry.getValue());

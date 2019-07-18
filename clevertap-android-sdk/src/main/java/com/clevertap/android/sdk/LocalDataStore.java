@@ -504,11 +504,11 @@ class LocalDataStore {
         }
     }
 
-    private Boolean profileValueIsEmpty(Object value) {
+    private boolean profileValueIsEmpty(Object value) {
 
         if (value == null) return true;
 
-        Boolean isEmpty = false;
+        boolean isEmpty = false;
 
         if (value instanceof String) {
             isEmpty = ((String) value).trim().length() == 0;
@@ -735,6 +735,7 @@ class LocalDataStore {
             Map<String, ?> all = prefs.getAll();
             Map<String, EventDetail> out = new HashMap<>();
             for (String eventName : all.keySet()) {
+                //noinspection ConstantConditions
                 out.put(eventName, decodeEventDetails(eventName, all.get(eventName).toString()));
             }
             return out;

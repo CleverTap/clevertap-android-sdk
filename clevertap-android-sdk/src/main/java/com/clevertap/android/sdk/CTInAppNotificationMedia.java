@@ -10,9 +10,9 @@ import java.util.UUID;
 
 public class CTInAppNotificationMedia implements Parcelable {
 
-    String mediaUrl;
-    String contentType;
-    String cacheKey;
+    private String mediaUrl;
+    private String contentType;
+    private String cacheKey;
     int orientation;
 
     CTInAppNotificationMedia(){}
@@ -56,6 +56,7 @@ public class CTInAppNotificationMedia implements Parcelable {
         return cacheKey;
     }
 
+    @SuppressWarnings("SameParameterValue")
     void setMediaUrl(String mediaUrl) {
         this.mediaUrl = mediaUrl;
     }

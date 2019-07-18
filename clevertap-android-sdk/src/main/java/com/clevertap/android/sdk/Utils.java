@@ -121,7 +121,6 @@ public final class Utils {
             icoPath = Constants.ICON_BASE_URL + "/" + icoPath;
         }
         Bitmap ic = getBitmapFromURL(icoPath);
-        //noinspection ConstantConditions
         return (ic != null) ? ic : ((fallbackToAppIcon) ? getAppIcon(context) : null);
     }
 
@@ -154,7 +153,6 @@ public final class Utils {
         return bitmap;
     }
 
-    @SuppressWarnings("WeakerAccess")
     static Bitmap getBitmapFromURL(String srcUrl) {
         // Safe bet, won't have more than three /s
         srcUrl = srcUrl.replace("///", "/");
@@ -233,7 +231,7 @@ public final class Utils {
     }
 
     static ArrayList<String> convertJSONArrayToArrayList(JSONArray array){
-        ArrayList<String> listdata = new ArrayList<String>();
+        ArrayList<String> listdata = new ArrayList<>();
         if (array != null) {
             for (int i = 0; i< array.length(); i++){
                 try {

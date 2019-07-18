@@ -11,6 +11,7 @@ import java.lang.ref.WeakReference;
 /**
  * This class helps WebViews to interact with CleverTapAPI via pre-defined methods
  */
+@SuppressWarnings("WeakerAccess")
 public class CTWebInterface {
 
     private WeakReference<CleverTapAPI> weakReference;
@@ -25,6 +26,7 @@ public class CTWebInterface {
      * @param eventName String value of event name
      */
     @JavascriptInterface
+    @SuppressWarnings("unused")
     public void pushEvent(String eventName){
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
@@ -40,6 +42,7 @@ public class CTWebInterface {
      * @param eventActions Stringified JSON Object of event properties
      */
     @JavascriptInterface
+    @SuppressWarnings("unused")
     public void pushEvent(String eventName, String eventActions){
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
@@ -65,6 +68,7 @@ public class CTWebInterface {
      * @param profile Stringified JSON Object of profile properties
      */
     @JavascriptInterface
+    @SuppressWarnings("unused")
     public void pushProfile(String profile){
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
@@ -89,6 +93,7 @@ public class CTWebInterface {
      * @param value String value of profile property value
      */
     @JavascriptInterface
+    @SuppressWarnings("unused")
     public void addMultiValueForKey(String key, String value){
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
@@ -104,6 +109,7 @@ public class CTWebInterface {
      * @param values Stringified JSON Array of profile property values
      */
     @JavascriptInterface
+    @SuppressWarnings("unused")
     public void addMultiValuesForKey(String key, String values){
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
@@ -133,6 +139,7 @@ public class CTWebInterface {
      * @param value String value of profile property value
      */
     @JavascriptInterface
+    @SuppressWarnings("unused")
     public void removeMultiValueForKey(String key, String value){
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
@@ -156,6 +163,7 @@ public class CTWebInterface {
      * @param values Stringified JSON Array of profile property values
      */
     @JavascriptInterface
+    @SuppressWarnings("unused")
     public void removeMultiValuesForKey(String key, String values){
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
@@ -183,6 +191,7 @@ public class CTWebInterface {
      * @param key String value of profile property key
      */
     @JavascriptInterface
+    @SuppressWarnings("unused")
     public void removeValueForKey(String key){
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
@@ -202,6 +211,7 @@ public class CTWebInterface {
      * @param values Stringified JSON Array of profile property values
      */
     @JavascriptInterface
+    @SuppressWarnings("unused")
     public void setMultiValueForKey(String key, String values){
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {

@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk;
 
+import android.support.annotation.NonNull;
+
 enum CTInboxMessageType {
 
     SimpleMessage("simple"),
@@ -26,6 +28,7 @@ enum CTInboxMessageType {
         }
     }
 
+    @NonNull
     @Override
     public String toString() {
         return inboxMessageType;

@@ -17,7 +17,6 @@ public class Constants {
     static final String LABEL_BACKGROUND_SYNC = "CLEVERTAP_BACKGROUND_SYNC";
     static final String LABEL_CUSTOM_ID = "CLEVERTAP_USE_CUSTOM_ID";
     static final String LABEL_USE_GOOGLE_AD_ID = "CLEVERTAP_USE_GOOGLE_AD_ID";
-    static final String LABEL_RAISE_NOTIFICATION_VIEWED = "CLEVERTAP_RAISE_NOTIFICATION_VIEWED";
     static final String LABEL_FCM_SENDER_ID = "FCM_SENDER_ID";
     static final String LABEL_PACKAGE_NAME = "CLEVERTAP_APP_PACKAGE";
     static final String CLEVERTAP_OPTOUT = "ct_optout";
@@ -64,7 +63,6 @@ public class Constants {
     static final String INAPP_KEY = "inApp";
     static final int INAPP_CLOSE_IV_WIDTH = 40;
     static final String INAPP_JS_ENABLED = "isJsEnabled";
-    static final String DEBUG_KEY = "d";
     static final String NOTIFICATION_ID_TAG = "wzrk_id";
     static final String DEEP_LINK_KEY = "wzrk_dl";
     static final String WZRK_PREFIX = "wzrk_";
@@ -96,7 +94,6 @@ public class Constants {
     static final String MULTI_USER_PREFIX = "mt_";
     static final String NOTIFICATION_TAG = "wzrk_pn";
     static final String CHARGED_EVENT = "Charged";
-    static final String GCM_PROPERTY_REG_ID = "registration_id"; // maintain legacy value
     static final String FCM_PROPERTY_REG_ID = "fcm_token";
     static final String KEY_MUTED = "comms_mtd";
     static final int EMPTY_NOTIFICATION_ID = -1000;

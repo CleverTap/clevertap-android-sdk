@@ -28,11 +28,11 @@ class ViewEdit {
         static final int ZERO_LENGTH_PREFIX = 0;
         static final int SHORTEST_PREFIX = 1;
 
-        PathElement(int usePrefix, String vClass, int ix, int vId, String cDesc, String vTag) {
+        PathElement(int usePrefix, String className, int idx, int id, String cDesc, String vTag) {
             prefix = usePrefix;
-            viewClassName = vClass;
-            index = ix;
-            viewId = vId;
+            viewClassName = className;
+            index = idx;
+            viewId = id;
             contentDescription = cDesc;
             tag = vTag;
         }
@@ -41,26 +41,26 @@ class ViewEdit {
         @Override
         public String toString() {
             try {
-                final JSONObject ret = new JSONObject();
+                final JSONObject s = new JSONObject();
                 if (prefix == SHORTEST_PREFIX) {
-                    ret.put("prefix", "shortest");
+                    s.put("prefix", "shortest");
                 }
                 if (null != viewClassName) {
-                    ret.put("view_class", viewClassName);
+                    s.put("view_class", viewClassName);
                 }
                 if (index > -1) {
-                    ret.put("index", index);
+                    s.put("index", index);
                 }
                 if (viewId > -1) {
-                    ret.put("id", viewId);
+                    s.put("id", viewId);
                 }
                 if (null != contentDescription) {
-                    ret.put("contentDescription", contentDescription);
+                    s.put("contentDescription", contentDescription);
                 }
                 if (null != tag) {
-                    ret.put("tag", tag);
+                    s.put("tag", tag);
                 }
-                return ret.toString();
+                return s.toString();
             } catch (final JSONException e) {
                 throw new RuntimeException("Can't serialize PathElement to String", e);
             }
@@ -91,7 +91,7 @@ class ViewEdit {
         pathFinder.findTargetsInRoot(rootView, path, this);
     }
 
-    public void cleanup() {
+    void cleanup() {
         for (Map.Entry<View, Object> original:originalValues.entrySet()) {
             final View changedView = original.getKey();
             final Object originalValue = original.getValue();
@@ -103,50 +103,46 @@ class ViewEdit {
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
-    private void apply(View found) {
-        if (null != accessor) {
-            final Object[] setArgs = mutator.getArgs();
-            if (1 == setArgs.length) {
-                final Object desiredValue = setArgs[0];
-                final Object currentValue = accessor.invokeMethod(found);
+    private void apply(View targetView) {
+        if (accessor != null) {
+            final Object[] args = mutator.getArgs();
+            if (args.length == 1) {
+                final Object targetValue = args[0];
+                final Object currentValue = accessor.invokeMethod(targetView);
 
-                if (desiredValue == currentValue) {
+                if (targetValue == currentValue) {
                     return;
                 }
-
-                if (null != desiredValue) {
-                    if (desiredValue instanceof Bitmap && currentValue instanceof Bitmap) {
-                        final Bitmap desiredBitmap = (Bitmap) desiredValue;
+                if (targetValue != null) {
+                    if (targetValue instanceof Bitmap && currentValue instanceof Bitmap) {
+                        final Bitmap targetBitmap = (Bitmap) targetValue;
                         final Bitmap currentBitmap = (Bitmap) currentValue;
-                        if (desiredBitmap.sameAs(currentBitmap)) {
+                        if (targetBitmap.sameAs(currentBitmap)) {
                             return;
                         }
-                    } else if (desiredValue instanceof BitmapDrawable && currentValue instanceof BitmapDrawable) {
-                        final Bitmap desiredBitmap = ((BitmapDrawable) desiredValue).getBitmap();
+                    } else if (targetValue instanceof BitmapDrawable && currentValue instanceof BitmapDrawable) {
+                        final Bitmap targetBitmap = ((BitmapDrawable) targetValue).getBitmap();
                         final Bitmap currentBitmap = ((BitmapDrawable) currentValue).getBitmap();
-                        if (desiredBitmap != null && desiredBitmap.sameAs(currentBitmap)) {
+                        if (targetBitmap != null && targetBitmap.sameAs(currentBitmap)) {
                             return;
                         }
-                    } else if (desiredValue.equals(currentValue)) {
+                    } else if (targetValue.equals(currentValue)) {
                         return;
                     }
                 }
-
-                if (currentValue instanceof Bitmap ||
-                        currentValue instanceof BitmapDrawable ||
-                        originalValues.containsKey(found)) {
-                    // Cache exactly one non-image original value
+                if (currentValue instanceof Bitmap || currentValue instanceof BitmapDrawable || originalValues.containsKey(targetView)) {
+                    // no-op, only cache one non-image original value
                 } else {
                     originalValueHolder[0] = currentValue;
                     if (mutator.argsAreApplicable(originalValueHolder)) {
-                        originalValues.put(found, currentValue);
+                        originalValues.put(targetView, currentValue);
                     } else {
-                        originalValues.put(found, null);
+                        originalValues.put(targetView, null);
                     }
                 }
             }
         }
-        mutator.invokeMethod(found);
+        mutator.invokeMethod(targetView);
     }
     protected String name() {
         return "Property Mutator";
@@ -163,7 +159,6 @@ class ViewEdit {
             if (path.isEmpty()) {
                 return;
             }
-
             if (indexStack.isFull()) {
                 Logger.v("There appears to be a concurrency issue in the pathfinding code. Path will not be matched.");
                 return;
@@ -173,7 +168,7 @@ class ViewEdit {
             final List<PathElement> childPath = path.subList(1, path.size());
 
             final int indexKey = indexStack.allocate();
-            final View rootView = findPrefixedMatch(rootPathElement, givenRootView, indexKey);
+            final View rootView = findMatch(rootPathElement, givenRootView, indexKey);
             indexStack.free();
 
             if (null != rootView) {
@@ -182,62 +177,55 @@ class ViewEdit {
         }
 
         private void findTargetsInMatchedView(View alreadyMatched, List<PathElement> remainingPath, ViewEdit viewEdit) {
-            // When this is run, alreadyMatched has already been matched to a path prefix.
-            // path is a possibly empty "remaining path" suffix left over after the match
-
             if (remainingPath.isEmpty()) {
-                // Nothing left to match- we're found!
+                // found, apply the edit
                 viewEdit.apply(alreadyMatched);
                 return;
             }
 
             if (!(alreadyMatched instanceof ViewGroup)) {
-                // Matching a non-empty path suffix is impossible, because we have no children
+                // Not possible as there are no children
                 return;
             }
 
             if (indexStack.isFull()) {
-                Logger.v("Path is too deep, will not match");
-                // Can't match anyhow, stack is too deep
+                Logger.v("Path too deep, will not match");
                 return;
             }
 
             final ViewGroup parent = (ViewGroup) alreadyMatched;
-            final PathElement matchElement = remainingPath.get(0);
-            final List<PathElement> nextPath = remainingPath.subList(1, remainingPath.size());
+            final PathElement pathElement = remainingPath.get(0);
+            final List<PathElement> next = remainingPath.subList(1, remainingPath.size());
 
             final int childCount = parent.getChildCount();
             final int indexKey = indexStack.allocate();
             for (int i = 0; i < childCount; i++) {
                 final View givenChild = parent.getChildAt(i);
-                final View child = findPrefixedMatch(matchElement, givenChild, indexKey);
-                if (null != child) {
-                    findTargetsInMatchedView(child, nextPath, viewEdit);
+                final View child = findMatch(pathElement, givenChild, indexKey);
+                if (child != null) {
+                    findTargetsInMatchedView(child, next, viewEdit);
                 }
-                if (matchElement.index >= 0 && indexStack.read(indexKey) > matchElement.index) {
+                if (pathElement.index >= 0 && indexStack.read(indexKey) > pathElement.index) {
                     break;
                 }
             }
             indexStack.free();
         }
 
-        // Finds the first matching view of the path element in the given subject's view hierarchy.
-        // If the path is indexed, it needs a start index, and will consume some indexes
-        private View findPrefixedMatch(PathElement findElement, View subject, int indexKey) {
+        private View findMatch(PathElement pathElement, View target, int indexKey) {
             final int currentIndex = indexStack.read(indexKey);
-            if (matches(findElement, subject)) {
+            if (matches(pathElement, target)) {
                 indexStack.increment(indexKey);
-                if (findElement.index == -1 || findElement.index == currentIndex) {
-                    return subject;
+                if (pathElement.index == -1 || pathElement.index == currentIndex) {
+                    return target;
                 }
             }
-
-            if (findElement.prefix == PathElement.SHORTEST_PREFIX && subject instanceof ViewGroup) {
-                final ViewGroup group = (ViewGroup) subject;
+            if (pathElement.prefix == PathElement.SHORTEST_PREFIX && target instanceof ViewGroup) {
+                final ViewGroup group = (ViewGroup) target;
                 final int childCount = group.getChildCount();
                 for (int i = 0; i < childCount; i++) {
                     final View child = group.getChildAt(i);
-                    final View result = findPrefixedMatch(findElement, child, indexKey);
+                    final View result = findMatch(pathElement, child, indexKey);
                     if (null != result) {
                         return result;
                     }
@@ -247,25 +235,22 @@ class ViewEdit {
             return null;
         }
 
-        private boolean matches(PathElement matchElement, View subject) {
-            if (null != matchElement.viewClassName &&
-                    !hasClassName(subject, matchElement.viewClassName)) {
+        private boolean matches(PathElement pathElement, View target) {
+            if (pathElement.viewClassName != null && !hasClassName(target, pathElement.viewClassName)) {
+                return false;
+            }
+            if (pathElement.viewId != -1 && (target.getId() != pathElement.viewId)) {
                 return false;
             }
 
-            if (-1 != matchElement.viewId && subject.getId() != matchElement.viewId) {
+            if (pathElement.contentDescription != null && !pathElement.contentDescription.contentEquals(target.getContentDescription())) {
                 return false;
             }
 
-            if (null != matchElement.contentDescription &&
-                    !matchElement.contentDescription.contentEquals(subject.getContentDescription())) {
-                return false;
-            }
-
-            final String matchTag = matchElement.tag;
-            if (null != matchElement.tag) {
-                final Object subjectTag = subject.getTag();
-                return null != subjectTag && matchTag.equals(subject.getTag().toString());
+            final String matchTag = pathElement.tag;
+            if (pathElement.tag != null) {
+                final Object targetTag = target.getTag();
+                return targetTag != null && matchTag.equals(target.getTag().toString());
             }
             return true;
         }

@@ -18,6 +18,7 @@ final class SSLContextBuilder {
             KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
             keyStore.load(null,null);//Use null inputstream & password to create empty key store
 
+            //noinspection ConstantConditions
             InputStream inputStream1 = new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("com/clevertap/android/sdk/certificates/DigiCertGlobalRootCA.crt"));
             X509Certificate x509Certificate1 = (X509Certificate) certificateFactory.generateCertificate(inputStream1);
             keyStore.setCertificateEntry("DigiCertGlobalRootCA",x509Certificate1);

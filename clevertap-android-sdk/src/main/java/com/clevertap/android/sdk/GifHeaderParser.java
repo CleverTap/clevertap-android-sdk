@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2014 Google, Inc. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
@@ -25,13 +25,13 @@ import java.util.Arrays;
 
 class GifHeaderParser {
 
-    public static final String TAG = "GifHeaderParser";
+    private static final String TAG = "GifHeaderParser";
 
     // The minimum frame delay in hundredths of a second.
-    static final int MIN_FRAME_DELAY = 2;
+    private static final int MIN_FRAME_DELAY = 2;
     // The default frame delay in hundredths of a second for GIFs with frame delays less than the
     // minimum.
-    static final int DEFAULT_FRAME_DELAY = 10;
+    private static final int DEFAULT_FRAME_DELAY = 10;
 
     private static final int MAX_BLOCK_SIZE = 256;
     // Raw data read working array.
@@ -94,6 +94,7 @@ class GifHeaderParser {
      * Determines if the GIF is animated by trying to read in the first 2 frames
      * This method reparses the data even if the header has already been read.
      */
+    @SuppressWarnings("unused")
     public boolean isAnimated() {
         readHeader();
         if (!err()) {
@@ -362,6 +363,7 @@ class GifHeaderParser {
                 rawData.position(rawData.position() + blockSize);
             } while (blockSize > 0);
         } catch (IllegalArgumentException ex) {
+            // no-op
         }
     }
 
@@ -370,11 +372,12 @@ class GifHeaderParser {
      *
      * @return number of bytes stored in "buffer"
      */
+    @SuppressWarnings("UnusedReturnValue")
     private int readBlock() {
         blockSize = read();
         int n = 0;
         if (blockSize > 0) {
-            int count = 0;
+            int count;
             try {
                 while (n < blockSize) {
                     count = blockSize - n;

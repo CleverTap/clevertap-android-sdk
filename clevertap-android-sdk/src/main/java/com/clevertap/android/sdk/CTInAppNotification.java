@@ -13,7 +13,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.UUID;
 
 class CTInAppNotification implements Parcelable {
 
@@ -436,7 +435,7 @@ class CTInAppNotification implements Parcelable {
         return customExtras;
     }
 
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     public JSONObject getActionExtras() {
         return actionExtras;
     }
@@ -522,14 +521,15 @@ class CTInAppNotification implements Parcelable {
         }
     }
 
-    public boolean isPortrait() {
+    boolean isPortrait() {
         return isPortrait;
     }
 
-    public boolean isLandscape() {
+    boolean isLandscape() {
         return isLandscape;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     boolean isHideCloseButton() {
         return hideCloseButton;
     }
@@ -675,7 +675,7 @@ class CTInAppNotification implements Parcelable {
         static void init(){
             synchronized (GifCache.class) {
                 if(mMemoryCache == null) {
-                    Logger.v("CTInAppNotification.GifCache: init with max device memory: " + String.valueOf(maxMemory) + "KB and allocated cache size: " + String.valueOf(cacheSize) + "KB");
+                    Logger.v("CTInAppNotification.GifCache: init with max device memory: " + maxMemory + "KB and allocated cache size: " + cacheSize + "KB");
                     try {
                         mMemoryCache = new LruCache<String, byte[]>(cacheSize) {
                             @Override

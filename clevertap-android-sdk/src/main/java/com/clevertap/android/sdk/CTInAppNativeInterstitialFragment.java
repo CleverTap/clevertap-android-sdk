@@ -327,7 +327,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         // 3. Produces DataSource instances through which media data is loaded.
         DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(getActivity().getBaseContext(),
                 Util.getUserAgent(getActivity().getBaseContext(), getActivity().getApplication().getPackageName()), (TransferListener<? super DataSource>) bandwidthMeter);
-        HlsMediaSource hlsMediaSource = null;
+        HlsMediaSource hlsMediaSource;
         hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(inAppNotification.getMediaList().get(0).getMediaUrl()));
         // 4. Prepare the player with the source.
         player.prepare(hlsMediaSource);
