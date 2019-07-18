@@ -88,10 +88,10 @@ public class UIEditor {
         private void cleanUp() {
             if (alive) {
                 final View viewRoot = this.viewRoot.get();
-                if (null != viewRoot) {
+                if (viewRoot != null) {
                     final ViewTreeObserver observer = viewRoot.getViewTreeObserver();
                     if (observer.isAlive()) {
-                        observer.removeGlobalOnLayoutListener(this); // Deprecated Name
+                        observer.removeGlobalOnLayoutListener(this);
                     }
                 }
                 viewEdit.cleanup();
@@ -136,7 +136,7 @@ public class UIEditor {
 
     private CleverTapInstanceConfig config;
     private ResourceIds resourceIds;
-    private static final Class<?>[] NO_PARAMS = new Class[0];
+    private static final Class<?>[] EMPTY_PARAMS = new Class[0];
     private static final List<ViewEdit.PathElement> NEVER_MATCH_PATH = Collections.emptyList();
 
     private final Handler uiThreadHandler;
@@ -149,7 +149,7 @@ public class UIEditor {
 
     public UIEditor(Context context, CleverTapInstanceConfig config) {
         String resourcePackageName = config.getPackageName();
-        if(null == resourcePackageName){
+        if(resourcePackageName == null) {
             resourcePackageName = context.getPackageName();
         }
         this.resourceIds = new ResourceIds(resourcePackageName);
@@ -192,7 +192,6 @@ public class UIEditor {
             getConfigLogger().debug("Unable to write snapshot, snapshot config not set");
             return;
         }
-
         try {
             SnapshotBuilder.writeSnapshot(snapshotConfig, activitySet, out, config);
         }  catch (Throwable t) {
@@ -206,19 +205,19 @@ public class UIEditor {
     }
 
     public void applyVariants(Set<CTABVariant> variants) {
-        final Map<String, List<ViewEdit>> editMap = new HashMap<>();
+        final Map<String, List<ViewEdit>> edits = new HashMap<>();
         for (CTABVariant variant : variants) {
             for (CTABVariant.CTVariantAction action: variant.getActions()) {
                 final UIChange change = generateUIChange(action.getChange());
                 if (change != null) {
                     String name = action.getActivityName();
-                    ViewEdit viewEdit = change.viewEdit;
+                    ViewEdit viewEdit = change.viewEdit;  // TODO what about the UIChange.imageurls ??
                     final List<ViewEdit> mapElement;
-                    if (editMap.containsKey(name)) {
-                        mapElement = editMap.get(name);
+                    if (edits.containsKey(name)) {
+                        mapElement = edits.get(name);
                     } else {
                         mapElement = new ArrayList<>();
-                        editMap.put(name, mapElement);
+                        edits.put(name, mapElement);
                     }
                     if (mapElement != null) {
                         mapElement.add(viewEdit);
@@ -230,9 +229,35 @@ public class UIEditor {
 
         synchronized(newEdits) {
             newEdits.clear();
-            newEdits.putAll(editMap);
+            newEdits.putAll(edits);
         }
         handleNewEditsOnUiThread();
+    }
+
+    private List<ViewProperty> loadViewProperties(JSONObject data) {
+        final List<ViewProperty> properties = new ArrayList<>();
+        try {
+            final JSONObject config = data.getJSONObject("config");
+            final JSONArray classes = config.getJSONArray("classes");
+            for (int i = 0; i < classes.length(); i++) {
+                final JSONObject classDesc = classes.getJSONObject(i);
+                final String targetName = classDesc.getString("name");
+                final Class<?> targetClass = Class.forName(targetName);
+                final JSONArray props = classDesc.getJSONArray("properties");
+                for (int j = 0; j < props.length(); j++) {
+                    final JSONObject prop = props.getJSONObject(j);
+                    final ViewProperty desc = generateViewProperty(targetClass, prop);
+                    properties.add(desc);
+                }
+            }
+        } catch (JSONException e) {
+            //TODO logging here
+            return null;
+        } catch (final ClassNotFoundException e) {
+            //TODO logging here
+            return null;
+        }
+        return properties;
     }
 
     private void clearEdits() {
@@ -290,30 +315,61 @@ public class UIEditor {
         }
     }
 
-    private List<ViewProperty> loadViewProperties(JSONObject data) {
-        final List<ViewProperty> properties = new ArrayList<>();
+    private UIChange generateUIChange(JSONObject data) {
+        final ViewEdit viewEdit;
+        final List<String> assetsLoaded = new ArrayList<>(); // TODO
         try {
-            final JSONObject config = data.getJSONObject("config");
-            final JSONArray classes = config.getJSONArray("classes");
-            for (int i = 0; i < classes.length(); i++) {
-                final JSONObject classDesc = classes.getJSONObject(i);
-                final String targetName = classDesc.getString("name");
-                final Class<?> targetClass = Class.forName(targetName);
-                final JSONArray props = classDesc.getJSONArray("properties");
-                for (int j = 0; j < props.length(); j++) {
-                    final JSONObject prop = props.getJSONObject(j);
-                    final ViewProperty desc = generateViewProperty(targetClass, prop);
-                    properties.add(desc);
-                }
+            final JSONArray pathDesc = data.getJSONArray("path");
+            final List<ViewEdit.PathElement> path = generatePath(pathDesc, resourceIds);
+            if (path.size() == 0) {
+                //TODO logging
+                return null;
             }
-        } catch (JSONException e) {
-            //TODO logging here
+            if (data.getString("change_type").equals("property")) {
+                final JSONObject propertyDesc = data.getJSONObject("property");
+                final String targetClassName = propertyDesc.getString("classname");
+                if (null == targetClassName) {
+                    //TODO logging
+                    return null;
+                }
+                final Class<?> targetClass;
+                try {
+                    targetClass = Class.forName(targetClassName);
+                } catch (final ClassNotFoundException e) {
+                    //TODO logging
+                    return null;
+                }
+                final ViewProperty prop = generateViewProperty(targetClass, data.getJSONObject("property"));
+                final JSONArray argsAndTypes = data.getJSONArray("args");
+                final Object[] methodArgs = new Object[argsAndTypes.length()];
+                for (int i = 0; i < argsAndTypes.length(); i++) {
+                    final JSONArray argPlusType = argsAndTypes.getJSONArray(i);
+                    final Object jsonArg = argPlusType.get(0);
+                    final String argType = argPlusType.getString(1);
+                    methodArgs[i] = castArgumentObject(jsonArg, argType, assetsLoaded);
+                }
+
+                ViewCaller mutator = null;
+                if (prop != null) {
+                    mutator = prop.makeMutator(methodArgs);
+                }
+                if (mutator == null) {
+                    //TODO logging
+                    return null;
+                }
+                viewEdit = new ViewEdit(path, mutator, prop.accessor);
+            } else {
+                //TODO logging
+                return null;
+            }
+        } catch (final NoSuchMethodException e) {
+            //TODO logging
             return null;
-        } catch (final ClassNotFoundException e) {
-            //TODO logging here
+        } catch (final JSONException e) {
+            //TODO logging
             return null;
         }
-        return properties;
+        return new UIChange(viewEdit, assetsLoaded);
     }
 
     private ViewProperty generateViewProperty(Class<?> targetClass, JSONObject property) {
@@ -326,7 +382,7 @@ public class UIEditor {
                 final String accessorName = accessorConfig.getString("selector");
                 final String accessorResultTypeName = accessorConfig.getJSONObject("result").getString("type");
                 final Class<?> accessorResultType = Class.forName(accessorResultTypeName);
-                accessor = new ViewCaller(targetClass, accessorName, NO_PARAMS, accessorResultType);
+                accessor = new ViewCaller(targetClass, accessorName, EMPTY_PARAMS, accessorResultType);
             }
 
             final String mutatorName;
@@ -349,73 +405,10 @@ public class UIEditor {
         }
     }
 
-    private UIChange generateUIChange(JSONObject data) {
-        final ViewEdit viewEdit;
-        final List<String> assetsLoaded = new ArrayList<>();
-        try {
-            final JSONArray pathDesc = data.getJSONArray("path");
-            final List<ViewEdit.PathElement> path = generatePath(pathDesc, resourceIds);
-
-            if (path.size() == 0) {
-                //TODO logging
-                return null;
-            }
-
-            if (data.getString("change_type").equals("property")) {
-                final JSONObject propertyDesc = data.getJSONObject("property");
-                final String targetClassName = propertyDesc.getString("classname");
-                if (null == targetClassName) {
-                    //TODO logging
-                    return null;
-                }
-
-                final Class<?> targetClass;
-                try {
-                    targetClass = Class.forName(targetClassName);
-                } catch (final ClassNotFoundException e) {
-                    //TODO logging
-                    return null;
-                }
-
-                final ViewProperty prop = generateViewProperty(targetClass, data.getJSONObject("property"));
-                final JSONArray argsAndTypes = data.getJSONArray("args");
-                final Object[] methodArgs = new Object[argsAndTypes.length()];
-                for (int i = 0; i < argsAndTypes.length(); i++) {
-                    final JSONArray argPlusType = argsAndTypes.getJSONArray(i);
-                    final Object jsonArg = argPlusType.get(0);
-                    final String argType = argPlusType.getString(1);
-                    methodArgs[i] = convertArgument(jsonArg, argType, assetsLoaded);
-                }
-
-                 ViewCaller mutator = null;
-                if (prop != null) {
-                    mutator = prop.makeMutator(methodArgs);
-                }
-                if (null == mutator) {
-                    //TODO logging
-                    return null;
-                }
-                viewEdit = new ViewEdit(path, mutator, prop.accessor);
-            } else {
-                //TODO logging
-                return null;
-            }
-        } catch (final NoSuchMethodException e) {
-            //TODO logging
-            return null;
-        } catch (final JSONException e) {
-            //TODO logging
-            return null;
-        }
-        return new UIChange(viewEdit, assetsLoaded);
-    }
-
     private List<ViewEdit.PathElement> generatePath(JSONArray pathDesc, ResourceIds idNameToId) throws JSONException {
         final List<ViewEdit.PathElement> path = new ArrayList<>();
-
         for (int i = 0; i < pathDesc.length(); i++) {
             final JSONObject targetView = pathDesc.getJSONObject(i);
-
             final String prefixCode = Utils.optionalStringKey(targetView, "prefix");
             final String targetViewClass = Utils.optionalStringKey(targetView, "view_class");
             final int targetIndex = targetView.optInt("index", -1);
@@ -427,31 +420,28 @@ public class UIEditor {
             final int prefix;
             if ("shortest".equals(prefixCode)) {
                 prefix = ViewEdit.PathElement.SHORTEST_PREFIX;
-            } else if (null == prefixCode) {
+            } else if (prefixCode == null) {
                 prefix = ViewEdit.PathElement.ZERO_LENGTH_PREFIX;
             } else {
                 getConfigLogger().verbose(getAccountId(), "Unrecognized prefix type \"" + prefixCode + "\". No views will be matched");
                 return NEVER_MATCH_PATH;
             }
-
             final int targetId;
-
-            final Integer targetIdOrNull = reconcileIds(targetExplicitId, targetIdName, idNameToId);
-            if (null == targetIdOrNull) {
+            final Integer targetIdOrNull = checkIds(targetExplicitId, targetIdName, idNameToId);
+            if (targetIdOrNull == null) {
                 return NEVER_MATCH_PATH;
             } else {
                 targetId = targetIdOrNull;
             }
-
             path.add(new ViewEdit.PathElement(prefix, targetViewClass, targetIndex, targetId, targetDescription, targetTag));
         }
 
         return path;
     }
 
-    private Integer reconcileIds(int explicitId, String idName, ResourceIds idNameToId) {
+    private Integer checkIds(int explicitId, String idName, ResourceIds idNameToId) {
         final int idFromName;
-        if (null != idName) {
+        if (idName != null) {
             if (idNameToId.knownIdName(idName)) {
                 idFromName = idNameToId.idFromName(idName);
             } else {
@@ -466,8 +456,8 @@ public class UIEditor {
             idFromName = -1;
         }
 
-        if (-1 != idFromName && -1 != explicitId && idFromName != explicitId) {
-            getConfigLogger().debug(getAccountId(), "Path contains both a named and an explicit id, and they don't match. No views will be matched.");
+        if (idFromName != -1 && explicitId != -1 && idFromName != explicitId) {
+            getConfigLogger().debug(getAccountId(), "Path contains both a named and an explicit id which don't match, can't match.");
             return null;
         }
 
@@ -478,9 +468,7 @@ public class UIEditor {
         return explicitId;
     }
 
-    @SuppressWarnings("unused")
-    private Object convertArgument(Object jsonArgument, String type, List<String> assetsLoaded) {
-        // Object is a Boolean, JSONArray, JSONObject, Number, String, or JSONObject.NULL
+    private Object castArgumentObject(Object jsonArgument, String type, List<String> assetsLoaded) {
         try {
             if ("java.lang.CharSequence".equals(type)) { // Because we're assignable
                 return jsonArgument;
@@ -491,7 +479,6 @@ public class UIEditor {
             } else if ("float".equals(type) || "java.lang.Float".equals(type)) {
                 return ((Number) jsonArgument).floatValue();
             } else if ("android.graphics.drawable.Drawable".equals(type)) {
-                // For historical reasons, we attempt to interpret generic Drawables as BitmapDrawables
                 //return readBitmapDrawable((JSONObject) jsonArgument, assetsLoaded);// TODO link this up with new ImageCache
                 return null;
             } else if ("android.graphics.drawable.BitmapDrawable".equals(type)) {

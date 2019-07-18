@@ -76,7 +76,6 @@ final class SnapshotBuilder {
     }
 
     static void writeSnapshot(ViewSnapshotConfig snapshotConfig, UIEditor.ActivitySet liveActivities, OutputStream out, CleverTapInstanceConfig config) throws IOException {
-
         rootViewsGenerator.findInActivities(liveActivities);
         final FutureTask<List<RootView>> rootViewsFuture = new FutureTask<>(rootViewsGenerator);
         mainThreadHandler.post(rootViewsFuture);
@@ -137,27 +136,27 @@ final class SnapshotBuilder {
 
     private static void viewSnapshot(JsonWriter j, View view, ViewSnapshotConfig snapshotConfig) throws IOException {
         final int viewId = view.getId();
-        final String viewIdName;
+        final String viewName;
         if (viewId == -1) {
-            viewIdName = null;
+            viewName = null;
         } else {
-            viewIdName = snapshotConfig.resourceIds.nameForId(viewId);
+            viewName = snapshotConfig.resourceIds.nameForId(viewId);
         }
 
         j.beginObject();
         j.name("hashCode").value(view.hashCode());
         j.name("id").value(viewId);
-        j.name("ct_id_name").value(viewIdName);
+        j.name("ct_id_name").value(viewName);
 
-        final CharSequence description = view.getContentDescription();
-        if (null == description) {
+        final CharSequence contentDescription = view.getContentDescription();
+        if ( contentDescription == null) {
             j.name("contentDescription").nullValue();
         } else {
-            j.name("contentDescription").value(description.toString());
+            j.name("contentDescription").value(contentDescription.toString());
         }
 
         final Object tag = view.getTag();
-        if (null == tag) {
+        if (tag == null) {
             j.name("tag").nullValue();
         } else if (tag instanceof CharSequence) {
             j.name("tag").value(tag.toString());
@@ -171,13 +170,12 @@ final class SnapshotBuilder {
         j.name("scrollY").value(view.getScrollY());
         j.name("visibility").value(view.getVisibility());
 
-        float translationX;
-        float translationY;
-        translationX = view.getTranslationX();
-        translationY = view.getTranslationY();
-
-        j.name("translationX").value(translationX);
-        j.name("translationY").value(translationY);
+        float transX;
+        float transY;
+        transX = view.getTranslationX();
+        transY = view.getTranslationY();
+        j.name("translationX").value(transX);
+        j.name("translationY").value(transY);
 
         j.name("classes");
         j.beginArray();
@@ -188,7 +186,7 @@ final class SnapshotBuilder {
         } while (klass != Object.class && klass != null);
         j.endArray();
 
-        addProperties(j, view, snapshotConfig);
+        writeViewProperties(j, view, snapshotConfig);
 
         ViewGroup.LayoutParams layoutParams = view.getLayoutParams();
         if (layoutParams instanceof RelativeLayout.LayoutParams) {
@@ -209,8 +207,7 @@ final class SnapshotBuilder {
             final int childCount = group.getChildCount();
             for (int i = 0; i < childCount; i++) {
                 final View child = group.getChildAt(i);
-                // child can be null when views are getting disposed.
-                if (null != child) {
+                if (child != null) {
                     j.value(child.hashCode());
                 }
             }
@@ -223,15 +220,14 @@ final class SnapshotBuilder {
             final int childCount = group.getChildCount();
             for (int i = 0; i < childCount; i++) {
                 final View child = group.getChildAt(i);
-                // child can be null when views are getting disposed.
-                if (null != child) {
+                if (child != null) {
                     viewSnapshot(j, child, snapshotConfig);
                 }
             }
         }
     }
 
-    private static void addProperties(JsonWriter j, View v, ViewSnapshotConfig snapshotConfig) throws IOException {
+    private static void writeViewProperties(JsonWriter j, View v, ViewSnapshotConfig snapshotConfig) throws IOException {
         final Class<?> viewClass = v.getClass();
         for (final ViewProperty desc : snapshotConfig.propertyDescriptionList) {
             if (desc.target.isAssignableFrom(viewClass) && null != desc.accessor) {
@@ -337,21 +333,21 @@ final class SnapshotBuilder {
     }
 
     private static class RootViewsGenerator implements Callable<List<RootView>> {
-        private UIEditor.ActivitySet liveActivities;
+        private UIEditor.ActivitySet activitySet;
         private final List<RootView> rootViews;
         private final DisplayMetrics displayMetrics;
-        private final Screenshot cachedBitmap;
+        private final Screenshot screenshot;
 
         private final int clientDensity = DisplayMetrics.DENSITY_DEFAULT;
 
         RootViewsGenerator() {
             displayMetrics = new DisplayMetrics();
             rootViews = new ArrayList<>();
-            cachedBitmap = new Screenshot();
+            screenshot = new Screenshot();
         }
 
-        void findInActivities(UIEditor.ActivitySet liveActivities) {
-            this.liveActivities = liveActivities;
+        void findInActivities(UIEditor.ActivitySet activitySet) {
+            this.activitySet = activitySet;
         }
 
         @Override
@@ -359,20 +355,20 @@ final class SnapshotBuilder {
         public List<RootView> call() throws Exception {
             rootViews.clear();
 
-            final Set<Activity> liveActivities = this.liveActivities.getAll();
+            final Set<Activity> activities = this.activitySet.getAll();
 
-            for (final Activity a : liveActivities) {
-                final String activityName = a.getClass().getCanonicalName();
-                final View rootView = a.getWindow().getDecorView().getRootView();
-                a.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-                final RootView info = new RootView(activityName, rootView);
-                rootViews.add(info);
+            for (final Activity activity : activities) {
+                final String activityName = activity.getClass().getCanonicalName();
+                final View view = activity.getWindow().getDecorView().getRootView();
+                activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+                final RootView rootView = new RootView(activityName, view);
+                rootViews.add(rootView);
             }
 
             final int viewCount = rootViews.size();
             for (int i = 0; i < viewCount; i++) {
-                final RootView info = rootViews.get(i);
-                takeScreenshot(info);
+                final RootView rootView = rootViews.get(i);
+                takeScreenshot(rootView);
             }
 
             return rootViews;
@@ -380,13 +376,13 @@ final class SnapshotBuilder {
 
         private void takeScreenshot(final RootView root) {
             final View rootView = root.rootView;
-            Bitmap rawBitmap = null;
+            Bitmap bitmap = null;
 
             try {
                 @SuppressWarnings("JavaReflectionMemberAccess") @SuppressLint("PrivateApi")
                 final Method createSnapshot = View.class.getDeclaredMethod("createSnapshot", Bitmap.Config.class, Integer.TYPE, Boolean.TYPE);
                 createSnapshot.setAccessible(true);
-                rawBitmap = (Bitmap) createSnapshot.invoke(rootView, Bitmap.Config.RGB_565, Color.WHITE, false);
+                bitmap = (Bitmap) createSnapshot.invoke(rootView, Bitmap.Config.RGB_565, Color.WHITE, false);
             } catch (final NoSuchMethodException e) {
                 Logger.v("Can't call createSnapshot, will use drawCache");
             } catch (final IllegalArgumentException e) {
@@ -401,39 +397,39 @@ final class SnapshotBuilder {
 
             Boolean originalCacheState = null;
             try {
-                if (null == rawBitmap) {
+                if (bitmap == null) {
                     originalCacheState = rootView.isDrawingCacheEnabled();
                     rootView.setDrawingCacheEnabled(true);
                     rootView.buildDrawingCache(true);
-                    rawBitmap = rootView.getDrawingCache();
+                    bitmap = rootView.getDrawingCache();
                 }
             } catch (final RuntimeException e) {
-                Logger.v("Can't take a bitmap snapshot of view " + rootView + ", skipping for now.", e);
+                Logger.v("Error taking a bitmap snapshot of view " + rootView + ", skipping", e);
             }
 
             float scale = 1.0f;
-            if (null != rawBitmap) {
-                final int rawDensity = rawBitmap.getDensity();
+            if (bitmap != null) {
+                final int density = bitmap.getDensity();
 
-                if (rawDensity != Bitmap.DENSITY_NONE) {
-                    scale = ((float) clientDensity) / rawDensity;
+                if (density != Bitmap.DENSITY_NONE) {
+                    scale = ((float) clientDensity) / density;
                 }
 
-                final int rawWidth = rawBitmap.getWidth();
-                final int rawHeight = rawBitmap.getHeight();
-                final int destWidth = (int) ((rawBitmap.getWidth() * scale) + 0.5);
-                final int destHeight = (int) ((rawBitmap.getHeight() * scale) + 0.5);
+                final int rawWidth = bitmap.getWidth();
+                final int rawHeight = bitmap.getHeight();
+                final int destWidth = (int) ((bitmap.getWidth() * scale) + 0.5);
+                final int destHeight = (int) ((bitmap.getHeight() * scale) + 0.5);
 
                 if (rawWidth > 0 && rawHeight > 0 && destWidth > 0 && destHeight > 0) {
-                    cachedBitmap.regenerate(destWidth, destHeight, clientDensity, rawBitmap);
+                    screenshot.regenerate(destWidth, destHeight, clientDensity, bitmap);
                 }
             }
 
-            if (null != originalCacheState && !originalCacheState) {
+            if (originalCacheState != null && !originalCacheState) {
                 rootView.setDrawingCacheEnabled(false);
             }
             root.scale = scale;
-            root.screenshot = cachedBitmap;
+            root.screenshot = screenshot;
         }
     }
 
