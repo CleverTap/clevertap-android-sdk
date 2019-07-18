@@ -431,6 +431,14 @@ class DeviceInfo {
         return getDeviceCachedInfo().dpi;
     }
 
+    int getHeightPixels(){
+        return getDeviceCachedInfo().heightPixels;
+    }
+
+    int getWidthPixels(){
+        return getDeviceCachedInfo().widthPixels;
+    }
+
     boolean getNotificationsEnabledForUser(){
         return getDeviceCachedInfo().notificationsEnabled;
     }
@@ -449,10 +457,11 @@ class DeviceInfo {
         private String countryCode;
         private int sdkVersion;
         private double height;
+        private int heightPixels;
         private double width;
+        private int widthPixels;
         private int dpi;
         private boolean notificationsEnabled;
-        private Map<String,String> deviceInfoMap = new HashMap<>();
 
         DeviceCachedInfo() {
             versionName = getVersionName();
@@ -467,25 +476,11 @@ class DeviceInfo {
             countryCode = getCountryCode();
             sdkVersion = getSdkVersion();
             height = getHeight();
+            heightPixels = getHeightPixels();
             width = getWidth();
+            widthPixels = getWidthPixels();
             dpi = getDPI();
             notificationsEnabled = getNotificationEnabledForUser();
-            if(!deviceInfoMap.isEmpty()){
-                deviceInfoMap.put("AppVersion",versionName);
-                deviceInfoMap.put("OSName",osName);
-                deviceInfoMap.put("OSVersion",osVersion);
-                deviceInfoMap.put("Manufacturer",manufacturer);
-                deviceInfoMap.put("Model",model);
-                deviceInfoMap.put("Carrier",carrier);
-                deviceInfoMap.put("NetworkType",networkType);
-                deviceInfoMap.put("Bluetooth",bluetoothVersion);
-                deviceInfoMap.put("CountryCode",countryCode);
-                deviceInfoMap.put("Build",String.valueOf(build));
-                deviceInfoMap.put("SDKVersion",String.valueOf(sdkVersion));
-                deviceInfoMap.put("Height",String.valueOf(height));
-                deviceInfoMap.put("Width",String.valueOf(width));
-                deviceInfoMap.put("DPI",String.valueOf(dpi));
-            }
         }
 
         private String getVersionName() {
@@ -601,6 +596,16 @@ class DeviceInfo {
             return BuildConfig.VERSION_CODE;
         }
 
+        private int getHeightPixels(){
+            WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+            if (wm == null) {
+                return 0;
+            }
+            DisplayMetrics dm = new DisplayMetrics();
+            wm.getDefaultDisplay().getMetrics(dm);
+            return dm.heightPixels;
+        }
+
         private double getHeight(){
             WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
             if (wm == null) {
@@ -611,6 +616,16 @@ class DeviceInfo {
             // Calculate the height in inches
             double rHeight = dm.heightPixels / dm.ydpi;
             return toTwoPlaces(rHeight);
+        }
+
+        private int getWidthPixels(){
+            WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+            if (wm == null) {
+                return 0;
+            }
+            DisplayMetrics dm = new DisplayMetrics();
+            wm.getDefaultDisplay().getMetrics(dm);
+            return dm.widthPixels;
         }
 
         private double getWidth(){

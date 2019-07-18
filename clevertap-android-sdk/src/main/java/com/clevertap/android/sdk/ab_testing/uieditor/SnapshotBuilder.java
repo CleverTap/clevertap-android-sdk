@@ -355,7 +355,7 @@ final class SnapshotBuilder {
         }
 
         @Override
-        public List<RootView> call() throws Exception {
+        public List<RootView> call() {
             rootViews.clear();
 
             final Set<Activity> liveActivities = this.liveActivities.getAll();

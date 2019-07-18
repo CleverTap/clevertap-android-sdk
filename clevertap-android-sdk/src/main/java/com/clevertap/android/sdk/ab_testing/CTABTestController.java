@@ -17,6 +17,7 @@ import android.support.annotation.NonNull;
 
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.ImageCache;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ab_testing.gesture.ConnectionGesture;
 import com.clevertap.android.sdk.ab_testing.models.CTABVariant;
@@ -111,6 +112,7 @@ public class CTABTestController {
     private JSONObject cachedDeviceInfo;
     private CTVarCache varCache;
     private UIEditor uiEditor;
+    private ImageCache imageCache;
 
     private WeakReference<CTABTestListener> listenerWeakReference;
 
@@ -138,11 +140,11 @@ public class CTABTestController {
         switch (type) {
             case MESSAGE_TYPE_CHANGE_REQUEST:
                 messageCode = ExecutionThreadHandler.MESSAGE_HANDLE_EDITOR_CHANGES_RECEIVED;
-                try {
-                    msg = new JSONObject("{\"type\":\"change_request\",\"data\":{\"actions\":[{\"args\":[[4287903743,\"android.graphics.drawable.ColorDrawable\"]],\"name\":\"c1361\",\"path\":[{\"prefix\":\"shortest\",\"index\":0,\"id\":16908290},{\"view_class\":\"android.widget.LinearLayout\",\"index\":0},{\"view_class\":\"android.widget.Button\",\"index\":1}],\"property\":{\"name\":\"background\",\"get\":{\"selector\":\"getBackground\",\"parameters\":[],\"result\":{\"type\":\"android.graphics.drawable.Drawable\"}},\"set\":{\"selector\":\"setBackground\",\"parameters\":[{\"type\":\"android.graphics.drawable.ColorDrawable\"}]},\"classname\":\"android.view.View\"},\"change_type\":\"property\"}]}}");//TODO remove this after test
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+//                try {
+//                    msg = new JSONObject("{\"type\":\"change_request\",\"data\":{\"actions\":[{\"args\":[[4287903743,\"android.graphics.drawable.ColorDrawable\"]],\"name\":\"c1361\",\"path\":[{\"prefix\":\"shortest\",\"index\":0,\"id\":16908290},{\"view_class\":\"android.widget.LinearLayout\",\"index\":0},{\"view_class\":\"android.widget.Button\",\"index\":1}],\"property\":{\"name\":\"background\",\"get\":{\"selector\":\"getBackground\",\"parameters\":[],\"result\":{\"type\":\"android.graphics.drawable.Drawable\"}},\"set\":{\"selector\":\"setBackground\",\"parameters\":[{\"type\":\"android.graphics.drawable.ColorDrawable\"}]},\"classname\":\"android.view.View\"},\"change_type\":\"property\"}]}}");//TODO remove this after test
+//                } catch (JSONException e) {
+//                    e.printStackTrace();
+//                }
                 break;
             case MESSAGE_TYPE_CLEAR_REQUEST:
                 messageCode = ExecutionThreadHandler.MESSAGE_HANDLE_EDITOR_CHANGES_CLEARED;
@@ -205,7 +207,8 @@ public class CTABTestController {
         this.config = config;
         this.guid = guid;
         this.setListener(listener);
-        this.uiEditor = new UIEditor(context, config);
+        this.imageCache = new ImageCache(context,"Experiments");
+        this.uiEditor = new UIEditor(context, config, imageCache);
 
         final HandlerThread thread = new HandlerThread(CTABTestController.class.getCanonicalName());
         thread.setPriority(Process.THREAD_PRIORITY_BACKGROUND);
@@ -504,6 +507,7 @@ public class CTABTestController {
         private final Set<String> seenExperiments;
         private CTABVariant editorSessionVariant;
         private HashSet<CTABVariant> editorSessionVariantSet;
+        private ImageCache imageCache;
 
         @SuppressWarnings("unused")
         ExecutionThreadHandler(Context context, CleverTapInstanceConfig config, Looper looper) {
@@ -607,7 +611,8 @@ public class CTABTestController {
             }
 
             final String protocol = "wss";
-            final String dashboardDomain = /*@"dashboard.clevertap.com"*/ "43764d4a.ngrok.io";  // TODO put final production dashboard link
+            final String dashboardDomain = /*@"dashboard.clevertap.com"*/ "fa5487f0.ngrok.io";  // TODO put final production dashboard link
+            //final String dashboardDomain = "eu1-dashboard-staging-2.dashboard.clevertap.com"; //Staging link
             final String domain = config.getAccountRegion() != null ? config.getAccountRegion()+"."+dashboardDomain : dashboardDomain;
             final String url =  protocol+"://"+domain+"/"+getAccountId()+"/"+"websocket/screenab/sdk?tk="+config.getAccountToken();
             getConfigLogger().verbose(getAccountId(), "Websocket URL - " + url);
@@ -791,6 +796,8 @@ public class CTABTestController {
                     writer.write("\"activities\":");
                     writer.flush();
                     uiEditor.writeSnapshot(out);
+//                    writer.write(",\"orientation\": ");
+//                    writer.write("\""+uiEditor.getActivityOrientation()+"\"");//TODO test once before commit
                 }
 
                 final long snapshotTime = System.currentTimeMillis() - startSnapshot;
@@ -1058,6 +1065,7 @@ public class CTABTestController {
 
         @Override
         public void onActivityCreated(Activity activity, Bundle bundle) {
+            uiEditor.setActivityOrientation(activity);
         }
 
         @Override

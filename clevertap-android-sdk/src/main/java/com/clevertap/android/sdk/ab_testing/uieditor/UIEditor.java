@@ -2,13 +2,19 @@ package com.clevertap.android.sdk.ab_testing.uieditor;
 
 import android.app.Activity;
 import android.content.Context;
+import android.content.pm.ActivityInfo;
+import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.Drawable;
 import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
 import android.view.ViewTreeObserver;
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.ImageCache;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.ab_testing.models.CTABVariant;
@@ -142,12 +148,14 @@ public class UIEditor {
     private final Handler uiThreadHandler;
     private final Map<String, List<ViewEdit>> newEdits;
     private final Set<UIChangeBinding> currentEdits;
+    private ImageCache imageCache;
+    private static int activityOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
 
     private SnapshotBuilder.ViewSnapshotConfig snapshotConfig;
 
     private ActivitySet activitySet;
 
-    public UIEditor(Context context, CleverTapInstanceConfig config) {
+    public UIEditor(Context context, CleverTapInstanceConfig config, ImageCache imageCache) {
         String resourcePackageName = config.getPackageName();
         if(null == resourcePackageName){
             resourcePackageName = context.getPackageName();
@@ -158,6 +166,26 @@ public class UIEditor {
         newEdits = new HashMap<>();
         currentEdits = new HashSet<>();
         activitySet = new ActivitySet();
+        this.imageCache = imageCache;
+    }
+
+    public String getActivityOrientation() {
+        switch(activityOrientation){
+            case ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED :
+                return "unspecified";
+            case ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE:
+            case ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE:
+            case ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE :
+            case ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE:
+                return "landscape";
+            case ActivityInfo.SCREEN_ORIENTATION_PORTRAIT:
+            case ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT:
+            case ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT:
+            case ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT:
+                return "portrait";
+                default: return "portrait";
+
+        }
     }
 
     private Logger getConfigLogger() {
@@ -171,6 +199,10 @@ public class UIEditor {
     public void addActivity(Activity activity) {
         activitySet.add(activity);
         handleNewEditsOnUiThread();
+    }
+
+    public void setActivityOrientation(Activity activity){
+        activityOrientation = activity.getResources().getConfiguration().orientation;
     }
 
     public void removeActivity(Activity activity) {
@@ -307,10 +339,10 @@ public class UIEditor {
                 }
             }
         } catch (JSONException e) {
-            //TODO logging here
+            getConfigLogger().verbose(getAccountId(),"Unable to parse JSON while loading View Properties - "+e.getLocalizedMessage());
             return null;
         } catch (final ClassNotFoundException e) {
-            //TODO logging here
+            getConfigLogger().verbose(getAccountId(),"Class not found while loading View Properties - "+e.getLocalizedMessage());
             return null;
         }
         return properties;
@@ -338,13 +370,13 @@ public class UIEditor {
             }
             return new ViewProperty(propName, targetClass, accessor, mutatorName);
         } catch (final NoSuchMethodException e) {
-            //TODO add logging
+            getConfigLogger().verbose(getAccountId(),"No such method found while generating View Property - "+ e.getLocalizedMessage());
             return null;
         } catch (final JSONException e) {
-            //TODO add logging
+            getConfigLogger().verbose(getAccountId(),"Unable to parse JSON while generating View Property - "+ e.getLocalizedMessage());
             return null;
         } catch (final ClassNotFoundException e) {
-            //TODO add logging
+            getConfigLogger().verbose(getAccountId(),"Class not found while generating View Property - "+ e.getLocalizedMessage());
             return null;
         }
     }
@@ -373,7 +405,7 @@ public class UIEditor {
                 try {
                     targetClass = Class.forName(targetClassName);
                 } catch (final ClassNotFoundException e) {
-                    //TODO logging
+                    getConfigLogger().verbose(getAccountId(),"Class not found while generating UI change - "+ e.getLocalizedMessage());
                     return null;
                 }
 
@@ -401,10 +433,10 @@ public class UIEditor {
                 return null;
             }
         } catch (final NoSuchMethodException e) {
-            //TODO logging
+            getConfigLogger().verbose(getAccountId(),"No such method found while generating UI change - "+ e.getLocalizedMessage());
             return null;
         } catch (final JSONException e) {
-            //TODO logging
+            getConfigLogger().verbose(getAccountId(),"Unable to parse JSON while generating UI change - "+ e.getLocalizedMessage());
             return null;
         }
         return new UIChange(viewEdit, assetsLoaded);
@@ -491,12 +523,9 @@ public class UIEditor {
             } else if ("float".equals(type) || "java.lang.Float".equals(type)) {
                 return ((Number) jsonArgument).floatValue();
             } else if ("android.graphics.drawable.Drawable".equals(type)) {
-                // For historical reasons, we attempt to interpret generic Drawables as BitmapDrawables
-                //return readBitmapDrawable((JSONObject) jsonArgument, assetsLoaded);// TODO link this up with new ImageCache
-                return null;
+                return readBitmapDrawable((JSONObject) jsonArgument, assetsLoaded);
             } else if ("android.graphics.drawable.BitmapDrawable".equals(type)) {
-                //return readBitmapDrawable((JSONObject) jsonArgument, assetsLoaded);//TODO link this up with new ImageCache
-                return null;
+                return readBitmapDrawable((JSONObject) jsonArgument, assetsLoaded);
             } else if ("android.graphics.drawable.ColorDrawable".equals(type)) {
                 int colorValue = ((Number) jsonArgument).intValue();
                 return new ColorDrawable(colorValue);
@@ -505,7 +534,45 @@ public class UIEditor {
                 return null;
             }
         } catch (final ClassCastException e) {
-            //TODO logging
+            getConfigLogger().verbose(getAccountId(),"Error casting class while converting argument - "+ e.getLocalizedMessage());
+            return null;
+        }
+    }
+
+    private Drawable readBitmapDrawable(JSONObject description, List<String> assetsLoaded) {
+        try {
+            final String url = description.getString("url");
+            final String key = description.getString("key");
+            final boolean useBounds;
+            final int left;
+            final int right;
+            final int top;
+            final int bottom;
+            if (description.isNull("dimensions")) {
+                left = right = top = bottom = 0;
+                useBounds = false;
+            } else {
+                final JSONObject dimensions = description.getJSONObject("dimensions");
+                left = dimensions.getInt("left");
+                right = dimensions.getInt("right");
+                top = dimensions.getInt("top");
+                bottom = dimensions.getInt("bottom");
+                useBounds = true;
+            }
+
+            final Bitmap image;
+            image = imageCache.getImageBitmap(key,url);
+            assetsLoaded.add(url);
+
+
+            final Drawable ret = new BitmapDrawable(Resources.getSystem(), image);
+            if (useBounds) {
+                ret.setBounds(left, top, right, bottom);
+            }
+
+            return ret;
+        } catch (JSONException e) {
+            getConfigLogger().verbose(getAccountId(),"Unable to parse JSON while reading Bitmap from payload - "+ e.getLocalizedMessage());
             return null;
         }
     }
