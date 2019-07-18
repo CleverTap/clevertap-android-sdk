@@ -176,9 +176,8 @@ final class Validator {
      */
     ValidationResult mergeMultiValuePropertyForKey(JSONArray currentValues, JSONArray newValues, String action, String key) {
         ValidationResult vr = new ValidationResult();
-        Boolean remove = REMOVE_VALUES_OPERATION.equals(action);
-        vr = _mergeListInternalForKey(key, currentValues, newValues, remove, vr);
-        return vr;
+        boolean remove = REMOVE_VALUES_OPERATION.equals(action);
+        return _mergeListInternalForKey(key, currentValues, newValues, remove, vr);
     }
 
     /**
@@ -257,7 +256,7 @@ final class Validator {
                     }
                 }
             }
-            values = allStrings.toArray(new String[allStrings.size()]);
+            values = allStrings.toArray(new String[0]);
             if(values.length>0 && values.length <= Constants.MAX_MULTI_VALUE_ARRAY_LENGTH){
                 JSONArray jsonArray = new JSONArray();
                 JSONObject jsonObject = new JSONObject();

@@ -91,7 +91,7 @@ class ViewEdit {
         pathFinder.findTargetsInRoot(rootView, path, this);
     }
 
-    public void cleanup() {
+    void cleanup() {
         for (Map.Entry<View, Object> original:originalValues.entrySet()) {
             final View changedView = original.getKey();
             final Object originalValue = original.getValue();

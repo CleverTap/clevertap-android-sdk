@@ -32,7 +32,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings({"unused"})
     RelativeLayout relativeLayout,clickLayout;
     LinearLayout ctaLinearLayout,bodyRelativeLayout;
     FrameLayout frameLayout;
@@ -175,6 +175,7 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
                 height = this.mediaImage.getMeasuredHeight();
             }else{
                 height = this.squareImage.getMeasuredHeight();
+                //noinspection all
                 width = height;
             }
         }else {

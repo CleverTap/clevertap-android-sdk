@@ -7,7 +7,7 @@ import android.os.Looper;
 import android.util.AttributeSet;
 import android.support.v7.widget.AppCompatImageView;
 
-@SuppressWarnings({"unused", "WeakerAccess"})
+@SuppressWarnings({"unused"})
 class GifImageView extends AppCompatImageView implements Runnable {
 
     private static final String TAG = "GifDecoderView";

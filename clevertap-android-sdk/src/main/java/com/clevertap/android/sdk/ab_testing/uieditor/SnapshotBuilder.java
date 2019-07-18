@@ -355,6 +355,7 @@ final class SnapshotBuilder {
         }
 
         @Override
+        @SuppressWarnings("all")
         public List<RootView> call() throws Exception {
             rootViews.clear();
 
@@ -382,7 +383,7 @@ final class SnapshotBuilder {
             Bitmap rawBitmap = null;
 
             try {
-                @SuppressLint("PrivateApi")
+                @SuppressWarnings("JavaReflectionMemberAccess") @SuppressLint("PrivateApi")
                 final Method createSnapshot = View.class.getDeclaredMethod("createSnapshot", Bitmap.Config.class, Integer.TYPE, Boolean.TYPE);
                 createSnapshot.setAccessible(true);
                 rawBitmap = (Bitmap) createSnapshot.invoke(rootView, Bitmap.Config.RGB_565, Color.WHITE, false);

@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright 2014 Google, Inc. All rights reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
@@ -21,7 +21,7 @@ package com.clevertap.android.sdk;
 import java.util.ArrayList;
 import java.util.List;
 
-@SuppressWarnings({"unused", "WeakerAccess"})
+@SuppressWarnings({"unused"})
 class GifHeader {
 
     int[] gct = null;
