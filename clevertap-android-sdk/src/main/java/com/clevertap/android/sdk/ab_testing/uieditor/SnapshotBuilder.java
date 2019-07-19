@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.ab_testing.uieditor;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.res.ColorStateList;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -106,6 +107,9 @@ final class SnapshotBuilder {
             writer.write(",");
             writer.write("\"scale\":");
             writer.write(String.format("%s", rootView.scale));
+            writer.write(",");
+            writer.write("\"orientation\":");
+            writer.write(JSONObject.quote(rootView.orientation));
             writer.write(",");
             writer.write("\"serialized_objects\":");
             {
@@ -276,17 +280,27 @@ final class SnapshotBuilder {
     }
 
     private static class RootView {
-        RootView(String activityName, View rootView) {
-            this.activityName = activityName;
-            this.rootView = rootView;
-            this.screenshot = null;
-            this.scale = 1.0f;
-        }
+        private final static String UNSPECIFIED = "unspecified";
+        private final static String LANDSCAPE = "landscape";
+        private final static String PORTRAIT = "portrait";
 
         final String activityName;
         final View rootView;
         Screenshot screenshot;
         float scale;
+        String orientation = UNSPECIFIED;
+
+        RootView(String activityName, View rootView, int activityOrientation) {
+            this.activityName = activityName;
+            this.rootView = rootView;
+            this.screenshot = null;
+            this.scale = 1.0f;
+            setOrientation(activityOrientation);
+        }
+
+        private void setOrientation(final int orientation) {
+            this.orientation = (orientation == Configuration.ORIENTATION_LANDSCAPE) ? LANDSCAPE : PORTRAIT;
+        }
     }
 
     private static class Screenshot {
@@ -358,9 +372,10 @@ final class SnapshotBuilder {
 
             for (final Activity activity : activities) {
                 final String activityName = activity.getClass().getCanonicalName();
+                final int orientation = activity.getResources().getConfiguration().orientation;
                 final View view = activity.getWindow().getDecorView().getRootView();
                 activity.getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-                final RootView rootView = new RootView(activityName, view);
+                final RootView rootView = new RootView(activityName, view, orientation);
                 rootViews.add(rootView);
             }
 

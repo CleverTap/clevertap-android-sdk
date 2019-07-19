@@ -6976,8 +6976,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         deviceInfo.put("model", this.deviceInfo.getModel());
         deviceInfo.put("sdkVersion", String.valueOf(this.deviceInfo.getSdkVersion()));
         deviceInfo.put("dpi", String.valueOf(this.deviceInfo.getDPI()));
-        deviceInfo.put("device_width",String.valueOf(this.deviceInfo.getWidthPixels()));
-        deviceInfo.put("device_height",String.valueOf(this.deviceInfo.getHeightPixels()));
+        deviceInfo.put("device_width", String.valueOf(this.deviceInfo.getWidthPixels()));
+        deviceInfo.put("device_height", String.valueOf(this.deviceInfo.getHeightPixels()));
         return deviceInfo;
     }
 

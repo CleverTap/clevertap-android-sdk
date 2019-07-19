@@ -18,8 +18,6 @@ import android.view.WindowManager;
 
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.UUID;
 
 class DeviceInfo {

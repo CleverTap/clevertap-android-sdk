@@ -2,7 +2,6 @@ package com.clevertap.android.sdk.ab_testing.uieditor;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.pm.ActivityInfo;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -148,14 +147,14 @@ public class UIEditor {
     private final Handler uiThreadHandler;
     private final Map<String, List<ViewEdit>> newEdits;
     private final Set<UIChangeBinding> currentEdits;
-    private ImageCache imageCache;
-    private static int activityOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED;
 
     private SnapshotBuilder.ViewSnapshotConfig snapshotConfig;
 
     private ActivitySet activitySet;
+    private Context context;
+    private boolean imageCacheInitialized;
 
-    public UIEditor(Context context, CleverTapInstanceConfig config, ImageCache imageCache) {
+    public UIEditor(Context context, CleverTapInstanceConfig config) {
         String resourcePackageName = config.getPackageName();
         if(resourcePackageName == null) {
             resourcePackageName = context.getPackageName();
@@ -166,26 +165,7 @@ public class UIEditor {
         newEdits = new HashMap<>();
         currentEdits = new HashSet<>();
         activitySet = new ActivitySet();
-        this.imageCache = imageCache;
-    }
-
-    public String getActivityOrientation() {
-        switch(activityOrientation){
-            case ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED :
-                return "unspecified";
-            case ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE:
-            case ActivityInfo.SCREEN_ORIENTATION_REVERSE_LANDSCAPE:
-            case ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE :
-            case ActivityInfo.SCREEN_ORIENTATION_USER_LANDSCAPE:
-                return "landscape";
-            case ActivityInfo.SCREEN_ORIENTATION_PORTRAIT:
-            case ActivityInfo.SCREEN_ORIENTATION_REVERSE_PORTRAIT:
-            case ActivityInfo.SCREEN_ORIENTATION_SENSOR_PORTRAIT:
-            case ActivityInfo.SCREEN_ORIENTATION_USER_PORTRAIT:
-                return "portrait";
-                default: return "portrait";
-
-        }
+        this.context = context;
     }
 
     private Logger getConfigLogger() {
@@ -199,10 +179,6 @@ public class UIEditor {
     public void addActivity(Activity activity) {
         activitySet.add(activity);
         handleNewEditsOnUiThread();
-    }
-
-    public void setActivityOrientation(Activity activity){
-        activityOrientation = activity.getResources().getConfiguration().orientation;
     }
 
     public void removeActivity(Activity activity) {
@@ -349,7 +325,7 @@ public class UIEditor {
 
     private UIChange generateUIChange(JSONObject data) {
         final ViewEdit viewEdit;
-        final List<String> assetsLoaded = new ArrayList<>(); // TODO
+        final List<String> imageUrls = new ArrayList<>();
         try {
             final JSONArray pathDesc = data.getJSONArray("path");
             final List<ViewEdit.PathElement> path = generatePath(pathDesc, resourceIds);
@@ -378,7 +354,7 @@ public class UIEditor {
                     final JSONArray argPlusType = argsAndTypes.getJSONArray(i);
                     final Object jsonArg = argPlusType.get(0);
                     final String argType = argPlusType.getString(1);
-                    methodArgs[i] = castArgumentObject(jsonArg, argType, assetsLoaded);
+                    methodArgs[i] = castArgumentObject(jsonArg, argType, imageUrls);
                 }
 
                 ViewCaller mutator = null;
@@ -401,7 +377,7 @@ public class UIEditor {
             getConfigLogger().verbose(getAccountId(),"Unable to parse JSON while generating UI change - "+ e.getLocalizedMessage());
             return null;
         }
-        return new UIChange(viewEdit, assetsLoaded);
+        return new UIChange(viewEdit, imageUrls);
     }
 
     private ViewProperty generateViewProperty(Class<?> targetClass, JSONObject property) {
@@ -500,26 +476,33 @@ public class UIEditor {
         return explicitId;
     }
 
-    private Object castArgumentObject(Object jsonArgument, String type, List<String> assetsLoaded) {
+    private Object castArgumentObject(Object jsonArgument, String type, List<String> imageUrls) {
         try {
-            if ("java.lang.CharSequence".equals(type)) { // Because we're assignable
-                return jsonArgument;
-            } else if ("boolean".equals(type) || "java.lang.Boolean".equals(type)) {
-                return jsonArgument;
-            } else if ("int".equals(type) || "java.lang.Integer".equals(type)) {
-                return ((Number) jsonArgument).intValue();
-            } else if ("float".equals(type) || "java.lang.Float".equals(type)) {
-                return ((Number) jsonArgument).floatValue();
-            } else if ("android.graphics.drawable.Drawable".equals(type)) {
-                return readBitmapDrawable((JSONObject) jsonArgument, assetsLoaded);
-            } else if ("android.graphics.drawable.BitmapDrawable".equals(type)) {
-                return readBitmapDrawable((JSONObject) jsonArgument, assetsLoaded);
-            } else if ("android.graphics.drawable.ColorDrawable".equals(type)) {
-                int colorValue = ((Number) jsonArgument).intValue();
-                return new ColorDrawable(colorValue);
-            } else {
-                //TODO logging
+            if (type == null) {
                 return null;
+            }
+            switch (type) {
+                case "java.lang.CharSequence":
+                    return jsonArgument;
+                case "boolean":
+                case "java.lang.Boolean":
+                    return jsonArgument;
+                case "int":
+                case "java.lang.Integer":
+                    return ((Number) jsonArgument).intValue();
+                case "float":
+                case "java.lang.Float":
+                    return ((Number) jsonArgument).floatValue();
+                case "android.graphics.drawable.Drawable":
+                    return readBitmapDrawable((JSONObject) jsonArgument, imageUrls);
+                case "android.graphics.drawable.BitmapDrawable":
+                    return readBitmapDrawable((JSONObject) jsonArgument, imageUrls);
+                case "android.graphics.drawable.ColorDrawable":
+                    int colorValue = ((Number) jsonArgument).intValue();
+                    return new ColorDrawable(colorValue);
+                default:
+                    getConfigLogger().verbose(getAccountId(), "Unhandled argument object type: " +type);
+                    return null;
             }
         } catch (final ClassCastException e) {
             getConfigLogger().verbose(getAccountId(),"Error casting class while converting argument - "+ e.getLocalizedMessage());
@@ -527,10 +510,9 @@ public class UIEditor {
         }
     }
 
-    private Drawable readBitmapDrawable(JSONObject description, List<String> assetsLoaded) {
+    private Drawable readBitmapDrawable(JSONObject description, List<String> imageUrls) {
         try {
             final String url = description.getString("url");
-            final String key = description.getString("key");
             final boolean useBounds;
             final int left;
             final int right;
@@ -549,9 +531,8 @@ public class UIEditor {
             }
 
             final Bitmap image;
-            image = imageCache.getImageBitmap(key,url);
-            assetsLoaded.add(url);
-
+            image = getOrFetchBitmap(url);
+            imageUrls.add(url);
 
             final Drawable ret = new BitmapDrawable(Resources.getSystem(), image);
             if (useBounds) {
@@ -563,6 +544,18 @@ public class UIEditor {
             getConfigLogger().verbose(getAccountId(),"Unable to parse JSON while reading Bitmap from payload - "+ e.getLocalizedMessage());
             return null;
         }
+    }
+
+    // only call off main thread as initWithPersistence touches the file system
+    private void initImageCache() {
+        if (imageCacheInitialized) return;
+        imageCacheInitialized = true;
+        ImageCache.initWithPersistence(context);
+    }
+
+    private Bitmap getOrFetchBitmap(String key) {
+        initImageCache();
+        return ImageCache.getOrFetchBitmap(key);
     }
 
 }

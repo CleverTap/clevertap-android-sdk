@@ -112,7 +112,6 @@ public class CTABTestController {
     private JSONObject cachedDeviceInfo;
     private CTVarCache varCache;
     private UIEditor uiEditor;
-    private ImageCache imageCache;
 
     private WeakReference<CTABTestListener> listenerWeakReference;
 
@@ -207,8 +206,7 @@ public class CTABTestController {
         this.config = config;
         this.guid = guid;
         this.setListener(listener);
-        this.imageCache = new ImageCache(context,"Experiments");
-        this.uiEditor = new UIEditor(context, config, imageCache);
+        this.uiEditor = new UIEditor(context, config);
 
         final HandlerThread thread = new HandlerThread(CTABTestController.class.getCanonicalName());
         thread.setPriority(Process.THREAD_PRIORITY_BACKGROUND);
@@ -502,12 +500,11 @@ public class CTABTestController {
         private DashboardClient wsClient;
         private static final int CONNECT_TIMEOUT = 5000;
         private Context context;
-        private final List<String> editorAssetUrls;  // TODO what is this for ???
+        private final List<String> editorAssetUrls;
         private Set<CTABVariant> allExperiments;
         private final Set<String> seenExperiments;
         private CTABVariant editorSessionVariant;
         private HashSet<CTABVariant> editorSessionVariantSet;
-        private ImageCache imageCache;
 
         @SuppressWarnings("unused")
         ExecutionThreadHandler(Context context, CleverTapInstanceConfig config, Looper looper) {
@@ -611,7 +608,7 @@ public class CTABTestController {
             }
 
             final String protocol = "wss";
-            final String dashboardDomain = /*@"dashboard.clevertap.com"*/ "fa5487f0.ngrok.io";  // TODO put final production dashboard link
+            final String dashboardDomain = /*@"dashboard.clevertap.com"*/ "01a63471.ngrok.io";  // TODO put final production dashboard link
             //final String dashboardDomain = "eu1-dashboard-staging-2.dashboard.clevertap.com"; //Staging link
             final String domain = config.getAccountRegion() != null ? config.getAccountRegion()+"."+dashboardDomain : dashboardDomain;
             final String url =  protocol+"://"+domain+"/"+getAccountId()+"/"+"websocket/screenab/sdk?tk="+config.getAccountToken();
@@ -728,7 +725,6 @@ public class CTABTestController {
         }
 
         private void applyExperiments(JSONArray experiments, boolean areNew) {
-
             loadVariants(experiments, areNew);
             applyVariants();
             if (areNew) {
@@ -796,8 +792,6 @@ public class CTABTestController {
                     writer.write("\"activities\":");
                     writer.flush();
                     uiEditor.writeSnapshot(out);
-//                    writer.write(",\"orientation\": ");
-//                    writer.write("\""+uiEditor.getActivityOrientation()+"\"");//TODO test once before commit
                 }
 
                 final long snapshotTime = System.currentTimeMillis() - startSnapshot;
@@ -936,6 +930,10 @@ public class CTABTestController {
             stopVariants();
             getEditorSessionVariant().clearActions();
             varCache.reset();
+            // TODO
+            for (final String assetUrl:editorAssetUrls) {
+                ImageCache.removeBitmap(assetUrl, true);
+            }
             applyVariants();
         }
 
@@ -1064,7 +1062,7 @@ public class CTABTestController {
 
         @Override
         public void onActivityCreated(Activity activity, Bundle bundle) {
-            uiEditor.setActivityOrientation(activity);
+
         }
 
         @Override

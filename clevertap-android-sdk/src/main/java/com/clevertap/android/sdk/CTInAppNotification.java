@@ -508,12 +508,12 @@ class CTInAppNotification implements Parcelable {
     }
 
     private void removeImageOrGif(){
-        for(CTInAppNotificationMedia inAppMedia : this.mediaList){
-            if(inAppMedia.getMediaUrl() != null){
-                if(!inAppMedia.getContentType().equals("image/gif")){
-                    ImageCache.removeBitmap(inAppMedia.getCacheKey());
+        for (CTInAppNotificationMedia inAppMedia : this.mediaList){
+            if (inAppMedia.getMediaUrl() != null){
+                if (!inAppMedia.getContentType().equals("image/gif")) {
+                    ImageCache.removeBitmap(inAppMedia.getCacheKey(), false);
                     Logger.v("Deleted image - "+inAppMedia.getCacheKey());
-                }else{
+                } else {
                     GifCache.removeByteArray(inAppMedia.getCacheKey());
                     Logger.v("Deleted GIF - "+inAppMedia.getCacheKey());
                 }
