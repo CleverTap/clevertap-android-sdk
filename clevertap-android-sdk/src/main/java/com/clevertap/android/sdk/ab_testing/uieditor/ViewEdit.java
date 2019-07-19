@@ -171,7 +171,7 @@ class ViewEdit {
             final View rootView = findMatch(rootPathElement, givenRootView, indexKey);
             indexStack.free();
 
-            if (null != rootView) {
+            if (rootView != null) {
                 findTargetsInMatchedView(rootView, childPath, viewEdit);
             }
         }
@@ -242,7 +242,6 @@ class ViewEdit {
             if (pathElement.viewId != -1 && (target.getId() != pathElement.viewId)) {
                 return false;
             }
-
             if (pathElement.contentDescription != null && !pathElement.contentDescription.contentEquals(target.getContentDescription())) {
                 return false;
             }
