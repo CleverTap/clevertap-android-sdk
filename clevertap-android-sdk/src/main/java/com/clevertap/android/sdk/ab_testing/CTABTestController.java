@@ -101,6 +101,7 @@ public class CTABTestController {
     private static final String MESSAGE_TYPE_GENERIC_ERROR = "error";
     private static final String MESSAGE_TYPE_VARS_TEST = "test_vars";
     private static final String MESSAGE_TYPE_MATCHED = "matched";
+    private static final String MESSAGE_TYPE_DISCONNECT = "disconnect";
 
     private static final String DATA_KEY = "data";
     private static final String TYPE_KEY = "type";
@@ -163,6 +164,8 @@ public class CTABTestController {
             case MESSAGE_TYPE_MATCHED:
                 messageCode = ExecutionThreadHandler.MESSAGE_MATCHED;
                 break;
+            case MESSAGE_TYPE_DISCONNECT :
+                messageCode = ExecutionThreadHandler.MESSAGE_HANDLE_EDITOR_CLOSED;
             default:
                 break;
         }
@@ -742,6 +745,7 @@ public class CTABTestController {
                 }
             }
             uiEditor.applyVariants(allExperiments);
+            editorAssetUrls.addAll(uiEditor.getEditorImageList());
         }
 
         private void sendHandshake() {
@@ -930,7 +934,6 @@ public class CTABTestController {
             stopVariants();
             getEditorSessionVariant().clearActions();
             varCache.reset();
-            // TODO
             for (final String assetUrl:editorAssetUrls) {
                 ImageCache.removeBitmap(assetUrl, true);
             }

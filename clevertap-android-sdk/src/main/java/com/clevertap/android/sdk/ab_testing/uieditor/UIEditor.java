@@ -147,6 +147,7 @@ public class UIEditor {
     private final Handler uiThreadHandler;
     private final Map<String, List<ViewEdit>> newEdits;
     private final Set<UIChangeBinding> currentEdits;
+    private final List<String> editorImageList;
 
     private SnapshotBuilder.ViewSnapshotConfig snapshotConfig;
 
@@ -165,6 +166,7 @@ public class UIEditor {
         newEdits = new HashMap<>();
         currentEdits = new HashSet<>();
         activitySet = new ActivitySet();
+        editorImageList = new ArrayList<>();
         this.context = context;
     }
 
@@ -183,6 +185,10 @@ public class UIEditor {
 
     public void removeActivity(Activity activity) {
         activitySet.remove(activity);
+    }
+
+    public List<String> getEditorImageList() {
+        return editorImageList;
     }
 
     public boolean loadSnapshotConfig(JSONObject data) {
@@ -218,8 +224,9 @@ public class UIEditor {
             for (CTABVariant.CTVariantAction action: variant.getActions()) {
                 final UIChange change = generateUIChange(action.getChange());
                 if (change != null) {
+                    editorImageList.addAll(change.imageUrls); //Add all images to a list to be cleared when dashboard disconnects.
                     String name = action.getActivityName();
-                    ViewEdit viewEdit = change.viewEdit;  // TODO what about the UIChange.imageurls ??
+                    ViewEdit viewEdit = change.viewEdit;
                     final List<ViewEdit> mapElement;
                     if (edits.containsKey(name)) {
                         mapElement = edits.get(name);
