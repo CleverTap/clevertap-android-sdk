@@ -745,7 +745,7 @@ public class CTABTestController {
                 }
             }
             uiEditor.applyVariants(allExperiments);
-            editorAssetUrls.addAll(uiEditor.getEditorImageList());
+            editorAssetUrls.addAll(uiEditor.getEditorImageList());//TODO Darshan place this at the right place.
         }
 
         private void sendHandshake() {

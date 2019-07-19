@@ -168,6 +168,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private int currentRequestTimestamp = 0;
     private Location locationFromUser = null;
     private SyncListener syncListener = null;
+    private CTExperimentsListener experimentsListener = null;
     private ArrayList<PushType> enabledPushTypes = null;
     private long appLastSeen = 0;
     private int currentSessionId = 0;
@@ -3080,6 +3081,24 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @SuppressWarnings("unused")
     public void setSyncListener(SyncListener syncListener) {
         this.syncListener = syncListener;
+    }
+
+    /**
+     * Returns the CTExperimentsListener object
+     * @return The {@link CTExperimentsListener} object
+     */
+    @SuppressWarnings("WeakerAccess")
+    public CTExperimentsListener getCTExperimentsListener() {
+        return experimentsListener;
+    }
+
+    /**
+     * This method is used to set the CTExperimentsListener
+     * @param experimentsListener The {@link CTExperimentsListener} object
+     */
+    @SuppressWarnings("unused")
+    public void setCTExperimentsListener(CTExperimentsListener experimentsListener) {
+        this.experimentsListener = experimentsListener;
     }
 
     /**
@@ -6737,11 +6756,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     @Override
     public void ABExperimentsUpdated() {
-        final SyncListener sl;
+        final CTExperimentsListener sl;
         try {
-            sl = getSyncListener();
+            sl = getCTExperimentsListener();
             if (sl != null) {
-                sl.ABExperimentsUpdated();
+                sl.CTExperimentsUpdated();
             }
         } catch (Throwable t) {
             // Ignore
