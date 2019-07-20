@@ -44,9 +44,11 @@ public class CTABVariant {
     private JSONArray vars = new JSONArray();
     private final Object actionsLock = new Object();
     private ArrayList<String> imageUrls;
+    private JSONObject experimentObject;
 
     public CTABVariant(JSONObject variant) {
         try {
+            this.experimentObject = variant;
             variantId = variant.optString("id", "0");
             experimentId = variant.optString("experiment_id", "0");
             version = variant.optInt("variant_version", 0);
@@ -155,5 +157,9 @@ public class CTABVariant {
         for (String url: imageUrls) {
             ImageCache.removeBitmap(url, true);
         }
+    }
+
+    public JSONObject getExperimentObject() {
+        return experimentObject;
     }
 }

@@ -501,6 +501,7 @@ public class CTABTestController {
         private static final int CONNECT_TIMEOUT = 5000;
         private Context context;
         private Set<CTABVariant> experiments;
+        private Set<CTABVariant> storedExperiments;
         private CTABVariant editorSessionVariant;
         private HashSet<CTABVariant> editorSessionVariantSet;
 
@@ -510,6 +511,7 @@ public class CTABTestController {
             this.config = config;
             this.context = context;
             this.experiments = new HashSet<>();
+            this.storedExperiments = new HashSet<>();
             lock.lock();
         }
 
@@ -675,6 +677,7 @@ public class CTABTestController {
         private void persistExperiments(JSONArray experiments) {
             final SharedPreferences preferences = getSharedPreferences();
             final SharedPreferences.Editor editor = preferences.edit();
+            editor.remove(EXPERIMENTS_KEY); //Clear all data and add new experiments
             editor.putString(EXPERIMENTS_KEY, experiments.toString());
             editor.apply();
         }
@@ -697,7 +700,28 @@ public class CTABTestController {
             }
         }
 
-        private void loadVariants(JSONArray experiments){
+        private Set<CTABVariant> getStoredExperiments(){
+            Set<CTABVariant> storedSet = new HashSet<>();
+            final SharedPreferences preferences = getSharedPreferences();
+            final String storedExperiments = preferences.getString(EXPERIMENTS_KEY, null);
+            if (null != storedExperiments) {
+                try {
+                    final JSONArray _experiments = new JSONArray(storedExperiments);
+                    for (int i = 0; i < _experiments.length(); i++) {
+                        final JSONObject nextVariant = _experiments.getJSONObject(i);
+                        final CTABVariant variant = new CTABVariant(nextVariant);
+                        storedSet.add(variant);
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }else{
+                getConfigLogger().debug(getAccountId(), "No Stored Experiments for key: " + getSharedPrefsName());
+            }
+            return storedSet;
+        }
+
+        private void loadVariants(JSONArray experiments, boolean areNew){
             if (null != experiments) {
                 try {
                     final int experimentsLength = experiments.length();
@@ -705,6 +729,23 @@ public class CTABTestController {
                         final JSONObject nextVariant = experiments.getJSONObject(i);
                         final CTABVariant variant = new CTABVariant(nextVariant);
                         this.experiments.add(variant);
+
+                        if(areNew){
+                            Set<CTABVariant> tempExperiments = new HashSet<>();
+                            this.storedExperiments = getStoredExperiments();
+                            for(CTABVariant ctabVariant: storedExperiments){
+                                //Condition checks whether each stored experiment is in the Set of all experiments,
+                                //condition is false if the variant info changes in the CTABVariant object
+                                //If condition is false, add the CTABVariant object to tempExperiments Set and
+                                //then clear all experiments and add all tempExperiments. This way we handle finished
+                                //experiments and keep track of edited variants
+                                if(!this.experiments.contains(ctabVariant)){
+                                    tempExperiments.add(ctabVariant);
+                                }
+                            }
+                            this.experiments.clear();
+                            this.experiments.addAll(tempExperiments);
+                        }
                     }
                 } catch (JSONException e) {
                     getConfigLogger().verbose(getAccountId(), "JSON error when loading ab tests / tweaks, clearing persistent memory", e);
@@ -717,10 +758,14 @@ public class CTABTestController {
         }
 
         private void applyExperiments(JSONArray experiments, boolean areNew) {
-            loadVariants(experiments);
+            loadVariants(experiments, areNew);
             applyVariants();
             if (areNew) {
-                persistExperiments(experiments);
+                JSONArray persistArray =  new JSONArray();
+                for(CTABVariant variant: this.experiments){
+                    persistArray.put(variant.getExperimentObject());
+                }
+                persistExperiments(persistArray);
             }
             notifyExperimentsUpdated();
         }
@@ -731,6 +776,7 @@ public class CTABTestController {
             }
             uiEditor.applyVariants(experiments, false);
         }
+
 
         private void sendHandshake() {
             try {
