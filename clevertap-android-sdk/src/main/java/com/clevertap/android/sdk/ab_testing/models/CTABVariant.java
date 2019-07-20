@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.ab_testing.models;
 
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 
 import org.json.JSONArray;
@@ -20,7 +21,7 @@ public class CTABVariant {
             this.change = change;
         }
 
-       public String getName() {
+        public String getName() {
             return name;
         }
 
@@ -34,34 +35,32 @@ public class CTABVariant {
     }
 
     private String id;
-    private Integer variantId;
-    private Integer experimentId;
+    private String variantId;
+    private String experimentId;
+    private Integer version;
     private ArrayList<CTVariantAction> actions = new ArrayList<>();
     private JSONArray vars = new JSONArray();
     private final Object actionsLock = new Object();
 
     public CTABVariant(JSONObject variant) {
         try {
-            variantId = variant.optInt("id", 0);
-            experimentId = variant.optInt("experiment_id", 0);
-            this.id = variantId.toString()+":"+experimentId.toString();
-
+            variantId = variant.optString("id", "0");
+            experimentId = variant.optString("experiment_id", "0");
+            version = variant.optInt("variant_version", 0);
+            this.id = variantId+":"+experimentId;
             try {
                 final JSONArray actions = variant.optJSONArray("actions");
                 addActions(actions);
-
             } catch (Throwable t) {
-                // TODO
+                Logger.v("Error loading variant actions", t);
             }
-
             try {
                 this.vars = variant.optJSONArray("vars");
             } catch (Throwable t) {
-                // TODO
+                Logger.v("Error loading variant vars", t);
             }
-
         } catch (Throwable t) {
-            // TODO
+            Logger.v("Error creating variant", t);
         }
     }
 
@@ -70,12 +69,12 @@ public class CTABVariant {
     }
 
     @SuppressWarnings("unused")
-    Integer getVariantId() {
+    String getVariantId() {
         return variantId;
     }
 
     @SuppressWarnings("unused")
-    Integer getExperimentId() {
+    String getExperimentId() {
         return experimentId;
     }
 
@@ -95,7 +94,7 @@ public class CTABVariant {
                     this.actions.add(action);
                 }
             } catch (Throwable t) {
-                // TODO
+                Logger.v("Error adding variant actions", t);
             }
         }
     }
@@ -110,7 +109,7 @@ public class CTABVariant {
                 try {
                     _names.add(names.getString(i));
                 } catch (Throwable t) {
-                    // nm-op
+                    // no-op
                 }
             }
             ArrayList<CTVariantAction> newActions = new ArrayList<>();
@@ -137,6 +136,10 @@ public class CTABVariant {
 
     public JSONArray getVars() {
         return vars;
+    }
+
+    public Integer getVersion() {
+        return version;
     }
 
 }

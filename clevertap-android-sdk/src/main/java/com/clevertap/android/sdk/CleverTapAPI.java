@@ -168,7 +168,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private int currentRequestTimestamp = 0;
     private Location locationFromUser = null;
     private SyncListener syncListener = null;
-    private CTExperimentsListener experimentsListener = null;
     private ArrayList<PushType> enabledPushTypes = null;
     private long appLastSeen = 0;
     private int currentSessionId = 0;
@@ -208,10 +207,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private final Boolean eventLock = true;
     private boolean offline = false;
     private CTInboxController ctInboxController;
-    private CTABTestController ctABTestController;  // TODO
+    private CTABTestController ctABTestController;
+    private CTExperimentsListener experimentsListener = null;
     private final Object inboxControllerLock = new Object();
     private CTInboxListener inboxListener;
-    private CTABTestListener ctabTestListener; // TODO
     private boolean isBgPing = false;
 
 
@@ -825,6 +824,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 token = FirebaseInstanceId.getInstance().getToken(senderID, FirebaseMessaging.INSTANCE_ID_SCOPE);
             } else {
                 getConfigLogger().verbose(getAccountId(), "FcmManager: Requesting a FCM token");
+                //noinspection deprecation
                 token = FirebaseInstanceId.getInstance().getToken();
             }
             getConfigLogger().info(getAccountId(),"FCM token: "+token);
@@ -833,7 +833,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
         return token;
     }
-
 
     //Push
     private void cacheFCMToken(String token) {
@@ -6746,27 +6745,21 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //ABTesting
 
-    // TODO
     private static boolean isUIEditorEnabled = true;
 
+    /**
+     * Disables/Enables the ability to do UI Edits from the CleverTap Dashboard
+     * Enabled by default
+     */
     @SuppressWarnings("unused")
     public static void setUIEditorEnabled(boolean enabled) {
         isUIEditorEnabled = enabled;
     }
 
-    @Override
-    public void ABExperimentsUpdated() {
-        final CTExperimentsListener sl;
-        try {
-            sl = getCTExperimentsListener();
-            if (sl != null) {
-                sl.CTExperimentsUpdated();
-            }
-        } catch (Throwable t) {
-            // Ignore
-        }
-    }
-
+    /**
+     * Registers an ABTesting variable of type {@link Boolean} for ease of editing on the CleverTap Dashboard
+     * @param name {@link String} the name of the variable
+     */
     @SuppressWarnings({"unused"})
     public void registerBooleanVariable(String name) {
         if (ctABTestController == null) {
@@ -6776,6 +6769,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         ctABTestController.registerBooleanVariable(name);
     }
 
+    /**
+     * Registers an ABTesting variable of type {@link Double} for ease of editing on the CleverTap Dashboard
+     * @param name {@link String} the name of the variable
+     */
     @SuppressWarnings({"unused"})
     public void registerDoubleVariable(String name) {
         if (ctABTestController == null) {
@@ -6785,6 +6782,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         ctABTestController.registerDoubleVariable(name);
     }
 
+    /**
+     * Registers an ABTesting variable of type {@link Integer} for ease of editing on the CleverTap Dashboard
+     * @param name {@link String} the name of the variable
+     */
     @SuppressWarnings({"unused"})
     public void registerIntegerVariable(String name) {
         if (ctABTestController == null) {
@@ -6794,6 +6795,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         ctABTestController.registerIntegerVariable(name);
     }
 
+    /**
+     * Registers an ABTesting variable of type {@link String} for ease of editing on the CleverTap Dashboard
+     * @param name {@link String} the name of the variable
+     */
     @SuppressWarnings({"unused"})
     public void registerStringVariable(String name) {
         if (ctABTestController == null) {
@@ -6803,6 +6808,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         ctABTestController.registerStringVariable(name);
     }
 
+    /**
+     * Registers an ABTesting variable of type {@link List} of {@link Boolean} for ease of editing on the CleverTap Dashboard
+     * @param name {@link String} the name of the variable
+     */
     @SuppressWarnings({"unused"})
     public void registerListOfBooleanVariable(String name) {
         if (ctABTestController == null) {
@@ -6812,6 +6821,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         ctABTestController.registerListOfBooleanVariable(name);
     }
 
+    /**
+     * Registers an ABTesting variable of type {@link List} of {@link Double} for ease of editing on the CleverTap Dashboard
+     * @param name {@link String} the name of the variable
+     */
     @SuppressWarnings({"unused"})
     public void registerListOfDoubleVariable(String name) {
         if (ctABTestController == null) {
@@ -6821,6 +6834,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         ctABTestController.registerListOfDoubleVariable(name);
     }
 
+    /**
+     * Registers an ABTesting variable of type {@link List} of {@link Integer} for ease of editing on the CleverTap Dashboard
+     * @param name {@link String} the name of the variable
+     */
     @SuppressWarnings({"unused"})
     public void registerListOfIntegerVariable(String name) {
         if (ctABTestController == null) {
@@ -6830,6 +6847,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         ctABTestController.registerListOfIntegerVariable(name);
     }
 
+    /**
+     * Registers an ABTesting variable of type {@link List} of {@link String} for ease of editing on the CleverTap Dashboard
+     * @param name {@link String} the name of the variable
+     */
     @SuppressWarnings({"unused"})
     public void registerListOfStringVariable(String name) {
         if (ctABTestController == null) {
@@ -6839,6 +6860,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         ctABTestController.registerListOfStringVariable(name);
     }
 
+    /**
+     * Registers an ABTesting variable of type {@link Map} of {@link Boolean} for ease of editing on the CleverTap Dashboard
+     * @param name {@link String} the name of the variable
+     */
     @SuppressWarnings({"unused"})
     public void registerMapOfBooleanVariable(String name) {
         if (ctABTestController == null) {
@@ -6848,6 +6873,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         ctABTestController.registerMapOfBooleanVariable(name);
     }
 
+    /**
+     * Registers an ABTesting variable of type {@link Map} of {@link Double} for ease of editing on the CleverTap Dashboard
+     * @param name {@link String} the name of the variable
+     */
     @SuppressWarnings({"unused"})
     public void registerMapOfDoubleVariable(String name) {
         if (ctABTestController == null) {
@@ -6857,6 +6886,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         ctABTestController.registerMapOfDoubleVariable(name);
     }
 
+    /**
+     * Registers an ABTesting variable of type {@link Map} of {@link Integer} for ease of editing on the CleverTap Dashboard
+     * @param name {@link String} the name of the variable
+     */
     @SuppressWarnings({"unused"})
     public void registerMapOfIntegerVariable(String name) {
         if (ctABTestController == null) {
@@ -6866,6 +6899,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         ctABTestController.registerMapOfIntegerVariable(name);
     }
 
+    /**
+     * Registers an ABTesting variable of type {@link Map} of {@link String} for ease of editing on the CleverTap Dashboard
+     * @param name {@link String} the name of the variable
+     */
     @SuppressWarnings({"unused"})
     public void registerMapOfStringVariable(String name) {
         if (ctABTestController == null) {
@@ -6875,6 +6912,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         ctABTestController.registerMapOfStringVariable(name);
     }
 
+    /**
+     * Returns the {@link Boolean} value of the named variable set via an AB Testing Experiment or the default value if unset
+     * @param name - the name of the variable
+     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
+     * @return {@link Boolean} the value set by the Experiment or the default value if unset
+     */
     @SuppressWarnings({"unused"})
     public Boolean getBooleanVariable(String name, Boolean defaultValue) {
         if (ctABTestController == null) {
@@ -6884,6 +6927,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return ctABTestController.getBooleanVariable(name, defaultValue);
     }
 
+    /**
+     * Returns the {@link Double} value of the named variable set via an AB Testing Experiment or the default value if unset
+     * @param name - the name of the variable
+     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
+     * @return {@link Double} the value set by the Experiment or the default value if unset
+     */
     @SuppressWarnings({"unused"})
     public Double getDoubleVariable(String name, Double defaultValue) {
         if (ctABTestController == null) {
@@ -6893,6 +6942,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return ctABTestController.getDoubleVariable(name, defaultValue);
     }
 
+    /**
+     * Returns the {@link Integer} value of the named variable set via an AB Testing Experiment or the default value if unset
+     * @param name - the name of the variable
+     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
+     * @return {@link Integer} the value set by the Experiment or the default value if unset
+     */
     @SuppressWarnings({"unused"})
     public Integer getIntegerVariable(String name, Integer defaultValue) {
         if (ctABTestController == null) {
@@ -6902,6 +6957,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return ctABTestController.getIntegerVariable(name, defaultValue);
     }
 
+    /**
+     * Returns the {@link String} value of the named variable set via an AB Testing Experiment or the default value if unset
+     * @param name - the name of the variable
+     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
+     * @return {@link String} the value set by the Experiment or the default value if unset
+     */
     @SuppressWarnings({"unused"})
     public String getStringVariable(String name, String defaultValue) {
         if (ctABTestController == null) {
@@ -6911,6 +6972,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return ctABTestController.getStringVariable(name, defaultValue);
     }
 
+    /**
+     * Returns the {@link List} of {@link Boolean} value of the named variable set via an AB Testing Experiment or the default value if unset
+     * @param name - the name of the variable
+     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
+     * @return {@link List} of {@link Boolean} the value set by the Experiment or the default value if unset
+     */
     @SuppressWarnings({"unused"})
     public List<Boolean> getListOfBooleanVariable(String name, List<Boolean> defaultValue) {
         if (ctABTestController == null) {
@@ -6921,6 +6988,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     }
 
+    /**
+     * Returns the {@link List} of {@link Double} value of the named variable set via an AB Testing Experiment or the default value if unset
+     * @param name - the name of the variable
+     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
+     * @return {@link List} of {@link Double} the value set by the Experiment or the default value if unset
+     */
     @SuppressWarnings({"unused"})
     public List<Double> getListOfDoubleVariable(String name, List<Double> defaultValue) {
         if (ctABTestController == null) {
@@ -6931,6 +7004,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     }
 
+    /**
+     * Returns the {@link List} of {@link Integer} value of the named variable set via an AB Testing Experiment or the default value if unset
+     * @param name - the name of the variable
+     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
+     * @return {@link List} of {@link Integer} the value set by the Experiment or the default value if unset
+     */
     @SuppressWarnings({"unused"})
     public List<Integer> getListOfIntegerVariable(String name, List<Integer> defaultValue) {
         if (ctABTestController == null) {
@@ -6940,6 +7019,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return ctABTestController.getListOfIntegerVariable(name, defaultValue);
     }
 
+    /**
+     * Returns the {@link List} of {@link String} value of the named variable set via an AB Testing Experiment or the default value if unset
+     * @param name - the name of the variable
+     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
+     * @return {@link List} of {@link String} the value set by the Experiment or the default value if unset
+     */
     @SuppressWarnings({"unused"})
     public List<String> getListOfStringVariable(String name, List<String> defaultValue) {
         if (ctABTestController == null) {
@@ -6949,6 +7034,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return ctABTestController.getListOfStringVariable(name, defaultValue);
     }
 
+    /**
+     * Returns the {@link Map} of {@link Boolean} value of the named variable set via an AB Testing Experiment or the default value if unset
+     * @param name - the name of the variable
+     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
+     * @return {@link Map} of {@link Boolean} the value set by the Experiment or the default value if unset
+     */
     @SuppressWarnings({"unused"})
     public Map<String, Boolean> getMapOfBooleanVariable(String name, Map<String, Boolean> defaultValue) {
         if (ctABTestController == null) {
@@ -6958,6 +7049,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return ctABTestController.getMapOfBooleanVariable(name, defaultValue);
     }
 
+    /**
+     * Returns the {@link Map} of {@link Double} value of the named variable set via an AB Testing Experiment or the default value if unset
+     * @param name - the name of the variable
+     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
+     * @return {@link Map} of {@link Double} the value set by the Experiment or the default value if unset
+     */
     @SuppressWarnings({"unused"})
     public Map<String, Double> getMapOfDoubleVariable(String name, Map<String, Double> defaultValue) {
         if (ctABTestController == null) {
@@ -6967,6 +7064,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return ctABTestController.getMapOfDoubleVariable(name, defaultValue);
     }
 
+    /**
+     * Returns the {@link Map} of {@link Integer} value of the named variable set via an AB Testing Experiment or the default value if unset
+     * @param name - the name of the variable
+     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
+     * @return {@link Map} of {@link Integer} the value set by the Experiment or the default value if unset
+     */
     @SuppressWarnings({"unused"})
     public Map<String, Integer> getMapOfIntegerVariable(String name, Map<String, Integer> defaultValue) {
         if (ctABTestController == null) {
@@ -6976,6 +7079,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return ctABTestController.getMapOfIntegerVariable(name, defaultValue);
     }
 
+    /**
+     * Returns the {@link Map} of {@link String} value of the named variable set via an AB Testing Experiment or the default value if unset
+     * @param name - the name of the variable
+     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
+     * @return {@link Map} of {@link String} the value set by the Experiment or the default value if unset
+     */
     @SuppressWarnings({"unused"})
     public Map<String, String> getMapOfStringVariable(String name, Map<String, String> defaultValue) {
         if (ctABTestController == null) {
@@ -6985,30 +7094,26 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return ctABTestController.getMapOfStringVariable(name, defaultValue);
     }
 
-    public Map<String, String> getDeviceInfo() {
-        final Map<String, String> deviceInfo = new HashMap<>();
-        deviceInfo.put("build", String.valueOf(this.deviceInfo.getBuild()));
-        deviceInfo.put("versionName",this.deviceInfo.getVersionName());
-        deviceInfo.put("osName", this.deviceInfo.getOsName());
-        deviceInfo.put("osVersion", this.deviceInfo.getOsVersion());
-        deviceInfo.put("manufacturer",this.deviceInfo.getManufacturer());
-        deviceInfo.put("model", this.deviceInfo.getModel());
-        deviceInfo.put("sdkVersion", String.valueOf(this.deviceInfo.getSdkVersion()));
-        deviceInfo.put("dpi", String.valueOf(this.deviceInfo.getDPI()));
-        deviceInfo.put("device_width", String.valueOf(this.deviceInfo.getWidthPixels()));
-        deviceInfo.put("device_height", String.valueOf(this.deviceInfo.getHeightPixels()));
-        return deviceInfo;
-    }
-
     private void initABTesting(){
         if (!config.isAnalyticsOnly()) {
             if (!config.isABTestingEnabled()) {
                 getConfigLogger().debug(config.getAccountId(), "AB Testing is not enabled for this instance");
                 return;
             }
+
+            if (getCleverTapID() == null) {
+                getConfigLogger().verbose(config.getAccountId(), "GUID not set yet, deferring ABTesting initialization");
+                postAsyncSafely("postDelayedInitABTesting", new Runnable() {
+                    @Override
+                    public void run() {
+                        initABTesting();
+                    }
+                });
+                return;
+            }
             config.setEnableUIEditor(isUIEditorEnabled);
             if (ctABTestController == null) {
-                ctABTestController = new CTABTestController(context, config, getCleverTapID(), this); // TODO what if guid is null?
+                ctABTestController = new CTABTestController(context, config, getCleverTapID(), this);
                 getConfigLogger().verbose(config.getAccountId(), "AB Testing initialized");
             }
         }
@@ -7028,8 +7133,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     private void processIncomingExperiments(JSONObject experiments){
         try {
-            //TODO handle AB Testing response from LC
-            JSONArray experimentsArray = experiments.getJSONArray("experiments");
+            JSONArray experimentsArray = experiments.getJSONArray("ab_exp");
             if (this.ctABTestController != null) {
                 ctABTestController.updateExperiments(experimentsArray);
             }
@@ -7037,4 +7141,32 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             getConfigLogger().debug(config.getAccountId(), "Error parsing AB Testing response " + e.getLocalizedMessage());
         }
     }
+
+    @Override
+    public void ABExperimentsUpdated() {
+        try {
+            final CTExperimentsListener sl = getCTExperimentsListener();
+            if (sl != null) {
+                sl.CTExperimentsUpdated();
+            }
+        } catch (Throwable t) {
+            // no-op
+        }
+    }
+
+    public Map<String, String> getDeviceInfo() {
+        final Map<String, String> deviceInfo = new HashMap<>();
+        deviceInfo.put("build", String.valueOf(this.deviceInfo.getBuild()));
+        deviceInfo.put("versionName",this.deviceInfo.getVersionName());
+        deviceInfo.put("osName", this.deviceInfo.getOsName());
+        deviceInfo.put("osVersion", this.deviceInfo.getOsVersion());
+        deviceInfo.put("manufacturer",this.deviceInfo.getManufacturer());
+        deviceInfo.put("model", this.deviceInfo.getModel());
+        deviceInfo.put("sdkVersion", String.valueOf(this.deviceInfo.getSdkVersion()));
+        deviceInfo.put("dpi", String.valueOf(this.deviceInfo.getDPI()));
+        deviceInfo.put("device_width", String.valueOf(this.deviceInfo.getWidthPixels()));
+        deviceInfo.put("device_height", String.valueOf(this.deviceInfo.getHeightPixels()));
+        return deviceInfo;
+    }
+
 }

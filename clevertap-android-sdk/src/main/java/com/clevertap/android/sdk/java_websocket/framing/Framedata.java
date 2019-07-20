@@ -61,6 +61,7 @@ public interface Framedata {
 	 * Defines whether the "Payload data" is masked.
 	 * @return true, "Payload data" is masked
 	 */
+	@SuppressWarnings("unused")
 	boolean getTransfereMasked();
 
 	/**
@@ -73,7 +74,7 @@ public interface Framedata {
 	 * The "Payload data" which was sent in this frame
 	 * @return the "Payload data" as ByteBuffer
 	 */
-	ByteBuffer getPayloadData();// TODO the separation of the application data and the extension data is yet to be done
+	ByteBuffer getPayloadData();
 
 	/**
 	 * Appends an additional frame to the current frame
@@ -81,5 +82,6 @@ public interface Framedata {
 	 * This methods does not override the opcode, but does override the fin
 	 * @param nextframe the additional frame
 	 */
+	@SuppressWarnings("unused")
 	void append( Framedata nextframe );
 }

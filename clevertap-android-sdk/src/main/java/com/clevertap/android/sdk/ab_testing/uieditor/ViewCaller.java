@@ -23,7 +23,6 @@ class ViewCaller {
         if (null == targetMethod) {
             throw new NoSuchMethodException("Method " + targetClass.getName() + "." + methodName + " doesn't exit");
         }
-
         this.targetClass = targetMethod.getDeclaringClass();
     }
 
@@ -44,7 +43,6 @@ class ViewCaller {
                 Logger.v("Method " + targetMethod.getName() + " threw an exception", e);
             }
         }
-
         return null;
     }
 
@@ -81,17 +79,10 @@ class ViewCaller {
 
             return method;
         }
-
         return null;
     }
 
     private static Class<?> assignableArgType(Class<?> type) {
-        // a.isAssignableFrom(b) only tests if b is a
-        // subclass of a. It does not handle the autoboxing case,
-        // i.e. when a is an int and b is an Integer, so we have
-        // to make the Object types primitive types. When the
-        // function is finally invoked, autoboxing will take
-        // care of the the cast.
         if (type == Byte.class) {
             type = byte.class;
         } else if (type == Short.class) {
@@ -109,7 +100,6 @@ class ViewCaller {
         } else if (type == Character.class) {
             type = char.class;
         }
-
         return type;
     }
 
@@ -143,7 +133,6 @@ class ViewCaller {
                 }
             }
         }
-
         return true;
     }
 }

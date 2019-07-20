@@ -147,13 +147,14 @@ public class UIEditor {
     private final Handler uiThreadHandler;
     private final Map<String, List<ViewEdit>> newEdits;
     private final Set<UIChangeBinding> currentEdits;
-    private final List<String> editorImageList;
 
     private SnapshotBuilder.ViewSnapshotConfig snapshotConfig;
 
     private ActivitySet activitySet;
+
     private Context context;
     private boolean imageCacheInitialized;
+    private final ArrayList<String> editorSessionImageUrls;
 
     public UIEditor(Context context, CleverTapInstanceConfig config) {
         String resourcePackageName = config.getPackageName();
@@ -166,7 +167,7 @@ public class UIEditor {
         newEdits = new HashMap<>();
         currentEdits = new HashSet<>();
         activitySet = new ActivitySet();
-        editorImageList = new ArrayList<>();
+        editorSessionImageUrls = new ArrayList<>();
         this.context = context;
     }
 
@@ -187,10 +188,6 @@ public class UIEditor {
         activitySet.remove(activity);
     }
 
-    public List<String> getEditorImageList() {
-        return editorImageList;
-    }
-
     public boolean loadSnapshotConfig(JSONObject data) {
         if (snapshotConfig == null) {
             List<ViewProperty> properties = loadViewProperties(data);
@@ -203,28 +200,34 @@ public class UIEditor {
 
     public void writeSnapshot(final OutputStream out) {
         if (snapshotConfig == null) {
-            getConfigLogger().debug("Unable to write snapshot, snapshot config not set");
+            getConfigLogger().debug("UIEditor: Unable to write snapshot, snapshot config not set");
             return;
         }
         try {
             SnapshotBuilder.writeSnapshot(snapshotConfig, activitySet, out, config);
         }  catch (Throwable t) {
-            getConfigLogger().debug("error writing snapshot", t);
+            getConfigLogger().debug("UIEditor: error writing snapshot", t);
         }
     }
 
     public void stopVariants() {
         clearEdits();
+        for (final String assetUrl: editorSessionImageUrls) {
+            ImageCache.removeBitmap(assetUrl, true);
+        }
+        editorSessionImageUrls.clear();
         snapshotConfig = null;
     }
 
-    public void applyVariants(Set<CTABVariant> variants) {
+    public void applyVariants(Set<CTABVariant> variants, boolean isEditorSession) {
         final Map<String, List<ViewEdit>> edits = new HashMap<>();
         for (CTABVariant variant : variants) {
             for (CTABVariant.CTVariantAction action: variant.getActions()) {
                 final UIChange change = generateUIChange(action.getChange());
                 if (change != null) {
-                    editorImageList.addAll(change.imageUrls); //Add all images to a list to be cleared when dashboard disconnects.
+                    if (isEditorSession) {
+                        editorSessionImageUrls.addAll(change.imageUrls); // Add all images to a list to be cleared when dashboard disconnects.
+                    }
                     String name = action.getActivityName();
                     ViewEdit viewEdit = change.viewEdit;
                     final List<ViewEdit> mapElement;
@@ -266,10 +269,10 @@ public class UIEditor {
                 }
             }
         } catch (JSONException e) {
-            //TODO logging here
+            getConfigLogger().verbose("UIEditor: Error loading view properties json: " + data.toString());
             return null;
         } catch (final ClassNotFoundException e) {
-            //TODO logging here
+            getConfigLogger().verbose("UIEditor: Error loading view properties", e);
             return null;
         }
         return properties;
@@ -337,21 +340,21 @@ public class UIEditor {
             final JSONArray pathDesc = data.getJSONArray("path");
             final List<ViewEdit.PathElement> path = generatePath(pathDesc, resourceIds);
             if (path.size() == 0) {
-                //TODO logging
+                getConfigLogger().verbose("UIEditor: UI change path is empty: " + data.toString());
                 return null;
             }
             if (data.getString("change_type").equals("property")) {
                 final JSONObject propertyDesc = data.getJSONObject("property");
                 final String targetClassName = propertyDesc.getString("classname");
-                if (null == targetClassName) {
-                    //TODO logging
+                if (targetClassName == null) {
+                    getConfigLogger().verbose("UIEditor: UI change target classname is missing: " + data.toString());
                     return null;
                 }
                 final Class<?> targetClass;
                 try {
                     targetClass = Class.forName(targetClassName);
                 } catch (final ClassNotFoundException e) {
-                    getConfigLogger().verbose(getAccountId(),"Class not found while generating UI change - "+ e.getLocalizedMessage());
+                    getConfigLogger().verbose(getAccountId(),"UIEditor: Class not found while generating UI change - "+ e.getLocalizedMessage());
                     return null;
                 }
                 final ViewProperty prop = generateViewProperty(targetClass, data.getJSONObject("property"));
@@ -366,22 +369,22 @@ public class UIEditor {
 
                 ViewCaller mutator = null;
                 if (prop != null) {
-                    mutator = prop.makeMutator(methodArgs);
+                    mutator = prop.createMutator(methodArgs);
                 }
                 if (mutator == null) {
-                    //TODO logging
+                    getConfigLogger().verbose("UIEditor: UI change unable to create mutator: " + data.toString());
                     return null;
                 }
                 viewEdit = new ViewEdit(path, mutator, prop.accessor);
             } else {
-                //TODO logging
+                getConfigLogger().verbose("UIEditor: UI change type is unknown: " + data.toString());
                 return null;
             }
         } catch (final NoSuchMethodException e) {
-            getConfigLogger().verbose(getAccountId(),"No such method found while generating UI change - "+ e.getLocalizedMessage());
+            getConfigLogger().verbose(getAccountId(),"UIEditor: No such method found while generating UI change - "+ e.getLocalizedMessage());
             return null;
         } catch (final JSONException e) {
-            getConfigLogger().verbose(getAccountId(),"Unable to parse JSON while generating UI change - "+ e.getLocalizedMessage());
+            getConfigLogger().verbose(getAccountId(),"UIEditor: Unable to parse JSON while generating UI change - "+ e.getLocalizedMessage());
             return null;
         }
         return new UIChange(viewEdit, imageUrls);
@@ -409,13 +412,13 @@ public class UIEditor {
             }
             return new ViewProperty(propName, targetClass, accessor, mutatorName);
         } catch (final NoSuchMethodException e) {
-            //TODO add logging
+            getConfigLogger().verbose("UIEditor: Error generating view property", e);
             return null;
         } catch (final JSONException e) {
-            //TODO add logging
+            getConfigLogger().verbose("UIEditor: Error generating view property", e);
             return null;
         } catch (final ClassNotFoundException e) {
-            //TODO add logging
+            getConfigLogger().verbose("UIEditor: Error generating view property", e);
             return null;
         }
     }
@@ -433,12 +436,12 @@ public class UIEditor {
             final String targetTag = Utils.optionalStringKey(targetView, "tag");
 
             final int prefix;
-            if ("shortest".equals(prefixCode)) {
+            if (prefixCode == null) {
+                prefix = ViewEdit.PathElement.ZERO_LENGTH_PREFIX ;
+            } else if (prefixCode.equals("shortest")) {
                 prefix = ViewEdit.PathElement.SHORTEST_PREFIX;
-            } else if (prefixCode == null) {
-                prefix = ViewEdit.PathElement.ZERO_LENGTH_PREFIX;
             } else {
-                getConfigLogger().verbose(getAccountId(), "Unrecognized prefix type \"" + prefixCode + "\". No views will be matched");
+                getConfigLogger().verbose(getAccountId(), "UIEditor: Unrecognized prefix type \"" + prefixCode + "\". No views will be matched");
                 return NEVER_MATCH_PATH;
             }
             final int targetId;
@@ -461,7 +464,7 @@ public class UIEditor {
                 idFromName = idNameToId.idFromName(idName);
             } else {
                 getConfigLogger().debug(getAccountId(),
-                        "Path element contains an id name not known to the system. No views will be matched.\n" +
+                        "UIEditor: Path element contains an id name not known to the system. No views will be matched.\n" +
                                 "Make sure that you're not stripping your packages R class out with proguard.\n" +
                                 "id name was \"" + idName + "\""
                 );
@@ -472,7 +475,7 @@ public class UIEditor {
         }
 
         if (idFromName != -1 && explicitId != -1 && idFromName != explicitId) {
-            getConfigLogger().debug(getAccountId(), "Path contains both a named and an explicit id which don't match, can't match.");
+            getConfigLogger().debug(getAccountId(), "UIEditor: Path contains both a named and an explicit id which don't match, can't match.");
             return null;
         }
 
@@ -508,11 +511,11 @@ public class UIEditor {
                     int colorValue = ((Number) jsonArgument).intValue();
                     return new ColorDrawable(colorValue);
                 default:
-                    getConfigLogger().verbose(getAccountId(), "Unhandled argument object type: " +type);
+                    getConfigLogger().verbose(getAccountId(), "UIEditor: Unhandled argument object type: " +type);
                     return null;
             }
         } catch (final ClassCastException e) {
-            getConfigLogger().verbose(getAccountId(),"Error casting class while converting argument - "+ e.getLocalizedMessage());
+            getConfigLogger().verbose(getAccountId(),"UIEditor: Error casting class while converting argument - "+ e.getLocalizedMessage());
             return null;
         }
     }
@@ -548,7 +551,7 @@ public class UIEditor {
 
             return ret;
         } catch (JSONException e) {
-            getConfigLogger().verbose(getAccountId(),"Unable to parse JSON while reading Bitmap from payload - "+ e.getLocalizedMessage());
+            getConfigLogger().verbose(getAccountId(),"UIEditor: Unable to parse JSON while reading Bitmap from payload - "+ e.getLocalizedMessage());
             return null;
         }
     }

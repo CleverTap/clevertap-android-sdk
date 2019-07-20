@@ -17,7 +17,6 @@ import android.support.annotation.NonNull;
 
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.ImageCache;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ab_testing.gesture.ConnectionGesture;
 import com.clevertap.android.sdk.ab_testing.models.CTABVariant;
@@ -42,7 +41,6 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -229,9 +227,8 @@ public class CTABTestController {
     public void resetWithGuid(String guid){
         this.guid = guid;
         this.varCache.reset();
-        //TODO
-        // most likely clear the UI experiments and then apply any persisted ones for the new user and then wait for new ones coming back in the app launched call
-        applyStoredExperiments();  // most likely
+        uiEditor.stopVariants();
+        applyStoredExperiments();
     }
 
     public void updateExperiments(JSONArray experiments) {
@@ -503,9 +500,7 @@ public class CTABTestController {
         private DashboardClient wsClient;
         private static final int CONNECT_TIMEOUT = 5000;
         private Context context;
-        private final List<String> editorAssetUrls;
-        private Set<CTABVariant> allExperiments;
-        private final Set<String> seenExperiments;
+        private Set<CTABVariant> experiments;
         private CTABVariant editorSessionVariant;
         private HashSet<CTABVariant> editorSessionVariantSet;
 
@@ -514,9 +509,7 @@ public class CTABTestController {
             super(looper);
             this.config = config;
             this.context = context;
-            editorAssetUrls = new ArrayList<>();
-            this.allExperiments = new HashSet<>();
-            this.seenExperiments = new HashSet<>();
+            this.experiments = new HashSet<>();
             lock.lock();
         }
 
@@ -528,8 +521,8 @@ public class CTABTestController {
             if (editorSessionVariant == null) {
                 try {
                     JSONObject variant = new JSONObject();
-                    variant.put("id", 0);
-                    variant.put("experiment_id", 0);
+                    variant.put("id", "0");
+                    variant.put("experiment_id", "0");
                     editorSessionVariant = new CTABVariant(variant);
                     editorSessionVariantSet = new HashSet<>();
                     editorSessionVariantSet.add(editorSessionVariant);
@@ -611,7 +604,7 @@ public class CTABTestController {
             }
 
             final String protocol = "wss";
-            final String dashboardDomain = /*@"dashboard.clevertap.com"*/ "01a63471.ngrok.io";  // TODO put final production dashboard link
+            final String dashboardDomain = /*@"dashboard.clevertap.com"*/ "c1fce0f6.ngrok.io";  // TODO put final production dashboard link
             //final String dashboardDomain = "eu1-dashboard-staging-2.dashboard.clevertap.com"; //Staging link
             final String domain = config.getAccountRegion() != null ? config.getAccountRegion()+"."+dashboardDomain : dashboardDomain;
             final String url =  protocol+"://"+domain+"/"+getAccountId()+"/"+"websocket/screenab/sdk?tk="+config.getAccountToken();
@@ -654,12 +647,12 @@ public class CTABTestController {
             try {
                 writer.write(message);
             } catch (final IOException e) {
-                getConfigLogger().debug(getAccountId(), "Can't message to editor", e);
+                getConfigLogger().verbose(getAccountId(), "Can't message to editor", e);
             } finally {
                 try {
                     writer.close();
                 } catch (final IOException e) {
-                    getConfigLogger().debug(getAccountId(), "Could not close output writer to editor", e);
+                    getConfigLogger().verbose(getAccountId(), "Could not close output writer to editor", e);
                 }
             }
         }
@@ -704,18 +697,14 @@ public class CTABTestController {
             }
         }
 
-        private void loadVariants(JSONArray experiments, boolean areNew){
+        private void loadVariants(JSONArray experiments){
             if (null != experiments) {
                 try {
-                    // TODO check for diff from storage and mark areNew based on experiment seen or not. Use areNew to raise event
                     final int experimentsLength = experiments.length();
                     for (int i = 0; i < experimentsLength; i++) {
                         final JSONObject nextVariant = experiments.getJSONObject(i);
                         final CTABVariant variant = new CTABVariant(nextVariant);
-                        allExperiments.add(variant);
-                        if (!areNew) {
-                            seenExperiments.add(variant.getId());
-                        }
+                        this.experiments.add(variant);
                     }
                 } catch (JSONException e) {
                     getConfigLogger().verbose(getAccountId(), "JSON error when loading ab tests / tweaks, clearing persistent memory", e);
@@ -728,7 +717,7 @@ public class CTABTestController {
         }
 
         private void applyExperiments(JSONArray experiments, boolean areNew) {
-            loadVariants(experiments, areNew);
+            loadVariants(experiments);
             applyVariants();
             if (areNew) {
                 persistExperiments(experiments);
@@ -737,15 +726,10 @@ public class CTABTestController {
         }
 
         private void applyVariants() {
-            for (CTABVariant variant : allExperiments) {
+            for (CTABVariant variant : experiments) {
                 applyVars(variant.getVars());
-
-                if (!seenExperiments.contains(variant.getId())) {
-                    //TODO raise event
-                }
             }
-            uiEditor.applyVariants(allExperiments);
-            editorAssetUrls.addAll(uiEditor.getEditorImageList());//TODO Darshan place this at the right place.
+            uiEditor.applyVariants(experiments, false);
         }
 
         private void sendHandshake() {
@@ -881,7 +865,7 @@ public class CTABTestController {
                 } else {
                     getEditorSessionVariant().addActions(changes);
                 }
-                uiEditor.applyVariants(editorSessionVariantSet);
+                uiEditor.applyVariants(editorSessionVariantSet, true);
             } catch (Throwable t) {
                 getConfigLogger().debug(getAccountId(),"Unable to handle dashboard changes received - "+t);
             }
@@ -895,7 +879,7 @@ public class CTABTestController {
                 }else{
                     getEditorSessionVariant().removeActionsByName(changes);
                 }
-                uiEditor.applyVariants(editorSessionVariantSet);
+                uiEditor.applyVariants(editorSessionVariantSet, true);
             } catch (Throwable t) {
                 getConfigLogger().debug(getAccountId(),"Unable to clear dashboard changes - "+t);
             }
@@ -934,9 +918,6 @@ public class CTABTestController {
             stopVariants();
             getEditorSessionVariant().clearActions();
             varCache.reset();
-            for (final String assetUrl:editorAssetUrls) {
-                ImageCache.removeBitmap(assetUrl, true);
-            }
             applyVariants();
         }
 
