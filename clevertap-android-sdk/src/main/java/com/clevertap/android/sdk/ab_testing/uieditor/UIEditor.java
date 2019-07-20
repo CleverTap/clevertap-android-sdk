@@ -228,6 +228,8 @@ public class UIEditor {
                     if (isEditorSession) {
                         editorSessionImageUrls.addAll(change.imageUrls); // Add all images to a list to be cleared when dashboard disconnects.
                     }
+                    variant.addImageUrls(change.imageUrls);
+
                     String name = action.getActivityName();
                     ViewEdit viewEdit = change.viewEdit;
                     final List<ViewEdit> mapElement;

@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.ab_testing.models;
 
+import com.clevertap.android.sdk.ImageCache;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 
@@ -7,6 +8,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class CTABVariant {
 
@@ -41,6 +43,7 @@ public class CTABVariant {
     private ArrayList<CTVariantAction> actions = new ArrayList<>();
     private JSONArray vars = new JSONArray();
     private final Object actionsLock = new Object();
+    private ArrayList<String> imageUrls;
 
     public CTABVariant(JSONObject variant) {
         try {
@@ -48,6 +51,7 @@ public class CTABVariant {
             experimentId = variant.optString("experiment_id", "0");
             version = variant.optInt("variant_version", 0);
             this.id = variantId+":"+experimentId;
+            imageUrls = new ArrayList<>();
             try {
                 final JSONArray actions = variant.optJSONArray("actions");
                 addActions(actions);
@@ -142,4 +146,14 @@ public class CTABVariant {
         return version;
     }
 
+    public void addImageUrls(List<String>urls) {
+        if (urls == null) return;
+        this.imageUrls.addAll(urls);
+    }
+
+    public void cleanup() {
+        for (String url: imageUrls) {
+            ImageCache.removeBitmap(url, true);
+        }
+    }
 }
