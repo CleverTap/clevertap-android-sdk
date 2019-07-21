@@ -110,7 +110,6 @@ public class ImageCache {
         return bitmap;
     }
 
-    @SuppressWarnings("WeakerAccess")
     public static void removeBitmap(String key, boolean isPersisted) {
         synchronized (ImageCache.class) {
             if (isPersisted) {

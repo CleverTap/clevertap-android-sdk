@@ -92,10 +92,12 @@ class ViewEdit {
     }
 
     void cleanup() {
-        for (Map.Entry<View, Object> original:originalValues.entrySet()) {
+        Logger.v("Cleaning up ViewEdit with path: " + path.toString()); // TODO remove
+        for (Map.Entry<View, Object> original : originalValues.entrySet()) {
             final View changedView = original.getKey();
             final Object originalValue = original.getValue();
-            if (null != originalValue) {
+            Logger.v("In cleanup trying to revert view: " + changedView.toString() + " to originalValue: " + (originalValue == null ? "NULL" : originalValue.toString()));  // TODO remove
+            if (originalValue != null) {
                 originalValueHolder[0] = originalValue;
                 mutator.invokeMethodWithArgs(changedView, originalValueHolder);
             }
@@ -110,6 +112,7 @@ class ViewEdit {
                 final Object targetValue = args[0];
                 final Object currentValue = accessor.invokeMethod(targetView);
 
+                Logger.v("Applying View Edit with target value: " + (targetValue != null ? targetValue.toString() : "NULL") + " and current value: "+ (currentValue != null ? currentValue.toString() : "NULL")); // TODO remove
                 if (targetValue == currentValue) {
                     return;
                 }
@@ -137,6 +140,7 @@ class ViewEdit {
                     if (mutator.argsAreApplicable(originalValueHolder)) {
                         originalValues.put(targetView, currentValue);
                     } else {
+                        Logger.v("Unable to save original value for current value: "+ (currentValue != null ? currentValue.toString() : "NULL"));  // TODO remove
                         originalValues.put(targetView, null);
                     }
                 }

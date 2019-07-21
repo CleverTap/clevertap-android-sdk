@@ -163,7 +163,7 @@ public class CTABTestController {
                 messageCode = ExecutionThreadHandler.MESSAGE_MATCHED;
                 break;
             case MESSAGE_TYPE_DISCONNECT :
-                messageCode = ExecutionThreadHandler.MESSAGE_HANDLE_EDITOR_CLOSED;
+                messageCode = ExecutionThreadHandler.MESSAGE_HANDLE_DISCONNECT;
             default:
                 break;
         }
@@ -178,16 +178,6 @@ public class CTABTestController {
         }
         m.obj = messageObject;
 
-        executionThreadHandler.sendMessage(m);
-    }
-
-    private void handleDashboardConnect() {
-        final Message m = executionThreadHandler.obtainMessage(ExecutionThreadHandler.MESSAGE_SEND_HANDSHAKE);
-        executionThreadHandler.sendMessage(m);
-    }
-
-    private void handleDashboardDisconnect() {
-        final Message m = executionThreadHandler.obtainMessage(ExecutionThreadHandler.MESSAGE_HANDLE_EDITOR_CLOSED);
         executionThreadHandler.sendMessage(m);
     }
 
@@ -482,16 +472,15 @@ public class CTABTestController {
         static final int MESSAGE_SEND_SNAPSHOT= 2;
         static final int MESSAGE_HANDLE_EDITOR_CHANGES_RECEIVED = 3;
         static final int MESSAGE_SEND_DEVICE_INFO = 4;
-        static final int MESSAGE_HANDLE_EDITOR_CLOSED = 5;
+        static final int MESSAGE_HANDLE_DISCONNECT = 5;
         static final int MESSAGE_EXPERIMENTS_RECEIVED = 6;
         static final int MESSAGE_HANDLE_EDITOR_CHANGES_CLEARED = 7;
         static final int MESSAGE_HANDLE_EDITOR_VARS_RECEIVED = 8;
         static final int MESSAGE_SEND_LAYOUT_ERROR = 9;
         static final int MESSAGE_PERSIST_EXPERIMENTS = 10;
-        static final int MESSAGE_SEND_HANDSHAKE = 11;
-        static final int MESSAGE_SEND_VARS = 12;
-        static final int MESSAGE_TEST_VARS = 13;
-        static final int MESSAGE_MATCHED = 14;
+        static final int MESSAGE_SEND_VARS = 11;
+        static final int MESSAGE_TEST_VARS = 12;
+        static final int MESSAGE_MATCHED = 13;
 
         private static final String EXPERIMENTS_KEY = "experiments";
 
@@ -500,8 +489,7 @@ public class CTABTestController {
         private DashboardClient wsClient;
         private static final int CONNECT_TIMEOUT = 5000;
         private Context context;
-        private Set<CTABVariant> experiments;
-        private Set<CTABVariant> storedExperiments;
+        private Set<CTABVariant> variants;
         private CTABVariant editorSessionVariant;
         private HashSet<CTABVariant> editorSessionVariantSet;
 
@@ -510,13 +498,20 @@ public class CTABTestController {
             super(looper);
             this.config = config;
             this.context = context;
-            this.experiments = new HashSet<>();
-            this.storedExperiments = new HashSet<>();
+            this.variants = new HashSet<>();
             lock.lock();
         }
 
         public void start() {
             lock.unlock();
+        }
+
+        private Logger getConfigLogger(){
+            return config.getLogger();
+        }
+
+        private String getAccountId(){
+            return config.getAccountId();
         }
 
         private CTABVariant getEditorSessionVariant() {
@@ -525,11 +520,11 @@ public class CTABTestController {
                     JSONObject variant = new JSONObject();
                     variant.put("id", "0");
                     variant.put("experiment_id", "0");
-                    editorSessionVariant = new CTABVariant(variant);
+                    editorSessionVariant = CTABVariant.initWithJSON(variant);
                     editorSessionVariantSet = new HashSet<>();
                     editorSessionVariantSet.add(editorSessionVariant);
                 } catch (Throwable t) {
-                    // no-op
+                   getConfigLogger().verbose(getAccountId(), "Error creating editor session variant", t);
                 }
             }
             return editorSessionVariant;
@@ -550,6 +545,9 @@ public class CTABTestController {
                         break;
                     case MESSAGE_MATCHED:
                         handleMatched();
+                        break;
+                    case MESSAGE_HANDLE_DISCONNECT:
+                        handleDashboardDisconnect();
                         break;
                     case MESSAGE_SEND_DEVICE_INFO:
                         sendDeviceInfo();
@@ -572,14 +570,8 @@ public class CTABTestController {
                     case MESSAGE_HANDLE_EDITOR_VARS_RECEIVED:
                         handleEditorVarsReceived((JSONObject) data);
                         break;
-                    case MESSAGE_HANDLE_EDITOR_CLOSED:
-                        handleEditorClosed();
-                        break;
                     case MESSAGE_PERSIST_EXPERIMENTS:
                         persistExperiments((JSONArray) data);
-                        break;
-                    case MESSAGE_SEND_HANDSHAKE:
-                        sendHandshake();
                         break;
                     case MESSAGE_SEND_VARS:
                         sendVars();
@@ -606,7 +598,7 @@ public class CTABTestController {
             }
 
             final String protocol = "wss";
-            final String dashboardDomain = /*@"dashboard.clevertap.com"*/ "c1fce0f6.ngrok.io";  // TODO put final production dashboard link
+            final String dashboardDomain = /*@"dashboard.clevertap.com"*/ "aa931949.ngrok.io";  // TODO put final production dashboard link
             //final String dashboardDomain = "eu1-dashboard-staging-2.dashboard.clevertap.com"; //Staging link
             final String domain = config.getAccountRegion() != null ? config.getAccountRegion()+"."+dashboardDomain : dashboardDomain;
             final String url =  protocol+"://"+domain+"/"+getAccountId()+"/"+"websocket/screenab/sdk?tk="+config.getAccountToken();
@@ -619,6 +611,17 @@ public class CTABTestController {
             }
         }
 
+        private void closeConnection() {
+            if (connectionIsValid()) {
+                try {
+                    getConfigLogger().verbose(getAccountId(), "disconnecting from dashboard");
+                    wsClient.closeBlocking();
+                } catch (final Exception e) {
+                    getConfigLogger().verbose(getAccountId(), "Unable to close dashboard connection", e);
+                }
+            }
+        }
+
         private boolean connectionIsValid() {
             return wsClient != null && !wsClient.isClosed() && !wsClient.isClosing() && !wsClient.isFlushAndClose();
         }
@@ -627,12 +630,16 @@ public class CTABTestController {
             return wsClient != null && wsClient.isOpen();
         }
 
-        private Logger getConfigLogger(){
-            return config.getLogger();
+        private void handleOnOpen() {
+            sendHandshake();
         }
 
-        private String getAccountId(){
-            return config.getAccountId();
+        private void handleOnClose() {
+            getConfigLogger().verbose(getAccountId(), "handle websocket on close");
+            stopVariants();
+            getEditorSessionVariant().clearActions();
+            varCache.reset();
+            applyVariants();
         }
 
         private BufferedOutputStream getBufferedOutputStream() {
@@ -677,7 +684,6 @@ public class CTABTestController {
         private void persistExperiments(JSONArray experiments) {
             final SharedPreferences preferences = getSharedPreferences();
             final SharedPreferences.Editor editor = preferences.edit();
-            editor.remove(EXPERIMENTS_KEY); //Clear all data and add new experiments
             editor.putString(EXPERIMENTS_KEY, experiments.toString());
             editor.apply();
         }
@@ -685,7 +691,7 @@ public class CTABTestController {
         private void loadStoredExperiments() {
             final SharedPreferences preferences = getSharedPreferences();
             final String storedExperiments = preferences.getString(EXPERIMENTS_KEY, null);
-            if (null != storedExperiments) {
+            if (storedExperiments != null) {
                 try {
                     getConfigLogger().debug(getAccountId(), "Loading Stored Experiments: " + storedExperiments + " for key: " + getSharedPrefsName());
                     final JSONArray _experiments = new JSONArray(storedExperiments);
@@ -700,83 +706,54 @@ public class CTABTestController {
             }
         }
 
-        private Set<CTABVariant> getStoredExperiments(){
-            Set<CTABVariant> storedSet = new HashSet<>();
-            final SharedPreferences preferences = getSharedPreferences();
-            final String storedExperiments = preferences.getString(EXPERIMENTS_KEY, null);
-            if (null != storedExperiments) {
-                try {
-                    final JSONArray _experiments = new JSONArray(storedExperiments);
-                    for (int i = 0; i < _experiments.length(); i++) {
-                        final JSONObject nextVariant = _experiments.getJSONObject(i);
-                        final CTABVariant variant = new CTABVariant(nextVariant);
-                        storedSet.add(variant);
-                    }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-            }else{
-                getConfigLogger().debug(getAccountId(), "No Stored Experiments for key: " + getSharedPrefsName());
-            }
-            return storedSet;
-        }
-
-        private void loadVariants(JSONArray experiments, boolean areNew){
-            if (null != experiments) {
-                try {
-                    final int experimentsLength = experiments.length();
-                    for (int i = 0; i < experimentsLength; i++) {
-                        final JSONObject nextVariant = experiments.getJSONObject(i);
-                        final CTABVariant variant = new CTABVariant(nextVariant);
-                        this.experiments.add(variant);
-
-                        if(areNew){
-                            Set<CTABVariant> tempExperiments = new HashSet<>();
-                            this.storedExperiments = getStoredExperiments();
-                            for(CTABVariant ctabVariant: storedExperiments){
-                                //Condition checks whether each stored experiment is in the Set of all experiments,
-                                //condition is false if the variant info changes in the CTABVariant object
-                                //If condition is false, add the CTABVariant object to tempExperiments Set and
-                                //then clear all experiments and add all tempExperiments. This way we handle finished
-                                //experiments and keep track of edited variants
-                                if(!this.experiments.contains(ctabVariant)){
-                                    tempExperiments.add(ctabVariant);
-                                }
-                            }
-                            this.experiments.clear();
-                            this.experiments.addAll(tempExperiments);
-                        }
-                    }
-                } catch (JSONException e) {
-                    getConfigLogger().verbose(getAccountId(), "JSON error when loading ab tests / tweaks, clearing persistent memory", e);
-                    final SharedPreferences preferences = getSharedPreferences();
-                    final SharedPreferences.Editor editor = preferences.edit();
-                    editor.remove(EXPERIMENTS_KEY);
-                    editor.apply();
-                }
-            }
-        }
-
         private void applyExperiments(JSONArray experiments, boolean areNew) {
-            loadVariants(experiments, areNew);
+            loadVariants(experiments);
             applyVariants();
             if (areNew) {
-                JSONArray persistArray =  new JSONArray();
-                for(CTABVariant variant: this.experiments){
-                    persistArray.put(variant.getExperimentObject());
-                }
-                persistExperiments(persistArray);
+                persistExperiments(experiments);
             }
             notifyExperimentsUpdated();
         }
 
-        private void applyVariants() {
-            for (CTABVariant variant : experiments) {
-                applyVars(variant.getVars());
+        private void loadVariants(JSONArray experiments){
+            if (experiments == null || experiments.length() <= 0) {
+                return;
             }
-            uiEditor.applyVariants(experiments, false);
+            // note:  experiments here will be all the currently running experiments for the user
+            try {  // TODO test this updating logic
+                Set<CTABVariant> toRemove = new HashSet<>(this.variants);
+                Set<CTABVariant> allVariants = new HashSet<>(this.variants);
+
+                final int experimentsLength = experiments.length();
+                for (int i = 0; i < experimentsLength; i++) {
+                    final JSONObject nextVariant = experiments.getJSONObject(i);
+                    final CTABVariant variant = CTABVariant.initWithJSON(nextVariant);
+                    if (variant != null) {
+                        boolean added = allVariants.add(variant);
+                        if (added) {
+                            toRemove.remove(variant);
+                        }
+                    }
+                }
+                if (toRemove.size() > 0) {
+                    for (CTABVariant v : toRemove) {
+                        v.cleanup();
+                        allVariants.remove(v);
+                    }
+                }
+                this.variants = allVariants;
+            } catch (JSONException e) {
+                getConfigLogger().verbose(getAccountId(), "Error loading variants, clearing all running variants", e);
+                this.variants.clear();
+            }
         }
 
+        private void applyVariants() {
+            for (CTABVariant variant : variants) {
+                applyVars(variant.getVars());
+            }
+            uiEditor.applyVariants(variants, false);
+        }
 
         private void sendHandshake() {
             try {
@@ -960,11 +937,8 @@ public class CTABTestController {
             stopVariants();
         }
 
-        private void handleEditorClosed() {
-            stopVariants();
-            getEditorSessionVariant().clearActions();
-            varCache.reset();
-            applyVariants();
+        private void handleDashboardDisconnect() {
+            closeConnection();
         }
 
         private void stopVariants() {
@@ -982,7 +956,7 @@ public class CTABTestController {
             @Override
             public void onOpen(ServerHandshake handshakedata) {
                 getConfigLogger().verbose(getAccountId(), "Websocket connected");
-                handleDashboardConnect();
+                handleOnOpen();
             }
 
             @Override
@@ -990,6 +964,10 @@ public class CTABTestController {
                 getConfigLogger().verbose(getAccountId(),"Received message from dashboard:\n" + message);
                 try {
                     final JSONObject messageJson = new JSONObject(message);
+                    if (!connectionIsValid()) {
+                        getConfigLogger().verbose(getAccountId(), "Dashboard connection is stale, dropping message: " + message);
+                        return;
+                    }
                     handleDashboardMessage(messageJson);
                 } catch (final JSONException e) {
                     getConfigLogger().verbose(getAccountId(),"Bad JSON message received:" + message, e);
@@ -999,7 +977,7 @@ public class CTABTestController {
             @Override
             public void onClose(int code, String reason, boolean remote) {
                 getConfigLogger().verbose(getAccountId(),"WebSocket closed. Code: " + code + ", reason: " + reason + "\nURI: " + dashboardURI);
-                handleDashboardDisconnect();
+                handleOnClose();
             }
 
             @Override

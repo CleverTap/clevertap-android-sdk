@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.ab_testing.models;
 
+import android.support.annotation.NonNull;
+
 import com.clevertap.android.sdk.ImageCache;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
@@ -39,35 +41,36 @@ public class CTABVariant {
     private String id;
     private String variantId;
     private String experimentId;
-    private Integer version;
+    private int version;
     private ArrayList<CTVariantAction> actions = new ArrayList<>();
-    private JSONArray vars = new JSONArray();
+    private JSONArray vars;
     private final Object actionsLock = new Object();
     private ArrayList<String> imageUrls;
-    private JSONObject experimentObject;
 
-    public CTABVariant(JSONObject variant) {
+    public static CTABVariant initWithJSON(JSONObject json) {
         try {
-            this.experimentObject = variant;
-            variantId = variant.optString("id", "0");
-            experimentId = variant.optString("experiment_id", "0");
-            version = variant.optInt("variant_version", 0);
-            this.id = variantId+":"+experimentId;
-            imageUrls = new ArrayList<>();
-            try {
-                final JSONArray actions = variant.optJSONArray("actions");
-                addActions(actions);
-            } catch (Throwable t) {
-                Logger.v("Error loading variant actions", t);
-            }
-            try {
-                this.vars = variant.optJSONArray("vars");
-            } catch (Throwable t) {
-                Logger.v("Error loading variant vars", t);
-            }
+            String experimentId = json.optString("experiment_id", "0");
+            String variantId = json.optString("id", "0");
+            int version = json.optInt("variant_version", 0);
+            final JSONArray actions = json.optJSONArray("actions");
+            final JSONArray vars = json.optJSONArray("vars");
+            CTABVariant variant = new CTABVariant(experimentId, variantId, version, actions, vars);
+            Logger.v("Created CTABVariant:  " + variant.toString());
+            return variant;
         } catch (Throwable t) {
             Logger.v("Error creating variant", t);
+            return null;
         }
+    }
+
+    private CTABVariant(String experimentId, String variantId, int version, JSONArray actions, JSONArray vars) {
+        this.experimentId = experimentId;
+        this.variantId = variantId;
+        this.id = variantId+":"+experimentId;
+        this.version = version;
+        imageUrls = new ArrayList<>();
+        addActions(actions);
+        this.vars = vars == null ? new JSONArray() : vars;
     }
 
     public String getId() {
@@ -82,6 +85,26 @@ public class CTABVariant {
     @SuppressWarnings("unused")
     String getExperimentId() {
         return experimentId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof CTABVariant) {
+            CTABVariant other = (CTABVariant) o;
+            return this.getId().equals(other.getId()) && this.getVersion() == other.getVersion();
+        }
+        return false;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.getId().hashCode();
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "< id: " + getId() + ", version: " + getVersion()+ ", actions count: " + actions.size() + ", vars count: " + getVars().length() + " >";
     }
 
     public void addActions(JSONArray actions) {
@@ -144,7 +167,7 @@ public class CTABVariant {
         return vars;
     }
 
-    public Integer getVersion() {
+    public int getVersion() {
         return version;
     }
 
@@ -157,9 +180,5 @@ public class CTABVariant {
         for (String url: imageUrls) {
             ImageCache.removeBitmap(url, true);
         }
-    }
-
-    public JSONObject getExperimentObject() {
-        return experimentObject;
     }
 }
