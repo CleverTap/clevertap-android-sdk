@@ -73,7 +73,7 @@ class ViewCaller {
                 assignable = paramType.isAssignableFrom(argumentType);
             }
 
-            if (! assignable) {
+            if (!assignable) {
                 continue;
             }
 
