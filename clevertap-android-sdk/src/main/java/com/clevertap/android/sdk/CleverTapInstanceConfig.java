@@ -19,7 +19,7 @@ public class CleverTapInstanceConfig implements Parcelable {
     private boolean disableAppLaunchedEvent;
     private boolean personalization;
     private int debugLevel;
-    protected Logger logger;
+    private Logger logger;
     private boolean createdPostAppLaunch;
     private boolean sslPinning;
     private boolean backgroundSync;
@@ -29,7 +29,7 @@ public class CleverTapInstanceConfig implements Parcelable {
     private boolean enableABTesting;
     private String packageName;
 
-    private CleverTapInstanceConfig(Context context, String accountId, String accountToken, String accountRegion, boolean isDefault){
+    private CleverTapInstanceConfig(Context context, String accountId, String accountToken, String accountRegion, boolean isDefault) {
         this.accountId = accountId;
         this.accountToken = accountToken;
         this.accountRegion = accountRegion;
@@ -53,7 +53,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.enableCustomCleverTapId = manifest.useCustomId();
     }
 
-    CleverTapInstanceConfig(CleverTapInstanceConfig config){
+    CleverTapInstanceConfig(CleverTapInstanceConfig config) {
         this.accountId = config.accountId;
         this.accountToken = config.accountToken;
         this.accountRegion = config.accountRegion;
@@ -98,8 +98,8 @@ public class CleverTapInstanceConfig implements Parcelable {
                 this.personalization = configJsonObject.getBoolean(Constants.KEY_PERSONALIZATION);
             if(configJsonObject.has(Constants.KEY_DEBUG_LEVEL)) {
                 this.debugLevel = configJsonObject.getInt(Constants.KEY_DEBUG_LEVEL);
-                this.logger = new Logger(this.debugLevel);
             }
+            this.logger = new Logger(this.debugLevel);
             if(configJsonObject.has("enableABTesting"))
                 this.enableABTesting = configJsonObject.getBoolean("enableABTesting");
             if(configJsonObject.has("enableUIEditor"))
@@ -142,6 +142,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         enableABTesting = in.readByte() != 0x00;
         enableUIEditor = in.readByte() != 0x00;
         packageName = in.readString();
+        logger = new Logger(debugLevel);
     }
 
     @SuppressWarnings("unused")
@@ -267,6 +268,9 @@ public class CleverTapInstanceConfig implements Parcelable {
     }
 
     public Logger getLogger() {
+        if (logger == null) {
+            logger = new Logger(this.debugLevel);
+        }
         return logger;
     }
 
