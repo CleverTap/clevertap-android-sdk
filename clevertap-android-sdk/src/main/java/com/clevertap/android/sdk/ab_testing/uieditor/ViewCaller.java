@@ -110,14 +110,12 @@ class ViewCaller {
     boolean argsAreApplicable(Object[] proposedArgs) {
         final Class<?>[] paramTypes = targetMethod.getParameterTypes();
         if (proposedArgs.length != paramTypes.length) {
-            Logger.v("Args not applicable: incorrect args length: " + proposedArgs.length + " relative to paramtypes length: " + paramTypes.length);  // TODO remove
             return false;
         }
 
         for (int i = 0; i < proposedArgs.length; i++) {
             final Class<?> paramType = assignableArgType(paramTypes[i]);
             if (proposedArgs[i] == null) {
-                Logger.v("Args not applicable: proposed args is null");  // TODO remove
                 if (paramType == byte.class ||
                         paramType == short.class ||
                         paramType == int.class ||
@@ -130,8 +128,9 @@ class ViewCaller {
                 }
             } else {
                 final Class<?> argumentType = assignableArgType(proposedArgs[i].getClass());
-                if (!paramType.isAssignableFrom(argumentType)) {
-                    Logger.v("Param type: " + paramType.toString() + " not assignable from arg type: " + argumentType.toString());  // TODO remove
+                if(argumentType.getCanonicalName() != null && argumentType.getCanonicalName().equals("android.content.res.ColorStateList")){
+                    //no-op to skip
+                }else if (!paramType.isAssignableFrom(argumentType)) {
                     return false;
                 }
             }

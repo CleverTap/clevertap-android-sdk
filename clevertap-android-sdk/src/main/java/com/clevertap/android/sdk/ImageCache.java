@@ -206,10 +206,11 @@ public class ImageCache {
 
     private static Bitmap decodeImageFromFile(File file) {
         BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
+        options.inJustDecodeBounds = false;
         BitmapFactory.decodeFile(file.getAbsolutePath(), options);
         float imageSize = (float) options.outHeight * options.outWidth * 4;
-        if (imageSize > getAvailableMemory()) {
+        float imageSizeKb = imageSize/1024;
+        if (imageSizeKb > getAvailableMemory()) {
             Logger.v( "CleverTap.ImageCache: image too large to decode");
             return null;
         }

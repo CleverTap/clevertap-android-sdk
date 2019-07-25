@@ -138,11 +138,6 @@ public class CTABTestController {
         switch (type) {
             case MESSAGE_TYPE_CHANGE_REQUEST:
                 messageCode = ExecutionThreadHandler.MESSAGE_HANDLE_EDITOR_CHANGES_RECEIVED;
-//                try {
-//                    msg = new JSONObject("{\"type\":\"change_request\",\"data\":{\"actions\":[{\"args\":[[4287903743,\"android.graphics.drawable.ColorDrawable\"]],\"name\":\"c1361\",\"path\":[{\"prefix\":\"shortest\",\"index\":0,\"id\":16908290},{\"view_class\":\"android.widget.LinearLayout\",\"index\":0},{\"view_class\":\"android.widget.Button\",\"index\":1}],\"property\":{\"name\":\"background\",\"get\":{\"selector\":\"getBackground\",\"parameters\":[],\"result\":{\"type\":\"android.graphics.drawable.Drawable\"}},\"set\":{\"selector\":\"setBackground\",\"parameters\":[{\"type\":\"android.graphics.drawable.ColorDrawable\"}]},\"classname\":\"android.view.View\"},\"change_type\":\"property\"}]}}");//TODO remove this after test
-//                } catch (JSONException e) {
-//                    e.printStackTrace();
-//                }
                 break;
             case MESSAGE_TYPE_CLEAR_REQUEST:
                 messageCode = ExecutionThreadHandler.MESSAGE_HANDLE_EDITOR_CHANGES_CLEARED;
@@ -598,8 +593,8 @@ public class CTABTestController {
             }
 
             final String protocol = "wss";
-            final String dashboardDomain = /*@"dashboard.clevertap.com"*/ "aa931949.ngrok.io";  // TODO put final production dashboard link
-            //final String dashboardDomain = "eu1-dashboard-staging-2.dashboard.clevertap.com"; //Staging link
+            //final String dashboardDomain = /*@"dashboard.clevertap.com"*/ "f43cc14f.ngrok.io";  // TODO put final production dashboard link
+            final String dashboardDomain = "eu1-dashboard-staging-2.dashboard.clevertap.com"; //Staging link
             final String domain = config.getAccountRegion() != null ? config.getAccountRegion()+"."+dashboardDomain : dashboardDomain;
             final String url =  protocol+"://"+domain+"/"+getAccountId()+"/"+"websocket/screenab/sdk?tk="+config.getAccountToken();
             getConfigLogger().verbose(getAccountId(), "Websocket URL - " + url);
