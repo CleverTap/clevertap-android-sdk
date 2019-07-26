@@ -6745,14 +6745,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //ABTesting
 
-    private static boolean isUIEditorEnabled = true;
+    private static boolean isUIEditorEnabled = false;
 
     /**
      * Disables/Enables the ability to do UI Edits from the CleverTap Dashboard
-     * Enabled by default
+     * Disabled by default
+     *
      */
     @SuppressWarnings("unused")
-    public static void setUIEditorEnabled(boolean enabled) {
+    public static void setUIEditorConnectionEnabled(boolean enabled) {
         isUIEditorEnabled = enabled;
     }
 

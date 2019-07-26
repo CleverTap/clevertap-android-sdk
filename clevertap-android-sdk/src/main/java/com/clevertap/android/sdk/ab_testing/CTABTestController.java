@@ -188,7 +188,7 @@ public class CTABTestController {
 
     public CTABTestController(Context context, CleverTapInstanceConfig config, String guid, CTABTestListener listener) {
         this.varCache = new CTVarCache();
-        this.enableEditor = config.isUIEditorEnabled();
+        this.enableEditor = config.isUIEditorEnabled();  // TODO test this
         this.config = config;
         this.guid = guid;
         this.setListener(listener);
@@ -204,7 +204,7 @@ public class CTABTestController {
             final Application app = (Application) context.getApplicationContext();
             app.registerActivityLifecycleCallbacks(new LifecycleCallbacks());
         } else {
-            config.getLogger().debug(config.getAccountId(), "UIEditor is disabled");
+            config.getLogger().debug(config.getAccountId(), "UIEditor connection is disabled");
         }
         applyStoredExperiments();
     }
