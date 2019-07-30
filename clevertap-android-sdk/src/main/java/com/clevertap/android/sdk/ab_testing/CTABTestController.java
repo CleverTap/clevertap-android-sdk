@@ -186,9 +186,13 @@ public class CTABTestController {
         executionThreadHandler.sendMessage(executionThreadHandler.obtainMessage(ExecutionThreadHandler.MESSAGE_INITIALIZE_EXPERIMENTS));
     }
 
+    private void disconnectOnBackground() {
+        executionThreadHandler.sendMessage(executionThreadHandler.obtainMessage(ExecutionThreadHandler.MESSAGE_HANDLE_DISCONNECT));
+    }
+
     public CTABTestController(Context context, CleverTapInstanceConfig config, String guid, CTABTestListener listener) {
         this.varCache = new CTVarCache();
-        this.enableEditor = config.isUIEditorEnabled();  // TODO test this
+        this.enableEditor = config.isUIEditorEnabled();
         this.config = config;
         this.guid = guid;
         this.setListener(listener);
@@ -1083,6 +1087,7 @@ public class CTABTestController {
         public void onActivityPaused(Activity activity) {
             uiEditor.removeActivity(activity);
             deregisterConnectionTrigger(activity);
+            disconnectOnBackground();
         }
 
         @Override
