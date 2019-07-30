@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.ab_testing.uieditor;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.view.View;
 import android.view.ViewGroup;
@@ -16,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
+@SuppressWarnings("SuspiciousMethodCalls")
 class ViewEdit {
 
     static class PathElement {
@@ -72,7 +74,7 @@ class ViewEdit {
     private final Pathfinder pathFinder;
     private final ViewCaller mutator;
     private final ViewCaller accessor;
-    private final WeakHashMap<View, Object> originalValues;
+    private static final WeakHashMap<View, Object> originalValues = new WeakHashMap<>();
     private final Object[] originalValueHolder;
 
     ViewEdit(List<PathElement> path, ViewCaller mutator, ViewCaller accessor) {
@@ -81,7 +83,6 @@ class ViewEdit {
         this.mutator = mutator;
         this.accessor = accessor;
         originalValueHolder = new Object[1];
-        originalValues = new WeakHashMap<>();
     }
 
     protected List<PathElement> getPath() {
@@ -97,14 +98,17 @@ class ViewEdit {
             final View changedView = original.getKey();
             final Object originalValue = original.getValue();
             if (originalValue != null) {
-                if(originalValue instanceof ColorStateList){
+                if (originalValue instanceof ColorStateList) {
                     originalValueHolder[0] = ((ColorStateList) originalValue).getDefaultColor();
-                }else {
+                } else if(originalValue instanceof Drawable){
+                    originalValueHolder[0] = ((Drawable) originalValue).getCurrent();
+                } else {
                     originalValueHolder[0] = originalValue;
                 }
                 mutator.invokeMethodWithArgs(changedView, originalValueHolder);
             }
         }
+
     }
 
     @SuppressWarnings("StatementWithEmptyBody")

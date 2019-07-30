@@ -933,6 +933,7 @@ public class CTABTestController {
         }
 
         private void handleDashboardDisconnect() {
+            stopVariants();
             closeConnection();
         }
 

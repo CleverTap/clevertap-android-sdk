@@ -2438,7 +2438,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             //Handle ABTesting response
             if(!getConfig().isAnalyticsOnly()){
                 try{
-                    if(response.has("abtest")){
+                    if(response.has("ab_exps")){
                         getConfigLogger().verbose(getAccountId(), "Processing ABTest experiments...");
                         processIncomingExperiments(response);
                     }
@@ -7131,9 +7131,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
-    private void processIncomingExperiments(JSONObject experiments){
+    private void processIncomingExperiments(JSONObject response){
         try {
-            JSONArray experimentsArray = experiments.getJSONArray("ab_exp");
+            JSONArray experimentsArray = response.getJSONArray("ab_exps");
             if (this.ctABTestController != null) {
                 ctABTestController.updateExperiments(experimentsArray);
             }

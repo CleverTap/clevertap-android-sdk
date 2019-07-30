@@ -49,9 +49,9 @@ public class CTABVariant {
 
     public static CTABVariant initWithJSON(JSONObject json) {
         try {
-            String experimentId = json.optString("experiment_id", "0");
-            String variantId = json.optString("id", "0");
-            int version = json.optInt("variant_version", 0);
+            String experimentId = json.optString("exp_id", "0");
+            String variantId = json.optString("var_id", "0");
+            int version = json.optInt("version", 0);
             final JSONArray actions = json.optJSONArray("actions");
             final JSONArray vars = json.optJSONArray("vars");
             CTABVariant variant = new CTABVariant(experimentId, variantId, version, actions, vars);
