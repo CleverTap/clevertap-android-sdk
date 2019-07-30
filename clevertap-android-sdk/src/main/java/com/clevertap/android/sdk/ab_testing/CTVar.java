@@ -1,9 +1,10 @@
 package com.clevertap.android.sdk.ab_testing;
 
 import android.support.annotation.NonNull;
-
+import com.clevertap.android.sdk.Logger;
 import org.json.JSONObject;
-
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -97,22 +98,111 @@ final class CTVar {
         if (_value == null) {
             return;
         }
-        if (_value instanceof String) {
-            _stringValue = (String) _value;
-            try {
-                _numberValue = Double.valueOf(_stringValue);
-            } catch (NumberFormatException e) {
-                _numberValue = null;
-            }
-        } else if (_value instanceof Number) {
-            _stringValue = "" + _value;
-            _numberValue = ((Number) _value).doubleValue();
-        } else if (_value instanceof List<?>) {
-            _listValue = (List<?>) _value;
 
-        } else if (_value instanceof Map<?, ?>) {
-            _mapValue = (Map<?, ?>) _value;
+        switch (type){
+            case CTVarTypeBool:
+                _stringValue = _value.toString();
+                break;
+            case CTVarTypeDouble:
+                _numberValue = Double.valueOf(_value.toString());
+                break;
+            case CTVarTypeInteger:
+                _numberValue = Double.valueOf(_value.toString());
+                break;
+            case CTVarTypeString:
+                _stringValue = _value.toString();
+                break;
+            case CTVarTypeListOfBool:
+            case CTVarTypeListOfDouble:
+            case CTVarTypeListOfInteger:
+            case CTVarTypeListOfString:
+                _listValue = validateValueArray(_value);
+                break;
+            case CTVarTypeMapOfBool:
+            case CTVarTypeMapOfDouble:
+            case CTVarTypeMapOfInteger:
+            case CTVarTypeMapOfString:
+                _mapValue = validateValueMap(_value);
+                break;
+            case CTVarTypeUnknown:
+                break;
         }
+    }
+
+    private Map<?,?> validateValueMap(Object _value){
+        String stringValue = _value.toString();
+        stringValue = stringValue.replace("\"","");
+        stringValue = stringValue.replace("{","");
+        stringValue = stringValue.replace("}","");
+
+        Object[] objectArray = stringValue.split(",");
+
+        Map<Object,Object> objectMap = new HashMap<>();
+
+        for(Object o : objectArray){
+            Object[] objectValuesArray = o.toString().split(":");
+            switch (type) {
+                case CTVarTypeListOfString:
+                    if (!(objectValuesArray[1] instanceof String)) {
+                        Logger.d("Failed to parse the array value, invalid value provided : " + o.toString());
+                        return null;
+                    }
+                    break;
+                case CTVarTypeListOfDouble:
+                case CTVarTypeListOfInteger:
+                    if (!(objectValuesArray[1] instanceof Number)) {
+                        Logger.d("Failed to parse the array value, invalid value provided : " + o.toString());
+                        return null;
+                    }
+                    break;
+                case CTVarTypeListOfBool:
+                    if(!(objectValuesArray[1] instanceof Boolean)){
+                        Logger.d("Failed to parse the array value, invalid value provided : "+o.toString());
+                        return null;
+                    }
+                    break;
+            }
+            objectMap.put(objectValuesArray[0],objectValuesArray[1]);
+        }
+
+        return objectMap;
+
+    }
+
+    private List<?> validateValueArray(Object _value){
+        //TODO Example - If integerArray is passed from dashboard _value comes as [1,2,3].
+        //TODO to remove the solid brackets I have to convert to String but then validation fails
+        //TODO need to send array Vars in a better format. This happens for all data types except String
+        String stringValue = _value.toString();
+        stringValue = stringValue.replace("[","");
+        stringValue = stringValue.replace("]","");
+        Object[] objectArray = stringValue.split(",");
+
+        for (Object o : objectArray) {
+            switch (type) {
+                case CTVarTypeListOfString:
+                    if (!(o instanceof String)) {
+                        Logger.d("Failed to parse the array value, invalid value provided : " + o.toString());
+                        return null;
+                    }
+                    break;
+                case CTVarTypeListOfDouble:
+                case CTVarTypeListOfInteger:
+                    if (!(o instanceof Number)) {
+                        Logger.d("Failed to parse the array value, invalid value provided : " + o.toString());
+                        return null;
+                    }
+                    break;
+                case CTVarTypeListOfBool:
+                    if(!(o instanceof Boolean)){
+                        Logger.d("Failed to parse the array value, invalid value provided : "+o.toString());
+                        return null;
+                    }
+                    break;
+            }
+        }
+        return Arrays.asList(objectArray);
+
     }
 
     CTVar(String name, CTVarType type, Object value) {

@@ -915,6 +915,7 @@ public class CTABTestController {
                     return;
                 }
                 applyVars(vars);
+                notifyExperimentsUpdated();
             } catch (Throwable t) {
                 getConfigLogger().debug(getAccountId(),"Unable to handle dashboard Vars received - "+t);
             }
@@ -923,7 +924,7 @@ public class CTABTestController {
         private void applyVars(JSONArray vars) {
             try {
                 for (int i=0;i<vars.length();i++) {
-                    JSONObject var = (JSONObject) vars.get(i);
+                    JSONObject var = vars.getJSONObject(i);
                     _registerVar(var.getString("name"), CTVar.CTVarType.fromString(var.getString("type")), var.get("value"));
                 }
             } catch (Throwable t) {
