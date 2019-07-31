@@ -994,6 +994,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return debugLevel;
     }
 
+    /**
+     * Not to be used by developers. This is used internally to help CleverTap know which library is wrapping the native SDK
+     * @param library {@link String} library name
+     */
+    public void setLibrary(String library){
+        if(this.deviceInfo != null){
+            deviceInfo.setLibrary(library);
+        }
+    }
+
     //Validation
     private void pushValidationResult(ValidationResult vr) {
         synchronized (pendingValidationResultsLock) {
@@ -2910,6 +2920,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 evtData.put("wdt", this.deviceInfo.getWidth());
                 evtData.put("hgt", this.deviceInfo.getHeight());
                 evtData.put("dpi", this.deviceInfo.getDPI());
+                if(this.deviceInfo.getLibrary() != null) {
+                    evtData.put("lib", this.deviceInfo.getLibrary());
+                }
 
                 String cc = this.deviceInfo.getCountryCode();
                 if (cc != null && !cc.equals(""))
@@ -7167,6 +7180,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         deviceInfo.put("dpi", String.valueOf(this.deviceInfo.getDPI()));
         deviceInfo.put("device_width", String.valueOf(this.deviceInfo.getWidthPixels()));
         deviceInfo.put("device_height", String.valueOf(this.deviceInfo.getHeightPixels()));
+        deviceInfo.put("library", this.deviceInfo.getLibrary());
         return deviceInfo;
     }
 

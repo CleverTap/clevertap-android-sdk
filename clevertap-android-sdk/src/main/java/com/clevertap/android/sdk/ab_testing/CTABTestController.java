@@ -186,10 +186,6 @@ public class CTABTestController {
         executionThreadHandler.sendMessage(executionThreadHandler.obtainMessage(ExecutionThreadHandler.MESSAGE_INITIALIZE_EXPERIMENTS));
     }
 
-    private void disconnectOnBackground() {
-        executionThreadHandler.sendMessage(executionThreadHandler.obtainMessage(ExecutionThreadHandler.MESSAGE_HANDLE_DISCONNECT));
-    }
-
     public CTABTestController(Context context, CleverTapInstanceConfig config, String guid, CTABTestListener listener) {
         this.varCache = new CTVarCache();
         this.enableEditor = config.isUIEditorEnabled();
@@ -761,6 +757,9 @@ public class CTABTestController {
                 data.put("id", guid);
                 data.put("os", deviceInfo.getString("osName"));
                 data.put("name", deviceInfo.getString("model"));
+                if(deviceInfo.getString("library") != null){
+                    data.put("library",deviceInfo.getString("library"));
+                }
                 JSONObject payload = new JSONObject();
                 payload.put(TYPE_KEY, MESSAGE_TYPE_HANDSHAKE);
                 payload.put(DATA_KEY, data);
@@ -1088,7 +1087,6 @@ public class CTABTestController {
         public void onActivityPaused(Activity activity) {
             uiEditor.removeActivity(activity);
             deregisterConnectionTrigger(activity);
-            disconnectOnBackground();
         }
 
         @Override

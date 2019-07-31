@@ -24,6 +24,7 @@ class DeviceInfo {
 
     private Context context;
     private CleverTapInstanceConfig config;
+    private String library;
     private static final String GUID_PREFIX = "__";
     private final Object deviceIDLock = new Object();
     private final Object adIDLock = new Object();
@@ -44,6 +45,7 @@ class DeviceInfo {
     DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID) {
         this.context = context;
         this.config = config;
+        this.library = null;
         Thread deviceInfoCacheThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -52,6 +54,14 @@ class DeviceInfo {
         });
         deviceInfoCacheThread.start();
         initDeviceID(cleverTapID);
+    }
+
+    String getLibrary() {
+        return library;
+    }
+
+    void setLibrary(String library) {
+        this.library = library;
     }
 
     String getGoogleAdID() {

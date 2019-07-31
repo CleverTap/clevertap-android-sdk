@@ -74,7 +74,7 @@ class ViewEdit {
     private final Pathfinder pathFinder;
     private final ViewCaller mutator;
     private final ViewCaller accessor;
-    private static final WeakHashMap<View, Object> originalValues = new WeakHashMap<>();
+    private final WeakHashMap<View, Object> originalValues;
     private final Object[] originalValueHolder;
 
     ViewEdit(List<PathElement> path, ViewCaller mutator, ViewCaller accessor) {
@@ -83,6 +83,7 @@ class ViewEdit {
         this.mutator = mutator;
         this.accessor = accessor;
         originalValueHolder = new Object[1];
+        originalValues = new WeakHashMap<>();
     }
 
     protected List<PathElement> getPath() {
@@ -94,64 +95,67 @@ class ViewEdit {
     }
 
     void cleanup() {
-        for (Map.Entry<View, Object> original : originalValues.entrySet()) {
-            final View changedView = original.getKey();
-            final Object originalValue = original.getValue();
-            if (originalValue != null) {
-                if (originalValue instanceof ColorStateList) {
-                    originalValueHolder[0] = ((ColorStateList) originalValue).getDefaultColor();
-                } else if(originalValue instanceof Drawable){
-                    originalValueHolder[0] = ((Drawable) originalValue).getCurrent();
-                } else {
-                    originalValueHolder[0] = originalValue;
+        synchronized (originalValues) {
+            for (Map.Entry<View, Object> original : originalValues.entrySet()) {
+                final View changedView = original.getKey();
+                final Object originalValue = original.getValue();
+                if (originalValue != null) {
+                    if (originalValue instanceof ColorStateList) {
+                        originalValueHolder[0] = ((ColorStateList) originalValue).getDefaultColor();
+                    } else if (originalValue instanceof Drawable) {
+                        originalValueHolder[0] = ((Drawable) originalValue).getCurrent();
+                    } else {
+                        originalValueHolder[0] = originalValue;
+                    }
+                    mutator.invokeMethodWithArgs(changedView, originalValueHolder);
                 }
-                mutator.invokeMethodWithArgs(changedView, originalValueHolder);
             }
         }
-
     }
 
     @SuppressWarnings("StatementWithEmptyBody")
     private void apply(View targetView) {
-        if (accessor != null) {
-            final Object[] args = mutator.getArgs();
-            if (args.length == 1) {
-                final Object targetValue = args[0];
-                final Object currentValue = accessor.invokeMethod(targetView);
+        synchronized (originalValues) {
+            if (accessor != null) {
+                final Object[] args = mutator.getArgs();
+                if (args.length == 1) {
+                    final Object targetValue = args[0];
+                    final Object currentValue = accessor.invokeMethod(targetView);
 
-                if (targetValue == currentValue) {
-                    return;
-                }
-                if (targetValue != null) {
-                    if (targetValue instanceof Bitmap && currentValue instanceof Bitmap) {
-                        final Bitmap targetBitmap = (Bitmap) targetValue;
-                        final Bitmap currentBitmap = (Bitmap) currentValue;
-                        if (targetBitmap.sameAs(currentBitmap)) {
-                            return;
-                        }
-                    } else if (targetValue instanceof BitmapDrawable && currentValue instanceof BitmapDrawable) {
-                        final Bitmap targetBitmap = ((BitmapDrawable) targetValue).getBitmap();
-                        final Bitmap currentBitmap = ((BitmapDrawable) currentValue).getBitmap();
-                        if (targetBitmap != null && targetBitmap.sameAs(currentBitmap)) {
-                            return;
-                        }
-                    } else if (targetValue.equals(currentValue)) {
+                    if (targetValue == currentValue) {
                         return;
                     }
-                }
-                if (currentValue instanceof Bitmap || currentValue instanceof BitmapDrawable || originalValues.containsKey(targetView)) {
-                    // no-op, only cache one non-image original value
-                } else {
-                    originalValueHolder[0] = currentValue;
-                    if (mutator.argsAreApplicable(originalValueHolder)) {
-                        originalValues.put(targetView, currentValue);
+                    if (targetValue != null) {
+                        if (targetValue instanceof Bitmap && currentValue instanceof Bitmap) {
+                            final Bitmap targetBitmap = (Bitmap) targetValue;
+                            final Bitmap currentBitmap = (Bitmap) currentValue;
+                            if (targetBitmap.sameAs(currentBitmap)) {
+                                return;
+                            }
+                        } else if (targetValue instanceof BitmapDrawable && currentValue instanceof BitmapDrawable) {
+                            final Bitmap targetBitmap = ((BitmapDrawable) targetValue).getBitmap();
+                            final Bitmap currentBitmap = ((BitmapDrawable) currentValue).getBitmap();
+                            if (targetBitmap != null && targetBitmap.sameAs(currentBitmap)) {
+                                return;
+                            }
+                        } else if (targetValue.equals(currentValue)) {
+                            return;
+                        }
+                    }
+                    if (currentValue instanceof Bitmap || currentValue instanceof BitmapDrawable || originalValues.containsKey(targetView)) {
+                        // no-op, only cache one non-image original value
                     } else {
-                        originalValues.put(targetView, null);
+                        originalValueHolder[0] = currentValue;
+                        if (mutator.argsAreApplicable(originalValueHolder)) {
+                            originalValues.put(targetView, currentValue);
+                        } else {
+                            originalValues.put(targetView, null);
+                        }
                     }
                 }
             }
+            mutator.invokeMethod(targetView);
         }
-        mutator.invokeMethod(targetView);
     }
     protected String name() {
         return "Property Mutator";
