@@ -3,6 +3,8 @@ package com.clevertap.android.sdk.ab_testing;
 import android.support.annotation.NonNull;
 import com.clevertap.android.sdk.Logger;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -99,110 +101,110 @@ final class CTVar {
             return;
         }
 
+        if (_value instanceof String) {
+            _stringValue = (String) _value;
+            try {
+                _numberValue = Double.valueOf(_stringValue);
+            } catch (Throwable t) {
+                // no-op
+            }
+        } else if (_value instanceof Number) {
+            _stringValue = "" + _value;
+            _numberValue = ((Number) _value).doubleValue();
+        } else {
+            try {
+                _stringValue = _value.toString();
+            } catch (Throwable t) {
+                Logger.d("Error parsing var", t);
+                return;
+            }
+        }
+
         switch (type){
-            case CTVarTypeBool:
-                _stringValue = _value.toString();
-                break;
-            case CTVarTypeDouble:
-                _numberValue = Double.valueOf(_value.toString());
-                break;
-            case CTVarTypeInteger:
-                _numberValue = Double.valueOf(_value.toString());
-                break;
-            case CTVarTypeString:
-                _stringValue = _value.toString();
-                break;
             case CTVarTypeListOfBool:
             case CTVarTypeListOfDouble:
             case CTVarTypeListOfInteger:
             case CTVarTypeListOfString:
-                _listValue = validateValueArray(_value);
+                _listValue = listFromString(_stringValue, type);
                 break;
             case CTVarTypeMapOfBool:
             case CTVarTypeMapOfDouble:
             case CTVarTypeMapOfInteger:
             case CTVarTypeMapOfString:
-                _mapValue = validateValueMap(_value);
-                break;
-            case CTVarTypeUnknown:
+                _mapValue = mapFromString(_stringValue, type);
                 break;
         }
     }
 
-    private Map<?,?> validateValueMap(Object _value){
-        String stringValue = _value.toString();
-        stringValue = stringValue.replace("\"","");
-        stringValue = stringValue.replace("{","");
-        stringValue = stringValue.replace("}","");
+    private Map<String, ?> mapFromString(String stringValue, CTVarType type) {
+        try {
+            String[] stringArray = stringValue.replace("\"","")
+                    .replace("{","")
+                    .replace("}","")
+                    .split(",");  // ["key:value", "key:value"...]
 
-        Object[] objectArray = stringValue.split(",");
+            Map<String, Object> objectMap = new HashMap<>();
 
-        Map<Object,Object> objectMap = new HashMap<>();
-
-        for(Object o : objectArray){
-            Object[] objectValuesArray = o.toString().split(":");
-            switch (type) {
-                case CTVarTypeListOfString:
-                    if (!(objectValuesArray[1] instanceof String)) {
-                        Logger.d("Failed to parse the array value, invalid value provided : " + o.toString());
-                        return null;
-                    }
-                    break;
-                case CTVarTypeListOfDouble:
-                case CTVarTypeListOfInteger:
-                    if (!(objectValuesArray[1] instanceof Number)) {
-                        Logger.d("Failed to parse the array value, invalid value provided : " + o.toString());
-                        return null;
-                    }
-                    break;
-                case CTVarTypeListOfBool:
-                    if(!(objectValuesArray[1] instanceof Boolean)){
-                        Logger.d("Failed to parse the array value, invalid value provided : "+o.toString());
-                        return null;
-                    }
-                    break;
+            for(String s : stringArray){
+                String [] stringValuesArray = s.split(":");
+                String key = stringValuesArray[0];
+                String _stringValue = stringValuesArray[1];
+                Object value = null;
+                switch (type) {
+                    case CTVarTypeMapOfBool:
+                        value = Boolean.valueOf(_stringValue);
+                        break;
+                    case CTVarTypeMapOfDouble:
+                        value = Double.valueOf(_stringValue);
+                        break;
+                    case CTVarTypeMapOfInteger:
+                        value = Integer.valueOf(_stringValue);
+                        break;
+                    case CTVarTypeMapOfString:
+                        value = _stringValue;
+                        break;
+                }
+                if (value != null) {
+                    objectMap.put(key, value);
+                }
             }
-            objectMap.put(objectValuesArray[0],objectValuesArray[1]);
+            return objectMap;
+        } catch (Throwable t) {
+            Logger.d("Unable to parse map of type: " + type.toString() + " from : " + stringValue);
+            return null;
         }
-
-        return objectMap;
-
     }
 
-    private List<?> validateValueArray(Object _value){
-        //TODO Example - If integerArray is passed from dashboard _value comes as [1,2,3].
-        //TODO to remove the solid brackets I have to convert to String but then validation fails
-        //TODO need to send array Vars in a better format. This happens for all data types except String
-        String stringValue = _value.toString();
-        stringValue = stringValue.replace("[","");
-        stringValue = stringValue.replace("]","");
-        Object[] objectArray = stringValue.split(",");
+    private List<?> listFromString(String stringValue, CTVarType type) {
+        try {
+            String[] stringArray = stringValue.replace("[","")
+                    .replace("]","")
+                    .split(","); // ["value", "value"...]
 
-        for (Object o : objectArray) {
-            switch (type) {
-                case CTVarTypeListOfString:
-                    if (!(o instanceof String)) {
-                        Logger.d("Failed to parse the array value, invalid value provided : " + o.toString());
-                        return null;
-                    }
-                    break;
-                case CTVarTypeListOfDouble:
-                case CTVarTypeListOfInteger:
-                    if (!(o instanceof Number)) {
-                        Logger.d("Failed to parse the array value, invalid value provided : " + o.toString());
-                        return null;
-                    }
-                    break;
-                case CTVarTypeListOfBool:
-                    if(!(o instanceof Boolean)){
-                        Logger.d("Failed to parse the array value, invalid value provided : "+o.toString());
-                        return null;
-                    }
-                    break;
+            if (type == CTVarType.CTVarTypeListOfString) {
+                return Arrays.asList(stringArray);
             }
-        }
-        return Arrays.asList(objectArray);
 
+            ArrayList<Object> parsed = new ArrayList<>();
+
+            for (String s : stringArray) {
+                switch (type) {
+                    case CTVarTypeListOfBool:
+                        parsed.add(Boolean.valueOf(s));
+                        break;
+                    case CTVarTypeListOfDouble:
+                        parsed.add(Double.valueOf(s));
+                        break;
+                    case CTVarTypeListOfInteger:
+                        parsed.add(Integer.valueOf(s));
+                        break;
+                }
+            }
+            return parsed;
+        } catch (Throwable t) {
+            Logger.d("Unable to parse list of type: " + type.toString() + " from : " + stringValue);
+            return null;
+        }
     }
 
     CTVar(String name, CTVarType type, Object value) {
@@ -236,14 +238,22 @@ final class CTVar {
         if (_stringValue == null) {
             return null;
         }
-        return Boolean.valueOf(_stringValue);
+        try {
+            return Boolean.valueOf(_stringValue);
+        } catch (Throwable t) {
+            return null;
+        }
     }
 
     Integer integerValue() {
         if (_numberValue == null) {
             return null;
         }
-        return _numberValue.intValue();
+        try {
+            return _numberValue.intValue();
+        } catch (Throwable t) {
+            return null;
+        }
     }
 
     Double doubleValue() {
