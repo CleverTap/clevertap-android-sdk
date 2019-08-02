@@ -3,7 +3,6 @@ package com.clevertap.android.sdk.ab_testing.uieditor;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.support.annotation.NonNull;
 import android.view.View;
 import android.view.ViewGroup;
@@ -101,8 +100,6 @@ class ViewEdit {
             if (originalValue != null) {
                 if (originalValue instanceof ColorStateList) {
                     originalValueHolder[0] = ((ColorStateList) originalValue).getDefaultColor();
-                } else if (originalValue instanceof Drawable) {
-                    originalValueHolder[0] = ((Drawable) originalValue).getCurrent();
                 } else {
                     originalValueHolder[0] = originalValue;
                 }

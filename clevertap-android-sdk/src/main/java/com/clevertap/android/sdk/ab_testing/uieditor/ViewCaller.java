@@ -129,7 +129,9 @@ class ViewCaller {
             } else {
                 final Class<?> argumentType = assignableArgType(proposedArgs[i].getClass());
                 if(argumentType.getCanonicalName() != null
-                        && (argumentType.getCanonicalName().equals("android.content.res.ColorStateList"))){
+                        && (argumentType.getCanonicalName().equals("android.content.res.ColorStateList") ||
+                            argumentType.getCanonicalName().equals("android.graphics.drawable.ColorDrawable") ||
+                            argumentType.getCanonicalName().equals("android.graphics.drawable.RippleDrawable"))){
                     //no-op to skip
                 }else if (!paramType.isAssignableFrom(argumentType)) {
                     return false;
