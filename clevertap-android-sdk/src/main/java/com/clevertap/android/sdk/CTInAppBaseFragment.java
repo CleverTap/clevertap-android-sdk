@@ -11,6 +11,7 @@ import android.util.TypedValue;
 import android.view.View;
 
 import java.lang.ref.WeakReference;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class CTInAppBaseFragment extends Fragment {
@@ -92,7 +93,18 @@ public abstract class CTInAppBaseFragment extends Fragment {
 
     void fireUrlThroughIntent(String url, Bundle formData) {
         try {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            Uri uri = Uri.parse(url);
+            Set<String> queryParamSet = uri.getQueryParameterNames();
+            Bundle queryBundle = new Bundle();
+            if(queryParamSet != null && !queryParamSet.isEmpty()){
+                for(String queryName : queryParamSet){
+                    queryBundle.putString(queryName,uri.getQueryParameter(queryName));
+                }
+            }
+            Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+            if(!queryBundle.isEmpty()){
+                intent.putExtras(queryBundle);
+            }
             startActivity(intent);
         } catch (Throwable t) {
             // Ignore
