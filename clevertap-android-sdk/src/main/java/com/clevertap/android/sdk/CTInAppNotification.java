@@ -212,10 +212,14 @@ class CTInAppNotification implements Parcelable {
                 case CTInAppTypeCoverImageOnly:
                 case CTInAppTypeHalfInterstitialImageOnly:
                 case CTInAppTypeInterstitialImageOnly:
-                    for(CTInAppNotificationMedia inAppMedia : this.mediaList){
-                        if(inAppMedia.isGIF() || inAppMedia.isAudio() || inAppMedia.isVideo() || !inAppMedia.isImage()){
-                            this.error = "Wrong media type for template";
+                    if(!this.mediaList.isEmpty()) {
+                        for (CTInAppNotificationMedia inAppMedia : this.mediaList) {
+                            if (inAppMedia.isGIF() || inAppMedia.isAudio() || inAppMedia.isVideo() || !inAppMedia.isImage()) {
+                                this.error = "Wrong media type for template";
+                            }
                         }
+                    }else{
+                        this.error = "No media type for template";
                     }
                     break;
             }
