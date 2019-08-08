@@ -26,6 +26,10 @@ class ViewCaller {
         this.targetClass = targetMethod.getDeclaringClass();
     }
 
+    String getMethodName() {
+        return methodName;
+    }
+
     Object invokeMethod(View target) {
         return invokeMethodWithArgs(target, methodArgs);
     }

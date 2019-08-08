@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.ab_testing.uieditor;
 
+import android.content.Context;
 import android.content.res.ColorStateList;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
@@ -75,14 +76,16 @@ class ViewEdit {
     private final ViewCaller accessor;
     private final WeakHashMap<View, Object> originalValues;
     private final Object[] originalValueHolder;
+    private Context context;
 
-    ViewEdit(List<PathElement> path, ViewCaller mutator, ViewCaller accessor) {
+    ViewEdit(List<PathElement> path, ViewCaller mutator, ViewCaller accessor, Context context) {
         this.path = path;
         pathFinder = new Pathfinder();
         this.mutator = mutator;
         this.accessor = accessor;
         originalValueHolder = new Object[1];
         originalValues = new WeakHashMap<>();
+        this.context = context;
     }
 
     protected List<PathElement> getPath() {
@@ -114,11 +117,16 @@ class ViewEdit {
             final Object[] args = mutator.getArgs();
             if (args.length == 1) {
                 final Object targetValue = args[0];
-                final Object currentValue = accessor.invokeMethod(targetView);
+                Object currentValue = accessor.invokeMethod(targetView);
+
+                if(accessor.getMethodName().equals("getTextSize")){
+                    currentValue = (float)currentValue / context.getResources().getDisplayMetrics().scaledDensity;
+                }
 
                 if (targetValue == currentValue) {
                     return;
                 }
+
                 if (targetValue != null) {
                     if (targetValue instanceof Bitmap && currentValue instanceof Bitmap) {
                         final Bitmap targetBitmap = (Bitmap) targetValue;

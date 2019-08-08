@@ -377,7 +377,7 @@ public class UIEditor {
                     getConfigLogger().verbose("UIEditor: UI change unable to create mutator: " + data.toString());
                     return null;
                 }
-                viewEdit = new ViewEdit(path, mutator, prop.accessor);
+                viewEdit = new ViewEdit(path, mutator, prop.accessor,context);
             } else {
                 getConfigLogger().verbose("UIEditor: UI change type is unknown: " + data.toString());
                 return null;
