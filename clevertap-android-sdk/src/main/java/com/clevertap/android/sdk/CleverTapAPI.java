@@ -18,7 +18,10 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.content.pm.ServiceInfo;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.location.Location;
@@ -5563,8 +5566,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
         }
 
-        boolean isCTIntentServiceAvailable = isServiceAvailable(context,
-                CTNotificationIntentService.MAIN_ACTION, CTNotificationIntentService.class);
+        boolean isCTIntentServiceAvailable = isServiceAvailable(context, CTNotificationIntentService.class);
 
         if (actions != null && actions.length() > 0) {
             for (int i = 0; i < actions.length(); i++) {
@@ -5656,16 +5658,23 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     @SuppressWarnings("SameParameterValue")
-    private static boolean isServiceAvailable(Context context, String action, Class clazz) {
-        final PackageManager packageManager = context.getPackageManager();
-        final Intent intent = new Intent(action);
-        List resolveInfo =
-                packageManager.queryIntentServices(intent, 0);
-        if (resolveInfo.size() > 0) {
-            Logger.v("" + clazz.getName() + " is available");
-            return true;
+    private static boolean isServiceAvailable(Context context, Class clazz) {
+        PackageManager pm = context.getPackageManager();
+        String packageName = context.getPackageName();
+
+        PackageInfo packageInfo;
+        try {
+            packageInfo = pm.getPackageInfo(packageName, PackageManager.GET_SERVICES);
+            ServiceInfo[] services = packageInfo.services;
+            for (ServiceInfo serviceInfo : services) {
+                if (serviceInfo.name.equals(clazz.getName())) {
+                    Logger.v("Service "+serviceInfo.name+" found");
+                    return true;
+                }
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            Logger.d("Intent Service name not found exception - "+e.getLocalizedMessage());
         }
-        Logger.v("" + clazz.getName() + " is NOT available");
         return false;
     }
 
