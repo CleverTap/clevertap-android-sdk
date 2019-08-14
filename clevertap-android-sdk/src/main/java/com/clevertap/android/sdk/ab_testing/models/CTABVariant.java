@@ -119,6 +119,18 @@ public class CTABVariant {
                     }
                     final String targetActivity = Utils.optionalStringKey(change, "target_activity");
                     final String name = change.getString("name");
+                    boolean exists = false;
+                    CTVariantAction existingAction = null;
+                    for(CTVariantAction action: this.actions){
+                        if(action.getName().equals(name)){
+                            exists = true;
+                            existingAction = action;
+                            break;
+                        }
+                    }
+                    if(exists) {
+                        this.actions.remove(existingAction);
+                    }
                     final CTVariantAction action = new CTVariantAction(name, targetActivity, change);
                     this.actions.add(action);
                 }

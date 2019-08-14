@@ -621,7 +621,7 @@ public class CTABTestController {
             return wsClient != null && !wsClient.isClosed() && !wsClient.isClosing() && !wsClient.isFlushAndClose();
         }
 
-        private boolean isConnected() {
+        boolean isConnected() {
             return wsClient != null && wsClient.isOpen();
         }
 
@@ -1085,6 +1085,9 @@ public class CTABTestController {
         public void onActivityResumed(Activity activity) {
             registerConnectionTrigger(activity);
             uiEditor.addActivity(activity);
+            if(!executionThreadHandler.isConnected()){//Will not apply stored experiments on new screens if Dashboard is connected
+                applyStoredExperiments();
+            }
         }
 
         @Override
