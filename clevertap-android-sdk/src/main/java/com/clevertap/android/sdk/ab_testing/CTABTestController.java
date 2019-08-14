@@ -961,9 +961,13 @@ public class CTABTestController {
 
             @Override
             public void onMessage(String message) {
-                getConfigLogger().verbose(getAccountId(),"Received message from dashboard:\n" + message);
                 try {
                     final JSONObject messageJson = new JSONObject(message);
+                    if(messageJson.has("data")){
+                        if(messageJson.getJSONObject("data").keys().hasNext()){
+                            getConfigLogger().verbose(getAccountId(),"Received message from dashboard:\n" + message);
+                        }
+                    }
                     if (!connectionIsValid()) {
                         getConfigLogger().verbose(getAccountId(), "Dashboard connection is stale, dropping message: " + message);
                         return;

@@ -24,8 +24,10 @@ import org.json.JSONObject;
 
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -146,7 +148,7 @@ public class UIEditor {
 
     private final Handler uiThreadHandler;
     private final Map<String, List<ViewEdit>> newEdits;
-    private final Set<UIChangeBinding> currentEdits;
+    private final Deque<UIChangeBinding> currentEdits;//Need a LIFO structure to reverse changes
 
     private SnapshotBuilder.ViewSnapshotConfig snapshotConfig;
 
@@ -165,7 +167,7 @@ public class UIEditor {
         this.config = config;
         uiThreadHandler = new Handler(Looper.getMainLooper());
         newEdits = new HashMap<>();
-        currentEdits = new HashSet<>();
+        currentEdits = new ArrayDeque<>();
         activitySet = new ActivitySet();
         editorSessionImageUrls = new ArrayList<>();
         this.context = context;
@@ -282,10 +284,9 @@ public class UIEditor {
 
     private void clearEdits() {
         synchronized (currentEdits) {
-            for (final UIChangeBinding stale : currentEdits) {
-                stale.kill();
+            while(!currentEdits.isEmpty()){
+                currentEdits.removeLast().kill();//removeLast() picks up the last change added to the Deque
             }
-            currentEdits.clear();
         }
     }
 
