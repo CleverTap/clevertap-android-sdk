@@ -124,9 +124,9 @@ class CTInAppNotification implements Parcelable {
                 }
 
                 if (this.html != null) {
-                    if (this.position == 't' && this.widthPercentage == 100 && this.heightPercentage == 30)
+                    if (this.position == 't' && this.widthPercentage == 100 && this.heightPercentage <= 30)
                         this.inAppType = CTInAppType.CTInAppTypeHeaderHTML;
-                    else if (this.position == 'b' && this.widthPercentage == 100 && this.heightPercentage == 30)
+                    else if (this.position == 'b' && this.widthPercentage == 100 && this.heightPercentage <= 30)
                         this.inAppType = CTInAppType.CTInAppTypeFooterHTML;
                     else if (this.position == 'c' && this.widthPercentage == 90 && this.heightPercentage == 85)
                         this.inAppType = CTInAppType.CTInAppTypeInterstitialHTML;
