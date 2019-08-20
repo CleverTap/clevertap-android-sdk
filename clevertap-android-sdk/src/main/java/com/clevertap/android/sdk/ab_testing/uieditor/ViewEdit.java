@@ -144,9 +144,7 @@ class ViewEdit {
                         return;
                     }
                 }
-                if (currentValue instanceof Bitmap || currentValue instanceof BitmapDrawable || originalValues.containsKey(targetView)) {
-                    // no-op, only cache one non-image original value
-                } else {
+                if (!originalValues.containsKey(targetView)) {
                     originalValueHolder[0] = currentValue;
                     if (mutator.argsAreApplicable(originalValueHolder)) {
                         originalValues.put(targetView, currentValue);
