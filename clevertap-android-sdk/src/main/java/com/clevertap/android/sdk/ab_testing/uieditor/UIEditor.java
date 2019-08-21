@@ -217,6 +217,7 @@ public class UIEditor {
         for (final String assetUrl: editorSessionImageUrls) {
             ImageCache.removeBitmap(assetUrl, true);
         }
+        imageCacheInitialized = false;
         editorSessionImageUrls.clear();
         snapshotConfig = null;
     }
