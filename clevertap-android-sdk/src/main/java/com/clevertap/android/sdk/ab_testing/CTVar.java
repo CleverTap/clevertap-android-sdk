@@ -178,7 +178,7 @@ final class CTVar {
     private List<?> listFromString(String stringValue, CTVarType type) {
         try {
             String[] stringArray = stringValue.replace("[","")
-                    .replace("]","")
+                    .replace("]","").replace("\"","")
                     .split(","); // ["value", "value"...]
 
             if (type == CTVarType.CTVarTypeListOfString) {
