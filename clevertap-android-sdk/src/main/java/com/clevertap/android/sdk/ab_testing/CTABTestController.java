@@ -715,7 +715,7 @@ public class CTABTestController {
                 return;
             }
             // note:  experiments here will be all the currently running experiments for the user
-            try {  // TODO test this updating logic
+            try {
                 Set<CTABVariant> toRemove = new HashSet<>(this.variants);
                 Set<CTABVariant> allVariants = new HashSet<>(this.variants);
 
@@ -730,10 +730,12 @@ public class CTABTestController {
                         }
                     }
                 }
-                if (toRemove.size() > 0) {
-                    for (CTABVariant v : toRemove) {
-                        v.cleanup();
-                        allVariants.remove(v);
+                if(!allVariants.containsAll(toRemove)) {
+                    if (toRemove.size() > 0) {
+                        for (CTABVariant v : toRemove) {
+                            v.cleanup();
+                            allVariants.remove(v);
+                        }
                     }
                 }
                 this.variants = allVariants;
@@ -1085,9 +1087,6 @@ public class CTABTestController {
         public void onActivityResumed(Activity activity) {
             registerConnectionTrigger(activity);
             uiEditor.addActivity(activity);
-            if(!executionThreadHandler.isConnected()){//Will not apply stored experiments on new screens if Dashboard is connected
-                applyStoredExperiments();
-            }
         }
 
         @Override

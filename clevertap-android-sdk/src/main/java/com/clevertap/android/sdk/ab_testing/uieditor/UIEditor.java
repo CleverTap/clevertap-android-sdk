@@ -155,7 +155,6 @@ public class UIEditor {
     private ActivitySet activitySet;
 
     private Context context;
-    private boolean imageCacheInitialized;
     private final ArrayList<String> editorSessionImageUrls;
 
     public UIEditor(Context context, CleverTapInstanceConfig config) {
@@ -217,7 +216,6 @@ public class UIEditor {
         for (final String assetUrl: editorSessionImageUrls) {
             ImageCache.removeBitmap(assetUrl, true);
         }
-        imageCacheInitialized = false;
         editorSessionImageUrls.clear();
         snapshotConfig = null;
     }
@@ -565,8 +563,6 @@ public class UIEditor {
 
     // only call off main thread as initWithPersistence touches the file system
     private void initImageCache() {
-        if (imageCacheInitialized) return;
-        imageCacheInitialized = true;
         ImageCache.initWithPersistence(context);
     }
 
