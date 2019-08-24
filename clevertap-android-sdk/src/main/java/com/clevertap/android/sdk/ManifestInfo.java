@@ -20,6 +20,7 @@ class ManifestInfo {
     private static boolean useCustomID;
     private static String fcmSenderId;
     private static String packageName;
+    private static boolean beta;
 
     private static String _getManifestStringValueForKey(Bundle manifest, String name) {
         try {
@@ -64,6 +65,7 @@ class ManifestInfo {
             fcmSenderId = fcmSenderId.replace("id:", "");
         }
         packageName = _getManifestStringValueForKey(metaData,Constants.LABEL_PACKAGE_NAME);
+        beta = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_BETA));
     }
 
     synchronized static ManifestInfo getInstance(Context context){
@@ -95,6 +97,10 @@ class ManifestInfo {
 
     boolean useGoogleAdId(){
          return useADID;
+    }
+
+    boolean enableBeta(){
+        return beta;
     }
 
     boolean isAppLaunchedDisabled(){

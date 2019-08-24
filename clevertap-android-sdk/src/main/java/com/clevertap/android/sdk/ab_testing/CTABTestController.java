@@ -595,7 +595,9 @@ public class CTABTestController {
             final String protocol = "wss";
             //final String dashboardDomain = /*@"dashboard.clevertap.com"*/ "f43cc14f.ngrok.io";  // TODO put final production dashboard link
             final String dashboardDomain = "eu1-dashboard-staging-2.dashboard.clevertap.com"; //Staging link
-            final String domain = config.getAccountRegion() != null ? config.getAccountRegion()+"."+dashboardDomain : dashboardDomain;
+            String _domain = config.getAccountRegion() != null ? config.getAccountRegion()+"."+dashboardDomain : dashboardDomain;
+            _domain = config.isBeta() ? "beta."+ _domain : _domain;
+            final String domain = _domain;
             final String url =  protocol+"://"+domain+"/"+getAccountId()+"/"+"websocket/screenab/sdk?tk="+config.getAccountToken();
             getConfigLogger().verbose(getAccountId(), "Websocket URL - " + url);
             try {

@@ -19,6 +19,7 @@ public class Constants {
     static final String LABEL_USE_GOOGLE_AD_ID = "CLEVERTAP_USE_GOOGLE_AD_ID";
     static final String LABEL_FCM_SENDER_ID = "FCM_SENDER_ID";
     static final String LABEL_PACKAGE_NAME = "CLEVERTAP_APP_PACKAGE";
+    static final String LABEL_BETA = "CLEVERTAP_BETA";
     static final String CLEVERTAP_OPTOUT = "ct_optout";
     static final String CLEVERTAP_STORAGE_TAG = "WizRocket";
     static final String CLEVERTAP_LOG_TAG = "CleverTap";
@@ -151,6 +152,7 @@ public class Constants {
     static final String KEY_BUTTONS = "buttons";
     static final String KEY_CUSTOM_HTML = "custom-html";
     static final String KEY_ENABLE_CUSTOM_CT_ID = "getEnableCustomCleverTapId";
+    static final String KEY_BETA = "beta";
     static final String WZRK_PUSH_ID = "wzrk_pid";
     static final String NOTIF_MSG = "nm";
     static final String NOTIF_TITLE = "nt";

@@ -28,6 +28,7 @@ public class CleverTapInstanceConfig implements Parcelable {
     private boolean enableUIEditor;
     private boolean enableABTesting;
     private String packageName;
+    private boolean beta;
 
     private CleverTapInstanceConfig(Context context, String accountId, String accountToken, String accountRegion, boolean isDefault) {
         this.accountId = accountId;
@@ -51,6 +52,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.fcmSenderId = manifest.getFCMSenderId();
         this.packageName = manifest.getPackageName();
         this.enableCustomCleverTapId = manifest.useCustomId();
+        this.beta = manifest.enableBeta();
     }
 
     CleverTapInstanceConfig(CleverTapInstanceConfig config) {
@@ -73,6 +75,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.enableABTesting = config.enableABTesting;
         this.enableUIEditor = config.enableUIEditor;
         this.packageName = config.packageName;
+        this.beta = config.beta;
     }
 
     private CleverTapInstanceConfig(String jsonString) throws Throwable {
@@ -116,7 +119,9 @@ public class CleverTapInstanceConfig implements Parcelable {
                 this.enableCustomCleverTapId = configJsonObject.getBoolean(Constants.KEY_ENABLE_CUSTOM_CT_ID);
             if(configJsonObject.has(Constants.KEY_FCM_SENDER_ID))
                 this.gcmSenderId = configJsonObject.getString(Constants.KEY_FCM_SENDER_ID);
-
+            if(configJsonObject.has("beta")) {
+                this.beta = configJsonObject.getBoolean("beta");
+            }
         } catch (Throwable t){
             Logger.v("Error constructing CleverTapInstanceConfig from JSON: " + jsonString +": ", t.getCause());
             throw(t);
@@ -143,6 +148,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         enableUIEditor = in.readByte() != 0x00;
         packageName = in.readString();
         logger = new Logger(debugLevel);
+        beta = in.readByte() != 0x00;
     }
 
     @SuppressWarnings("unused")
@@ -322,6 +328,10 @@ public class CleverTapInstanceConfig implements Parcelable {
         return packageName;
     }
 
+    public boolean isBeta() {
+        return beta;
+    }
+
     @Override
     public int describeContents() {
         return 0;
@@ -347,6 +357,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         dest.writeByte((byte) (enableUIEditor ? 0x01 : 0x00));
         dest.writeByte((byte) (enableABTesting ? 0x01 : 0x00));
         dest.writeString(packageName);
+        dest.writeByte((byte) (beta ? 0x01 : 0x00));
     }
 
     @SuppressWarnings("unused")
@@ -381,6 +392,7 @@ public class CleverTapInstanceConfig implements Parcelable {
             configJsonObject.put(Constants.KEY_BACKGROUND_SYNC, isBackgroundSync());
             configJsonObject.put(Constants.KEY_ENABLE_CUSTOM_CT_ID, getEnableCustomCleverTapId());
             configJsonObject.put(Constants.KEY_FCM_SENDER_ID, getFcmSenderId());
+            configJsonObject.put(Constants.KEY_BETA, isBeta());
             return configJsonObject.toString();
         }catch (Throwable e){
             Logger.v("Unable to convert config to JSON : ",e.getCause());
