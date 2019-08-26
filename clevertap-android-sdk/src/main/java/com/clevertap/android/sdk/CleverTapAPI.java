@@ -957,7 +957,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     public interface DevicePushTokenRefreshListener {
         /**
          * @param token the device token
-         * @param type  the token type com.clevertap.android.sdk.PushType (FCM or GCM)
+         * @param type  the token type com.clevertap.android.sdk.PushType (FCM)
          */
         void devicePushTokenDidRefresh(String token, PushType type);
     }
@@ -1179,7 +1179,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     /**
      * Returns the device push token or null
      *
-     * @param type com.clevertap.android.sdk.PushType (FCM or GCM)
+     * @param type com.clevertap.android.sdk.PushType (FCM)
      * @return String device token or null
      * NOTE: on initial install calling getDevicePushToken may return null, as the device token is
      * not yet available
@@ -5227,7 +5227,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     /**
      * Checks whether this notification is from CleverTap.
      *
-     * @param extras The payload from the GCM intent
+     * @param extras The payload from the FCM intent
      * @return See {@link NotificationInfo}
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
@@ -5243,7 +5243,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Launches an asynchronous task to download the notification icon from CleverTap,
      * and create the Android notification.
      * <p/>
-     * Use this method when implementing your own FCM/GCM handling mechanism. Refer to the
+     * Use this method when implementing your own FCM handling mechanism. Refer to the
      * SDK documentation for usage scenarios and examples.
      *
      * @param context A reference to an Android context
@@ -5258,10 +5258,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Launches an asynchronous task to download the notification icon from CleverTap,
      * and create the Android notification.
      * <p>
-     * If your app is using CleverTap SDK's built in FCM/GCM message handling,
+     * If your app is using CleverTap SDK's built in FCM message handling,
      * this method does not need to be called explicitly.
      * <p/>
-     * Use this method when implementing your own FCM/GCM handling mechanism. Refer to the
+     * Use this method when implementing your own FCM handling mechanism. Refer to the
      * SDK documentation for usage scenarios and examples.
      *
      * @param context A reference to an Android context
@@ -5299,10 +5299,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Launches an asynchronous task to download the notification icon from CleverTap,
      * and create the Android notification.
      * <p/>
-     * If your app is using CleverTap SDK's built in FCM/GCM message handling,
+     * If your app is using CleverTap SDK's built in FCM message handling,
      * this method does not need to be called explicitly.
      * <p/>
-     * Use this method when implementing your own FCM/GCM handling mechanism. Refer to the
+     * Use this method when implementing your own FCM handling mechanism. Refer to the
      * SDK documentation for usage scenarios and examples.
      *
      * @param context A reference to an Android context
@@ -5681,7 +5681,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     /**
      * Launches an asynchronous task to create the notification channel from CleverTap
      * <p/>
-     * Use this method when implementing your own FCM/GCM handling mechanism. Refer to the
+     * Use this method when implementing your own FCM handling mechanism. Refer to the
      * SDK documentation for usage scenarios and examples.
      *
      * @param context A reference to an Android context
@@ -5726,7 +5726,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     /**
      * Launches an asynchronous task to create the notification channel from CleverTap
      * <p/>
-     * Use this method when implementing your own FCM/GCM handling mechanism and creating
+     * Use this method when implementing your own FCM handling mechanism and creating
      * notification channel groups. Refer to the
      * SDK documentation for usage scenarios and examples.
      *
@@ -5775,7 +5775,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     /**
      * Launches an asynchronous task to create the notification channel from CleverTap
      * <p/>
-     * Use this method when implementing your own FCM/GCM handling mechanism. Refer to the
+     * Use this method when implementing your own FCM handling mechanism. Refer to the
      * SDK documentation for usage scenarios and examples.
      *
      * @param context A reference to an Android context
@@ -5840,7 +5840,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     /**
      * Launches an asynchronous task to create the notification channel from CleverTap
      * <p/>
-     * Use this method when implementing your own FCM/GCM handling mechanism and creating
+     * Use this method when implementing your own FCM handling mechanism and creating
      * notification channel groups. Refer to the
      * SDK documentation for usage scenarios and examples.
      *
@@ -5909,7 +5909,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     /**
      * Launches an asynchronous task to create the notification channel group from CleverTap
      * <p/>
-     * Use this method when implementing your own FCM/GCM handling mechanism. Refer to the
+     * Use this method when implementing your own FCM handling mechanism. Refer to the
      * SDK documentation for usage scenarios and examples.
      *
      * @param context A reference to an Android context
@@ -5946,7 +5946,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     /**
      * Launches an asynchronous task to delete the notification channel from CleverTap
      * <p/>
-     * Use this method when implementing your own FCM/GCM handling mechanism. Refer to the
+     * Use this method when implementing your own FCM handling mechanism. Refer to the
      * SDK documentation for usage scenarios and examples.
      *
      * @param context A reference to an Android context
@@ -5982,7 +5982,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     /**
      * Launches an asynchronous task to delete the notification channel from CleverTap
      * <p/>
-     * Use this method when implementing your own FCM/GCM handling mechanism. Refer to the
+     * Use this method when implementing your own FCM handling mechanism. Refer to the
      * SDK documentation for usage scenarios and examples.
      *
      * @param context A reference to an Android context

@@ -3,7 +3,7 @@ package com.clevertap.android.sdk;
 import android.os.Bundle;
 
 /**
- * Contains information regarding the notification payload in the GCM intent.
+ * Contains information regarding the notification payload in the FCM intent.
  * <p/>
  * Use {@link CleverTapAPI#getNotificationInfo(Bundle)} to retrieve this information.
  */

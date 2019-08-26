@@ -9,7 +9,6 @@ class ManifestInfo {
     private static String accountId;
     private static String accountToken;
     private static String accountRegion;
-    private static String gcmSenderId;
     private static boolean useADID;
     private static boolean appLaunchedDisabled;
     private static String notificationIcon;
@@ -49,11 +48,7 @@ class ManifestInfo {
             accountToken = _getManifestStringValueForKey(metaData, Constants.LABEL_TOKEN);
         if(accountRegion==null)
             accountRegion = _getManifestStringValueForKey(metaData, Constants.LABEL_REGION);
-        gcmSenderId = _getManifestStringValueForKey(metaData, Constants.LABEL_SENDER_ID);
         notificationIcon = _getManifestStringValueForKey(metaData,Constants.LABEL_NOTIFICATION_ICON);
-        if (gcmSenderId != null) {
-            gcmSenderId = gcmSenderId.replace("id:", "");
-        }
         useADID = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_USE_GOOGLE_AD_ID));
         appLaunchedDisabled = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_DISABLE_APP_LAUNCH));
         excludedActivities = _getManifestStringValueForKey(metaData,Constants.LABEL_INAPP_EXCLUDE);
@@ -85,10 +80,6 @@ class ManifestInfo {
 
     String getAccountRegion(){
         return accountRegion;
-    }
-
-    String getGCMSenderId(){
-        return gcmSenderId;
     }
 
     String getFCMSenderId() {

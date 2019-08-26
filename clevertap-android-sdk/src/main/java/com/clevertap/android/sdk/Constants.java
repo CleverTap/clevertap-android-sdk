@@ -71,7 +71,6 @@ public class Constants {
     static final int NOTIFICATION_VIEWED_ID_TAG_INTERVAL = 2000;
     static final String SESSION_ID_LAST = "lastSessionId";
     static final String LAST_SESSION_EPOCH = "sexe";
-    static final String LABEL_SENDER_ID = "GCM_SENDER_ID";
     static final int MAX_KEY_LENGTH = 120;
     static final int MAX_VALUE_LENGTH = 512;
     static final int MAX_MULTI_VALUE_ARRAY_LENGTH = 100;
@@ -153,6 +152,9 @@ public class Constants {
     static final String KEY_CUSTOM_HTML = "custom-html";
     static final String KEY_ENABLE_CUSTOM_CT_ID = "getEnableCustomCleverTapId";
     static final String KEY_BETA = "beta";
+    static final String KEY_PACKAGE_NAME = "packageName";
+    static final String KEY_ENABLE_UIEDITOR = "enableUIEditor";
+    static final String KEY_ENABLE_ABTEST = "enableABTesting";
     static final String WZRK_PUSH_ID = "wzrk_pid";
     static final String NOTIF_MSG = "nm";
     static final String NOTIF_TITLE = "nt";

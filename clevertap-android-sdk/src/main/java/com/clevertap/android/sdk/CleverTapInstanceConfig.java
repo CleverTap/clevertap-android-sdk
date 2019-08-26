@@ -12,7 +12,6 @@ public class CleverTapInstanceConfig implements Parcelable {
     private String accountId;
     private String accountToken;
     private String accountRegion;
-    private String gcmSenderId;
     private boolean analyticsOnly;
     private boolean isDefaultInstance;
     private boolean useGoogleAdId;
@@ -46,7 +45,6 @@ public class CleverTapInstanceConfig implements Parcelable {
         ManifestInfo manifest = ManifestInfo.getInstance(context);
         this.useGoogleAdId = manifest.useGoogleAdId();
         this.disableAppLaunchedEvent = manifest.isAppLaunchedDisabled();
-        this.gcmSenderId = manifest.getGCMSenderId();
         this.sslPinning = manifest.isSSLPinningEnabled();
         this.backgroundSync = manifest.isBackgroundSync();
         this.fcmSenderId = manifest.getFCMSenderId();
@@ -66,7 +64,6 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.logger = config.logger;
         this.useGoogleAdId = config.useGoogleAdId;
         this.disableAppLaunchedEvent = config.disableAppLaunchedEvent;
-        this.gcmSenderId = config.gcmSenderId;
         this.createdPostAppLaunch = config.createdPostAppLaunch;
         this.sslPinning = config.sslPinning;
         this.backgroundSync = config.backgroundSync;
@@ -87,8 +84,6 @@ public class CleverTapInstanceConfig implements Parcelable {
                 this.accountToken = configJsonObject.getString(Constants.KEY_ACCOUNT_TOKEN);
             if(configJsonObject.has(Constants.KEY_ACCOUNT_REGION))
                 this.accountRegion = configJsonObject.getString(Constants.KEY_ACCOUNT_REGION);
-            if(configJsonObject.has("gcmSenderId"))
-                this.gcmSenderId = configJsonObject.getString("gcmSenderId");
             if(configJsonObject.has(Constants.KEY_ANALYTICS_ONLY))
                 this.analyticsOnly = configJsonObject.getBoolean(Constants.KEY_ANALYTICS_ONLY);
             if(configJsonObject.has(Constants.KEY_DEFAULT_INSTANCE))
@@ -103,12 +98,12 @@ public class CleverTapInstanceConfig implements Parcelable {
                 this.debugLevel = configJsonObject.getInt(Constants.KEY_DEBUG_LEVEL);
             }
             this.logger = new Logger(this.debugLevel);
-            if(configJsonObject.has("enableABTesting"))
-                this.enableABTesting = configJsonObject.getBoolean("enableABTesting");
-            if(configJsonObject.has("enableUIEditor"))
-                this.enableUIEditor = configJsonObject.getBoolean("enableUIEditor");
-            if(configJsonObject.has("packageName"))
-                this.packageName = configJsonObject.getString("packageName");
+            if(configJsonObject.has(Constants.KEY_ENABLE_ABTEST))
+                this.enableABTesting = configJsonObject.getBoolean(Constants.KEY_ENABLE_ABTEST);
+            if(configJsonObject.has(Constants.KEY_ENABLE_UIEDITOR))
+                this.enableUIEditor = configJsonObject.getBoolean(Constants.KEY_ENABLE_UIEDITOR);
+            if(configJsonObject.has(Constants.KEY_PACKAGE_NAME))
+                this.packageName = configJsonObject.getString(Constants.KEY_PACKAGE_NAME);
             if(configJsonObject.has(Constants.KEY_CREATED_POST_APP_LAUNCH))
                 this.createdPostAppLaunch = configJsonObject.getBoolean(Constants.KEY_CREATED_POST_APP_LAUNCH);
             if(configJsonObject.has(Constants.KEY_SSL_PINNING))
@@ -118,9 +113,9 @@ public class CleverTapInstanceConfig implements Parcelable {
             if(configJsonObject.has(Constants.KEY_ENABLE_CUSTOM_CT_ID))
                 this.enableCustomCleverTapId = configJsonObject.getBoolean(Constants.KEY_ENABLE_CUSTOM_CT_ID);
             if(configJsonObject.has(Constants.KEY_FCM_SENDER_ID))
-                this.gcmSenderId = configJsonObject.getString(Constants.KEY_FCM_SENDER_ID);
-            if(configJsonObject.has("beta")) {
-                this.beta = configJsonObject.getBoolean("beta");
+                this.fcmSenderId = configJsonObject.getString(Constants.KEY_FCM_SENDER_ID);
+            if(configJsonObject.has(Constants.KEY_BETA)) {
+                this.beta = configJsonObject.getBoolean(Constants.KEY_BETA);
             }
         } catch (Throwable t){
             Logger.v("Error constructing CleverTapInstanceConfig from JSON: " + jsonString +": ", t.getCause());
@@ -132,7 +127,6 @@ public class CleverTapInstanceConfig implements Parcelable {
         accountId = in.readString();
         accountToken = in.readString();
         accountRegion = in.readString();
-        gcmSenderId = in.readString();
         analyticsOnly = in.readByte() != 0x00;
         isDefaultInstance = in.readByte() != 0x00;
         useGoogleAdId = in.readByte() != 0x00;
@@ -199,10 +193,6 @@ public class CleverTapInstanceConfig implements Parcelable {
     @SuppressWarnings({"unused"})
     public String getAccountRegion() {
         return accountRegion;
-    }
-
-    private String getGCMSenderId() {
-        return gcmSenderId;
     }
 
     @SuppressWarnings({"unused", "WeakerAccess"})
@@ -337,29 +327,6 @@ public class CleverTapInstanceConfig implements Parcelable {
         return 0;
     }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(accountId);
-        dest.writeString(accountToken);
-        dest.writeString(accountRegion);
-        dest.writeString(gcmSenderId);
-        dest.writeByte((byte) (analyticsOnly ? 0x01 : 0x00));
-        dest.writeByte((byte) (isDefaultInstance ? 0x01 : 0x00));
-        dest.writeByte((byte) (useGoogleAdId ? 0x01 : 0x00));
-        dest.writeByte((byte) (disableAppLaunchedEvent ? 0x01 : 0x00));
-        dest.writeByte((byte) (personalization ? 0x01 : 0x00));
-        dest.writeInt(debugLevel);
-        dest.writeByte((byte) (sslPinning ? 0x01 : 0x00));
-        dest.writeByte((byte) (createdPostAppLaunch ? 0x01 : 0x00));
-        dest.writeByte((byte) (backgroundSync ? 0x01 : 0x00));
-        dest.writeByte((byte) (enableCustomCleverTapId ? 0x01 : 0x00));
-        dest.writeString(fcmSenderId);
-        dest.writeByte((byte) (enableUIEditor ? 0x01 : 0x00));
-        dest.writeByte((byte) (enableABTesting ? 0x01 : 0x00));
-        dest.writeString(packageName);
-        dest.writeByte((byte) (beta ? 0x01 : 0x00));
-    }
-
     @SuppressWarnings("unused")
     public static final Parcelable.Creator<CleverTapInstanceConfig> CREATOR = new Parcelable.Creator<CleverTapInstanceConfig>() {
         @Override
@@ -373,14 +340,35 @@ public class CleverTapInstanceConfig implements Parcelable {
         }
     };
 
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(accountId);
+        dest.writeString(accountToken);
+        dest.writeString(accountRegion);
+        dest.writeByte((byte) (analyticsOnly ? 0x01 : 0x00));
+        dest.writeByte((byte) (isDefaultInstance ? 0x01 : 0x00));
+        dest.writeByte((byte) (useGoogleAdId ? 0x01 : 0x00));
+        dest.writeByte((byte) (disableAppLaunchedEvent ? 0x01 : 0x00));
+        dest.writeByte((byte) (personalization ? 0x01 : 0x00));
+        dest.writeInt(debugLevel);
+        dest.writeByte((byte) (createdPostAppLaunch ? 0x01 : 0x00));
+        dest.writeByte((byte) (sslPinning ? 0x01 : 0x00));
+        dest.writeByte((byte) (backgroundSync ? 0x01 : 0x00));
+        dest.writeByte((byte) (enableCustomCleverTapId ? 0x01 : 0x00));
+        dest.writeString(fcmSenderId);
+        dest.writeByte((byte) (enableABTesting ? 0x01 : 0x00));
+        dest.writeByte((byte) (enableUIEditor ? 0x01 : 0x00));
+        dest.writeString(packageName);
+        dest.writeByte((byte) (beta ? 0x01 : 0x00));
+    }
+
     String toJSONString() {
         JSONObject configJsonObject = new JSONObject();
         try{
             configJsonObject.put(Constants.KEY_ACCOUNT_ID, getAccountId());
             configJsonObject.put(Constants.KEY_ACCOUNT_TOKEN, getAccountToken());
             configJsonObject.put(Constants.KEY_ACCOUNT_REGION, getAccountRegion());
-            configJsonObject.put("gcmSenderId", getGCMSenderId());
-            configJsonObject.put("packageName", getFcmSenderId());
+            configJsonObject.put(Constants.KEY_FCM_SENDER_ID, getFcmSenderId());
             configJsonObject.put(Constants.KEY_ANALYTICS_ONLY, isAnalyticsOnly());
             configJsonObject.put(Constants.KEY_DEFAULT_INSTANCE, isDefaultInstance());
             configJsonObject.put(Constants.KEY_USE_GOOGLE_AD_ID, isUseGoogleAdId());
@@ -391,8 +379,10 @@ public class CleverTapInstanceConfig implements Parcelable {
             configJsonObject.put(Constants.KEY_SSL_PINNING, isSslPinningEnabled());
             configJsonObject.put(Constants.KEY_BACKGROUND_SYNC, isBackgroundSync());
             configJsonObject.put(Constants.KEY_ENABLE_CUSTOM_CT_ID, getEnableCustomCleverTapId());
-            configJsonObject.put(Constants.KEY_FCM_SENDER_ID, getFcmSenderId());
+            configJsonObject.put(Constants.KEY_PACKAGE_NAME, getPackageName());
             configJsonObject.put(Constants.KEY_BETA, isBeta());
+            configJsonObject.put(Constants.KEY_ENABLE_UIEDITOR,isUIEditorEnabled());
+            configJsonObject.put(Constants.KEY_ENABLE_ABTEST,isABTestingEnabled());
             return configJsonObject.toString();
         }catch (Throwable e){
             Logger.v("Unable to convert config to JSON : ",e.getCause());

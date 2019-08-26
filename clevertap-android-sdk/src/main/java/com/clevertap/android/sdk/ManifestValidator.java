@@ -46,10 +46,9 @@ final class ManifestValidator {
             //no-op
             if (pushType == PushType.FCM) {
                 try {
-                    // use class name string directly here to avoid class not found issues on class import, because we only use one of FCM or GCM
+                    // use class name string directly here to avoid class not found issues on class import, because we only use FCM
                     validateServiceInManifest((Application) context.getApplicationContext(), "com.clevertap.android.sdk.FcmMessageListenerService");
                     validateServiceInManifest((Application) context.getApplicationContext(), "com.clevertap.android.sdk.FcmTokenListenerService");
-
                 } catch (Exception e) {
                     Logger.v("Receiver/Service issue : " + e.toString());
 
