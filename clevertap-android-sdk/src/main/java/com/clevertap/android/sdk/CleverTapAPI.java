@@ -2760,7 +2760,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
                 Intent intent = new Intent(context,InAppNotificationActivity.class);
                 intent.putExtra("inApp",inAppNotification);
-                intent.putExtra("config",config);
+                Bundle configBundle = new Bundle();
+                configBundle.putParcelable("config",config);
+                intent.putExtra("configBundle", configBundle);
                 try {
                     Activity currentActivity = getCurrentActivity();
                     if (currentActivity == null) {
@@ -6479,7 +6481,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
             Intent intent = new Intent(context, CTInboxActivity.class);
             intent.putExtra("styleConfig", _styleConfig);
-            intent.putExtra("config", config);
+            Bundle configBundle = new Bundle();
+            configBundle.putParcelable("config",config);
+            intent.putExtra("configBundle", configBundle);
             try {
                 Activity currentActivity = getCurrentActivity();
                 if (currentActivity == null) {

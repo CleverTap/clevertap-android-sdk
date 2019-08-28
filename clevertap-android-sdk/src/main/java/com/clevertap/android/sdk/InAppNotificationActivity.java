@@ -62,7 +62,10 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             Bundle notif = getIntent().getExtras();
             if (notif == null) throw new IllegalArgumentException();
             inAppNotification = notif.getParcelable("inApp");
-            config = notif.getParcelable("config");
+            Bundle configBundle = notif.getBundle("configBundle");
+            if (configBundle != null) {
+                config = configBundle.getParcelable("config");
+            }
             setListener(CleverTapAPI.instanceWithConfig(getApplicationContext(),config));
         } catch (Throwable t) {
             Logger.v("Cannot find a valid notification bundle to show!", t);

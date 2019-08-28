@@ -64,7 +64,10 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             Bundle extras = getIntent().getExtras();
             if(extras == null) throw new IllegalArgumentException();
             styleConfig = extras.getParcelable("styleConfig");
-            config = extras.getParcelable("config");
+            Bundle configBundle = extras.getBundle("configBundle");
+            if (configBundle != null) {
+                config = configBundle.getParcelable("config");
+            }
             cleverTapAPI = CleverTapAPI.instanceWithConfig(getApplicationContext(), config);
             if (cleverTapAPI != null) {
                 setListener(cleverTapAPI);
