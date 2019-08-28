@@ -44,13 +44,18 @@ public final class Logger {
     }
     public void debug(String message){
         if(getStaticDebugLevel() > CleverTapAPI.LogLevel.INFO.intValue()){
-            Log.d(Constants.CLEVERTAP_LOG_TAG,message);
+            Log.d(Constants.CLEVERTAP_LOG_TAG, message);
         }
     }
 
     public void debug(String suffix, String message){
         if(getStaticDebugLevel() > CleverTapAPI.LogLevel.INFO.intValue()){
-            Log.d(Constants.CLEVERTAP_LOG_TAG+":"+suffix, message);
+            if(message.length() > 4000){
+                Log.d(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message.substring(0,4000));
+                debug(suffix,message.substring(4000));
+            }else {
+                Log.d(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message);
+            }
         }
     }
     public void debug(String suffix, String message, Throwable t){
@@ -94,7 +99,12 @@ public final class Logger {
     }
     public  void verbose(String suffix, String message){
         if(getStaticDebugLevel() > CleverTapAPI.LogLevel.DEBUG.intValue()){
-            Log.v(Constants.CLEVERTAP_LOG_TAG+":"+suffix, message);
+            if(message.length() > 4000){
+                Log.v(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message.substring(0,4000));
+                verbose(suffix,message.substring(4000));
+            }else {
+                Log.v(Constants.CLEVERTAP_LOG_TAG + ":" + suffix, message);
+            }
         }
     }
     public void verbose(String suffix, String message, Throwable t){
