@@ -312,7 +312,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     static void onActivityCreated(Activity activity, String cleverTapID) {
         // make sure we have at least the default instance created here.
         if (instances == null) {
-            CleverTapAPI.createInstanceIfAvailable(activity, null,cleverTapID);
+            CleverTapAPI.createInstanceIfAvailable(activity.getApplicationContext(), null,cleverTapID);
         }
 
         if (instances == null) {
@@ -392,7 +392,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @SuppressWarnings("WeakerAccess")
     public static void onActivityResumed(Activity activity, String cleverTapID) {
         if (instances == null) {
-            CleverTapAPI.createInstanceIfAvailable(activity, null,cleverTapID);
+            CleverTapAPI.createInstanceIfAvailable(activity.getApplicationContext(), null,cleverTapID);
         }
 
         CleverTapAPI.setAppForeground(true);
