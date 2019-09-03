@@ -760,7 +760,7 @@ public class CTABTestController {
                 JSONObject data = new JSONObject();
                 data.put("id", guid);
                 data.put("os", deviceInfo.getString("osName"));
-                data.put("name", deviceInfo.getString("model"));
+                data.put("name", deviceInfo.getString("manufacturer")+" "+deviceInfo.getString("model"));
                 if(deviceInfo.has("library")){
                     data.put("library",deviceInfo.getString("library"));
                 }
