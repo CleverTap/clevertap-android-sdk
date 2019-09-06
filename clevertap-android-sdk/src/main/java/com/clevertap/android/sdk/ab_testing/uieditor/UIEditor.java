@@ -247,9 +247,8 @@ public class UIEditor {
             }
         }
 
-        if(isEditorSession) {
-            clearEdits();
-        }
+        clearEdits();
+
 
         synchronized(newEdits) {
             newEdits.clear();

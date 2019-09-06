@@ -713,7 +713,7 @@ public class CTABTestController {
         }
 
         private void loadVariants(JSONArray experiments){
-            if (experiments == null || experiments.length() <= 0) {
+            if (experiments == null) {
                 return;
             }
             // note:  experiments here will be all the currently running experiments for the user
@@ -740,6 +740,13 @@ public class CTABTestController {
                         }
                     }
                 }
+
+                //This will revert changes at SDK level when all experiments are stopped/revert without needing
+                //another App Launched event
+                if(experiments.length() == 0){
+                    allVariants.clear();
+                }
+
                 this.variants = allVariants;
             } catch (JSONException e) {
                 getConfigLogger().verbose(getAccountId(), "Error loading variants, clearing all running variants", e);
