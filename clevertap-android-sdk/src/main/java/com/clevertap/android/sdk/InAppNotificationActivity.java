@@ -332,7 +332,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     void fireUrlThroughIntent(String url, Bundle formData) {
         try {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url.replace("\n", "").replace("\r", "")));
             startActivity(intent);
         } catch (Throwable t) {
             // Ignore

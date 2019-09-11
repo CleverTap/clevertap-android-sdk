@@ -250,7 +250,7 @@ public class CTInboxListViewFragment extends Fragment {
 
     void fireUrlThroughIntent(String url) {
         try {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url.replace("\n", "").replace("\r", "")));
             startActivity(intent);
         } catch (Throwable t) {
             // Ignore

@@ -93,7 +93,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
 
     void fireUrlThroughIntent(String url, Bundle formData) {
         try {
-            Uri uri = Uri.parse(url);
+            Uri uri = Uri.parse(url.replace("\n", "").replace("\r", ""));
             Set<String> queryParamSet = uri.getQueryParameterNames();
             Bundle queryBundle = new Bundle();
             if(queryParamSet != null && !queryParamSet.isEmpty()){
