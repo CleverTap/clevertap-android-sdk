@@ -187,6 +187,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
             webView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
         }else{
             String url = inAppNotification.getCustomInAppUrl();
+            webView.setWebViewClient(new WebViewClient());
             webView.loadUrl(url);
         }
     }
