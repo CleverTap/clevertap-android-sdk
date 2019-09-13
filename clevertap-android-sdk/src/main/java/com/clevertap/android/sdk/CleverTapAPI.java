@@ -37,6 +37,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
+import android.text.TextUtils;
 
 
 import com.clevertap.android.sdk.exceptions.CleverTapMetaDataNotFoundException;
@@ -2519,25 +2520,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         if (pushAmpObject.has("pf")) {
                             try {
                                 int frequency = pushAmpObject.getInt("pf");
-                                getConfigLogger().verbose("Ping frequency received - " + frequency);
-                                getConfigLogger().verbose("Stored Ping Frequency - " + getPingFrequency(context));
-                                if (frequency != getPingFrequency(context)) {
-                                    setPingFrequency(context, frequency);
-                                    if (this.config.isBackgroundSync() && !this.config.isAnalyticsOnly()) {
-                                        postAsyncSafely("createOrResetJobScheduler", new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                                    getConfigLogger().verbose("Creating job");
-                                                    createOrResetJobScheduler(context);
-                                                } else {
-                                                    getConfigLogger().verbose("Resetting alarm");
-                                                    resetAlarmScheduler(context);
-                                                }
-                                            }
-                                        });
-                                    }
-                                }
+                                updatePingFrequencyIfNeeded(context, frequency);
                             }catch (Throwable t){
                                 getConfigLogger().verbose("Error handling ping frequency in response : "+ t.getMessage());
                             }
@@ -2568,6 +2551,34 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         } catch (Throwable t) {
             mResponseFailureCount++;
             getConfigLogger().verbose(getAccountId(), "Problem process send queue response", t);
+        }
+    }
+
+    /**
+     * updates the ping frequency if there is a change & reschedules existing ping tasks.
+     *
+     * @param context
+     * @param frequency-
+     */
+    private void updatePingFrequencyIfNeeded(final Context context, int frequency) {
+        getConfigLogger().verbose("Ping frequency received - " + frequency);
+        getConfigLogger().verbose("Stored Ping Frequency - " + getPingFrequency(context));
+        if (frequency != getPingFrequency(context)) {
+            setPingFrequency(context, frequency);
+            if (this.config.isBackgroundSync() && !this.config.isAnalyticsOnly()) {
+                postAsyncSafely("createOrResetJobScheduler", new Runnable() {
+                    @Override
+                    public void run() {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            getConfigLogger().verbose("Creating job");
+                            createOrResetJobScheduler(context);
+                        } else {
+                            getConfigLogger().verbose("Resetting alarm");
+                            resetAlarmScheduler(context);
+                        }
+                    }
+                });
+            }
         }
     }
 
@@ -5453,8 +5464,13 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         String notifMessage = extras.getString(Constants.NOTIF_MSG);
                         notifMessage = (notifMessage != null) ? notifMessage : "";
                         if (notifMessage.isEmpty()) {
+                            //silent notification
                             getConfigLogger().verbose(getAccountId(),"Push notification message is empty, not rendering");
                             loadDBAdapter(context).storeUninstallTimestamp();
+                            String pingFreq = extras.getString("pf", "");
+                            if (!TextUtils.isEmpty(pingFreq)) {
+                                updatePingFrequencyIfNeeded(context, Integer.parseInt(pingFreq));
+                            }
                             return;
                         }
                         String notifTitle = extras.getString(Constants.NOTIF_TITLE, "");

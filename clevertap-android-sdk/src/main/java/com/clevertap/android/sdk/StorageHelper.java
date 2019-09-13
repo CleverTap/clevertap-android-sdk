@@ -2,6 +2,7 @@ package com.clevertap.android.sdk;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
 
 final class StorageHelper {
     static void putString(Context context, String key, String value) {
@@ -75,9 +76,18 @@ final class StorageHelper {
         return getPreferences(context, null);
     }
 
-    static void persist(SharedPreferences.Editor editor) {
+    static void persist(final SharedPreferences.Editor editor) {
         try {
-            editor.apply();
+            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                editor.apply();
+            } else {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        editor.commit();
+                    }
+                }).start();
+            }
         } catch (Throwable t) {
             Logger.v("CRITICAL: Failed to persist shared preferences!", t);
         }
