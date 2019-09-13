@@ -4,14 +4,20 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Build;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 final class StorageHelper {
+    private static long EXECUTOR_THREAD_ID = 0;
+    private static ExecutorService es;
+
     static void putString(Context context, String key, String value) {
         SharedPreferences prefs = getPreferences(context);
         SharedPreferences.Editor editor = prefs.edit().putString(key, value);
         persist(editor);
     }
 
-    static void removeString(Context context, String key){
+    static void removeString(Context context, String key) {
         SharedPreferences prefs = getPreferences(context);
         SharedPreferences.Editor editor = prefs.edit().remove(key);
         persist(editor);
@@ -22,7 +28,7 @@ final class StorageHelper {
     }
 
     static String getString(Context context, String nameSpace, String key, String defaultValue) {
-        return getPreferences(context,nameSpace).getString(key, defaultValue);
+        return getPreferences(context, nameSpace).getString(key, defaultValue);
     }
 
     @SuppressWarnings("unused")
@@ -38,7 +44,7 @@ final class StorageHelper {
     }
 
     static long getLong(Context context, String nameSpace, String key, long defaultValue) {
-        return getPreferences(context,nameSpace).getLong(key, defaultValue);
+        return getPreferences(context, nameSpace).getLong(key, defaultValue);
     }
 
     static void putInt(Context context, String key, int value) {
@@ -81,15 +87,41 @@ final class StorageHelper {
             if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 editor.apply();
             } else {
-                new Thread(new Runnable() {
+                postAsyncSafely(new Runnable() {
                     @Override
                     public void run() {
                         editor.commit();
                     }
-                }).start();
+                });
             }
         } catch (Throwable t) {
             Logger.v("CRITICAL: Failed to persist shared preferences!", t);
+        }
+    }
+
+    private static void postAsyncSafely(final Runnable runnable) {
+        try {
+            if (es == null)
+                es = Executors.newFixedThreadPool(1);
+            final boolean executeSync = Thread.currentThread().getId() == EXECUTOR_THREAD_ID;
+
+            if (executeSync) {
+                runnable.run();
+            } else {
+                es.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        EXECUTOR_THREAD_ID = Thread.currentThread().getId();
+                        try {
+                            runnable.run();
+                        } catch (Throwable t) {
+                            Logger.v("Executor service: Failed to complete the scheduled task", t);
+                        }
+                    }
+                });
+            }
+        } catch (Throwable t) {
+            Logger.v("Failed to submit task to the executor service", t);
         }
     }
 }
