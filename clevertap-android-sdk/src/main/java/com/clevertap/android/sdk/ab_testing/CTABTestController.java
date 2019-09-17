@@ -86,6 +86,7 @@ public class CTABTestController {
     private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.allocate(0);
     private static final int EMULATOR_CONNECT_ATTEMPT_INTERVAL_MILLIS = 1000 * 30;
 
+    private static final String DASHBOARD_URL = "dashboard.clevertap.com";
     private static final String MESSAGE_TYPE_HANDSHAKE = "handshake";
     private static final String MESSAGE_TYPE_CLEAR_REQUEST = "clear_request";
     private static final String MESSAGE_TYPE_CHANGE_REQUEST = "change_request";
@@ -593,8 +594,8 @@ public class CTABTestController {
             }
 
             final String protocol = "wss";
-            //final String dashboardDomain = /*@"dashboard.clevertap.com"*/ "f43cc14f.ngrok.io";  // TODO put final production dashboard link
-            final String dashboardDomain = "eu1-dashboard-staging-2.dashboard.clevertap.com"; //Staging link
+            final String dashboardDomain = DASHBOARD_URL;
+            //final String dashboardDomain = "eu1-dashboard-staging-2.dashboard.clevertap.com"; //Staging link
             String _domain = config.getAccountRegion() != null ? config.getAccountRegion()+"."+dashboardDomain : dashboardDomain;
             _domain = config.isBeta() ? "beta."+ _domain : _domain;
             final String domain = _domain;
@@ -732,14 +733,14 @@ public class CTABTestController {
                         }
                     }
                 }
-                if(!allVariants.containsAll(toRemove)) {
+                //if(!allVariants.containsAll(toRemove)) {
                     if (toRemove.size() > 0) {
                         for (CTABVariant v : toRemove) {
                             v.cleanup();
                             allVariants.remove(v);
                         }
                     }
-                }
+                //}
 
                 //This will revert changes at SDK level when all experiments are stopped/revert without needing
                 //another App Launched event
