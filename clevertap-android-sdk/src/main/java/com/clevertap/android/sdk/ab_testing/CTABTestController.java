@@ -87,6 +87,7 @@ public class CTABTestController {
     private static final int EMULATOR_CONNECT_ATTEMPT_INTERVAL_MILLIS = 1000 * 30;
 
     private static final String DASHBOARD_URL = "dashboard.clevertap.com";
+    private static final String DEFAULT_REGION = "eu1";
     private static final String MESSAGE_TYPE_HANDSHAKE = "handshake";
     private static final String MESSAGE_TYPE_CLEAR_REQUEST = "clear_request";
     private static final String MESSAGE_TYPE_CHANGE_REQUEST = "change_request";
@@ -595,10 +596,10 @@ public class CTABTestController {
 
             final String protocol = "wss";
             final String dashboardDomain = DASHBOARD_URL;
-            //final String dashboardDomain = "eu1-dashboard-staging-2.dashboard.clevertap.com"; //Staging link
-            String _domain = config.getAccountRegion() != null ? config.getAccountRegion()+"."+dashboardDomain : dashboardDomain;
-            _domain = config.isBeta() ? "beta."+ _domain : _domain;
-            final String domain = _domain;
+            String region = config.getAccountRegion() != null ? config.getAccountRegion() : DEFAULT_REGION;
+            region = config.isBeta() ? region+"-dashaboard-beta" : region;
+            final String domain = region + "." + DASHBOARD_URL;
+            //final String domain = "eu1-dashboard-staging-1.dashboard.clevertap.com"; //Staging link
             final String url =  protocol+"://"+domain+"/"+getAccountId()+"/"+"websocket/screenab/sdk?tk="+config.getAccountToken();
             getConfigLogger().verbose(getAccountId(), "Websocket URL - " + url);
             try {
