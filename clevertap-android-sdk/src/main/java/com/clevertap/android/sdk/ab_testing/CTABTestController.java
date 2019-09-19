@@ -734,14 +734,14 @@ public class CTABTestController {
                         }
                     }
                 }
-                //if(!allVariants.containsAll(toRemove)) {
+                if(!allVariants.containsAll(toRemove)) {
                     if (toRemove.size() > 0) {
                         for (CTABVariant v : toRemove) {
                             v.cleanup();
                             allVariants.remove(v);
                         }
                     }
-                //}
+                }
 
                 //This will revert changes at SDK level when all experiments are stopped/revert without needing
                 //another App Launched event

@@ -74,35 +74,24 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
         //Allow rotation for all InApps but respect the flags sent from dashboard
         if (inAppNotification.isPortrait() && !inAppNotification.isLandscape()) {
-            try {
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
-            } catch (Throwable t) {
-                Logger.d("Error displaying InAppNotification", t);
-
-                if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                    Logger.d("App in Landscape, dismissing portrait InApp Notification");
-                    finish();
-                    didDismiss(null);
-                    return;
-                } else {
-                    Logger.d("App in Portrait, displaying InApp Notification anyway");
-                }
+            if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                Logger.d("App in Landscape, dismissing portrait InApp Notification");
+                finish();
+                didDismiss(null);
+                return;
+            } else {
+                Logger.d("App in Portrait, displaying InApp Notification anyway");
             }
         }
 
         if (!inAppNotification.isPortrait() && inAppNotification.isLandscape()) {
-            try {
-                setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
-            } catch (Throwable t) {
-                Logger.d("Error displaying InAppNotification", t);
-                if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                    Logger.d("App in Portrait, dismissing landscape InApp Notification");
-                    finish();
-                    didDismiss(null);
-                    return;
-                } else {
-                    Logger.d("App in Landscape, displaying InApp Notification anyway");
-                }
+            if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+                Logger.d("App in Portrait, dismissing landscape InApp Notification");
+                finish();
+                didDismiss(null);
+                return;
+            } else {
+                Logger.d("App in Landscape, displaying InApp Notification anyway");
             }
         }
 
