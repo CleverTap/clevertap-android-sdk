@@ -55,7 +55,7 @@ import javax.net.ssl.SSLSocketFactory;
 public class CTABTestController {
 
     @SuppressWarnings("unused")
-    public static class LayoutErrorMessage {  // TODO
+    public static class LayoutErrorMessage {
         public LayoutErrorMessage(String type, String name) {
             errorType = type;
             errorName = name;
@@ -565,6 +565,7 @@ public class CTABTestController {
                         handleEditorChangesCleared((JSONObject) data);
                         break;
                     case MESSAGE_HANDLE_EDITOR_VARS_RECEIVED:
+                    case MESSAGE_TEST_VARS:
                         handleEditorVarsReceived((JSONObject) data);
                         break;
                     case MESSAGE_PERSIST_EXPERIMENTS:
@@ -572,9 +573,6 @@ public class CTABTestController {
                         break;
                     case MESSAGE_SEND_VARS:
                         sendVars();
-                        break;
-                    case MESSAGE_TEST_VARS:
-                        handleEditorVarsReceived((JSONObject) data);
                         break;
                 }
             } finally {
@@ -595,7 +593,6 @@ public class CTABTestController {
             }
 
             final String protocol = "wss";
-            final String dashboardDomain = DASHBOARD_URL;
             String region = config.getAccountRegion() != null ? config.getAccountRegion() : DEFAULT_REGION;
             region = config.isBeta() ? region+"-dashboard-beta" : region;
             final String domain = region + "." + DASHBOARD_URL;

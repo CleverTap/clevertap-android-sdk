@@ -249,7 +249,6 @@ public class UIEditor {
 
         clearEdits();
 
-
         synchronized(newEdits) {
             newEdits.clear();
             newEdits.putAll(edits);
@@ -497,7 +496,6 @@ public class UIEditor {
             }
             switch (type) {
                 case "java.lang.CharSequence":
-                    return jsonArgument;
                 case "boolean":
                 case "java.lang.Boolean":
                     return jsonArgument;
@@ -508,7 +506,6 @@ public class UIEditor {
                 case "java.lang.Float":
                     return ((Number) jsonArgument).floatValue();
                 case "android.graphics.drawable.Drawable":
-                    return readBitmapDrawable((JSONObject) jsonArgument, imageUrls);
                 case "android.graphics.drawable.BitmapDrawable":
                     return readBitmapDrawable((JSONObject) jsonArgument, imageUrls);
                 case "android.graphics.drawable.ColorDrawable":

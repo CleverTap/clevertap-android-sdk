@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 
-@SuppressWarnings("SuspiciousMethodCalls")
 class ViewEdit {
 
     static class PathElement {
@@ -88,12 +87,12 @@ class ViewEdit {
         this.context = context;
     }
 
-    protected List<PathElement> getPath() {
+    private List<PathElement> getPath() {
         return this.path;
     }
 
     void run(View rootView) {
-        pathFinder.findTargetsInRoot(rootView, path, this);
+        pathFinder.findTargetsInRoot(rootView, getPath(), this);
     }
 
     void cleanup() {
@@ -111,7 +110,6 @@ class ViewEdit {
         }
     }
 
-    @SuppressWarnings("StatementWithEmptyBody")
     private void apply(View targetView) {
         if (accessor != null) {
             final Object[] args = mutator.getArgs();
