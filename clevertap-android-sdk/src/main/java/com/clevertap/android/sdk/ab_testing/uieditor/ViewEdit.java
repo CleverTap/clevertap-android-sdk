@@ -271,13 +271,9 @@ class ViewEdit {
                 String klassCanonicalName = klass.getCanonicalName();
                 if (klassCanonicalName != null && klassCanonicalName.equals(className)) {
                     return true;
-                }
-
-                if (klass == Object.class) {
+                }else{
                     return false;
                 }
-
-                klass = klass.getSuperclass();
             }
         }
 

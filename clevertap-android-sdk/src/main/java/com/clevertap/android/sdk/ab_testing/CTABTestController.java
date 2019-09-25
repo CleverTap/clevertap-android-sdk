@@ -596,7 +596,6 @@ public class CTABTestController {
             String region = config.getAccountRegion() != null ? config.getAccountRegion() : DEFAULT_REGION;
             region = config.isBeta() ? region+"-dashboard-beta" : region;
             final String domain = region + "." + DASHBOARD_URL;
-            //final String domain = "eu1-dashboard-staging-1.dashboard.clevertap.com"; //Staging link
             final String url =  protocol+"://"+domain+"/"+getAccountId()+"/"+"websocket/screenab/sdk?tk="+config.getAccountToken();
             getConfigLogger().verbose(getAccountId(), "Websocket URL - " + url);
             try {
