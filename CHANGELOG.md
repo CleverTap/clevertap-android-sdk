@@ -1,5 +1,13 @@
 ## CHANGE LOG
 
+### Version 3.6.0 (September 25, 2019)
+* Adds support for AB Tests. (in closed Beta)
+* Adds support for deep link query parameters in InApps.
+* Deprecated GCM.
+* Deprecated EventHandler, SessionHandler and DataHandler classes.
+* Workaround for below Oreo Android OS bug causing ANRs while using Push Amplification.
+* Bug fixes and performance improvements
+
 ### Version 3.5.1 (May 24, 2019)
 * Removes requirement for Manifest entry to enable automatic recording of Push Notification Viewed event
 * Fixes certain Landscape InApp Notification display issues
