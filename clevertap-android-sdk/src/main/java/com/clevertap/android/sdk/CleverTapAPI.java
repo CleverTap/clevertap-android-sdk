@@ -6452,7 +6452,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 return inboxMessageArrayList;
             } else {
                 getConfigLogger().debug(getAccountId(),"Notification Inbox not initialized");
-                return null;
+                return inboxMessageArrayList; //return empty list to avoid null pointer exceptions
             }
         }
     }
@@ -6474,7 +6474,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 return inboxMessageArrayList;
             }else{
                 getConfigLogger().debug(getAccountId(),"Notification Inbox not initialized");
-                return null;
+                return inboxMessageArrayList; //return empty list to avoid null pointer exceptions
             }
         }
     }
