@@ -21,7 +21,7 @@ class CTInboxButtonClickListener implements View.OnClickListener {
     private ViewPager viewPager;
     private JSONObject buttonObject;
 
-    CTInboxButtonClickListener(int position, CTInboxMessage inboxMessage, String buttonText, JSONObject jsonObject, CTInboxListViewFragment fragment){
+    CTInboxButtonClickListener(int position, CTInboxMessage inboxMessage, String buttonText, JSONObject jsonObject, CTInboxListViewFragment fragment) {
         this.position = position;
         this.inboxMessage = inboxMessage;
         this.buttonText = buttonText;
@@ -40,34 +40,34 @@ class CTInboxButtonClickListener implements View.OnClickListener {
 
     @Override
     public void onClick(View v) {
-        if(viewPager != null){//Handles viewpager clicks
-            if(fragment != null) {
+        if (viewPager != null) {//Handles viewpager clicks
+            if (fragment != null) {
                 fragment.handleViewPagerClick(position, viewPager.getCurrentItem());
             }
-        }else{//Handles button clicks
-            if(buttonText != null && buttonObject != null) {
-                if(fragment != null) {
-                    if(inboxMessage.getInboxMessageContents().get(0).getLinktype(buttonObject).equalsIgnoreCase(Constants.COPY_TYPE)) {//Copy to clipboard feature
-                        if(fragment.getActivity() !=null) {
+        } else {//Handles button clicks
+            if (buttonText != null && buttonObject != null) {
+                if (fragment != null) {
+                    if (inboxMessage.getInboxMessageContents().get(0).getLinktype(buttonObject).equalsIgnoreCase(Constants.COPY_TYPE)) {//Copy to clipboard feature
+                        if (fragment.getActivity() != null) {
                             copyToClipboard(fragment.getActivity());
                         }
                     }
-                    fragment.handleClick(this.position, buttonText, buttonObject);
+                    fragment.handleClick(this.position, buttonText, buttonObject, inboxMessage.getInboxMessageContents().get(0).getLinkKeyValue(buttonObject));
                 }
             } else {
                 if (fragment != null) {
-                    fragment.handleClick(this.position, null,null);
+                    fragment.handleClick(this.position, null, null, null);
                 }
             }
         }
     }
 
-    private void copyToClipboard(Context context){
+    private void copyToClipboard(Context context) {
         ClipboardManager clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-        ClipData clipData = ClipData.newPlainText(buttonText,inboxMessage.getInboxMessageContents().get(0).getLinkCopyText(buttonObject));
+        ClipData clipData = ClipData.newPlainText(buttonText, inboxMessage.getInboxMessageContents().get(0).getLinkCopyText(buttonObject));
         if (clipboardManager != null) {
             clipboardManager.setPrimaryClip(clipData);
-            Toast.makeText(context,"Text Copied to Clipboard",Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Text Copied to Clipboard", Toast.LENGTH_SHORT).show();
         }
     }
 }

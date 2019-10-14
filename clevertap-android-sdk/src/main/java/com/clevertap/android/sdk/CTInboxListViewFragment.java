@@ -24,13 +24,17 @@ import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 
 public class CTInboxListViewFragment extends Fragment {
 
-    interface InboxListener{
-        void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data);
-        void messageDidClick(Context baseContext, CTInboxMessage inboxMessage, Bundle data);
+    void didClick(Bundle data, int position, HashMap<String, String> keyValuePayload) {
+        CTInboxListViewFragment.InboxListener listener = getListener();
+        if (listener != null) {
+            //noinspection ConstantConditions
+            listener.messageDidClick(getActivity().getBaseContext(), inboxMessages.get(position), data, keyValuePayload);
+        }
     }
 
     ArrayList<CTInboxMessage> inboxMessages =  new ArrayList<>();
@@ -176,24 +180,7 @@ public class CTInboxListViewFragment extends Fragment {
         }
     }
 
-    void didClick(Bundle data, int position) {
-        CTInboxListViewFragment.InboxListener listener = getListener();
-        if (listener != null) {
-            //noinspection ConstantConditions
-            listener.messageDidClick(getActivity().getBaseContext(), inboxMessages.get(position), data);
-        }
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    void didShow(Bundle data, int position) {
-        CTInboxListViewFragment.InboxListener listener = getListener();
-        if (listener != null) {
-            //noinspection ConstantConditions
-            listener.messageDidShow(getActivity().getBaseContext(), inboxMessages.get(position), data);
-        }
-    }
-
-    void handleClick(int position, String buttonText, JSONObject jsonObject){
+    void handleClick(int position, String buttonText, JSONObject jsonObject, HashMap<String, String> keyValuePayload) {
         try {
             Bundle data = new Bundle();
             JSONObject wzrkParams = inboxMessages.get(position).getWzrkParams();
@@ -207,7 +194,7 @@ public class CTInboxListViewFragment extends Fragment {
             if (buttonText != null && !buttonText.isEmpty()) {
                 data.putString("wzrk_c2a", buttonText);
             }
-            didClick(data,position);
+            didClick(data, position, keyValuePayload);
 
             if (jsonObject != null) {
                 if(inboxMessages.get(position).getInboxMessageContents().get(0).getLinktype(jsonObject).equalsIgnoreCase(Constants.COPY_TYPE)){
@@ -230,6 +217,15 @@ public class CTInboxListViewFragment extends Fragment {
         }
     }
 
+    @SuppressWarnings("SameParameterValue")
+    void didShow(Bundle data, int position) {
+        CTInboxListViewFragment.InboxListener listener = getListener();
+        if (listener != null) {
+            //noinspection ConstantConditions
+            listener.messageDidShow(getActivity().getBaseContext(), inboxMessages.get(position), data);
+        }
+    }
+
     void handleViewPagerClick(int position, int viewPagerPosition){
         try {
             Bundle data = new Bundle();
@@ -240,12 +236,18 @@ public class CTInboxListViewFragment extends Fragment {
                 if(keyName.startsWith(Constants.WZRK_PREFIX))
                     data.putString(keyName,wzrkParams.getString(keyName));
             }
-            didClick(data,position);
+            didClick(data, position, null);
             String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(viewPagerPosition).getActionUrl();
             fireUrlThroughIntent(actionUrl);
         }catch (Throwable t){
             Logger.d("Error handling notification button click: " + t.getCause());
         }
+    }
+
+    interface InboxListener {
+        void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data);
+
+        void messageDidClick(Context baseContext, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue);
     }
 
     void fireUrlThroughIntent(String url) {
