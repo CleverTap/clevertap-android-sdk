@@ -134,17 +134,19 @@ class CTInAppNotificationButton implements Parcelable {
                     this.actionUrl = action;
                 }
             }
-            if (Constants.KEY_KV.equalsIgnoreCase(text) && actions != null) {
-                JSONObject keyValues = actions.has(Constants.KEY_KV) ? actions.getJSONObject(Constants.KEY_KV) : null;
+            if (actions != null && actions.has(Constants.KEY_KV)) {
+                JSONObject keyValues = actions.getJSONObject(Constants.KEY_KV);
                 if (keyValues != null) {
                     Iterator<String> keys = keyValues.keys();
-                    String key, value;
-                    while (keys.hasNext()) {
-                        key = keys.next();
-                        value = keyValues.getString(key);
-                        if (this.keyValues == null)
-                            this.keyValues = new HashMap<>();
-                        this.keyValues.put(key, value);
+                    if (keys != null) {
+                        String key, value;
+                        while (keys.hasNext()) {
+                            key = keys.next();
+                            value = keyValues.getString(key);
+                            if (this.keyValues == null)
+                                this.keyValues = new HashMap<>();
+                            this.keyValues.put(key, value);
+                        }
                     }
                 }
             }
