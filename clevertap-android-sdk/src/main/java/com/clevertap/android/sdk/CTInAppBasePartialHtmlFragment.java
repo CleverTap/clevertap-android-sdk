@@ -83,7 +83,7 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
                     }
                 }
 
-                didClick(formData);
+                didClick(formData, null);
                 Logger.d("Executing call to action for in-app: " + url);
                 fireUrlThroughIntent(url,formData);
             } catch (Throwable t) {

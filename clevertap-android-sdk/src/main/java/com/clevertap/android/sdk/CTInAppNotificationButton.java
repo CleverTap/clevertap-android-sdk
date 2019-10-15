@@ -7,6 +7,9 @@ import android.os.Parcelable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.HashMap;
+import java.util.Iterator;
+
 class CTInAppNotificationButton implements Parcelable {
 
     private String text;
@@ -17,6 +20,11 @@ class CTInAppNotificationButton implements Parcelable {
     private String error;
     private String borderColor;
     private String borderRadius;
+
+    private HashMap<String, String> keyValues;
+
+    CTInAppNotificationButton() {
+    }
 
     String getText() {
         return text;
@@ -88,30 +96,7 @@ class CTInAppNotificationButton implements Parcelable {
         this.borderRadius = borderRadius;
     }
 
-    CTInAppNotificationButton(){}
-
-    CTInAppNotificationButton initWithJSON(JSONObject jsonObject){
-        try{
-            this.jsonDescription = jsonObject;
-            this.text = jsonObject.has("text") ? jsonObject.getString("text") : "";
-            this.textColor = jsonObject.has("color") ? jsonObject.getString("color") : Constants.BLUE;
-            this.backgroundColor = jsonObject.has("bg") ? jsonObject.getString("bg") : Constants.WHITE;
-            this.borderColor = jsonObject.has("border") ? jsonObject.getString("border") : Constants.WHITE;
-            this.borderRadius = jsonObject.has("radius") ? jsonObject.getString("radius") : "";
-
-            JSONObject actions = jsonObject.has("actions") ? jsonObject.getJSONObject("actions") : null;
-            if(actions!=null){
-                String action = actions.has("android") ? actions.getString("android") : "";
-                if(!action.isEmpty()){
-                    this.actionUrl = action;
-                }
-            }
-        }catch (JSONException e){
-            this.error = "Invalid JSON";
-        }
-        return this;
-    }
-
+    @SuppressWarnings("unchecked")
     protected CTInAppNotificationButton(Parcel in) {
         text = in.readString();
         textColor = in.readString();
@@ -126,6 +111,47 @@ class CTInAppNotificationButton implements Parcelable {
             e.printStackTrace();
         }
         error = in.readString();
+        keyValues = in.readHashMap(null);
+    }
+
+    public HashMap<String, String> getKeyValues() {
+        return keyValues;
+    }
+
+    CTInAppNotificationButton initWithJSON(JSONObject jsonObject) {
+        try {
+            this.jsonDescription = jsonObject;
+            this.text = jsonObject.has("text") ? jsonObject.getString("text") : "";
+            this.textColor = jsonObject.has("color") ? jsonObject.getString("color") : Constants.BLUE;
+            this.backgroundColor = jsonObject.has("bg") ? jsonObject.getString("bg") : Constants.WHITE;
+            this.borderColor = jsonObject.has("border") ? jsonObject.getString("border") : Constants.WHITE;
+            this.borderRadius = jsonObject.has("radius") ? jsonObject.getString("radius") : "";
+
+            JSONObject actions = jsonObject.has("actions") ? jsonObject.getJSONObject("actions") : null;
+            if (actions != null) {
+                String action = actions.has("android") ? actions.getString("android") : "";
+                if (!action.isEmpty()) {
+                    this.actionUrl = action;
+                }
+            }
+            if (Constants.KEY_KV.equalsIgnoreCase(text) && actions != null) {
+                JSONObject keyValues = actions.has(Constants.KEY_KV) ? actions.getJSONObject(Constants.KEY_KV) : null;
+                if (keyValues != null) {
+                    Iterator<String> keys = keyValues.keys();
+                    String key, value;
+                    while (keys.hasNext()) {
+                        key = keys.next();
+                        value = keyValues.getString(key);
+                        if (this.keyValues == null)
+                            this.keyValues = new HashMap<>();
+                        this.keyValues.put(key, value);
+                    }
+                }
+            }
+        } catch (JSONException e) {
+            this.error = "Invalid JSON";
+        }
+        return this;
     }
 
     @Override
@@ -149,6 +175,7 @@ class CTInAppNotificationButton implements Parcelable {
             dest.writeString(jsonDescription.toString());
         }
         dest.writeString(error);
+        dest.writeMap(keyValues);
     }
 
     @SuppressWarnings("unused")
