@@ -113,7 +113,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private static String sdkVersion;  // For Google Play Store/Android Studio analytics
-    private WeakReference<InAppButtonListener> inAppButtonListenerWeakReference;
+    private WeakReference<InAppNotificationButtonListener> inAppNotificationButtonListener;
+
+    private WeakReference<InboxMessageButtonListener> inboxMessageButtonListener;
 
     // Initialize
     private CleverTapAPI(final Context context, final CleverTapInstanceConfig config, String cleverTapID) {
@@ -1543,8 +1545,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return config;
     }
 
-    public void setInAppButtonListener(InAppButtonListener inAppButtonListener) {
-        this.inAppButtonListenerWeakReference = new WeakReference<>(inAppButtonListener);
+    public void setInAppNotificationButtonListener(InAppNotificationButtonListener listener) {
+        this.inAppNotificationButtonListener = new WeakReference<>(listener);
+    }
+
+    public void setInboxMessageButtonListener(InboxMessageButtonListener listener) {
+        this.inboxMessageButtonListener = new WeakReference<>(listener);
     }
 
     private Logger getConfigLogger() {
@@ -5639,8 +5645,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @Override
     public void inAppNotificationDidClick(Context context, CTInAppNotification inAppNotification, Bundle formData, HashMap<String, String> keyValueMap) {
         if (keyValueMap != null && !keyValueMap.isEmpty()) {
-            if (inAppButtonListenerWeakReference != null && inAppButtonListenerWeakReference.get() != null) {
-                inAppButtonListenerWeakReference.get().onClick(keyValueMap);
+            if (inAppNotificationButtonListener != null && inAppNotificationButtonListener.get() != null) {
+                inAppNotificationButtonListener.get().onInAppButtonClick(keyValueMap);
             }
         } else {
             pushInAppNotificationStateEvent(true, inAppNotification, formData);
@@ -6621,10 +6627,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     @Override
-    public void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data) {
-        pushInboxMessageStateEvent(true, inboxMessage, data);
+    public void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue) {
+        if (keyValue != null && !keyValue.isEmpty()) {
+            if (inboxMessageButtonListener != null && inboxMessageButtonListener.get() != null) {
+                inboxMessageButtonListener.get().onInboxButtonClick(keyValue);
+            }
+        } else {
+            pushInboxMessageStateEvent(true, inboxMessage, data);
+        }
     }
-
 
     private void createAlarmScheduler(Context context) {
         int pingFrequency = getPingFrequency(context);

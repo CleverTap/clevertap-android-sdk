@@ -2,10 +2,10 @@ package com.clevertap.android.sdk;
 
 import java.util.HashMap;
 
-public interface CTInboxButtonListener {
+public interface InboxMessageButtonListener {
 
     /**
      * callback to transfer payload when inbox button is clicked
      */
-    void onClick(HashMap<String, String> payload);
+    void onInboxButtonClick(HashMap<String, String> payload);
 }
