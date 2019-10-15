@@ -9,6 +9,8 @@ import android.widget.Toast;
 
 import org.json.JSONObject;
 
+import java.util.HashMap;
+
 /**
  * Custom OnClickListener to handle both "onMessage" and "onLink" clicks
  */
@@ -52,7 +54,13 @@ class CTInboxButtonClickListener implements View.OnClickListener {
                             copyToClipboard(fragment.getActivity());
                         }
                     }
-                    fragment.handleClick(this.position, buttonText, buttonObject, inboxMessage.getInboxMessageContents().get(0).getLinkKeyValue(buttonObject));
+
+                    HashMap<String, String> keyValues = null;
+                    if (inboxMessage != null && inboxMessage.getInboxMessageContents() != null && inboxMessage.getInboxMessageContents().get(0) != null) {
+                        keyValues = inboxMessage.getInboxMessageContents().get(0).getLinkKeyValue(buttonObject);
+                    }
+
+                    fragment.handleClick(this.position, buttonText, buttonObject, keyValues);
                 }
             } else {
                 if (fragment != null) {

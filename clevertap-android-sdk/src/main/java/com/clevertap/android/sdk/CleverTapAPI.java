@@ -113,7 +113,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private static String sdkVersion;  // For Google Play Store/Android Studio analytics
-    private WeakReference<CTInboxPayloadListener> inboxPayloadListener;
+    private WeakReference<CTInboxButtonListener> inboxButtonListenerWeakReference;
 
     // Initialize
     private CleverTapAPI(final Context context, final CleverTapInstanceConfig config, String cleverTapID) {
@@ -238,6 +238,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     static void onActivityCreated(Activity activity) {
         onActivityCreated(activity, null);
     }
+
     private DeviceInfo deviceInfo;
     private DevicePushTokenRefreshListener tokenRefreshListener;
     private boolean appLaunchPushed = false;
@@ -1501,12 +1502,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //Network Info handling
 
-    public WeakReference<CTInboxPayloadListener> getInboxPayloadListener() {
-        return inboxPayloadListener;
-    }
-
-    public void setInboxPayloadListener(WeakReference<CTInboxPayloadListener> inboxPayloadListener) {
-        this.inboxPayloadListener = inboxPayloadListener;
+    public void setInboxPayloadListener(CTInboxButtonListener inboxButtonListener) {
+        this.inboxButtonListenerWeakReference = new WeakReference<>(inboxButtonListener);
     }
 
     private Logger getConfigLogger() {
@@ -6621,9 +6618,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     @Override
     public void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue) {
-        if (keyValue != null) {
-            if (inboxPayloadListener != null && inboxPayloadListener.get() != null) {
-                inboxPayloadListener.get().onClick(keyValue);
+        if (keyValue != null && !keyValue.isEmpty()) {
+            if (inboxButtonListenerWeakReference != null && inboxButtonListenerWeakReference.get() != null) {
+                inboxButtonListenerWeakReference.get().onClick(keyValue);
             }
         } else {
             pushInboxMessageStateEvent(true, inboxMessage, data);
