@@ -37,7 +37,7 @@ public class CTInboxListViewFragment extends Fragment {
         }
     }
 
-    ArrayList<CTInboxMessage> inboxMessages =  new ArrayList<>();
+    ArrayList<CTInboxMessage> inboxMessages = new ArrayList<>();
     CleverTapInstanceConfig config;
     boolean haveVideoPlayerSupport = CleverTapAPI.haveVideoPlayerSupport;
     CTInboxStyleConfig styleConfig;
@@ -70,10 +70,10 @@ public class CTInboxListViewFragment extends Fragment {
         return listener;
     }
 
-    private ArrayList<CTInboxMessage> filterMessages(ArrayList<CTInboxMessage>messages, String filter){
+    private ArrayList<CTInboxMessage> filterMessages(ArrayList<CTInboxMessage> messages, String filter) {
         ArrayList<CTInboxMessage> filteredMessages = new ArrayList<>();
-        for(CTInboxMessage inboxMessage : messages){
-            if(inboxMessage.getTags() != null && inboxMessage.getTags().size() > 0) {
+        for (CTInboxMessage inboxMessage : messages) {
+            if (inboxMessage.getTags() != null && inboxMessage.getTags().size() > 0) {
                 for (String stringTag : inboxMessage.getTags()) {
                     if (stringTag.equalsIgnoreCase(filter)) {
                         filteredMessages.add(inboxMessage);
@@ -107,7 +107,7 @@ public class CTInboxListViewFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View allView = inflater.inflate(R.layout.inbox_list_view,container,false);
+        View allView = inflater.inflate(R.layout.inbox_list_view, container, false);
         linearLayout = allView.findViewById(R.id.list_view_linear_layout);
         linearLayout.setBackgroundColor(Color.parseColor(styleConfig.getInboxBackgroundColor()));
         TextView noMessageView = allView.findViewById(R.id.list_view_no_message_view);
@@ -159,7 +159,7 @@ public class CTInboxListViewFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-        if(mediaRecyclerView != null){
+        if (mediaRecyclerView != null) {
             mediaRecyclerView.onPausePlayer();
         }
     }
@@ -167,7 +167,7 @@ public class CTInboxListViewFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if(mediaRecyclerView != null){
+        if (mediaRecyclerView != null) {
             mediaRecyclerView.onRestartPlayer();
         }
     }
@@ -175,7 +175,7 @@ public class CTInboxListViewFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if(mediaRecyclerView != null){
+        if (mediaRecyclerView != null) {
             mediaRecyclerView.release();
         }
     }
@@ -185,28 +185,28 @@ public class CTInboxListViewFragment extends Fragment {
             Bundle data = new Bundle();
             JSONObject wzrkParams = inboxMessages.get(position).getWzrkParams();
             Iterator<String> iterator = wzrkParams.keys();
-            while(iterator.hasNext()){
+            while (iterator.hasNext()) {
                 String keyName = iterator.next();
-                if(keyName.startsWith(Constants.WZRK_PREFIX))
-                    data.putString(keyName,wzrkParams.getString(keyName));
+                if (keyName.startsWith(Constants.WZRK_PREFIX))
+                    data.putString(keyName, wzrkParams.getString(keyName));
             }
 
             if (buttonText != null && !buttonText.isEmpty()) {
                 data.putString("wzrk_c2a", buttonText);
             }
             didClick(data, position, keyValuePayload);
-
+            boolean isKVButton = keyValuePayload != null && !keyValuePayload.isEmpty();
             if (jsonObject != null) {
-                if(inboxMessages.get(position).getInboxMessageContents().get(0).getLinktype(jsonObject).equalsIgnoreCase(Constants.COPY_TYPE)){
+                if (isKVButton || inboxMessages.get(position).getInboxMessageContents().get(0).getLinktype(jsonObject).equalsIgnoreCase(Constants.COPY_TYPE)) {
                     //noinspection UnnecessaryReturnStatement
                     return;
-                }else{
+                } else {
                     String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(0).getLinkUrl(jsonObject);
                     if (actionUrl != null) {
                         fireUrlThroughIntent(actionUrl);
                     }
                 }
-            }else {
+            } else {
                 String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(0).getActionUrl();
                 if (actionUrl != null) {
                     fireUrlThroughIntent(actionUrl);
@@ -226,20 +226,20 @@ public class CTInboxListViewFragment extends Fragment {
         }
     }
 
-    void handleViewPagerClick(int position, int viewPagerPosition){
+    void handleViewPagerClick(int position, int viewPagerPosition) {
         try {
             Bundle data = new Bundle();
             JSONObject wzrkParams = inboxMessages.get(position).getWzrkParams();
             Iterator<String> iterator = wzrkParams.keys();
-            while(iterator.hasNext()){
+            while (iterator.hasNext()) {
                 String keyName = iterator.next();
-                if(keyName.startsWith(Constants.WZRK_PREFIX))
-                    data.putString(keyName,wzrkParams.getString(keyName));
+                if (keyName.startsWith(Constants.WZRK_PREFIX))
+                    data.putString(keyName, wzrkParams.getString(keyName));
             }
             didClick(data, position, null);
             String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(viewPagerPosition).getActionUrl();
             fireUrlThroughIntent(actionUrl);
-        }catch (Throwable t){
+        } catch (Throwable t) {
             Logger.d("Error handling notification button click: " + t.getCause());
         }
     }
@@ -270,13 +270,13 @@ public class CTInboxListViewFragment extends Fragment {
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        if(mediaRecyclerView != null) {
+        if (mediaRecyclerView != null) {
             if (mediaRecyclerView.getLayoutManager() != null) {
                 outState.putParcelable("recyclerLayoutState", mediaRecyclerView.getLayoutManager().onSaveInstanceState());
             }
         }
 
-        if(recyclerView != null) {
+        if (recyclerView != null) {
             if (recyclerView.getLayoutManager() != null) {
                 outState.putParcelable("recyclerLayoutState", recyclerView.getLayoutManager().onSaveInstanceState());
             }
@@ -286,16 +286,16 @@ public class CTInboxListViewFragment extends Fragment {
     @Override
     public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
         super.onViewStateRestored(savedInstanceState);
-        if(savedInstanceState != null) {
+        if (savedInstanceState != null) {
             Parcelable savedRecyclerLayoutState = savedInstanceState.getParcelable("recyclerLayoutState");
             if (mediaRecyclerView != null) {
-                if(mediaRecyclerView.getLayoutManager()!=null) {
+                if (mediaRecyclerView.getLayoutManager() != null) {
                     mediaRecyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
                 }
             }
 
             if (recyclerView != null) {
-                if(recyclerView.getLayoutManager()!=null) {
+                if (recyclerView.getLayoutManager() != null) {
                     recyclerView.getLayoutManager().onRestoreInstanceState(savedRecyclerLayoutState);
                 }
             }

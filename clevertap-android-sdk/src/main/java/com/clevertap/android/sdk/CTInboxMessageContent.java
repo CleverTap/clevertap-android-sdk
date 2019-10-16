@@ -9,6 +9,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
+import java.util.Iterator;
 
 /**
  * Public model class for the "msg" object from notification inbox payload
@@ -371,27 +372,23 @@ public class CTInboxMessageContent implements Parcelable {
      * @return
      */
     public HashMap<String, String> getLinkKeyValue(JSONObject jsonObject) {
-        if (jsonObject == null) return null;
+        if (jsonObject == null || !jsonObject.has(Constants.KEY_KV)) return null;
         try {
-            JSONArray keyValueArr = jsonObject.has("kv") ? jsonObject.getJSONArray("kv") : null;
-            if (keyValueArr != null && keyValueArr.length() > 0) {
-                JSONObject kvobj, valueObj;
-                String key, value;
-                HashMap<String, String> map = new HashMap<>();
-                for (int i = 0; i < keyValueArr.length(); i++) {
-                    kvobj = keyValueArr.getJSONObject(0);
-                    if (kvobj != null) {
-                        key = kvobj.getString("key");
-                        valueObj = kvobj.getJSONObject("value");
-                        if (!TextUtils.isEmpty(key) && valueObj != null) {
-                            value = valueObj.getString("text");
-                            if (!TextUtils.isEmpty(value)) {
-                                map.put(key, value);
-                            }
+            JSONObject keyValues = jsonObject.getJSONObject(Constants.KEY_KV);
+            if (keyValues != null) {
+                Iterator<String> keys = keyValues.keys();
+                HashMap<String, String> keyValuesMap = new HashMap<>();
+                if (keys != null) {
+                    String key, value;
+                    while (keys.hasNext()) {
+                        key = keys.next();
+                        value = keyValues.getString(key);
+                        if (!TextUtils.isEmpty(key)) {
+                            keyValuesMap.put(key, value);
                         }
                     }
                 }
-                return !map.isEmpty() ? map : null;
+                return !keyValuesMap.isEmpty() ? keyValuesMap : null;
             } else {
                 return null;
             }

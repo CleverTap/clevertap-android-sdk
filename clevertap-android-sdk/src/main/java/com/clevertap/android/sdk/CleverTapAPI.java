@@ -240,6 +240,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     static void onActivityCreated(Activity activity) {
         onActivityCreated(activity, null);
     }
+
     private DeviceInfo deviceInfo;
     private DevicePushTokenRefreshListener tokenRefreshListener;
     private boolean appLaunchPushed = false;
@@ -5644,12 +5645,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     @Override
     public void inAppNotificationDidClick(Context context, CTInAppNotification inAppNotification, Bundle formData, HashMap<String, String> keyValueMap) {
+        pushInAppNotificationStateEvent(true, inAppNotification, formData);
         if (keyValueMap != null && !keyValueMap.isEmpty()) {
             if (inAppNotificationButtonListener != null && inAppNotificationButtonListener.get() != null) {
                 inAppNotificationButtonListener.get().onInAppButtonClick(keyValueMap);
             }
-        } else {
-            pushInAppNotificationStateEvent(true, inAppNotification, formData);
         }
     }
 
@@ -6628,12 +6628,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     @Override
     public void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue) {
+        pushInboxMessageStateEvent(true, inboxMessage, data);
         if (keyValue != null && !keyValue.isEmpty()) {
             if (inboxMessageButtonListener != null && inboxMessageButtonListener.get() != null) {
                 inboxMessageButtonListener.get().onInboxButtonClick(keyValue);
             }
-        } else {
-            pushInboxMessageStateEvent(true, inboxMessage, data);
         }
     }
 

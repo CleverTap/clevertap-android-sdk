@@ -3,6 +3,7 @@ package com.clevertap.android.sdk;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.TextUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -143,9 +144,11 @@ class CTInAppNotificationButton implements Parcelable {
                         while (keys.hasNext()) {
                             key = keys.next();
                             value = keyValues.getString(key);
-                            if (this.keyValues == null)
-                                this.keyValues = new HashMap<>();
-                            this.keyValues.put(key, value);
+                            if (!TextUtils.isEmpty(key)) {
+                                if (this.keyValues == null)
+                                    this.keyValues = new HashMap<>();
+                                this.keyValues.put(key, value);
+                            }
                         }
                     }
                 }
