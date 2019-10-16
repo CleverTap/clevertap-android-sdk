@@ -83,7 +83,7 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         }else {
             @SuppressLint("SimpleDateFormat")
             SimpleDateFormat sdf = new SimpleDateFormat("dd MMM");
-            return sdf.format(new Date(time));
+            return sdf.format(new Date(time*1000L));
         }
     }
 
