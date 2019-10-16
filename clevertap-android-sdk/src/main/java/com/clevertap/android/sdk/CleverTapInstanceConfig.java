@@ -28,6 +28,7 @@ public class CleverTapInstanceConfig implements Parcelable {
     private boolean enableABTesting;
     private String packageName;
     private boolean beta;
+    private int staging;
 
     private CleverTapInstanceConfig(Context context, String accountId, String accountToken, String accountRegion, boolean isDefault) {
         this.accountId = accountId;
@@ -51,6 +52,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.packageName = manifest.getPackageName();
         this.enableCustomCleverTapId = manifest.useCustomId();
         this.beta = manifest.enableBeta();
+        this.staging = 0;
     }
 
     CleverTapInstanceConfig(CleverTapInstanceConfig config) {
@@ -73,6 +75,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.enableUIEditor = config.enableUIEditor;
         this.packageName = config.packageName;
         this.beta = config.beta;
+        this.staging = config.staging;
     }
 
     private CleverTapInstanceConfig(String jsonString) throws Throwable {
@@ -117,6 +120,8 @@ public class CleverTapInstanceConfig implements Parcelable {
             if(configJsonObject.has(Constants.KEY_BETA)) {
                 this.beta = configJsonObject.getBoolean(Constants.KEY_BETA);
             }
+            if(configJsonObject.has("staging"))
+                this.staging = configJsonObject.getInt("staging");
         } catch (Throwable t){
             Logger.v("Error constructing CleverTapInstanceConfig from JSON: " + jsonString +": ", t.getCause());
             throw(t);
@@ -143,6 +148,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         packageName = in.readString();
         logger = new Logger(debugLevel);
         beta = in.readByte() != 0x00;
+        staging = in.readInt();
     }
 
     @SuppressWarnings("unused")
@@ -316,6 +322,14 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     public String getPackageName() {
         return packageName;
+    }
+
+    public int getStaging() {
+        return staging;
+    }
+
+    public void setStaging(int staging) {
+        this.staging = staging;
     }
 
     public boolean isBeta() {

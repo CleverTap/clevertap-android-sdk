@@ -1711,7 +1711,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     private String getDomainFromPrefsOrMetadata(final EventGroup eventGroup) {
         try {
-            final String region = this.config.getAccountRegion();
+            String region = this.config.getAccountRegion();
+            if(this.config.getStaging() > 0 && !region.isEmpty() && !region.equals("in1") && !region.equals("sg1")){
+                region = region+"-staging-"+this.config.getStaging();
+            }
             if (region != null && region.trim().length() > 0) {
                 // Always set this to 0 so that the handshake is not performed during a HTTP failure
                 mResponseFailureCount = 0;
