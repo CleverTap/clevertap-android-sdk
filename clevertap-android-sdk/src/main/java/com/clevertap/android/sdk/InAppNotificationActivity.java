@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
@@ -12,106 +11,14 @@ import android.support.v4.app.FragmentActivity;
 import android.view.WindowManager;
 
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
 
 public final class InAppNotificationActivity extends FragmentActivity implements CTInAppBaseFragment.InAppListener {
 
-    interface InAppActivityListener {
-        void inAppNotificationDidShow(Context context, CTInAppNotification inAppNotification, Bundle formData);
-        void inAppNotificationDidClick(Context context, CTInAppNotification inAppNotification, Bundle formData);
-        void inAppNotificationDidDismiss(Context context, CTInAppNotification inAppNotification, Bundle formData);
-    }
-
+    private static boolean isAlertVisible = false;
     private CTInAppNotification inAppNotification;
     private CleverTapInstanceConfig config;
     private WeakReference<InAppActivityListener> listenerWeakReference;
-    private static boolean isAlertVisible = false;
-
-    void setListener(InAppActivityListener listener) {
-        listenerWeakReference = new WeakReference<>(listener);
-    }
-
-    InAppActivityListener getListener() {
-        InAppActivityListener listener = null;
-        try {
-            listener = listenerWeakReference.get();
-        } catch (Throwable t) {
-            // no-op
-        }
-        if (listener == null) {
-            config.getLogger().verbose(config.getAccountId(),"InAppActivityListener is null for notification: " + inAppNotification.getJsonDescription());
-        }
-        return listener;
-    }
-
-    @Override
-    public void setTheme(int resid) {
-        super.setTheme(android.R.style.Theme_Translucent_NoTitleBar);
-    }
-
-    private String getFragmentTag() {
-        return config.getAccountId() +":CT_INAPP_CONTENT_FRAGMENT";
-    }
-
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        int orientation = this.getResources().getConfiguration().orientation;
-        if(orientation == Configuration.ORIENTATION_LANDSCAPE) {
-            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        }
-        try {
-            Bundle notif = getIntent().getExtras();
-            if (notif == null) throw new IllegalArgumentException();
-            inAppNotification = notif.getParcelable("inApp");
-            Bundle configBundle = notif.getBundle("configBundle");
-            if (configBundle != null) {
-                config = configBundle.getParcelable("config");
-            }
-            setListener(CleverTapAPI.instanceWithConfig(getApplicationContext(),config));
-        } catch (Throwable t) {
-            Logger.v("Cannot find a valid notification bundle to show!", t);
-            return;
-        }
-
-        //Allow rotation for all InApps but respect the flags sent from dashboard
-        if (inAppNotification.isPortrait() && !inAppNotification.isLandscape()) {
-            if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                Logger.d("App in Landscape, dismissing portrait InApp Notification");
-                finish();
-                didDismiss(null);
-                return;
-            } else {
-                Logger.d("App in Portrait, displaying InApp Notification anyway");
-            }
-        }
-
-        if (!inAppNotification.isPortrait() && inAppNotification.isLandscape()) {
-            if (orientation == Configuration.ORIENTATION_PORTRAIT) {
-                Logger.d("App in Portrait, dismissing landscape InApp Notification");
-                finish();
-                didDismiss(null);
-                return;
-            } else {
-                Logger.d("App in Landscape, displaying InApp Notification anyway");
-            }
-        }
-
-        CTInAppBaseFullFragment contentFragment;
-        if (savedInstanceState == null) {
-            contentFragment = createContentFragment();
-            if(contentFragment!=null) {
-                Bundle bundle = new Bundle();
-                bundle.putParcelable("inApp", inAppNotification);
-                bundle.putParcelable("config", config);
-                contentFragment.setArguments(bundle);
-                getFragmentManager().beginTransaction()
-                        .setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out)
-                        .add(android.R.id.content, contentFragment, getFragmentTag())
-                        .commit();
-            }
-        }else if(isAlertVisible){
-            createContentFragment();
-        }
-    }
 
     private CTInAppBaseFullFragment createContentFragment(){
         CTInAppType type = inAppNotification.getInAppType();
@@ -167,7 +74,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                         Bundle data = new Bundle();
                                         data.putString(Constants.NOTIFICATION_ID_TAG, inAppNotification.getCampaignId());
                                         data.putString("wzrk_c2a", inAppNotification.getButtons().get(0).getText());
-                                        didClick(data);
+                                        didClick(data, null);
                                         String actionUrl = inAppNotification.getButtons().get(0).getActionUrl();
                                         if (actionUrl != null) {
                                             fireUrlThroughIntent(actionUrl, data);
@@ -184,7 +91,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                     Bundle data = new Bundle();
                                     data.putString(Constants.NOTIFICATION_ID_TAG, inAppNotification.getCampaignId());
                                     data.putString("wzrk_c2a", inAppNotification.getButtons().get(1).getText());
-                                    didClick(data);
+                                    didClick(data, null);
                                     String actionUrl = inAppNotification.getButtons().get(1).getActionUrl();
                                     if (actionUrl != null) {
                                         fireUrlThroughIntent(actionUrl, data);
@@ -205,7 +112,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                         Bundle data = new Bundle();
                                         data.putString(Constants.NOTIFICATION_ID_TAG, inAppNotification.getCampaignId());
                                         data.putString("wzrk_c2a", inAppNotification.getButtons().get(0).getText());
-                                        didClick(data);
+                                        didClick(data, null);
                                         String actionUrl = inAppNotification.getButtons().get(0).getActionUrl();
                                         if (actionUrl != null) {
                                             fireUrlThroughIntent(actionUrl, data);
@@ -221,7 +128,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                     Bundle data = new Bundle();
                                     data.putString(Constants.NOTIFICATION_ID_TAG, inAppNotification.getCampaignId());
                                     data.putString("wzrk_c2a", inAppNotification.getButtons().get(1).getText());
-                                    didClick(data);
+                                    didClick(data, null);
                                     String actionUrl = inAppNotification.getButtons().get(1).getActionUrl();
                                     if (actionUrl != null) {
                                         fireUrlThroughIntent(actionUrl, data);
@@ -240,7 +147,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                 Bundle data = new Bundle();
                                 data.putString(Constants.NOTIFICATION_ID_TAG, inAppNotification.getCampaignId());
                                 data.putString("wzrk_c2a", inAppNotification.getButtons().get(2).getText());
-                                didClick(data);
+                                didClick(data, null);
                                 String actionUrl = inAppNotification.getButtons().get(2).getActionUrl();
                                 if (actionUrl != null) {
                                     fireUrlThroughIntent(actionUrl, data);
@@ -265,11 +172,103 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         return viewFragment;
     }
 
-    void didClick(Bundle data) {
+    InAppActivityListener getListener() {
+        InAppActivityListener listener = null;
+        try {
+            listener = listenerWeakReference.get();
+        } catch (Throwable t) {
+            // no-op
+        }
+        if (listener == null) {
+            config.getLogger().verbose(config.getAccountId(), "InAppActivityListener is null for notification: " + inAppNotification.getJsonDescription());
+        }
+        return listener;
+    }
+
+    void setListener(InAppActivityListener listener) {
+        listenerWeakReference = new WeakReference<>(listener);
+    }
+
+    @Override
+    public void setTheme(int resid) {
+        super.setTheme(android.R.style.Theme_Translucent_NoTitleBar);
+    }
+
+    private String getFragmentTag() {
+        return config.getAccountId() + ":CT_INAPP_CONTENT_FRAGMENT";
+    }
+
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        int orientation = this.getResources().getConfiguration().orientation;
+        if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            getWindow().addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        }
+        try {
+            Bundle notif = getIntent().getExtras();
+            if (notif == null) throw new IllegalArgumentException();
+            inAppNotification = notif.getParcelable("inApp");
+            Bundle configBundle = notif.getBundle("configBundle");
+            if (configBundle != null) {
+                config = configBundle.getParcelable("config");
+            }
+            setListener(CleverTapAPI.instanceWithConfig(getApplicationContext(), config));
+        } catch (Throwable t) {
+            Logger.v("Cannot find a valid notification bundle to show!", t);
+            return;
+        }
+
+        //Allow rotation for all InApps but respect the flags sent from dashboard
+        if (inAppNotification.isPortrait() && !inAppNotification.isLandscape()) {
+            if (orientation == Configuration.ORIENTATION_LANDSCAPE) {
+                Logger.d("App in Landscape, dismissing portrait InApp Notification");
+                finish();
+                didDismiss(null);
+                return;
+            } else {
+                Logger.d("App in Portrait, displaying InApp Notification anyway");
+            }
+        }
+
+        if (!inAppNotification.isPortrait() && inAppNotification.isLandscape()) {
+            if (orientation == Configuration.ORIENTATION_PORTRAIT) {
+                Logger.d("App in Portrait, dismissing landscape InApp Notification");
+                finish();
+                didDismiss(null);
+                return;
+            } else {
+                Logger.d("App in Landscape, displaying InApp Notification anyway");
+            }
+        }
+
+        CTInAppBaseFullFragment contentFragment;
+        if (savedInstanceState == null) {
+            contentFragment = createContentFragment();
+            if (contentFragment != null) {
+                Bundle bundle = new Bundle();
+                bundle.putParcelable("inApp", inAppNotification);
+                bundle.putParcelable("config", config);
+                contentFragment.setArguments(bundle);
+                getFragmentManager().beginTransaction()
+                        .setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out)
+                        .add(android.R.id.content, contentFragment, getFragmentTag())
+                        .commit();
+            }
+        } else if (isAlertVisible) {
+            createContentFragment();
+        }
+    }
+
+    void didClick(Bundle data, HashMap<String, String> keyValueMap) {
         InAppActivityListener listener = getListener();
         if (listener != null) {
-            listener.inAppNotificationDidClick(getBaseContext(),inAppNotification, data);
+            listener.inAppNotificationDidClick(getBaseContext(), inAppNotification, data, keyValueMap);
         }
+    }
+
+    @Override
+    public void inAppNotificationDidClick(Context context, CTInAppNotification inAppNotification, Bundle formData, HashMap<String, String> keyValueMap) {
+        didClick(formData, keyValueMap);
     }
 
     void didShow(Bundle data) {
@@ -309,9 +308,12 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         didShow(formData);
     }
 
-    @Override
-    public void inAppNotificationDidClick(Context context, CTInAppNotification inAppNotification, Bundle formData) {
-       didClick(formData);
+    interface InAppActivityListener {
+        void inAppNotificationDidShow(Context context, CTInAppNotification inAppNotification, Bundle formData);
+
+        void inAppNotificationDidClick(Context context, CTInAppNotification inAppNotification, Bundle formData, HashMap<String, String> keyValuePayload);
+
+        void inAppNotificationDidDismiss(Context context, CTInAppNotification inAppNotification, Bundle formData);
     }
 
     @Override

@@ -11,15 +11,17 @@ import android.util.TypedValue;
 import android.view.View;
 
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class CTInAppBaseFragment extends Fragment {
 
-    interface InAppListener {
-        void inAppNotificationDidShow(Context context, CTInAppNotification inAppNotification, Bundle formData);
-        void inAppNotificationDidClick(Context context, CTInAppNotification inAppNotification, Bundle formData);
-        void inAppNotificationDidDismiss(Context context, CTInAppNotification inAppNotification, Bundle formData);
+    void didClick(Bundle data, HashMap<String, String> keyValueMap) {
+        InAppListener listener = getListener();
+        if (listener != null) {
+            listener.inAppNotificationDidClick(getActivity().getBaseContext(), inAppNotification, data, keyValueMap);
+        }
     }
 
     CTInAppNotification inAppNotification;
@@ -68,10 +70,25 @@ public abstract class CTInAppBaseFragment extends Fragment {
         didShow(null);
     }
 
-    void didClick(Bundle data) {
-        InAppListener listener = getListener();
-        if (listener != null) {
-            listener.inAppNotificationDidClick(getActivity().getBaseContext(),inAppNotification, data);
+    void handleButtonClickAtIndex(int index) {
+        try {
+            CTInAppNotificationButton button = inAppNotification.getButtons().get(index);
+            Bundle data = new Bundle();
+
+            data.putString(Constants.NOTIFICATION_ID_TAG, inAppNotification.getCampaignId());
+            data.putString(Constants.KEY_C2A, button.getText());
+
+            didClick(data, button.getKeyValues());
+
+            String actionUrl = button.getActionUrl();
+            if (actionUrl != null) {
+                fireUrlThroughIntent(actionUrl, data);
+                return;
+            }
+            didDismiss(data);
+        } catch (Throwable t) {
+            config.getLogger().debug("Error handling notification button click: " + t.getCause());
+            didDismiss(null);
         }
     }
 
@@ -117,25 +134,12 @@ public abstract class CTInAppBaseFragment extends Fragment {
                 raw, getResources().getDisplayMetrics());
     }
 
-    void handleButtonClickAtIndex(int index) {
-        try {
-            CTInAppNotificationButton button = inAppNotification.getButtons().get(index);
-            Bundle data = new Bundle();
+    interface InAppListener {
+        void inAppNotificationDidShow(Context context, CTInAppNotification inAppNotification, Bundle formData);
 
-            data.putString(Constants.NOTIFICATION_ID_TAG,inAppNotification.getCampaignId());
-            data.putString(Constants.KEY_C2A, button.getText());
-            didClick(data);
+        void inAppNotificationDidClick(Context context, CTInAppNotification inAppNotification, Bundle formData, HashMap<String, String> keyValueMap);
 
-            String actionUrl = button.getActionUrl();
-            if (actionUrl != null) {
-                fireUrlThroughIntent(actionUrl, data);
-                return;
-            }
-            didDismiss(data);
-        } catch (Throwable t) {
-            config.getLogger().debug("Error handling notification button click: " + t.getCause());
-            didDismiss(null);
-        }
+        void inAppNotificationDidDismiss(Context context, CTInAppNotification inAppNotification, Bundle formData);
     }
 
     class CTInAppNativeButtonClickListener implements View.OnClickListener{
