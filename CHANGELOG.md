@@ -1,5 +1,8 @@
 ## CHANGE LOG
 
+### Version 3.6.1 (October 16, 2019)
+* Bug fixes and performance improvements
+
 ### Version 3.6.0 (September 25, 2019)
 * Adds support for AB Tests. (in closed Beta)
 * Adds support for deep link query parameters in InApps.
