@@ -43,6 +43,9 @@ import android.text.TextUtils;
 
 import com.clevertap.android.sdk.ab_testing.CTABTestController;
 import com.clevertap.android.sdk.ab_testing.CTABTestListener;
+import com.clevertap.android.sdk.ads.AdListener;
+import com.clevertap.android.sdk.ads.AdUnitController;
+import com.clevertap.android.sdk.ads.CTAdUnit;
 import com.google.android.gms.plus.model.people.Person;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -116,6 +119,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private WeakReference<InAppNotificationButtonListener> inAppNotificationButtonListener;
 
     private WeakReference<InboxMessageButtonListener> inboxMessageButtonListener;
+
+    private WeakReference<AdListener> adListenerWeakReference;
 
     // Initialize
     private CleverTapAPI(final Context context, final CleverTapInstanceConfig config, String cleverTapID) {
@@ -273,8 +278,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private CTABTestController ctABTestController;
     private CTExperimentsListener experimentsListener = null;
     private final Object inboxControllerLock = new Object();
+    private final Object adControllerLock = new Object();
     private CTInboxListener inboxListener;
     private boolean isBgPing = false;
+    private AdUnitController mAdController;
 
     // static lifecycle callbacks
     static void onActivityCreated(Activity activity, String cleverTapID) {
@@ -3242,6 +3249,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 }
             }
 
+            //Handle AdUnit response
+            if (!getConfig().isAnalyticsOnly()) {
+                try {
+                    getConfigLogger().verbose(getAccountId(), "Processing adUnit items...");
+                    processAdUnitsResponse(response);
+                } catch (Throwable t) {
+                    getConfigLogger().verbose("Error handling AdUnit response: " + t.getLocalizedMessage());
+                }
+            }
+
         } catch (Throwable t) {
             mResponseFailureCount++;
             getConfigLogger().verbose(getAccountId(), "Problem process send queue response", t);
@@ -4972,6 +4989,27 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         processInboxResponse(r);
                     } catch (Throwable t) {
                         Logger.v("Failed to process inbox message from push notification payload", t);
+                    }
+                }
+            };
+            return;
+        }
+
+        if (extras.containsKey(Constants.ADUNIT_PREVIEW_PUSH_PAYLOAD_KEY)) {
+            pendingInappRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        Logger.v("Received adUnit via push payload: " + extras.getString(Constants.ADUNIT_PREVIEW_PUSH_PAYLOAD_KEY));
+                        JSONObject r = new JSONObject();
+                        JSONArray adUnits = new JSONArray();
+                        r.put(Constants.ADUNIT_JSON_RESPONSE_KEY, adUnits);
+                        JSONObject testPushObject = new JSONObject(extras.getString(Constants.ADUNIT_PREVIEW_PUSH_PAYLOAD_KEY));
+                        testPushObject.put("_id", String.valueOf(System.currentTimeMillis() / 1000));
+                        adUnits.put(testPushObject);
+                        processAdUnitsResponse(r);
+                    } catch (Throwable t) {
+                        Logger.v("Failed to process Ad Unit from push notification payload", t);
                     }
                 }
             };
@@ -7320,4 +7358,150 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+    /**
+     * -----------------------------------------------------------------------
+     * ********                        AD LOGIC                          *****
+     * -----------------------------------------------------------------------/
+     * <p>
+     * /**
+     * logic for the processing of ad response
+     *
+     * @param response
+     */
+    private void processAdUnitsResponse(JSONObject response) {
+        if (getConfig().isAnalyticsOnly()) {
+            getConfigLogger().verbose(getAccountId(), "CleverTap instance is configured to analytics only, not processing Ad messages");
+            return;
+        }
+
+        getConfigLogger().verbose(getAccountId(), "Ad: Processing response");
+
+        if (!response.has(Constants.ADUNIT_JSON_RESPONSE_KEY)) {
+            getConfigLogger().verbose(getAccountId(), "Ad: Response JSON object doesn't contain the Ad key");
+            return;
+        }
+        try {
+            parseAdUnits(response.getJSONArray(Constants.ADUNIT_JSON_RESPONSE_KEY));
+        } catch (Throwable t) {
+            getConfigLogger().verbose(getAccountId(), "AdResponse: Failed to parse response", t);
+        }
+    }
+
+    /**
+     * prepares the ad Units using the JSON response
+     *
+     * @param messages
+     */
+    private void parseAdUnits(JSONArray messages) {
+        synchronized (adControllerLock) {
+            if (mAdController == null) {
+                mAdController = new AdUnitController();
+            }
+            ArrayList<CTAdUnit> adUnits = mAdController.updateAdItems(messages);
+
+            notifyAdUnitsLoaded(adUnits);
+        }
+    }
+
+    /**
+     * Notify the registered ad listener about the running ad campaigns
+     *
+     * @param adUnits
+     */
+    private void notifyAdUnitsLoaded(ArrayList<CTAdUnit> adUnits) {
+        if (adUnits != null && !adUnits.isEmpty()) {
+            if (adListenerWeakReference != null && adListenerWeakReference.get() != null) {
+                adListenerWeakReference.get().onAdUnitsLoaded(adUnits);
+            }
+        }
+    }
+
+    /**
+     * Register listener to receive the list of running ad campaign ids
+     *
+     * @param adListener
+     */
+    public void registerAdListener(@NonNull AdListener adListener) {
+        if (adListener != null) {
+            adListenerWeakReference = new WeakReference<>(adListener);
+        }
+    }
+
+    /**
+     * API to get the Custom Key Value data associated with an adUnit.
+     *
+     * @param adID
+     * @return
+     */
+    public @Nullable
+    HashMap<String, String> getAdUnitForID(@NonNull String adID) {
+        if (mAdController != null) {
+            mAdController.getAdUnitForID(adID);
+        }
+        return null;
+    }
+
+    /**
+     * Raises the Ad Unit Viewed event
+     *
+     * @param adID - Unique id of the Ad Unit
+     */
+    @SuppressWarnings({"unused", "WeakerAccess"})
+    public void recordAdUnitViewedEventForID(String adID) {
+        JSONObject event = new JSONObject();
+
+        try {
+
+            event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
+
+            //wzrk fields
+            if (mAdController != null) {
+                CTAdUnit adUnit = mAdController.getAdUnitForID(adID);
+                if (adUnit != null) {
+                    JSONObject eventExtras = adUnit.getWzrkFields();
+                    if (eventExtras != null) {
+                        event.put("evtData", eventExtras);
+                    }
+                }
+            }
+
+            queueEvent(context, event, Constants.RAISED_EVENT);
+        } catch (Throwable ignored) {
+            // We won't get here
+        }
+    }
+
+    /**
+     * Raises the Ad Unit Clicked event
+     *
+     * @param adID - Unique id of the Ad Unit
+     */
+    @SuppressWarnings({"unused", "WeakerAccess"})
+    public void recordAdUnitClickedEventForID(String adID) {
+        JSONObject event = new JSONObject();
+
+        try {
+            event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
+
+            //wzrk fields
+            if (mAdController != null) {
+                CTAdUnit adUnit = mAdController.getAdUnitForID(adID);
+                if (adUnit != null) {
+                    JSONObject eventExtraData = adUnit.getWzrkFields();
+                    if (eventExtraData != null) {
+                        event.put("evtData", eventExtraData);
+                        try {
+                            setWzrkParams(eventExtraData);
+                        } catch (Throwable t) {
+                            // no-op
+                        }
+                    }
+                }
+            }
+
+            queueEvent(context, event, Constants.RAISED_EVENT);
+        } catch (Throwable ignored) {
+            // We won't get here
+        }
+    }
 }
