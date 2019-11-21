@@ -42,6 +42,7 @@ public class Constants {
     static final int PUSH_DELAY_MS = 1000;
     static final String INAPP_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inapp";
     static final String INBOX_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inbox";
+    static final String ADUNIT_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_adUnit";
     static final String INAPP_HTML_TAG = "html";
     static final String INAPP_DATA_TAG = "d";
     static final String INAPP_X_PERCENT = "xp";
@@ -58,6 +59,7 @@ public class Constants {
     static final String INAPP_NOTIF_SHOW_CLOSE = "sc";
     static final String INAPP_JSON_RESPONSE_KEY = "inapp_notifs";
     static final String INBOX_JSON_RESPONSE_KEY = "inbox_notifs";
+    static final String ADUNIT_JSON_RESPONSE_KEY = "adUnit_notifs";
     static final String INAPP_MAX_DISPLAY_COUNT = "mdc";
     static final String INAPP_MAX_PER_SESSION = "imc";
     static final String INAPP_WINDOW = "w";
@@ -66,7 +68,7 @@ public class Constants {
     static final String INAPP_JS_ENABLED = "isJsEnabled";
     static final String NOTIFICATION_ID_TAG = "wzrk_id";
     static final String DEEP_LINK_KEY = "wzrk_dl";
-    static final String WZRK_PREFIX = "wzrk_";
+    public static final String WZRK_PREFIX = "wzrk_";
     static final int NOTIFICATION_ID_TAG_INTERVAL = 5000;
     static final int NOTIFICATION_VIEWED_ID_TAG_INTERVAL = 2000;
     static final String SESSION_ID_LAST = "lastSessionId";
@@ -102,7 +104,7 @@ public class Constants {
     static final String KEY_COUNTS_PER_INAPP = "counts_per_inapp";
     static final String INAPP_ID_IN_PAYLOAD = "ti";
     static final int LOCATION_PING_INTERVAL_IN_SECONDS = 10;
-    static final String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME,NOTIFICATION_VIEWED_EVENT_NAME};
+    static final String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME, NOTIFICATION_VIEWED_EVENT_NAME};
     static final long DEFAULT_PUSH_TTL = 1000 * 60 * 60 * 24 * 4;
     static final String PF_JOB_ID = "pfjobid";
     static final int PING_FREQUENCY_VALUE = 240;
@@ -140,7 +142,7 @@ public class Constants {
     static final String KEY_TITLE = "title";
     static final String KEY_TEXT = "text";
     static final String KEY_COLOR = "color";
-    static final String KEY_MESSAGE= "message";
+    static final String KEY_MESSAGE = "message";
     static final String KEY_HIDE_CLOSE = "close";
     static final String KEY_MEDIA = "media";
     static final String KEY_MEDIA_LANDSCAPE = "mediaLandscape";
