@@ -57,11 +57,11 @@ android {
 
     buildTypes {
         debug {
-            buildConfigField "String", "SDK_VERSION_STRING", '"!SDK-VERSION-STRING!:com.clevertap.android:clevertap-android-sdk:3.6.0.0"'
+            buildConfigField "String", "SDK_VERSION_STRING", '"!SDK-VERSION-STRING!:com.clevertap.android:clevertap-android-sdk:3.6.2.0"'
         }
 
         release {
-            buildConfigField "String", "SDK_VERSION_STRING", '"!SDK-VERSION-STRING!:com.clevertap.android:clevertap-android-sdk:3.6.0.0"'
+            buildConfigField "String", "SDK_VERSION_STRING", '"!SDK-VERSION-STRING!:com.clevertap.android:clevertap-android-sdk:3.6.2.0"'
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
@@ -69,6 +69,15 @@ android {
 
     lintOptions {
         abortOnError false
+    }
+    libraryVariants.all { variant ->
+        variant.outputs.all {
+            if (variant.getName().toLowerCase().contains('release')) {
+                outputFileName = "${artifact}-${libraryVersion}.aar"
+            } else if (variant.getName().toLowerCase().contains('debug')) {
+                outputFileName = "${artifact}-${variant.name}-${libraryVersion}.aar"
+            }
+        }
     }
 }
 
