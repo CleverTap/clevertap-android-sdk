@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.ads;
 
+import com.clevertap.android.sdk.ads.model.CTAdUnit;
+
 import java.util.ArrayList;
 
 /**
