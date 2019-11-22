@@ -45,7 +45,7 @@ import com.clevertap.android.sdk.ab_testing.CTABTestController;
 import com.clevertap.android.sdk.ab_testing.CTABTestListener;
 import com.clevertap.android.sdk.ads.AdListener;
 import com.clevertap.android.sdk.ads.AdUnitController;
-import com.clevertap.android.sdk.ads.CTAdUnit;
+import com.clevertap.android.sdk.ads.model.CTAdUnit;
 import com.google.android.gms.plus.model.people.Person;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -7369,10 +7369,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param response
      */
     private void processAdUnitsResponse(JSONObject response) {
-        if (getConfig().isAnalyticsOnly()) {
-            getConfigLogger().verbose(getAccountId(), "CleverTap instance is configured to analytics only, not processing Ad messages");
-            return;
-        }
 
         getConfigLogger().verbose(getAccountId(), "Ad: Processing response");
 
@@ -7390,7 +7386,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     /**
      * prepares the ad Units using the JSON response
      *
-     * @param messages
+     * @param messages - Json array of Ad items
      */
     private void parseAdUnits(JSONArray messages) {
         synchronized (adControllerLock) {
@@ -7406,12 +7402,17 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     /**
      * Notify the registered ad listener about the running ad campaigns
      *
-     * @param adUnits
+     * @param adUnits - Array of AdUnits
      */
-    private void notifyAdUnitsLoaded(ArrayList<CTAdUnit> adUnits) {
+    private void notifyAdUnitsLoaded(final ArrayList<CTAdUnit> adUnits) {
         if (adUnits != null && !adUnits.isEmpty()) {
             if (adListenerWeakReference != null && adListenerWeakReference.get() != null) {
-                adListenerWeakReference.get().onAdUnitsLoaded(adUnits);
+                Utils.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        adListenerWeakReference.get().onAdUnitsLoaded(adUnits);
+                    }
+                });
             }
         }
     }
@@ -7419,22 +7420,22 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     /**
      * Register listener to receive the list of running ad campaign ids
      *
-     * @param adListener
+     * @param adListener- Listener to set Ad unit callback
      */
-    public void registerAdListener(@NonNull AdListener adListener) {
+    public void registerAdListener(AdListener adListener) {
         if (adListener != null) {
             adListenerWeakReference = new WeakReference<>(adListener);
         }
     }
 
     /**
-     * API to get the Custom Key Value data associated with an adUnit.
+     * API to get the Ad Unit for Ad ID
      *
-     * @param adID
-     * @return
+     * @param adID- Ad Identifier
+     * @return - CTAdUnit and can be null
      */
-    public @Nullable
-    HashMap<String, String> getAdUnitForID(@NonNull String adID) {
+    public CTAdUnit getAdUnitForID(String adID) {
+        //TODO remove before release
         if (mAdController != null) {
             mAdController.getAdUnitForID(adID);
         }
@@ -7447,7 +7448,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param adID - Unique id of the Ad Unit
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
-    public void recordAdUnitViewedEventForID(String adID) {
+    public void pushAdViewedEventForID(String adID) {
         JSONObject event = new JSONObject();
 
         try {
@@ -7477,7 +7478,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param adID - Unique id of the Ad Unit
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
-    public void recordAdUnitClickedEventForID(String adID) {
+    public void pushAdClickedEventForID(String adID) {
         JSONObject event = new JSONObject();
 
         try {

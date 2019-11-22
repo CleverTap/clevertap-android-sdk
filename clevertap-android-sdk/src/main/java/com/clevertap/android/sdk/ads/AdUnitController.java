@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.ads;
 import android.text.TextUtils;
 
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.ads.model.CTAdUnit;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -32,7 +33,7 @@ public class AdUnitController {
                 for (int i = 0; i < messages.length(); i++) {
                     //parse each ad Unit
                     CTAdUnit item = CTAdUnit.toAdUnit((JSONObject) messages.get(i));
-                    if (item != null && !TextUtils.isEmpty(item.getError())) {
+                    if (item != null && TextUtils.isEmpty(item.getError())) {
                         items.put(item.getAdID(), item);
                         list.add(item);
                     } else {
@@ -53,12 +54,14 @@ public class AdUnitController {
     /**
      * API to get the AdUnit using the adID
      *
-     * @param adID
-     * @return
+     * @param adID - Ad ID
+     * @return CTAdUnit
      */
     public CTAdUnit getAdUnitForID(String adID) {
         if (!TextUtils.isEmpty(adID)) {
             return items.get(adID);
+        } else {
+            Logger.d("Can't return Ad Unit, id was null");
         }
         return null;
     }
