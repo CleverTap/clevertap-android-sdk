@@ -56,28 +56,20 @@ public class CTAdUnit implements Parcelable {
     /**
      * static API to convert json to AdUnit
      *
-     * @param object - Ad Unit Item in Json form
+     * @param jsonObject - Ad Unit Item in Json form
      * @return - CTAdUnit
      */
-    public static CTAdUnit toAdUnit(JSONObject object) {
-        if (object != null) {
-            Iterator<?> keys = object.keys();
+    public static CTAdUnit toAdUnit(JSONObject jsonObject) {
+        if (jsonObject != null) {
             //logic to convert jsonobj to item
             try {
-                if (keys != null && keys.hasNext()) {
-                    String key = (String) keys.next();
-                    if (object.get(key) instanceof JSONObject) {
-
-                        JSONObject jsonObject = (JSONObject) object.get(key);
-                        String adID = jsonObject.has("wzrk_id") ? jsonObject.getString("wzrk_id") : "";
-                        AdConstants.CtAdType adType = jsonObject.has("type") ? AdConstants.CtAdType.type(jsonObject.getString("type")) : null;
-                        JSONObject customKV = null;
-                        if (jsonObject.has("custom_kv")) {
-                            customKV = jsonObject.getJSONObject("custom_kv");
-                        }
-                        return new CTAdUnit(jsonObject, adID, adType, customKV, null);
-                    }
+                String adID = jsonObject.has("wzrk_id") ? jsonObject.getString("wzrk_id") : "";
+                AdConstants.CtAdType adType = jsonObject.has(Constants.KEY_TYPE) ? AdConstants.CtAdType.type(jsonObject.getString(Constants.KEY_TYPE)) : null;
+                JSONObject customKV = null;
+                if (jsonObject.has("custom_kv")) {
+                    customKV = jsonObject.getJSONObject("custom_kv");
                 }
+                return new CTAdUnit(jsonObject, adID, adType, customKV, null);
             } catch (Exception e) {
                 return new CTAdUnit(null, null, null, null, "Error Creating AdUnit from JSON : " + e.getLocalizedMessage());
 
