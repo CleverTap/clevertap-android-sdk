@@ -7434,20 +7434,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
-     * API to get the Ad Unit for Ad ID
-     *
-     * @param adID- Ad Identifier
-     * @return - CTAdUnit and can be null
-     */
-    public CTAdUnit getAdUnitForID(String adID) {
-        //TODO remove before release
-        if (mAdController != null) {
-            mAdController.getAdUnitForID(adID);
-        }
-        return null;
-    }
-
-    /**
      * Raises the Ad Unit Viewed event
      *
      * @param adID - Unique id of the Ad Unit
