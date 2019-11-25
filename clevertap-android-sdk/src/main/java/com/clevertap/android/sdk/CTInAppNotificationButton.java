@@ -135,7 +135,9 @@ class CTInAppNotificationButton implements Parcelable {
                     this.actionUrl = action;
                 }
             }
-            if (actions != null && actions.has(Constants.KEY_KV)) {
+
+            //Custom KEY VALUE
+            if (isKVAction(actions)) {
                 JSONObject keyValues = actions.getJSONObject(Constants.KEY_KV);
                 if (keyValues != null) {
                     Iterator<String> keys = keyValues.keys();
@@ -157,6 +159,10 @@ class CTInAppNotificationButton implements Parcelable {
             this.error = "Invalid JSON";
         }
         return this;
+    }
+
+    private boolean isKVAction(JSONObject actions) throws JSONException {
+        return actions != null && actions.has("type") && Constants.KEY_KV.equalsIgnoreCase(actions.getString("type")) && actions.has(Constants.KEY_KV);
     }
 
     @Override

@@ -55,12 +55,7 @@ class CTInboxButtonClickListener implements View.OnClickListener {
                         }
                     }
 
-                    HashMap<String, String> keyValues = null;
-                    if (inboxMessage != null && inboxMessage.getInboxMessageContents() != null && inboxMessage.getInboxMessageContents().get(0) != null) {
-                        keyValues = inboxMessage.getInboxMessageContents().get(0).getLinkKeyValue(buttonObject);
-                    }
-
-                    fragment.handleClick(this.position, buttonText, buttonObject, keyValues);
+                    fragment.handleClick(this.position, buttonText, buttonObject, getKeyValues(inboxMessage));
                 }
             } else {
                 if (fragment != null) {
@@ -68,6 +63,17 @@ class CTInboxButtonClickListener implements View.OnClickListener {
                 }
             }
         }
+    }
+
+    private HashMap<String, String> getKeyValues(CTInboxMessage inboxMessage) {
+        if (inboxMessage != null
+                && inboxMessage.getInboxMessageContents() != null
+                && inboxMessage.getInboxMessageContents().get(0) != null
+                && Constants.KEY_KV.equalsIgnoreCase(inboxMessage.getInboxMessageContents().get(0).getLinktype(buttonObject))) {
+
+            return inboxMessage.getInboxMessageContents().get(0).getLinkKeyValue(buttonObject);
+        }
+        return null;
     }
 
     private void copyToClipboard(Context context) {
