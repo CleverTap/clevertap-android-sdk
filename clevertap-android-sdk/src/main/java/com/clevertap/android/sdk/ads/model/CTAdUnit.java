@@ -9,6 +9,7 @@ import com.clevertap.android.sdk.ads.AdConstants;
 
 import org.json.JSONObject;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -18,22 +19,29 @@ import java.util.Iterator;
 public class CTAdUnit implements Parcelable {
 
     private String adID;//Ad unit identifier
+
     private AdConstants.CtAdType adType;//can be (banner/image/video/carousel etc.)
+
+    private String bgColor;
+
+    private String orientation;
+
+    private ArrayList<CTAdUnitContent> adContentItems = new ArrayList<>();
 
     // Custom Key Value pairs
     private HashMap<String, String> customExtras;
 
-    private String error;
-
     private JSONObject jsonObject;
+
+    private String error;
 
     //constructors
     private CTAdUnit(JSONObject jsonObject, String adID, AdConstants.CtAdType adType, JSONObject object, String error) {
         this.jsonObject = jsonObject;
         this.adID = adID;
         this.adType = adType;
-        this.error = error;
         this.customExtras = getKeyValues(object);
+        this.error = error;
     }
 
     public String getAdID() {
@@ -53,6 +61,22 @@ public class CTAdUnit implements Parcelable {
         return jsonObject;
     }
 
+    public String getBgColor() {
+        return bgColor;
+    }
+
+    public String getOrientation() {
+        return orientation;
+    }
+
+    public AdConstants.CtAdType getAdType() {
+        return adType;
+    }
+
+    public ArrayList<CTAdUnitContent> getAdContentItems() {
+        return adContentItems;
+    }
+
     /**
      * static API to convert json to AdUnit
      *
@@ -66,6 +90,7 @@ public class CTAdUnit implements Parcelable {
                 String adID = jsonObject.has("wzrk_id") ? jsonObject.getString("wzrk_id") : "";
                 AdConstants.CtAdType adType = jsonObject.has(Constants.KEY_TYPE) ? AdConstants.CtAdType.type(jsonObject.getString(Constants.KEY_TYPE)) : null;
                 JSONObject customKV = null;
+                //custom KV can be added to ad unit of any types, so don't
                 if (jsonObject.has("custom_kv")) {
                     customKV = jsonObject.getJSONObject("custom_kv");
                 }
@@ -147,6 +172,16 @@ public class CTAdUnit implements Parcelable {
         try {
             this.adID = in.readString();
             this.adType = (AdConstants.CtAdType) in.readValue(AdConstants.CtAdType.class.getClassLoader());
+            this.bgColor = in.readString();
+            this.orientation = in.readString();
+
+            if (in.readByte() == 0x01) {
+                adContentItems = new ArrayList<>();
+                in.readList(adContentItems, CTAdUnitContent.class.getClassLoader());
+            } else {
+                adContentItems = null;
+            }
+
             this.customExtras = in.readHashMap(null);
             this.jsonObject = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
             this.error = in.readString();
@@ -159,6 +194,16 @@ public class CTAdUnit implements Parcelable {
     public void writeToParcel(Parcel parcel, int i) {
         parcel.writeString(adID);
         parcel.writeValue(adType);
+        parcel.writeString(bgColor);
+        parcel.writeString(orientation);
+
+        if (adContentItems == null) {
+            parcel.writeByte((byte) (0x00));
+        } else {
+            parcel.writeByte((byte) (0x01));
+            parcel.writeList(adContentItems);
+        }
+
         parcel.writeMap(customExtras);
         if (jsonObject == null) {
             parcel.writeByte((byte) (0x00));

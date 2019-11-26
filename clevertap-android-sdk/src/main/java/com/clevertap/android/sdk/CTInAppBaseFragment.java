@@ -19,7 +19,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
 
     void didClick(Bundle data, HashMap<String, String> keyValueMap) {
         InAppListener listener = getListener();
-        if (listener != null) {
+        if (listener != null && getActivity() != null) {
             listener.inAppNotificationDidClick(getActivity().getBaseContext(), inAppNotification, data, keyValueMap);
         }
     }
@@ -45,12 +45,13 @@ public abstract class CTInAppBaseFragment extends Fragment {
             // no-op
         }
         if (listener == null) {
-            config.getLogger().verbose(config.getAccountId(),"InAppListener is null for notification: " + inAppNotification.getJsonDescription());
+            config.getLogger().verbose(config.getAccountId(), "InAppListener is null for notification: " + inAppNotification.getJsonDescription());
         }
         return listener;
     }
 
     abstract void cleanup();
+
     abstract void generateListener();
 
     @Override
@@ -96,7 +97,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
     void didShow(Bundle data) {
         InAppListener listener = getListener();
         if (listener != null) {
-            listener.inAppNotificationDidShow(getActivity().getBaseContext(),inAppNotification, data);
+            listener.inAppNotificationDidShow(getActivity().getBaseContext(), inAppNotification, data);
         }
     }
 
@@ -104,7 +105,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
         cleanup();
         InAppListener listener = getListener();
         if (listener != null) {
-            listener.inAppNotificationDidDismiss(getActivity().getBaseContext(),inAppNotification, data);
+            listener.inAppNotificationDidDismiss(getActivity().getBaseContext(), inAppNotification, data);
         }
     }
 
@@ -113,13 +114,13 @@ public abstract class CTInAppBaseFragment extends Fragment {
             Uri uri = Uri.parse(url.replace("\n", "").replace("\r", ""));
             Set<String> queryParamSet = uri.getQueryParameterNames();
             Bundle queryBundle = new Bundle();
-            if(queryParamSet != null && !queryParamSet.isEmpty()){
-                for(String queryName : queryParamSet){
-                    queryBundle.putString(queryName,uri.getQueryParameter(queryName));
+            if (queryParamSet != null && !queryParamSet.isEmpty()) {
+                for (String queryName : queryParamSet) {
+                    queryBundle.putString(queryName, uri.getQueryParameter(queryName));
                 }
             }
             Intent intent = new Intent(Intent.ACTION_VIEW, uri);
-            if(!queryBundle.isEmpty()){
+            if (!queryBundle.isEmpty()) {
                 intent.putExtras(queryBundle);
             }
             startActivity(intent);
@@ -142,10 +143,10 @@ public abstract class CTInAppBaseFragment extends Fragment {
         void inAppNotificationDidDismiss(Context context, CTInAppNotification inAppNotification, Bundle formData);
     }
 
-    class CTInAppNativeButtonClickListener implements View.OnClickListener{
+    class CTInAppNativeButtonClickListener implements View.OnClickListener {
         @Override
         public void onClick(View view) {
-            handleButtonClickAtIndex((int)view.getTag());
+            handleButtonClickAtIndex((int) view.getTag());
         }
     }
 
