@@ -33,7 +33,7 @@ public class AdUnitController {
                 for (int i = 0; i < messages.length(); i++) {
                     //parse each ad Unit
                     CTAdUnit item = CTAdUnit.toAdUnit((JSONObject) messages.get(i));
-                    if (item != null && TextUtils.isEmpty(item.getError())) {
+                    if (TextUtils.isEmpty(item.getError())) {
                         items.put(item.getAdID(), item);
                         list.add(item);
                     } else {
