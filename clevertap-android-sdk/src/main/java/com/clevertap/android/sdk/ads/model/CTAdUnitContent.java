@@ -22,10 +22,11 @@ public class CTAdUnitContent implements Parcelable {
     private String actionUrl;
     private String icon;
     private Boolean hasUrl;
+    private String error;
 
     private CTAdUnitContent(String title, String titleColor, String message, String messageColor,
                             String icon, String media, String contentType, String posterUrl,
-                            String actionUrl, boolean hasUrl) {
+                            String actionUrl, boolean hasUrl, String error) {
         this.title = title;
         this.titleColor = titleColor;
         this.message = message;
@@ -36,6 +37,7 @@ public class CTAdUnitContent implements Parcelable {
         this.posterUrl = posterUrl;
         this.actionUrl = actionUrl;
         this.hasUrl = hasUrl;
+        this.error = error;
     }
 
 
@@ -50,6 +52,7 @@ public class CTAdUnitContent implements Parcelable {
         posterUrl = in.readString();
         actionUrl = in.readString();
         hasUrl = in.readByte() != 0x00;
+        error = in.readString();
     }
 
     @Override
@@ -64,6 +67,7 @@ public class CTAdUnitContent implements Parcelable {
         dest.writeString(posterUrl);
         dest.writeString(actionUrl);
         dest.writeByte((byte) (hasUrl ? 0x01 : 0x00));
+        dest.writeString(error);
     }
 
     static CTAdUnitContent toContent(JSONObject contentObject) {
@@ -110,10 +114,11 @@ public class CTAdUnitContent implements Parcelable {
 
             new CTAdUnitContent(title, titleColor, message, messageColor,
                     icon, media, contentType, posterUrl,
-                    actionUrl, hasUrl);
+                    actionUrl, hasUrl, null);
 
         } catch (JSONException e) {
-            Logger.v("Unable to init CTInboxMessageContent with JSON - " + e.getLocalizedMessage());
+            Logger.v("Unable to init CTAdUnitContent with JSON - " + e.getLocalizedMessage());
+            return new CTAdUnitContent("", "", "", "", "", "", "", "", "", false, "Error Creating AdUnit Content from JSON : " + e.getLocalizedMessage());
         }
         return null;
     }
@@ -141,6 +146,7 @@ public class CTAdUnitContent implements Parcelable {
      *
      * @return String
      */
+    @SuppressWarnings("unused")
     public String getMedia() {
         return media;
     }
@@ -150,6 +156,7 @@ public class CTAdUnitContent implements Parcelable {
      *
      * @return String
      */
+    @SuppressWarnings("unused")
     public String getActionUrl() {
         return actionUrl;
     }
@@ -159,6 +166,7 @@ public class CTAdUnitContent implements Parcelable {
      *
      * @return String
      */
+    @SuppressWarnings("unused")
     public String getIcon() {
         return icon;
     }
@@ -168,6 +176,7 @@ public class CTAdUnitContent implements Parcelable {
      *
      * @return String
      */
+    @SuppressWarnings("unused")
     public String getTitleColor() {
         return titleColor;
     }
@@ -186,6 +195,7 @@ public class CTAdUnitContent implements Parcelable {
      *
      * @return String
      */
+    @SuppressWarnings("unused")
     public String getPosterUrl() {
         return posterUrl;
     }
@@ -195,6 +205,7 @@ public class CTAdUnitContent implements Parcelable {
      *
      * @return String
      */
+    @SuppressWarnings("unused")
     public String getContentType() {
         return contentType;
     }
@@ -205,6 +216,7 @@ public class CTAdUnitContent implements Parcelable {
      * @return true if the media type is image
      * false if the media type is not an image
      */
+    @SuppressWarnings("unused")
     public boolean mediaIsImage() {
         return contentType != null && this.media != null && contentType.startsWith("image") && !contentType.equals("image/gif");
     }
@@ -215,6 +227,7 @@ public class CTAdUnitContent implements Parcelable {
      * @return true if the media type is GIF
      * false if the media type is not an GIF
      */
+    @SuppressWarnings("unused")
     public boolean mediaIsGIF() {
         return contentType != null && this.media != null && contentType.equals("image/gif");
     }
@@ -225,6 +238,7 @@ public class CTAdUnitContent implements Parcelable {
      * @return true if the media type is video
      * false if the media type is not a video
      */
+    @SuppressWarnings("unused")
     public boolean mediaIsVideo() {
         return contentType != null && this.media != null && contentType.startsWith("video");
     }
@@ -235,6 +249,7 @@ public class CTAdUnitContent implements Parcelable {
      * @return true if the media type is audio
      * false if the media type is not an audio
      */
+    @SuppressWarnings("unused")
     public boolean mediaIsAudio() {
         return contentType != null && this.media != null && contentType.startsWith("audio");
     }

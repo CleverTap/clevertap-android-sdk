@@ -138,7 +138,7 @@ public class Constants {
     static final String KEY_KV = "kv";
     public static final String KEY_TYPE = "type";
     static final String KEY_IS_TABLET = "tablet";
-    static final String KEY_BG = "bg";
+    public static final String KEY_BG = "bg";
     static final String KEY_TITLE = "title";
     static final String KEY_TEXT = "text";
     static final String KEY_COLOR = "color";
