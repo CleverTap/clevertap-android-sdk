@@ -79,7 +79,6 @@ public class CTAdUnitContent implements Parcelable {
 
             boolean hasUrl = false;
 
-
             JSONObject titleObject = contentObject.has("title") ? contentObject.getJSONObject("title") : null;
             if (titleObject != null) {
                 title = titleObject.has("text") ? titleObject.getString("text") : "";
@@ -113,15 +112,14 @@ public class CTAdUnitContent implements Parcelable {
                 }
             }
 
-            new CTAdUnitContent(title, titleColor, message, messageColor,
+            return new CTAdUnitContent(title, titleColor, message, messageColor,
                     icon, media, contentType, posterUrl,
                     actionUrl, hasUrl, null);
 
-        } catch (JSONException e) {
+        } catch (Exception e) {
             Logger.v("Unable to init CTAdUnitContent with JSON - " + e.getLocalizedMessage());
             return new CTAdUnitContent("", "", "", "", "", "", "", "", "", false, "Error Creating AdUnit Content from JSON : " + e.getLocalizedMessage());
         }
-        return null;
     }
 
     /**
@@ -255,6 +253,15 @@ public class CTAdUnitContent implements Parcelable {
         return contentType != null && this.media != null && contentType.startsWith("audio");
     }
 
+    public String getError() {
+        return error;
+    }
+
+    @SuppressWarnings("unused")
+    public Boolean getHasUrl() {
+        return hasUrl;
+    }
+
     public static final Creator<CTAdUnitContent> CREATOR = new Creator<CTAdUnitContent>() {
         @Override
         public CTAdUnitContent createFromParcel(Parcel in) {
@@ -275,20 +282,6 @@ public class CTAdUnitContent implements Parcelable {
     @NonNull
     @Override
     public String toString() {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("[");
-        stringBuilder.append("title:" + title);
-        stringBuilder.append("titleColor:" + titleColor);
-        stringBuilder.append("message:" + message);
-        stringBuilder.append("messageColor:" + messageColor);
-        stringBuilder.append("media:" + media);
-        stringBuilder.append("contentType:" + contentType);
-        stringBuilder.append("posterUrl:" + posterUrl);
-        stringBuilder.append("actionUrl:" + actionUrl);
-        stringBuilder.append("icon:" + icon);
-        stringBuilder.append("hasUrl:" + hasUrl);
-        stringBuilder.append("error:" + error);
-        stringBuilder.append("]");
-        return stringBuilder.toString();
+        return "[" + "title:" + title + "titleColor:" + titleColor + "message:" + message + "messageColor:" + messageColor + "media:" + media + "contentType:" + contentType + "posterUrl:" + posterUrl + "actionUrl:" + actionUrl + "icon:" + icon + "hasUrl:" + hasUrl + "error:" + error + "]";
     }
 }
