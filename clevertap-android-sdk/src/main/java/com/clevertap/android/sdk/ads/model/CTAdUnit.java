@@ -7,6 +7,7 @@ import android.text.TextUtils;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ads.AdConstants;
 
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -26,7 +27,7 @@ public class CTAdUnit implements Parcelable {
 
     private String orientation;
 
-    private ArrayList<CTAdUnitContent> adContentItems = new ArrayList<>();
+    private ArrayList<CTAdUnitContent> adContentItems;
 
     // Custom Key Value pairs
     private HashMap<String, String> customExtras;
@@ -36,12 +37,56 @@ public class CTAdUnit implements Parcelable {
     private String error;
 
     //constructors
-    private CTAdUnit(JSONObject jsonObject, String adID, AdConstants.CtAdType adType, JSONObject object, String error) {
+    private CTAdUnit(JSONObject jsonObject, String adID, AdConstants.CtAdType adType,
+                     String bgColor, String orientation, ArrayList<CTAdUnitContent> contentArray,
+                     JSONObject kvObject, String error) {
         this.jsonObject = jsonObject;
         this.adID = adID;
         this.adType = adType;
-        this.customExtras = getKeyValues(object);
+        this.bgColor = bgColor;
+        this.orientation = orientation;
+        this.adContentItems = contentArray;
+        this.customExtras = getKeyValues(kvObject);
         this.error = error;
+    }
+
+    /**
+     * static API to convert json to AdUnit
+     *
+     * @param jsonObject - Ad Unit Item in Json form
+     * @return - CTAdUnit
+     */
+    public static CTAdUnit toAdUnit(JSONObject jsonObject) {
+        if (jsonObject != null) {
+            //logic to convert jsonobj to item
+            try {
+                String adID = jsonObject.has("wzrk_id") ? jsonObject.getString("wzrk_id") : "";
+                AdConstants.CtAdType adType = jsonObject.has(Constants.KEY_TYPE) ? AdConstants.CtAdType.type(jsonObject.getString(Constants.KEY_TYPE)) : null;
+
+                String bgColor = jsonObject.has(Constants.KEY_BG) ? jsonObject.getString(Constants.KEY_BG) : "";
+
+                String orientation = jsonObject.has("orientation") ? jsonObject.getString("orientation") : "";
+
+                JSONArray contentArray = jsonObject.has("content") ? jsonObject.getJSONArray("content") : null;
+                ArrayList<CTAdUnitContent> contentArrayList = new ArrayList<>();
+                if (contentArray != null) {
+                    for (int i = 0; i < contentArray.length(); i++) {
+                        CTAdUnitContent adUnitContent = CTAdUnitContent.toContent(contentArray.getJSONObject(i));
+                        contentArrayList.add(adUnitContent);
+                    }
+                }
+                JSONObject customKV = null;
+                //custom KV can be added to ad unit of any types, so don't
+                if (jsonObject.has("custom_kv")) {
+                    customKV = jsonObject.getJSONObject("custom_kv");
+                }
+                return new CTAdUnit(jsonObject, adID, adType, bgColor, orientation, contentArrayList, customKV, null);
+            } catch (Exception e) {
+                return new CTAdUnit(null, "", null, null, null, null, null,"Error Creating AdUnit from JSON : " + e.getLocalizedMessage());
+
+            }
+        }
+        return null;
     }
 
     public String getAdID() {
@@ -61,6 +106,7 @@ public class CTAdUnit implements Parcelable {
         return jsonObject;
     }
 
+    @SuppressWarnings("unused")
     public String getBgColor() {
         return bgColor;
     }
@@ -69,38 +115,14 @@ public class CTAdUnit implements Parcelable {
         return orientation;
     }
 
+    @SuppressWarnings("unused")
     public AdConstants.CtAdType getAdType() {
         return adType;
     }
 
+    @SuppressWarnings("unused")
     public ArrayList<CTAdUnitContent> getAdContentItems() {
         return adContentItems;
-    }
-
-    /**
-     * static API to convert json to AdUnit
-     *
-     * @param jsonObject - Ad Unit Item in Json form
-     * @return - CTAdUnit
-     */
-    public static CTAdUnit toAdUnit(JSONObject jsonObject) {
-        if (jsonObject != null) {
-            //logic to convert jsonobj to item
-            try {
-                String adID = jsonObject.has("wzrk_id") ? jsonObject.getString("wzrk_id") : "";
-                AdConstants.CtAdType adType = jsonObject.has(Constants.KEY_TYPE) ? AdConstants.CtAdType.type(jsonObject.getString(Constants.KEY_TYPE)) : null;
-                JSONObject customKV = null;
-                //custom KV can be added to ad unit of any types, so don't
-                if (jsonObject.has("custom_kv")) {
-                    customKV = jsonObject.getJSONObject("custom_kv");
-                }
-                return new CTAdUnit(jsonObject, adID, adType, customKV, null);
-            } catch (Exception e) {
-                return new CTAdUnit(null, null, null, null, "Error Creating AdUnit from JSON : " + e.getLocalizedMessage());
-
-            }
-        }
-        return null;
     }
 
     /**
