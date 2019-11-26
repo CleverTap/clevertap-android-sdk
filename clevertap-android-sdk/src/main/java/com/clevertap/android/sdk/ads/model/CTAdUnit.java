@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.ads.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.clevertap.android.sdk.Constants;
@@ -82,7 +83,7 @@ public class CTAdUnit implements Parcelable {
                 }
                 return new CTAdUnit(jsonObject, adID, adType, bgColor, orientation, contentArrayList, customKV, null);
             } catch (Exception e) {
-                return new CTAdUnit(null, "", null, null, null, null, null,"Error Creating AdUnit from JSON : " + e.getLocalizedMessage());
+                return new CTAdUnit(null, "", null, null, null, null, null, "Error Creating AdUnit from JSON : " + e.getLocalizedMessage());
 
             }
         }
@@ -239,5 +240,32 @@ public class CTAdUnit implements Parcelable {
     @Override
     public int describeContents() {
         return 0;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("[");
+        stringBuilder.append("ADid- " + adID);
+        stringBuilder.append("Type- " + adType != null ? adType.toString() : null);
+        stringBuilder.append("bgColor- " + bgColor);
+        stringBuilder.append("Orientation- " + orientation);
+        if (adContentItems != null && adContentItems.isEmpty()) {
+            for (int i = 0; i < adContentItems.size(); i++) {
+                CTAdUnitContent item = adContentItems.get(i);
+                if (item != null) {
+                    stringBuilder.append("Content Item:" + i + " " + item.toString());
+                    stringBuilder.append("\n");
+                }
+            }
+        }
+        if (customExtras != null) {
+            stringBuilder.append("Custom KV:" + customExtras);
+        }
+        stringBuilder.append("JSON -" + jsonObject);
+        stringBuilder.append("Error-" + error);
+        stringBuilder.append("]");
+        return stringBuilder.toString();
     }
 }
