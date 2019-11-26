@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.ads.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
 
 import com.clevertap.android.sdk.Logger;
 
@@ -269,5 +270,25 @@ public class CTAdUnitContent implements Parcelable {
     @Override
     public int describeContents() {
         return 0;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("[");
+        stringBuilder.append("title:" + title);
+        stringBuilder.append("titleColor:" + titleColor);
+        stringBuilder.append("message:" + message);
+        stringBuilder.append("messageColor:" + messageColor);
+        stringBuilder.append("media:" + media);
+        stringBuilder.append("contentType:" + contentType);
+        stringBuilder.append("posterUrl:" + posterUrl);
+        stringBuilder.append("actionUrl:" + actionUrl);
+        stringBuilder.append("icon:" + icon);
+        stringBuilder.append("hasUrl:" + hasUrl);
+        stringBuilder.append("error:" + error);
+        stringBuilder.append("]");
+        return stringBuilder.toString();
     }
 }
