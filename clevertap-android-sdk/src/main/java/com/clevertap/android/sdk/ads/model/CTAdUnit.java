@@ -6,7 +6,7 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.ads.AdConstants;
+import com.clevertap.android.sdk.ads.CTAdConstants;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -22,7 +22,7 @@ public class CTAdUnit implements Parcelable {
 
     private String adID;//Ad unit identifier
 
-    private AdConstants.CtAdType adType;//can be (banner/image/video/carousel etc.)
+    private CTAdConstants.CtAdType adType;//can be (banner/image/video/carousel etc.)
 
     private String bgColor;
 
@@ -38,7 +38,7 @@ public class CTAdUnit implements Parcelable {
     private String error;
 
     //constructors
-    private CTAdUnit(JSONObject jsonObject, String adID, AdConstants.CtAdType adType,
+    private CTAdUnit(JSONObject jsonObject, String adID, CTAdConstants.CtAdType adType,
                      String bgColor, String orientation, ArrayList<CTAdUnitContent> contentArray,
                      JSONObject kvObject, String error) {
         this.jsonObject = jsonObject;
@@ -61,7 +61,7 @@ public class CTAdUnit implements Parcelable {
         //logic to convert jsonobj to item
         try {
             String adID = jsonObject.has("wzrk_id") ? jsonObject.getString("wzrk_id") : "";
-            AdConstants.CtAdType adType = jsonObject.has(Constants.KEY_TYPE) ? AdConstants.CtAdType.type(jsonObject.getString(Constants.KEY_TYPE)) : null;
+            CTAdConstants.CtAdType adType = jsonObject.has(Constants.KEY_TYPE) ? CTAdConstants.CtAdType.type(jsonObject.getString(Constants.KEY_TYPE)) : null;
 
             String bgColor = jsonObject.has(Constants.KEY_BG) ? jsonObject.getString(Constants.KEY_BG) : "";
 
@@ -115,7 +115,7 @@ public class CTAdUnit implements Parcelable {
     }
 
     @SuppressWarnings("unused")
-    public AdConstants.CtAdType getAdType() {
+    public CTAdConstants.CtAdType getAdType() {
         return adType;
     }
 
@@ -192,7 +192,7 @@ public class CTAdUnit implements Parcelable {
     private CTAdUnit(Parcel in) {
         try {
             this.adID = in.readString();
-            this.adType = (AdConstants.CtAdType) in.readValue(AdConstants.CtAdType.class.getClassLoader());
+            this.adType = (CTAdConstants.CtAdType) in.readValue(CTAdConstants.CtAdType.class.getClassLoader());
             this.bgColor = in.readString();
             this.orientation = in.readString();
 

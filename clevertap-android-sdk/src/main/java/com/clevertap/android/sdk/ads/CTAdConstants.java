@@ -3,7 +3,7 @@ package com.clevertap.android.sdk.ads;
 import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
-public interface AdConstants {
+public interface CTAdConstants {
 
     enum CtAdType {
         SIMPLE("simple"),
