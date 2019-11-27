@@ -5149,7 +5149,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //InApp
     @Override
-    public void inAppNotificationDidShow(Context context, CTInAppNotification inAppNotification, Bundle formData) {
+    public void inAppNotificationDidShow(CTInAppNotification inAppNotification, Bundle formData) {
         pushInAppNotificationStateEvent(false, inAppNotification, formData);
     }
 
@@ -5687,7 +5687,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     @Override
-    public void inAppNotificationDidClick(Context context, CTInAppNotification inAppNotification, Bundle formData, HashMap<String, String> keyValueMap) {
+    public void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData, HashMap<String, String> keyValueMap) {
         pushInAppNotificationStateEvent(true, inAppNotification, formData);
         if (keyValueMap != null && !keyValueMap.isEmpty()) {
             if (inAppNotificationButtonListener != null && inAppNotificationButtonListener.get() != null) {
