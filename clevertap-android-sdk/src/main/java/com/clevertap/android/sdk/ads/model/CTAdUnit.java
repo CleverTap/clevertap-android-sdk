@@ -20,17 +20,34 @@ import java.util.Iterator;
  */
 public class CTAdUnit implements Parcelable {
 
-    private String adID;//Ad unit identifier
+    /**
+     * Ad unit identifier
+     */
+    private String adID;
 
-    private CTAdConstants.CtAdType adType;//can be (banner/image/video/carousel etc.)
+    /**
+     * Could be (banner,carousel,custom key value etc.)
+     */
+    private CTAdConstants.CtAdType adType;
 
+    /**
+     * background Color
+     */
     private String bgColor;
 
+    /**
+     * orientation
+     */
     private String orientation;
 
+    /**
+     * List of Ad Content Items
+     */
     private ArrayList<CTAdUnitContent> adContentItems;
 
-    // Custom Key Value pairs
+    /**
+     * Custom Key Value Pairs
+     */
     private HashMap<String, String> customExtras;
 
     private JSONObject jsonObject;
@@ -88,6 +105,9 @@ public class CTAdUnit implements Parcelable {
         }
     }
 
+    /**
+     * @return the AdId of the adUnit
+     */
     public String getAdID() {
         return adID;
     }
@@ -96,6 +116,9 @@ public class CTAdUnit implements Parcelable {
         return error;
     }
 
+    /**
+     * @return the Key Value pair of the adUnit
+     */
     @SuppressWarnings("unused")
     public HashMap<String, String> getCustomExtras() {
         return customExtras;
@@ -105,20 +128,32 @@ public class CTAdUnit implements Parcelable {
         return jsonObject;
     }
 
+    /**
+     * @return the background color of the adUnit
+     */
     @SuppressWarnings("unused")
     public String getBgColor() {
         return bgColor;
     }
 
+    /**
+     * @return the orientation of the adUnit
+     */
     public String getOrientation() {
         return orientation;
     }
 
+    /**
+     * @return the AdType of the AdUnit
+     */
     @SuppressWarnings("unused")
     public CTAdConstants.CtAdType getAdType() {
         return adType;
     }
 
+    /**
+     * @return the list of Content Ad Items.
+     */
     @SuppressWarnings("unused")
     public ArrayList<CTAdUnitContent> getAdContentItems() {
         return adContentItems;

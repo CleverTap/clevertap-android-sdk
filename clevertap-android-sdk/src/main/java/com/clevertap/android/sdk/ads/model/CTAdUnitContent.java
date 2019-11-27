@@ -6,7 +6,6 @@ import android.support.annotation.NonNull;
 
 import com.clevertap.android.sdk.Logger;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -71,6 +70,11 @@ public class CTAdUnitContent implements Parcelable {
         dest.writeString(error);
     }
 
+    /**
+     * Converts jsonContent to ADUnitContent
+     * @param contentObject - jsonObject
+     * @return - CTAdUnitContent Obj
+     */
     static CTAdUnitContent toContent(JSONObject contentObject) {
         try {
             String title = "", titleColor = "", message = "", messageColor = "",
@@ -123,27 +127,21 @@ public class CTAdUnitContent implements Parcelable {
     }
 
     /**
-     * Returns the title section of the AdUnit
-     *
-     * @return String
+     * @return the title section of the AdUnit Content
      */
     public String getTitle() {
         return title;
     }
 
     /**
-     * Returns the message section of the AdUnit
-     *
-     * @return String
+     * @return the message section of the AdUnit Content
      */
     public String getMessage() {
         return message;
     }
 
     /**
-     * Returns the media URL of the AdUnit
-     *
-     * @return String
+     * @return the media URL of the AdUnit Content
      */
     @SuppressWarnings("unused")
     public String getMedia() {
@@ -151,9 +149,7 @@ public class CTAdUnitContent implements Parcelable {
     }
 
     /**
-     * Return the action URL of the body of the AdUnit
-     *
-     * @return String
+     * @return the action URL of the body of the AdUnit Content
      */
     @SuppressWarnings("unused")
     public String getActionUrl() {
@@ -161,9 +157,7 @@ public class CTAdUnitContent implements Parcelable {
     }
 
     /**
-     * Returns the URL as String for the icon in case of Icon Message template
-     *
-     * @return String
+     * @return the URL as String for the icon in case of Icon Message template
      */
     @SuppressWarnings("unused")
     public String getIcon() {
@@ -171,9 +165,7 @@ public class CTAdUnitContent implements Parcelable {
     }
 
     /**
-     * Returns the hexcode value of the title color as String
-     *
-     * @return String
+     * @return the hexcode value of the title color as String
      */
     @SuppressWarnings("unused")
     public String getTitleColor() {
@@ -181,18 +173,14 @@ public class CTAdUnitContent implements Parcelable {
     }
 
     /**
-     * Returns the hexcode value of the message color as String
-     *
-     * @return String
+     * @return the hexcode value of the message color as String
      */
     public String getMessageColor() {
         return messageColor;
     }
 
     /**
-     * Returns URL for the thumbnail of the video
-     *
-     * @return String
+     * @return URL for the thumbnail of the video
      */
     @SuppressWarnings("unused")
     public String getPosterUrl() {
@@ -200,9 +188,7 @@ public class CTAdUnitContent implements Parcelable {
     }
 
     /**
-     * Returns the content type of the media
-     *
-     * @return String
+     * @return the content type of the media
      */
     @SuppressWarnings("unused")
     public String getContentType() {
@@ -221,10 +207,10 @@ public class CTAdUnitContent implements Parcelable {
     }
 
     /**
-     * Method to check whether media in the {@link CTAdUnitContent} object is an GIF.
+     * Method to check whether media in the {@link CTAdUnitContent} object is a GIF.
      *
      * @return true if the media type is GIF
-     * false if the media type is not an GIF
+     * false if the media type is not a GIF
      */
     @SuppressWarnings("unused")
     public boolean mediaIsGIF() {
