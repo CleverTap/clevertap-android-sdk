@@ -19,8 +19,8 @@ public abstract class CTInAppBaseFragment extends Fragment {
 
     void didClick(Bundle data, HashMap<String, String> keyValueMap) {
         InAppListener listener = getListener();
-        if (listener != null && getActivity() != null) {
-            listener.inAppNotificationDidClick(getActivity().getBaseContext(), inAppNotification, data, keyValueMap);
+        if (listener != null) {
+            listener.inAppNotificationDidClick(inAppNotification, data, keyValueMap);
         }
     }
 
@@ -97,14 +97,14 @@ public abstract class CTInAppBaseFragment extends Fragment {
     void didShow(Bundle data) {
         InAppListener listener = getListener();
         if (listener != null) {
-            listener.inAppNotificationDidShow(getActivity().getBaseContext(), inAppNotification, data);
+            listener.inAppNotificationDidShow(inAppNotification, data);
         }
     }
 
     void didDismiss(Bundle data) {
         cleanup();
         InAppListener listener = getListener();
-        if (listener != null) {
+        if (listener != null && getActivity() != null && getActivity().getBaseContext() != null) {
             listener.inAppNotificationDidDismiss(getActivity().getBaseContext(), inAppNotification, data);
         }
     }
@@ -136,9 +136,9 @@ public abstract class CTInAppBaseFragment extends Fragment {
     }
 
     interface InAppListener {
-        void inAppNotificationDidShow(Context context, CTInAppNotification inAppNotification, Bundle formData);
+        void inAppNotificationDidShow(CTInAppNotification inAppNotification, Bundle formData);
 
-        void inAppNotificationDidClick(Context context, CTInAppNotification inAppNotification, Bundle formData, HashMap<String, String> keyValueMap);
+        void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData, HashMap<String, String> keyValueMap);
 
         void inAppNotificationDidDismiss(Context context, CTInAppNotification inAppNotification, Bundle formData);
     }
