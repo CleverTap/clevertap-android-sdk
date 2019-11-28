@@ -72,6 +72,7 @@ public class CTAdUnitContent implements Parcelable {
 
     /**
      * Converts jsonContent to ADUnitContent
+     *
      * @param contentObject - jsonObject
      * @return - CTAdUnitContent Obj
      */
@@ -106,9 +107,8 @@ public class CTAdUnitContent implements Parcelable {
 
             JSONObject actionObject = contentObject.has("action") ? contentObject.getJSONObject("action") : null;
             if (actionObject != null) {
-                hasUrl = actionObject.has("hasUrl") && actionObject.getBoolean("hasUrl");
                 JSONObject urlObject = actionObject.has("url") ? actionObject.getJSONObject("url") : null;
-                if (urlObject != null && hasUrl) {
+                if (urlObject != null) {
                     JSONObject androidObject = urlObject.has("android") ? urlObject.getJSONObject("android") : null;
                     if (androidObject != null) {
                         actionUrl = androidObject.has("text") ? androidObject.getString("text") : "";
