@@ -278,27 +278,32 @@ public class CTAdUnit implements Parcelable {
     @NonNull
     @Override
     public String toString() {
-        StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("[");
-        stringBuilder.append("ADid- ").append(adID);
-        stringBuilder.append("Type- " + adType != null ? adType.toString() : null);
-        stringBuilder.append("bgColor- ").append(bgColor);
-        stringBuilder.append("Orientation- ").append(orientation);
-        if (adContentItems != null && adContentItems.isEmpty()) {
-            for (int i = 0; i < adContentItems.size(); i++) {
-                CTAdUnitContent item = adContentItems.get(i);
-                if (item != null) {
-                    stringBuilder.append("Content Item:" + i + " " + item.toString());
-                    stringBuilder.append("\n");
+        try {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.append("[");
+            stringBuilder.append("ADid- ").append(adID);
+            stringBuilder.append("Type- " + adType != null ? adType.toString() : null);
+            stringBuilder.append("bgColor- ").append(bgColor);
+            stringBuilder.append("Orientation- ").append(orientation);
+            if (adContentItems != null && adContentItems.isEmpty()) {
+                for (int i = 0; i < adContentItems.size(); i++) {
+                    CTAdUnitContent item = adContentItems.get(i);
+                    if (item != null) {
+                        stringBuilder.append("Content Item:" + i + " " + item.toString());
+                        stringBuilder.append("\n");
+                    }
                 }
             }
+            if (customExtras != null) {
+                stringBuilder.append("Custom KV:").append(customExtras);
+            }
+            stringBuilder.append("JSON -").append(jsonObject);
+            stringBuilder.append("Error-").append(error);
+            stringBuilder.append("]");
+            return stringBuilder.toString();
+        } catch (Exception e) {
+
         }
-        if (customExtras != null) {
-            stringBuilder.append("Custom KV:").append(customExtras);
-        }
-        stringBuilder.append("JSON -").append(jsonObject);
-        stringBuilder.append("Error-").append(error);
-        stringBuilder.append("]");
-        return stringBuilder.toString();
+        return super.toString();
     }
 }

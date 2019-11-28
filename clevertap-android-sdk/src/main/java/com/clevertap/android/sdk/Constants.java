@@ -42,7 +42,7 @@ public class Constants {
     static final int PUSH_DELAY_MS = 1000;
     static final String INAPP_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inapp";
     static final String INBOX_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inbox";
-    static final String ADUNIT_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_adUnit";
+    static final String ADUNIT_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_adunit";
     static final String INAPP_HTML_TAG = "html";
     static final String INAPP_DATA_TAG = "d";
     static final String INAPP_X_PERCENT = "xp";
