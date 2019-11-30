@@ -109,7 +109,7 @@ public interface WebSocketListener {
 	 * @param blob
 	 *            The binary message that was received.
 	 */
-	void onWebsocketMessage( WebSocket conn, ByteBuffer blob );
+	void onWebsocketMessageBuffer(WebSocket conn, ByteBuffer blob );
 
 	/**
 	 * Called after <var>onHandshakeReceived</var> returns <var>true</var>.

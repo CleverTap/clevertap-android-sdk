@@ -801,7 +801,7 @@ public class Draft_6455 extends Draft {
 	 */
 	private void processFrameBinary(WebSocketImpl webSocketImpl, Framedata frame) {
 		try {
-			webSocketImpl.getWebSocketListener().onWebsocketMessage( webSocketImpl, frame.getPayloadData() );
+			webSocketImpl.getWebSocketListener().onWebsocketMessageBuffer( webSocketImpl, frame.getPayloadData() );
 		} catch ( RuntimeException e ) {
 			logRuntimeException(webSocketImpl, e);
 		}
@@ -853,7 +853,7 @@ public class Draft_6455 extends Draft {
 			((FramedataImpl1) currentContinuousFrame).setPayload( getPayloadFromByteBufferList() );
 			((FramedataImpl1) currentContinuousFrame).isValid();
 			try {
-				webSocketImpl.getWebSocketListener().onWebsocketMessage( webSocketImpl, currentContinuousFrame.getPayloadData() );
+				webSocketImpl.getWebSocketListener().onWebsocketMessageBuffer( webSocketImpl, currentContinuousFrame.getPayloadData() );
 			} catch ( RuntimeException e ) {
 				logRuntimeException(webSocketImpl, e);
 			}

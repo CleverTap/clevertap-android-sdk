@@ -501,7 +501,7 @@ public abstract class WebSocketClient extends AbstractWebSocket implements Runna
 	}
 
 	@Override
-	public final void onWebsocketMessage( WebSocket conn, ByteBuffer blob ) {
+	public final void onWebsocketMessageBuffer(WebSocket conn, ByteBuffer blob ) {
 		onMessage( blob );
 	}
 
