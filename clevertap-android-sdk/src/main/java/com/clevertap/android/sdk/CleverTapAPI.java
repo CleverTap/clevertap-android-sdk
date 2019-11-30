@@ -7418,11 +7418,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
-     * Register listener to receive the list of running ad campaign ids
+     * Set listener to receive the list of running ad campaign ids
      *
      * @param adListener- Listener to set Ad unit callback
      */
-    public void registerAdListener(AdListener adListener) {
+    public void setAdListener(AdListener adListener) {
         if (adListener != null) {
             adListenerWeakReference = new WeakReference<>(adListener);
         }

@@ -95,7 +95,7 @@ public class CTAdUnit implements Parcelable {
                 }
             }
             JSONObject customKV = null;
-            //custom KV can be added to ad unit of any types, so don't
+            //custom KV can be added to ad unit of any types, no need to add type check here
             if (jsonObject.has("custom_kv")) {
                 customKV = jsonObject.getJSONObject("custom_kv");
             }

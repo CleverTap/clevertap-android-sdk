@@ -21,12 +21,11 @@ public class CTAdUnitContent implements Parcelable {
     private String posterUrl;
     private String actionUrl;
     private String icon;
-    private Boolean hasUrl;
     private String error;
 
     private CTAdUnitContent(String title, String titleColor, String message, String messageColor,
                             String icon, String media, String contentType, String posterUrl,
-                            String actionUrl, boolean hasUrl, String error) {
+                            String actionUrl, String error) {
         this.title = title;
         this.titleColor = titleColor;
         this.message = message;
@@ -36,7 +35,6 @@ public class CTAdUnitContent implements Parcelable {
         this.contentType = contentType;
         this.posterUrl = posterUrl;
         this.actionUrl = actionUrl;
-        this.hasUrl = hasUrl;
         this.error = error;
     }
 
@@ -51,7 +49,6 @@ public class CTAdUnitContent implements Parcelable {
         contentType = in.readString();
         posterUrl = in.readString();
         actionUrl = in.readString();
-        hasUrl = in.readByte() != 0x00;
         error = in.readString();
     }
 
@@ -66,7 +63,6 @@ public class CTAdUnitContent implements Parcelable {
         dest.writeString(contentType);
         dest.writeString(posterUrl);
         dest.writeString(actionUrl);
-        dest.writeByte((byte) (hasUrl ? 0x01 : 0x00));
         dest.writeString(error);
     }
 
@@ -82,7 +78,6 @@ public class CTAdUnitContent implements Parcelable {
                     icon = "", media = "", contentType = "", posterUrl = "",
                     actionUrl = "";
 
-            boolean hasUrl = false;
 
             JSONObject titleObject = contentObject.has("title") ? contentObject.getJSONObject("title") : null;
             if (titleObject != null) {
@@ -118,11 +113,11 @@ public class CTAdUnitContent implements Parcelable {
 
             return new CTAdUnitContent(title, titleColor, message, messageColor,
                     icon, media, contentType, posterUrl,
-                    actionUrl, hasUrl, null);
+                    actionUrl, null);
 
         } catch (Exception e) {
             Logger.v("Unable to init CTAdUnitContent with JSON - " + e.getLocalizedMessage());
-            return new CTAdUnitContent("", "", "", "", "", "", "", "", "", false, "Error Creating AdUnit Content from JSON : " + e.getLocalizedMessage());
+            return new CTAdUnitContent("", "", "", "", "", "", "", "", "", "Error Creating AdUnit Content from JSON : " + e.getLocalizedMessage());
         }
     }
 
@@ -243,11 +238,6 @@ public class CTAdUnitContent implements Parcelable {
         return error;
     }
 
-    @SuppressWarnings("unused")
-    public Boolean getHasUrl() {
-        return hasUrl;
-    }
-
     public static final Creator<CTAdUnitContent> CREATOR = new Creator<CTAdUnitContent>() {
         @Override
         public CTAdUnitContent createFromParcel(Parcel in) {
@@ -268,6 +258,6 @@ public class CTAdUnitContent implements Parcelable {
     @NonNull
     @Override
     public String toString() {
-        return "[" + "title:" + title + "titleColor:" + titleColor + "message:" + message + "messageColor:" + messageColor + "media:" + media + "contentType:" + contentType + "posterUrl:" + posterUrl + "actionUrl:" + actionUrl + "icon:" + icon + "hasUrl:" + hasUrl + "error:" + error + "]";
+        return "[" + "title:" + title + "titleColor:" + titleColor + "message:" + message + "messageColor:" + messageColor + "media:" + media + "contentType:" + contentType + "posterUrl:" + posterUrl + "actionUrl:" + actionUrl + "icon:" + icon + "error:" + error + "]";
     }
 }
