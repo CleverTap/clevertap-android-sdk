@@ -271,6 +271,6 @@ public class CTAdUnitContent implements Parcelable {
     @NonNull
     @Override
     public String toString() {
-        return "[" + " title:" + title + " titleColor:" + titleColor + " message:" + message + " messageColor:" + messageColor + " media:" + media + " contentType:" + contentType + " posterUrl:" + posterUrl + " actionUrl:" + actionUrl + " icon:" + icon + " error:" + error + " ]";
+        return "[" + " title:" + title + ", titleColor:" + titleColor + " message:" + message + ", messageColor:" + messageColor + ", media:" + media + ", contentType:" + contentType + ", posterUrl:" + posterUrl + ", actionUrl:" + actionUrl + ", icon:" + icon + ", error:" + error + " ]";
     }
 }
