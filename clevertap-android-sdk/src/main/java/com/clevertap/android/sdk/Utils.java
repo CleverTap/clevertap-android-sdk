@@ -267,13 +267,20 @@ public final class Utils {
     }
 
     /**
-     * Handy method to post any runnable to be run on the main thread.
+     * Handy method to post any runnable to run on the main thread.
+     *
      * @param runnable - task to be run
      */
     static void runOnUiThread(Runnable runnable) {
         if (runnable != null) {
-            Handler mainHandler = new Handler(Looper.getMainLooper());
-            mainHandler.post(runnable);
+            //run if already on the UI thread
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                runnable.run();
+            } else {
+                //post on UI thread if called from Non-UI thread.
+                Handler mainHandler = new Handler(Looper.getMainLooper());
+                mainHandler.post(runnable);
+            }
         }
     }
 }
