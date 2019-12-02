@@ -122,21 +122,21 @@ class CTInAppNotificationButton implements Parcelable {
     CTInAppNotificationButton initWithJSON(JSONObject jsonObject) {
         try {
             this.jsonDescription = jsonObject;
-            this.text = jsonObject.has("text") ? jsonObject.getString("text") : "";
-            this.textColor = jsonObject.has("color") ? jsonObject.getString("color") : Constants.BLUE;
-            this.backgroundColor = jsonObject.has("bg") ? jsonObject.getString("bg") : Constants.WHITE;
-            this.borderColor = jsonObject.has("border") ? jsonObject.getString("border") : Constants.WHITE;
-            this.borderRadius = jsonObject.has("radius") ? jsonObject.getString("radius") : "";
+            this.text = jsonObject.has(Constants.KEY_TEXT) ? jsonObject.getString(Constants.KEY_TEXT) : "";
+            this.textColor = jsonObject.has(Constants.KEY_COLOR) ? jsonObject.getString(Constants.KEY_COLOR) : Constants.BLUE;
+            this.backgroundColor = jsonObject.has(Constants.KEY_BG) ? jsonObject.getString(Constants.KEY_BG) : Constants.WHITE;
+            this.borderColor = jsonObject.has(Constants.KEY_BORDER) ? jsonObject.getString(Constants.KEY_BORDER) : Constants.WHITE;
+            this.borderRadius = jsonObject.has(Constants.KEY_RADIUS) ? jsonObject.getString(Constants.KEY_RADIUS) : "";
 
-            JSONObject actions = jsonObject.has("actions") ? jsonObject.getJSONObject("actions") : null;
+            JSONObject actions = jsonObject.has(Constants.KEY_ACTIONS) ? jsonObject.getJSONObject(Constants.KEY_ACTIONS) : null;
             if (actions != null) {
-                String action = actions.has("android") ? actions.getString("android") : "";
+                String action = actions.has(Constants.KEY_ANDROID) ? actions.getString(Constants.KEY_ANDROID) : "";
                 if (!action.isEmpty()) {
                     this.actionUrl = action;
                 }
             }
 
-            //Custom KEY VALUE
+            //Custom Key Value pairs
             if (isKVAction(actions)) {
                 JSONObject keyValues = actions.getJSONObject(Constants.KEY_KV);
                 if (keyValues != null) {
@@ -161,8 +161,14 @@ class CTInAppNotificationButton implements Parcelable {
         return this;
     }
 
+    /**
+     * Checks if custom Key Value pair is present or not
+     * @param actions - action object in the payload
+     * @return
+     * @throws JSONException
+     */
     private boolean isKVAction(JSONObject actions) throws JSONException {
-        return actions != null && actions.has("type") && Constants.KEY_KV.equalsIgnoreCase(actions.getString("type")) && actions.has(Constants.KEY_KV);
+        return actions != null && actions.has(Constants.KEY_TYPE) && Constants.KEY_KV.equalsIgnoreCase(actions.getString(Constants.KEY_TYPE)) && actions.has(Constants.KEY_KV);
     }
 
     @Override

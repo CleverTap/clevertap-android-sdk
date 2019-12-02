@@ -4,6 +4,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
+import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 
 import org.json.JSONObject;
@@ -21,12 +22,11 @@ public class CTAdUnitContent implements Parcelable {
     private String posterUrl;
     private String actionUrl;
     private String icon;
-    private Boolean hasUrl;
     private String error;
 
     private CTAdUnitContent(String title, String titleColor, String message, String messageColor,
                             String icon, String media, String contentType, String posterUrl,
-                            String actionUrl, boolean hasUrl, String error) {
+                            String actionUrl, String error) {
         this.title = title;
         this.titleColor = titleColor;
         this.message = message;
@@ -36,7 +36,6 @@ public class CTAdUnitContent implements Parcelable {
         this.contentType = contentType;
         this.posterUrl = posterUrl;
         this.actionUrl = actionUrl;
-        this.hasUrl = hasUrl;
         this.error = error;
     }
 
@@ -51,7 +50,6 @@ public class CTAdUnitContent implements Parcelable {
         contentType = in.readString();
         posterUrl = in.readString();
         actionUrl = in.readString();
-        hasUrl = in.readByte() != 0x00;
         error = in.readString();
     }
 
@@ -66,7 +64,6 @@ public class CTAdUnitContent implements Parcelable {
         dest.writeString(contentType);
         dest.writeString(posterUrl);
         dest.writeString(actionUrl);
-        dest.writeByte((byte) (hasUrl ? 0x01 : 0x00));
         dest.writeString(error);
     }
 
@@ -74,7 +71,7 @@ public class CTAdUnitContent implements Parcelable {
      * Converts jsonContent to ADUnitContent
      *
      * @param contentObject - jsonObject
-     * @return - CTAdUnitContent Obj
+     * @return - CTAdUnitContent - can have empty fields with an error message in case of parsing error
      */
     static CTAdUnitContent toContent(JSONObject contentObject) {
         try {
@@ -82,66 +79,68 @@ public class CTAdUnitContent implements Parcelable {
                     icon = "", media = "", contentType = "", posterUrl = "",
                     actionUrl = "";
 
-            boolean hasUrl = false;
 
-            JSONObject titleObject = contentObject.has("title") ? contentObject.getJSONObject("title") : null;
+            JSONObject titleObject = contentObject.has(Constants.KEY_TITLE) ? contentObject.getJSONObject(Constants.KEY_TITLE) : null;
             if (titleObject != null) {
-                title = titleObject.has("text") ? titleObject.getString("text") : "";
-                titleColor = titleObject.has("color") ? titleObject.getString("color") : "";
+                title = titleObject.has(Constants.KEY_TEXT) ? titleObject.getString(Constants.KEY_TEXT) : "";
+                titleColor = titleObject.has(Constants.KEY_COLOR) ? titleObject.getString(Constants.KEY_COLOR) : "";
             }
-            JSONObject msgObject = contentObject.has("message") ? contentObject.getJSONObject("message") : null;
+            JSONObject msgObject = contentObject.has(Constants.KEY_MESSAGE) ? contentObject.getJSONObject(Constants.KEY_MESSAGE) : null;
             if (msgObject != null) {
-                message = msgObject.has("text") ? msgObject.getString("text") : "";
-                messageColor = msgObject.has("color") ? msgObject.getString("color") : "";
+                message = msgObject.has(Constants.KEY_TEXT) ? msgObject.getString(Constants.KEY_TEXT) : "";
+                messageColor = msgObject.has(Constants.KEY_COLOR) ? msgObject.getString(Constants.KEY_COLOR) : "";
             }
-            JSONObject iconObject = contentObject.has("icon") ? contentObject.getJSONObject("icon") : null;
+            JSONObject iconObject = contentObject.has(Constants.KEY_ICON) ? contentObject.getJSONObject(Constants.KEY_ICON) : null;
             if (iconObject != null) {
-                icon = iconObject.has("url") ? iconObject.getString("url") : "";
+                icon = iconObject.has(Constants.KEY_URL) ? iconObject.getString(Constants.KEY_URL) : "";
             }
-            JSONObject mediaObject = contentObject.has("media") ? contentObject.getJSONObject("media") : null;
+            JSONObject mediaObject = contentObject.has(Constants.KEY_MEDIA) ? contentObject.getJSONObject(Constants.KEY_MEDIA) : null;
             if (mediaObject != null) {
-                media = mediaObject.has("url") ? mediaObject.getString("url") : "";
-                contentType = mediaObject.has("content_type") ? mediaObject.getString("content_type") : "";
-                posterUrl = mediaObject.has("poster") ? mediaObject.getString("poster") : "";
+                media = mediaObject.has(Constants.KEY_URL) ? mediaObject.getString(Constants.KEY_URL) : "";
+                contentType = mediaObject.has(Constants.KEY_CONTENT_TYPE) ? mediaObject.getString(Constants.KEY_CONTENT_TYPE) : "";
+                posterUrl = mediaObject.has(Constants.KEY_POSTER_URL) ? mediaObject.getString(Constants.KEY_POSTER_URL) : "";
             }
 
-            JSONObject actionObject = contentObject.has("action") ? contentObject.getJSONObject("action") : null;
+            JSONObject actionObject = contentObject.has(Constants.KEY_ACTION) ? contentObject.getJSONObject(Constants.KEY_ACTION) : null;
             if (actionObject != null) {
-                JSONObject urlObject = actionObject.has("url") ? actionObject.getJSONObject("url") : null;
+                JSONObject urlObject = actionObject.has(Constants.KEY_URL) ? actionObject.getJSONObject(Constants.KEY_URL) : null;
                 if (urlObject != null) {
-                    JSONObject androidObject = urlObject.has("android") ? urlObject.getJSONObject("android") : null;
+                    JSONObject androidObject = urlObject.has(Constants.KEY_ANDROID) ? urlObject.getJSONObject(Constants.KEY_ANDROID) : null;
                     if (androidObject != null) {
-                        actionUrl = androidObject.has("text") ? androidObject.getString("text") : "";
+                        actionUrl = androidObject.has(Constants.KEY_TEXT) ? androidObject.getString(Constants.KEY_TEXT) : "";
                     }
                 }
             }
 
             return new CTAdUnitContent(title, titleColor, message, messageColor,
                     icon, media, contentType, posterUrl,
-                    actionUrl, hasUrl, null);
+                    actionUrl, null);
 
         } catch (Exception e) {
             Logger.v("Unable to init CTAdUnitContent with JSON - " + e.getLocalizedMessage());
-            return new CTAdUnitContent("", "", "", "", "", "", "", "", "", false, "Error Creating AdUnit Content from JSON : " + e.getLocalizedMessage());
+            return new CTAdUnitContent("", "", "", "", "", "", "", "", "", "Error Creating AdUnit Content from JSON : " + e.getLocalizedMessage());
         }
     }
 
     /**
-     * @return the title section of the AdUnit Content
+     * Getter for the title section of the AdUnit Content
+     * @return String
      */
     public String getTitle() {
         return title;
     }
 
     /**
-     * @return the message section of the AdUnit Content
+     * Getter for the message section of the AdUnit Content
+     * @return String
      */
     public String getMessage() {
         return message;
     }
 
     /**
-     * @return the media URL of the AdUnit Content
+     * Getter for the media URL of the AdUnit Content
+     * @return String
      */
     @SuppressWarnings("unused")
     public String getMedia() {
@@ -149,7 +148,8 @@ public class CTAdUnitContent implements Parcelable {
     }
 
     /**
-     * @return the action URL of the body of the AdUnit Content
+     * Getter for the action URL of the body of the AdUnit Content
+     * @return String
      */
     @SuppressWarnings("unused")
     public String getActionUrl() {
@@ -157,7 +157,8 @@ public class CTAdUnitContent implements Parcelable {
     }
 
     /**
-     * @return the URL as String for the icon in case of Icon Message template
+     * Getter for the URL as String for the icon in case of Icon Message template
+     * @return String
      */
     @SuppressWarnings("unused")
     public String getIcon() {
@@ -165,7 +166,8 @@ public class CTAdUnitContent implements Parcelable {
     }
 
     /**
-     * @return the hexcode value of the title color as String
+     * Getter for the hex-code value of the title color e.g. #000000
+     * @return String
      */
     @SuppressWarnings("unused")
     public String getTitleColor() {
@@ -173,14 +175,16 @@ public class CTAdUnitContent implements Parcelable {
     }
 
     /**
-     * @return the hexcode value of the message color as String
+     * Getter for the hex-code value of the message color e.g. #000000
+     * @return String
      */
     public String getMessageColor() {
         return messageColor;
     }
 
     /**
-     * @return URL for the thumbnail of the video
+     * Getter for the URL for the thumbnail of the video
+     * @return String
      */
     @SuppressWarnings("unused")
     public String getPosterUrl() {
@@ -188,7 +192,11 @@ public class CTAdUnitContent implements Parcelable {
     }
 
     /**
-     * @return the content type of the media
+     * Getter for the content type of the media(image/gif/audio/video etc.)
+     *
+     * Refer{@link #mediaIsImage()}, {@link #mediaIsGIF()},
+     *      {@link #mediaIsAudio()} ,{@link #mediaIsVideo()}
+     * @return String
      */
     @SuppressWarnings("unused")
     public String getContentType() {
@@ -198,8 +206,8 @@ public class CTAdUnitContent implements Parcelable {
     /**
      * Method to check whether media in the {@link CTAdUnitContent} object is an image.
      *
-     * @return true if the media type is image
-     * false if the media type is not an image
+     * @return boolean - | true, if the media type is image
+     *                   | false, if the media type is not an image
      */
     @SuppressWarnings("unused")
     public boolean mediaIsImage() {
@@ -209,8 +217,8 @@ public class CTAdUnitContent implements Parcelable {
     /**
      * Method to check whether media in the {@link CTAdUnitContent} object is a GIF.
      *
-     * @return true if the media type is GIF
-     * false if the media type is not a GIF
+     * @return boolean - | true, if the media type is GIF
+     *                   | false, if the media type is not a GIF
      */
     @SuppressWarnings("unused")
     public boolean mediaIsGIF() {
@@ -220,8 +228,8 @@ public class CTAdUnitContent implements Parcelable {
     /**
      * Method to check whether media in the {@link CTAdUnitContent} object is a video.
      *
-     * @return true if the media type is video
-     * false if the media type is not a video
+     * @return boolean - | true, if the media type is video
+     *                   | false, if the media type is not a video
      */
     @SuppressWarnings("unused")
     public boolean mediaIsVideo() {
@@ -231,8 +239,8 @@ public class CTAdUnitContent implements Parcelable {
     /**
      * Method to check whether media in the {@link CTAdUnitContent} object is an audio.
      *
-     * @return true if the media type is audio
-     * false if the media type is not an audio
+     * @return boolean - | true, if the media type is audio
+     *                   | false, if the media type is not an audio
      */
     @SuppressWarnings("unused")
     public boolean mediaIsAudio() {
@@ -241,11 +249,6 @@ public class CTAdUnitContent implements Parcelable {
 
     public String getError() {
         return error;
-    }
-
-    @SuppressWarnings("unused")
-    public Boolean getHasUrl() {
-        return hasUrl;
     }
 
     public static final Creator<CTAdUnitContent> CREATOR = new Creator<CTAdUnitContent>() {
@@ -268,6 +271,6 @@ public class CTAdUnitContent implements Parcelable {
     @NonNull
     @Override
     public String toString() {
-        return "[" + "title:" + title + "titleColor:" + titleColor + "message:" + message + "messageColor:" + messageColor + "media:" + media + "contentType:" + contentType + "posterUrl:" + posterUrl + "actionUrl:" + actionUrl + "icon:" + icon + "hasUrl:" + hasUrl + "error:" + error + "]";
+        return "[" + "title:" + title + "titleColor:" + titleColor + "message:" + message + "messageColor:" + messageColor + "media:" + media + "contentType:" + contentType + "posterUrl:" + posterUrl + "actionUrl:" + actionUrl + "icon:" + icon + "error:" + error + "]";
     }
 }

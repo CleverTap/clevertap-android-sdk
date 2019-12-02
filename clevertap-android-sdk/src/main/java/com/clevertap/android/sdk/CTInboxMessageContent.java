@@ -54,40 +54,40 @@ public class CTInboxMessageContent implements Parcelable {
 
     CTInboxMessageContent initWithJSON(JSONObject contentObject) {
         try {
-            JSONObject titleObject = contentObject.has("title") ? contentObject.getJSONObject("title") : null;
+            JSONObject titleObject = contentObject.has(Constants.KEY_TITLE) ? contentObject.getJSONObject(Constants.KEY_TITLE) : null;
             if (titleObject != null) {
-                this.title = titleObject.has("text") ? titleObject.getString("text") : "";
-                this.titleColor = titleObject.has("color") ? titleObject.getString("color") : "";
+                this.title = titleObject.has(Constants.KEY_TEXT) ? titleObject.getString(Constants.KEY_TEXT) : "";
+                this.titleColor = titleObject.has(Constants.KEY_COLOR) ? titleObject.getString(Constants.KEY_COLOR) : "";
             }
-            JSONObject msgObject = contentObject.has("message") ? contentObject.getJSONObject("message") : null;
+            JSONObject msgObject = contentObject.has(Constants.KEY_MESSAGE) ? contentObject.getJSONObject(Constants.KEY_MESSAGE) : null;
             if (msgObject != null) {
-                this.message = msgObject.has("text") ? msgObject.getString("text") : "";
-                this.messageColor = msgObject.has("color") ? msgObject.getString("color") : "";
+                this.message = msgObject.has(Constants.KEY_TEXT) ? msgObject.getString(Constants.KEY_TEXT) : "";
+                this.messageColor = msgObject.has(Constants.KEY_COLOR) ? msgObject.getString(Constants.KEY_COLOR) : "";
             }
-            JSONObject iconObject = contentObject.has("icon") ? contentObject.getJSONObject("icon") : null;
+            JSONObject iconObject = contentObject.has(Constants.KEY_ICON) ? contentObject.getJSONObject(Constants.KEY_ICON) : null;
             if (iconObject != null) {
-                this.icon = iconObject.has("url") ? iconObject.getString("url") : "";
+                this.icon = iconObject.has(Constants.KEY_URL) ? iconObject.getString(Constants.KEY_URL) : "";
             }
-            JSONObject mediaObject = contentObject.has("media") ? contentObject.getJSONObject("media") : null;
+            JSONObject mediaObject = contentObject.has(Constants.KEY_MEDIA) ? contentObject.getJSONObject(Constants.KEY_MEDIA) : null;
             if (mediaObject != null) {
-                this.media = mediaObject.has("url") ? mediaObject.getString("url") : "";
-                this.contentType = mediaObject.has("content_type") ? mediaObject.getString("content_type") : "";
-                this.posterUrl = mediaObject.has("poster") ? mediaObject.getString("poster") : "";
+                this.media = mediaObject.has(Constants.KEY_URL) ? mediaObject.getString(Constants.KEY_URL) : "";
+                this.contentType = mediaObject.has(Constants.KEY_CONTENT_TYPE) ? mediaObject.getString(Constants.KEY_CONTENT_TYPE) : "";
+                this.posterUrl = mediaObject.has(Constants.KEY_POSTER_URL) ? mediaObject.getString(Constants.KEY_POSTER_URL) : "";
             }
 
-            JSONObject actionObject = contentObject.has("action") ? contentObject.getJSONObject("action") : null;
+            JSONObject actionObject = contentObject.has(Constants.KEY_ACTION) ? contentObject.getJSONObject(Constants.KEY_ACTION) : null;
             if (actionObject != null) {
-                this.hasUrl = actionObject.has("hasUrl") && actionObject.getBoolean("hasUrl");
-                this.hasLinks = actionObject.has("hasLinks") && actionObject.getBoolean("hasLinks");
-                JSONObject urlObject = actionObject.has("url") ? actionObject.getJSONObject("url") : null;
+                this.hasUrl = actionObject.has(Constants.KEY_HAS_URL) && actionObject.getBoolean(Constants.KEY_HAS_URL);
+                this.hasLinks = actionObject.has(Constants.KEY_HAS_LINKS) && actionObject.getBoolean(Constants.KEY_HAS_LINKS);
+                JSONObject urlObject = actionObject.has(Constants.KEY_URL) ? actionObject.getJSONObject(Constants.KEY_URL) : null;
                 if (urlObject != null && this.hasUrl) {
-                    JSONObject androidObject = urlObject.has("android") ? urlObject.getJSONObject("android") : null;
+                    JSONObject androidObject = urlObject.has(Constants.KEY_ANDROID) ? urlObject.getJSONObject(Constants.KEY_ANDROID) : null;
                     if (androidObject != null) {
-                        this.actionUrl = androidObject.has("text") ? androidObject.getString("text") : "";
+                        this.actionUrl = androidObject.has(Constants.KEY_TEXT) ? androidObject.getString(Constants.KEY_TEXT) : "";
                     }
                 }
                 if (urlObject != null && this.hasLinks) {
-                    this.links = actionObject.has("links") ? actionObject.getJSONArray("links") : null;
+                    this.links = actionObject.has(Constants.KEY_LINKS) ? actionObject.getJSONArray(Constants.KEY_LINKS) : null;
                 }
             }
 
@@ -263,7 +263,7 @@ public class CTInboxMessageContent implements Parcelable {
     public String getLinktype(JSONObject jsonObject) {
         if (jsonObject == null) return null;
         try {
-            return jsonObject.has("type") ? jsonObject.getString("type") : "";
+            return jsonObject.has(Constants.KEY_TYPE) ? jsonObject.getString(Constants.KEY_TYPE) : "";
         } catch (JSONException e) {
             Logger.v("Unable to get Link Type with JSON - " + e.getLocalizedMessage());
             return null;
@@ -279,7 +279,7 @@ public class CTInboxMessageContent implements Parcelable {
     public String getLinkText(JSONObject jsonObject) {
         if (jsonObject == null) return null;
         try {
-            return jsonObject.has("text") ? jsonObject.getString("text") : "";
+            return jsonObject.has(Constants.KEY_TEXT) ? jsonObject.getString(Constants.KEY_TEXT) : "";
         } catch (JSONException e) {
             Logger.v("Unable to get Link Text with JSON - " + e.getLocalizedMessage());
             return null;
@@ -298,7 +298,7 @@ public class CTInboxMessageContent implements Parcelable {
         try {
             JSONObject copyObject = jsonObject.has("copyText") ? jsonObject.getJSONObject("copyText") : null;
             if (copyObject != null) {
-                return copyObject.has("text") ? copyObject.getString("text") : "";
+                return copyObject.has(Constants.KEY_TEXT) ? copyObject.getString(Constants.KEY_TEXT) : "";
             } else {
                 return "";
             }
@@ -318,11 +318,11 @@ public class CTInboxMessageContent implements Parcelable {
     public String getLinkUrl(JSONObject jsonObject) {
         if (jsonObject == null) return null;
         try {
-            JSONObject urlObject = jsonObject.has("url") ? jsonObject.getJSONObject("url") : null;
+            JSONObject urlObject = jsonObject.has(Constants.KEY_URL) ? jsonObject.getJSONObject(Constants.KEY_URL) : null;
             if (urlObject == null) return null;
-            JSONObject androidObject = urlObject.has("android") ? urlObject.getJSONObject("android") : null;
+            JSONObject androidObject = urlObject.has(Constants.KEY_ANDROID) ? urlObject.getJSONObject(Constants.KEY_ANDROID) : null;
             if (androidObject != null) {
-                return androidObject.has("text") ? androidObject.getString("text") : "";
+                return androidObject.has(Constants.KEY_TEXT) ? androidObject.getString(Constants.KEY_TEXT) : "";
             } else {
                 return "";
             }
@@ -341,7 +341,7 @@ public class CTInboxMessageContent implements Parcelable {
     public String getLinkColor(JSONObject jsonObject) {
         if (jsonObject == null) return null;
         try {
-            return jsonObject.has("color") ? jsonObject.getString("color") : "";
+            return jsonObject.has(Constants.KEY_COLOR) ? jsonObject.getString(Constants.KEY_COLOR) : "";
         } catch (JSONException e) {
             Logger.v("Unable to get Link Text Color with JSON - " + e.getLocalizedMessage());
             return null;
@@ -357,7 +357,7 @@ public class CTInboxMessageContent implements Parcelable {
     public String getLinkBGColor(JSONObject jsonObject) {
         if (jsonObject == null) return null;
         try {
-            return jsonObject.has("bg") ? jsonObject.getString("bg") : "";
+            return jsonObject.has(Constants.KEY_BG) ? jsonObject.getString(Constants.KEY_BG) : "";
         } catch (JSONException e) {
             Logger.v("Unable to get Link Text Color with JSON - " + e.getLocalizedMessage());
             return null;

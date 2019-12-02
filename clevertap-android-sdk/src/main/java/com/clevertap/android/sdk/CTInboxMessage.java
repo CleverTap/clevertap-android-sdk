@@ -38,31 +38,31 @@ public class CTInboxMessage implements Parcelable {
     CTInboxMessage(JSONObject jsonObject){
         this.data = jsonObject;
         try {
-            this.messageId = jsonObject.has("id") ? jsonObject.getString("id") : "0";
-            this.campaignId = jsonObject.has("wzrk_id") ? jsonObject.getString("wzrk_id") : "0_0";
-            this.date = jsonObject.has("date") ? jsonObject.getLong("date") : System.currentTimeMillis()/1000;
-            this.expires = jsonObject.has("wzrk_ttl") ? jsonObject.getLong("wzrk_ttl") : System.currentTimeMillis() + 1000*60*60*24;
-            this.isRead = jsonObject.has("isRead") && jsonObject.getBoolean("isRead");
-            JSONArray tagsArray = jsonObject.has("tags") ? jsonObject.getJSONArray("tags") : null;
+            this.messageId = jsonObject.has(Constants.KEY_ID) ? jsonObject.getString(Constants.KEY_ID) : "0";
+            this.campaignId = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject.getString(Constants.NOTIFICATION_ID_TAG) : "0_0";
+            this.date = jsonObject.has(Constants.KEY_DATE) ? jsonObject.getLong(Constants.KEY_DATE) : System.currentTimeMillis()/1000;
+            this.expires = jsonObject.has(Constants.KEY_WZRK_TTL) ? jsonObject.getLong(Constants.KEY_WZRK_TTL) : System.currentTimeMillis() + 1000*60*60*24;
+            this.isRead = jsonObject.has(Constants.KEY_IS_READ) && jsonObject.getBoolean(Constants.KEY_IS_READ);
+            JSONArray tagsArray = jsonObject.has(Constants.KEY_TAGS) ? jsonObject.getJSONArray(Constants.KEY_TAGS) : null;
             if(tagsArray != null){
                 for(int i=0; i< tagsArray.length(); i++){
                     this.tags.add(tagsArray.getString(i));
                 }
             }
-            JSONObject cellObject = jsonObject.has("msg") ? jsonObject.getJSONObject("msg") : null;
+            JSONObject cellObject = jsonObject.has(Constants.KEY_MSG) ? jsonObject.getJSONObject(Constants.KEY_MSG) : null;
             if(cellObject != null){
-                this.type = cellObject.has("type") ? CTInboxMessageType.fromString(cellObject.getString("type")) : CTInboxMessageType.fromString("");
-                this.bgColor = cellObject.has("bg") ? cellObject.getString("bg") : "";
-                JSONArray contentArray = cellObject.has("content") ? cellObject.getJSONArray("content") : null;
+                this.type = cellObject.has(Constants.KEY_TYPE) ? CTInboxMessageType.fromString(cellObject.getString(Constants.KEY_TYPE)) : CTInboxMessageType.fromString("");
+                this.bgColor = cellObject.has(Constants.KEY_BG) ? cellObject.getString(Constants.KEY_BG) : "";
+                JSONArray contentArray = cellObject.has(Constants.KEY_CONTENT) ? cellObject.getJSONArray(Constants.KEY_CONTENT) : null;
                 if(contentArray != null){
                     for(int i=0 ; i<contentArray.length(); i++){
                         CTInboxMessageContent ctInboxMessageContent = new CTInboxMessageContent().initWithJSON(contentArray.getJSONObject(i));
                         this.inboxMessageContents.add(ctInboxMessageContent);
                     }
                 }
-                this.orientation = cellObject.has("orientation") ? cellObject.getString("orientation") : "";
+                this.orientation = cellObject.has(Constants.KEY_ORIENTATION) ? cellObject.getString(Constants.KEY_ORIENTATION) : "";
             }
-            this.wzrkParams = jsonObject.has("wzrkParams") ? jsonObject.getJSONObject("wzrkParams") : null;
+            this.wzrkParams = jsonObject.has(Constants.KEY_WZRK_PARAMS) ? jsonObject.getJSONObject(Constants.KEY_WZRK_PARAMS) : null;
         } catch (JSONException e) {
             Logger.v("Unable to init CTInboxMessage with JSON - "+e.getLocalizedMessage());
         }

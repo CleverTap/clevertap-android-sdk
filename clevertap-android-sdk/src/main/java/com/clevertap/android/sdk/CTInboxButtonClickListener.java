@@ -65,6 +65,11 @@ class CTInboxButtonClickListener implements View.OnClickListener {
         }
     }
 
+    /**
+     * Returns Custom Key Value pairs if present in the payload
+     * @param inboxMessage - InboxMessage object
+     * @return HashMap<String, String>
+     */
     private HashMap<String, String> getKeyValues(CTInboxMessage inboxMessage) {
         if (inboxMessage != null
                 && inboxMessage.getInboxMessageContents() != null

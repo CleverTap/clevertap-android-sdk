@@ -5010,7 +5010,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         JSONArray adUnits = new JSONArray();
                         r.put(Constants.ADUNIT_JSON_RESPONSE_KEY, adUnits);
                         JSONObject testPushObject = new JSONObject(extras.getString(Constants.ADUNIT_PREVIEW_PUSH_PAYLOAD_KEY));
-                        testPushObject.put("_id", String.valueOf(System.currentTimeMillis() / 1000));
                         adUnits.put(testPushObject);
                         processAdUnitsResponse(r);
                     } catch (Throwable t) {
@@ -7365,7 +7364,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     /**
      * -----------------------------------------------------------------------
-     * ********                        AD LOGIC                          *****
+     * ********                        ADView LOGIC                          *****
      * -----------------------------------------------------------------------/
      * <p>
      * /**
@@ -7389,7 +7388,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
-     * prepares the ad Units using the JSON response
+     * Prepares the ad Units using the JSON response
      *
      * @param messages - Json array of Ad items
      */
@@ -7407,7 +7406,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     /**
      * Notify the registered ad listener about the running ad campaigns
      *
-     * @param adUnits - Array of AdUnits
+     * @param adUnits - Array of AdUnits {@link CTAdUnit}
      */
     private void notifyAdUnitsLoaded(final ArrayList<CTAdUnit> adUnits) {
         if (adUnits != null && !adUnits.isEmpty()) {
@@ -7423,11 +7422,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
-     * Register listener to receive the list of running ad campaign ids
+     * Sets listener to receive the list of running ad campaign ids
      *
-     * @param adListener- Listener to set Ad unit callback
+     * @param adListener- Listener to set Ad unit callback{@link AdListener}
      */
-    public void registerAdListener(AdListener adListener) {
+    public void setAdListener(AdListener adListener) {
         if (adListener != null) {
             adListenerWeakReference = new WeakReference<>(adListener);
         }
@@ -7436,7 +7435,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     /**
      * Raises the Ad Unit Viewed event
      *
-     * @param adID - Unique id of the Ad Unit
+     * @param adID - Unique id of the Ad Unit{@link CTAdUnit#getAdID()}
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void pushAdViewedEventForID(String adID) {
@@ -7466,7 +7465,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     /**
      * Raises the Ad Unit Clicked event
      *
-     * @param adID - Unique id of the Ad Unit
+     * @param adID - Unique id of the Ad Unit{@link CTAdUnit#getAdID()}
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void pushAdClickedEventForID(String adID) {

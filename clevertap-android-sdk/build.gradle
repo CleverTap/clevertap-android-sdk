@@ -70,6 +70,7 @@ android {
     lintOptions {
         abortOnError false
     }
+    //logic for variant based renaming of the aar files
     libraryVariants.all { variant ->
         variant.outputs.all {
             if (variant.getName().toLowerCase().contains('release')) {

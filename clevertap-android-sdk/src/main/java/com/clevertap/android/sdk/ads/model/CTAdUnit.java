@@ -77,14 +77,14 @@ public class CTAdUnit implements Parcelable {
     public static CTAdUnit toAdUnit(JSONObject jsonObject) {
         //logic to convert jsonobj to item
         try {
-            String adID = jsonObject.has("wzrk_id") ? jsonObject.getString("wzrk_id") : "";
+            String adID = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject.getString(Constants.NOTIFICATION_ID_TAG) : "";
             CTAdConstants.CtAdType adType = jsonObject.has(Constants.KEY_TYPE) ? CTAdConstants.CtAdType.type(jsonObject.getString(Constants.KEY_TYPE)) : null;
 
             String bgColor = jsonObject.has(Constants.KEY_BG) ? jsonObject.getString(Constants.KEY_BG) : "";
 
-            String orientation = jsonObject.has("orientation") ? jsonObject.getString("orientation") : "";
+            String orientation = jsonObject.has(Constants.KEY_ORIENTATION) ? jsonObject.getString(Constants.KEY_ORIENTATION) : "";
 
-            JSONArray contentArray = jsonObject.has("content") ? jsonObject.getJSONArray("content") : null;
+            JSONArray contentArray = jsonObject.has(Constants.KEY_CONTENT) ? jsonObject.getJSONArray(Constants.KEY_CONTENT) : null;
             ArrayList<CTAdUnitContent> contentArrayList = new ArrayList<>();
             if (contentArray != null) {
                 for (int i = 0; i < contentArray.length(); i++) {
@@ -95,9 +95,9 @@ public class CTAdUnit implements Parcelable {
                 }
             }
             JSONObject customKV = null;
-            //custom KV can be added to ad unit of any types, so don't
-            if (jsonObject.has("custom_kv")) {
-                customKV = jsonObject.getJSONObject("custom_kv");
+            //custom KV can be added to ad unit of any types, no need to add type check here
+            if (jsonObject.has(Constants.KEY_CUSTOM_KV)) {
+                customKV = jsonObject.getJSONObject(Constants.KEY_CUSTOM_KV);
             }
             return new CTAdUnit(jsonObject, adID, adType, bgColor, orientation, contentArrayList, customKV, null);
         } catch (Exception e) {
@@ -106,7 +106,8 @@ public class CTAdUnit implements Parcelable {
     }
 
     /**
-     * @return the AdId of the adUnit
+     * Getter for the AdId of the adUnit
+     * @return String
      */
     public String getAdID() {
         return adID;
@@ -117,19 +118,25 @@ public class CTAdUnit implements Parcelable {
     }
 
     /**
-     * @return the Key Value pair of the adUnit
+     * Getter for the Key Value pair of the adUnit
+     * @return HashMap<String, String>
      */
     @SuppressWarnings("unused")
     public HashMap<String, String> getCustomExtras() {
         return customExtras;
     }
 
+    /**
+     * Getter for the JsonObject corresponding to the CTAdUnit object
+     * @return JSONObject
+     */
     public JSONObject getJsonObject() {
         return jsonObject;
     }
 
     /**
-     * @return the background color of the adUnit
+     * Getter for the hex-value background color of the adUnit e.g. #000000
+     * @return String
      */
     @SuppressWarnings("unused")
     public String getBgColor() {
@@ -137,14 +144,16 @@ public class CTAdUnit implements Parcelable {
     }
 
     /**
-     * @return the orientation of the adUnit
+     * Getter for the orientation of the adUnit
+     * @return String
      */
     public String getOrientation() {
         return orientation;
     }
 
     /**
-     * @return the AdType of the AdUnit
+     * Getter for the AdType of the AdUnit, Refer{@link CTAdConstants.CtAdType}
+     * @return CTAdConstants.CtAdType
      */
     @SuppressWarnings("unused")
     public CTAdConstants.CtAdType getAdType() {
@@ -152,7 +161,8 @@ public class CTAdUnit implements Parcelable {
     }
 
     /**
-     * @return the list of Content Ad Items.
+     * Getter for the list of Content Ad Items.
+     * @return ArrayList<CTAdUnitContent>
      */
     @SuppressWarnings("unused")
     public ArrayList<CTAdUnitContent> getAdContentItems() {
@@ -160,7 +170,8 @@ public class CTAdUnit implements Parcelable {
     }
 
     /**
-     * get the wzrk fields obj to be passed in the data for recording event.
+     * Getter for the wzrk fields obj to be passed in the data for recording event.
+     * @return JSONObject
      */
     public JSONObject getWzrkFields() {
         try {

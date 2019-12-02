@@ -51,7 +51,6 @@ public abstract class CTInAppBaseFragment extends Fragment {
     }
 
     abstract void cleanup();
-
     abstract void generateListener();
 
     @Override
