@@ -12,7 +12,7 @@ public interface AdListener {
     /**
      * Provides the list of currently running ad campaigns
      *
-     * @param units - list of ad units
+     * @param units - list of ad units {@link CTAdUnit}
      */
     void onAdUnitsLoaded(ArrayList<CTAdUnit> units);
 

@@ -21,7 +21,7 @@ public class AdUnitController {
     /**
      * Replaces the old AdUnits with the new ones post transformation of Json objects to AdUnit objects
      *
-     * @param messages
+     * @param messages - jsonarray of ad items
      * @return
      */
     public ArrayList<CTAdUnit> updateAdItems(JSONArray messages) {
@@ -52,9 +52,9 @@ public class AdUnitController {
     }
 
     /**
-     * API to get the AdUnit using the adID
+     * Getter to retrieve the AdUnit using the adID
      *
-     * @param adID - Ad ID
+     * @param adID - AdID {@link CTAdUnit#getAdID()}
      * @return CTAdUnit
      */
     public CTAdUnit getAdUnitForID(String adID) {

@@ -5,6 +5,7 @@ import android.text.TextUtils;
 
 public interface CTAdConstants {
 
+    //supported AD Types
     enum CtAdType {
         SIMPLE("simple"),
         SIMPLE_WITH_IMAGE("simple-image"),
@@ -19,6 +20,11 @@ public interface CTAdConstants {
             this.adType = type;
         }
 
+        /**
+         * Returns the adtype instance using the string value
+         * @param type - string value of the type provided from the feed.
+         * @return CtAdType
+         */
         public static CtAdType type(String type) {
 
             if (TextUtils.isEmpty(type))

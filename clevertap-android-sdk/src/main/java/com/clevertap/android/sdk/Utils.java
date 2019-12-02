@@ -266,6 +266,10 @@ public final class Utils {
         return true;
     }
 
+    /**
+     * Handy method to post any runnable to be run on the main thread.
+     * @param runnable - task to be run
+     */
     static void runOnUiThread(Runnable runnable) {
         if (runnable != null) {
             Handler mainHandler = new Handler(Looper.getMainLooper());
