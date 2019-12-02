@@ -7249,7 +7249,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 });
                 return;
             }
-            config.setEnableUIEditor(isUIEditorEnabled);
+            //config.setEnableUIEditor(isUIEditorEnabled);
             if (ctABTestController == null) {
                 ctABTestController = new CTABTestController(context, config, getCleverTapID(), this);
                 getConfigLogger().verbose(config.getAccountId(), "AB Testing initialized");

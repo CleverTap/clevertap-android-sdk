@@ -40,8 +40,8 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.debugLevel = CleverTapAPI.LogLevel.INFO.intValue();
         this.logger = new Logger(this.debugLevel);
         this.createdPostAppLaunch = false;
-        this.enableABTesting = this.isDefaultInstance;
-        this.enableUIEditor = this.enableABTesting;
+        this.enableABTesting = false;//this.isDefaultInstance;
+        this.enableUIEditor = false;//this.enableABTesting;
 
         ManifestInfo manifest = ManifestInfo.getInstance(context);
         this.useGoogleAdId = manifest.useGoogleAdId();
@@ -316,8 +316,9 @@ public class CleverTapInstanceConfig implements Parcelable {
     }
 
     @SuppressWarnings("SameParameterValue")
-    void setEnableABTesting(boolean enableABTesting) {
+    public void setEnableABTesting(boolean enableABTesting) {
         this.enableABTesting = enableABTesting;
+        this.enableUIEditor = this.enableABTesting;
     }
 
     public String getPackageName() {
