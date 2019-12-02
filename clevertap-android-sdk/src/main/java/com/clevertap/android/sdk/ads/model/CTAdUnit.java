@@ -77,7 +77,7 @@ public class CTAdUnit implements Parcelable {
     public static CTAdUnit toAdUnit(JSONObject jsonObject) {
         //logic to convert jsonobj to item
         try {
-            String adID = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject.getString(Constants.NOTIFICATION_ID_TAG) : "";
+            String adID = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject.getString(Constants.NOTIFICATION_ID_TAG) : Constants.TEST_IDENTIFIER;
             CTAdConstants.CtAdType adType = jsonObject.has(Constants.KEY_TYPE) ? CTAdConstants.CtAdType.type(jsonObject.getString(Constants.KEY_TYPE)) : null;
 
             String bgColor = jsonObject.has(Constants.KEY_BG) ? jsonObject.getString(Constants.KEY_BG) : "";
@@ -107,6 +107,7 @@ public class CTAdUnit implements Parcelable {
 
     /**
      * Getter for the AdId of the adUnit
+     *
      * @return String
      */
     public String getAdID() {
@@ -119,6 +120,7 @@ public class CTAdUnit implements Parcelable {
 
     /**
      * Getter for the Key Value pair of the adUnit
+     *
      * @return HashMap<String, String>
      */
     @SuppressWarnings("unused")
@@ -128,6 +130,7 @@ public class CTAdUnit implements Parcelable {
 
     /**
      * Getter for the JsonObject corresponding to the CTAdUnit object
+     *
      * @return JSONObject
      */
     public JSONObject getJsonObject() {
@@ -136,6 +139,7 @@ public class CTAdUnit implements Parcelable {
 
     /**
      * Getter for the hex-value background color of the adUnit e.g. #000000
+     *
      * @return String
      */
     @SuppressWarnings("unused")
@@ -145,6 +149,7 @@ public class CTAdUnit implements Parcelable {
 
     /**
      * Getter for the orientation of the adUnit
+     *
      * @return String
      */
     public String getOrientation() {
@@ -153,6 +158,7 @@ public class CTAdUnit implements Parcelable {
 
     /**
      * Getter for the AdType of the AdUnit, Refer{@link CTAdConstants.CtAdType}
+     *
      * @return CTAdConstants.CtAdType
      */
     @SuppressWarnings("unused")
@@ -162,6 +168,7 @@ public class CTAdUnit implements Parcelable {
 
     /**
      * Getter for the list of Content Ad Items.
+     *
      * @return ArrayList<CTAdUnitContent>
      */
     @SuppressWarnings("unused")
@@ -171,6 +178,7 @@ public class CTAdUnit implements Parcelable {
 
     /**
      * Getter for the wzrk fields obj to be passed in the data for recording event.
+     *
      * @return JSONObject
      */
     public JSONObject getWzrkFields() {

@@ -214,4 +214,5 @@ public class Constants {
     public static final String KEY_HAS_URL = "hasUrl";
     public static final String KEY_HAS_LINKS = "hasLinks";
     public static final String KEY_LINKS = "links";
+    public static final String TEST_IDENTIFIER = "0_0";
 }
