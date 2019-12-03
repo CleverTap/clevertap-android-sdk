@@ -12,7 +12,7 @@ import org.json.JSONObject;
 /**
  * Content class for holding AdContent Data
  */
-public class CTAdUnitContent implements Parcelable {
+public class CleverTapAdUnitContent implements Parcelable {
     private String title;
     private String titleColor;
     private String message;
@@ -24,9 +24,9 @@ public class CTAdUnitContent implements Parcelable {
     private String icon;
     private String error;
 
-    private CTAdUnitContent(String title, String titleColor, String message, String messageColor,
-                            String icon, String media, String contentType, String posterUrl,
-                            String actionUrl, String error) {
+    private CleverTapAdUnitContent(String title, String titleColor, String message, String messageColor,
+                                   String icon, String media, String contentType, String posterUrl,
+                                   String actionUrl, String error) {
         this.title = title;
         this.titleColor = titleColor;
         this.message = message;
@@ -40,7 +40,7 @@ public class CTAdUnitContent implements Parcelable {
     }
 
 
-    private CTAdUnitContent(Parcel in) {
+    private CleverTapAdUnitContent(Parcel in) {
         title = in.readString();
         titleColor = in.readString();
         message = in.readString();
@@ -71,9 +71,9 @@ public class CTAdUnitContent implements Parcelable {
      * Converts jsonContent to ADUnitContent
      *
      * @param contentObject - jsonObject
-     * @return - CTAdUnitContent - can have empty fields with an error message in case of parsing error
+     * @return - CleverTapAdUnitContent - can have empty fields with an error message in case of parsing error
      */
-    static CTAdUnitContent toContent(JSONObject contentObject) {
+    static CleverTapAdUnitContent toContent(JSONObject contentObject) {
         try {
             String title = "", titleColor = "", message = "", messageColor = "",
                     icon = "", media = "", contentType = "", posterUrl = "",
@@ -112,13 +112,13 @@ public class CTAdUnitContent implements Parcelable {
                 }
             }
 
-            return new CTAdUnitContent(title, titleColor, message, messageColor,
+            return new CleverTapAdUnitContent(title, titleColor, message, messageColor,
                     icon, media, contentType, posterUrl,
                     actionUrl, null);
 
         } catch (Exception e) {
-            Logger.v("Unable to init CTAdUnitContent with JSON - " + e.getLocalizedMessage());
-            return new CTAdUnitContent("", "", "", "", "", "", "", "", "", "Error Creating AdUnit Content from JSON : " + e.getLocalizedMessage());
+            Logger.d(Constants.FEATURE_AD_UNIT,"Unable to init CleverTapAdUnitContent with JSON - " + e.getLocalizedMessage());
+            return new CleverTapAdUnitContent("", "", "", "", "", "", "", "", "", "Error Creating AdUnit Content from JSON : " + e.getLocalizedMessage());
         }
     }
 
@@ -204,45 +204,45 @@ public class CTAdUnitContent implements Parcelable {
     }
 
     /**
-     * Method to check whether media in the {@link CTAdUnitContent} object is an image.
+     * Method to check whether media in the {@link CleverTapAdUnitContent} object is an image.
      *
      * @return boolean - | true, if the media type is image
      *                   | false, if the media type is not an image
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused","WeakerAccess"})
     public boolean mediaIsImage() {
         return contentType != null && this.media != null && contentType.startsWith("image") && !contentType.equals("image/gif");
     }
 
     /**
-     * Method to check whether media in the {@link CTAdUnitContent} object is a GIF.
+     * Method to check whether media in the {@link CleverTapAdUnitContent} object is a GIF.
      *
      * @return boolean - | true, if the media type is GIF
      *                   | false, if the media type is not a GIF
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused","WeakerAccess"})
     public boolean mediaIsGIF() {
         return contentType != null && this.media != null && contentType.equals("image/gif");
     }
 
     /**
-     * Method to check whether media in the {@link CTAdUnitContent} object is a video.
+     * Method to check whether media in the {@link CleverTapAdUnitContent} object is a video.
      *
      * @return boolean - | true, if the media type is video
      *                   | false, if the media type is not a video
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused","WeakerAccess"})
     public boolean mediaIsVideo() {
         return contentType != null && this.media != null && contentType.startsWith("video");
     }
 
     /**
-     * Method to check whether media in the {@link CTAdUnitContent} object is an audio.
+     * Method to check whether media in the {@link CleverTapAdUnitContent} object is an audio.
      *
      * @return boolean - | true, if the media type is audio
      *                   | false, if the media type is not an audio
      */
-    @SuppressWarnings("unused")
+    @SuppressWarnings({"unused","WeakerAccess"})
     public boolean mediaIsAudio() {
         return contentType != null && this.media != null && contentType.startsWith("audio");
     }
@@ -251,15 +251,15 @@ public class CTAdUnitContent implements Parcelable {
         return error;
     }
 
-    public static final Creator<CTAdUnitContent> CREATOR = new Creator<CTAdUnitContent>() {
+    public static final Creator<CleverTapAdUnitContent> CREATOR = new Creator<CleverTapAdUnitContent>() {
         @Override
-        public CTAdUnitContent createFromParcel(Parcel in) {
-            return new CTAdUnitContent(in);
+        public CleverTapAdUnitContent createFromParcel(Parcel in) {
+            return new CleverTapAdUnitContent(in);
         }
 
         @Override
-        public CTAdUnitContent[] newArray(int size) {
-            return new CTAdUnitContent[size];
+        public CleverTapAdUnitContent[] newArray(int size) {
+            return new CleverTapAdUnitContent[size];
         }
     };
 

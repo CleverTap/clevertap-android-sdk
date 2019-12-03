@@ -45,7 +45,7 @@ import com.clevertap.android.sdk.ab_testing.CTABTestController;
 import com.clevertap.android.sdk.ab_testing.CTABTestListener;
 import com.clevertap.android.sdk.ads.AdListener;
 import com.clevertap.android.sdk.ads.AdUnitController;
-import com.clevertap.android.sdk.ads.model.CTAdUnit;
+import com.clevertap.android.sdk.ads.model.CleverTapAdUnit;
 import com.google.android.gms.plus.model.people.Person;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -83,6 +83,7 @@ import javax.net.ssl.SSLSocketFactory;
 
 import static android.content.Context.JOB_SCHEDULER_SERVICE;
 import static android.content.Context.NOTIFICATION_SERVICE;
+import static com.clevertap.android.sdk.Utils.runOnUiThread;
 
 /**
  * <h1>CleverTapAPI</h1>
@@ -5639,6 +5640,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     resetInbox();
                     resetABTesting();
                     recordDeviceIDErrors();
+                    resetAdUnits();
                 } catch (Throwable t) {
                     getConfigLogger().verbose(getAccountId(), "Reset Profile error", t);
                 }
@@ -7362,64 +7364,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
-    /**
-     * -----------------------------------------------------------------------
-     * ********                        ADView LOGIC                          *****
-     * -----------------------------------------------------------------------/
-     * <p>
-     * /**
-     * logic for the processing of ad response
-     *
-     * @param response
-     */
-    private void processAdUnitsResponse(JSONObject response) {
-
-        getConfigLogger().verbose(getAccountId(), "Ad: Processing response");
-
-        if (!response.has(Constants.ADUNIT_JSON_RESPONSE_KEY)) {
-            getConfigLogger().verbose(getAccountId(), "Ad: Response JSON object doesn't contain the Ad key");
-            return;
-        }
-        try {
-            parseAdUnits(response.getJSONArray(Constants.ADUNIT_JSON_RESPONSE_KEY));
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getAccountId(), "AdResponse: Failed to parse response", t);
-        }
-    }
-
-    /**
-     * Prepares the ad Units using the JSON response
-     *
-     * @param messages - Json array of Ad items
-     */
-    private void parseAdUnits(JSONArray messages) {
-        synchronized (adControllerLock) {
-            if (mAdController == null) {
-                mAdController = new AdUnitController();
-            }
-            ArrayList<CTAdUnit> adUnits = mAdController.updateAdItems(messages);
-
-            notifyAdUnitsLoaded(adUnits);
-        }
-    }
-
-    /**
-     * Notify the registered ad listener about the running ad campaigns
-     *
-     * @param adUnits - Array of AdUnits {@link CTAdUnit}
-     */
-    private void notifyAdUnitsLoaded(final ArrayList<CTAdUnit> adUnits) {
-        if (adUnits != null && !adUnits.isEmpty()) {
-            if (adListenerWeakReference != null && adListenerWeakReference.get() != null) {
-                Utils.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        adListenerWeakReference.get().onAdUnitsLoaded(adUnits);
-                    }
-                });
-            }
-        }
-    }
+    // -----------------------------------------------------------------------//
+    // ********                        ADView LOGIC                      *****//
+    // -----------------------------------------------------------------------//
 
     /**
      * Sets listener to receive the list of running ad campaign ids
@@ -7429,52 +7376,59 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     public void setAdListener(AdListener adListener) {
         if (adListener != null) {
             adListenerWeakReference = new WeakReference<>(adListener);
+        } else {
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_AD_UNIT + "Failed to set - AdListener can't be null");
         }
     }
 
     /**
      * Getter for retrieving all the adUnits.
      *
-     * @return ArrayList<CTAdUnit> - could be null, if there is no ad campaigns
+     * @return ArrayList<CleverTapAdUnit> - could be null, if there is no ad campaigns
      */
-    public ArrayList<CTAdUnit> getAllAdUnits() {
+    @Nullable
+    public ArrayList<CleverTapAdUnit> getAllAdUnits() {
         if (mAdController != null) {
-            mAdController.getAllAdUnits();
+            return mAdController.getAllAdUnits();
+        } else {
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_AD_UNIT + "Failed to get all adUnits");
+            return null;
         }
-        return null;
     }
 
     /**
      * Getter for retrieving AdUnit using AdID
      *
-     * @param adUnit - ADId {@link CTAdUnit#getAdID()}
-     * @return CTAdUnit - could be null, if there is no ad campaign with the identifier
+     * @param adUnit - ADId {@link CleverTapAdUnit#getAdID()}
+     * @return CleverTapAdUnit - could be null, if there is no ad campaign with the identifier
      */
-    public CTAdUnit getAdUnitForId(String adUnit) {
+    @Nullable
+    public CleverTapAdUnit getAdUnitForId(String adUnit) {
         if (mAdController != null) {
-            mAdController.getAdUnitForID(adUnit);
+            return mAdController.getAdUnitForID(adUnit);
+        } else {
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_AD_UNIT + "Failed to get AdUnit for id: " + adUnit);
+            return null;
         }
-        return null;
     }
 
     /**
      * Raises the Ad Unit Viewed event
      *
-     * @param adID - Unique id of the Ad Unit{@link CTAdUnit#getAdID()}
+     * @param adID - Unique id of the Ad Unit{@link CleverTapAdUnit#getAdID()}
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings("unused")
     public void pushAdViewedEventForID(String adID) {
         JSONObject event = new JSONObject();
 
         try {
-
             event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
 
             //wzrk fields
             if (mAdController != null) {
-                CTAdUnit adUnit = mAdController.getAdUnitForID(adID);
+                CleverTapAdUnit adUnit = mAdController.getAdUnitForID(adID);
                 if (adUnit != null) {
-                    JSONObject eventExtras = adUnit.getWzrkFields();
+                    JSONObject eventExtras = adUnit.getWZRKFields();
                     if (eventExtras != null) {
                         event.put("evtData", eventExtras);
                     }
@@ -7482,17 +7436,18 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
 
             queueEvent(context, event, Constants.RAISED_EVENT);
-        } catch (Throwable ignored) {
+        } catch (Throwable t) {
             // We won't get here
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_AD_UNIT + "Failed to push Ad viewed event" + t);
         }
     }
 
     /**
      * Raises the Ad Unit Clicked event
      *
-     * @param adID - Unique id of the Ad Unit{@link CTAdUnit#getAdID()}
+     * @param adID - Unique id of the Ad Unit{@link CleverTapAdUnit#getAdID()}
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
+    @SuppressWarnings("unused")
     public void pushAdClickedEventForID(String adID) {
         JSONObject event = new JSONObject();
 
@@ -7501,9 +7456,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
             //wzrk fields
             if (mAdController != null) {
-                CTAdUnit adUnit = mAdController.getAdUnitForID(adID);
+                CleverTapAdUnit adUnit = mAdController.getAdUnitForID(adID);
                 if (adUnit != null) {
-                    JSONObject eventExtraData = adUnit.getWzrkFields();
+                    JSONObject eventExtraData = adUnit.getWZRKFields();
                     if (eventExtraData != null) {
                         event.put("evtData", eventExtraData);
                         try {
@@ -7516,8 +7471,87 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
 
             queueEvent(context, event, Constants.RAISED_EVENT);
-        } catch (Throwable ignored) {
+        } catch (Throwable t) {
             // We won't get here
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_AD_UNIT + "Failed to push Ad clicked event" + t);
+        }
+    }
+
+    /**
+     * Resets the Ad Units
+     */
+    private void resetAdUnits() {
+        if (mAdController != null) {
+            mAdController.reset();
+        } else {
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_AD_UNIT + "Can't reset Ad Units, adcontroller is null");
+        }
+    }
+
+    /**
+     * Logic for the processing of ad response
+     *
+     * @param response - AdUnit json response object
+     */
+    private void processAdUnitsResponse(JSONObject response) {
+        if (response == null) {
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_AD_UNIT + "Can't parse Ad Response, JSON response object is null");
+            return;
+        }
+
+        getConfigLogger().verbose(getAccountId(), Constants.FEATURE_AD_UNIT + "Processing response");
+
+        if (!response.has(Constants.ADUNIT_JSON_RESPONSE_KEY)) {
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_AD_UNIT + "JSON object doesn't contain the Ad key");
+            return;
+        }
+        try {
+            parseAdUnits(response.getJSONArray(Constants.ADUNIT_JSON_RESPONSE_KEY));
+        } catch (Throwable t) {
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_AD_UNIT + "Failed to parse response", t);
+        }
+    }
+
+    /**
+     * Parses the ad Units using the JSON response
+     *
+     * @param messages - Json array of Ad items
+     */
+    private void parseAdUnits(JSONArray messages) {
+        if (messages == null || messages.length() == 0) {
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_AD_UNIT + "Can't parse ad Units, jsonArray is either empty or null");
+            return;
+        }
+
+        synchronized (adControllerLock) {// lock to avoid multiple instance creation for controller
+            if (mAdController == null) {
+                mAdController = new AdUnitController();
+            }
+        }
+        ArrayList<CleverTapAdUnit> adUnits = mAdController.updateAdItems(messages);
+
+        notifyAdUnitsLoaded(adUnits);
+    }
+
+    /**
+     * Notify the registered ad listener about the running ad campaigns
+     *
+     * @param adUnits - Array of AdUnits {@link CleverTapAdUnit}
+     */
+    private void notifyAdUnitsLoaded(final ArrayList<CleverTapAdUnit> adUnits) {
+        if (adUnits != null && !adUnits.isEmpty()) {
+            if (adListenerWeakReference != null && adListenerWeakReference.get() != null) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        adListenerWeakReference.get().onAdUnitsLoaded(adUnits);
+                    }
+                });
+            } else {
+                getConfigLogger().verbose(getAccountId(), Constants.FEATURE_AD_UNIT + "No registered listener, failed to notify");
+            }
+        } else {
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_AD_UNIT + "No AdUnits found");
         }
     }
 }
