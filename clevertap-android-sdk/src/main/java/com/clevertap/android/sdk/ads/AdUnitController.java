@@ -52,6 +52,17 @@ public class AdUnitController {
     }
 
     /**
+     * Getter for retrieving all the running adUnits in the cache.
+     *
+     * @return ArrayList<CTAdUnit> - Could be null in case no adUnits are there in the cache
+     */
+    public ArrayList<CTAdUnit> getAllAdUnits() {
+        if (items.isEmpty())
+            return null;
+        return new ArrayList<>(items.values());
+    }
+
+    /**
      * Getter to retrieve the AdUnit using the adID
      *
      * @param adID - AdID {@link CTAdUnit#getAdID()}
