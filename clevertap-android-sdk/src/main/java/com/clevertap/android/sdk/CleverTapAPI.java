@@ -4997,22 +4997,17 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
 
         if (extras.containsKey(Constants.ADUNIT_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            pendingInappRunnable = new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Logger.v("Received adUnit via push payload: " + extras.getString(Constants.ADUNIT_PREVIEW_PUSH_PAYLOAD_KEY));
-                        JSONObject r = new JSONObject();
-                        JSONArray adUnits = new JSONArray();
-                        r.put(Constants.ADUNIT_JSON_RESPONSE_KEY, adUnits);
-                        JSONObject testPushObject = new JSONObject(extras.getString(Constants.ADUNIT_PREVIEW_PUSH_PAYLOAD_KEY));
-                        adUnits.put(testPushObject);
-                        processAdUnitsResponse(r);
-                    } catch (Throwable t) {
-                        Logger.v("Failed to process Ad Unit from push notification payload", t);
-                    }
-                }
-            };
+            try {
+                Logger.v("Received adUnit via push payload: " + extras.getString(Constants.ADUNIT_PREVIEW_PUSH_PAYLOAD_KEY));
+                JSONObject r = new JSONObject();
+                JSONArray adUnits = new JSONArray();
+                r.put(Constants.ADUNIT_JSON_RESPONSE_KEY, adUnits);
+                JSONObject testPushObject = new JSONObject(extras.getString(Constants.ADUNIT_PREVIEW_PUSH_PAYLOAD_KEY));
+                adUnits.put(testPushObject);
+                processAdUnitsResponse(r);
+            } catch (Throwable t) {
+                Logger.v("Failed to process Ad Unit from push notification payload", t);
+            }
             return;
         }
 
