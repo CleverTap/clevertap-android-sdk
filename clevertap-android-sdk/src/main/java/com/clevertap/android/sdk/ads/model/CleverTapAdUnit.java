@@ -6,6 +6,7 @@ import android.support.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ads.CTAdConstants;
 
 import org.json.JSONArray;
@@ -18,7 +19,7 @@ import java.util.Iterator;
 /**
  * This model class holds the data of an individual ad Unit.
  */
-public class CTAdUnit implements Parcelable {
+public class CleverTapAdUnit implements Parcelable {
 
     /**
      * Ad unit identifier
@@ -35,15 +36,11 @@ public class CTAdUnit implements Parcelable {
      */
     private String bgColor;
 
-    /**
-     * orientation
-     */
-    private String orientation;
 
     /**
      * List of Ad Content Items
      */
-    private ArrayList<CTAdUnitContent> adContentItems;
+    private ArrayList<CleverTapAdUnitContent> adContentItems;
 
     /**
      * Custom Key Value Pairs
@@ -55,14 +52,13 @@ public class CTAdUnit implements Parcelable {
     private String error;
 
     //constructors
-    private CTAdUnit(JSONObject jsonObject, String adID, CTAdConstants.CtAdType adType,
-                     String bgColor, String orientation, ArrayList<CTAdUnitContent> contentArray,
-                     JSONObject kvObject, String error) {
+    private CleverTapAdUnit(JSONObject jsonObject, String adID, CTAdConstants.CtAdType adType,
+                            String bgColor, ArrayList<CleverTapAdUnitContent> contentArray,
+                            JSONObject kvObject, String error) {
         this.jsonObject = jsonObject;
         this.adID = adID;
         this.adType = adType;
         this.bgColor = bgColor;
-        this.orientation = orientation;
         this.adContentItems = contentArray;
         this.customExtras = getKeyValues(kvObject);
         this.error = error;
@@ -72,23 +68,21 @@ public class CTAdUnit implements Parcelable {
      * static API to convert json to AdUnit
      *
      * @param jsonObject - Ad Unit Item in Json form
-     * @return - CTAdUnit
+     * @return - CleverTapAdUnit
      */
-    public static CTAdUnit toAdUnit(JSONObject jsonObject) {
-        //logic to convert jsonobj to item
+    public static CleverTapAdUnit toAdUnit(JSONObject jsonObject) {
+        //logic to convert json obj to item
         try {
             String adID = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject.getString(Constants.NOTIFICATION_ID_TAG) : Constants.TEST_IDENTIFIER;
             CTAdConstants.CtAdType adType = jsonObject.has(Constants.KEY_TYPE) ? CTAdConstants.CtAdType.type(jsonObject.getString(Constants.KEY_TYPE)) : null;
 
             String bgColor = jsonObject.has(Constants.KEY_BG) ? jsonObject.getString(Constants.KEY_BG) : "";
 
-            String orientation = jsonObject.has(Constants.KEY_ORIENTATION) ? jsonObject.getString(Constants.KEY_ORIENTATION) : "";
-
             JSONArray contentArray = jsonObject.has(Constants.KEY_CONTENT) ? jsonObject.getJSONArray(Constants.KEY_CONTENT) : null;
-            ArrayList<CTAdUnitContent> contentArrayList = new ArrayList<>();
+            ArrayList<CleverTapAdUnitContent> contentArrayList = new ArrayList<>();
             if (contentArray != null) {
                 for (int i = 0; i < contentArray.length(); i++) {
-                    CTAdUnitContent adUnitContent = CTAdUnitContent.toContent(contentArray.getJSONObject(i));
+                    CleverTapAdUnitContent adUnitContent = CleverTapAdUnitContent.toContent(contentArray.getJSONObject(i));
                     if (TextUtils.isEmpty(adUnitContent.getError())) {
                         contentArrayList.add(adUnitContent);
                     }
@@ -99,9 +93,10 @@ public class CTAdUnit implements Parcelable {
             if (jsonObject.has(Constants.KEY_CUSTOM_KV)) {
                 customKV = jsonObject.getJSONObject(Constants.KEY_CUSTOM_KV);
             }
-            return new CTAdUnit(jsonObject, adID, adType, bgColor, orientation, contentArrayList, customKV, null);
+            return new CleverTapAdUnit(jsonObject, adID, adType, bgColor, contentArrayList, customKV, null);
         } catch (Exception e) {
-            return new CTAdUnit(null, "", null, null, null, null, null, "Error Creating AdUnit from JSON : " + e.getLocalizedMessage());
+            Logger.d(Constants.FEATURE_AD_UNIT, "Unable to init CleverTapAdUnit with JSON - " + e.getLocalizedMessage());
+            return new CleverTapAdUnit(null, "", null, null, null, null, "Error Creating AdUnit from JSON : " + e.getLocalizedMessage());
         }
     }
 
@@ -129,7 +124,7 @@ public class CTAdUnit implements Parcelable {
     }
 
     /**
-     * Getter for the JsonObject corresponding to the CTAdUnit object
+     * Getter for the JsonObject corresponding to the CleverTapAdUnit object
      *
      * @return JSONObject
      */
@@ -148,15 +143,6 @@ public class CTAdUnit implements Parcelable {
     }
 
     /**
-     * Getter for the orientation of the adUnit
-     *
-     * @return String
-     */
-    public String getOrientation() {
-        return orientation;
-    }
-
-    /**
      * Getter for the AdType of the AdUnit, Refer{@link CTAdConstants.CtAdType}
      *
      * @return CTAdConstants.CtAdType
@@ -169,33 +155,34 @@ public class CTAdUnit implements Parcelable {
     /**
      * Getter for the list of Content Ad Items.
      *
-     * @return ArrayList<CTAdUnitContent>
+     * @return ArrayList<CleverTapAdUnitContent>
      */
     @SuppressWarnings("unused")
-    public ArrayList<CTAdUnitContent> getAdContentItems() {
+    public ArrayList<CleverTapAdUnitContent> getAdContentItems() {
         return adContentItems;
     }
 
     /**
-     * Getter for the wzrk fields obj to be passed in the data for recording event.
+     * Getter for the WiZRK fields obj to be passed in the data for recording event.
      *
      * @return JSONObject
      */
-    public JSONObject getWzrkFields() {
+    public JSONObject getWZRKFields() {
         try {
             if (jsonObject != null) {
                 Iterator<String> iterator = jsonObject.keys();
-                JSONObject wzrkFieldsObj = new JSONObject();
+                JSONObject object = new JSONObject();
                 while (iterator.hasNext()) {
                     String keyName = iterator.next();
                     if (keyName.startsWith(Constants.WZRK_PREFIX)) {
-                        wzrkFieldsObj.put(keyName, jsonObject.get(keyName));
+                        object.put(keyName, jsonObject.get(keyName));
                     }
                 }
-                return wzrkFieldsObj;
+                return object;
             }
         } catch (Exception e) {
             //no op
+            Logger.d(Constants.FEATURE_AD_UNIT, "Error in getting WiZRK fields " + e.getLocalizedMessage());
         }
         return null;
     }
@@ -226,33 +213,33 @@ public class CTAdUnit implements Parcelable {
             }
         } catch (Exception e) {
             //no op
+            Logger.d(Constants.FEATURE_AD_UNIT, "Error in getting Key Value Pairs " + e.getLocalizedMessage());
         }
         return null;
     }
 
-    public static final Creator<CTAdUnit> CREATOR = new Creator<CTAdUnit>() {
+    public static final Creator<CleverTapAdUnit> CREATOR = new Creator<CleverTapAdUnit>() {
         @Override
-        public CTAdUnit createFromParcel(Parcel in) {
-            return new CTAdUnit(in);
+        public CleverTapAdUnit createFromParcel(Parcel in) {
+            return new CleverTapAdUnit(in);
         }
 
         @Override
-        public CTAdUnit[] newArray(int size) {
-            return new CTAdUnit[size];
+        public CleverTapAdUnit[] newArray(int size) {
+            return new CleverTapAdUnit[size];
         }
     };
 
     @SuppressWarnings("unchecked")
-    private CTAdUnit(Parcel in) {
+    private CleverTapAdUnit(Parcel in) {
         try {
             this.adID = in.readString();
             this.adType = (CTAdConstants.CtAdType) in.readValue(CTAdConstants.CtAdType.class.getClassLoader());
             this.bgColor = in.readString();
-            this.orientation = in.readString();
 
             if (in.readByte() == 0x01) {
                 adContentItems = new ArrayList<>();
-                in.readList(adContentItems, CTAdUnitContent.class.getClassLoader());
+                in.readList(adContentItems, CleverTapAdUnitContent.class.getClassLoader());
             } else {
                 adContentItems = null;
             }
@@ -262,6 +249,7 @@ public class CTAdUnit implements Parcelable {
             this.error = in.readString();
         } catch (Exception e) {
             error = "Error Creating AdUnit from parcel : " + e.getLocalizedMessage();
+            Logger.d(Constants.FEATURE_AD_UNIT, error);
         }
     }
 
@@ -270,7 +258,6 @@ public class CTAdUnit implements Parcelable {
         parcel.writeString(adID);
         parcel.writeValue(adType);
         parcel.writeString(bgColor);
-        parcel.writeString(orientation);
 
         if (adContentItems == null) {
             parcel.writeByte((byte) (0x00));
@@ -301,14 +288,13 @@ public class CTAdUnit implements Parcelable {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("[");
             stringBuilder.append(" ADid- ").append(adID);
-            stringBuilder.append(", Type- " + (adType != null ? adType.toString() : null));
+            stringBuilder.append(", Type- ").append((adType != null ? adType.toString() : null));
             stringBuilder.append(", bgColor- ").append(bgColor);
-            stringBuilder.append(", Orientation- ").append(orientation);
-            if (adContentItems != null && adContentItems.isEmpty()) {
+            if (adContentItems != null && !adContentItems.isEmpty()) {
                 for (int i = 0; i < adContentItems.size(); i++) {
-                    CTAdUnitContent item = adContentItems.get(i);
+                    CleverTapAdUnitContent item = adContentItems.get(i);
                     if (item != null) {
-                        stringBuilder.append(", Content Item:" + i + " " + item.toString());
+                        stringBuilder.append(", Content Item:").append(i).append(" ").append(item.toString());
                         stringBuilder.append("\n");
                     }
                 }
@@ -321,7 +307,7 @@ public class CTAdUnit implements Parcelable {
             stringBuilder.append(" ]");
             return stringBuilder.toString();
         } catch (Exception e) {
-
+            Logger.d(Constants.FEATURE_AD_UNIT, "Exception in toString:" + e);
         }
         return super.toString();
     }
