@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.ads;
 
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.clevertap.android.sdk.Constants;
@@ -23,8 +24,9 @@ public class AdUnitController {
      * Replaces the old AdUnits with the new ones post transformation of Json objects to AdUnit objects
      *
      * @param messages - json-array of ad items
-     * @return ArrayList<CleverTapAdUnit>
+     * @return ArrayList<CleverTapAdUnit> - could be null in case of null/empty/invalid json array
      */
+    @Nullable
     public ArrayList<CleverTapAdUnit> updateAdItems(JSONArray messages) {
 
         //flush existing ad units before updating with the new ones.
@@ -60,6 +62,7 @@ public class AdUnitController {
      *
      * @return ArrayList<CleverTapAdUnit> - Could be null in case no adUnits are there in the cache
      */
+    @Nullable
     public ArrayList<CleverTapAdUnit> getAllAdUnits() {
         if (!items.isEmpty()) {
             return new ArrayList<>(items.values());
@@ -75,6 +78,7 @@ public class AdUnitController {
      * @param adID - AdID {@link CleverTapAdUnit#getAdID()}
      * @return CleverTapAdUnit - Could be null in case no adUnits with the ID is found
      */
+    @Nullable
     public CleverTapAdUnit getAdUnitForID(String adID) {
         if (!TextUtils.isEmpty(adID)) {
             return items.get(adID);

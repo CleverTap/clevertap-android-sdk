@@ -7246,7 +7246,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 });
                 return;
             }
-            //config.setEnableUIEditor(isUIEditorEnabled);
+            config.setEnableUIEditor(isUIEditorEnabled);
             if (ctABTestController == null) {
                 ctABTestController = new CTABTestController(context, config, getCleverTapID(), this);
                 getConfigLogger().verbose(config.getAccountId(), "AB Testing initialized");
@@ -7381,7 +7381,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      *
      * @return ArrayList<CleverTapAdUnit> - could be null, if there is no ad campaigns
      */
-
+    @Nullable
     public ArrayList<CleverTapAdUnit> getAllAdUnits() {
         if (mAdController != null) {
             return mAdController.getAllAdUnits();
@@ -7397,6 +7397,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param adUnit - ADId {@link CleverTapAdUnit#getAdID()}
      * @return CleverTapAdUnit - could be null, if there is no ad campaign with the identifier
      */
+    @Nullable
     public CleverTapAdUnit getAdUnitForId(String adUnit) {
         if (mAdController != null) {
             return mAdController.getAdUnitForID(adUnit);
@@ -7416,7 +7417,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         JSONObject event = new JSONObject();
 
         try {
-
             event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
 
             //wzrk fields
@@ -7489,6 +7489,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param response - AdUnit json response object
      */
     private void processAdUnitsResponse(JSONObject response) {
+        if (response == null) {
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_AD_UNIT + "Can't parse Ad Response, JSON response object is null");
+            return;
+        }
 
         getConfigLogger().verbose(getAccountId(), Constants.FEATURE_AD_UNIT + "Processing response");
 
@@ -7504,19 +7508,24 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
-     * Prepares the ad Units using the JSON response
+     * Parses the ad Units using the JSON response
      *
      * @param messages - Json array of Ad items
      */
     private void parseAdUnits(JSONArray messages) {
-        synchronized (adControllerLock) {
+        if (messages == null || messages.length() == 0) {
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_AD_UNIT + "Can't parse ad Units, jsonArray is either empty or null");
+            return;
+        }
+
+        synchronized (adControllerLock) {// lock to avoid multiple instance creation for controller
             if (mAdController == null) {
                 mAdController = new AdUnitController();
             }
-            ArrayList<CleverTapAdUnit> adUnits = mAdController.updateAdItems(messages);
-
-            notifyAdUnitsLoaded(adUnits);
         }
+        ArrayList<CleverTapAdUnit> adUnits = mAdController.updateAdItems(messages);
+
+        notifyAdUnitsLoaded(adUnits);
     }
 
     /**

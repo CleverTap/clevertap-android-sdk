@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.ads;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
@@ -27,6 +28,7 @@ public interface CTAdConstants {
          * @param type - string value of the type provided from the feed.
          * @return CtAdType
          */
+        @Nullable
         public static CtAdType type(String type) {
 
             if (!TextUtils.isEmpty(type)) {

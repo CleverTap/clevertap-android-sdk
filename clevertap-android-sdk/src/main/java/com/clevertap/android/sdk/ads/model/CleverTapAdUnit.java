@@ -68,8 +68,9 @@ public class CleverTapAdUnit implements Parcelable {
      * static API to convert json to AdUnit
      *
      * @param jsonObject - Ad Unit Item in Json form
-     * @return - CleverTapAdUnit
+     * @return - CleverTapAdUnit - always returns non-null instance
      */
+    @NonNull
     public static CleverTapAdUnit toAdUnit(JSONObject jsonObject) {
         //logic to convert json obj to item
         try {
