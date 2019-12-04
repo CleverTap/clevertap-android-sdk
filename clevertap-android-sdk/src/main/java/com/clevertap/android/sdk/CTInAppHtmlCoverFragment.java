@@ -4,7 +4,7 @@ import android.widget.RelativeLayout;
 
 public class CTInAppHtmlCoverFragment extends CTInAppBaseFullHtmlFragment {
     @Override
-    protected RelativeLayout.LayoutParams getCloseButtonLayoutParam() {
+    protected RelativeLayout.LayoutParams getLayoutParamsForCloseButton() {
         RelativeLayout.LayoutParams closeIvLp = new RelativeLayout
                 .LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT,
                 RelativeLayout.LayoutParams.FILL_PARENT);

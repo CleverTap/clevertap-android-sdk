@@ -77,7 +77,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
 
             if (isCloseButtonEnabled()) {
                 closeImageView = new CloseImageView(getActivity().getBaseContext());
-                RelativeLayout.LayoutParams closeIvLp = getCloseButtonLayoutParam();
+                RelativeLayout.LayoutParams closeIvLp = getLayoutParamsForCloseButton();
 
                 closeImageView.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -95,7 +95,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
         return inAppView;
     }
 
-    protected RelativeLayout.LayoutParams getCloseButtonLayoutParam() {
+    protected RelativeLayout.LayoutParams getLayoutParamsForCloseButton() {
         RelativeLayout.LayoutParams closeIvLp = new RelativeLayout
                 .LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT,
                 RelativeLayout.LayoutParams.FILL_PARENT);
