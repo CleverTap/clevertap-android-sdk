@@ -594,7 +594,12 @@ public class CTABTestController {
 
             final String protocol = "wss";
             String region = config.getAccountRegion() != null ? config.getAccountRegion() : DEFAULT_REGION;
-            region = config.isBeta() ? region+"-dashboard-beta" : region;
+            if(this.config.getStaging() > 0 && !region.isEmpty() && !region.equals("in1") && !region.equals("sg1")){
+                region = region+"-dashboard-staging-"+this.config.getStaging();
+            }else {
+                //String region = config.getAccountRegion() != null ? config.getAccountRegion() : DEFAULT_REGION;
+                region = config.isBeta() ? region + "-dashboard-beta" : region;
+            }
             final String domain = region + "." + DASHBOARD_URL;
             final String url =  protocol+"://"+domain+"/"+getAccountId()+"/"+"websocket/screenab/sdk?tk="+config.getAccountToken();
             getConfigLogger().verbose(getAccountId(), "Websocket URL - " + url);
