@@ -1,5 +1,9 @@
 ## CHANGE LOG
 
+### Version 3.6.2 (December 9, 2019)
+* Adds support for Native Display.
+* Bug fixes and performance improvements
+
 ### Version 3.6.1 (October 16, 2019)
 * Bug fixes and performance improvements
 
