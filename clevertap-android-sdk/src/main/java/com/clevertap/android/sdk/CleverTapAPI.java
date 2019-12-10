@@ -43,9 +43,9 @@ import android.text.TextUtils;
 
 import com.clevertap.android.sdk.ab_testing.CTABTestController;
 import com.clevertap.android.sdk.ab_testing.CTABTestListener;
-import com.clevertap.android.sdk.display_units.CTDisplayUnitController;
-import com.clevertap.android.sdk.display_units.DisplayUnitListener;
-import com.clevertap.android.sdk.display_units.model.CleverTapDisplayUnit;
+import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
+import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
+import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.google.android.gms.plus.model.people.Person;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
