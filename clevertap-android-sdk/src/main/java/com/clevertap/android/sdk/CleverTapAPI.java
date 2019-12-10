@@ -5002,18 +5002,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
 
         if (extras.containsKey(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            try {
-                String pushJsonPayload = extras.getString(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY);
-                Logger.v("Received Display Unit via push payload: " + pushJsonPayload);
-                JSONObject r = new JSONObject();
-                JSONArray displayUnits = new JSONArray();
-                r.put(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY, displayUnits);
-                JSONObject testPushObject = new JSONObject(pushJsonPayload);
-                displayUnits.put(testPushObject);
-                processDisplayUnitsResponse(r);
-            } catch (Throwable t) {
-                Logger.v("Failed to process Display Unit from push notification payload", t);
-            }
+            handleSendTestForDisplayUnits(extras);
             return;
         }
 
@@ -7550,6 +7539,25 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
         } else {
             getConfigLogger().verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "No Display Units found");
+        }
+    }
+
+    /**
+     * This method handles send Test flow for Display Units
+     * @param extras - bundled data of notification payload
+     */
+    private void handleSendTestForDisplayUnits(Bundle extras) {
+        try {
+            String pushJsonPayload = extras.getString(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY);
+            Logger.v("Received Display Unit via push payload: " + pushJsonPayload);
+            JSONObject r = new JSONObject();
+            JSONArray displayUnits = new JSONArray();
+            r.put(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY, displayUnits);
+            JSONObject testPushObject = new JSONObject(pushJsonPayload);
+            displayUnits.put(testPushObject);
+            processDisplayUnitsResponse(r);
+        } catch (Throwable t) {
+            Logger.v("Failed to process Display Unit from push notification payload", t);
         }
     }
 }
