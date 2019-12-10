@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.ads.model;
+package com.clevertap.android.sdk.display_units.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -7,7 +7,7 @@ import android.text.TextUtils;
 
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.ads.CTAdConstants;
+import com.clevertap.android.sdk.display_units.CTDisplayUnitConstants;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -17,30 +17,30 @@ import java.util.HashMap;
 import java.util.Iterator;
 
 /**
- * This model class holds the data of an individual ad Unit.
+ * This model class holds the data of an individual Display Unit.
  */
-public class CleverTapAdUnit implements Parcelable {
+public class CleverTapDisplayUnit implements Parcelable {
 
     /**
-     * Ad unit identifier
+     * Display unit identifier
      */
-    private String adID;
+    private String unitID;
 
     /**
-     * Could be (banner,carousel,custom key value etc.)
+     * Display Type Could be (banner,carousel,custom key value etc.)
      */
-    private CTAdConstants.CtAdType adType;
+    private CTDisplayUnitConstants.CTDisplayUnitType displayUnitType;
 
     /**
-     * background Color
+     * Background Color
      */
     private String bgColor;
 
 
     /**
-     * List of Ad Content Items
+     * List of Display Content Items
      */
-    private ArrayList<CleverTapAdUnitContent> adContentItems;
+    private ArrayList<CleverTapDisplayUnitContent> displayUnitContentItems;
 
     /**
      * Custom Key Value Pairs
@@ -52,62 +52,62 @@ public class CleverTapAdUnit implements Parcelable {
     private String error;
 
     //constructors
-    private CleverTapAdUnit(JSONObject jsonObject, String adID, CTAdConstants.CtAdType adType,
-                            String bgColor, ArrayList<CleverTapAdUnitContent> contentArray,
-                            JSONObject kvObject, String error) {
+    private CleverTapDisplayUnit(JSONObject jsonObject, String unitID, CTDisplayUnitConstants.CTDisplayUnitType displayUnitType,
+                                 String bgColor, ArrayList<CleverTapDisplayUnitContent> contentArray,
+                                 JSONObject kvObject, String error) {
         this.jsonObject = jsonObject;
-        this.adID = adID;
-        this.adType = adType;
+        this.unitID = unitID;
+        this.displayUnitType = displayUnitType;
         this.bgColor = bgColor;
-        this.adContentItems = contentArray;
+        this.displayUnitContentItems = contentArray;
         this.customExtras = getKeyValues(kvObject);
         this.error = error;
     }
 
     /**
-     * static API to convert json to AdUnit
+     * static method to convert json to Display Unit
      *
-     * @param jsonObject - Ad Unit Item in Json form
-     * @return - CleverTapAdUnit - always returns non-null instance
+     * @param jsonObject - Display Unit Item in Json form
+     * @return - CleverTapDisplayUnit - always returns non-null instance
      */
     @NonNull
-    public static CleverTapAdUnit toAdUnit(JSONObject jsonObject) {
+    public static CleverTapDisplayUnit toDisplayUnit(JSONObject jsonObject) {
         //logic to convert json obj to item
         try {
-            String adID = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject.getString(Constants.NOTIFICATION_ID_TAG) : Constants.TEST_IDENTIFIER;
-            CTAdConstants.CtAdType adType = jsonObject.has(Constants.KEY_TYPE) ? CTAdConstants.CtAdType.type(jsonObject.getString(Constants.KEY_TYPE)) : null;
+            String unitID = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject.getString(Constants.NOTIFICATION_ID_TAG) : Constants.TEST_IDENTIFIER;
+            CTDisplayUnitConstants.CTDisplayUnitType displayUnitType = jsonObject.has(Constants.KEY_TYPE) ? CTDisplayUnitConstants.CTDisplayUnitType.type(jsonObject.getString(Constants.KEY_TYPE)) : null;
 
             String bgColor = jsonObject.has(Constants.KEY_BG) ? jsonObject.getString(Constants.KEY_BG) : "";
 
             JSONArray contentArray = jsonObject.has(Constants.KEY_CONTENT) ? jsonObject.getJSONArray(Constants.KEY_CONTENT) : null;
-            ArrayList<CleverTapAdUnitContent> contentArrayList = new ArrayList<>();
+            ArrayList<CleverTapDisplayUnitContent> contentArrayList = new ArrayList<>();
             if (contentArray != null) {
                 for (int i = 0; i < contentArray.length(); i++) {
-                    CleverTapAdUnitContent adUnitContent = CleverTapAdUnitContent.toContent(contentArray.getJSONObject(i));
-                    if (TextUtils.isEmpty(adUnitContent.getError())) {
-                        contentArrayList.add(adUnitContent);
+                    CleverTapDisplayUnitContent displayUnitContent = CleverTapDisplayUnitContent.toContent(contentArray.getJSONObject(i));
+                    if (TextUtils.isEmpty(displayUnitContent.getError())) {
+                        contentArrayList.add(displayUnitContent);
                     }
                 }
             }
             JSONObject customKV = null;
-            //custom KV can be added to ad unit of any types, no need to add type check here
+            //custom KV can be added to Display unit of any types, no need to add type check here
             if (jsonObject.has(Constants.KEY_CUSTOM_KV)) {
                 customKV = jsonObject.getJSONObject(Constants.KEY_CUSTOM_KV);
             }
-            return new CleverTapAdUnit(jsonObject, adID, adType, bgColor, contentArrayList, customKV, null);
+            return new CleverTapDisplayUnit(jsonObject, unitID, displayUnitType, bgColor, contentArrayList, customKV, null);
         } catch (Exception e) {
-            Logger.d(Constants.FEATURE_AD_UNIT, "Unable to init CleverTapAdUnit with JSON - " + e.getLocalizedMessage());
-            return new CleverTapAdUnit(null, "", null, null, null, null, "Error Creating AdUnit from JSON : " + e.getLocalizedMessage());
+            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Unable to init CleverTapDisplayUnit with JSON - " + e.getLocalizedMessage());
+            return new CleverTapDisplayUnit(null, "", null, null, null, null, "Error Creating Display Unit from JSON : " + e.getLocalizedMessage());
         }
     }
 
     /**
-     * Getter for the AdId of the adUnit
+     * Getter for the unitId of the Display Unit
      *
      * @return String
      */
-    public String getAdID() {
-        return adID;
+    public String getUnitID() {
+        return unitID;
     }
 
     public String getError() {
@@ -115,7 +115,7 @@ public class CleverTapAdUnit implements Parcelable {
     }
 
     /**
-     * Getter for the Key Value pair of the adUnit
+     * Getter for the Key Value pairs of the Display Unit
      *
      * @return HashMap<String, String>
      */
@@ -125,7 +125,7 @@ public class CleverTapAdUnit implements Parcelable {
     }
 
     /**
-     * Getter for the JsonObject corresponding to the CleverTapAdUnit object
+     * Getter for the JsonObject corresponding to the CleverTapDisplayUnit object
      *
      * @return JSONObject
      */
@@ -134,7 +134,7 @@ public class CleverTapAdUnit implements Parcelable {
     }
 
     /**
-     * Getter for the hex-value background color of the adUnit e.g. #000000
+     * Getter for the hex-value background color of the Display Unit e.g. #000000
      *
      * @return String
      */
@@ -144,23 +144,23 @@ public class CleverTapAdUnit implements Parcelable {
     }
 
     /**
-     * Getter for the AdType of the AdUnit, Refer{@link CTAdConstants.CtAdType}
+     * Getter for the DisplayUnitType of the Display Unit, Refer{@link CTDisplayUnitConstants.CTDisplayUnitType}
      *
-     * @return CTAdConstants.CtAdType
+     * @return CTDisplayUnitConstants.CTDisplayUnitType
      */
     @SuppressWarnings("unused")
-    public CTAdConstants.CtAdType getAdType() {
-        return adType;
+    public CTDisplayUnitConstants.CTDisplayUnitType getDisplayUnitType() {
+        return displayUnitType;
     }
 
     /**
-     * Getter for the list of Content Ad Items.
+     * Getter for the list of Content Display Unit Items.
      *
-     * @return ArrayList<CleverTapAdUnitContent>
+     * @return ArrayList<CleverTapDisplayUnitContent>
      */
     @SuppressWarnings("unused")
-    public ArrayList<CleverTapAdUnitContent> getAdContentItems() {
-        return adContentItems;
+    public ArrayList<CleverTapDisplayUnitContent> getDisplayUnitContentItems() {
+        return displayUnitContentItems;
     }
 
     /**
@@ -183,7 +183,7 @@ public class CleverTapAdUnit implements Parcelable {
             }
         } catch (Exception e) {
             //no op
-            Logger.d(Constants.FEATURE_AD_UNIT, "Error in getting WiZRK fields " + e.getLocalizedMessage());
+            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Error in getting WiZRK fields " + e.getLocalizedMessage());
         }
         return null;
     }
@@ -214,57 +214,57 @@ public class CleverTapAdUnit implements Parcelable {
             }
         } catch (Exception e) {
             //no op
-            Logger.d(Constants.FEATURE_AD_UNIT, "Error in getting Key Value Pairs " + e.getLocalizedMessage());
+            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Error in getting Key Value Pairs " + e.getLocalizedMessage());
         }
         return null;
     }
 
-    public static final Creator<CleverTapAdUnit> CREATOR = new Creator<CleverTapAdUnit>() {
+    public static final Creator<CleverTapDisplayUnit> CREATOR = new Creator<CleverTapDisplayUnit>() {
         @Override
-        public CleverTapAdUnit createFromParcel(Parcel in) {
-            return new CleverTapAdUnit(in);
+        public CleverTapDisplayUnit createFromParcel(Parcel in) {
+            return new CleverTapDisplayUnit(in);
         }
 
         @Override
-        public CleverTapAdUnit[] newArray(int size) {
-            return new CleverTapAdUnit[size];
+        public CleverTapDisplayUnit[] newArray(int size) {
+            return new CleverTapDisplayUnit[size];
         }
     };
 
     @SuppressWarnings("unchecked")
-    private CleverTapAdUnit(Parcel in) {
+    private CleverTapDisplayUnit(Parcel in) {
         try {
-            this.adID = in.readString();
-            this.adType = (CTAdConstants.CtAdType) in.readValue(CTAdConstants.CtAdType.class.getClassLoader());
+            this.unitID = in.readString();
+            this.displayUnitType = (CTDisplayUnitConstants.CTDisplayUnitType) in.readValue(CTDisplayUnitConstants.CTDisplayUnitType.class.getClassLoader());
             this.bgColor = in.readString();
 
             if (in.readByte() == 0x01) {
-                adContentItems = new ArrayList<>();
-                in.readList(adContentItems, CleverTapAdUnitContent.class.getClassLoader());
+                displayUnitContentItems = new ArrayList<>();
+                in.readList(displayUnitContentItems, CleverTapDisplayUnitContent.class.getClassLoader());
             } else {
-                adContentItems = null;
+                displayUnitContentItems = null;
             }
 
             this.customExtras = in.readHashMap(null);
             this.jsonObject = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
             this.error = in.readString();
         } catch (Exception e) {
-            error = "Error Creating AdUnit from parcel : " + e.getLocalizedMessage();
-            Logger.d(Constants.FEATURE_AD_UNIT, error);
+            error = "Error Creating Display Unit from parcel : " + e.getLocalizedMessage();
+            Logger.d(Constants.FEATURE_DISPLAY_UNIT, error);
         }
     }
 
     @Override
     public void writeToParcel(Parcel parcel, int i) {
-        parcel.writeString(adID);
-        parcel.writeValue(adType);
+        parcel.writeString(unitID);
+        parcel.writeValue(displayUnitType);
         parcel.writeString(bgColor);
 
-        if (adContentItems == null) {
+        if (displayUnitContentItems == null) {
             parcel.writeByte((byte) (0x00));
         } else {
             parcel.writeByte((byte) (0x01));
-            parcel.writeList(adContentItems);
+            parcel.writeList(displayUnitContentItems);
         }
 
         parcel.writeMap(customExtras);
@@ -288,12 +288,12 @@ public class CleverTapAdUnit implements Parcelable {
         try {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("[");
-            stringBuilder.append(" ADid- ").append(adID);
-            stringBuilder.append(", Type- ").append((adType != null ? adType.toString() : null));
+            stringBuilder.append(" Unit id- ").append(unitID);
+            stringBuilder.append(", Type- ").append((displayUnitType != null ? displayUnitType.toString() : null));
             stringBuilder.append(", bgColor- ").append(bgColor);
-            if (adContentItems != null && !adContentItems.isEmpty()) {
-                for (int i = 0; i < adContentItems.size(); i++) {
-                    CleverTapAdUnitContent item = adContentItems.get(i);
+            if (displayUnitContentItems != null && !displayUnitContentItems.isEmpty()) {
+                for (int i = 0; i < displayUnitContentItems.size(); i++) {
+                    CleverTapDisplayUnitContent item = displayUnitContentItems.get(i);
                     if (item != null) {
                         stringBuilder.append(", Content Item:").append(i).append(" ").append(item.toString());
                         stringBuilder.append("\n");
@@ -308,7 +308,7 @@ public class CleverTapAdUnit implements Parcelable {
             stringBuilder.append(" ]");
             return stringBuilder.toString();
         } catch (Exception e) {
-            Logger.d(Constants.FEATURE_AD_UNIT, "Exception in toString:" + e);
+            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Exception in toString:" + e);
         }
         return super.toString();
     }
