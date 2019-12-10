@@ -29,7 +29,7 @@ public class CleverTapDisplayUnit implements Parcelable {
     /**
      * Display Type Could be (banner,carousel,custom key value etc.)
      */
-    private CTDisplayUnitConstants.CTDisplayUnitType displayUnitType;
+    private CTDisplayUnitConstants.CTDisplayUnitType type;
 
     /**
      * Background Color
@@ -40,7 +40,7 @@ public class CleverTapDisplayUnit implements Parcelable {
     /**
      * List of Display Content Items
      */
-    private ArrayList<CleverTapDisplayUnitContent> displayUnitContentItems;
+    private ArrayList<CleverTapDisplayUnitContent> contents;
 
     /**
      * Custom Key Value Pairs
@@ -52,14 +52,14 @@ public class CleverTapDisplayUnit implements Parcelable {
     private String error;
 
     //constructors
-    private CleverTapDisplayUnit(JSONObject jsonObject, String unitID, CTDisplayUnitConstants.CTDisplayUnitType displayUnitType,
+    private CleverTapDisplayUnit(JSONObject jsonObject, String unitID, CTDisplayUnitConstants.CTDisplayUnitType type,
                                  String bgColor, ArrayList<CleverTapDisplayUnitContent> contentArray,
                                  JSONObject kvObject, String error) {
         this.jsonObject = jsonObject;
         this.unitID = unitID;
-        this.displayUnitType = displayUnitType;
+        this.type = type;
         this.bgColor = bgColor;
-        this.displayUnitContentItems = contentArray;
+        this.contents = contentArray;
         this.customExtras = getKeyValues(kvObject);
         this.error = error;
     }
@@ -149,8 +149,8 @@ public class CleverTapDisplayUnit implements Parcelable {
      * @return CTDisplayUnitConstants.CTDisplayUnitType
      */
     @SuppressWarnings("unused")
-    public CTDisplayUnitConstants.CTDisplayUnitType getDisplayUnitType() {
-        return displayUnitType;
+    public CTDisplayUnitConstants.CTDisplayUnitType getType() {
+        return type;
     }
 
     /**
@@ -159,8 +159,8 @@ public class CleverTapDisplayUnit implements Parcelable {
      * @return ArrayList<CleverTapDisplayUnitContent>
      */
     @SuppressWarnings("unused")
-    public ArrayList<CleverTapDisplayUnitContent> getDisplayUnitContentItems() {
-        return displayUnitContentItems;
+    public ArrayList<CleverTapDisplayUnitContent> getContents() {
+        return contents;
     }
 
     /**
@@ -235,14 +235,14 @@ public class CleverTapDisplayUnit implements Parcelable {
     private CleverTapDisplayUnit(Parcel in) {
         try {
             this.unitID = in.readString();
-            this.displayUnitType = (CTDisplayUnitConstants.CTDisplayUnitType) in.readValue(CTDisplayUnitConstants.CTDisplayUnitType.class.getClassLoader());
+            this.type = (CTDisplayUnitConstants.CTDisplayUnitType) in.readValue(CTDisplayUnitConstants.CTDisplayUnitType.class.getClassLoader());
             this.bgColor = in.readString();
 
             if (in.readByte() == 0x01) {
-                displayUnitContentItems = new ArrayList<>();
-                in.readList(displayUnitContentItems, CleverTapDisplayUnitContent.class.getClassLoader());
+                contents = new ArrayList<>();
+                in.readList(contents, CleverTapDisplayUnitContent.class.getClassLoader());
             } else {
-                displayUnitContentItems = null;
+                contents = null;
             }
 
             this.customExtras = in.readHashMap(null);
@@ -257,14 +257,14 @@ public class CleverTapDisplayUnit implements Parcelable {
     @Override
     public void writeToParcel(Parcel parcel, int i) {
         parcel.writeString(unitID);
-        parcel.writeValue(displayUnitType);
+        parcel.writeValue(type);
         parcel.writeString(bgColor);
 
-        if (displayUnitContentItems == null) {
+        if (contents == null) {
             parcel.writeByte((byte) (0x00));
         } else {
             parcel.writeByte((byte) (0x01));
-            parcel.writeList(displayUnitContentItems);
+            parcel.writeList(contents);
         }
 
         parcel.writeMap(customExtras);
@@ -289,11 +289,11 @@ public class CleverTapDisplayUnit implements Parcelable {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("[");
             stringBuilder.append(" Unit id- ").append(unitID);
-            stringBuilder.append(", Type- ").append((displayUnitType != null ? displayUnitType.toString() : null));
+            stringBuilder.append(", Type- ").append((type != null ? type.toString() : null));
             stringBuilder.append(", bgColor- ").append(bgColor);
-            if (displayUnitContentItems != null && !displayUnitContentItems.isEmpty()) {
-                for (int i = 0; i < displayUnitContentItems.size(); i++) {
-                    CleverTapDisplayUnitContent item = displayUnitContentItems.get(i);
+            if (contents != null && !contents.isEmpty()) {
+                for (int i = 0; i < contents.size(); i++) {
+                    CleverTapDisplayUnitContent item = contents.get(i);
                     if (item != null) {
                         stringBuilder.append(", Content Item:").append(i).append(" ").append(item.toString());
                         stringBuilder.append("\n");
