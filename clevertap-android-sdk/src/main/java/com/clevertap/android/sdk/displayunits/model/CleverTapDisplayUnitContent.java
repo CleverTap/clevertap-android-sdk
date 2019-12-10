@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.display_units.model;
+package com.clevertap.android.sdk.displayunits.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;

@@ -1,11 +1,11 @@
-package com.clevertap.android.sdk.display_units;
+package com.clevertap.android.sdk.displayunits;
 
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.display_units.model.CleverTapDisplayUnit;
+import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

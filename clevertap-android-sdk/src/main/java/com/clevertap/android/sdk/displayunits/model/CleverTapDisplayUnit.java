@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.display_units.model;
+package com.clevertap.android.sdk.displayunits.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -7,7 +7,7 @@ import android.text.TextUtils;
 
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.display_units.CTDisplayUnitConstants;
+import com.clevertap.android.sdk.displayunits.CTDisplayUnitType;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -29,7 +29,7 @@ public class CleverTapDisplayUnit implements Parcelable {
     /**
      * Display Type Could be (banner,carousel,custom key value etc.)
      */
-    private CTDisplayUnitConstants.CTDisplayUnitType type;
+    private CTDisplayUnitType type;
 
     /**
      * Background Color
@@ -52,7 +52,7 @@ public class CleverTapDisplayUnit implements Parcelable {
     private String error;
 
     //constructors
-    private CleverTapDisplayUnit(JSONObject jsonObject, String unitID, CTDisplayUnitConstants.CTDisplayUnitType type,
+    private CleverTapDisplayUnit(JSONObject jsonObject, String unitID, CTDisplayUnitType type,
                                  String bgColor, ArrayList<CleverTapDisplayUnitContent> contentArray,
                                  JSONObject kvObject, String error) {
         this.jsonObject = jsonObject;
@@ -75,7 +75,7 @@ public class CleverTapDisplayUnit implements Parcelable {
         //logic to convert json obj to item
         try {
             String unitID = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject.getString(Constants.NOTIFICATION_ID_TAG) : Constants.TEST_IDENTIFIER;
-            CTDisplayUnitConstants.CTDisplayUnitType displayUnitType = jsonObject.has(Constants.KEY_TYPE) ? CTDisplayUnitConstants.CTDisplayUnitType.type(jsonObject.getString(Constants.KEY_TYPE)) : null;
+            CTDisplayUnitType displayUnitType = jsonObject.has(Constants.KEY_TYPE) ? CTDisplayUnitType.type(jsonObject.getString(Constants.KEY_TYPE)) : null;
 
             String bgColor = jsonObject.has(Constants.KEY_BG) ? jsonObject.getString(Constants.KEY_BG) : "";
 
@@ -144,12 +144,12 @@ public class CleverTapDisplayUnit implements Parcelable {
     }
 
     /**
-     * Getter for the DisplayUnitType of the Display Unit, Refer{@link CTDisplayUnitConstants.CTDisplayUnitType}
+     * Getter for the DisplayUnitType of the Display Unit, Refer{@link CTDisplayUnitType}
      *
-     * @return CTDisplayUnitConstants.CTDisplayUnitType
+     * @return CTDisplayUnitType
      */
     @SuppressWarnings("unused")
-    public CTDisplayUnitConstants.CTDisplayUnitType getType() {
+    public CTDisplayUnitType getType() {
         return type;
     }
 
@@ -235,7 +235,7 @@ public class CleverTapDisplayUnit implements Parcelable {
     private CleverTapDisplayUnit(Parcel in) {
         try {
             this.unitID = in.readString();
-            this.type = (CTDisplayUnitConstants.CTDisplayUnitType) in.readValue(CTDisplayUnitConstants.CTDisplayUnitType.class.getClassLoader());
+            this.type = (CTDisplayUnitType) in.readValue(CTDisplayUnitType.class.getClassLoader());
             this.bgColor = in.readString();
 
             if (in.readByte() == 0x01) {
