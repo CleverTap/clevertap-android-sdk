@@ -1,14 +1,16 @@
-package com.clevertap.android.sdk.ads;
+package com.clevertap.android.sdk.display_units;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 
-public interface CTAdConstants {
+import com.clevertap.android.sdk.Constants;
 
-    //supported AD Types
-    enum CtAdType {
+public interface CTDisplayUnitConstants {
+
+    //supported Display Unit Types
+    enum CTDisplayUnitType {
         SIMPLE("simple"),
         SIMPLE_WITH_IMAGE("simple-image"),
         CAROUSEL("carousel"),
@@ -16,20 +18,20 @@ public interface CTAdConstants {
         MESSAGE_WITH_ICON("message-icon"),
         CUSTOM_KEY_VALUE("custom-key-value");
 
-        private final String adType;
+        private final String displayUnitType;
 
-        CtAdType(String type) {
-            this.adType = type;
+        CTDisplayUnitType(String type) {
+            this.displayUnitType = type;
         }
 
         /**
-         * Returns the ad-type instance using the string value
+         * Returns the display type instance using the string value
          *
          * @param type - string value of the type provided from the feed.
-         * @return CtAdType
+         * @return CTDisplayUnitType
          */
         @Nullable
-        public static CtAdType type(String type) {
+        public static CTDisplayUnitType type(String type) {
 
             if (!TextUtils.isEmpty(type)) {
                 switch (type) {
@@ -47,14 +49,14 @@ public interface CTAdConstants {
                         return CUSTOM_KEY_VALUE;
                 }
             }
-            Log.d("CtAdType", "Unsupported AdType");
+            Log.d(Constants.FEATURE_DISPLAY_UNIT, "Unsupported Display Unit Type");
             return null;
         }
 
         @NonNull
         @Override
         public String toString() {
-            return adType;
+            return displayUnitType;
         }
     }
 }

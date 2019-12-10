@@ -42,7 +42,7 @@ public class Constants {
     static final int PUSH_DELAY_MS = 1000;
     static final String INAPP_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inapp";
     static final String INBOX_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inbox";
-    static final String ADUNIT_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_adunit";
+    static final String DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_adunit";
     static final String INAPP_HTML_TAG = "html";
     static final String INAPP_DATA_TAG = "d";
     static final String INAPP_X_PERCENT = "xp";
@@ -59,7 +59,7 @@ public class Constants {
     static final String INAPP_NOTIF_SHOW_CLOSE = "sc";
     static final String INAPP_JSON_RESPONSE_KEY = "inapp_notifs";
     static final String INBOX_JSON_RESPONSE_KEY = "inbox_notifs";
-    static final String ADUNIT_JSON_RESPONSE_KEY = "adUnit_notifs";
+    static final String DISPLAY_UNIT_JSON_RESPONSE_KEY = "adUnit_notifs";
     static final String INAPP_MAX_DISPLAY_COUNT = "mdc";
     static final String INAPP_MAX_PER_SESSION = "imc";
     static final String INAPP_WINDOW = "w";
@@ -215,5 +215,5 @@ public class Constants {
     public static final String KEY_HAS_LINKS = "hasLinks";
     public static final String KEY_LINKS = "links";
     public static final String TEST_IDENTIFIER = "0_0";
-    public static final String FEATURE_AD_UNIT = "AdUnit : ";
+    public static final String FEATURE_DISPLAY_UNIT = "DisplayUnit : ";
 }

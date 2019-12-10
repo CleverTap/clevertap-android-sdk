@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.ads.model;
+package com.clevertap.android.sdk.display_units.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
@@ -10,9 +10,9 @@ import com.clevertap.android.sdk.Logger;
 import org.json.JSONObject;
 
 /**
- * Content class for holding AdContent Data
+ * Content class for holding Display Unit Content Data
  */
-public class CleverTapAdUnitContent implements Parcelable {
+public class CleverTapDisplayUnitContent implements Parcelable {
     private String title;
     private String titleColor;
     private String message;
@@ -24,9 +24,9 @@ public class CleverTapAdUnitContent implements Parcelable {
     private String icon;
     private String error;
 
-    private CleverTapAdUnitContent(String title, String titleColor, String message, String messageColor,
-                                   String icon, String media, String contentType, String posterUrl,
-                                   String actionUrl, String error) {
+    private CleverTapDisplayUnitContent(String title, String titleColor, String message, String messageColor,
+                                        String icon, String media, String contentType, String posterUrl,
+                                        String actionUrl, String error) {
         this.title = title;
         this.titleColor = titleColor;
         this.message = message;
@@ -40,7 +40,7 @@ public class CleverTapAdUnitContent implements Parcelable {
     }
 
 
-    private CleverTapAdUnitContent(Parcel in) {
+    private CleverTapDisplayUnitContent(Parcel in) {
         title = in.readString();
         titleColor = in.readString();
         message = in.readString();
@@ -68,12 +68,12 @@ public class CleverTapAdUnitContent implements Parcelable {
     }
 
     /**
-     * Converts jsonContent to ADUnitContent
+     * Converts jsonContent to DisplayUnitContent
      *
      * @param contentObject - jsonObject
-     * @return - CleverTapAdUnitContent - can have empty fields with an error message in case of parsing error
+     * @return - CleverTapDisplayUnitContent - can have empty fields with an error message in case of parsing error
      */
-    static CleverTapAdUnitContent toContent(JSONObject contentObject) {
+    static CleverTapDisplayUnitContent toContent(JSONObject contentObject) {
         try {
             String title = "", titleColor = "", message = "", messageColor = "",
                     icon = "", media = "", contentType = "", posterUrl = "",
@@ -112,18 +112,18 @@ public class CleverTapAdUnitContent implements Parcelable {
                 }
             }
 
-            return new CleverTapAdUnitContent(title, titleColor, message, messageColor,
+            return new CleverTapDisplayUnitContent(title, titleColor, message, messageColor,
                     icon, media, contentType, posterUrl,
                     actionUrl, null);
 
         } catch (Exception e) {
-            Logger.d(Constants.FEATURE_AD_UNIT,"Unable to init CleverTapAdUnitContent with JSON - " + e.getLocalizedMessage());
-            return new CleverTapAdUnitContent("", "", "", "", "", "", "", "", "", "Error Creating AdUnit Content from JSON : " + e.getLocalizedMessage());
+            Logger.d(Constants.FEATURE_DISPLAY_UNIT,"Unable to init CleverTapDisplayUnitContent with JSON - " + e.getLocalizedMessage());
+            return new CleverTapDisplayUnitContent("", "", "", "", "", "", "", "", "", "Error Creating DisplayUnit Content from JSON : " + e.getLocalizedMessage());
         }
     }
 
     /**
-     * Getter for the title section of the AdUnit Content
+     * Getter for the title section of the Display Unit Content
      * @return String
      */
     public String getTitle() {
@@ -131,7 +131,7 @@ public class CleverTapAdUnitContent implements Parcelable {
     }
 
     /**
-     * Getter for the message section of the AdUnit Content
+     * Getter for the message section of the Display Unit Content
      * @return String
      */
     public String getMessage() {
@@ -139,7 +139,7 @@ public class CleverTapAdUnitContent implements Parcelable {
     }
 
     /**
-     * Getter for the media URL of the AdUnit Content
+     * Getter for the media URL of the Display Unit Content
      * @return String
      */
     @SuppressWarnings("unused")
@@ -148,7 +148,7 @@ public class CleverTapAdUnitContent implements Parcelable {
     }
 
     /**
-     * Getter for the action URL of the body of the AdUnit Content
+     * Getter for the action URL of the body of the Display Unit Content
      * @return String
      */
     @SuppressWarnings("unused")
@@ -204,7 +204,7 @@ public class CleverTapAdUnitContent implements Parcelable {
     }
 
     /**
-     * Method to check whether media in the {@link CleverTapAdUnitContent} object is an image.
+     * Method to check whether media in the {@link CleverTapDisplayUnitContent} object is an image.
      *
      * @return boolean - | true, if the media type is image
      *                   | false, if the media type is not an image
@@ -215,7 +215,7 @@ public class CleverTapAdUnitContent implements Parcelable {
     }
 
     /**
-     * Method to check whether media in the {@link CleverTapAdUnitContent} object is a GIF.
+     * Method to check whether media in the {@link CleverTapDisplayUnitContent} object is a GIF.
      *
      * @return boolean - | true, if the media type is GIF
      *                   | false, if the media type is not a GIF
@@ -226,7 +226,7 @@ public class CleverTapAdUnitContent implements Parcelable {
     }
 
     /**
-     * Method to check whether media in the {@link CleverTapAdUnitContent} object is a video.
+     * Method to check whether media in the {@link CleverTapDisplayUnitContent} object is a video.
      *
      * @return boolean - | true, if the media type is video
      *                   | false, if the media type is not a video
@@ -237,7 +237,7 @@ public class CleverTapAdUnitContent implements Parcelable {
     }
 
     /**
-     * Method to check whether media in the {@link CleverTapAdUnitContent} object is an audio.
+     * Method to check whether media in the {@link CleverTapDisplayUnitContent} object is an audio.
      *
      * @return boolean - | true, if the media type is audio
      *                   | false, if the media type is not an audio
@@ -251,15 +251,15 @@ public class CleverTapAdUnitContent implements Parcelable {
         return error;
     }
 
-    public static final Creator<CleverTapAdUnitContent> CREATOR = new Creator<CleverTapAdUnitContent>() {
+    public static final Creator<CleverTapDisplayUnitContent> CREATOR = new Creator<CleverTapDisplayUnitContent>() {
         @Override
-        public CleverTapAdUnitContent createFromParcel(Parcel in) {
-            return new CleverTapAdUnitContent(in);
+        public CleverTapDisplayUnitContent createFromParcel(Parcel in) {
+            return new CleverTapDisplayUnitContent(in);
         }
 
         @Override
-        public CleverTapAdUnitContent[] newArray(int size) {
-            return new CleverTapAdUnitContent[size];
+        public CleverTapDisplayUnitContent[] newArray(int size) {
+            return new CleverTapDisplayUnitContent[size];
         }
     };
 
