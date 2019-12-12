@@ -14,7 +14,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-class CTInAppNotification implements Parcelable {
+public class CTInAppNotification implements Parcelable {
 
     private String id;
     private String campaignId;
@@ -50,7 +50,7 @@ class CTInAppNotification implements Parcelable {
     private String error;
     private JSONObject customExtras;
     private JSONObject actionExtras;
-    CTInAppNotificationListener listener;
+    public CTInAppNotificationListener listener;
 
     private boolean isTablet;
     private boolean videoSupported;
@@ -63,7 +63,7 @@ class CTInAppNotification implements Parcelable {
 
     CTInAppNotification(){}
 
-    interface CTInAppNotificationListener{
+    public interface CTInAppNotificationListener{
         void notificationReady(CTInAppNotification inAppNotification);
     }
 

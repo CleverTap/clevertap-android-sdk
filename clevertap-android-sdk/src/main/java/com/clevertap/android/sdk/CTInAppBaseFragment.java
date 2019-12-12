@@ -134,12 +134,12 @@ public abstract class CTInAppBaseFragment extends Fragment {
                 raw, getResources().getDisplayMetrics());
     }
 
-    interface InAppListener {
-        void inAppNotificationDidShow(Context context, CTInAppNotification inAppNotification, Bundle formData);
+    public interface InAppListener {
+        public void inAppNotificationDidShow(Context context, CTInAppNotification inAppNotification, Bundle formData);
 
-        void inAppNotificationDidClick(Context context, CTInAppNotification inAppNotification, Bundle formData, HashMap<String, String> keyValueMap);
+        public void inAppNotificationDidClick(Context context, CTInAppNotification inAppNotification, Bundle formData, HashMap<String, String> keyValueMap);
 
-        void inAppNotificationDidDismiss(Context context, CTInAppNotification inAppNotification, Bundle formData);
+        public void inAppNotificationDidDismiss(Context context, CTInAppNotification inAppNotification, Bundle formData);
     }
 
     class CTInAppNativeButtonClickListener implements View.OnClickListener{
