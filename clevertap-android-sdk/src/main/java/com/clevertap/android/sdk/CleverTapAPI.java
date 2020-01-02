@@ -34,6 +34,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.RemoteException;
 import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -41,6 +42,9 @@ import android.support.annotation.RequiresApi;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 
+import com.android.installreferrer.api.InstallReferrerClient;
+import com.android.installreferrer.api.InstallReferrerStateListener;
+import com.android.installreferrer.api.ReferrerDetails;
 import com.clevertap.android.sdk.ab_testing.CTABTestController;
 import com.clevertap.android.sdk.ab_testing.CTABTestListener;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
@@ -73,6 +77,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -217,6 +222,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private String source = null, medium = null, campaign = null;
     private JSONObject wzrkParams = null;
     private int lastVisitTime;
+    private int maxDelayFrequency = 1000000;
+    private int minDelayFrequency = 0;
+    private boolean installReferrerDataSent = false;
+    private long referrerClickTime = 0;
+    private long appInstallTime = 0;
+    private boolean instantExperienceLaunched = false;
 
     /**
      * Method to check whether app has ExoPlayer dependencies
@@ -1290,25 +1301,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
-    static void handleInstallReferrer(Context context, Intent intent) {
-        if (instances == null) {
-            Logger.v("No CleverTap Instance found");
-            CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
-            if (instance != null) {
-                instance.pushInstallReferrer(intent);
-            }
-            return;
-        }
-
-        for (String accountId : CleverTapAPI.instances.keySet()) {
-            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
-            if (instance != null) {
-                instance.pushInstallReferrer(intent);
-            }
-        }
-
-    }
-
     /**
      * This method is used to change the credentials of CleverTap account Id and token programmatically
      *
@@ -1696,6 +1688,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (!isAppLaunchPushed()) {
             pushAppLaunchedEvent();
             onTokenRefresh();
+            if(!installReferrerDataSent){
+                handleInstallReferrerOnFirstInstall();
+            }
         }
         if (!inCurrentSession()) {
             pushInitialEventsAsync();
@@ -2476,6 +2471,24 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return !newDomain.equals(oldDomain);
     }
 
+    //gives delay frequency based on region
+    //randomly adds delay to 1s delay in case of non-EU regions
+    private int getDelayFrequency(){
+        if(config.getAccountRegion() == null){
+            return Constants.PUSH_DELAY_MS;
+        }else{
+            Random randomGen = new Random();
+            int randomDelay = (randomGen.nextInt(10) + 1)*1000;
+            minDelayFrequency += randomDelay;
+            if(minDelayFrequency < maxDelayFrequency) {
+                return minDelayFrequency;
+            }else{
+                minDelayFrequency = Constants.PUSH_DELAY_MS;
+            }
+            return minDelayFrequency;
+        }
+    }
+
     //Event
     private void scheduleQueueFlush(final Context context) {
         if (commsRunnable == null)
@@ -2488,7 +2501,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             };
         // Cancel any outstanding send runnables, and issue a new delayed one
         getHandlerUsingMainLooper().removeCallbacks(commsRunnable);
-        getHandlerUsingMainLooper().postDelayed(commsRunnable, Constants.PUSH_DELAY_MS);
+        getHandlerUsingMainLooper().postDelayed(commsRunnable, getDelayFrequency());
 
         getConfigLogger().verbose(getAccountId(), "Scheduling delayed queue flush on main event loop");
     }
@@ -3007,6 +3020,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 isBgPing = false;
             }
             header.put("rtl", getRenderedTargetList());
+            if(!installReferrerDataSent){
+                header.put("rct",getReferrerClickTime());
+                header.put("ait",getAppInstallTime());
+                header.put("iel",isInstantExperienceLaunched());
+            }
 
 
             // Attach ARP
@@ -6227,6 +6245,37 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
+     * This method is used to push install referrer via url String
+     *
+     * @param url A String with the install referrer parameters
+     */
+    @SuppressWarnings({"unused"})
+    public void pushInstallReferrer(String url) {
+        try {
+            getConfigLogger().verbose(getAccountId(), "Referrer received: " + url);
+
+            if (url == null) {
+                return;
+            }
+            int now = (int) (System.currentTimeMillis() / 1000);
+
+            //noinspection ConstantConditions
+            if (installReferrerMap.containsKey(url) && now - installReferrerMap.get(url) < 10) {
+                getConfigLogger().verbose(getAccountId(), "Skipping install referrer due to duplicate within 10 seconds");
+                return;
+            }
+
+            installReferrerMap.put(url, now);
+
+            Uri uri = Uri.parse("wzrk://track?install=true&" + url);
+
+            pushDeepLink(uri, true);
+        } catch (Throwable t) {
+            // no-op
+        }
+    }
+
+    /**
      * This method is used to push install referrer via UTM source, medium & campaign parameters
      *
      * @param source   The UTM source parameter
@@ -6259,6 +6308,61 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         } catch (Throwable t) {
             Logger.v("Failed to push install referrer", t);
         }
+    }
+
+    public long getReferrerClickTime() {
+        return referrerClickTime;
+    }
+
+    public long getAppInstallTime() {
+        return appInstallTime;
+    }
+
+    public boolean isInstantExperienceLaunched() {
+        return instantExperienceLaunched;
+    }
+
+    private void handleInstallReferrerOnFirstInstall(){
+        final InstallReferrerClient referrerClient = InstallReferrerClient.newBuilder(context).build();
+        referrerClient.startConnection(new InstallReferrerStateListener() {
+            @Override
+            public void onInstallReferrerSetupFinished(int responseCode) {
+                switch (responseCode){
+                    case InstallReferrerClient.InstallReferrerResponse.OK:
+                        // Connection established.
+                        ReferrerDetails response = null;
+                        try {
+                            response = referrerClient.getInstallReferrer();
+                            String referrerUrl = response.getInstallReferrer();
+                            referrerClickTime = response.getReferrerClickTimestampSeconds();
+                            appInstallTime = response.getInstallBeginTimestampSeconds();
+                            instantExperienceLaunched = response.getGooglePlayInstantParam();
+                            pushInstallReferrer(referrerUrl);
+                            installReferrerDataSent = true;
+                        } catch (RemoteException e) {
+                            e.printStackTrace();
+                            referrerClient.endConnection();
+                        }
+                        referrerClient.endConnection();
+                        break;
+                    case InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED:
+                        // API not available on the current Play Store app.
+                        //TODO log something
+                        break;
+                    case InstallReferrerClient.InstallReferrerResponse.SERVICE_UNAVAILABLE:
+                        // Connection couldn't be established.
+                        //TODO log something
+                        break;
+                }
+            }
+
+            @Override
+            public void onInstallReferrerServiceDisconnected() {
+                if(!installReferrerDataSent){
+                    handleInstallReferrerOnFirstInstall();
+                }
+            }
+        });
     }
 
     /**
