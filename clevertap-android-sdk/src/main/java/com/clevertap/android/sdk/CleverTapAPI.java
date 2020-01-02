@@ -211,6 +211,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private LocalDataStore localDataStore;
     private CleverTapInstanceConfig config;
     private int mResponseFailureCount = 0;
+    private int networkRetryCount = 0;
     private int currentRequestTimestamp = 0;
     private Location locationFromUser = null;
     private SyncListener syncListener = null;
@@ -2474,17 +2475,26 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     //gives delay frequency based on region
     //randomly adds delay to 1s delay in case of non-EU regions
     private int getDelayFrequency(){
+        if(networkRetryCount < 5){
+            getConfigLogger().debug(getAccountId(),"Failure count is "+networkRetryCount+". Setting delay frequency to 1s");
+            return Constants.PUSH_DELAY_MS;
+        }
+        getConfigLogger().debug(getAccountId(),"Network retry #"+networkRetryCount);
+
         if(config.getAccountRegion() == null){
+            getConfigLogger().debug(getAccountId(),"Setting delay frequency to 1s");
             return Constants.PUSH_DELAY_MS;
         }else{
             Random randomGen = new Random();
             int randomDelay = (randomGen.nextInt(10) + 1)*1000;
             minDelayFrequency += randomDelay;
             if(minDelayFrequency < maxDelayFrequency) {
+                getConfigLogger().debug(getAccountId(),"Setting delay frequency to "+minDelayFrequency);
                 return minDelayFrequency;
             }else{
                 minDelayFrequency = Constants.PUSH_DELAY_MS;
             }
+            getConfigLogger().debug(getAccountId(),"Setting delay frequency to "+minDelayFrequency);
             return minDelayFrequency;
         }
     }
@@ -2538,7 +2548,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         postAsyncSafely("CommsManager#flushQueueAsync", new Runnable() {
             @Override
             public void run() {
-                getConfigLogger().verbose(getAccountId(), "Pushing Notification Viewed event onto queue flush sync");
+                if(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
+                    getConfigLogger().verbose(getAccountId(), "Pushing Notification Viewed event onto queue flush sync");
+                }else{
+                    getConfigLogger().verbose(getAccountId(), "Pushing event onto queue flush sync");
+                }
                 flushQueueSync(context, eventGroup);
             }
         });
@@ -2936,6 +2950,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         } catch (Throwable e) {
             getConfigLogger().debug(getAccountId(), "An exception occurred while sending the queue, will retry: " + e.getLocalizedMessage());
             mResponseFailureCount++;
+            networkRetryCount++;
             scheduleQueueFlush(context);
             return false;
         } finally {
