@@ -31,7 +31,7 @@
         <service
             android:name="com.clevertap.android.sdk.CTBackgroundIntentService"
             android:permission="android.permission.BIND_JOB_SERVICE"
-            android:exported="true">
+            android:exported="false">
             <intent-filter>
                 <action android:name="com.clevertap.BG_EVENT"/>
             </intent-filter>
@@ -40,7 +40,7 @@
         <service
             android:name="com.clevertap.android.sdk.CTBackgroundJobService"
             android:permission="android.permission.BIND_JOB_SERVICE"
-            android:exported="true">
+            android:exported="false">
         </service>
     </application>
 </manifest>
