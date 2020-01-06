@@ -2366,7 +2366,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 getLocalDataStore().setDataSyncFlag(event);
                 queueEventToDB(context, event, eventType);
                 updateLocalStore(context, event, eventType);
-                scheduleQueueFlush(context);
+                scheduleQueueFlush(context, isBgPing);
 
             } catch (Throwable e) {
                 getConfigLogger().verbose(getAccountId(), "Failed to queue event: " + event.toString(), e);
@@ -2464,7 +2464,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 @Override
                 public void run() {
                     getConfigLogger().verbose(getAccountId(), "Pushing Notification Viewed event onto queue flush async");
-                    flushQueueAsync(context, EventGroup.PUSH_NOTIFICATION_VIEWED);
+                    flushQueueAsync(context, EventGroup.PUSH_NOTIFICATION_VIEWED, isBgPing);
                 }
             };
         getHandlerUsingMainLooper().removeCallbacks(pushNotificationViewedRunnable);
@@ -2477,13 +2477,13 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //Event
-    private void scheduleQueueFlush(final Context context) {
+    private void scheduleQueueFlush(final Context context, final boolean isBgPing) {
         if (commsRunnable == null)
             commsRunnable = new Runnable() {
                 @Override
                 public void run() {
-                    flushQueueAsync(context, EventGroup.REGULAR);
-                    flushQueueAsync(context, EventGroup.PUSH_NOTIFICATION_VIEWED);
+                    flushQueueAsync(context, EventGroup.REGULAR, isBgPing);
+                    flushQueueAsync(context, EventGroup.PUSH_NOTIFICATION_VIEWED, isBgPing);
                 }
             };
         // Cancel any outstanding send runnables, and issue a new delayed one
@@ -2521,17 +2521,17 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
-    private void flushQueueAsync(final Context context, final EventGroup eventGroup) {
+    private void flushQueueAsync(final Context context, final EventGroup eventGroup, final boolean isBgPing) {
         postAsyncSafely("CommsManager#flushQueueAsync", new Runnable() {
             @Override
             public void run() {
                 getConfigLogger().verbose(getAccountId(), "Pushing Notification Viewed event onto queue flush sync");
-                flushQueueSync(context, eventGroup);
+                flushQueueSync(context, eventGroup, isBgPing);
             }
         });
     }
 
-    private void flushQueueSync(final Context context, final EventGroup eventGroup) {
+    private void flushQueueSync(final Context context, final EventGroup eventGroup, final boolean isBgPing) {
         if (!isNetworkOnline(context)) {
             getConfigLogger().verbose(getAccountId(), "Network connectivity unavailable. Will retry later");
             return;
@@ -2548,12 +2548,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             performHandshakeForDomain(context, eventGroup, new Runnable() {
                 @Override
                 public void run() {
-                    flushDBQueue(context, eventGroup);
+                    flushDBQueue(context, eventGroup, isBgPing);
                 }
             });
         } else {
             getConfigLogger().verbose(getAccountId(), "Pushing Notification Viewed event onto queue DB flush");
-            flushDBQueue(context, eventGroup);
+            flushDBQueue(context, eventGroup, isBgPing);
         }
     }
 
@@ -2578,8 +2578,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         try {
             String region = this.config.getAccountRegion();
 
-            if(this.config.getStaging() > 0 && !region.isEmpty() && !region.equals("in1") && !region.equals("sg1")){
-                region = region+"-staging-"+this.config.getStaging();
+            if (this.config.getStaging() > 0 && !region.isEmpty() && !region.equals("in1") && !region.equals("sg1")) {
+                region = region + "-staging-" + this.config.getStaging();
             }
 
             if (region != null && region.trim().length() > 0) {
@@ -2740,7 +2740,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return "ARP:" + accountId;
     }
 
-    private void flushDBQueue(final Context context, final EventGroup eventGroup) {
+    private void flushDBQueue(final Context context, final EventGroup eventGroup, boolean isBgPing) {
         getConfigLogger().verbose(getAccountId(), "Somebody has invoked me to send the queue to CleverTap servers");
 
         QueueCursor cursor;
@@ -2764,7 +2764,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 break;
             }
 
-            loadMore = sendQueue(context, eventGroup, queue);
+            loadMore = sendQueue(context, eventGroup, queue, isBgPing);
         }
     }
 
@@ -2852,7 +2852,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     /**
      * @return true if the network request succeeded. Anything non 200 results in a false.
      */
-    private boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue) {
+    private boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue, boolean isBgPing) {
 
         if (queue == null || queue.length() <= 0) return false;
 
@@ -2885,6 +2885,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             getConfigLogger().debug(getAccountId(), "Sending queue to: " + endpoint);
             conn.setDoOutput(true);
             // noinspection all
+            if (isBgPing)
+                PushAmpDiagnosticUtil.raiseEvent(context, Constants.CT_PUSH_AMP_PING_EVENT_SENT);
             conn.getOutputStream().write(req.getBytes("UTF-8"));
 
             final int responseCode = conn.getResponseCode();
@@ -2915,7 +2917,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     sb.append(line);
                 }
                 body = sb.toString();
-                processResponse(context, body);
+                processResponse(context, body, isBgPing);
             }
 
             setLastRequestTimestamp(context, currentRequestTimestamp);
@@ -2928,7 +2930,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         } catch (Throwable e) {
             getConfigLogger().debug(getAccountId(), "An exception occurred while sending the queue, will retry: " + e.getLocalizedMessage());
             mResponseFailureCount++;
-            scheduleQueueFlush(context);
+            scheduleQueueFlush(context, this.isBgPing);
             return false;
         } finally {
             if (conn != null) {
@@ -3092,12 +3094,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //Event
-    private void processResponse(final Context context, final String responseStr) {
+    private void processResponse(final Context context, final String responseStr, boolean isBgPing) {
         if (responseStr == null) {
             getConfigLogger().verbose(getAccountId(), "Problem processing queue response, response is null");
             return;
         }
         try {
+            if (isBgPing)
+                PushAmpDiagnosticUtil.raiseEvent(context, Constants.CT_PUSH_AMP_PROCESS_RESPONSE);
             getConfigLogger().verbose(getAccountId(), "Trying to process response: " + responseStr);
 
             JSONObject response = new JSONObject(responseStr);
@@ -3210,7 +3214,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         final JSONArray pushNotifications = pushAmpObject.getJSONArray("list");
                         if (pushNotifications.length() > 0) {
                             getConfigLogger().verbose(getAccountId(), "Handling Push payload locally");
-                            handlePushNotificationsInResponse(pushNotifications);
+                            handlePushNotificationsInResponse(pushNotifications, isBgPing);
                         }
                         if (pushAmpObject.has("pf")) {
                             try {
@@ -5352,6 +5356,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         getConfigLogger().debug("Recording Notification Viewed event for notification:  " + extras.toString());
 
+        boolean isBgPing = extras.getBoolean("isBgPing");
+        if(isBgPing)
+            PushAmpDiagnosticUtil.raiseEvent(context, Constants.CT_PUSH_AMP_NOTIFICATION_CREATED);
         JSONObject event = new JSONObject();
         try {
             JSONObject notif = getWzrkFields(extras);
@@ -5593,8 +5600,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     forcePushDeviceToken(false);
 
                     // try and flush and then reset the queues
-                    flushQueueSync(context, EventGroup.REGULAR);
-                    flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED);
+                    flushQueueSync(context, EventGroup.REGULAR, isBgPing);
+                    flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED, isBgPing);
                     clearQueues(context);
 
                     // clear out the old data
@@ -5651,7 +5658,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void flush() {
-        flushQueueAsync(context, EventGroup.REGULAR);
+        flushQueueAsync(context, EventGroup.REGULAR, isBgPing);
     }
 
     private void pushDeviceToken(final Context context, final String token, final boolean register, final PushType type) {
@@ -5756,7 +5763,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //PN
-    private void handlePushNotificationsInResponse(JSONArray pushNotifications) {
+    private void handlePushNotificationsInResponse(JSONArray pushNotifications, boolean isBgPing) {
         try {
             for (int i = 0; i < pushNotifications.length(); i++) {
                 Bundle pushBundle = new Bundle();
@@ -5806,6 +5813,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 }
                 if (!pushBundle.isEmpty() && !dbAdapter.doesPushNotificationIdExist(pushObject.getString("wzrk_pid"))) {
                     getConfigLogger().verbose("Creating Push Notification locally");
+                    pushBundle.putBoolean("isBgPing", isBgPing);
                     createNotification(context, pushBundle);
                 } else {
                     getConfigLogger().verbose(getAccountId(), "Push Notification already shown, ignoring local notification :" + pushObject.getString("wzrk_pid"));
@@ -6780,12 +6788,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
                 long lastTS = loadDBAdapter(context).getLastUninstallTimestamp();
 
-                if (lastTS == 0 || lastTS > System.currentTimeMillis() - 24 * 60 * 60 * 1000) {
+//                if (lastTS == 0 || lastTS > System.currentTimeMillis() - 24 * 60 * 60 * 1000) {
                     try {
                         JSONObject eventObject = new JSONObject();
                         eventObject.put("bk", 1);
                         queueEvent(context, eventObject, Constants.PING_EVENT);
-
                         if (parameters == null) {
                             int pingFrequency = getPingFrequency(context);
                             AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
@@ -6808,7 +6815,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         Logger.v("Unable to raise background Ping event");
                     }
 
-                }
+//                }
             }
         });
     }
@@ -7544,6 +7551,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     /**
      * This method handles send Test flow for Display Units
+     *
      * @param extras - bundled data of notification payload
      */
     private void handleSendTestForDisplayUnits(Bundle extras) {
