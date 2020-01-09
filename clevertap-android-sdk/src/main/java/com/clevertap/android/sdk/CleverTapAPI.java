@@ -1690,6 +1690,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             pushAppLaunchedEvent();
             onTokenRefresh();
             if(!installReferrerDataSent){
+                Logger.d("Starting handling of install referrer on first install");
                 handleInstallReferrerOnFirstInstall();
             }
         }
@@ -6345,20 +6346,21 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
-    public long getReferrerClickTime() {
+    private long getReferrerClickTime() {
         return referrerClickTime;
     }
 
-    public long getAppInstallTime() {
+    private long getAppInstallTime() {
         return appInstallTime;
     }
 
-    public boolean isInstantExperienceLaunched() {
+    private boolean isInstantExperienceLaunched() {
         return instantExperienceLaunched;
     }
 
     private void handleInstallReferrerOnFirstInstall(){
         final InstallReferrerClient referrerClient = InstallReferrerClient.newBuilder(context).build();
+        Logger.d("Referrer client build");
         referrerClient.startConnection(new InstallReferrerStateListener() {
             @Override
             public void onInstallReferrerSetupFinished(int responseCode) {
@@ -6368,10 +6370,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         ReferrerDetails response = null;
                         try {
                             response = referrerClient.getInstallReferrer();
+                            Logger.d("got response "+response.toString());
                             String referrerUrl = response.getInstallReferrer();
+                            Logger.d("referrerUrl ="+referrerUrl);
                             referrerClickTime = response.getReferrerClickTimestampSeconds();
+                            Logger.d("referral click time ="+String.valueOf(referrerClickTime));
                             appInstallTime = response.getInstallBeginTimestampSeconds();
+                            Logger.d("appInstallTime = "+String.valueOf(appInstallTime));
                             instantExperienceLaunched = response.getGooglePlayInstantParam();
+                            Logger.d("instant experience = "+String.valueOf(instantExperienceLaunched));
                             pushInstallReferrer(referrerUrl);
                             installReferrerDataSent = true;
                         } catch (RemoteException e) {
