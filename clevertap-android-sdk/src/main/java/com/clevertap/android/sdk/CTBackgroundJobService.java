@@ -16,9 +16,10 @@ public class CTBackgroundJobService extends JobService {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                PushAmpDiagnosticUtil.raiseEvent(getApplicationContext(), Constants.CT_PUSH_AMP_SERVICE_START);
+                //PushAmpDiagnosticUtil.raiseEvent(getApplicationContext(), Constants.CT_PUSH_AMP_SERVICE_START);
                 CleverTapAPI.runJobWork(getApplicationContext(), params);
                 jobFinished(params, true);
+                Logger.d("Job Service Finished Sent");
             }
         }).start();
         return true;

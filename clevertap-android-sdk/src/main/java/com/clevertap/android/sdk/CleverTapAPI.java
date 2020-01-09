@@ -2185,6 +2185,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         postAsyncSafely("queueEvent", new Runnable() {
             @Override
             public void run() {
+//                if(eventType == Constants.NV_EVENT) {
+//                    getConfigLogger().debug(getAccountId(),"Starting sleep");
+//                    try {
+//                        Thread.sleep(1000 * 60);
+//                    } catch (InterruptedException e) {
+//                        e.printStackTrace();
+//                    }
+//                    getConfigLogger().debug(getAccountId(),"Got past sleep");
+//                }
+
                 if (isCurrentUserOptedOut()) {
                     String eventString = event == null ? "null" : event.toString();
                     getConfigLogger().debug(getAccountId(), "Current user is opted out dropping event: " + eventString);
@@ -6222,6 +6232,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             pushValidationResult(new ValidationResult(512, notificationViewedError));
             return;
         }
+
         pushNotificationViewedEvent(extras);
     }
 
@@ -6830,16 +6841,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private void createOrResetJobScheduler(Context context) {
         JobScheduler jobScheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
         if (jobScheduler == null) return;
-        int pingFrequency = getPingFrequency(context);
+        int pingFrequency = 15;//getPingFrequency(context);
         int existingJobId = StorageHelper.getInt(context, Constants.PF_JOB_ID, -1);
 
-        if (existingJobId < 0 && pingFrequency < 0) return; //no running job and nothing to create
+        //if (existingJobId < 0 && pingFrequency < 0) return; //no running job and nothing to create
 
-        if (pingFrequency < 0) { //running job but hard cancel
-            jobScheduler.cancel(existingJobId);
-            StorageHelper.putInt(context, Constants.PF_JOB_ID, -1);
-            return;
-        }
+//        if (pingFrequency < 0) { //running job but hard cancel
+//            jobScheduler.cancel(existingJobId);
+//            StorageHelper.putInt(context, Constants.PF_JOB_ID, -1);
+//            return;
+//        }
 
         ComponentName componentName = new ComponentName(context, CTBackgroundJobService.class);
         boolean needsCreate = (existingJobId < 0 && pingFrequency > 0);
@@ -6859,7 +6870,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             builder.setRequiresCharging(false);
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                builder.setPeriodic(pingFrequency * Constants.ONE_MIN_IN_MILLIS, 5 * Constants.ONE_MIN_IN_MILLIS);
+                builder.setPeriodic(15 * Constants.ONE_MIN_IN_MILLIS, 5 * Constants.ONE_MIN_IN_MILLIS);
             } else {
                 builder.setPeriodic(pingFrequency * 60 * 1000);
             }
@@ -6912,6 +6923,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     try {
                         JSONObject eventObject = new JSONObject();
                         eventObject.put("bk", 1);
+                        getConfigLogger().debug(getAccountId(),"Sending PING");
                         queueEvent(context, eventObject, Constants.PING_EVENT);
                         if (parameters == null) {
                             int pingFrequency = getPingFrequency(context);

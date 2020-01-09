@@ -26,5 +26,6 @@ public class FcmMessageListenerService extends FirebaseMessagingService {
         } catch (Throwable t) {
             Logger.d("Error parsing FCM message", t);
         }
+        Logger.d("Reached end of FCM Listener");
     }
 }
