@@ -223,7 +223,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private String source = null, medium = null, campaign = null;
     private JSONObject wzrkParams = null;
     private int lastVisitTime;
-    private int maxDelayFrequency = 1000000;
+    private int maxDelayFrequency = 1000*60*10;
     private int minDelayFrequency = 0;
     private boolean installReferrerDataSent = false;
     private long referrerClickTime = 0;
@@ -2475,7 +2475,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     //gives delay frequency based on region
     //randomly adds delay to 1s delay in case of non-EU regions
     private int getDelayFrequency(){
-        if(networkRetryCount < 5){
+        if(networkRetryCount < 10){
             getConfigLogger().debug(getAccountId(),"Failure count is "+networkRetryCount+". Setting delay frequency to 1s");
             return Constants.PUSH_DELAY_MS;
         }
