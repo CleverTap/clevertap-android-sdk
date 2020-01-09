@@ -223,7 +223,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private String source = null, medium = null, campaign = null;
     private JSONObject wzrkParams = null;
     private int lastVisitTime;
-    private int maxDelayFrequency = 1000*60*10;
+    private int maxDelayFrequency = 1000*100;
     private int minDelayFrequency = 0;
     private boolean installReferrerDataSent = false;
     private long referrerClickTime = 0;
