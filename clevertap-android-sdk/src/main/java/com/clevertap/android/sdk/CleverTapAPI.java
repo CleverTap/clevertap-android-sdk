@@ -2475,16 +2475,21 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     //gives delay frequency based on region
     //randomly adds delay to 1s delay in case of non-EU regions
     private int getDelayFrequency(){
-        if(networkRetryCount < 10){
-            getConfigLogger().debug(getAccountId(),"Failure count is "+networkRetryCount+". Setting delay frequency to 1s");
-            return Constants.PUSH_DELAY_MS;
-        }
         getConfigLogger().debug(getAccountId(),"Network retry #"+networkRetryCount);
 
+        //Retry with delay as 1s for first 10 retries
+        if(networkRetryCount < 10){
+            getConfigLogger().debug(getAccountId(),"Failure count is "+networkRetryCount+". Setting delay frequency to 1s");
+            minDelayFrequency =  Constants.PUSH_DELAY_MS; //reset minimum delay to 1s
+            return minDelayFrequency;
+        }
+
         if(config.getAccountRegion() == null){
+            //Retry with delay as 1s if region is null in case of eu1
             getConfigLogger().debug(getAccountId(),"Setting delay frequency to 1s");
             return Constants.PUSH_DELAY_MS;
         }else{
+            //Retry with delay as minimum delay frequency and add random number of seconds to scatter traffic
             Random randomGen = new Random();
             int randomDelay = (randomGen.nextInt(10) + 1)*1000;
             minDelayFrequency += randomDelay;
@@ -2946,6 +2951,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             getConfigLogger().debug(getAccountId(), "Queue sent successfully");
 
             mResponseFailureCount = 0;
+            networkRetryCount = 0; //reset retry count when queue is sent successfully
             return true;
         } catch (Throwable e) {
             getConfigLogger().debug(getAccountId(), "An exception occurred while sending the queue, will retry: " + e.getLocalizedMessage());
@@ -6320,19 +6326,20 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
-    public long getReferrerClickTime() {
+    private long getReferrerClickTime() {
         return referrerClickTime;
     }
 
-    public long getAppInstallTime() {
+    private long getAppInstallTime() {
         return appInstallTime;
     }
 
-    public boolean isInstantExperienceLaunched() {
+    private boolean isInstantExperienceLaunched() {
         return instantExperienceLaunched;
     }
 
     private void handleInstallReferrerOnFirstInstall(){
+        getConfigLogger().verbose(getAccountId(),"Starting to handle install referrer");
         final InstallReferrerClient referrerClient = InstallReferrerClient.newBuilder(context).build();
         referrerClient.startConnection(new InstallReferrerStateListener() {
             @Override
@@ -6349,19 +6356,21 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                             instantExperienceLaunched = response.getGooglePlayInstantParam();
                             pushInstallReferrer(referrerUrl);
                             installReferrerDataSent = true;
+                            getConfigLogger().debug(getAccountId(),"Install Referrer data set");
                         } catch (RemoteException e) {
                             e.printStackTrace();
                             referrerClient.endConnection();
+                            installReferrerDataSent = false;
                         }
                         referrerClient.endConnection();
                         break;
                     case InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED:
                         // API not available on the current Play Store app.
-                        //TODO log something
+                        getConfigLogger().debug(getAccountId(),"Install Referrer data not set, API not supported by Play Store on device");
                         break;
                     case InstallReferrerClient.InstallReferrerResponse.SERVICE_UNAVAILABLE:
                         // Connection couldn't be established.
-                        //TODO log something
+                        getConfigLogger().debug(getAccountId(),"Install Referrer data not set, connection to Play Store unavailable");
                         break;
                 }
             }
