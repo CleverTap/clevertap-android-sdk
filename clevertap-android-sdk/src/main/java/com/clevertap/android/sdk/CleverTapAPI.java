@@ -1302,6 +1302,27 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+    //Deprecation warning because Google Play install referrer via intent will be deprecated in March 2020 
+    @Deprecated
+    static void handleInstallReferrer(Context context, Intent intent) {
+        if (instances == null) {
+            Logger.v("No CleverTap Instance found");
+            CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
+            if (instance != null) {
+                instance.pushInstallReferrer(intent);
+            }
+            return;
+        }
+
+        for (String accountId : CleverTapAPI.instances.keySet()) {
+            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+            if (instance != null) {
+                instance.pushInstallReferrer(intent);
+            }
+        }
+
+    }
+
     /**
      * This method is used to change the credentials of CleverTap account Id and token programmatically
      *
@@ -2485,32 +2506,32 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //gives delay frequency based on region
     //randomly adds delay to 1s delay in case of non-EU regions
-    private int getDelayFrequency(){
-        getConfigLogger().debug(getAccountId(),"Network retry #"+networkRetryCount);
+    private int getDelayFrequency() {
+        getConfigLogger().debug(getAccountId(), "Network retry #" + networkRetryCount);
 
         //Retry with delay as 1s for first 10 retries
-        if(networkRetryCount < 10){
-            getConfigLogger().debug(getAccountId(),"Failure count is "+networkRetryCount+". Setting delay frequency to 1s");
-            minDelayFrequency =  Constants.PUSH_DELAY_MS; //reset minimum delay to 1s
+        if (networkRetryCount < 10) {
+            getConfigLogger().debug(getAccountId(), "Failure count is " + networkRetryCount + ". Setting delay frequency to 1s");
+            minDelayFrequency = Constants.PUSH_DELAY_MS; //reset minimum delay to 1s
             return minDelayFrequency;
         }
 
-        if(config.getAccountRegion() == null){
+        if (config.getAccountRegion() == null) {
             //Retry with delay as 1s if region is null in case of eu1
-            getConfigLogger().debug(getAccountId(),"Setting delay frequency to 1s");
+            getConfigLogger().debug(getAccountId(), "Setting delay frequency to 1s");
             return Constants.PUSH_DELAY_MS;
-        }else{
+        } else {
             //Retry with delay as minimum delay frequency and add random number of seconds to scatter traffic
             Random randomGen = new Random();
-            int randomDelay = (randomGen.nextInt(10) + 1)*1000;
+            int randomDelay = (randomGen.nextInt(10) + 1) * 1000;
             minDelayFrequency += randomDelay;
-            if(minDelayFrequency < maxDelayFrequency) {
-                getConfigLogger().debug(getAccountId(),"Setting delay frequency to "+minDelayFrequency);
+            if (minDelayFrequency < maxDelayFrequency) {
+                getConfigLogger().debug(getAccountId(), "Setting delay frequency to " + minDelayFrequency);
                 return minDelayFrequency;
-            }else{
+            } else {
                 minDelayFrequency = Constants.PUSH_DELAY_MS;
             }
-            getConfigLogger().debug(getAccountId(),"Setting delay frequency to "+minDelayFrequency);
+            getConfigLogger().debug(getAccountId(), "Setting delay frequency to " + minDelayFrequency);
             return minDelayFrequency;
         }
     }
@@ -2564,9 +2585,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         postAsyncSafely("CommsManager#flushQueueAsync", new Runnable() {
             @Override
             public void run() {
-                if(eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
+                if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
                     getConfigLogger().verbose(getAccountId(), "Pushing Notification Viewed event onto queue flush sync");
-                }else{
+                } else {
                     getConfigLogger().verbose(getAccountId(), "Pushing event onto queue flush sync");
                 }
                 getConfigLogger().verbose(getAccountId(), "Pushing Notification Viewed event onto queue flush sync");
@@ -3055,10 +3076,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 isBgPing = false;
             }
             header.put("rtl", getRenderedTargetList());
-            if(!installReferrerDataSent){
-                header.put("rct",getReferrerClickTime());
-                header.put("ait",getAppInstallTime());
-                header.put("iel",isInstantExperienceLaunched());
+            if (!installReferrerDataSent) {
+                header.put("rct", getReferrerClickTime());
+                header.put("ait", getAppInstallTime());
+                header.put("iel", isInstantExperienceLaunched());
             }
 
 
@@ -6245,10 +6266,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     /**
      * This method is used to push install referrer via Intent
+     * Deprecation warning because Google Play install referrer via intent will be deprecated in March 2020
      *
      * @param intent An Intent with the install referrer parameters
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
+    @Deprecated
     public void pushInstallReferrer(Intent intent) {
         try {
             final Bundle extras = intent.getExtras();
@@ -6364,14 +6387,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return instantExperienceLaunched;
     }
 
-    private void handleInstallReferrerOnFirstInstall(){
-        getConfigLogger().verbose(getAccountId(),"Starting to handle install referrer");
+    private void handleInstallReferrerOnFirstInstall() {
+        getConfigLogger().verbose(getAccountId(), "Starting to handle install referrer");
         final InstallReferrerClient referrerClient = InstallReferrerClient.newBuilder(context).build();
         Logger.d("Referrer client build");
         referrerClient.startConnection(new InstallReferrerStateListener() {
             @Override
             public void onInstallReferrerSetupFinished(int responseCode) {
-                switch (responseCode){
+                switch (responseCode) {
                     case InstallReferrerClient.InstallReferrerResponse.OK:
                         // Connection established.
                         ReferrerDetails response = null;
@@ -6388,7 +6411,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                             Logger.d("instant experience = "+String.valueOf(instantExperienceLaunched));
                             pushInstallReferrer(referrerUrl);
                             installReferrerDataSent = true;
-                            getConfigLogger().debug(getAccountId(),"Install Referrer data set");
+                            getConfigLogger().debug(getAccountId(), "Install Referrer data set");
                         } catch (RemoteException e) {
                             e.printStackTrace();
                             referrerClient.endConnection();
@@ -6398,18 +6421,18 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         break;
                     case InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED:
                         // API not available on the current Play Store app.
-                        getConfigLogger().debug(getAccountId(),"Install Referrer data not set, API not supported by Play Store on device");
+                        getConfigLogger().debug(getAccountId(), "Install Referrer data not set, API not supported by Play Store on device");
                         break;
                     case InstallReferrerClient.InstallReferrerResponse.SERVICE_UNAVAILABLE:
                         // Connection couldn't be established.
-                        getConfigLogger().debug(getAccountId(),"Install Referrer data not set, connection to Play Store unavailable");
+                        getConfigLogger().debug(getAccountId(), "Install Referrer data not set, connection to Play Store unavailable");
                         break;
                 }
             }
 
             @Override
             public void onInstallReferrerServiceDisconnected() {
-                if(!installReferrerDataSent){
+                if (!installReferrerDataSent) {
                     handleInstallReferrerOnFirstInstall();
                 }
             }
