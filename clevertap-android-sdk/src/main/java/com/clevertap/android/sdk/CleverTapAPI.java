@@ -1302,7 +1302,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
-    static void handleInstallReferrerViaReceiver(Context context, Intent intent) {
+    //Deprecation warning because Google Play install referrer via intent will be deprecated in March 2020 
+    @Deprecated
+    static void handleInstallReferrer(Context context, Intent intent) {
         if (instances == null) {
             Logger.v("No CleverTap Instance found");
             CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
@@ -6238,10 +6240,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     /**
      * This method is used to push install referrer via Intent
+     * Deprecation warning because Google Play install referrer via intent will be deprecated in March 2020
      *
      * @param intent An Intent with the install referrer parameters
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
+    @Deprecated
     public void pushInstallReferrer(Intent intent) {
         try {
             final Bundle extras = intent.getExtras();

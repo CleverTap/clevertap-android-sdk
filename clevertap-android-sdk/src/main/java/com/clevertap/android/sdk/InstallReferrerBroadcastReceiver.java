@@ -6,10 +6,12 @@ import android.content.Intent;
 
 /**
  * Broadcast receiver for INSTALL_REFERRAL intents.
+ * Deprecation warning because Google Play install referrer via intent will be deprecated in March 2020
  */
+@Deprecated
 public final class InstallReferrerBroadcastReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
-            CleverTapAPI.handleInstallReferrerViaReceiver(context,intent);
+            CleverTapAPI.handleInstallReferrer(context,intent);
     }
 
 }
