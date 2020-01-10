@@ -1302,6 +1302,25 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+    static void handleInstallReferrerViaReceiver(Context context, Intent intent) {
+        if (instances == null) {
+            Logger.v("No CleverTap Instance found");
+            CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
+            if (instance != null) {
+                instance.pushInstallReferrer(intent);
+            }
+            return;
+        }
+
+        for (String accountId : CleverTapAPI.instances.keySet()) {
+            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+            if (instance != null) {
+                instance.pushInstallReferrer(intent);
+            }
+        }
+
+    }
+
     /**
      * This method is used to change the credentials of CleverTap account Id and token programmatically
      *
