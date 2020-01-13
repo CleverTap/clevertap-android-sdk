@@ -348,3 +348,9 @@ Add the following between the `<application></application>` tags. This will enab
             </intent-filter>
     </receiver>
 ```
+
+From CleverTap SDK v3.6.3 onwards, just remove the above the Broadcast Receiver if you are using it and add the following gradle dependency to capture UTM details, app install time, referrer click time and other metrics provided by the Google Install Referrer Library.
+
+```markdown
+    implementation 'com.android.installreferrer:installreferrer:1.1'
+```

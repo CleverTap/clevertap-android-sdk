@@ -177,7 +177,11 @@ class DeviceInfo {
                 Method getAdId = adInfo.getClass().getMethod("getId");
                 advertisingID = (String) getAdId.invoke(adInfo);
             } catch (Throwable t) {
-                getConfigLogger().verbose(config.getAccountId(), "Failed to get Advertising ID: " + t.toString() + t.getCause().toString());
+                if(t.getCause() != null) {
+                    getConfigLogger().verbose(config.getAccountId(), "Failed to get Advertising ID: " + t.toString() + t.getCause().toString());
+                }else{
+                    getConfigLogger().verbose(config.getAccountId(), "Failed to get Advertising ID: " + t.toString());
+                }
             }
             if (advertisingID != null && advertisingID.trim().length() > 2) {
                 synchronized (adIDLock) {
