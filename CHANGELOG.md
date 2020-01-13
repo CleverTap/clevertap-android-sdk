@@ -1,5 +1,11 @@
 ## CHANGE LOG
 
+### Version 3.6.3 (January 10, 2020)
+* Adds support for capturing Install Referrer via Google Play Install Referrer Library
+* Deprecation warning for `InstallReferrerBroadcastReceiver`
+* Changes retry mechanism in case CleverTap back end doesn't respond
+* Bug fixes and performance improvements
+
 ### Version 3.6.2 (December 11, 2019)
 * Adds support for Native Display.
 * Bug fixes and performance improvements
