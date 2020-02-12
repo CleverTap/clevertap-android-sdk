@@ -280,7 +280,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private int lastLocationPingTime = 0;
     private final Object tokenLock = new Object();
     private final Object notificationMapLock = new Object();
-    private boolean havePushedDeviceToken = false;
+    private boolean havePushedFCMToken = false;
+    private boolean havePushedXPSToken = false;
+    private boolean havePushedBPSToken = false;
+    private boolean havePushedHPSToken = false;
     private String processingUserLoginIdentifier = null;
     private final Boolean processingUserLoginLock = true;
     private long EXECUTOR_THREAD_ID = 0;
@@ -1245,6 +1248,51 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+    private void cacheXPSToken(String token) {
+        try {
+            if (token == null || alreadyHaveXPSToken(token)) return;
+
+            final SharedPreferences prefs = getPreferences();
+            if (prefs == null) return;
+
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putString(storageKeyWithSuffix(Constants.XPS_PROPERTY_REG_ID), token);
+            StorageHelper.persist(editor);
+        } catch (Throwable t) {
+            getConfigLogger().verbose(getAccountId(), "FcmManager: Unable to cache FCM Token", t);
+        }
+    }
+
+    private void cacheBPSToken(String token) {
+        try {
+            if (token == null || alreadyHaveBPSToken(token)) return;
+
+            final SharedPreferences prefs = getPreferences();
+            if (prefs == null) return;
+
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putString(storageKeyWithSuffix(Constants.BPS_PROPERTY_REG_ID), token);
+            StorageHelper.persist(editor);
+        } catch (Throwable t) {
+            getConfigLogger().verbose(getAccountId(), "FcmManager: Unable to cache FCM Token", t);
+        }
+    }
+
+    private void cacheHPSToken(String token) {
+        try {
+            if (token == null || alreadyHaveHPSToken(token)) return;
+
+            final SharedPreferences prefs = getPreferences();
+            if (prefs == null) return;
+
+            SharedPreferences.Editor editor = prefs.edit();
+            editor.putString(storageKeyWithSuffix(Constants.HPS_PROPERTY_REG_ID), token);
+            StorageHelper.persist(editor);
+        } catch (Throwable t) {
+            getConfigLogger().verbose(getAccountId(), "FcmManager: Unable to cache FCM Token", t);
+        }
+    }
+
     //Push
     private boolean alreadyHaveFCMToken(final String newToken) {
         if (newToken == null) return false;
@@ -1252,10 +1300,43 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return (cachedToken != null && cachedToken.equals(newToken));
     }
 
+    private boolean alreadyHaveXPSToken(final String newToken) {
+        if (newToken == null) return false;
+        String cachedToken = getCachedXPSToken();
+        return (cachedToken != null && cachedToken.equals(newToken));
+    }
+
+    private boolean alreadyHaveBPSToken(final String newToken) {
+        if (newToken == null) return false;
+        String cachedToken = getCachedBPSToken();
+        return (cachedToken != null && cachedToken.equals(newToken));
+    }
+
+    private boolean alreadyHaveHPSToken(final String newToken) {
+        if (newToken == null) return false;
+        String cachedToken = getCachedHPSToken();
+        return (cachedToken != null && cachedToken.equals(newToken));
+    }
+
     //Push
     private String getCachedFCMToken() {
         SharedPreferences prefs = getPreferences();
         return (prefs == null) ? null : getStringFromPrefs(Constants.FCM_PROPERTY_REG_ID, null);
+    }
+
+    private String getCachedXPSToken() {
+        SharedPreferences prefs = getPreferences();
+        return (prefs == null) ? null : getStringFromPrefs(Constants.XPS_PROPERTY_REG_ID, null);
+    }
+
+    private String getCachedBPSToken() {
+        SharedPreferences prefs = getPreferences();
+        return (prefs == null) ? null : getStringFromPrefs(Constants.BPS_PROPERTY_REG_ID, null);
+    }
+
+    private String getCachedHPSToken() {
+        SharedPreferences prefs = getPreferences();
+        return (prefs == null) ? null : getStringFromPrefs(Constants.HPS_PROPERTY_REG_ID, null);
     }
 
     /**
@@ -1382,7 +1463,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     //Push
     private void pushFCMDeviceToken(String token, final boolean register, final boolean forceUpdate) {
         synchronized (tokenLock) {
-            if (havePushedDeviceToken && !forceUpdate) {
+            if (havePushedFCMToken && !forceUpdate) {
                 getConfigLogger().verbose(getAccountId(), "FcmManager: skipping device token push - already sent.");
                 return;
             }
@@ -1391,9 +1472,61 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 token = (token != null) ? token : getCachedFCMToken();
                 if (token == null) return;
                 pushDeviceToken(context, token, register, PushType.FCM);
-                havePushedDeviceToken = true;
+                havePushedFCMToken = true;
             } catch (Throwable t) {
                 getConfigLogger().verbose(getAccountId(), "FcmManager: pushing device token failed", t);
+            }
+        }
+    }
+
+    private void pushXPSDeviceToken(String token, final boolean register, final boolean forceUpdate) {
+        synchronized (tokenLock) {
+            if (havePushedXPSToken && !forceUpdate) {
+                getConfigLogger().verbose(getAccountId(), "Xiaomi: skipping device token push - already sent.");
+                return;
+            }
+
+            try {
+                token = (token != null) ? token : getCachedXPSToken();
+                if (token == null) return;
+                pushDeviceToken(context, token, register, PushType.XPS);
+                havePushedXPSToken = true;
+            } catch (Throwable t) {
+                getConfigLogger().verbose(getAccountId(), "Xiaomi: pushing device token failed", t);
+            }
+        }
+    }
+    private void pushBPSDeviceToken(String token, final boolean register, final boolean forceUpdate) {
+        synchronized (tokenLock) {
+            if (havePushedBPSToken && !forceUpdate) {
+                getConfigLogger().verbose(getAccountId(), "Baidu: skipping device token push - already sent.");
+                return;
+            }
+
+            try {
+                token = (token != null) ? token : getCachedBPSToken();
+                if (token == null) return;
+                pushDeviceToken(context, token, register, PushType.BPS);
+                havePushedBPSToken = true;
+            } catch (Throwable t) {
+                getConfigLogger().verbose(getAccountId(), "Baidu: pushing device token failed", t);
+            }
+        }
+    }
+    private void pushHPSDeviceToken(String token, final boolean register, final boolean forceUpdate) {
+        synchronized (tokenLock) {
+            if (havePushedHPSToken && !forceUpdate) {
+                getConfigLogger().verbose(getAccountId(), "Huawei: skipping device token push - already sent.");
+                return;
+            }
+
+            try {
+                token = (token != null) ? token : getCachedHPSToken();
+                if (token == null) return;
+                pushDeviceToken(context, token, register, PushType.HPS);
+                havePushedHPSToken = true;
+            } catch (Throwable t) {
+                getConfigLogger().verbose(getAccountId(), "Huawei: pushing device token failed", t);
             }
         }
     }
@@ -4971,6 +5104,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         for (PushType pushType : enabledPushTypes) {
             if (pushType == PushType.FCM) {
                 pushFCMDeviceToken(null, register, force);
+            } else if (pushType == PushType.XPS){
+                pushXPSDeviceToken(null,register,force);
+            } else if(pushType == PushType.BPS){
+                pushBPSDeviceToken(null,register,force);
+            } else if(pushType == PushType.HPS){
+                pushHPSDeviceToken(null,register,force);
             }
         }
     }
@@ -5109,6 +5248,52 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @SuppressWarnings("unused")
     public void pushFcmRegistrationId(String fcmId, boolean register) {
         pushDeviceToken(fcmId, register, PushType.FCM);
+        cacheFCMToken(fcmId);
+    }
+
+    /**
+     * Sends the Xiaomi registration ID to CleverTap.
+     *
+     * @param regId    The Xiaomi registration ID
+     * @param register Boolean indicating whether to register
+     *                 or not for receiving push messages from CleverTap.
+     *                 Set this to true to receive push messages from CleverTap,
+     *                 and false to not receive any messages from CleverTap.
+     */
+    @SuppressWarnings("unused")
+    public void pushXiaomiRegistrationId(String regId, boolean register) {
+        pushDeviceToken(regId, register, PushType.XPS);
+        cacheXPSToken(regId);
+    }
+
+    /**
+     * Sends the Baidu registration ID to CleverTap.
+     *
+     * @param regId    The Baidu registration ID
+     * @param register Boolean indicating whether to register
+     *                 or not for receiving push messages from CleverTap.
+     *                 Set this to true to receive push messages from CleverTap,
+     *                 and false to not receive any messages from CleverTap.
+     */
+    @SuppressWarnings("unused")
+    public void pushBaiduRegistrationId(String regId, boolean register) {
+        pushDeviceToken(regId, register, PushType.BPS);
+        cacheBPSToken(regId);
+    }
+
+    /**
+     * Sends the Huawei registration ID to CleverTap.
+     *
+     * @param regId    The Huawei registration ID
+     * @param register Boolean indicating whether to register
+     *                 or not for receiving push messages from CleverTap.
+     *                 Set this to true to receive push messages from CleverTap,
+     *                 and false to not receive any messages from CleverTap.
+     */
+    @SuppressWarnings("unused")
+    public void pushHuaweiRegistrationId(String regId, boolean register) {
+        pushDeviceToken(regId, register, PushType.HPS);
+        cacheHPSToken(regId);
     }
 
     //Util

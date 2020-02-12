@@ -3,7 +3,10 @@ package com.clevertap.android.sdk;
 import android.support.annotation.NonNull;
 
 public enum PushType {
-    FCM("fcm");
+    FCM("fcm"),
+    HPS("hps"),
+    XPS("xps"),
+    BPS("bps");
 
     private final String type;
 
@@ -15,6 +18,12 @@ public enum PushType {
     static PushType fromString(String type) {
         if ("fcm".equals(type)) {
             return PushType.FCM;
+        } else if ("hps".equals(type)) {
+            return PushType.HPS;
+        } else if ("xps".equals(type)) {
+            return PushType.XPS;
+        } else if ("bps".equals(type)) {
+            return PushType.BPS;
         } else {
             return null;
         }
