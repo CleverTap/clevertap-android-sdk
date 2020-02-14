@@ -244,7 +244,7 @@ public class CTInboxListViewFragment extends Fragment {
         }
     }
 
-    interface InboxListener {
+    public interface InboxListener {
         void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data);
 
         void messageDidClick(Context baseContext, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue);

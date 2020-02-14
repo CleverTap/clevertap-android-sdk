@@ -221,7 +221,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         super.onDestroy();
     }
 
-    interface InboxActivityListener {
+    public interface InboxActivityListener {
         void messageDidShow(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data);
 
         void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue);
