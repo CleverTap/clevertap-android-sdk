@@ -308,7 +308,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         didShow(formData);
     }
 
-    interface InAppActivityListener {
+    public interface InAppActivityListener {
         void inAppNotificationDidShow(Context context, CTInAppNotification inAppNotification, Bundle formData);
 
         void inAppNotificationDidClick(Context context, CTInAppNotification inAppNotification, Bundle formData, HashMap<String, String> keyValuePayload);
