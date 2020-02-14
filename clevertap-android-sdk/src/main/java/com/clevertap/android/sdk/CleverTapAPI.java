@@ -43,6 +43,9 @@ import android.text.TextUtils;
 
 import com.clevertap.android.sdk.ab_testing.CTABTestController;
 import com.clevertap.android.sdk.ab_testing.CTABTestListener;
+import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
+import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
+import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.google.android.gms.plus.model.people.Person;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -80,6 +83,7 @@ import javax.net.ssl.SSLSocketFactory;
 
 import static android.content.Context.JOB_SCHEDULER_SERVICE;
 import static android.content.Context.NOTIFICATION_SERVICE;
+import static com.clevertap.android.sdk.Utils.runOnUiThread;
 
 /**
  * <h1>CleverTapAPI</h1>
@@ -116,6 +120,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private WeakReference<InAppNotificationButtonListener> inAppNotificationButtonListener;
 
     private WeakReference<InboxMessageButtonListener> inboxMessageButtonListener;
+
+    private WeakReference<DisplayUnitListener> displayUnitListenerWeakReference;
 
     // Initialize
     private CleverTapAPI(final Context context, final CleverTapInstanceConfig config, String cleverTapID) {
@@ -273,8 +279,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private CTABTestController ctABTestController;
     private CTExperimentsListener experimentsListener = null;
     private final Object inboxControllerLock = new Object();
+    private final Object displayUnitControllerLock = new Object();
     private CTInboxListener inboxListener;
     private boolean isBgPing = false;
+    private CTDisplayUnitController mCTDisplayUnitController;
 
     // static lifecycle callbacks
     static void onActivityCreated(Activity activity, String cleverTapID) {
@@ -3242,6 +3250,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 }
             }
 
+            //Handle Display Unit response
+            if (!getConfig().isAnalyticsOnly()) {
+                try {
+                    getConfigLogger().verbose(getAccountId(), "Processing Display Unit items...");
+                    processDisplayUnitsResponse(response);
+                } catch (Throwable t) {
+                    getConfigLogger().verbose("Error handling Display Unit response: " + t.getLocalizedMessage());
+                }
+            }
+
         } catch (Throwable t) {
             mResponseFailureCount++;
             getConfigLogger().verbose(getAccountId(), "Problem process send queue response", t);
@@ -4978,6 +4996,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             return;
         }
 
+        if (extras.containsKey(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY)) {
+            handleSendTestForDisplayUnits(extras);
+            return;
+        }
+
         if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG) || (extras.getString(Constants.NOTIFICATION_ID_TAG) == null)) {
             getConfigLogger().debug(getAccountId(), "Push notification ID Tag is null, not processing Notification Clicked event for:  " + extras.toString());
             return;
@@ -5106,7 +5129,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //InApp
     @Override
-    public void inAppNotificationDidShow(Context context, CTInAppNotification inAppNotification, Bundle formData) {
+    public void inAppNotificationDidShow(CTInAppNotification inAppNotification, Bundle formData) {
         pushInAppNotificationStateEvent(false, inAppNotification, formData);
     }
 
@@ -5597,6 +5620,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     resetInbox();
                     resetABTesting();
                     recordDeviceIDErrors();
+                    resetDisplayUnits();
                 } catch (Throwable t) {
                     getConfigLogger().verbose(getAccountId(), "Reset Profile error", t);
                 }
@@ -5644,7 +5668,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     @Override
-    public void inAppNotificationDidClick(Context context, CTInAppNotification inAppNotification, Bundle formData, HashMap<String, String> keyValueMap) {
+    public void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData, HashMap<String, String> keyValueMap) {
         pushInAppNotificationStateEvent(true, inAppNotification, formData);
         if (keyValueMap != null && !keyValueMap.isEmpty()) {
             if (inAppNotificationButtonListener != null && inAppNotificationButtonListener.get() != null) {
@@ -7320,4 +7344,215 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+    // -----------------------------------------------------------------------//
+    // ********                        Display Unit LOGIC                      *****//
+    // -----------------------------------------------------------------------//
+
+    /**
+     * Sets the listener to get the list of currently running Display Campaigns via callback
+     *
+     * @param listener- {@link DisplayUnitListener}
+     */
+    public void setDisplayUnitListener(DisplayUnitListener listener) {
+        if (listener != null) {
+            displayUnitListenerWeakReference = new WeakReference<>(listener);
+        } else {
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Failed to set - DisplayUnitListener can't be null");
+        }
+    }
+
+    /**
+     * Getter for retrieving all the Display Units.
+     *
+     * @return ArrayList<CleverTapDisplayUnit> - could be null, if there is no Display Unit campaigns
+     */
+    @Nullable
+    public ArrayList<CleverTapDisplayUnit> getAllDisplayUnits() {
+        if (mCTDisplayUnitController != null) {
+            return mCTDisplayUnitController.getAllDisplayUnits();
+        } else {
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Failed to get all Display Units");
+            return null;
+        }
+    }
+
+    /**
+     * Getter for retrieving Display Unit using the unitID
+     *
+     * @param unitID - unitID of the Display Unit {@link CleverTapDisplayUnit#getUnitID()}
+     * @return CleverTapDisplayUnit - could be null, if there is no Display Unit campaign with the identifier
+     */
+    @Nullable
+    public CleverTapDisplayUnit getDisplayUnitForId(String unitID) {
+        if (mCTDisplayUnitController != null) {
+            return mCTDisplayUnitController.getDisplayUnitForID(unitID);
+        } else {
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Failed to get Display Unit for id: " + unitID);
+            return null;
+        }
+    }
+
+    /**
+     * Raises the Display Unit Viewed event
+     *
+     * @param unitID - unitID of the Display Unit{@link CleverTapDisplayUnit#getUnitID()}
+     */
+    @SuppressWarnings("unused")
+    public void pushDisplayUnitViewedEventForID(String unitID) {
+        JSONObject event = new JSONObject();
+
+        try {
+            event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
+
+            //wzrk fields
+            if (mCTDisplayUnitController != null) {
+                CleverTapDisplayUnit displayUnit = mCTDisplayUnitController.getDisplayUnitForID(unitID);
+                if (displayUnit != null) {
+                    JSONObject eventExtras = displayUnit.getWZRKFields();
+                    if (eventExtras != null) {
+                        event.put("evtData", eventExtras);
+                    }
+                }
+            }
+
+            queueEvent(context, event, Constants.RAISED_EVENT);
+        } catch (Throwable t) {
+            // We won't get here
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Failed to push Display Unit viewed event" + t);
+        }
+    }
+
+    /**
+     * Raises the Display Unit Clicked event
+     *
+     * @param unitID - unitID of the Display Unit{@link CleverTapDisplayUnit#getUnitID()}
+     */
+    @SuppressWarnings("unused")
+    public void pushDisplayUnitClickedEventForID(String unitID) {
+        JSONObject event = new JSONObject();
+
+        try {
+            event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
+
+            //wzrk fields
+            if (mCTDisplayUnitController != null) {
+                CleverTapDisplayUnit displayUnit = mCTDisplayUnitController.getDisplayUnitForID(unitID);
+                if (displayUnit != null) {
+                    JSONObject eventExtraData = displayUnit.getWZRKFields();
+                    if (eventExtraData != null) {
+                        event.put("evtData", eventExtraData);
+                        try {
+                            setWzrkParams(eventExtraData);
+                        } catch (Throwable t) {
+                            // no-op
+                        }
+                    }
+                }
+            }
+
+            queueEvent(context, event, Constants.RAISED_EVENT);
+        } catch (Throwable t) {
+            // We won't get here
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Failed to push Display Unit clicked event" + t);
+        }
+    }
+
+    /**
+     * Resets the Display Units in the cache
+     */
+    private void resetDisplayUnits() {
+        if (mCTDisplayUnitController != null) {
+            mCTDisplayUnitController.reset();
+        } else {
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Can't reset Display Units, DisplayUnitcontroller is null");
+        }
+    }
+
+    /**
+     * Logic for the processing of Display Unit response
+     *
+     * @param response - Display Unit json response object
+     */
+    private void processDisplayUnitsResponse(JSONObject response) {
+        if (response == null) {
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Can't parse Display Unit Response, JSON response object is null");
+            return;
+        }
+
+        if (!response.has(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY)) {
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "JSON object doesn't contain the Display Units key");
+            return;
+        }
+        try {
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Processing Display Unit response");
+            parseDisplayUnits(response.getJSONArray(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY));
+        } catch (Throwable t) {
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Failed to parse response", t);
+        }
+    }
+
+    /**
+     * Parses the Display Units using the JSON response
+     *
+     * @param messages - Json array of Display Unit items
+     */
+    private void parseDisplayUnits(JSONArray messages) {
+        if (messages == null || messages.length() == 0) {
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Can't parse Display Units, jsonArray is either empty or null");
+            return;
+        }
+
+        synchronized (displayUnitControllerLock) {// lock to avoid multiple instance creation for controller
+            if (mCTDisplayUnitController == null) {
+                mCTDisplayUnitController = new CTDisplayUnitController();
+            }
+        }
+        ArrayList<CleverTapDisplayUnit> displayUnits = mCTDisplayUnitController.updateDisplayUnits(messages);
+
+        notifyDisplayUnitsLoaded(displayUnits);
+    }
+
+    /**
+     * Notify the registered Display Unit listener about the running Display Unit campaigns
+     *
+     * @param displayUnits - Array of Display Units {@link CleverTapDisplayUnit}
+     */
+    private void notifyDisplayUnitsLoaded(final ArrayList<CleverTapDisplayUnit> displayUnits) {
+        if (displayUnits != null && !displayUnits.isEmpty()) {
+            if (displayUnitListenerWeakReference != null && displayUnitListenerWeakReference.get() != null) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        //double check to ensure null safety
+                        if (displayUnitListenerWeakReference != null && displayUnitListenerWeakReference.get() != null) {
+                            displayUnitListenerWeakReference.get().onDisplayUnitsLoaded(displayUnits);
+                        }
+                    }
+                });
+            } else {
+                getConfigLogger().verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "No registered listener, failed to notify");
+            }
+        } else {
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "No Display Units found");
+        }
+    }
+
+    /**
+     * This method handles send Test flow for Display Units
+     * @param extras - bundled data of notification payload
+     */
+    private void handleSendTestForDisplayUnits(Bundle extras) {
+        try {
+            String pushJsonPayload = extras.getString(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY);
+            Logger.v("Received Display Unit via push payload: " + pushJsonPayload);
+            JSONObject r = new JSONObject();
+            JSONArray displayUnits = new JSONArray();
+            r.put(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY, displayUnits);
+            JSONObject testPushObject = new JSONObject(pushJsonPayload);
+            displayUnits.put(testPushObject);
+            processDisplayUnitsResponse(r);
+        } catch (Throwable t) {
+            Logger.v("Failed to process Display Unit from push notification payload", t);
+        }
+    }
 }

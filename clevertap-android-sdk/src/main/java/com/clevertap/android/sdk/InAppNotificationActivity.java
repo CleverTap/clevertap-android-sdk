@@ -20,15 +20,15 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     private CleverTapInstanceConfig config;
     private WeakReference<InAppActivityListener> listenerWeakReference;
 
-    private CTInAppBaseFullFragment createContentFragment(){
+    private CTInAppBaseFullFragment createContentFragment() {
         CTInAppType type = inAppNotification.getInAppType();
         CTInAppBaseFullFragment viewFragment = null;
-        switch(type) {
+        switch (type) {
             case CTInAppTypeCoverHTML: {
                 viewFragment = new CTInAppHtmlCoverFragment();
                 break;
             }
-            case CTInAppTypeInterstitialHTML:{
+            case CTInAppTypeInterstitialHTML: {
                 viewFragment = new CTInAppHtmlInterstitialFragment();
                 break;
             }
@@ -62,7 +62,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             }
             case CTInAppTypeAlert: {
                 AlertDialog alertDialog = null;
-                if(inAppNotification.getButtons().size()>0) {
+                if (inAppNotification.getButtons().size() > 0) {
                     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
                         alertDialog = new AlertDialog.Builder(InAppNotificationActivity.this, android.R.style.Theme_Material_Light_Dialog_Alert)
                                 .setCancelable(false)
@@ -262,30 +262,30 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     void didClick(Bundle data, HashMap<String, String> keyValueMap) {
         InAppActivityListener listener = getListener();
         if (listener != null) {
-            listener.inAppNotificationDidClick(getBaseContext(), inAppNotification, data, keyValueMap);
+            listener.inAppNotificationDidClick(inAppNotification, data, keyValueMap);
         }
     }
 
     @Override
-    public void inAppNotificationDidClick(Context context, CTInAppNotification inAppNotification, Bundle formData, HashMap<String, String> keyValueMap) {
+    public void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData, HashMap<String, String> keyValueMap) {
         didClick(formData, keyValueMap);
     }
 
     void didShow(Bundle data) {
         InAppActivityListener listener = getListener();
         if (listener != null) {
-            listener.inAppNotificationDidShow(getBaseContext(),inAppNotification, data);
+            listener.inAppNotificationDidShow(inAppNotification, data);
         }
     }
 
     void didDismiss(Bundle data) {
-        if(isAlertVisible){
-            isAlertVisible  = false;
+        if (isAlertVisible) {
+            isAlertVisible = false;
         }
         finish();
         InAppActivityListener listener = getListener();
-        if (listener != null) {
-            listener.inAppNotificationDidDismiss(getBaseContext(),inAppNotification, data);
+        if (listener != null && getBaseContext() != null) {
+            listener.inAppNotificationDidDismiss(getBaseContext(), inAppNotification, data);
         }
     }
 
@@ -304,14 +304,14 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     }
 
     @Override
-    public void inAppNotificationDidShow(Context context, CTInAppNotification inAppNotification, Bundle formData) {
+    public void inAppNotificationDidShow(CTInAppNotification inAppNotification, Bundle formData) {
         didShow(formData);
     }
 
     interface InAppActivityListener {
-        void inAppNotificationDidShow(Context context, CTInAppNotification inAppNotification, Bundle formData);
+        void inAppNotificationDidShow(CTInAppNotification inAppNotification, Bundle formData);
 
-        void inAppNotificationDidClick(Context context, CTInAppNotification inAppNotification, Bundle formData, HashMap<String, String> keyValuePayload);
+        void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData, HashMap<String, String> keyValuePayload);
 
         void inAppNotificationDidDismiss(Context context, CTInAppNotification inAppNotification, Bundle formData);
     }

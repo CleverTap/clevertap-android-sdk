@@ -17,7 +17,8 @@ import android.widget.RelativeLayout;
 import java.net.URLDecoder;
 
 public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragment {
-    private CTInAppWebView webView;
+    protected CTInAppWebView webView;
+
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
@@ -26,7 +27,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        return displayHTMLView(inflater,container);
+        return displayHTMLView(inflater, container);
     }
 
     @Override
@@ -41,7 +42,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
     }
 
     @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
-    private View displayHTMLView(LayoutInflater inflater, ViewGroup container){
+    private View displayHTMLView(LayoutInflater inflater, ViewGroup container) {
         View inAppView;
         try {
             inAppView = inflater.inflate(R.layout.inapp_html_full, container, false);
@@ -64,7 +65,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                     webView.getSettings().setAllowFileAccessFromFileURLs(false);
                 }
-                webView.addJavascriptInterface(new CTWebInterface(CleverTapAPI.instanceWithConfig(getActivity(),config)),"CleverTap");
+                webView.addJavascriptInterface(new CTWebInterface(CleverTapAPI.instanceWithConfig(getActivity(), config)), "CleverTap");
             }
 
             if (isDarkenEnabled())
@@ -76,16 +77,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
 
             if (isCloseButtonEnabled()) {
                 closeImageView = new CloseImageView(getActivity().getBaseContext());
-                RelativeLayout.LayoutParams closeIvLp = new RelativeLayout
-                        .LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT,
-                        RelativeLayout.LayoutParams.FILL_PARENT);
-                // Position it at the top right corner
-                closeIvLp.addRule(RelativeLayout.ABOVE, webView.getId());
-                closeIvLp.addRule(RelativeLayout.RIGHT_OF, webView.getId());
-
-
-                int sub = getScaledPixels(Constants.INAPP_CLOSE_IV_WIDTH) / 2;
-                closeIvLp.setMargins(-sub, 0, 0, -sub);
+                RelativeLayout.LayoutParams closeIvLp = getLayoutParamsForCloseButton();
 
                 closeImageView.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -96,11 +88,24 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
                 rl.addView(closeImageView, closeIvLp);
             }
 
-        }catch (Throwable t){
-            config.getLogger().verbose(config.getAccountId(),"Fragment view not created",t);
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(), "Fragment view not created", t);
             return null;
         }
         return inAppView;
+    }
+
+    protected RelativeLayout.LayoutParams getLayoutParamsForCloseButton() {
+        RelativeLayout.LayoutParams closeIvLp = new RelativeLayout
+                .LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT,
+                RelativeLayout.LayoutParams.FILL_PARENT);
+        // Position it at the top right corner
+        closeIvLp.addRule(RelativeLayout.ABOVE, webView.getId());
+        closeIvLp.addRule(RelativeLayout.RIGHT_OF, webView.getId());
+
+        int sub = getScaledPixels(Constants.INAPP_CLOSE_IV_WIDTH) / 2;
+        closeIvLp.setMargins(-sub, 0, 0, -sub);
+        return closeIvLp;
     }
 
     private boolean isCloseButtonEnabled() {
@@ -136,7 +141,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
 
                 didClick(formData, null);
                 Logger.d("Executing call to action for in-app: " + url);
-                fireUrlThroughIntent(url,formData);
+                fireUrlThroughIntent(url, formData);
             } catch (Throwable t) {
                 Logger.v("Error parsing the in-app notification action!", t);
             }
@@ -169,7 +174,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
     private void reDrawInApp() {
         webView.updateDimension();
 
-        if(inAppNotification.getCustomInAppUrl().isEmpty()) {
+        if (inAppNotification.getCustomInAppUrl().isEmpty()) {
             int mHeight = webView.dim.y;
             int mWidth = webView.dim.x;
 
@@ -185,7 +190,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
 
             webView.setInitialScale((int) (d * 100));
             webView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
-        }else{
+        } else {
             String url = inAppNotification.getCustomInAppUrl();
             webView.setWebViewClient(new WebViewClient());
             webView.loadUrl(url);

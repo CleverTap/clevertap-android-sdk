@@ -42,6 +42,7 @@ public class Constants {
     static final int PUSH_DELAY_MS = 1000;
     static final String INAPP_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inapp";
     static final String INBOX_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_inbox";
+    static final String DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY = "wzrk_adunit";
     static final String INAPP_HTML_TAG = "html";
     static final String INAPP_DATA_TAG = "d";
     static final String INAPP_X_PERCENT = "xp";
@@ -58,15 +59,16 @@ public class Constants {
     static final String INAPP_NOTIF_SHOW_CLOSE = "sc";
     static final String INAPP_JSON_RESPONSE_KEY = "inapp_notifs";
     static final String INBOX_JSON_RESPONSE_KEY = "inbox_notifs";
+    static final String DISPLAY_UNIT_JSON_RESPONSE_KEY = "adUnit_notifs";
     static final String INAPP_MAX_DISPLAY_COUNT = "mdc";
     static final String INAPP_MAX_PER_SESSION = "imc";
     static final String INAPP_WINDOW = "w";
     static final String INAPP_KEY = "inApp";
     static final int INAPP_CLOSE_IV_WIDTH = 40;
     static final String INAPP_JS_ENABLED = "isJsEnabled";
-    static final String NOTIFICATION_ID_TAG = "wzrk_id";
+    public static final String NOTIFICATION_ID_TAG = "wzrk_id";
     static final String DEEP_LINK_KEY = "wzrk_dl";
-    static final String WZRK_PREFIX = "wzrk_";
+    public static final String WZRK_PREFIX = "wzrk_";
     static final int NOTIFICATION_ID_TAG_INTERVAL = 5000;
     static final int NOTIFICATION_VIEWED_ID_TAG_INTERVAL = 2000;
     static final String SESSION_ID_LAST = "lastSessionId";
@@ -102,7 +104,7 @@ public class Constants {
     static final String KEY_COUNTS_PER_INAPP = "counts_per_inapp";
     static final String INAPP_ID_IN_PAYLOAD = "ti";
     static final int LOCATION_PING_INTERVAL_IN_SECONDS = 10;
-    static final String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME,NOTIFICATION_VIEWED_EVENT_NAME};
+    static final String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME, NOTIFICATION_VIEWED_EVENT_NAME};
     static final long DEFAULT_PUSH_TTL = 1000 * 60 * 60 * 24 * 4;
     static final String PF_JOB_ID = "pfjobid";
     static final int PING_FREQUENCY_VALUE = 240;
@@ -134,20 +136,20 @@ public class Constants {
     static final String KEY_TLC = "tlc";
     static final String KEY_TDC = "tdc";
     static final String KEY_KV = "kv";
-    static final String KEY_TYPE = "type";
+    public static final String KEY_TYPE = "type";
     static final String KEY_IS_TABLET = "tablet";
-    static final String KEY_BG = "bg";
-    static final String KEY_TITLE = "title";
-    static final String KEY_TEXT = "text";
-    static final String KEY_COLOR = "color";
-    static final String KEY_MESSAGE= "message";
+    public static final String KEY_BG = "bg";
+    public static final String KEY_TITLE = "title";
+    public static final String KEY_TEXT = "text";
+    public static final String KEY_COLOR = "color";
+    public static final String KEY_MESSAGE = "message";
     static final String KEY_HIDE_CLOSE = "close";
-    static final String KEY_MEDIA = "media";
+    public static final String KEY_MEDIA = "media";
     static final String KEY_MEDIA_LANDSCAPE = "mediaLandscape";
     static final String KEY_PORTRAIT = "hasPortrait";
     static final String KEY_LANDSCAPE = "hasLandscape";
-    static final String KEY_CONTENT_TYPE = "content_type";
-    static final String KEY_URL = "url";
+    public static final String KEY_CONTENT_TYPE = "content_type";
+    public static final String KEY_URL = "url";
     static final String KEY_BUTTONS = "buttons";
     static final String KEY_CUSTOM_HTML = "custom-html";
     static final String KEY_ENABLE_CUSTOM_CT_ID = "getEnableCustomCleverTapId";
@@ -191,4 +193,27 @@ public class Constants {
     // valid profile identifier keys
     static final Set<String> PROFILE_IDENTIFIER_KEYS = new HashSet<>(Arrays.asList(
             "Identity", "Email", "FBID", "GPID"));
+
+    public static final String KEY_ICON = "icon";
+    public static final String KEY_POSTER_URL = "poster";
+    public static final String KEY_ACTION = "action";
+    public static final String KEY_ANDROID = "android";
+    public static final String KEY_ORIENTATION = "orientation";
+    public static final String KEY_WZRK_PARAMS = "wzrkParams";
+    public static final String KEY_CONTENT = "content";
+    public static final String KEY_CUSTOM_KV = "custom_kv";
+    public static final String KEY_BORDER = "border";
+    public static final String KEY_RADIUS = "radius";
+    public static final String KEY_ACTIONS = "actions";
+    public static final String KEY_ID = "id";
+    public static final String KEY_DATE = "date";
+    public static final String KEY_WZRK_TTL = "wzrk_ttl";
+    public static final String KEY_IS_READ = "isRead";
+    public static final String KEY_TAGS = "tags";
+    public static final String KEY_MSG = "msg";
+    public static final String KEY_HAS_URL = "hasUrl";
+    public static final String KEY_HAS_LINKS = "hasLinks";
+    public static final String KEY_LINKS = "links";
+    public static final String TEST_IDENTIFIER = "0_0";
+    public static final String FEATURE_DISPLAY_UNIT = "DisplayUnit : ";
 }
