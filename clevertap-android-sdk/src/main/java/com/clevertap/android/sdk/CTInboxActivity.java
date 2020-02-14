@@ -38,7 +38,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     private CleverTapInstanceConfig config;
     private WeakReference<InboxActivityListener> listenerWeakReference;
 
-    InboxActivityListener getListener() {
+    public InboxActivityListener getListener() {
         InboxActivityListener listener = null;
         try {
             listener = listenerWeakReference.get();
