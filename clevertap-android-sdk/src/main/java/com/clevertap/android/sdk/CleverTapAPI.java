@@ -77,6 +77,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
@@ -833,7 +834,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             packageInfo = pm.getPackageInfo(packageName, PackageManager.GET_SERVICES);
             ServiceInfo[] services = packageInfo.services;
             for (ServiceInfo serviceInfo : services) {
-                if (serviceInfo.name.equals(clazz.getName())) {
+                if (serviceInfo.name.equals(clazz.getName()) ||
+                        (serviceInfo.getClass().getSuperclass().getName() != null && serviceInfo.getClass().getSuperclass().getName().equals(clazz.getName()))) {
                     Logger.v("Service " + serviceInfo.name + " found");
                     return true;
                 }
