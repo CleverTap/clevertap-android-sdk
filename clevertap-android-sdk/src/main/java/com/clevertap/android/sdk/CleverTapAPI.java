@@ -1843,8 +1843,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (!isAppLaunchPushed()) {
             pushAppLaunchedEvent();
             onTokenRefresh();
-            if (!installReferrerDataSent) {
+            if (!installReferrerDataSent && isFirstSession()) {
                 handleInstallReferrerOnFirstInstall();
+            }else{
+                getConfigLogger().verbose(getAccountId(),"Not raising Install Referrer event as it is not first install");
             }
         }
         if (!inCurrentSession()) {

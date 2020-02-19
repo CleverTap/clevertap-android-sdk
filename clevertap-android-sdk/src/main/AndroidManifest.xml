@@ -4,14 +4,6 @@
     android:versionCode="30700"
     android:versionName="3.7.0">
     <application>
-       <receiver
-            android:name="com.clevertap.android.sdk.InstallReferrerBroadcastReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.android.vending.INSTALL_REFERRER" />
-            </intent-filter>
-        </receiver>
-
         <activity
             android:name="com.clevertap.android.sdk.InAppNotificationActivity"
             android:configChanges="keyboardHidden"
