@@ -834,10 +834,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             packageInfo = pm.getPackageInfo(packageName, PackageManager.GET_SERVICES);
             ServiceInfo[] services = packageInfo.services;
             for (ServiceInfo serviceInfo : services) {
-                if (serviceInfo.name.equals(clazz.getName()) ||
-                        (Class.forName(serviceInfo.name).getSuperclass().getName()!=null && clazz.getName().equals(Class.forName(serviceInfo.name).getSuperclass().getName()))) {
-                    Logger.v("Service " + serviceInfo.name + " found");
-                    return true;
+                try{
+                    Class serviceClass = Class.forName(serviceInfo.name);
+                    if(serviceClass.getName().equals(clazz.getName()) ||
+                            serviceClass.getSuperclass().getName().equals(clazz.getName())){
+                        Logger.v("Service " + serviceInfo.name + " found");
+                        return true;
+                    }
+                }catch (NoClassDefFoundError e){
+                    //no-op move to next service
                 }
             }
         } catch (PackageManager.NameNotFoundException e) {
