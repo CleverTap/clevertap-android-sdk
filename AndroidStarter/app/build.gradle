@@ -31,7 +31,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
     //CleverTap Android SDK, make sure the AAR file is in the libs folder
-    implementation (name: 'clevertap-android-sdk-3.6.3', ext: 'aar')
+    implementation (name: 'clevertap-android-sdk-3.6.4', ext: 'aar')
 
     implementation 'com.google.firebase:firebase-messaging:17.3.0' //Needed for FCM
     implementation 'com.google.android.gms:play-services-ads:15.0.1' //Needed to use Google Ad Ids
@@ -41,6 +41,7 @@ dependencies {
     implementation 'com.google.android.exoplayer:exoplayer-ui:2.8.4'
     implementation 'com.github.bumptech.glide:glide:4.9.0'//Mandatory if you are using Notification inbox
     implementation 'com.android.support:design:28.0.0'//Mandatory if you are using Notification Inbox
+    implementation 'com.android.installreferrer:installreferrer:1.0' // Mandatory for v3.6.4 and above
 }
 
 apply plugin: 'com.google.gms.google-services'

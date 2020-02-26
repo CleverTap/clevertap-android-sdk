@@ -1,17 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.clevertap.android.sdk"
-    android:versionCode="30603"
-    android:versionName="3.6.3">
+    android:versionCode="30604"
+    android:versionName="3.6.4">
     <application>
-       <receiver
-            android:name="com.clevertap.android.sdk.InstallReferrerBroadcastReceiver"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="com.android.vending.INSTALL_REFERRER" />
-            </intent-filter>
-        </receiver>
-
         <activity
             android:name="com.clevertap.android.sdk.InAppNotificationActivity"
             android:configChanges="keyboardHidden"
