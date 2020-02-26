@@ -77,7 +77,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Random;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
@@ -229,6 +228,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private boolean installReferrerDataSent = false;
     private long referrerClickTime = 0;
     private long appInstallTime = 0;
+    private String cachedGUID = null;
 
     /**
      * Method to check whether app has ExoPlayer dependencies
@@ -825,6 +825,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     @SuppressWarnings("SameParameterValue")
     private static boolean isServiceAvailable(Context context, Class clazz) {
+        if(clazz == null) return false;
+
         PackageManager pm = context.getPackageManager();
         String packageName = context.getPackageName();
 
@@ -833,20 +835,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             packageInfo = pm.getPackageInfo(packageName, PackageManager.GET_SERVICES);
             ServiceInfo[] services = packageInfo.services;
             for (ServiceInfo serviceInfo : services) {
-                try{
-                    Class serviceClass = Class.forName(serviceInfo.name);
-                    if(serviceClass.getName().equals(clazz.getName()) ||
-                            serviceClass.getSuperclass().getName().equals(clazz.getName())){
-                        Logger.v("Service " + serviceInfo.name + " found");
-                        return true;
-                    }
-                }catch (NoClassDefFoundError e){
-                    //no-op move to next service
+                if (serviceInfo.name.equals(clazz.getName())) {
+                    Logger.v("Service " + serviceInfo.name + " found");
+                    return true;
                 }
             }
         } catch (PackageManager.NameNotFoundException e) {
-            Logger.d("Intent Service name not found exception - " + e.getLocalizedMessage());
-        } catch (ClassNotFoundException e) {
             Logger.d("Intent Service name not found exception - " + e.getLocalizedMessage());
         }
         return false;
@@ -2458,7 +2452,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     //Session
     private void clearUserContext(final Context context) {
         clearIJ(context);
-        _clearARP(context);
+        //_clearARP(context);//do not clear ARP//TODO remove after testing
         clearFirstRequestTimestampIfNeeded(context);
         clearLastRequestTimestamp(context);
     }
@@ -2472,15 +2466,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //Session
-    private void _clearARP(Context context) {
-        final String nameSpaceKey = getNamespaceARPKey();
-        if (nameSpaceKey == null) return;
-
-        final SharedPreferences prefs = StorageHelper.getPreferences(context, nameSpaceKey);
-        final SharedPreferences.Editor editor = prefs.edit();
-        editor.clear();
-        StorageHelper.persist(editor);
-    }
+//    private void _clearARP(Context context) {
+//        final String nameSpaceKey = getNamespaceARPKey();
+//        if (nameSpaceKey == null) return;
+//
+//        final SharedPreferences prefs = StorageHelper.getPreferences(context, nameSpaceKey);
+//        final SharedPreferences.Editor editor = prefs.edit();
+//        editor.clear();
+//        StorageHelper.persist(editor);
+//    }
 
     //Event
     private void processEvent(final Context context, final JSONObject event, final int eventType) {
@@ -2931,7 +2925,17 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         final String accountId = getAccountId();
         if (accountId == null) return null;
 
+        getConfigLogger().verbose(getAccountId(),"Old ARP Key = ARP:" + accountId);
         return "ARP:" + accountId;
+    }
+
+    private String getNewNamespaceARPKey() {
+
+        final String accountId = getAccountId();
+        if (accountId == null) return null;
+
+        getConfigLogger().verbose(getAccountId(),"New ARP Key = ARP:" + accountId + ":" + getCleverTapID());
+        return "ARP:" + accountId + ":" + getCleverTapID();
     }
 
     private void flushDBQueue(final Context context, final EventGroup eventGroup) {
@@ -3210,13 +3214,19 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
 
             // Attach ARP
-            try {
-                final JSONObject arp = getARP(context);
-                if (arp != null && arp.length() > 0) {
-                    header.put("arp", arp);
+            if(cachedGUID != null){
+                if(cachedGUID.equals(getCleverTapID())){
+                    try {
+                        final JSONObject arp = getARP();
+                        if (arp != null && arp.length() > 0) {
+                            header.put("arp", arp);
+                        }
+                    } catch (Throwable t) {
+                        getConfigLogger().verbose(getAccountId(), "Failed to attach ARP", t);
+                    }
                 }
-            } catch (Throwable t) {
-                getConfigLogger().verbose(getAccountId(), "Failed to attach ARP", t);
+            }else{
+                getConfigLogger().verbose(getAccountId(), "Not attaching ARP because ");
             }
 
             JSONObject ref = new JSONObject();
@@ -3260,18 +3270,48 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+
+
+    private SharedPreferences migrateARPToNewNameSpace(String newKey, String oldKey){
+        SharedPreferences oldPrefs = StorageHelper.getPreferences(context,oldKey);
+        SharedPreferences newPrefs = StorageHelper.getPreferences(context,newKey);
+        SharedPreferences.Editor editor = newPrefs.edit();
+        Map<String, ?> all = oldPrefs.getAll();
+
+        for (Map.Entry<String, ?> kv : all.entrySet()) {
+            final Object o = kv.getValue();
+            if (o instanceof Number) {
+                final int update = ((Number) o).intValue();
+                editor.putInt(kv.getKey(), update);
+            } else if (o instanceof String) {
+                if (((String) o).length() < 100) {
+                    editor.putString(kv.getKey(), (String) o);
+                } else {
+                    getConfigLogger().verbose(getAccountId(), "ARP update for key " + kv.getKey() + " rejected (string value too long)");
+                }
+            } else if (o instanceof Boolean) {
+                editor.putBoolean(kv.getKey(), (Boolean) o);
+            } else {
+                getConfigLogger().verbose(getAccountId(), "ARP update for key " + kv.getKey() + " rejected (invalid data type)");
+            }
+        }
+        getConfigLogger().verbose(getAccountId(), "Completed ARP update for namespace key: " + newKey + "");
+        StorageHelper.persist(editor);
+        return newPrefs;
+    }
+
     /**
      * The ARP is additional request parameters, which must be sent once
      * received after any HTTP call. This is sort of a proxy for cookies.
      *
      * @return A JSON object containing the ARP key/values. Can be null.
      */
-    private JSONObject getARP(final Context context) {
+    private JSONObject getARP() {
         try {
-            final String nameSpaceKey = getNamespaceARPKey();
+            final String nameSpaceKey = getNewNamespaceARPKey();
             if (nameSpaceKey == null) return null;
 
-            final SharedPreferences prefs = StorageHelper.getPreferences(context, nameSpaceKey);
+            final SharedPreferences prefs = migrateARPToNewNameSpace(nameSpaceKey,getNamespaceARPKey());
             final Map<String, ?> all = prefs.getAll();
             final Iterator<? extends Map.Entry<String, ?>> iter = all.entrySet().iterator();
 
@@ -3494,7 +3534,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private void handleARPUpdate(final Context context, final JSONObject arp) {
         if (arp == null || arp.length() == 0) return;
 
-        final String nameSpaceKey = getNamespaceARPKey();
+        final String nameSpaceKey = getNewNamespaceARPKey();
         if (nameSpaceKey == null) return;
 
         final SharedPreferences prefs = StorageHelper.getPreferences(context, nameSpaceKey);
@@ -5770,7 +5810,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             if (currentGUID == null) return;
 
             boolean haveIdentifier = false;
-            String cachedGUID = null;
 
             // check for valid identifier keys
             // use the first one we find
@@ -6344,7 +6383,27 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
         }
 
-        boolean isCTIntentServiceAvailable = isServiceAvailable(context, CTNotificationIntentService.class);
+        String intentServiceName = ManifestInfo.getInstance(context).getIntentServiceName();
+        Class clazz = null;
+        if(intentServiceName != null) {
+            try {
+                clazz = Class.forName(intentServiceName);
+            } catch (ClassNotFoundException e) {
+                try {
+                    clazz = Class.forName("CTNotificationIntentService");
+                } catch (ClassNotFoundException ex) {
+                    Logger.d("No Intent Service found");
+                }
+            }
+        }else{
+            try {
+                clazz = Class.forName("CTNotificationIntentService");
+            } catch (ClassNotFoundException ex) {
+                Logger.d("No Intent Service found");
+            }
+        }
+
+        boolean isCTIntentServiceAvailable = isServiceAvailable(context, clazz);
 
         if (actions != null && actions.length() > 0) {
             for (int i = 0; i < actions.length(); i++) {
