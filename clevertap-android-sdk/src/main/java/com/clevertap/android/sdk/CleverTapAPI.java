@@ -7031,6 +7031,13 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @SuppressLint("MissingPermission")
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void createOrResetJobScheduler(Context context) {
+
+        if (Build.VERSION.SDK_INT<Build.VERSION_CODES.O)
+        {
+            getConfigLogger().debug(getAccountId(),"Push Amplification feature is not supported below Oreo");
+            return;
+        }
+
         JobScheduler jobScheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
         if (jobScheduler == null) return;
         int pingFrequency = getPingFrequency(context);
@@ -7061,15 +7068,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
             builder.setRequiresCharging(false);
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                builder.setPeriodic(pingFrequency * Constants.ONE_MIN_IN_MILLIS, 5 * Constants.ONE_MIN_IN_MILLIS);
-            } else {
-                builder.setPeriodic(pingFrequency * 60 * 1000);
-            }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                builder.setRequiresBatteryNotLow(true);
-            }
+            builder.setPeriodic(pingFrequency * Constants.ONE_MIN_IN_MILLIS, 5 * Constants.ONE_MIN_IN_MILLIS);
+            builder.setRequiresBatteryNotLow(true);
 
             if (this.deviceInfo.testPermission(context, "android.permission.RECEIVE_BOOT_COMPLETED")) {
                 builder.setPersisted(true);
