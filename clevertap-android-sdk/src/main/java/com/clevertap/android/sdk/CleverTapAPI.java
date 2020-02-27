@@ -77,6 +77,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
@@ -833,12 +834,20 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             packageInfo = pm.getPackageInfo(packageName, PackageManager.GET_SERVICES);
             ServiceInfo[] services = packageInfo.services;
             for (ServiceInfo serviceInfo : services) {
-                if (serviceInfo.name.equals(clazz.getName())) {
-                    Logger.v("Service " + serviceInfo.name + " found");
-                    return true;
+                try{
+                    Class serviceClass = Class.forName(serviceInfo.name);
+                    if(serviceClass.getName().equals(clazz.getName()) ||
+                            serviceClass.getSuperclass().getName().equals(clazz.getName())){
+                        Logger.v("Service " + serviceInfo.name + " found");
+                        return true;
+                    }
+                }catch (NoClassDefFoundError e){
+                    //no-op move to next service
                 }
             }
         } catch (PackageManager.NameNotFoundException e) {
+            Logger.d("Intent Service name not found exception - " + e.getLocalizedMessage());
+        } catch (ClassNotFoundException e) {
             Logger.d("Intent Service name not found exception - " + e.getLocalizedMessage());
         }
         return false;
@@ -1843,8 +1852,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (!isAppLaunchPushed()) {
             pushAppLaunchedEvent();
             onTokenRefresh();
-            if (!installReferrerDataSent) {
+            if (!installReferrerDataSent && isFirstSession()) {
                 handleInstallReferrerOnFirstInstall();
+            }else{
+                getConfigLogger().verbose(getAccountId(),"Not raising Install Referrer event as it is not first install");
             }
         }
         if (!inCurrentSession()) {
