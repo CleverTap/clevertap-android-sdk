@@ -1,5 +1,9 @@
 ## CHANGE LOG
 
+### Version 3.6.4 (February 26, 2020)
+* Reverting Google Play Install Library to v1.0
+* Bug Fixes
+
 ### Version 3.6.3 (January 13, 2020)
 * Adds support for capturing Install Referrer via Google Play Install Referrer Library
 * Deprecation warning for `InstallReferrerBroadcastReceiver`
