@@ -52,7 +52,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.packageName = manifest.getPackageName();
         this.enableCustomCleverTapId = manifest.useCustomId();
         this.beta = manifest.enableBeta();
-        this.staging = 0;
+        this.staging = manifest.getLC() != null ? Integer.parseInt(manifest.getLC()): 0;
     }
 
     CleverTapInstanceConfig(CleverTapInstanceConfig config) {
@@ -184,6 +184,10 @@ public class CleverTapInstanceConfig implements Parcelable {
     // convenience to construct the internal only default config
     @SuppressWarnings({"unused", "WeakerAccess"})
     protected static CleverTapInstanceConfig createDefaultInstance(Context context, @NonNull String accountId, @NonNull String accountToken, String accountRegion) {
+        return new CleverTapInstanceConfig(context, accountId, accountToken, accountRegion, true);
+    }
+
+    protected static CleverTapInstanceConfig createDefaultInstance(Context context, @NonNull String accountId, @NonNull String accountToken, String accountRegion, String accountLC) {
         return new CleverTapInstanceConfig(context, accountId, accountToken, accountRegion, true);
     }
 

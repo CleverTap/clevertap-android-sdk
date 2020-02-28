@@ -30,7 +30,6 @@ final class ManifestValidator {
     private static void checkReceiversServices(final Context context, DeviceInfo deviceInfo) {
         try {
             validateReceiverInManifest((Application) context.getApplicationContext(), CTPushNotificationReceiver.class.getName());
-            validateReceiverInManifest((Application) context.getApplicationContext(), InstallReferrerBroadcastReceiver.class.getName());
             validateServiceInManifest((Application) context.getApplicationContext(), CTNotificationIntentService.class.getName());
             validateServiceInManifest((Application) context.getApplicationContext(), CTBackgroundJobService.class.getName());
             validateServiceInManifest((Application) context.getApplicationContext(), CTBackgroundIntentService.class.getName());

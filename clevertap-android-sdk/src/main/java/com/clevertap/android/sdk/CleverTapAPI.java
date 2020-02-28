@@ -228,7 +228,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private boolean installReferrerDataSent = false;
     private long referrerClickTime = 0;
     private long appInstallTime = 0;
-    private boolean instantExperienceLaunched = false;
     private String cachedGUID = null;
 
     /**
@@ -411,7 +410,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     instance.activityResumed(activity);
                 }
             } catch (Throwable t) {
-                // Ignore
+                Logger.v("Throwable - "+t.getLocalizedMessage());
             }
         }
     }
@@ -834,10 +833,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             packageInfo = pm.getPackageInfo(packageName, PackageManager.GET_SERVICES);
             ServiceInfo[] services = packageInfo.services;
             for (ServiceInfo serviceInfo : services) {
-                if (serviceInfo.name.equals(clazz.getName()) ||
-                        (Class.forName(serviceInfo.name).getSuperclass().getName()!=null && clazz.getName().equals(Class.forName(serviceInfo.name).getSuperclass().getName()))) {
-                    Logger.v("Service " + serviceInfo.name + " found");
-                    return true;
+                try{
+                    Class serviceClass = Class.forName(serviceInfo.name);
+                    if(serviceClass.getName().equals(clazz.getName()) ||
+                            serviceClass.getSuperclass().getName().equals(clazz.getName())){
+                        Logger.v("Service " + serviceInfo.name + " found");
+                        return true;
+                    }
+                }catch (NoClassDefFoundError e){
+                    //no-op move to next service
                 }
             }
         } catch (PackageManager.NameNotFoundException e) {
@@ -1847,11 +1851,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (!isAppLaunchPushed()) {
             pushAppLaunchedEvent();
             onTokenRefresh();
-            if (!installReferrerDataSent && isFirstSession()) {
-                handleInstallReferrerOnFirstInstall();
-            }else{
-                getConfigLogger().verbose(getAccountId(),"Not raising Install Referrer event as it is not first install");
-            }
+            postAsyncSafely("HandlingInstallReferrer", new Runnable() {
+                @Override
+                public void run() {
+                    if (!installReferrerDataSent && isFirstSession()) {
+                        handleInstallReferrerOnFirstInstall();
+                    }
+                }
+            });
         }
         if (!inCurrentSession()) {
             pushInitialEventsAsync();
@@ -3224,10 +3231,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 isBgPing = false;
             }
             header.put("rtl", getRenderedTargetList());
-            if(!installReferrerDataSent){
-                header.put("rct",getReferrerClickTime());
-                header.put("ait",getAppInstallTime());
-                header.put("iel",isInstantExperienceLaunched());
+            if (!installReferrerDataSent) {
+                header.put("rct", getReferrerClickTime());
+                header.put("ait", getAppInstallTime());
             }
 
 
@@ -6618,60 +6624,55 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return appInstallTime;
     }
 
-    private boolean isInstantExperienceLaunched() {
-        return instantExperienceLaunched;
-    }
 
-    private void handleInstallReferrerOnFirstInstall(){
-        getConfigLogger().verbose(getAccountId(),"Starting to handle install referrer");
-        final InstallReferrerClient referrerClient = InstallReferrerClient.newBuilder(context).build();
-        Logger.d("Referrer client build");
-        referrerClient.startConnection(new InstallReferrerStateListener() {
-            @Override
-            public void onInstallReferrerSetupFinished(int responseCode) {
-                switch (responseCode){
-                    case InstallReferrerClient.InstallReferrerResponse.OK:
-                        // Connection established.
-                        ReferrerDetails response = null;
-                        try {
-                            response = referrerClient.getInstallReferrer();
-                            Logger.d("got response "+response.toString());
-                            String referrerUrl = response.getInstallReferrer();
-                            Logger.d("referrerUrl ="+referrerUrl);
-                            referrerClickTime = response.getReferrerClickTimestampSeconds();
-                            Logger.d("referral click time ="+String.valueOf(referrerClickTime));
-                            appInstallTime = response.getInstallBeginTimestampSeconds();
-                            Logger.d("appInstallTime = "+String.valueOf(appInstallTime));
-                            instantExperienceLaunched = response.getGooglePlayInstantParam();
-                            Logger.d("instant experience = "+String.valueOf(instantExperienceLaunched));
-                            pushInstallReferrer(referrerUrl);
-                            installReferrerDataSent = true;
-                            getConfigLogger().debug(getAccountId(),"Install Referrer data set");
-                        } catch (RemoteException e) {
-                            e.printStackTrace();
+    private void handleInstallReferrerOnFirstInstall() {
+        getConfigLogger().verbose(getAccountId(), "Starting to handle install referrer");
+        try {
+            final InstallReferrerClient referrerClient = InstallReferrerClient.newBuilder(context).build();
+            referrerClient.startConnection(new InstallReferrerStateListener() {
+                @Override
+                public void onInstallReferrerSetupFinished(int responseCode) {
+                    switch (responseCode) {
+                        case InstallReferrerClient.InstallReferrerResponse.OK:
+                            // Connection established.
+                            ReferrerDetails response = null;
+                            try {
+                                response = referrerClient.getInstallReferrer();
+                                String referrerUrl = response.getInstallReferrer();
+                                referrerClickTime = response.getReferrerClickTimestampSeconds();
+                                appInstallTime = response.getInstallBeginTimestampSeconds();
+                                pushInstallReferrer(referrerUrl);
+                                installReferrerDataSent = true;
+                                getConfigLogger().debug(getAccountId(), "Install Referrer data set");
+                            } catch (RemoteException e) {
+                                getConfigLogger().debug(getAccountId(),"Remote exception caused by Google Play Install Referrer library - "+e.getMessage());
+                                referrerClient.endConnection();
+                                installReferrerDataSent = false;
+                            }
                             referrerClient.endConnection();
-                            installReferrerDataSent = false;
-                        }
-                        referrerClient.endConnection();
-                        break;
-                    case InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED:
-                        // API not available on the current Play Store app.
-                        getConfigLogger().debug(getAccountId(),"Install Referrer data not set, API not supported by Play Store on device");
-                        break;
-                    case InstallReferrerClient.InstallReferrerResponse.SERVICE_UNAVAILABLE:
-                        // Connection couldn't be established.
-                        getConfigLogger().debug(getAccountId(),"Install Referrer data not set, connection to Play Store unavailable");
-                        break;
-                }
-            }
+                            break;
+                        case InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED:
+                            // API not available on the current Play Store app.
+                            getConfigLogger().debug(getAccountId(), "Install Referrer data not set, API not supported by Play Store on device");
+                            break;
+                        case InstallReferrerClient.InstallReferrerResponse.SERVICE_UNAVAILABLE:
+                            // Connection couldn't be established.
+                            getConfigLogger().debug(getAccountId(), "Install Referrer data not set, connection to Play Store unavailable");
+                            break;
+                    }
 
-            @Override
-            public void onInstallReferrerServiceDisconnected() {
-                if(!installReferrerDataSent){
-                    handleInstallReferrerOnFirstInstall();
                 }
-            }
-        });
+
+                @Override
+                public void onInstallReferrerServiceDisconnected() {
+                    if (!installReferrerDataSent) {
+                        handleInstallReferrerOnFirstInstall();
+                    }
+                }
+            });
+        }catch(Throwable t){
+            getConfigLogger().verbose(getAccountId(),"Google Play Install Referrer's InstallReferrerClient Class not found - " +t.getLocalizedMessage() + " \n Please add implementation \'com.android.installreferrer:installreferrer:1.0\' to your build.gradle");
+        }
     }
 
     /**
@@ -7113,6 +7114,13 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @SuppressLint("MissingPermission")
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void createOrResetJobScheduler(Context context) {
+
+        if (Build.VERSION.SDK_INT<Build.VERSION_CODES.O)
+        {
+            getConfigLogger().debug(getAccountId(),"Push Amplification feature is not supported below Oreo");
+            return;
+        }
+
         JobScheduler jobScheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
         if (jobScheduler == null) return;
         int pingFrequency = 15;//getPingFrequency(context);
@@ -7143,15 +7151,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             builder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);
             builder.setRequiresCharging(false);
 
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                builder.setPeriodic(15 * Constants.ONE_MIN_IN_MILLIS, 5 * Constants.ONE_MIN_IN_MILLIS);
-            } else {
-                builder.setPeriodic(pingFrequency * 60 * 1000);
-            }
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                builder.setRequiresBatteryNotLow(true);
-            }
+            builder.setPeriodic(pingFrequency * Constants.ONE_MIN_IN_MILLIS, 5 * Constants.ONE_MIN_IN_MILLIS);
+            builder.setRequiresBatteryNotLow(true);
 
             if (this.deviceInfo.testPermission(context, "android.permission.RECEIVE_BOOT_COMPLETED")) {
                 builder.setPersisted(true);

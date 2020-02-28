@@ -20,6 +20,7 @@ public class Constants {
     static final String LABEL_FCM_SENDER_ID = "FCM_SENDER_ID";
     static final String LABEL_PACKAGE_NAME = "CLEVERTAP_APP_PACKAGE";
     static final String LABEL_BETA = "CLEVERTAP_BETA";
+    static final String LABEL_LC = "CLEVERTAP_LC";
     static final String CLEVERTAP_OPTOUT = "ct_optout";
     static final String CLEVERTAP_STORAGE_TAG = "WizRocket";
     static final String CLEVERTAP_LOG_TAG = "CleverTap";
