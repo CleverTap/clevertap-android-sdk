@@ -4805,6 +4805,24 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
+     * Pushes the Notification Clicked event for App Inbox to CleverTap.
+     * @param messageId String - messageId of {@link CTInboxMessage}
+     */
+    public void pushInboxNotificationClickedEvent(String messageId){
+        CTInboxMessage message = getInboxMessageForId(messageId);
+        pushInboxMessageStateEvent(true,message,null);
+    }
+
+    /**
+     * Pushes the Notification Viewed event for App Inbox to CleverTap.
+     * @param messageId String - messageId of {@link CTInboxMessage}
+     */
+    public void pushInboxNotificationViewedEvent(String messageId){
+        CTInboxMessage message = getInboxMessageForId(messageId);
+        pushInboxMessageStateEvent(false,message,null);
+    }
+
+    /**
      * Returns an EventDetail object for the particular event passed. EventDetail consists of event name, count, first time
      * and last time timestamp of the event.
      *
@@ -6414,14 +6432,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 clazz = Class.forName(intentServiceName);
             } catch (ClassNotFoundException e) {
                 try {
-                    clazz = Class.forName("CTNotificationIntentService");
+                    clazz = Class.forName("com.clevertap.android.sdk.CTNotificationIntentService");
                 } catch (ClassNotFoundException ex) {
                     Logger.d("No Intent Service found");
                 }
             }
         }else{
             try {
-                clazz = Class.forName("CTNotificationIntentService");
+                clazz = Class.forName("com.clevertap.android.sdk.CTNotificationIntentService");
             } catch (ClassNotFoundException ex) {
                 Logger.d("No Intent Service found");
             }
