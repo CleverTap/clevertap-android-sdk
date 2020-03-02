@@ -21,6 +21,7 @@ class ManifestInfo {
     private static String packageName;
     private static boolean beta;
     private static String LC;
+    private static String intentServiceName;
 
     private static String _getManifestStringValueForKey(Bundle manifest, String name) {
         try {
@@ -64,6 +65,9 @@ class ManifestInfo {
         beta = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_BETA));
         if(LC==null)
             LC = _getManifestStringValueForKey(metaData, Constants.LABEL_LC);
+        if(intentServiceName == null){
+            intentServiceName = _getManifestStringValueForKey(metaData, Constants.LABEL_INTENT_SERVICE);
+        }
     }
 
     synchronized static ManifestInfo getInstance(Context context){
@@ -123,6 +127,10 @@ class ManifestInfo {
 
     String getLC() {
         return LC;
+    }
+
+    String getIntentServiceName (){
+        return intentServiceName;
     }
 
     static void changeCredentials(String id, String token, String region){

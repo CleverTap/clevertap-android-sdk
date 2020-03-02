@@ -825,6 +825,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     @SuppressWarnings("SameParameterValue")
     private static boolean isServiceAvailable(Context context, Class clazz) {
+        if(clazz == null) return false;
+
         PackageManager pm = context.getPackageManager();
         String packageName = context.getPackageName();
 
@@ -833,20 +835,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             packageInfo = pm.getPackageInfo(packageName, PackageManager.GET_SERVICES);
             ServiceInfo[] services = packageInfo.services;
             for (ServiceInfo serviceInfo : services) {
-                try{
-                    Class serviceClass = Class.forName(serviceInfo.name);
-                    if(serviceClass.getName().equals(clazz.getName()) ||
-                            serviceClass.getSuperclass().getName().equals(clazz.getName())){
-                        Logger.v("Service " + serviceInfo.name + " found");
-                        return true;
-                    }
-                }catch (NoClassDefFoundError e){
-                    //no-op move to next service
+                if (serviceInfo.name.equals(clazz.getName())) {
+                    Logger.v("Service " + serviceInfo.name + " found");
+                    return true;
                 }
             }
         } catch (PackageManager.NameNotFoundException e) {
-            Logger.d("Intent Service name not found exception - " + e.getLocalizedMessage());
-        } catch (ClassNotFoundException e) {
             Logger.d("Intent Service name not found exception - " + e.getLocalizedMessage());
         }
         return false;
@@ -6413,7 +6407,27 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
         }
 
-        boolean isCTIntentServiceAvailable = isServiceAvailable(context, CTNotificationIntentService.class);
+        String intentServiceName = ManifestInfo.getInstance(context).getIntentServiceName();
+        Class clazz = null;
+        if(intentServiceName != null) {
+            try {
+                clazz = Class.forName(intentServiceName);
+            } catch (ClassNotFoundException e) {
+                try {
+                    clazz = Class.forName("CTNotificationIntentService");
+                } catch (ClassNotFoundException ex) {
+                    Logger.d("No Intent Service found");
+                }
+            }
+        }else{
+            try {
+                clazz = Class.forName("CTNotificationIntentService");
+            } catch (ClassNotFoundException ex) {
+                Logger.d("No Intent Service found");
+            }
+        }
+
+        boolean isCTIntentServiceAvailable = isServiceAvailable(context, clazz);
 
         if (actions != null && actions.length() > 0) {
             for (int i = 0; i < actions.length(); i++) {
