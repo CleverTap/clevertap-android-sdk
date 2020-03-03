@@ -323,9 +323,9 @@ class DeviceInfo {
     private static Boolean isBaiduPresent = null;
     private static Boolean isHuaweiPresent = null;
     private static final String FIREBASE_CLASS_NAME = "com.google.firebase.messaging.FirebaseMessaging";
-    private static final String XIAOMI_CLASS_NAME = "com.google.firebase.messaging.FirebaseMessaging";//TODO
-    private static final String BAIDU_CLASS_NAME = "com.google.firebase.messaging.FirebaseMessaging";//TODO
-    private static final String HUAWEI_CLASS_NAME = "com.google.firebase.messaging.FirebaseMessaging";//TODO
+    private static final String XIAOMI_CLASS_NAME = "com.xiaomi.mipush.sdk.MiPushClient";
+    private static final String BAIDU_CLASS_NAME = "com.baidu.android.pushservice.PushMessageReceiver";
+    private static final String HUAWEI_CLASS_NAME = "com.huawei.hms.push.HmsMessaging";
 
     private boolean isFCMAvailable() {
         if (isFirebasePresent == null) {

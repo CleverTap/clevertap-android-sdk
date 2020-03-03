@@ -98,9 +98,9 @@ public class Constants {
     static final String NOTIFICATION_TAG = "wzrk_pn";
     static final String CHARGED_EVENT = "Charged";
     static final String FCM_PROPERTY_REG_ID = "fcm_token";
-    static final String XPS_PROPERTY_REG_ID = "fcm_token";
-    static final String BPS_PROPERTY_REG_ID = "fcm_token";
-    static final String HPS_PROPERTY_REG_ID = "fcm_token";
+    static final String XPS_PROPERTY_REG_ID = "xps_token";
+    static final String BPS_PROPERTY_REG_ID = "bps_token";
+    static final String HPS_PROPERTY_REG_ID = "hps_token";
     static final String KEY_MUTED = "comms_mtd";
     static final int EMPTY_NOTIFICATION_ID = -1000;
     static final String KEY_MAX_PER_DAY = "istmcd_inapp";
