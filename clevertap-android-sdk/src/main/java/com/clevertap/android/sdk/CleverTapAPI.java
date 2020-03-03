@@ -7120,16 +7120,23 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void createOrResetJobScheduler(Context context) {
 
+        int existingJobId = StorageHelper.getInt(context, Constants.PF_JOB_ID, -1);
+        JobScheduler jobScheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
+
+        //Disable push amp for devices below Api 26
         if (Build.VERSION.SDK_INT<Build.VERSION_CODES.O)
         {
+            if(existingJobId>=0) {//cancel already running job
+                jobScheduler.cancel(existingJobId);
+                StorageHelper.putInt(context, Constants.PF_JOB_ID, -1);
+            }
+
             getConfigLogger().debug(getAccountId(),"Push Amplification feature is not supported below Oreo");
             return;
         }
 
-        JobScheduler jobScheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
         if (jobScheduler == null) return;
         int pingFrequency = getPingFrequency(context);
-        int existingJobId = StorageHelper.getInt(context, Constants.PF_JOB_ID, -1);
 
         if (existingJobId < 0 && pingFrequency < 0) return; //no running job and nothing to create
 
