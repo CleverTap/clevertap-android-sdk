@@ -4808,6 +4808,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Pushes the Notification Clicked event for App Inbox to CleverTap.
      * @param messageId String - messageId of {@link CTInboxMessage}
      */
+    @SuppressWarnings("unused")
     public void pushInboxNotificationClickedEvent(String messageId){
         CTInboxMessage message = getInboxMessageForId(messageId);
         pushInboxMessageStateEvent(true,message,null);
@@ -4817,6 +4818,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Pushes the Notification Viewed event for App Inbox to CleverTap.
      * @param messageId String - messageId of {@link CTInboxMessage}
      */
+    @SuppressWarnings("unused")
     public void pushInboxNotificationViewedEvent(String messageId){
         CTInboxMessage message = getInboxMessageForId(messageId);
         pushInboxMessageStateEvent(false,message,null);
@@ -6972,6 +6974,17 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
+     * Deletes the {@link CTInboxMessage} object for given messageId
+     *
+     * @param messageId String - messageId of {@link CTInboxMessage} public object of inbox message
+     */
+    @SuppressWarnings("unused")
+    public void deleteInboxMessage(String messageId){
+        CTInboxMessage message = getInboxMessageForId(messageId);
+        deleteInboxMessage(message);
+    }
+
+    /**
      * Marks the given {@link CTInboxMessage} object as read
      *
      * @param message {@link CTInboxMessage} public object of inbox message
@@ -6994,6 +7007,17 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 }
             }
         });
+    }
+
+    /**
+     * Marks the given messageId of {@link CTInboxMessage} object as read
+     *
+     * @param messageId String - messageId of {@link CTInboxMessage} public object of inbox message
+     */
+    @SuppressWarnings("unused")
+    public void markReadInboxMessage(String messageId){
+        CTInboxMessage message = getInboxMessageForId(messageId);
+        markReadInboxMessage(message);
     }
 
     /**
@@ -7147,16 +7171,23 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private void createOrResetJobScheduler(Context context) {
 
+        int existingJobId = StorageHelper.getInt(context, Constants.PF_JOB_ID, -1);
+        JobScheduler jobScheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
+
+        //Disable push amp for devices below Api 26
         if (Build.VERSION.SDK_INT<Build.VERSION_CODES.O)
         {
+            if(existingJobId>=0) {//cancel already running job
+                jobScheduler.cancel(existingJobId);
+                StorageHelper.putInt(context, Constants.PF_JOB_ID, -1);
+            }
+
             getConfigLogger().debug(getAccountId(),"Push Amplification feature is not supported below Oreo");
             return;
         }
 
-        JobScheduler jobScheduler = (JobScheduler) context.getSystemService(JOB_SCHEDULER_SERVICE);
         if (jobScheduler == null) return;
         int pingFrequency = 15;//getPingFrequency(context);
-        int existingJobId = StorageHelper.getInt(context, Constants.PF_JOB_ID, -1);
 
         //if (existingJobId < 0 && pingFrequency < 0) return; //no running job and nothing to create
 
