@@ -4788,6 +4788,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Pushes the Notification Clicked event for App Inbox to CleverTap.
      * @param messageId String - messageId of {@link CTInboxMessage}
      */
+    @SuppressWarnings("unused")
     public void pushInboxNotificationClickedEvent(String messageId){
         CTInboxMessage message = getInboxMessageForId(messageId);
         pushInboxMessageStateEvent(true,message,null);
@@ -4797,6 +4798,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * Pushes the Notification Viewed event for App Inbox to CleverTap.
      * @param messageId String - messageId of {@link CTInboxMessage}
      */
+    @SuppressWarnings("unused")
     public void pushInboxNotificationViewedEvent(String messageId){
         CTInboxMessage message = getInboxMessageForId(messageId);
         pushInboxMessageStateEvent(false,message,null);
@@ -6945,6 +6947,17 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
+     * Deletes the {@link CTInboxMessage} object for given messageId
+     *
+     * @param messageId String - messageId of {@link CTInboxMessage} public object of inbox message
+     */
+    @SuppressWarnings("unused")
+    public void deleteInboxMessage(String messageId){
+        CTInboxMessage message = getInboxMessageForId(messageId);
+        deleteInboxMessage(message);
+    }
+
+    /**
      * Marks the given {@link CTInboxMessage} object as read
      *
      * @param message {@link CTInboxMessage} public object of inbox message
@@ -6967,6 +6980,17 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 }
             }
         });
+    }
+
+    /**
+     * Marks the given messageId of {@link CTInboxMessage} object as read
+     *
+     * @param messageId String - messageId of {@link CTInboxMessage} public object of inbox message
+     */
+    @SuppressWarnings("unused")
+    public void markReadInboxMessage(String messageId){
+        CTInboxMessage message = getInboxMessageForId(messageId);
+        markReadInboxMessage(message);
     }
 
     /**
