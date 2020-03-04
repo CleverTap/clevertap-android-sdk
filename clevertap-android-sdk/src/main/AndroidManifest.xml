@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.clevertap.android.sdk"
     android:versionCode="30604"
-    android:versionName="3.6.4">
+    android:versionName="3.8.0">
     <application>
         <activity
             android:name="com.clevertap.android.sdk.InAppNotificationActivity"
