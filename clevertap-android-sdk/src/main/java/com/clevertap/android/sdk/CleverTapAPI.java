@@ -137,8 +137,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         this.ns = Executors.newFixedThreadPool(1);
         this.localDataStore = new LocalDataStore(context, config);
         this.deviceInfo = new DeviceInfo(context, config, cleverTapID);
+        if(this.deviceInfo.getDeviceID() != null){
+            Logger.v("Initializing InAppFC with device Id = "+ this.deviceInfo.getDeviceID());
+            this.inAppFCManager = new InAppFCManager(context,config,this.deviceInfo.getDeviceID());
+        }
         this.validator = new Validator();
-        this.inAppFCManager = new InAppFCManager(context, config);
 
         postAsyncSafely("CleverTapAPI#initializeDeviceInfo", new Runnable() {
             @Override
@@ -2462,7 +2465,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     //Session
     private void clearUserContext(final Context context) {
         clearIJ(context);
-        //_clearARP(context);//do not clear ARP//TODO remove after testing
         clearFirstRequestTimestampIfNeeded(context);
         clearLastRequestTimestamp(context);
     }
@@ -2474,17 +2476,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         editor.clear();
         StorageHelper.persist(editor);
     }
-
-    //Session
-//    private void _clearARP(Context context) {
-//        final String nameSpaceKey = getNamespaceARPKey();
-//        if (nameSpaceKey == null) return;
-//
-//        final SharedPreferences prefs = StorageHelper.getPreferences(context, nameSpaceKey);
-//        final SharedPreferences.Editor editor = prefs.edit();
-//        editor.clear();
-//        StorageHelper.persist(editor);
-//    }
 
     //Event
     private void processEvent(final Context context, final JSONObject event, final int eventType) {
@@ -3278,7 +3269,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 header.put("wzrk_ref", wzrkParams);
             }
 
-            inAppFCManager.attachToHeader(context, header);
+            if(inAppFCManager != null) {
+                Logger.v("Attaching InAppFC to Header");
+                inAppFCManager.attachToHeader(context, header);
+            }
 
             // Resort to string concat for backward compatibility
             return "[" + header.toString() + ", " + arr.toString().substring(1);
@@ -3315,6 +3309,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
         getConfigLogger().verbose(getAccountId(), "Completed ARP update for namespace key: " + newKey + "");
         StorageHelper.persist(editor);
+        oldPrefs.edit().clear().apply();
         return newPrefs;
     }
 
@@ -3446,7 +3441,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
             // Handle stale_inapp
             try {
-                inAppFCManager.processResponse(context, response);
+                if(inAppFCManager != null) {
+                    inAppFCManager.processResponse(context, response);
+                }
             } catch (Throwable t) {
                 // Ignore
             }
@@ -3649,7 +3646,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 perDay = response.getInt("imp");
             }
 
-            inAppFCManager.updateLimits(context, perDay, perSession);
+            if(inAppFCManager != null) {
+                Logger.v("Updating InAppFC Limits");
+                inAppFCManager.updateLimits(context, perDay, perSession);
+            }
 
             JSONArray inappNotifs;
             try {
@@ -5933,7 +5933,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
                     // clear out the old data
                     getLocalDataStore().changeUser();
-                    inAppFCManager.changeUser(context);
                     activityCount = 1;
                     destroySession();
 
@@ -5960,6 +5959,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     resetABTesting();
                     recordDeviceIDErrors();
                     resetDisplayUnits();
+                    inAppFCManager.changeUser(getCleverTapID());
                 } catch (Throwable t) {
                     getConfigLogger().verbose(getAccountId(), "Reset Profile error", t);
                 }
@@ -6081,6 +6081,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //To be called from DeviceInfo AdID GUID generation
     void deviceIDCreated(String deviceId) {
+        Logger.v("Initializing InAppFC after Device ID Created = "+deviceId);
+        this.inAppFCManager = new InAppFCManager(context, config, deviceId);
+        Logger.v("Initializing ABTesting after Device ID Created = "+deviceId);
+        initABTesting();
         getConfigLogger().verbose("Got device id from DeviceInfo, notifying user profile initialized to SyncListener");
         notifyUserProfileInitialized(deviceId);
     }
@@ -7705,12 +7709,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
             if (getCleverTapID() == null) {
                 getConfigLogger().verbose(config.getAccountId(), "GUID not set yet, deferring ABTesting initialization");
-                postAsyncSafely("postDelayedInitABTesting", new Runnable() {
-                    @Override
-                    public void run() {
-                        initABTesting();
-                    }
-                });
                 return;
             }
             //config.setEnableUIEditor(isUIEditorEnabled);
