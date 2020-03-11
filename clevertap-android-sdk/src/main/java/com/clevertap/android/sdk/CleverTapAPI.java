@@ -534,10 +534,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (instance == null) {
             instance = new CleverTapAPI(context, config, cleverTapID);
             instances.put(config.getAccountId(), instance);
-            if (instance.getCleverTapID() != null) {
-                instance.notifyUserProfileInitialized();
-                instance.recordDeviceIDErrors();
-            }
+            final CleverTapAPI finalInstance = instance;
+            new Handler().post(new Runnable() {
+                @Override
+                public void run() {
+                    if (finalInstance.getCleverTapID() != null) {
+                        finalInstance.notifyUserProfileInitialized();
+                        finalInstance.recordDeviceIDErrors();
+                    }
+                }
+            });
         } else if (instance.isErrorDeviceId() && instance.getConfig().getEnableCustomCleverTapId() && Utils.validateCTID(cleverTapID)) {
             instance.asyncProfileSwitchUser(null, null, cleverTapID);
         }
