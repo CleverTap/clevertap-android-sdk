@@ -236,8 +236,20 @@ cleverTapDefaultInstance.getInboxMessageForId(messageId);
 //Delete message from the Inbox. Message id should be a String
 cleverTapDefaultInstance.deleteInboxMessage(messageId);
 
-//Mark Message as Read
+//Delete message from the Inbox. Message should object of CTInboxMessage
+cleverTapDefaultInstance.deleteInboxMessage(message);
+
+//Mark Message as Read. Message id should be a String
 cleverTapDefaultInstance.markReadInboxMessage(messageId);
+
+//Mark message as Read. Message should object of CTInboxMessage
+cleverTapDefaultInstance.markReadInboxMessage(message);
+
+//Raise Notification Viewed event for Inbox Message. Message id should be a String
+cleverTapDefaultInstance.pushInboxNotificationViewedEvent(messageId);
+
+//Raise Notification Clicked event for Inbox Message. Message id should be a String
+cleverTapDefaultInstance.pushInboxNotificationClickedEvent(messageId);
 
 //Callback on Inbox Message update/delete/read (any activity)
 @Override
@@ -349,8 +361,8 @@ Add the following between the `<application></application>` tags. This will enab
     </receiver>
 ```
 
-From CleverTap SDK v3.6.3 onwards, just remove the above the Broadcast Receiver if you are using it and add the following gradle dependency to capture UTM details, app install time, referrer click time and other metrics provided by the Google Install Referrer Library.
+From CleverTap SDK v3.6.4 onwards, just remove the above the Broadcast Receiver if you are using it and add the following gradle dependency to capture UTM details, app install time, referrer click time and other metrics provided by the Google Install Referrer Library.
 
 ```markdown
-    implementation 'com.android.installreferrer:installreferrer:1.1'
+    implementation 'com.android.installreferrer:installreferrer:1.0'
 ```

@@ -20,6 +20,7 @@ public class Constants {
     static final String LABEL_FCM_SENDER_ID = "FCM_SENDER_ID";
     static final String LABEL_PACKAGE_NAME = "CLEVERTAP_APP_PACKAGE";
     static final String LABEL_BETA = "CLEVERTAP_BETA";
+    static final String LABEL_INTENT_SERVICE = "CLEVERTAP_INTENT_SERVICE";
     static final String CLEVERTAP_OPTOUT = "ct_optout";
     static final String CLEVERTAP_STORAGE_TAG = "WizRocket";
     static final String CLEVERTAP_LOG_TAG = "CleverTap";
@@ -97,6 +98,9 @@ public class Constants {
     static final String NOTIFICATION_TAG = "wzrk_pn";
     static final String CHARGED_EVENT = "Charged";
     static final String FCM_PROPERTY_REG_ID = "fcm_token";
+    static final String XPS_PROPERTY_REG_ID = "xps_token";
+    static final String BPS_PROPERTY_REG_ID = "bps_token";
+    static final String HPS_PROPERTY_REG_ID = "hps_token";
     static final String KEY_MUTED = "comms_mtd";
     static final int EMPTY_NOTIFICATION_ID = -1000;
     static final String KEY_MAX_PER_DAY = "istmcd_inapp";

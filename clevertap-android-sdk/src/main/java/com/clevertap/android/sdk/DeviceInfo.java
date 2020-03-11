@@ -319,7 +319,13 @@ class DeviceInfo {
 
     private static ArrayList<PushType> enabledPushTypes = null;
     private static Boolean isFirebasePresent = null;
+    private static Boolean isXiaomiPresent = null;
+    private static Boolean isBaiduPresent = null;
+    private static Boolean isHuaweiPresent = null;
     private static final String FIREBASE_CLASS_NAME = "com.google.firebase.messaging.FirebaseMessaging";
+    private static final String XIAOMI_CLASS_NAME = "com.xiaomi.mipush.sdk.MiPushClient";
+    private static final String BAIDU_CLASS_NAME = "com.baidu.android.pushservice.PushMessageReceiver";
+    private static final String HUAWEI_CLASS_NAME = "com.huawei.hms.push.HmsMessaging";
 
     private boolean isFCMAvailable() {
         if (isFirebasePresent == null) {
@@ -335,6 +341,48 @@ class DeviceInfo {
         return isFirebasePresent;
     }
 
+    private boolean isXiaomiAvailable(){
+        if (isXiaomiPresent == null) {
+            try {
+                Class.forName(XIAOMI_CLASS_NAME);
+                isXiaomiPresent = true;
+                getConfigLogger().verbose("Xiaomi Push installed");
+            } catch (ClassNotFoundException e) {
+                isXiaomiPresent = false;
+                Logger.d("Xiaomi Push unavailable, will be unable to request Xiaomi Push token");
+            }
+        }
+        return isXiaomiPresent;
+    }
+
+    private boolean isBaiduAvailable(){
+        if (isBaiduPresent == null) {
+            try {
+                Class.forName(BAIDU_CLASS_NAME);
+                isBaiduPresent = true;
+                getConfigLogger().verbose("Baidu Push installed");
+            } catch (ClassNotFoundException e) {
+                isBaiduPresent = false;
+                Logger.d("Baidu Push unavailable, will be unable to request Baidu Push token");
+            }
+        }
+        return isBaiduPresent;
+    }
+
+    private boolean isHuaweiAvailable(){
+        if (isHuaweiPresent == null) {
+            try {
+                Class.forName(HUAWEI_CLASS_NAME);
+                isHuaweiPresent = true;
+                getConfigLogger().verbose("Huawei Push installed");
+            } catch (ClassNotFoundException e) {
+                isHuaweiPresent = false;
+                Logger.d("Huawei Push unavailable, will be unable to request Huawei Push token");
+            }
+        }
+        return isHuaweiPresent;
+    }
+
     ArrayList<PushType> getEnabledPushTypes() {
         if (enabledPushTypes == null) {
             enabledPushTypes = new ArrayList<>();
@@ -343,6 +391,18 @@ class DeviceInfo {
             boolean fcmAvail = isFCMAvailable();
             if (fcmAvail) {
                 enabledPushTypes.add(PushType.FCM);
+            }
+            boolean xiaomiAvail = isXiaomiAvailable();
+            if(xiaomiAvail){
+                enabledPushTypes.add(PushType.XPS);
+            }
+            boolean baiduAvail = isBaiduAvailable();
+            if(baiduAvail){
+                enabledPushTypes.add(PushType.BPS);
+            }
+            boolean huaweiAvail = isHuaweiAvailable();
+            if(huaweiAvail){
+                enabledPushTypes.add(PushType.HPS);
             }
 
         }

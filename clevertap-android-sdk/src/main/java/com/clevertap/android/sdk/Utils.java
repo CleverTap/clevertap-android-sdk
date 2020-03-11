@@ -283,4 +283,21 @@ public final class Utils {
             }
         }
     }
+
+    /**
+     * @param content String which contains bundle information
+     * @return Bundle to be passed to createNotification(Context context, Bundle extras)
+     * @throws JSONException
+     */
+    public static Bundle stringToBundle(String content) throws JSONException {
+        JSONObject jsonObject = new JSONObject(content);
+        Bundle bundle = new Bundle();
+        Iterator iter = jsonObject.keys();
+        while(iter.hasNext()){
+            String key = (String)iter.next();
+            String value = jsonObject.getString(key);
+            bundle.putString(key,value);
+        }
+        return bundle;
+    }
 }

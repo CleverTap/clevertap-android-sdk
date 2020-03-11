@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -48,7 +49,7 @@ public class CTInAppNativeInterstitialImageFragment extends CTInAppBaseFullFragm
                 relativeLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                     @Override
                     public void onGlobalLayout() {
-                        RelativeLayout relativeLayout1 = fl.findViewById(R.id.interstitial_image_relative_layout);
+                        final RelativeLayout relativeLayout1 = fl.findViewById(R.id.interstitial_image_relative_layout);
                         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1.getLayoutParams();
                         if (inAppNotification.isTablet() && isTablet()) {
                             layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 1.78f);
@@ -65,6 +66,14 @@ public class CTInAppNativeInterstitialImageFragment extends CTInAppBaseFullFragm
                             } else {
                                 layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 1.78f);
                                 relativeLayout1.setLayoutParams(layoutParams);
+                                new Handler().post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        int margin = closeImageView.getMeasuredWidth() / 2;
+                                        closeImageView.setX(relativeLayout1.getRight() - margin);
+                                        closeImageView.setY(relativeLayout1.getTop() - margin);
+                                    }
+                                });
                             }
                         }
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
@@ -79,7 +88,7 @@ public class CTInAppNativeInterstitialImageFragment extends CTInAppBaseFullFragm
                 relativeLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                     @Override
                     public void onGlobalLayout() {
-                        RelativeLayout relativeLayout1 = fl.findViewById(R.id.interstitial_image_relative_layout);
+                        final RelativeLayout relativeLayout1 = fl.findViewById(R.id.interstitial_image_relative_layout);
                         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1.getLayoutParams();
                         if (!inAppNotification.isTablet() || !isTablet()) {
                             if (isTablet()) {
@@ -95,6 +104,14 @@ public class CTInAppNativeInterstitialImageFragment extends CTInAppBaseFullFragm
                                 layoutWidth = layoutParams.width = (int) (relativeLayout1.getMeasuredHeight() * 1.78f);
                                 layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
                                 relativeLayout1.setLayoutParams(layoutParams);
+                                new Handler().post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        int margin = closeImageView.getMeasuredWidth() / 2;
+                                        closeImageView.setX(relativeLayout1.getRight() - margin);
+                                        closeImageView.setY(relativeLayout1.getTop() - margin);
+                                    }
+                                });
                             }
                         }
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
