@@ -2781,7 +2781,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 // Always set this to 0 so that the handshake is not performed during a HTTP failure
                 mResponseFailureCount = 0;
                 if (eventGroup.equals(EventGroup.PUSH_NOTIFICATION_VIEWED)) {
-                    return region.trim().toLowerCase() + eventGroup.httpResource + "." + Constants.PRIMARY_DOMAIN;
+                    return region.trim().toLowerCase() + /*eventGroup.httpResource +*/ "." +  Constants.PRIMARY_DOMAIN;
                 } else {
                     return region.trim().toLowerCase() + "." + Constants.PRIMARY_DOMAIN;
                 }
@@ -2790,7 +2790,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             // Ignore
         }
         if (eventGroup.equals(EventGroup.PUSH_NOTIFICATION_VIEWED)) {
-            return getStringFromPrefs(Constants.SPIKY_KEY_DOMAIN_NAME, null);
+            return getStringFromPrefs(Constants.KEY_DOMAIN_NAME, null);//Should be Constants.SPIKY_KEY_DOMAIN_NAME for production release
         } else {
             return getStringFromPrefs(Constants.KEY_DOMAIN_NAME, null);
         }
