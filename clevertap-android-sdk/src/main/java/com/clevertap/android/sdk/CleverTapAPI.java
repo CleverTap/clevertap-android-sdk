@@ -50,6 +50,7 @@ import com.clevertap.android.sdk.ab_testing.CTABTestListener;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
+import com.clevertap.android.sdk.product_config.ProductConfigController;
 import com.google.android.gms.plus.model.people.Person;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -97,7 +98,7 @@ import static com.clevertap.android.sdk.Utils.runOnUiThread;
 public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationListener,
         InAppNotificationActivity.InAppActivityListener,
         CTInAppBaseFragment.InAppListener,
-        CTInboxActivity.InboxActivityListener, CTABTestListener {
+        CTInboxActivity.InboxActivityListener, CTABTestListener, ProductConfigController.Listener {
     private final HashMap<String, Object> notificationIdTagMap = new HashMap<>();
     private final HashMap<String, Object> notificationViewedIdTagMap = new HashMap<>();
 
@@ -127,6 +128,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private WeakReference<InboxMessageButtonListener> inboxMessageButtonListener;
 
     private WeakReference<DisplayUnitListener> displayUnitListenerWeakReference;
+
+    private ProductConfigController productConfigController;
 
     // Initialize
     private CleverTapAPI(final Context context, final CleverTapInstanceConfig config, String cleverTapID) {
@@ -8015,5 +8018,21 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         } catch (Throwable t) {
             Logger.v("Failed to process Display Unit from push notification payload", t);
         }
+    }
+
+    /**
+     *              REMOTE CONFIG
+     */
+
+    public ProductConfigController remoteConfig(){
+        if(null == productConfigController){
+            productConfigController = new ProductConfigController(context,getAccountId(),this);
+        }
+        return productConfigController;
+    }
+
+    @Override
+    public void fetchProductConfig() {
+
     }
 }
