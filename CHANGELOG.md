@@ -1,5 +1,12 @@
 ## CHANGE LOG
 
+### Version 3.7.0 (March 11, 2020)
+* Adds support for Xiaomi & Baidu Push Notification Services
+* Adds public APIs for raising Notification Clicked and Viewed events for App Inbox
+* Adds public APIS for marking inbox message as read and deleting inbox message per message ID
+* Fixes center alignment issue of Native InApps on Mobile devices
+* Performance improvements
+
 ### Version 3.6.4 (February 26, 2020)
 * Reverting Google Play Install Library to v1.0
 * Bug Fixes

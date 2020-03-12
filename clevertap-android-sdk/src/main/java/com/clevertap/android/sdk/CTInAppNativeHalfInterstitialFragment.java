@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 import android.view.Gravity;
@@ -70,6 +71,15 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
                             } else {
                                 layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 1.3f);
                                 relativeLayout1.setLayoutParams(layoutParams);
+
+                                new Handler().post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        int margin = closeImageView.getMeasuredWidth() / 2;
+                                        closeImageView.setX(relativeLayout.getRight() - margin);
+                                        closeImageView.setY(relativeLayout.getTop() - margin);
+                                    }
+                                });
                             }
                         }
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
@@ -100,6 +110,14 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
                                 layoutWidth = layoutParams.width = (int) (relativeLayout1.getMeasuredHeight() * 1.3f);
                                 layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
                                 relativeLayout1.setLayoutParams(layoutParams);
+                                new Handler().post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        int margin = closeImageView.getMeasuredWidth() / 2;
+                                        closeImageView.setX(relativeLayout.getRight() - margin);
+                                        closeImageView.setY(relativeLayout.getTop() - margin);
+                                    }
+                                });
                             }
                         }
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
