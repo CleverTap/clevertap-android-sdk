@@ -35,6 +35,8 @@ public class Constants {
     static final int RAISED_EVENT = 4;
     static final int DATA_EVENT = 5;
     static final int NV_EVENT = 6;
+    static final int FETCH_EVENT = 7;
+    static final String WZRK_FETCH = "wzrk_fetch";
     static final String ICON_BASE_URL = "http://static.wizrocket.com/android/ico/";
     static final String NOTIFICATION_CLICKED_EVENT_NAME = "Notification Clicked";
     static final String NOTIFICATION_VIEWED_EVENT_NAME = "Notification Viewed";
@@ -61,6 +63,7 @@ public class Constants {
     static final String INAPP_JSON_RESPONSE_KEY = "inapp_notifs";
     static final String INBOX_JSON_RESPONSE_KEY = "inbox_notifs";
     static final String DISPLAY_UNIT_JSON_RESPONSE_KEY = "adUnit_notifs";
+    static final String FEATURE_FLAG_JSON_RESPONSE_KEY = "ff_notifs";
     static final String INAPP_MAX_DISPLAY_COUNT = "mdc";
     static final String INAPP_MAX_PER_SESSION = "imc";
     static final String INAPP_WINDOW = "w";
@@ -220,4 +223,6 @@ public class Constants {
     public static final String KEY_LINKS = "links";
     public static final String TEST_IDENTIFIER = "0_0";
     public static final String FEATURE_DISPLAY_UNIT = "DisplayUnit : ";
+
+    public static final String FEATURE_FLAG_UNIT = "Feature Flag : ";
 }
