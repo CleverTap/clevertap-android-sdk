@@ -8058,6 +8058,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     // -----------------------------------------------------------------------//
 
 
+    /**
+     * Use this method to raise fetch event for Feature Flags
+     */
     @Override
     public void fetchFeatureFlags() {
         JSONObject event = new JSONObject();
@@ -8073,6 +8076,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         queueEvent(context, event, Constants.FETCH_EVENT);
     }
 
+    /**
+     * @return object of {@link CTFeatureFlagsController}
+     */
     public CTFeatureFlagsController featureFlag() {
         return ctFeatureFlagsController;
     }
