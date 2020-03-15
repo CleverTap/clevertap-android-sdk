@@ -2,16 +2,18 @@ package com.clevertap.android.sdk.product_config;
 
 import android.content.Context;
 
+import org.json.JSONArray;
+
 import java.util.HashMap;
 
-public final class ProductConfigController {
+public final class CTProductConfigController {
     private final String accountId;
     private final Context context;
     private HashMap<String, String> defaultConfig;
-    private final Listener listener;
+    private final CTProductConfigListener listener;
     private long minFetchIntervalInSeconds;
 
-    public ProductConfigController(Context context, String accountId, Listener listener) {
+    public CTProductConfigController(Context context, String accountId, CTProductConfigListener listener) {
         this.context = context;
         this.accountId = accountId;
         this.listener = listener;
@@ -43,14 +45,12 @@ public final class ProductConfigController {
         return Boolean.parseBoolean(defaultConfig.get(Key));
     }
 
-
-    public interface Listener {
-        void fetchProductConfig();
-    }
-
     private boolean canRequest() {
         //TODO throttling logic
         return true;
     }
 
+    public void afterFetchProductConfig(JSONArray kvArray) {
+
+    }
 }

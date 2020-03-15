@@ -11,6 +11,8 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.util.HashMap;
 
+import static com.clevertap.android.sdk.Constants.LOG_TAG_PRODUCT_CONFIG;
+
 public class DefaultXmlParser {
     private static final String XML_TAG_ENTRY = "entry";
     private static final String XML_TAG_KEY = "key";
@@ -58,7 +60,7 @@ public class DefaultXmlParser {
                                 value = xmlParser.getText();
                                 break;
                             default:
-                                Log.w("RemoteConfig", "Encountered an unexpected tag while parsing the defaults XML.");
+                                Log.w(LOG_TAG_PRODUCT_CONFIG, "Encountered an unexpected tag while parsing the defaults XML.");
                         }
                     }
                 } else {
@@ -66,7 +68,7 @@ public class DefaultXmlParser {
                         if (key != null && value != null) {
                             defaultsMap.put(key, value);
                         } else {
-                            Log.w("RemoteConfig", "An entry in the defaults XML has an invalid key and/or value tag.");
+                            Log.w(LOG_TAG_PRODUCT_CONFIG, "An entry in the defaults XML has an invalid key and/or value tag.");
                         }
 
                         key = null;

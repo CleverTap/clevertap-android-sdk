@@ -52,7 +52,8 @@ import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.featureFlags.FeatureFlagListener;
-import com.clevertap.android.sdk.product_config.ProductConfigController;
+import com.clevertap.android.sdk.product_config.CTProductConfigController;
+import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.google.android.gms.plus.model.people.Person;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -100,7 +101,7 @@ import static com.clevertap.android.sdk.Utils.runOnUiThread;
 public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationListener,
         InAppNotificationActivity.InAppActivityListener,
         CTInAppBaseFragment.InAppListener,
-        CTInboxActivity.InboxActivityListener, CTABTestListener, FeatureFlagListener,ProductConfigController.Listener {
+        CTInboxActivity.InboxActivityListener, CTABTestListener, FeatureFlagListener, CTProductConfigListener {
     private final HashMap<String, Object> notificationIdTagMap = new HashMap<>();
     private final HashMap<String, Object> notificationViewedIdTagMap = new HashMap<>();
 
@@ -131,7 +132,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     private WeakReference<DisplayUnitListener> displayUnitListenerWeakReference;
 
-    private ProductConfigController productConfigController;
+    private CTProductConfigController productConfigController;
 
     // Initialize
     private CleverTapAPI(final Context context, final CleverTapInstanceConfig config, String cleverTapID) {
@@ -3538,7 +3539,17 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     getConfigLogger().verbose(getAccountId(), "Processing Feature Flags response...");
                     processFeatureFlagsResponse(response);
                 }catch (Throwable t){
-                    getConfigLogger().verbose("Error handling Display Unit response: " + t.getLocalizedMessage());
+                    getConfigLogger().verbose("Error handling Feature Flags response: " + t.getLocalizedMessage());
+                }
+            }
+
+            //Handle Product Config response
+            if(!getConfig().isAnalyticsOnly()){
+                try{
+                    getConfigLogger().verbose(getAccountId(), "Processing Product Config response...");
+                    processProductConfigResponse(response);
+                }catch (Throwable t){
+                    getConfigLogger().verbose("Error handling Product Config response: " + t.getLocalizedMessage());
                 }
             }
 
@@ -8172,18 +8183,78 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
-     *              REMOTE CONFIG
+     *              PRODUCT CONFIG
      */
 
-    public ProductConfigController remoteConfig(){
+    public CTProductConfigController productConfig(){
         if(null == productConfigController){
-            productConfigController = new ProductConfigController(context,getAccountId(),this);
+            productConfigController = new CTProductConfigController(context,getAccountId(),this);
         }
         return productConfigController;
     }
 
+    /**
+     * Use this method to raise fetch event for Product Config
+     */
     @Override
     public void fetchProductConfig() {
+        JSONObject event = new JSONObject();
+        JSONObject notif = new JSONObject();
+        try {
+            notif.put("type","rc");
+            event.put("evtName", Constants.WZRK_FETCH);
+            event.put("evtData", notif);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
+        queueEvent(context, event, Constants.FETCH_EVENT);
+    }
+
+    private void processProductConfigResponse(JSONObject response) throws JSONException {
+        JSONObject productConfig = mockProductConfigResponse();
+        response.put("pc_notifs", productConfig);
+        if (response == null) {
+            getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Can't parse Feature Flags Response, JSON response object is null");
+            return;
+        }
+
+        if (!response.has(Constants.REMOTE_CONFIG_FLAG_JSON_RESPONSE_KEY)) {
+            getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "JSON object doesn't contain the Display Units key");
+            return;
+        }
+        try {
+            getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Processing Feature Flags response");
+            parseProductConfigs(response.getJSONObject(Constants.REMOTE_CONFIG_FLAG_JSON_RESPONSE_KEY));
+        } catch (Throwable t) {
+            getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Failed to parse response", t);
+        }
+    }
+
+    private JSONObject mockProductConfigResponse() throws JSONException {
+        JSONObject object = new JSONObject();
+        JSONArray jsonArray = new JSONArray();
+        object.put("kv", jsonArray);
+        jsonArray.put(getJSONObject("discount", 10));
+        jsonArray.put(getJSONObject("customer-type", "gold"));
+        jsonArray.put(getJSONObject("loading_phrase", "Loading From Remote "));
+        jsonArray.put(getJSONObject("welcome_message_caps", true));
+        jsonArray.put(getJSONObject("welcome_message", "welcome from remote"));
+        jsonArray.put(getJSONObject("ts", 1245));
+        return object;
+    }
+
+    private JSONObject getJSONObject(String key, Object value) throws JSONException {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put(key, value);
+        return jsonObject;
+    }
+
+    private void parseProductConfigs(JSONObject responseKV) throws JSONException {
+        JSONArray kvArray = responseKV.getJSONArray(Constants.KEY_KV);
+
+        if(kvArray != null && productConfig()!= null){
+            productConfig().afterFetchProductConfig(kvArray);
+        }
     }
 }

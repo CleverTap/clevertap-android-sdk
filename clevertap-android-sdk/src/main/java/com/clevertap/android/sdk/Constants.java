@@ -64,6 +64,7 @@ public class Constants {
     static final String INBOX_JSON_RESPONSE_KEY = "inbox_notifs";
     static final String DISPLAY_UNIT_JSON_RESPONSE_KEY = "adUnit_notifs";
     static final String FEATURE_FLAG_JSON_RESPONSE_KEY = "ff_notifs";
+    static final String REMOTE_CONFIG_FLAG_JSON_RESPONSE_KEY = "pc_notifs";
     static final String INAPP_MAX_DISPLAY_COUNT = "mdc";
     static final String INAPP_MAX_PER_SESSION = "imc";
     static final String INAPP_WINDOW = "w";
@@ -225,4 +226,5 @@ public class Constants {
     public static final String FEATURE_DISPLAY_UNIT = "DisplayUnit : ";
 
     public static final String FEATURE_FLAG_UNIT = "Feature Flag : ";
+    public static final String LOG_TAG_PRODUCT_CONFIG = "Product Config : ";
 }
