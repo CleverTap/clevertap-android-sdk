@@ -101,7 +101,7 @@ import static com.clevertap.android.sdk.Utils.runOnUiThread;
 public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationListener,
         InAppNotificationActivity.InAppActivityListener,
         CTInAppBaseFragment.InAppListener,
-        CTInboxActivity.InboxActivityListener, CTABTestListener, FeatureFlagListener, CTProductConfigListener {
+        CTInboxActivity.InboxActivityListener, CTABTestListener, FeatureFlagListener, CTProductConfigController.Listener {
     private final HashMap<String, Object> notificationIdTagMap = new HashMap<>();
     private final HashMap<String, Object> notificationViewedIdTagMap = new HashMap<>();
 
@@ -147,6 +147,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             Logger.v("Initializing InAppFC with device Id = "+ this.deviceInfo.getDeviceID());
             this.inAppFCManager = new InAppFCManager(context,config,this.deviceInfo.getDeviceID());
             initFeatureFlags();
+            initProductConfig();
         }
         this.validator = new Validator();
 
@@ -311,6 +312,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     private CTFeatureFlagsController ctFeatureFlagsController;
     private CTFeatureFlagsListener featureFlagsListener = null;
+    private WeakReference<CTProductConfigListener> productConfigListener;
 
     // static lifecycle callbacks
     static void onActivityCreated(Activity activity, String cleverTapID) {
@@ -5986,6 +5988,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     resetInbox();
                     resetABTesting();
                     resetFeatureFlags();
+                    resetProductConfigs();
                     recordDeviceIDErrors();
                     resetDisplayUnits();
                     inAppFCManager.changeUser(getCleverTapID());
@@ -8165,7 +8168,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
 
         if (ctFeatureFlagsController == null) {
-            ctFeatureFlagsController = new CTFeatureFlagsController(getCleverTapID(), config, this);
+            ctFeatureFlagsController = new  CTFeatureFlagsController(getCleverTapID(), config, this);
             getConfigLogger().verbose(config.getAccountId(), "Feature Flags initialized");
         }
     }
@@ -8187,9 +8190,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
 
     public CTProductConfigController productConfig(){
-        if(null == productConfigController){
-            productConfigController = new CTProductConfigController(context,getAccountId(),this);
-        }
+        if(productConfigController == null)
+            initProductConfig();
         return productConfigController;
     }
 
@@ -8212,8 +8214,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     private void processProductConfigResponse(JSONObject response) throws JSONException {
+        //TODO Remove the mock response
         JSONObject productConfig = mockProductConfigResponse();
-        response.put("pc_notifs", productConfig);
+        response.put(Constants.REMOTE_CONFIG_FLAG_JSON_RESPONSE_KEY, productConfig);
         if (response == null) {
             getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Can't parse Feature Flags Response, JSON response object is null");
             return;
@@ -8254,7 +8257,65 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         JSONArray kvArray = responseKV.getJSONArray(Constants.KEY_KV);
 
         if(kvArray != null && productConfig()!= null){
-            productConfig().afterFetchProductConfig(kvArray);
+            productConfig().afterFetchProductConfig(responseKV);
         }
     }
+
+    private void resetProductConfigs() {
+        if (!this.config.isAnalyticsOnly()) {
+            getConfigLogger().debug(config.getAccountId(), "Product Config is not enabled for this instance");
+            return;
+        }
+
+        if (productConfigController != null && productConfigController.isInitialized()) {
+            productConfigController.resetWithGuid(getCleverTapID());//TODO check whether needed
+            productConfigController.fetch();
+        }
+    }
+
+    private void initProductConfig() {
+        if(this.deviceInfo.getDeviceID() != null){
+            Logger.v("Initializing Product Config with device Id = " + getCleverTapID());
+            if (!config.isAnalyticsOnly()) {
+                getConfigLogger().debug(config.getAccountId(), "Product Config is not enabled for this instance");
+                return;
+            }
+
+            if (getCleverTapID() == null) {
+                getConfigLogger().verbose(config.getAccountId(), "GUID not set yet, deferring Product Config initialization");
+                return;
+            }
+
+            if (productConfigController == null) {
+                productConfigController = new CTProductConfigController(context, getCleverTapID(), config, this);
+                getConfigLogger().verbose(config.getAccountId(), "Product Config initialized");
+            }
+        }
+    }
+
+    /**
+     * This method is used to set the {@link CTProductConfigListener} object
+     *
+     * @param listener The {@link CTProductConfigListener} object
+     */
+    @SuppressWarnings("unused")
+    public void setProductConfigListener(CTProductConfigListener listener) {
+        if(listener!= null)
+            this.productConfigListener = new WeakReference<>(listener);
+    }
+
+
+    @Override
+    public void onActivateCompleted() {
+        if(productConfigListener!= null && productConfigListener.get()!=null){
+            productConfigListener.get().onActivated();
+        }
+    }
+    @Override
+    public void onFetchCompleted(){
+        if(productConfigListener!= null && productConfigListener.get()!=null){
+            productConfigListener.get().onFetched();
+        }
+    }
+
 }

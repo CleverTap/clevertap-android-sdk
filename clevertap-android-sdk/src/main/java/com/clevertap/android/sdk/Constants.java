@@ -143,7 +143,7 @@ public class Constants {
     static final String KEY_EFC = "efc";
     static final String KEY_TLC = "tlc";
     static final String KEY_TDC = "tdc";
-    static final String KEY_KV = "kv";
+    public static final String KEY_KV = "kv";
     public static final String KEY_TYPE = "type";
     static final String KEY_IS_TABLET = "tablet";
     public static final String KEY_BG = "bg";

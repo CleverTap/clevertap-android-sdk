@@ -13,14 +13,22 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.telephony.TelephonyManager;
+import android.text.TextUtils;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
@@ -30,6 +38,7 @@ import java.util.Iterator;
 import javax.net.ssl.HttpsURLConnection;
 
 public final class Utils {
+    private static final String TAG = "Utils";
     static long getMemoryConsumption() {
         long free = Runtime.getRuntime().freeMemory();
         long total = Runtime.getRuntime().totalMemory();
@@ -271,7 +280,7 @@ public final class Utils {
      *
      * @param runnable - task to be run
      */
-    static void runOnUiThread(Runnable runnable) {
+    public static void runOnUiThread(Runnable runnable) {
         if (runnable != null) {
             //run if already on the UI thread
             if (Looper.myLooper() == Looper.getMainLooper()) {
@@ -299,5 +308,62 @@ public final class Utils {
             bundle.putString(key,value);
         }
         return bundle;
+    }
+
+    public static void writeJsonToFile(Context context, String dirName, String fileName, JSONObject jsonObject) throws Exception {
+        try {
+            if (jsonObject == null || TextUtils.isEmpty(dirName) || TextUtils.isEmpty(fileName))
+                return;
+            File file = new File(context.getFilesDir(), dirName);
+            if (!file.exists()) {
+                file.mkdir();
+            }
+
+            File file1 = new File(file, fileName + ".json");
+            FileWriter writer = new FileWriter(file1);
+            writer.append(jsonObject.toString());
+            writer.flush();
+            writer.close();
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d(TAG, "writeFileOnInternalStorage: failed");
+            throw e;
+        }
+    }
+
+    public static String readFromFile(Context context,String fileNameWithPath) {
+
+        String content = "";
+        //Make sure to use a try-catch statement to catch any errors
+        try {
+            //Make your FilePath and File
+            String yourFilePath = context.getFilesDir() + "/" + fileNameWithPath;
+            File yourFile = new File(yourFilePath);
+            //Make an InputStream with your File in the constructor
+            InputStream inputStream = new FileInputStream(yourFile);
+            StringBuilder stringBuilder = new StringBuilder();
+            //Check to see if your inputStream is null
+            //If it isn't use the inputStream to make a InputStreamReader
+            //Use that to make a BufferedReader
+            //Also create an empty String
+            if (inputStream != null) {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString = "";
+                //Use a while loop to append the lines from the Buffered reader
+                while ((receiveString = bufferedReader.readLine()) != null){
+                    stringBuilder.append(receiveString);
+                }
+                //Close your InputStream and save stringBuilder as a String
+                inputStream.close();
+                content = stringBuilder.toString();
+            }
+        } catch (FileNotFoundException e) {
+            //Log your error with Log.e
+        } catch (IOException e) {
+            //Log your error with Log.e
+        }
+        return content;
     }
 }
