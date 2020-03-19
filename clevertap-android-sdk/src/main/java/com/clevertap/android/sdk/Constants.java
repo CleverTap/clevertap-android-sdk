@@ -227,4 +227,7 @@ public class Constants {
 
     public static final String FEATURE_FLAG_UNIT = "Feature Flag : ";
     public static final String LOG_TAG_PRODUCT_CONFIG = "Product Config : ";
+    //arp
+    public static final String PRODUCT_CONFIG_NO_OF_CALLS = "rc_n";
+    public static final String PRODUCT_CONFIG_WINDOW_LENGTH_MINS = "rc_w";
 }

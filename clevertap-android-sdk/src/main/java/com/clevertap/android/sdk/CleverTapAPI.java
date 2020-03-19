@@ -3599,6 +3599,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 final Object o = arp.get(key);
                 if (o instanceof Number) {
                     final int update = ((Number) o).intValue();
+                    if(Constants.PRODUCT_CONFIG_NO_OF_CALLS.equalsIgnoreCase(key)
+                    ||Constants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS.equalsIgnoreCase(key) ){
+                        if(ctProductConfigController!= null){
+                            ctProductConfigController.setArpValue(key,update);
+                        }
+                    }
                     editor.putInt(key, update);
                 } else if (o instanceof String) {
                     if (((String) o).length() < 100) {
@@ -8108,7 +8114,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
 
         if (!response.has(Constants.FEATURE_FLAG_JSON_RESPONSE_KEY)) {
-            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_FLAG_UNIT + "JSON object doesn't contain the Display Units key");
+            getConfigLogger().verbose(getAccountId(), Constants.FEATURE_FLAG_UNIT + "JSON object doesn't contain the Feature Flags key");
             return;
         }
         try {
@@ -8227,7 +8233,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
 
         if (!response.has(Constants.REMOTE_CONFIG_FLAG_JSON_RESPONSE_KEY)) {
-            getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "JSON object doesn't contain the Display Units key");
+            getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "JSON object doesn't contain the Product Config key");
             return;
         }
         try {
