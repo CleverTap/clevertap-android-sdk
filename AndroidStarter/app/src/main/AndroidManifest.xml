@@ -55,7 +55,7 @@
         <!--Add meta and set to 1 start using custom CleverTap ID-->
         <meta-data
             android:name="CLEVERTAP_USE_CUSTOM_ID"
-            android:value="1"/>
+            android:value="0"/>
 
         <!-- Add CleverTap Push Notification Services & Install Referrer Receivers-->
         <service
