@@ -319,7 +319,7 @@ public final class Utils {
                 file.mkdir();
             }
 
-            File file1 = new File(file, fileName + ".json");
+            File file1 = new File(file, fileName);
             FileWriter writer = new FileWriter(file1);
             writer.append(jsonObject.toString());
             writer.flush();

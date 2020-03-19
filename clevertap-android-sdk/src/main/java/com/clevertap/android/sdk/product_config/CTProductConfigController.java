@@ -1,15 +1,14 @@
 package com.clevertap.android.sdk.product_config;
 
 import android.content.Context;
-import android.os.AsyncTask;
 import android.text.TextUtils;
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.TaskManager;
 import com.clevertap.android.sdk.Utils;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
@@ -38,12 +37,13 @@ public final class CTProductConfigController {
         initAsync();
     }
 
-    private void initAsync() {
+    private synchronized void initAsync() {
         if (TextUtils.isEmpty(guid))
             return;
-        Thread thread = new Thread(new Runnable() {
+        TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Boolean>() {
             @Override
-            public void run() {
+            public Boolean doInBackground(Void params) {
+                activatedConfig.clear();
                 String content = Utils.readFromFile(context, getActivatedFullPath());
                 //apply default config first
                 if (defaultConfig != null && !defaultConfig.isEmpty()) {
@@ -52,42 +52,42 @@ public final class CTProductConfigController {
                 if (!TextUtils.isEmpty(content)) {
                     try {
                         JSONObject jsonObject = new JSONObject(content);
-                        JSONArray kvArray = jsonObject.getJSONArray(Constants.KEY_KV);
+                        Iterator<String> iterator = jsonObject.keys();
+                        while (iterator.hasNext()) {
 
-                        if (kvArray != null && kvArray.length() > 0) {
-                            for (int i = 0; i < kvArray.length(); i++) {
-                                JSONObject object = (JSONObject) kvArray.get(i);
-                                if (object != null) {
-                                    Iterator<String> iterator = object.keys();
-                                    while (iterator.hasNext()) {
-                                        String key = iterator.next();
-                                        if (!TextUtils.isEmpty(key)) {
-                                            String value = String.valueOf(object.get(key));
-                                            activatedConfig.put(key, value);
-                                        }
-                                    }
-                                }
+                            String key = iterator.next();
+                            if (!TextUtils.isEmpty(key)) {
+                                String value = String.valueOf(jsonObject.get(key));
+                                activatedConfig.put(key, value);
                             }
                         }
                         isInitialized = true;
-                        Utils.runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                listener.onActivateCompleted();
-                            }
-                        });
+                        Utils.writeJsonToFile(context, getActivatedDirName(), getActivatedFileName(), new JSONObject(activatedConfig));
 
-                    } catch (JSONException e) {
+                    } catch (Exception e) {
                         e.printStackTrace();
+                        return false;
                     }
+                }
+                return true;
+            }
+
+            @Override
+            public void onPostExecute(Boolean isInitSuccess) {
+                if (isInitSuccess) {
+                    config.getLogger().verbose(config.getAccountId(), "Init Success");
+                    listener.onInitSuccess();
+                } else {
+                    config.getLogger().verbose(config.getAccountId(), "Init Failed");
+                    listener.onInitFailed();
                 }
             }
         });
-        thread.start();
     }
 
     public void setDefaults(int resourceID) {
         defaultConfig = DefaultXmlParser.getDefaultsFromXml(context, resourceID);
+        initAsync();
     }
 
     public void fetch() {
@@ -101,9 +101,9 @@ public final class CTProductConfigController {
     }
 
     public void activate() {
-        AsyncTask<Void, Void, Boolean> asyncTask = new AsyncTask<Void, Void, Boolean>() {
+        TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Boolean>() {
             @Override
-            protected Boolean doInBackground(Void... voids) {
+            public Boolean doInBackground(Void params) {
                 activatedConfig.clear();
                 //apply default config first
                 if (defaultConfig != null && !defaultConfig.isEmpty()) {
@@ -143,15 +143,16 @@ public final class CTProductConfigController {
             }
 
             @Override
-            protected void onPostExecute(Boolean isSuccess) {
-                super.onPostExecute(isSuccess);
+            public void onPostExecute(Boolean isSuccess) {
                 if (isSuccess) {
-                    listener.onActivateCompleted();
+                    config.getLogger().verbose(config.getAccountId(), "Activate Success");
+                    listener.onActivateSuccess();
+                } else {
+                    config.getLogger().verbose(config.getAccountId(), "Activate Failed");
+                    listener.onActivateFailed();
                 }
             }
-        };
-        asyncTask.execute();
-
+        });
     }
 
     public void setMinimumFetchIntervalInSeconds(long fetchIntervalInSeconds) {
@@ -168,7 +169,7 @@ public final class CTProductConfigController {
 
     private boolean canRequest() {
         //TODO throttling logic
-        return true;
+        return !TextUtils.isEmpty(guid);
     }
 
     public void afterFetchProductConfig(JSONObject kvResponse) {
@@ -178,22 +179,28 @@ public final class CTProductConfigController {
                 Utils.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        listener.onFetchCompleted();
+                        config.getLogger().verbose(config.getAccountId(), "fetch Success");
+                        listener.onFetchSuccess();
                     }
                 });
 
             } catch (Exception e) {
+                config.getLogger().verbose(config.getAccountId(), "fetch Failed");
+                listener.onFetchFailed();
                 e.printStackTrace();
             }
         }
     }
 
-    public void resetWithGuid(String cleverTapID) {
+    public void setGuidAndInit(String cleverTapID) {
+        if (TextUtils.isEmpty(guid))
+            return;
         this.guid = cleverTapID;
+        initAsync();
     }
 
     private String getActivatedFileName() {
-        return CTProductConfigConstants.FILE_NAME_ACTIVATED + ".json";
+        return CTProductConfigConstants.FILE_NAME_ACTIVATED;
     }
 
     private String getActivatedDirName() {
@@ -206,7 +213,7 @@ public final class CTProductConfigController {
 
 
     private String getFetchedFileName() {
-        return CTProductConfigConstants.FILE_NAME_FETCHED + ".json";
+        return CTProductConfigConstants.FILE_NAME_FETCHED;
     }
 
     private String getFetchedFullPath() {
@@ -216,11 +223,20 @@ public final class CTProductConfigController {
     private String getActivatedFullPath() {
         return getActivatedDirName() + "/" + getActivatedFileName();
     }
-    public interface Listener{
+
+    public interface Listener {
+        void onInitSuccess();
+
+        void onInitFailed();
+
         void fetchProductConfig();
 
-        void onFetchCompleted();
+        void onFetchSuccess();
 
-        void onActivateCompleted();
+        void onFetchFailed();
+
+        void onActivateSuccess();
+
+        void onActivateFailed();
     }
 }

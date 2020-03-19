@@ -1,7 +1,15 @@
 package com.clevertap.android.sdk.product_config;
 
 public interface CTProductConfigListener {
-    void onFetched();
+    void onInitSuccess();
 
-    void onActivated();
+    void onInitFailed();
+
+    void onFetchSuccess();
+
+    void onFetchFailed();
+
+    void onActivateSuccess();
+
+    void onActivateFailed();
 }
