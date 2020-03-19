@@ -548,7 +548,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             instance = new CleverTapAPI(context, config, cleverTapID);
             instances.put(config.getAccountId(), instance);
             final CleverTapAPI finalInstance = instance;
-            new Handler().post(new Runnable() {
+            instance.postAsyncSafely("notifyProfileInitialized",new Runnable() {
                 @Override
                 public void run() {
                     if (finalInstance.getCleverTapID() != null) {
