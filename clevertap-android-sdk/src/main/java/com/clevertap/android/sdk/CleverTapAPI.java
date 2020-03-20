@@ -1868,6 +1868,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         checkTimeoutSession();
         if (!isAppLaunchPushed()) {
             pushAppLaunchedEvent();
+            fetchFeatureFlags();
             onTokenRefresh();
             postAsyncSafely("HandlingInstallReferrer", new Runnable() {
                 @Override
