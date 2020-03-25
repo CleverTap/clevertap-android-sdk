@@ -149,7 +149,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             initFeatureFlags();
 
         }
-        initProductConfig(false);
         this.validator = new Validator();
 
         postAsyncSafely("CleverTapAPI#initializeDeviceInfo", new Runnable() {
@@ -8168,7 +8167,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     private void initFeatureFlags() {
         Logger.v("Initializing Feature Flags with device Id = " + getCleverTapID());
-        if (!config.isAnalyticsOnly()) {
+        if (config.isAnalyticsOnly()) {
             getConfigLogger().debug(config.getAccountId(), "Feature Flags is not enabled for this instance");
             return;
         }

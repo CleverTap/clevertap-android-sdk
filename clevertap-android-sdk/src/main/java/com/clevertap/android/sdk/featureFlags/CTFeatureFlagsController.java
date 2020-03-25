@@ -15,7 +15,9 @@ import org.json.JSONObject;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
-import java.util.Iterator;
+
+import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_JSON_KEY_FOR_KEY;
+import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_JSON_KEY_FOR_VALUE;
 
 public class CTFeatureFlagsController {
 
@@ -116,13 +118,11 @@ public class CTFeatureFlagsController {
                             for (int i = 0; i < kvArray.length(); i++) {
                                 JSONObject object = (JSONObject) kvArray.get(i);
                                 if (object != null) {
-                                    Iterator<String> iterator = object.keys();
-                                    while (iterator.hasNext()) {
-                                        String key = iterator.next();
-                                        if (!TextUtils.isEmpty(key)) {
-                                            Boolean value = (Boolean) object.get(key);
-                                            store.put(key, value);
-                                        }
+
+                                    String Key = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_KEY);
+                                    String Value = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_VALUE);
+                                    if (!TextUtils.isEmpty(Key)) {
+                                        store.put(Key, Boolean.parseBoolean(Value));
                                     }
                                 }
                             }
@@ -171,7 +171,7 @@ public class CTFeatureFlagsController {
 
 
     private String getCachedFileName() {
-        return CTFeatureFlagConstants.CACHED_FILE_NAME ;
+        return CTFeatureFlagConstants.CACHED_FILE_NAME;
     }
 
     private String getCachedDirName() {

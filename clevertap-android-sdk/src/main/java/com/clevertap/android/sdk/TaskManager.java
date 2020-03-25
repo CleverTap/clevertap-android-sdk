@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk;
 
-import java.lang.ref.WeakReference;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -24,17 +23,17 @@ public class TaskManager {
     }
 
     public <Params, Result> void execute(final Params params, final TaskListener<Params, Result> listener) {
-        final WeakReference<TaskListener<Params, Result>> listenerWeakReference = new WeakReference<>(listener);
+
         service.execute(new Runnable() {
             @Override
             public void run() {
-                if (listenerWeakReference.get() != null) {
-                    final Result result = listenerWeakReference.get().doInBackground(params);
+                if (listener != null) {
+                    final Result result = listener.doInBackground(params);
                     Utils.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            if (listenerWeakReference.get() != null) {
-                                listenerWeakReference.get().onPostExecute(result);
+                            if (listener != null) {
+                                listener.onPostExecute(result);
                             }
                         }
                     });

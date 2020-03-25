@@ -18,6 +18,9 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
+import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_JSON_KEY_FOR_KEY;
+import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_JSON_KEY_FOR_VALUE;
+
 public final class CTProductConfigController {
 
     private String guid;
@@ -34,6 +37,9 @@ public final class CTProductConfigController {
     private final Listener listener;
     private long minFetchIntervalInSeconds;
     private long lastFetchTimeStampInMillis;
+    private boolean isFetching = false;
+    private boolean isActivating = false;
+
     private int[] arpValues = new int[]{5, 60};//0 is for rc_n, 1 is for rc_w
 
     public CTProductConfigController(Context context, String guid, CleverTapInstanceConfig config, Listener listener) {
@@ -111,6 +117,7 @@ public final class CTProductConfigController {
 
     public void fetch(long minimumFetchIntervalInSeconds) {
         if (canRequest()) {
+            isFetching = true;
             listener.fetchProductConfig();
         } else {
             config.getLogger().verbose(config.getAccountId(), "Product Config: Throttled");
@@ -118,9 +125,12 @@ public final class CTProductConfigController {
     }
 
     public void activate() {
+        if (isActivating)
+            return;
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Boolean>() {
             @Override
             public Boolean doInBackground(Void params) {
+                isActivating = true;
                 activatedConfig.clear();
                 //apply default config first
                 if (defaultConfig != null && !defaultConfig.isEmpty()) {
@@ -137,13 +147,10 @@ public final class CTProductConfigController {
                             for (int i = 0; i < kvArray.length(); i++) {
                                 JSONObject object = (JSONObject) kvArray.get(i);
                                 if (object != null) {
-                                    Iterator<String> iterator = object.keys();
-                                    while (iterator.hasNext()) {
-                                        String key = iterator.next();
-                                        if (!TextUtils.isEmpty(key)) {
-                                            String value = String.valueOf(object.get(key));
-                                            activatedConfig.put(key, value);
-                                        }
+                                    String Key = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_KEY);
+                                    String Value = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_VALUE);
+                                    if (!TextUtils.isEmpty(Key)) {
+                                        activatedConfig.put(Key, String.valueOf(Value));
                                     }
                                 }
                             }
@@ -168,6 +175,7 @@ public final class CTProductConfigController {
                     config.getLogger().verbose(config.getAccountId(), "Product Config: Activate Failed");
                     listener.onActivateFailed();
                 }
+                isActivating = false;
             }
         });
     }
@@ -185,13 +193,13 @@ public final class CTProductConfigController {
     }
 
     private boolean canRequest() {
-        if (TextUtils.isEmpty(guid))
+        if (isFetching || TextUtils.isEmpty(guid))
             return false;
         if (arpValues[0] > 0 && arpValues[1] > 0) {
             long timeSinceLastRequest = System.currentTimeMillis() - lastFetchTimeStampInMillis;
             return TimeUnit.MILLISECONDS.toMinutes(timeSinceLastRequest) > (arpValues[1] / arpValues[0]);
         }
-        return false;
+        return true;
     }
 
     public void afterFetchProductConfig(JSONObject kvResponse) {
@@ -213,6 +221,7 @@ public final class CTProductConfigController {
                 e.printStackTrace();
             }
         }
+        isFetching = false;
     }
 
     private void parseLastFetchTimeStamp(JSONObject jsonObject) throws JSONException {
