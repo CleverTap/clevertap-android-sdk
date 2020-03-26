@@ -50,12 +50,12 @@ public class CTProductConfigController {
 
     private int[] arpValues = new int[]{DEFAULT_NO_OF_CALLS, DEFAULT_WINDOW_LENGTH_MINS};//0 is for rc_n, 1 is for rc_w
 
-    public CTProductConfigController(Context context, String guid, CleverTapInstanceConfig config, Listener listener, CTProductConfigListener ctProductConfigListener) {
+    public CTProductConfigController(Context context, String guid, CleverTapInstanceConfig config, Listener listener) {
         this.context = context;
         this.guid = guid;
         this.config = config;
         cleverTapApiListener = listener;
-        listenerList.add(ctProductConfigListener);
+        listenerList.add(listener);
         initAsync();
     }
 
@@ -481,7 +481,7 @@ public class CTProductConfigController {
         FETCH_FAILED, ACTIVATE_SUCCESS, ACTIVATE_FAILED
     }
 
-    public interface Listener {
+    public interface Listener extends CTProductConfigListener {
         void fetchProductConfig();
     }
 }
