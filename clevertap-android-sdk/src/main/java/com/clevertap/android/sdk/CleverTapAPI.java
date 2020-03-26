@@ -101,7 +101,7 @@ import static com.clevertap.android.sdk.Utils.runOnUiThread;
 public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationListener,
         InAppNotificationActivity.InAppActivityListener,
         CTInAppBaseFragment.InAppListener,
-        CTInboxActivity.InboxActivityListener, CTABTestListener, FeatureFlagListener, CTProductConfigController.Listener {
+        CTInboxActivity.InboxActivityListener, CTABTestListener, FeatureFlagListener, CTProductConfigController.Listener, CTProductConfigListener {
     private final HashMap<String, Object> notificationIdTagMap = new HashMap<>();
     private final HashMap<String, Object> notificationViewedIdTagMap = new HashMap<>();
 
@@ -3400,6 +3400,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 if (response.has("arp")) {
                     final JSONObject arp = (JSONObject) response.get("arp");
                     if (arp.length() > 0) {
+                        if(ctProductConfigController!=null){
+                            ctProductConfigController.setArpValue(arp);
+                        }
                         handleARPUpdate(context, arp);
                     }
                 }
@@ -3599,12 +3602,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 final Object o = arp.get(key);
                 if (o instanceof Number) {
                     final int update = ((Number) o).intValue();
-                    if(Constants.PRODUCT_CONFIG_NO_OF_CALLS.equalsIgnoreCase(key)
-                    ||Constants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS.equalsIgnoreCase(key) ){
-                        if(ctProductConfigController!= null){
-                            ctProductConfigController.setArpValue(key,update);
-                        }
-                    }
                     editor.putInt(key, update);
                 } else if (o instanceof String) {
                     if (((String) o).length() < 100) {
@@ -8224,9 +8221,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     private void processProductConfigResponse(JSONObject response) throws JSONException {
-        //TODO Remove the mock response
-//        JSONObject productConfig = mockProductConfigResponse();
-//        response.put(Constants.REMOTE_CONFIG_FLAG_JSON_RESPONSE_KEY, productConfig);
         if (response == null) {
             getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Can't parse Feature Flags Response, JSON response object is null");
             return;
@@ -8286,8 +8280,13 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private void initProductConfig(boolean fromPlayServices) {
         Logger.v("Initializing Product Config with device Id = " + getCleverTapID());
 
+        if (config.isAnalyticsOnly()) {
+            getConfigLogger().debug(config.getAccountId(), "Feature Flags is not enabled for this instance");
+            return;
+        }
+
         if (ctProductConfigController == null) {
-            ctProductConfigController = new CTProductConfigController(context, getCleverTapID(), config, this);
+            ctProductConfigController = new CTProductConfigController(context, getCleverTapID(), config, this, this);
             getConfigLogger().verbose(config.getAccountId(), "Product Config initialized");
         }
         if (fromPlayServices && ctProductConfigController != null && !ctProductConfigController.isInitialized()) {

@@ -5,9 +5,9 @@ import android.text.TextUtils;
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.FileUtils;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.TaskManager;
-import com.clevertap.android.sdk.Utils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -96,7 +96,7 @@ public class CTFeatureFlagsController {
 
         if (featureFlagRespObj != null) {
             try {
-                Utils.writeJsonToFile(mContext, getCachedDirName(), getCachedFileName(), featureFlagRespObj);
+                FileUtils.writeJsonToFile(mContext, getCachedDirName(), getCachedFileName(), featureFlagRespObj);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -107,10 +107,12 @@ public class CTFeatureFlagsController {
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Boolean>() {
             @Override
             public Boolean doInBackground(Void aVoid) {
-                store.clear();
-                String content = Utils.readFromFile(mContext, getCachedFullPath());
-                if (!TextUtils.isEmpty(content)) {
-                    try {
+
+                try {
+                    store.clear();
+                    String content = FileUtils.readFromFile(mContext, getCachedFullPath());
+                    if (!TextUtils.isEmpty(content)) {
+
                         JSONObject jsonObject = new JSONObject(content);
                         JSONArray kvArray = jsonObject.getJSONArray(Constants.KEY_KV);
 
@@ -127,10 +129,11 @@ public class CTFeatureFlagsController {
                                 }
                             }
                         }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        return false;
+
                     }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return false;
                 }
                 return true;
             }
@@ -177,7 +180,6 @@ public class CTFeatureFlagsController {
     private String getCachedDirName() {
         return CTFeatureFlagConstants.DIR_FEATURE_FLAG + "_" + config.getAccountId() + "_" + guid;
     }
-
 
     private String getCachedFullPath() {
         return getCachedDirName() + "/" + getCachedFileName();
