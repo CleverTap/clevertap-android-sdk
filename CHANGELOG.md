@@ -1,5 +1,8 @@
 ## CHANGE LOG
 
+### Version 3.7.2 (March 27, 2020)
+* Adds fix for a crash caused when InApp with Frequency Caps was shown on first App Launched
+
 ### Version 3.7.1 (March 19, 2020)
 * Adds fix for a crash caused when CleverTap instance was created from background
 
