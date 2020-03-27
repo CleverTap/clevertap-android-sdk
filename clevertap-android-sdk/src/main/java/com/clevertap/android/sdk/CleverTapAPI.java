@@ -137,10 +137,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         this.ns = Executors.newFixedThreadPool(1);
         this.localDataStore = new LocalDataStore(context, config);
         this.deviceInfo = new DeviceInfo(context, config, cleverTapID);
+
         if(this.deviceInfo.getDeviceID() != null){
             Logger.v("Initializing InAppFC with device Id = "+ this.deviceInfo.getDeviceID());
             this.inAppFCManager = new InAppFCManager(context,config,this.deviceInfo.getDeviceID());
         }
+
         this.validator = new Validator();
 
         postAsyncSafely("CleverTapAPI#initializeDeviceInfo", new Runnable() {
@@ -3948,13 +3950,18 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             return;
         }
 
-        if (!inAppFCManager.canShow(inAppNotification)) {
-            getConfigLogger().verbose(getAccountId(), "InApp has been rejected by FC, not showing " + inAppNotification.getCampaignId());
-            showInAppNotificationIfAny();
+        if(inAppFCManager != null) {
+            if (!inAppFCManager.canShow(inAppNotification)) {
+                getConfigLogger().verbose(getAccountId(), "InApp has been rejected by FC, not showing " + inAppNotification.getCampaignId());
+                showInAppNotificationIfAny();
+                return;
+            }
+
+            inAppFCManager.didShow(context, inAppNotification);
+        }else{
+            getConfigLogger().verbose(getAccountId(), "InAppFCManager is NULL, not showing " + inAppNotification.getCampaignId());
             return;
         }
-
-        inAppFCManager.didShow(context, inAppNotification);
 
         final InAppNotificationListener listener = getInAppNotificationListener();
 
@@ -6002,8 +6009,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @Override
     public void inAppNotificationDidDismiss(final Context context, final CTInAppNotification inAppNotification, Bundle formData) {
         inAppNotification.didDismiss();
-        inAppFCManager.didDismiss(inAppNotification);
-        getConfigLogger().verbose(getAccountId(), "InApp Dismissed: " + inAppNotification.getCampaignId());
+        if(inAppFCManager != null) {
+            inAppFCManager.didDismiss(inAppNotification);
+            getConfigLogger().verbose(getAccountId(), "InApp Dismissed: " + inAppNotification.getCampaignId());
+        }
         try {
             final InAppNotificationListener listener = getInAppNotificationListener();
             if (listener != null) {
