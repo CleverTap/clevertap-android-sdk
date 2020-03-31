@@ -2,10 +2,8 @@ package com.clevertap.android.sdk;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Build;
 
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public final class StorageHelper {
     private static long EXECUTOR_THREAD_ID = 0;
@@ -82,7 +80,7 @@ public final class StorageHelper {
         return getPreferences(context, null);
     }
 
-    static void persist(final SharedPreferences.Editor editor) {
+    public static void persist(final SharedPreferences.Editor editor) {
         try {
             editor.apply();
         } catch (Throwable t) {
