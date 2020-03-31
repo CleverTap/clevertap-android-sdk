@@ -82,46 +82,11 @@ public final class StorageHelper {
         return getPreferences(context, null);
     }
 
-    public static void persist(final SharedPreferences.Editor editor) {
+    static void persist(final SharedPreferences.Editor editor) {
         try {
-            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                editor.apply();
-            } else {
-                postAsyncSafely(new Runnable() {
-                    @Override
-                    public void run() {
-                        editor.commit();
-                    }
-                });
-            }
+            editor.apply();
         } catch (Throwable t) {
             Logger.v("CRITICAL: Failed to persist shared preferences!", t);
-        }
-    }
-
-    private static void postAsyncSafely(final Runnable runnable) {
-        try {
-            if (es == null)
-                es = Executors.newFixedThreadPool(1);
-            final boolean executeSync = Thread.currentThread().getId() == EXECUTOR_THREAD_ID;
-
-            if (executeSync) {
-                runnable.run();
-            } else {
-                es.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        EXECUTOR_THREAD_ID = Thread.currentThread().getId();
-                        try {
-                            runnable.run();
-                        } catch (Throwable t) {
-                            Logger.v("Executor service: Failed to complete the scheduled task", t);
-                        }
-                    }
-                });
-            }
-        } catch (Throwable t) {
-            Logger.v("Failed to submit task to the executor service", t);
         }
     }
 }
