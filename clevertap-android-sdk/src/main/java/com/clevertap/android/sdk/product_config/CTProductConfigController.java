@@ -15,7 +15,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
@@ -40,34 +39,21 @@ public class CTProductConfigController {
     private final Context context;
     private HashMap<String, String> defaultConfig;
     private final HashMap<String, String> activatedConfig = new HashMap<>();
-    private final ArrayList<CTProductConfigListener> listenerList = new ArrayList<>();
-    private final Listener cleverTapApiListener;
+    private final Listener listener;
     private long minFetchIntervalInSeconds = DEFAULT_MIN_FETCH_INTERVAL_SECONDS;
     private long lastFetchTimeStampInMillis;
     private boolean isFetching = false;
     private boolean isActivating = false;
-    private CTProductConfigListener localListener;
-
-    private int[] arpValues = new int[]{DEFAULT_NO_OF_CALLS, DEFAULT_WINDOW_LENGTH_MINS};//0 is for rc_n, 1 is for rc_w
+    private boolean isFetchAndActivating = false;
+    private int noOfCallsInAllowedWindow = DEFAULT_NO_OF_CALLS;
+    private int windowIntervalInMins = DEFAULT_WINDOW_LENGTH_MINS;
 
     public CTProductConfigController(Context context, String guid, CleverTapInstanceConfig config, Listener listener) {
         this.context = context;
         this.guid = guid;
         this.config = config;
-        cleverTapApiListener = listener;
-        listenerList.add(listener);
+        this.listener = listener;
         initAsync();
-    }
-
-    public void register(CTProductConfigListener listener) {
-        if (listener != null && !listenerList.contains(listener))
-            listenerList.add(listener);
-    }
-
-    public void unRegister(CTProductConfigListener listener) {
-        if (listener != null) {
-            listenerList.remove(listener);
-        }
     }
 
     private synchronized void initAsync() {
@@ -122,8 +108,8 @@ public class CTProductConfigController {
 
     private void initSharedPrefValues() {
         final SharedPreferences prefs = StorageHelper.getPreferences(context, CTProductConfigConstants.PRODUCT_CONFIG_PREF);
-        arpValues[0] = prefs.getInt(Constants.PRODUCT_CONFIG_NO_OF_CALLS, DEFAULT_NO_OF_CALLS);
-        arpValues[1] = prefs.getInt(Constants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS, DEFAULT_WINDOW_LENGTH_MINS);
+        noOfCallsInAllowedWindow = prefs.getInt(Constants.PRODUCT_CONFIG_NO_OF_CALLS, DEFAULT_NO_OF_CALLS);
+        windowIntervalInMins = prefs.getInt(Constants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS, DEFAULT_WINDOW_LENGTH_MINS);
 
         lastFetchTimeStampInMillis = prefs.getLong(CTProductConfigConstants.KEY_LAST_FETCHED_TIMESTAMP, 0);
     }
@@ -148,7 +134,7 @@ public class CTProductConfigController {
     public void fetch(long interval) {
         if (canRequest()) {
             isFetching = true;
-            cleverTapApiListener.fetchProductConfig();
+            listener.fetchProductConfig();
         } else {
             config.getLogger().verbose(config.getAccountId(), "Product Config: Throttled");
         }
@@ -171,6 +157,7 @@ public class CTProductConfigController {
                         activatedConfig.putAll(defaultConfig);
                     }
                     //read fetched info
+                    //TODO optimise
                     String content = FileUtils.readFromFile(context, getFetchedFullPath());
                     if (!TextUtils.isEmpty(content)) {
 
@@ -209,6 +196,7 @@ public class CTProductConfigController {
                     sendCallback(PROCESSING_STATE.ACTIVATE_FAILED);
                 }
                 isActivating = false;
+                isFetchAndActivating = false;
             }
         });
     }
@@ -277,9 +265,10 @@ public class CTProductConfigController {
 
     private boolean canRequest() {
         if (!isFetching && !TextUtils.isEmpty(guid)) {
-            if (arpValues[0] > 0 && arpValues[1] > 0) {
-                long timeSinceLastRequest = System.currentTimeMillis() - lastFetchTimeStampInMillis;
-                return TimeUnit.MILLISECONDS.toMinutes(timeSinceLastRequest) > (arpValues[1] / arpValues[0]);
+            long timeSinceLastRequest = System.currentTimeMillis() - lastFetchTimeStampInMillis;
+            if (noOfCallsInAllowedWindow > 0 && windowIntervalInMins > 0) {
+
+                return TimeUnit.MILLISECONDS.toMinutes(timeSinceLastRequest) > (windowIntervalInMins / noOfCallsInAllowedWindow);
             }
         }
         return false;
@@ -297,11 +286,15 @@ public class CTProductConfigController {
                         sendCallback(PROCESSING_STATE.FETCH_SUCCESS);
                     }
                 });
+                if (isFetchAndActivating) {
+                    activate();
+                }
 
             } catch (Exception e) {
                 config.getLogger().verbose(config.getAccountId(), "Product Config: fetch Failed");
                 sendCallback(PROCESSING_STATE.FETCH_FAILED);
                 e.printStackTrace();
+                isFetchAndActivating = false;// set fetchAndActivating flag to false if fetch fails.
             }
         }
         isFetching = false;
@@ -350,10 +343,10 @@ public class CTProductConfigController {
         final SharedPreferences.Editor editor = prefs.edit();
         switch (key) {
             case Constants.PRODUCT_CONFIG_NO_OF_CALLS:
-                arpValues[0] = value;
+                noOfCallsInAllowedWindow = value;
                 break;
             case Constants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS:
-                arpValues[1] = value;
+                windowIntervalInMins = value;
                 break;
         }
         editor.putInt(key, value);
@@ -402,34 +395,22 @@ public class CTProductConfigController {
         if (state != null) {
             switch (state) {
                 case INIT_SUCCESS:
-                    for (CTProductConfigListener listener : listenerList) {
-                        listener.onInitSuccess();
-                    }
+                    listener.onInitSuccess();
                     break;
                 case INIT_FAILED:
-                    for (CTProductConfigListener listener : listenerList) {
-                        listener.onInitFailed();
-                    }
+                    listener.onInitFailed();
                     break;
                 case FETCH_FAILED:
-                    for (CTProductConfigListener listener : listenerList) {
-                        listener.onFetchFailed();
-                    }
+                    listener.onFetchFailed();
                     break;
                 case FETCH_SUCCESS:
-                    for (CTProductConfigListener listener : listenerList) {
-                        listener.onFetchSuccess();
-                    }
+                    listener.onFetchSuccess();
                     break;
                 case ACTIVATE_FAILED:
-                    for (CTProductConfigListener listener : listenerList) {
-                        listener.onActivateFailed();
-                    }
+                    listener.onActivateFailed();
                     break;
                 case ACTIVATE_SUCCESS:
-                    for (CTProductConfigListener listener : listenerList) {
-                        listener.onActivateSuccess();
-                    }
+                    listener.onActivateSuccess();
                     break;
             }
         }
@@ -440,39 +421,8 @@ public class CTProductConfigController {
      * Asynchronously fetches and then activates the fetched configs.
      */
     public void fetchAndActivate() {
-        localListener = new CTProductConfigListener() {
-            @Override
-            public void onInitSuccess() {
-
-            }
-
-            @Override
-            public void onInitFailed() {
-
-            }
-
-            @Override
-            public void onFetchSuccess() {
-                activate();
-            }
-
-            @Override
-            public void onFetchFailed() {
-
-            }
-
-            @Override
-            public void onActivateSuccess() {
-                unRegister(localListener);
-                localListener = null;
-            }
-
-            @Override
-            public void onActivateFailed() {
-
-            }
-        };
-        register(localListener);
+        if (isFetchAndActivating)
+            return;
         fetch();
     }
 
