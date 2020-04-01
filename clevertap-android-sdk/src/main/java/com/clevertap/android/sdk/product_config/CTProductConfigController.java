@@ -39,6 +39,7 @@ public class CTProductConfigController {
     private final Context context;
     private HashMap<String, String> defaultConfig;
     private final HashMap<String, String> activatedConfig = new HashMap<>();
+    private final HashMap<String, String> fetchedConfig = new HashMap<>();
     private final Listener listener;
     private long minFetchIntervalInSeconds = DEFAULT_MIN_FETCH_INTERVAL_SECONDS;
     private long lastFetchTimeStampInMillis;
@@ -62,35 +63,37 @@ public class CTProductConfigController {
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Boolean>() {
             @Override
             public Boolean doInBackground(Void params) {
-                try {
-                    activatedConfig.clear();
-                    String content = FileUtils.readFromFile(context, getActivatedFullPath());
-                    //apply default config first
-                    if (defaultConfig != null && !defaultConfig.isEmpty()) {
-                        activatedConfig.putAll(defaultConfig);
-                    }
-                    if (!TextUtils.isEmpty(content)) {
-
-                        JSONObject jsonObject = new JSONObject(content);
-                        Iterator<String> iterator = jsonObject.keys();
-                        while (iterator.hasNext()) {
-
-                            String key = iterator.next();
-                            if (!TextUtils.isEmpty(key)) {
-                                String value = String.valueOf(jsonObject.get(key));
-                                activatedConfig.put(key, value);
-                            }
+                synchronized (this) {
+                    try {
+                        activatedConfig.clear();
+                        String content = FileUtils.readFromFile(context, getActivatedFullPath());
+                        //apply default config first
+                        if (defaultConfig != null && !defaultConfig.isEmpty()) {
+                            activatedConfig.putAll(defaultConfig);
                         }
-                        FileUtils.writeJsonToFile(context, getProductConfigDirName(), getActivatedFileName(), new JSONObject(activatedConfig));
-                        initSharedPrefValues();
-                        isInitialized = true;
+                        if (!TextUtils.isEmpty(content)) {
 
+                            JSONObject jsonObject = new JSONObject(content);
+                            Iterator<String> iterator = jsonObject.keys();
+                            while (iterator.hasNext()) {
+
+                                String key = iterator.next();
+                                if (!TextUtils.isEmpty(key)) {
+                                    String value = String.valueOf(jsonObject.get(key));
+                                    activatedConfig.put(key, value);
+                                }
+                            }
+                            FileUtils.writeJsonToFile(context, getProductConfigDirName(), getActivatedFileName(), new JSONObject(activatedConfig));
+                            initSharedPrefValues();
+                            isInitialized = true;
+
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return false;
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return false;
+                    return true;
                 }
-                return true;
             }
 
             @Override
@@ -149,41 +152,46 @@ public class CTProductConfigController {
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Boolean>() {
             @Override
             public Boolean doInBackground(Void params) {
-                isActivating = true;
-                try {
-                    activatedConfig.clear();
-                    //apply default config first
-                    if (defaultConfig != null && !defaultConfig.isEmpty()) {
-                        activatedConfig.putAll(defaultConfig);
-                    }
-                    //read fetched info
-                    //TODO optimise
-                    String content = FileUtils.readFromFile(context, getFetchedFullPath());
-                    if (!TextUtils.isEmpty(content)) {
+                synchronized (this) {
+                    isActivating = true;
+                    try {
+                        activatedConfig.clear();
+                        //apply default config first
+                        if (defaultConfig != null && !defaultConfig.isEmpty()) {
+                            activatedConfig.putAll(defaultConfig);
+                        }
+                        //read fetched info
+                        if (!fetchedConfig.isEmpty()) {
+                            activatedConfig.putAll(fetchedConfig);
+                        } else {
+                            String content = FileUtils.readFromFile(context, getFetchedFullPath());
+                            if (!TextUtils.isEmpty(content)) {
 
-                        JSONObject jsonObject = new JSONObject(content);
-                        JSONArray kvArray = jsonObject.getJSONArray(Constants.KEY_KV);
+                                JSONObject jsonObject = new JSONObject(content);
+                                JSONArray kvArray = jsonObject.getJSONArray(Constants.KEY_KV);
 
-                        if (kvArray != null && kvArray.length() > 0) {
-                            for (int i = 0; i < kvArray.length(); i++) {
-                                JSONObject object = (JSONObject) kvArray.get(i);
-                                if (object != null) {
-                                    String Key = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_KEY);
-                                    String Value = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_VALUE);
-                                    if (!TextUtils.isEmpty(Key)) {
-                                        activatedConfig.put(Key, String.valueOf(Value));
+                                if (kvArray != null && kvArray.length() > 0) {
+                                    for (int i = 0; i < kvArray.length(); i++) {
+                                        JSONObject object = (JSONObject) kvArray.get(i);
+                                        if (object != null) {
+                                            String Key = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_KEY);
+                                            String Value = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_VALUE);
+                                            if (!TextUtils.isEmpty(Key)) {
+                                                activatedConfig.put(Key, String.valueOf(Value));
+                                            }
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        FileUtils.writeJsonToFile(context, getProductConfigDirName(), getActivatedFileName(), new JSONObject(activatedConfig));
+                            FileUtils.writeJsonToFile(context, getProductConfigDirName(), getActivatedFileName(), new JSONObject(activatedConfig));
+                        }
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        return false;
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    return false;
+                    return true;
                 }
-                return true;
             }
 
             @Override
@@ -275,32 +283,50 @@ public class CTProductConfigController {
     }
 
     public void afterFetchProductConfig(JSONObject kvResponse) {
-        if (kvResponse != null) {
-            try {
-                parseLastFetchTimeStamp(kvResponse);
-                FileUtils.writeJsonToFile(context, getProductConfigDirName(), getFetchedFileName(), kvResponse);
-                Utils.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        config.getLogger().verbose(config.getAccountId(), "Product Config: fetch Success");
-                        sendCallback(PROCESSING_STATE.FETCH_SUCCESS);
+        synchronized (this) {
+            if (kvResponse != null) {
+                try {
+                    parseFetchedResponse(kvResponse);
+                    FileUtils.writeJsonToFile(context, getProductConfigDirName(), getFetchedFileName(), kvResponse);
+                    Utils.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            config.getLogger().verbose(config.getAccountId(), "Product Config: fetch Success");
+                            sendCallback(PROCESSING_STATE.FETCH_SUCCESS);
+                        }
+                    });
+                    if (isFetchAndActivating) {
+                        activate();
                     }
-                });
-                if (isFetchAndActivating) {
-                    activate();
-                }
 
-            } catch (Exception e) {
-                config.getLogger().verbose(config.getAccountId(), "Product Config: fetch Failed");
-                sendCallback(PROCESSING_STATE.FETCH_FAILED);
-                e.printStackTrace();
-                isFetchAndActivating = false;// set fetchAndActivating flag to false if fetch fails.
+                } catch (Exception e) {
+                    config.getLogger().verbose(config.getAccountId(), "Product Config: fetch Failed");
+                    sendCallback(PROCESSING_STATE.FETCH_FAILED);
+                    e.printStackTrace();
+                    isFetchAndActivating = false;// set fetchAndActivating flag to false if fetch fails.
+                }
             }
+            isFetching = false;
         }
-        isFetching = false;
     }
 
-    private void parseLastFetchTimeStamp(JSONObject jsonObject) throws JSONException {
+    private void parseFetchedResponse(JSONObject jsonObject) throws JSONException {
+        JSONArray kvArray = jsonObject.getJSONArray(Constants.KEY_KV);
+
+        if (kvArray != null && kvArray.length() > 0) {
+            fetchedConfig.clear();
+            for (int i = 0; i < kvArray.length(); i++) {
+                JSONObject object = (JSONObject) kvArray.get(i);
+                if (object != null) {
+                    String Key = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_KEY);
+                    String Value = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_VALUE);
+                    if (!TextUtils.isEmpty(Key)) {
+                        fetchedConfig.put(Key, String.valueOf(Value));
+                    }
+                }
+            }
+        }
+
         Integer timestampInSeconds = (Integer) jsonObject.get(CTProductConfigConstants.KEY_LAST_FETCHED_TIMESTAMP);
         if (timestampInSeconds > 0) {
             lastFetchTimeStampInMillis = timestampInSeconds * 1000L;
@@ -357,17 +383,19 @@ public class CTProductConfigController {
      * Deletes all activated, fetched and defaults configs and resets all Product Config settings.
      */
     public void reset() {
-        if (null != defaultConfig) {
-            defaultConfig.clear();
-        }
+        synchronized (this) {
+            if (null != defaultConfig) {
+                defaultConfig.clear();
+            }
 
-        activatedConfig.clear();
-        try {
-            FileUtils.deleteDirectory(context, getProductConfigDirName());
-        } catch (Exception e) {
-            e.printStackTrace();
+            activatedConfig.clear();
+            try {
+                FileUtils.deleteDirectory(context, getProductConfigDirName());
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+            setMinimumFetchIntervalInSeconds(DEFAULT_MIN_FETCH_INTERVAL_SECONDS);
         }
-        setMinimumFetchIntervalInSeconds(DEFAULT_MIN_FETCH_INTERVAL_SECONDS);
     }
 
     public void setArpValue(JSONObject arp) {

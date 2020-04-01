@@ -92,7 +92,7 @@ public class CTFeatureFlagsController {
         }
     }
 
-    private void archiveData(JSONObject featureFlagRespObj, boolean sync) {
+    private synchronized void archiveData(JSONObject featureFlagRespObj, boolean sync) {
 
         if (featureFlagRespObj != null) {
             try {
@@ -103,7 +103,7 @@ public class CTFeatureFlagsController {
         }
     }
 
-    private void unarchiveData(boolean sync) {
+    private synchronized void unarchiveData(boolean sync) {
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Boolean>() {
             @Override
             public Boolean doInBackground(Void aVoid) {
