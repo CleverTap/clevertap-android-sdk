@@ -48,10 +48,10 @@ public class CTProductConfigController {
         this.config = config;
         this.listener = listener;
         this.settings = new ProductConfigSettings(context, guid, config);
-        initAsync(false);
+        initAsync();
     }
 
-    private void initAsync(final boolean isProfileSwitched) {
+    private void initAsync() {
         if (TextUtils.isEmpty(guid))
             return;
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Boolean>() {
@@ -68,9 +68,6 @@ public class CTProductConfigController {
                         FileUtils.writeJsonToFile(context, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(activatedConfig));
                         settings.loadSettings();
                         isInitialized = true;
-                        if (isProfileSwitched) {
-                            fetch();
-                        }
                     } catch (Exception e) {
                         e.printStackTrace();
                         return false;
@@ -111,7 +108,7 @@ public class CTProductConfigController {
 
     public void setDefaults(int resourceID) {
         defaultConfig = DefaultXmlParser.getDefaultsFromXml(context, resourceID);
-        initAsync(false);
+        initAsync();
     }
 
     /**
@@ -248,7 +245,7 @@ public class CTProductConfigController {
     private boolean canRequest(long minimumFetchIntervalInSeconds) {
         return !isFetching
                 && !TextUtils.isEmpty(guid)
-                && (System.currentTimeMillis() - 1000 * minimumFetchIntervalInSeconds) > settings.getLastFetchTimeStampInMillis();
+                && (System.currentTimeMillis() - settings.getLastFetchTimeStampInMillis()) > minimumFetchIntervalInSeconds;
     }
 
     public void afterFetchProductConfig(JSONObject kvResponse) {
@@ -283,9 +280,9 @@ public class CTProductConfigController {
         HashMap<String, String> map = convertServerJsonToMap(jsonObject);
         fetchedConfig.clear();
         fetchedConfig.putAll(map);
-        Integer timestampInSeconds = (Integer) jsonObject.get(CTProductConfigConstants.KEY_LAST_FETCHED_TIMESTAMP);
-        if (timestampInSeconds > 0) {
-            settings.setLastFetchTimeStampInMillis(timestampInSeconds * 1000L);
+        Integer timestamp = (Integer) jsonObject.get(CTProductConfigConstants.KEY_LAST_FETCHED_TIMESTAMP);
+        if (timestamp > 0) {
+            settings.setLastFetchTimeStampInMillis(timestamp);
         }
     }
 
@@ -312,7 +309,7 @@ public class CTProductConfigController {
         if (TextUtils.isEmpty(guid))
             return;
         this.guid = cleverTapID;
-        initAsync(true);
+        initAsync();
     }
 
     private String getActivatedFileName() {

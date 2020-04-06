@@ -8279,9 +8279,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             return;
         }
 
-        if (ctProductConfigController != null && ctProductConfigController.isInitialized()) {
-            ctProductConfigController.setGuidAndInit(getCleverTapID());
-        }
+        ctProductConfigController = new CTProductConfigController(context, getCleverTapID(), config, this);
+        getConfigLogger().verbose(config.getAccountId(), "Product Config reset");
+        ctProductConfigController.fetch();
     }
 
     private void initProductConfig(boolean fromPlayServices) {
