@@ -8280,8 +8280,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
 
         if (ctProductConfigController != null && ctProductConfigController.isInitialized()) {
-            ctProductConfigController.setGuidAndInit(getCleverTapID());//TODO check whether needed
-            ctProductConfigController.fetch();
+            ctProductConfigController.setGuidAndInit(getCleverTapID());
         }
     }
 

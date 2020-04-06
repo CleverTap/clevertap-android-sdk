@@ -1,13 +1,11 @@
 package com.clevertap.android.sdk.product_config;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.text.TextUtils;
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.FileUtils;
-import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.TaskManager;
 import com.clevertap.android.sdk.Utils;
 
@@ -17,12 +15,9 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.concurrent.TimeUnit;
 
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_MIN_FETCH_INTERVAL_SECONDS;
-import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_NO_OF_CALLS;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_VALUE_FOR_STRING;
-import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_WINDOW_LENGTH_MINS;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_JSON_KEY_FOR_KEY;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_JSON_KEY_FOR_VALUE;
 
@@ -41,23 +36,22 @@ public class CTProductConfigController {
     private final HashMap<String, String> activatedConfig = new HashMap<>();
     private final HashMap<String, String> fetchedConfig = new HashMap<>();
     private final Listener listener;
-    private long minFetchIntervalInSeconds = DEFAULT_MIN_FETCH_INTERVAL_SECONDS;
-    private long lastFetchTimeStampInMillis;
     private boolean isFetching = false;
     private boolean isActivating = false;
     private boolean isFetchAndActivating = false;
-    private int noOfCallsInAllowedWindow = DEFAULT_NO_OF_CALLS;
-    private int windowIntervalInMins = DEFAULT_WINDOW_LENGTH_MINS;
+    private final ProductConfigSettings settings;
+
 
     public CTProductConfigController(Context context, String guid, CleverTapInstanceConfig config, Listener listener) {
         this.context = context;
         this.guid = guid;
         this.config = config;
         this.listener = listener;
-        initAsync();
+        this.settings = new ProductConfigSettings(context, guid, config);
+        initAsync(false);
     }
 
-    private synchronized void initAsync() {
+    private void initAsync(final boolean isProfileSwitched) {
         if (TextUtils.isEmpty(guid))
             return;
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Boolean>() {
@@ -66,27 +60,16 @@ public class CTProductConfigController {
                 synchronized (this) {
                     try {
                         activatedConfig.clear();
-                        String content = FileUtils.readFromFile(context, getActivatedFullPath());
                         //apply default config first
                         if (defaultConfig != null && !defaultConfig.isEmpty()) {
                             activatedConfig.putAll(defaultConfig);
                         }
-                        if (!TextUtils.isEmpty(content)) {
-
-                            JSONObject jsonObject = new JSONObject(content);
-                            Iterator<String> iterator = jsonObject.keys();
-                            while (iterator.hasNext()) {
-
-                                String key = iterator.next();
-                                if (!TextUtils.isEmpty(key)) {
-                                    String value = String.valueOf(jsonObject.get(key));
-                                    activatedConfig.put(key, value);
-                                }
-                            }
-                            FileUtils.writeJsonToFile(context, getProductConfigDirName(), getActivatedFileName(), new JSONObject(activatedConfig));
-                            initSharedPrefValues();
-                            isInitialized = true;
-
+                        activatedConfig.putAll(getStoredValues(getActivatedFullPath()));
+                        FileUtils.writeJsonToFile(context, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(activatedConfig));
+                        settings.loadSettings();
+                        isInitialized = true;
+                        if (isProfileSwitched) {
+                            fetch();
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -109,33 +92,42 @@ public class CTProductConfigController {
         });
     }
 
-    private void initSharedPrefValues() {
-        final SharedPreferences prefs = StorageHelper.getPreferences(context, CTProductConfigConstants.PRODUCT_CONFIG_PREF);
-        noOfCallsInAllowedWindow = prefs.getInt(Constants.PRODUCT_CONFIG_NO_OF_CALLS, DEFAULT_NO_OF_CALLS);
-        windowIntervalInMins = prefs.getInt(Constants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS, DEFAULT_WINDOW_LENGTH_MINS);
-
-        lastFetchTimeStampInMillis = prefs.getLong(CTProductConfigConstants.KEY_LAST_FETCHED_TIMESTAMP, 0);
+    private HashMap<String, String> getStoredValues(String fullFilePath) throws Exception {
+        HashMap<String, String> map = new HashMap<>();
+        String content = FileUtils.readFromFile(context, fullFilePath);
+        if (!TextUtils.isEmpty(content)) {
+            JSONObject jsonObject = new JSONObject(content);
+            Iterator<String> iterator = jsonObject.keys();
+            while (iterator.hasNext()) {
+                String key = iterator.next();
+                if (!TextUtils.isEmpty(key)) {
+                    String value = String.valueOf(jsonObject.get(key));
+                    map.put(key, value);
+                }
+            }
+        }
+        return map;
     }
 
     public void setDefaults(int resourceID) {
         defaultConfig = DefaultXmlParser.getDefaultsFromXml(context, resourceID);
-        initAsync();
+        initAsync(false);
     }
 
     /**
      * Starts fetching configs, adhering to the default minimum fetch interval.
      */
     public void fetch() {
-        fetch(minFetchIntervalInSeconds);
+        fetch(settings.getNextFetchIntervalInSeconds());
     }
 
     /**
-     * Starts fetching configs, adhering to the specified minimum fetch interval.
+     * Starts fetching configs, adhering to the specified minimum fetch interval in seconds.
      *
-     * @param interval
+     * @param minimumFetchIntervalInSeconds
      */
-    public void fetch(long interval) {
-        if (canRequest()) {
+    public void fetch(long minimumFetchIntervalInSeconds) {
+        if (canRequest(minimumFetchIntervalInSeconds)) {
             isFetching = true;
             listener.fetchProductConfig();
         } else {
@@ -164,27 +156,9 @@ public class CTProductConfigController {
                         if (!fetchedConfig.isEmpty()) {
                             activatedConfig.putAll(fetchedConfig);
                         } else {
-                            String content = FileUtils.readFromFile(context, getFetchedFullPath());
-                            if (!TextUtils.isEmpty(content)) {
-
-                                JSONObject jsonObject = new JSONObject(content);
-                                JSONArray kvArray = jsonObject.getJSONArray(Constants.KEY_KV);
-
-                                if (kvArray != null && kvArray.length() > 0) {
-                                    for (int i = 0; i < kvArray.length(); i++) {
-                                        JSONObject object = (JSONObject) kvArray.get(i);
-                                        if (object != null) {
-                                            String Key = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_KEY);
-                                            String Value = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_VALUE);
-                                            if (!TextUtils.isEmpty(Key)) {
-                                                activatedConfig.put(Key, String.valueOf(Value));
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            FileUtils.writeJsonToFile(context, getProductConfigDirName(), getActivatedFileName(), new JSONObject(activatedConfig));
+                            activatedConfig.putAll(getStoredValues(getFetchedFullPath()));
+                            FileUtils.writeJsonToFile(context, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(activatedConfig));
+                            FileUtils.deleteFile(context, getFetchedFullPath());
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -210,7 +184,7 @@ public class CTProductConfigController {
     }
 
     public void setMinimumFetchIntervalInSeconds(long fetchIntervalInSeconds) {
-        this.minFetchIntervalInSeconds = fetchIntervalInSeconds;
+        settings.setMinimumFetchIntervalInSeconds(fetchIntervalInSeconds);
     }
 
 
@@ -271,15 +245,10 @@ public class CTProductConfigController {
         return CTProductConfigConstants.DEFAULT_VALUE_FOR_DOUBLE;
     }
 
-    private boolean canRequest() {
-        if (!isFetching && !TextUtils.isEmpty(guid)) {
-            long timeSinceLastRequest = System.currentTimeMillis() - lastFetchTimeStampInMillis;
-            if (noOfCallsInAllowedWindow > 0 && windowIntervalInMins > 0) {
-
-                return TimeUnit.MILLISECONDS.toMinutes(timeSinceLastRequest) > (windowIntervalInMins / noOfCallsInAllowedWindow);
-            }
-        }
-        return false;
+    private boolean canRequest(long minimumFetchIntervalInSeconds) {
+        return !isFetching
+                && !TextUtils.isEmpty(guid)
+                && (System.currentTimeMillis() - 1000 * minimumFetchIntervalInSeconds) > settings.getLastFetchTimeStampInMillis();
     }
 
     public void afterFetchProductConfig(JSONObject kvResponse) {
@@ -287,7 +256,7 @@ public class CTProductConfigController {
             if (kvResponse != null) {
                 try {
                     parseFetchedResponse(kvResponse);
-                    FileUtils.writeJsonToFile(context, getProductConfigDirName(), getFetchedFileName(), kvResponse);
+                    FileUtils.writeJsonToFile(context, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_FETCHED, new JSONObject(fetchedConfig));
                     Utils.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -311,37 +280,39 @@ public class CTProductConfigController {
     }
 
     private void parseFetchedResponse(JSONObject jsonObject) throws JSONException {
+        HashMap<String, String> map = convertServerJsonToMap(jsonObject);
+        fetchedConfig.clear();
+        fetchedConfig.putAll(map);
+        Integer timestampInSeconds = (Integer) jsonObject.get(CTProductConfigConstants.KEY_LAST_FETCHED_TIMESTAMP);
+        if (timestampInSeconds > 0) {
+            settings.setLastFetchTimeStampInMillis(timestampInSeconds * 1000L);
+        }
+    }
+
+    private HashMap<String, String> convertServerJsonToMap(JSONObject jsonObject) throws JSONException {
+        HashMap<String, String> map = new HashMap<>();
         JSONArray kvArray = jsonObject.getJSONArray(Constants.KEY_KV);
 
         if (kvArray != null && kvArray.length() > 0) {
-            fetchedConfig.clear();
             for (int i = 0; i < kvArray.length(); i++) {
                 JSONObject object = (JSONObject) kvArray.get(i);
                 if (object != null) {
                     String Key = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_KEY);
                     String Value = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_VALUE);
                     if (!TextUtils.isEmpty(Key)) {
-                        fetchedConfig.put(Key, String.valueOf(Value));
+                        map.put(Key, String.valueOf(Value));
                     }
                 }
             }
         }
-
-        Integer timestampInSeconds = (Integer) jsonObject.get(CTProductConfigConstants.KEY_LAST_FETCHED_TIMESTAMP);
-        if (timestampInSeconds > 0) {
-            lastFetchTimeStampInMillis = timestampInSeconds * 1000L;
-            final SharedPreferences prefs = StorageHelper.getPreferences(context, CTProductConfigConstants.PRODUCT_CONFIG_PREF);
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putLong(CTProductConfigConstants.KEY_LAST_FETCHED_TIMESTAMP, lastFetchTimeStampInMillis);
-            editor.commit();
-        }
+        return map;
     }
 
     public void setGuidAndInit(String cleverTapID) {
         if (TextUtils.isEmpty(guid))
             return;
         this.guid = cleverTapID;
-        initAsync();
+        initAsync(true);
     }
 
     private String getActivatedFileName() {
@@ -352,31 +323,24 @@ public class CTProductConfigController {
         return CTProductConfigConstants.DIR_PRODUCT_CONFIG + "_" + config.getAccountId() + "_" + guid;
     }
 
-    private String getFetchedFileName() {
-        return CTProductConfigConstants.FILE_NAME_FETCHED;
-    }
-
     private String getFetchedFullPath() {
-        return getProductConfigDirName() + "/" + getFetchedFileName();
+        return getProductConfigDirName() + "/" + CTProductConfigConstants.FILE_NAME_FETCHED;
     }
 
     private String getActivatedFullPath() {
-        return getProductConfigDirName() + "/" + getActivatedFileName();
+        return getProductConfigDirName() + "/" + CTProductConfigConstants.FILE_NAME_ACTIVATED;
     }
 
     public void setArpValue(String key, int value) {
-        final SharedPreferences prefs = StorageHelper.getPreferences(context, CTProductConfigConstants.PRODUCT_CONFIG_PREF);
-        final SharedPreferences.Editor editor = prefs.edit();
+
         switch (key) {
-            case Constants.PRODUCT_CONFIG_NO_OF_CALLS:
-                noOfCallsInAllowedWindow = value;
+            case CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS:
+                settings.setNoOfCallsInAllowedWindow(value);
                 break;
-            case Constants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS:
-                windowIntervalInMins = value;
+            case CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS:
+                settings.setWindowIntervalInMinutes(value);
                 break;
         }
-        editor.putInt(key, value);
-        StorageHelper.persist(editor);
     }
 
     /**
@@ -407,8 +371,8 @@ public class CTProductConfigController {
                     final Object o = arp.get(key);
                     if (o instanceof Number) {
                         final int update = ((Number) o).intValue();
-                        if (Constants.PRODUCT_CONFIG_NO_OF_CALLS.equalsIgnoreCase(key)
-                                || Constants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS.equalsIgnoreCase(key)) {
+                        if (CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS.equalsIgnoreCase(key)
+                                || CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS.equalsIgnoreCase(key)) {
                             setArpValue(key, update);
                         }
                     }

@@ -6,6 +6,7 @@ public interface CTProductConfigConstants {
     String DIR_PRODUCT_CONFIG = "Product_Config";
     String FILE_NAME_FETCHED = "fetched.json";
     String FILE_NAME_ACTIVATED = "activated.json";
+    String FILE_NAME_CONFIG_SETTINGS = "config_settings.json";
     String PRODUCT_CONFIG_PREF = "PRODUCT_CONFIG_PREF";
     String PRODUCT_CONFIG_JSON_KEY_FOR_KEY = "n";
     String PRODUCT_CONFIG_JSON_KEY_FOR_VALUE = "v";
@@ -20,4 +21,8 @@ public interface CTProductConfigConstants {
     Boolean DEFAULT_VALUE_FOR_BOOLEAN = false;
     Long DEFAULT_VALUE_FOR_LONG = 0L;
     Double DEFAULT_VALUE_FOR_DOUBLE = 0.0;
+    //arp
+    String PRODUCT_CONFIG_NO_OF_CALLS = "rc_n";
+    String PRODUCT_CONFIG_WINDOW_LENGTH_MINS = "rc_w";
+    String PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS = "fetch_min_interval_seconds";
 }

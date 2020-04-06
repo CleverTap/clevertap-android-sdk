@@ -87,4 +87,26 @@ public class FileUtils {
             throw e;
         }
     }
+
+    public static boolean deleteFile(Context context, String fileName) throws Exception {
+        if (TextUtils.isEmpty(fileName) || context == null)
+            return false;
+        try {
+            File file = new File(context.getFilesDir(), fileName);
+            if (file.exists()) {
+                if (file.delete()) {
+                    Log.d(TAG, "File Deleted:" + fileName);
+                    return true;
+                } else {
+                    Log.d(TAG, "Failed to delete file" + fileName);
+                    return false;
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            Log.d(TAG, "writeFileOnInternalStorage: failed" + e.getMessage());
+            throw e;
+        }
+        return false;
+    }
 }
