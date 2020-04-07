@@ -5,11 +5,7 @@ public interface CTProductConfigListener {
 
     void onInitFailed();
 
-    void onFetchSuccess();
+    void onFetched();
 
-    void onFetchFailed();
-
-    void onActivateSuccess();
-
-    void onActivateFailed();
+    void onActivated();
 }

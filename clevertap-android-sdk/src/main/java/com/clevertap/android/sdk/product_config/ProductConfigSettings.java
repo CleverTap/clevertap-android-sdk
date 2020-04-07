@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.FileUtils;
 import com.clevertap.android.sdk.TaskManager;
 
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.HashMap;
@@ -44,18 +45,37 @@ class ProductConfigSettings {
     /**
      * loads settings by reading from file. It's a sync call, please make sure to call this from a background thread
      */
-    synchronized void loadSettings() throws Exception {
-        String content = FileUtils.readFromFile(context, getFullPath());
+    synchronized void loadSettings() {
+        String content = null;
+        try {
+            content = FileUtils.readFromFile(context, getFullPath());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         if (!TextUtils.isEmpty(content)) {
-            JSONObject jsonObject = new JSONObject(content);
-            Iterator<String> iterator = jsonObject.keys();
-            while (iterator.hasNext()) {
-                String key = iterator.next();
-                if (!TextUtils.isEmpty(key)) {
-                    String value = String.valueOf(jsonObject.get(key));
-                    settingsMap.put(key, value);
+            JSONObject jsonObject = null;
+            try {
+                jsonObject = new JSONObject(content);
+            } catch (JSONException e) {
+
+            }
+            if (jsonObject != null) {
+                Iterator<String> iterator = jsonObject.keys();
+                while (iterator.hasNext()) {
+                    String key = iterator.next();
+                    if (!TextUtils.isEmpty(key)) {
+                        String value = null;
+                        try {
+                            value = String.valueOf(jsonObject.get(key));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        if (!TextUtils.isEmpty(value))
+                            settingsMap.put(key, value);
+                    }
                 }
             }
+
         }
     }
 
@@ -171,5 +191,37 @@ class ProductConfigSettings {
 
     private String getFullPath() {
         return getDirName() + "/" + CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS;
+    }
+
+    void setArpValue(JSONObject arp) {
+        if (arp != null) {
+            final Iterator<String> keys = arp.keys();
+            while (keys.hasNext()) {
+                final String key = keys.next();
+                try {
+                    final Object o = arp.get(key);
+                    if (o instanceof Number) {
+                        final int update = ((Number) o).intValue();
+                        if (CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS.equalsIgnoreCase(key)
+                                || CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS.equalsIgnoreCase(key)) {
+                            setArpValue(key, update);
+                        }
+                    }
+                } catch (JSONException e) {
+                    // Ignore
+                }
+            }
+        }
+    }
+
+    void setArpValue(String key, int value) {
+        switch (key) {
+            case CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS:
+                setNoOfCallsInAllowedWindow(value);
+                break;
+            case CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS:
+                setWindowIntervalInMinutes(value);
+                break;
+        }
     }
 }

@@ -8314,30 +8314,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
 
     @Override
-    public void onActivateSuccess() {
+    public void onActivated() {
         if (productConfigListener != null && productConfigListener.get() != null) {
-            productConfigListener.get().onActivateSuccess();
+            productConfigListener.get().onActivated();
         }
     }
 
     @Override
-    public void onFetchSuccess() {
+    public void onFetched() {
         if (productConfigListener != null && productConfigListener.get() != null) {
-            productConfigListener.get().onFetchSuccess();
-        }
-    }
-
-    @Override
-    public void onActivateFailed() {
-        if (productConfigListener != null && productConfigListener.get() != null) {
-            productConfigListener.get().onActivateFailed();
-        }
-    }
-
-    @Override
-    public void onFetchFailed() {
-        if (productConfigListener != null && productConfigListener.get() != null) {
-            productConfigListener.get().onFetchFailed();
+            productConfigListener.get().onFetched();
         }
     }
 

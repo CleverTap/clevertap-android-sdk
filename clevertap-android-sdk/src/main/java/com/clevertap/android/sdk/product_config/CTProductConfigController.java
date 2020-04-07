@@ -89,19 +89,38 @@ public class CTProductConfigController {
         });
     }
 
-    private HashMap<String, String> getStoredValues(String fullFilePath) throws Exception {
+    private HashMap<String, String> getStoredValues(String fullFilePath) {
         HashMap<String, String> map = new HashMap<>();
-        String content = FileUtils.readFromFile(context, fullFilePath);
+        String content = null;
+        try {
+            content = FileUtils.readFromFile(context, fullFilePath);
+        } catch (Exception e) {
+
+        }
         if (!TextUtils.isEmpty(content)) {
-            JSONObject jsonObject = new JSONObject(content);
-            Iterator<String> iterator = jsonObject.keys();
-            while (iterator.hasNext()) {
-                String key = iterator.next();
-                if (!TextUtils.isEmpty(key)) {
-                    String value = String.valueOf(jsonObject.get(key));
-                    map.put(key, value);
+            JSONObject jsonObject = null;
+            try {
+                jsonObject = new JSONObject(content);
+            } catch (JSONException e) {
+
+            }
+            if (jsonObject != null) {
+                Iterator<String> iterator = jsonObject.keys();
+                while (iterator.hasNext()) {
+                    String key = iterator.next();
+                    if (!TextUtils.isEmpty(key)) {
+                        String value = null;
+                        try {
+                            value = String.valueOf(jsonObject.get(key));
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        if (!TextUtils.isEmpty(value))
+                            map.put(key, value);
+                    }
                 }
             }
+
         }
         return map;
     }
@@ -138,9 +157,9 @@ public class CTProductConfigController {
     public void activate() {
         if (isActivating)
             return;
-        TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Boolean>() {
+        TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
             @Override
-            public Boolean doInBackground(Void params) {
+            public Void doInBackground(Void params) {
                 synchronized (this) {
                     isActivating = true;
                     try {
@@ -159,21 +178,15 @@ public class CTProductConfigController {
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
-                        return false;
                     }
-                    return true;
+                    return null;
                 }
             }
 
             @Override
-            public void onPostExecute(Boolean isSuccess) {
-                if (isSuccess) {
-                    config.getLogger().verbose(config.getAccountId(), "Product Config: Activate Success");
-                    sendCallback(PROCESSING_STATE.ACTIVATE_SUCCESS);
-                } else {
-                    config.getLogger().verbose(config.getAccountId(), "Product Config: Activate Failed");
-                    sendCallback(PROCESSING_STATE.ACTIVATE_FAILED);
-                }
+            public void onPostExecute(Void isSuccess) {
+                config.getLogger().verbose(config.getAccountId(), "Product Config: Activated");
+                sendCallback(PROCESSING_STATE.ACTIVATED);
                 isActivating = false;
                 isFetchAndActivating = false;
             }
@@ -258,7 +271,7 @@ public class CTProductConfigController {
                         @Override
                         public void run() {
                             config.getLogger().verbose(config.getAccountId(), "Product Config: fetch Success");
-                            sendCallback(PROCESSING_STATE.FETCH_SUCCESS);
+                            sendCallback(PROCESSING_STATE.FETCHED);
                         }
                     });
                     if (isFetchAndActivating) {
@@ -267,7 +280,7 @@ public class CTProductConfigController {
 
                 } catch (Exception e) {
                     config.getLogger().verbose(config.getAccountId(), "Product Config: fetch Failed");
-                    sendCallback(PROCESSING_STATE.FETCH_FAILED);
+                    sendCallback(PROCESSING_STATE.FETCHED);
                     e.printStackTrace();
                     isFetchAndActivating = false;// set fetchAndActivating flag to false if fetch fails.
                 }
@@ -276,29 +289,44 @@ public class CTProductConfigController {
         }
     }
 
-    private void parseFetchedResponse(JSONObject jsonObject) throws JSONException {
+    private void parseFetchedResponse(JSONObject jsonObject) {
         HashMap<String, String> map = convertServerJsonToMap(jsonObject);
         fetchedConfig.clear();
         fetchedConfig.putAll(map);
-        Integer timestamp = (Integer) jsonObject.get(CTProductConfigConstants.KEY_LAST_FETCHED_TIMESTAMP);
-        if (timestamp > 0) {
+        Integer timestamp = null;
+        try {
+            timestamp = (Integer) jsonObject.get(CTProductConfigConstants.KEY_LAST_FETCHED_TIMESTAMP);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        if (timestamp != null) {
             settings.setLastFetchTimeStampInMillis(timestamp);
         }
     }
 
-    private HashMap<String, String> convertServerJsonToMap(JSONObject jsonObject) throws JSONException {
+    private HashMap<String, String> convertServerJsonToMap(JSONObject jsonObject) {
         HashMap<String, String> map = new HashMap<>();
-        JSONArray kvArray = jsonObject.getJSONArray(Constants.KEY_KV);
+        JSONArray kvArray = null;
+        try {
+            kvArray = jsonObject.getJSONArray(Constants.KEY_KV);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
 
         if (kvArray != null && kvArray.length() > 0) {
             for (int i = 0; i < kvArray.length(); i++) {
-                JSONObject object = (JSONObject) kvArray.get(i);
-                if (object != null) {
-                    String Key = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_KEY);
-                    String Value = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_VALUE);
-                    if (!TextUtils.isEmpty(Key)) {
-                        map.put(Key, String.valueOf(Value));
+                JSONObject object;
+                try {
+                    object = (JSONObject) kvArray.get(i);
+                    if (object != null) {
+                        String Key = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_KEY);
+                        String Value = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_VALUE);
+                        if (!TextUtils.isEmpty(Key)) {
+                            map.put(Key, String.valueOf(Value));
+                        }
                     }
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
             }
         }
@@ -312,10 +340,6 @@ public class CTProductConfigController {
         initAsync();
     }
 
-    private String getActivatedFileName() {
-        return CTProductConfigConstants.FILE_NAME_ACTIVATED;
-    }
-
     private String getProductConfigDirName() {
         return CTProductConfigConstants.DIR_PRODUCT_CONFIG + "_" + config.getAccountId() + "_" + guid;
     }
@@ -326,18 +350,6 @@ public class CTProductConfigController {
 
     private String getActivatedFullPath() {
         return getProductConfigDirName() + "/" + CTProductConfigConstants.FILE_NAME_ACTIVATED;
-    }
-
-    public void setArpValue(String key, int value) {
-
-        switch (key) {
-            case CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS:
-                settings.setNoOfCallsInAllowedWindow(value);
-                break;
-            case CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS:
-                settings.setWindowIntervalInMinutes(value);
-                break;
-        }
     }
 
     /**
@@ -360,24 +372,7 @@ public class CTProductConfigController {
     }
 
     public void setArpValue(JSONObject arp) {
-        if (arp != null) {
-            final Iterator<String> keys = arp.keys();
-            while (keys.hasNext()) {
-                final String key = keys.next();
-                try {
-                    final Object o = arp.get(key);
-                    if (o instanceof Number) {
-                        final int update = ((Number) o).intValue();
-                        if (CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS.equalsIgnoreCase(key)
-                                || CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS.equalsIgnoreCase(key)) {
-                            setArpValue(key, update);
-                        }
-                    }
-                } catch (JSONException e) {
-                    // Ignore
-                }
-            }
-        }
+        settings.setArpValue(arp);
     }
 
     private void sendCallback(PROCESSING_STATE state) {
@@ -389,17 +384,11 @@ public class CTProductConfigController {
                 case INIT_FAILED:
                     listener.onInitFailed();
                     break;
-                case FETCH_FAILED:
-                    listener.onFetchFailed();
+                case FETCHED:
+                    listener.onFetched();
                     break;
-                case FETCH_SUCCESS:
-                    listener.onFetchSuccess();
-                    break;
-                case ACTIVATE_FAILED:
-                    listener.onActivateFailed();
-                    break;
-                case ACTIVATE_SUCCESS:
-                    listener.onActivateSuccess();
+                case ACTIVATED:
+                    listener.onActivated();
                     break;
             }
         }
@@ -416,8 +405,8 @@ public class CTProductConfigController {
     }
 
     private enum PROCESSING_STATE {
-        INIT_SUCCESS, INIT_FAILED, FETCH_SUCCESS,
-        FETCH_FAILED, ACTIVATE_SUCCESS, ACTIVATE_FAILED
+        INIT_SUCCESS, INIT_FAILED,
+        FETCHED, ACTIVATED
     }
 
     public interface Listener extends CTProductConfigListener {
