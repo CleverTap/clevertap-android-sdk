@@ -177,7 +177,7 @@ class ProductConfigSettings {
             @Override
             public void onPostExecute(Boolean isSuccess) {
                 if (isSuccess) {
-                    config.getLogger().verbose(config.getAccountId(), "Product Config settings: writing Success");
+                    config.getLogger().verbose(config.getAccountId(), "Product Config settings: writing Success " + settingsMap);
                 } else {
                     config.getLogger().verbose(config.getAccountId(), "Product Config settings: writing Failed");
                 }

@@ -15,6 +15,8 @@ import org.json.JSONObject;
 
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_MIN_FETCH_INTERVAL_SECONDS;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_VALUE_FOR_STRING;
@@ -32,7 +34,7 @@ public class CTProductConfigController {
     private boolean isInitialized = false;
     private final CleverTapInstanceConfig config;
     private final Context context;
-    private HashMap<String, String> defaultConfig;
+    private HashMap<String, String> defaultConfig = new HashMap<>();
     private final HashMap<String, String> activatedConfig = new HashMap<>();
     private final HashMap<String, String> fetchedConfig = new HashMap<>();
     private final Listener listener;
@@ -61,11 +63,12 @@ public class CTProductConfigController {
                     try {
                         activatedConfig.clear();
                         //apply default config first
-                        if (defaultConfig != null && !defaultConfig.isEmpty()) {
+                        if (!defaultConfig.isEmpty()) {
                             activatedConfig.putAll(defaultConfig);
                         }
                         activatedConfig.putAll(getStoredValues(getActivatedFullPath()));
                         FileUtils.writeJsonToFile(context, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(activatedConfig));
+                        config.getLogger().verbose(config.getAccountId(), "Product Config : activate file write success: from init " + activatedConfig);
                         settings.loadSettings();
                         isInitialized = true;
                     } catch (Exception e) {
@@ -125,9 +128,49 @@ public class CTProductConfigController {
         return map;
     }
 
-    public void setDefaults(int resourceID) {
-        defaultConfig = DefaultXmlParser.getDefaultsFromXml(context, resourceID);
-        initAsync();
+    public void
+    setDefaults(final int resourceID) {
+        TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
+            @Override
+            public Void doInBackground(Void aVoid) {
+                defaultConfig.clear();
+                defaultConfig.putAll(DefaultXmlParser.getDefaultsFromXml(context, resourceID));
+                return null;
+            }
+
+            @Override
+            public void onPostExecute(Void aVoid) {
+                initAsync();
+            }
+        });
+    }
+
+    public void setDefaults(final HashMap<String, Object> map) {
+        TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
+            @Override
+            public Void doInBackground(Void aVoid) {
+                if (map != null && !map.isEmpty()) {
+                    defaultConfig.clear();
+                    Iterator<Map.Entry<String, Object>> iterator = map.entrySet().iterator();
+                    while (iterator.hasNext()) {
+                        Map.Entry<String, Object> entry = iterator.next();
+                        if (entry != null) {
+                            String key = entry.getKey();
+                            Object value = entry.getValue();
+                            if (!TextUtils.isEmpty(key) && ProductConfigUtil.isSupportedDataType(value)) {
+                                defaultConfig.put(key, String.valueOf(value));
+                            }
+                        }
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            public void onPostExecute(Void aVoid) {
+                initAsync();
+            }
+        });
     }
 
     /**
@@ -174,6 +217,7 @@ public class CTProductConfigController {
                         } else {
                             activatedConfig.putAll(getStoredValues(getFetchedFullPath()));
                             FileUtils.writeJsonToFile(context, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(activatedConfig));
+                            config.getLogger().verbose(config.getAccountId(), "Product Config : activate file write success: " + activatedConfig);
                             FileUtils.deleteFile(context, getFetchedFullPath());
                         }
                     } catch (Exception e) {
@@ -185,7 +229,7 @@ public class CTProductConfigController {
 
             @Override
             public void onPostExecute(Void isSuccess) {
-                config.getLogger().verbose(config.getAccountId(), "Product Config: Activated");
+                config.getLogger().verbose(config.getAccountId(), "Product Config: Activated " + activatedConfig);
                 sendCallback(PROCESSING_STATE.ACTIVATED);
                 isActivating = false;
                 isFetchAndActivating = false;
@@ -216,7 +260,7 @@ public class CTProductConfigController {
      * @param Key - String
      * @return String
      */
-    public boolean getBoolean(String Key) {
+    public Boolean getBoolean(String Key) {
         return Boolean.parseBoolean(activatedConfig.get(Key));
     }
 
@@ -226,7 +270,7 @@ public class CTProductConfigController {
      * @param Key - String
      * @return String
      */
-    public long getLong(String Key) {
+    public Long getLong(String Key) {
         if (isInitialized) {
             try {
                 return Long.parseLong(activatedConfig.get(Key));
@@ -243,7 +287,7 @@ public class CTProductConfigController {
      * @param Key String
      * @return String
      */
-    public double getDouble(String Key) {
+    public Double getDouble(String Key) {
         if (isInitialized) {
             try {
                 return Double.parseDouble(activatedConfig.get(Key));
@@ -258,7 +302,7 @@ public class CTProductConfigController {
     private boolean canRequest(long minimumFetchIntervalInSeconds) {
         return !isFetching
                 && !TextUtils.isEmpty(guid)
-                && (System.currentTimeMillis() - settings.getLastFetchTimeStampInMillis()) > minimumFetchIntervalInSeconds;
+                && (System.currentTimeMillis() - settings.getLastFetchTimeStampInMillis()) > TimeUnit.SECONDS.toMillis(minimumFetchIntervalInSeconds);
     }
 
     public void afterFetchProductConfig(JSONObject kvResponse) {
@@ -267,6 +311,7 @@ public class CTProductConfigController {
                 try {
                     parseFetchedResponse(kvResponse);
                     FileUtils.writeJsonToFile(context, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_FETCHED, new JSONObject(fetchedConfig));
+                    config.getLogger().verbose(config.getAccountId(), "Product Config : fetch file write success: from init " + fetchedConfig);
                     Utils.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -293,6 +338,7 @@ public class CTProductConfigController {
         HashMap<String, String> map = convertServerJsonToMap(jsonObject);
         fetchedConfig.clear();
         fetchedConfig.putAll(map);
+        config.getLogger().verbose(config.getAccountId(), "Product Config: Fetched response:" + jsonObject);
         Integer timestamp = null;
         try {
             timestamp = (Integer) jsonObject.get(CTProductConfigConstants.KEY_LAST_FETCHED_TIMESTAMP);
