@@ -10,10 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"
-        android:layout_marginTop="120dp"
-        android:layout_marginRight="45dp"
-        android:layout_marginBottom="120dp"
-        android:layout_marginLeft="45dp">
+        android:layout_margin="30dp">
 
         <ImageView
             android:id="@+id/half_interstitial_image"
@@ -29,8 +26,5 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_gravity="top|end"
-        android:layout_marginRight="30dp"
-        android:layout_marginTop="105dp"
-        android:adjustViewBounds="true"
-        android:layout_marginEnd="30dp" />
+        android:adjustViewBounds="true" />
 </FrameLayout>

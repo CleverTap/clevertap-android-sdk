@@ -91,17 +91,42 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                         final RelativeLayout relativeLayout1 = fl.findViewById(R.id.interstitial_relative_layout);
                         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1.getLayoutParams();
                         if (inAppNotification.isTablet() && isTablet()) {
-                            layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 1.78f);
+                            int aspectHeight = (int) (relativeLayout1.getMeasuredWidth() * 1.78f);
+                            int requiredHeight=fl.getMeasuredHeight()-getScaledPixels(80);
+
+                            if (aspectHeight>requiredHeight)
+                            {
+                                layoutParams.height=requiredHeight;
+                                layoutParams.width= (int) (requiredHeight/1.78f);
+                            }
+                            else {
+                                layoutParams.height=aspectHeight;
+                            }
+
+                            relativeLayout1.setLayoutParams(layoutParams);
+                            new Handler().post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    int margin = closeImageView.getMeasuredWidth() / 2;
+                                    closeImageView.setX(relativeLayout.getRight() - margin);
+                                    closeImageView.setY(relativeLayout.getTop() - margin);
+                                }
+                            });
                         } else {
                             if (isTablet()) {
-                                layoutParams.setMargins(85, 60, 85, 0);
-                                layoutParams.width = (relativeLayout1.getMeasuredWidth()) - 85;
+                                layoutParams.setMargins(getScaledPixels(140), getScaledPixels(140), getScaledPixels(140), getScaledPixels(140));
+                                layoutParams.width = relativeLayout1.getMeasuredWidth()-getScaledPixels(200);
                                 layoutHeight = layoutParams.height = (int) (layoutParams.width * 1.78f);
                                 relativeLayout1.setLayoutParams(layoutParams);
-                                FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(closeImageView.getWidth(), closeImageView.getHeight());
-                                closeLp.gravity = Gravity.TOP | Gravity.END;
-                                closeLp.setMargins(0, 40, 65, 0);
-                                closeImageView.setLayoutParams(closeLp);
+
+                                new Handler().post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        int margin = closeImageView.getMeasuredWidth() / 2;
+                                        closeImageView.setX(relativeLayout.getRight() - margin);
+                                        closeImageView.setY(relativeLayout.getTop() - margin);
+                                    }
+                                });
                             } else {
                                 layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 1.78f);
                                 Logger.d("Layout height = " + layoutHeight);
@@ -158,14 +183,20 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1.getLayoutParams();
                         if (!inAppNotification.isTablet() || !isTablet()) {
                             if (isTablet()) {
-                                layoutParams.setMargins(120, 40, 85, 0);
-                                layoutParams.height = (relativeLayout1.getMeasuredHeight()) - 75;
-                                layoutWidth = layoutParams.width = (int)(layoutParams.height * 1.78f);
+                                layoutParams.setMargins(getScaledPixels(140), getScaledPixels(140), getScaledPixels(140), getScaledPixels(140));
+                                layoutParams.height = relativeLayout1.getMeasuredHeight()-getScaledPixels(200);
+                                layoutParams.width = (int) (layoutParams.height *1.78f);
+                                layoutParams.gravity=Gravity.CENTER;
                                 relativeLayout1.setLayoutParams(layoutParams);
-                                FrameLayout.LayoutParams closeLp = new FrameLayout.LayoutParams(closeImageView.getWidth(), closeImageView.getHeight());
-                                closeLp.gravity = Gravity.TOP | Gravity.END;
-                                closeLp.setMargins(0, 20, 90, 0);
-                                closeImageView.setLayoutParams(closeLp);
+
+                                new Handler().post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        int margin = closeImageView.getMeasuredWidth() / 2;
+                                        closeImageView.setX(relativeLayout.getRight() - margin);
+                                        closeImageView.setY(relativeLayout.getTop() - margin);
+                                    }
+                                });
                             } else {
                                 layoutWidth = layoutParams.width = (int) (relativeLayout1.getMeasuredHeight() * 1.78f);
                                 layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
@@ -179,7 +210,32 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                                     }
                                 });
                             }
+                        } else {
+
+                            int aspectWidth = (int) (relativeLayout1.getMeasuredHeight() * 1.78f);
+                            int requiredWidth=fl.getMeasuredWidth()-getScaledPixels(80);
+
+                            if (aspectWidth>requiredWidth)
+                            {
+                                layoutParams.width=requiredWidth;
+                                layoutParams.height= (int) (requiredWidth/1.78f);
+                            }
+                            else {
+                                layoutParams.width=aspectWidth;
+                            }
+
+                            layoutParams.gravity = Gravity.CENTER;
+                            relativeLayout1.setLayoutParams(layoutParams);
+                            new Handler().post(new Runnable() {
+                                @Override
+                                public void run() {
+                                    int margin = closeImageView.getMeasuredWidth() / 2;
+                                    closeImageView.setX(relativeLayout.getRight() - margin);
+                                    closeImageView.setY(relativeLayout.getTop() - margin);
+                                }
+                            });
                         }
+
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
                             relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                         } else {

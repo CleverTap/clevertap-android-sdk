@@ -11,12 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_gravity="center"
-        android:layout_marginLeft="45dp"
-        android:layout_marginStart="45dp"
-        android:layout_marginRight="45dp"
-        android:layout_marginEnd="45dp"
-        android:layout_marginTop="120dp"
-        android:layout_marginBottom="120dp"
+        android:layout_margin="30dp"
         >
 
         <ImageView
@@ -57,7 +52,7 @@
             android:layout_centerHorizontal="true"
             android:layout_marginRight="30dp"
             android:layout_marginLeft="30dp"
-            android:layout_marginBottom="26dp"
+            android:layout_marginBottom="30dp"
             android:layout_below="@+id/half_interstitial_message"
             android:gravity="bottom"
             android:orientation="vertical"
@@ -66,14 +61,14 @@
             <Button
                 android:id="@+id/half_interstitial_button1"
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
+                android:layout_height="@dimen/inapp_button_height"
                 android:textSize="16sp"
                 android:visibility="invisible"/>
 
             <Button
                 android:id="@+id/half_interstitial_button2"
                 android:layout_width="match_parent"
-                android:layout_height="40dp"
+                android:layout_height="@dimen/inapp_button_height"
                 android:textSize="16sp"
                 android:layout_marginTop="12dp"
                 android:visibility="invisible"/>
@@ -83,8 +78,5 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_gravity="top|end"
-        android:layout_marginRight="30dp"
-        android:layout_marginTop="105dp"
-        android:adjustViewBounds="true"
-        android:layout_marginEnd="30dp"/>
+        android:adjustViewBounds="true"/>
 </FrameLayout>
