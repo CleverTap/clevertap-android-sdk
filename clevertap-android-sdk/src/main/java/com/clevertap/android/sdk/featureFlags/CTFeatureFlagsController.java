@@ -56,7 +56,6 @@ public class CTFeatureFlagsController {
 
 
     public void updateFeatureFlags(JSONObject featureFlagResponseObj) throws JSONException {
-
         updateFeatureFlags(featureFlagResponseObj, true);
     }
 
@@ -74,6 +73,7 @@ public class CTFeatureFlagsController {
         }
     }
 
+    //TODO @atul what is the use of isNew boolean here? value is always true
     private void updateFeatureFlags(JSONObject jsonObject, boolean isNew) throws JSONException {
         getConfigLogger().verbose(getAccountId(), "Updating feature flags...");
         JSONArray featureFlagList = jsonObject.getJSONArray(Constants.KEY_KV);
@@ -92,6 +92,7 @@ public class CTFeatureFlagsController {
         }
     }
 
+    //TODO @atul what is the use of sync? value is not used
     private synchronized void archiveData(JSONObject featureFlagRespObj, boolean sync) {
 
         if (featureFlagRespObj != null) {
@@ -103,6 +104,7 @@ public class CTFeatureFlagsController {
         }
     }
 
+    //TODO @atul what is the use of sync? value is not used
     private synchronized void unarchiveData(boolean sync) {
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Boolean>() {
             @Override

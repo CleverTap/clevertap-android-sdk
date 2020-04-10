@@ -45,6 +45,7 @@ class ProductConfigSettings {
     /**
      * loads settings by reading from file. It's a sync call, please make sure to call this from a background thread
      */
+    //TODO @atul Do not leave catch empty, put proper logging in all catches
     synchronized void loadSettings() {
         String content = null;
         try {
@@ -91,7 +92,7 @@ class ProductConfigSettings {
         try {
             if (value != null)
                 minInterVal = Long.parseLong(value);
-        } catch (Exception ignored) {
+        } catch (Exception ignored) {//TODO @atul why ignoring? should add logs
         }
         return minInterVal;
     }
@@ -102,7 +103,7 @@ class ProductConfigSettings {
         try {
             if (value != null)
                 lastFetchedTimeStamp = Long.parseLong(value);
-        } catch (Exception ignored) {
+        } catch (Exception ignored) {//TODO @atul why ignoring? should add logs
         }
         return lastFetchedTimeStamp;
     }
@@ -113,7 +114,7 @@ class ProductConfigSettings {
         try {
             if (value != null)
                 noCallsAllowedInWindow = Integer.parseInt(value);
-        } catch (Exception ignored) {
+        } catch (Exception ignored) {//TODO @atul why ignoring? should add logs
         }
         return noCallsAllowedInWindow;
     }
@@ -124,7 +125,7 @@ class ProductConfigSettings {
         try {
             if (value != null)
                 windowIntervalInMinutes = Integer.parseInt(value);
-        } catch (Exception ignored) {
+        } catch (Exception ignored) {//TODO @atul why ignoring? should add logs
         }
         return windowIntervalInMinutes;
     }
@@ -145,7 +146,7 @@ class ProductConfigSettings {
         }
     }
 
-    synchronized void setNoOfCallsInAllowedWindow(int callsInAllowedWindow) {
+    private synchronized void setNoOfCallsInAllowedWindow(int callsInAllowedWindow) {
         long noOfCallsInAllowedWindow = getNoOfCallsInAllowedWindow();
         if (noOfCallsInAllowedWindow != callsInAllowedWindow) {
             settingsMap.put(PRODUCT_CONFIG_NO_OF_CALLS, String.valueOf(callsInAllowedWindow));
@@ -153,7 +154,7 @@ class ProductConfigSettings {
         }
     }
 
-    synchronized void setWindowIntervalInMinutes(int intervalInMinutes) {
+    private synchronized void setWindowIntervalInMinutes(int intervalInMinutes) {
         int windowIntervalInMinutes = getWindowIntervalInMinutes();
         if (windowIntervalInMinutes != intervalInMinutes) {
             settingsMap.put(PRODUCT_CONFIG_WINDOW_LENGTH_MINS, String.valueOf(intervalInMinutes));
@@ -168,7 +169,7 @@ class ProductConfigSettings {
                 try {
                     FileUtils.writeJsonToFile(context, getDirName(), CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS, new JSONObject(settingsMap));
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    e.printStackTrace();//TODO @atul logging needed?
                     return false;
                 }
                 return true;
@@ -193,7 +194,7 @@ class ProductConfigSettings {
         return getDirName() + "/" + CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS;
     }
 
-    void setArpValue(JSONObject arp) {
+    void setARPValue(JSONObject arp) {
         if (arp != null) {
             final Iterator<String> keys = arp.keys();
             while (keys.hasNext()) {
@@ -204,17 +205,17 @@ class ProductConfigSettings {
                         final int update = ((Number) o).intValue();
                         if (CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS.equalsIgnoreCase(key)
                                 || CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS.equalsIgnoreCase(key)) {
-                            setArpValue(key, update);
+                            setProductConfigValuesFromARP(key, update);
                         }
                     }
                 } catch (JSONException e) {
-                    // Ignore
+                    // Ignore//TODO @atul add proper logging, cannot ignore exception in case of ARP
                 }
             }
         }
     }
 
-    void setArpValue(String key, int value) {
+    void setProductConfigValuesFromARP(String key, int value) {
         switch (key) {
             case CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS:
                 setNoOfCallsInAllowedWindow(value);

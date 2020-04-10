@@ -8195,7 +8195,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
 
         if (ctFeatureFlagsController != null && ctFeatureFlagsController.isInitialized()) {
-            ctFeatureFlagsController.resetWithGuid(getCleverTapID());//TODO check whether needed
+            ctFeatureFlagsController.resetWithGuid(getCleverTapID());//TODO @atul check whether needed
             ctFeatureFlagsController.fetchFeatureFlags();
         }
     }
@@ -8204,6 +8204,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * PRODUCT CONFIG
      */
 
+    @SuppressWarnings("WeakerAccess")
     public CTProductConfigController productConfig() {
         if (ctProductConfigController == null)
             initProductConfig(false);
@@ -8228,6 +8229,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         queueEvent(context, event, Constants.FETCH_EVENT);
     }
 
+    //TODO @atul this method doesn't throw JSONException
     private void processProductConfigResponse(JSONObject response) throws JSONException {
         if (response == null) {
             getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Can't parse Feature Flags Response, JSON response object is null");
@@ -8246,6 +8248,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+    //TODO remove later
     private JSONObject mockProductConfigResponse() throws JSONException {
         JSONObject object = new JSONObject();
         JSONArray jsonArray = new JSONArray();
@@ -8259,6 +8262,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return object;
     }
 
+    //TODO remove later
     private JSONObject getJSONObject(String key, Object value) throws JSONException {
         JSONObject jsonObject = new JSONObject();
         jsonObject.put(key, value);

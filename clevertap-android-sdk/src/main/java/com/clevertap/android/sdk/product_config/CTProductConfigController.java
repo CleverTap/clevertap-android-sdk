@@ -92,6 +92,7 @@ public class CTProductConfigController {
         });
     }
 
+    //TODO @atul Do not leave catch clause empty, put logging
     private HashMap<String, String> getStoredValues(String fullFilePath) {
         HashMap<String, String> map = new HashMap<>();
         String content = null;
@@ -128,8 +129,8 @@ public class CTProductConfigController {
         return map;
     }
 
-    public void
-    setDefaults(final int resourceID) {
+    //TODO @atul add javadoc
+    public void setDefaults(final int resourceID) {
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
             @Override
             public Void doInBackground(Void aVoid) {
@@ -145,15 +146,14 @@ public class CTProductConfigController {
         });
     }
 
+    //TODO @atul add javadoc
     public void setDefaults(final HashMap<String, Object> map) {
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
             @Override
             public Void doInBackground(Void aVoid) {
                 if (map != null && !map.isEmpty()) {
                     defaultConfig.clear();
-                    Iterator<Map.Entry<String, Object>> iterator = map.entrySet().iterator();
-                    while (iterator.hasNext()) {
-                        Map.Entry<String, Object> entry = iterator.next();
+                    for (Map.Entry<String, Object> entry : map.entrySet()) {
                         if (entry != null) {
                             String key = entry.getKey();
                             Object value = entry.getValue();
@@ -183,8 +183,9 @@ public class CTProductConfigController {
     /**
      * Starts fetching configs, adhering to the specified minimum fetch interval in seconds.
      *
-     * @param minimumFetchIntervalInSeconds
+     * @param minimumFetchIntervalInSeconds - long value of seconds
      */
+    @SuppressWarnings("WeakerAccess")
     public void fetch(long minimumFetchIntervalInSeconds) {
         if (canRequest(minimumFetchIntervalInSeconds)) {
             isFetching = true;
@@ -197,6 +198,7 @@ public class CTProductConfigController {
     /**
      * Asynchronously activates the most recently fetched configs, so that the fetched key value pairs take effect.
      */
+    @SuppressWarnings("WeakerAccess")
     public void activate() {
         if (isActivating)
             return;
@@ -221,7 +223,7 @@ public class CTProductConfigController {
                             FileUtils.deleteFile(context, getFetchedFullPath());
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();
+                        e.printStackTrace();//TODO @atul better logging
                     }
                     return null;
                 }
@@ -237,6 +239,8 @@ public class CTProductConfigController {
         });
     }
 
+    //TODO @atul add javadoc
+    @SuppressWarnings("WeakerAccess")
     public void setMinimumFetchIntervalInSeconds(long fetchIntervalInSeconds) {
         settings.setMinimumFetchIntervalInSeconds(fetchIntervalInSeconds);
     }
@@ -334,6 +338,7 @@ public class CTProductConfigController {
         }
     }
 
+    //TODO @atul logging in catch clauses needed
     private void parseFetchedResponse(JSONObject jsonObject) {
         HashMap<String, String> map = convertServerJsonToMap(jsonObject);
         fetchedConfig.clear();
@@ -350,6 +355,7 @@ public class CTProductConfigController {
         }
     }
 
+    //TODO @atul logging in catch clauses needed
     private HashMap<String, String> convertServerJsonToMap(JSONObject jsonObject) {
         HashMap<String, String> map = new HashMap<>();
         JSONArray kvArray = null;
@@ -401,6 +407,7 @@ public class CTProductConfigController {
     /**
      * Deletes all activated, fetched and defaults configs and resets all Product Config settings.
      */
+    //TODO @atul logging in catch clause needed
     public void reset() {
         synchronized (this) {
             if (null != defaultConfig) {
@@ -418,7 +425,7 @@ public class CTProductConfigController {
     }
 
     public void setArpValue(JSONObject arp) {
-        settings.setArpValue(arp);
+        settings.setARPValue(arp);
     }
 
     private void sendCallback(PROCESSING_STATE state) {
@@ -451,10 +458,13 @@ public class CTProductConfigController {
     }
 
     private enum PROCESSING_STATE {
-        INIT_SUCCESS, INIT_FAILED,
-        FETCHED, ACTIVATED
+        INIT_SUCCESS,
+        INIT_FAILED,
+        FETCHED,
+        ACTIVATED
     }
 
+    //TODO @atul Give a better name to this Listener interface and make it a separate file for ease of reading code
     public interface Listener extends CTProductConfigListener {
         void fetchProductConfig();
     }

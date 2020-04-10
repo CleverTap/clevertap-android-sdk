@@ -22,7 +22,7 @@ public class FileUtils {
                 return;
             File file = new File(context.getFilesDir(), dirName);
             if (!file.exists()) {
-                file.mkdir();
+                file.mkdir();//TODO @atul Shouldn't we use the returned boolean value to proceed?
             }
 
             File file1 = new File(file, fileName);
@@ -32,7 +32,7 @@ public class FileUtils {
             writer.close();
         } catch (Exception e) {
             e.printStackTrace();
-            Log.d(TAG, "writeFileOnInternalStorage: failed" + e.getMessage());
+            Log.d(TAG, "writeFileOnInternalStorage: failed" + e.getMessage());//TODO @atul Use our Logger
             throw e;
         }
     }
@@ -63,13 +63,13 @@ public class FileUtils {
             inputStream.close();
             content = stringBuilder.toString();
         } catch (Exception e) {
-            Log.d(TAG, "[Exception While Reading: " + fileNameWithPath + "]" + e.getMessage());
-            throw e;
+            Log.d(TAG, "[Exception While Reading: " + fileNameWithPath + "]" + e.getMessage());//TODO @atul use our Logger
+            throw e;//TODO @atul you are throwing exception but not catching it anywhere
             //Log your error with Log.e
         }
         return content;
     }
-
+    //TODO @atul No exception is being thrown but method has a "throws"
     public static void deleteDirectory(Context context, String dirName) throws Exception {
         if (TextUtils.isEmpty(dirName) || context == null)
             return;
@@ -83,11 +83,12 @@ public class FileUtils {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            Log.d(TAG, "writeFileOnInternalStorage: failed" + e.getMessage());
+            Log.d(TAG, "writeFileOnInternalStorage: failed" + e.getMessage());//TODO @atul Use our Logger
             throw e;
         }
     }
 
+    //TODO @atul this method can be void, why boolean?, and use our Logger
     public static boolean deleteFile(Context context, String fileName) throws Exception {
         if (TextUtils.isEmpty(fileName) || context == null)
             return false;

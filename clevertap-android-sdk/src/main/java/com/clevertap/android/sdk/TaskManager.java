@@ -22,6 +22,7 @@ public class TaskManager {
         execute(null, listener);
     }
 
+    //TODO @atul can we make this private?
     public <Params, Result> void execute(final Params params, final TaskListener<Params, Result> listener) {
 
         service.execute(new Runnable() {
@@ -32,7 +33,7 @@ public class TaskManager {
                     Utils.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            if (listener != null) {
+                            if (listener != null) {//TODO @atul do we need this check?
                                 listener.onPostExecute(result);
                             }
                         }

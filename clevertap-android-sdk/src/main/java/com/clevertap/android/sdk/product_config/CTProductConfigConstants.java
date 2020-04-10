@@ -18,7 +18,7 @@ public interface CTProductConfigConstants {
 
     //static values
     String DEFAULT_VALUE_FOR_STRING = "";
-    Boolean DEFAULT_VALUE_FOR_BOOLEAN = false;
+    Boolean DEFAULT_VALUE_FOR_BOOLEAN = false; //TODO @atul why is this not used? if there is no need, remove it
     Long DEFAULT_VALUE_FOR_LONG = 0L;
     Double DEFAULT_VALUE_FOR_DOUBLE = 0.0;
     //arp
