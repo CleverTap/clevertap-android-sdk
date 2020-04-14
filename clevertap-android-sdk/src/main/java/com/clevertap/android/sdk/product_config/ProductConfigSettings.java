@@ -215,7 +215,7 @@ class ProductConfigSettings {
         }
     }
 
-    void setProductConfigValuesFromARP(String key, int value) {
+    private void setProductConfigValuesFromARP(String key, int value) {
         switch (key) {
             case CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS:
                 setNoOfCallsInAllowedWindow(value);
