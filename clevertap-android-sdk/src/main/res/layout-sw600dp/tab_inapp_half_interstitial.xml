@@ -10,10 +10,8 @@
         android:id="@+id/half_interstitial_relative_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginLeft="60dp"
-        android:layout_marginRight="60dp"
-        android:layout_marginTop="240dp"
-        android:layout_marginBottom="240dp"
+        android:layout_margin="35dp"
+        android:layout_gravity="center"
         >
 
         <ImageView
@@ -48,11 +46,13 @@
 
         <LinearLayout
             android:id="@+id/half_interstitial_linear_layout"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
             android:layout_centerHorizontal="true"
-            android:layout_marginBottom="26dp"
+            android:layout_marginBottom="30dp"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp"
             android:layout_below="@+id/half_interstitial_message"
             android:gravity="bottom"
             android:orientation="vertical"
@@ -60,15 +60,15 @@
 
             <Button
                 android:id="@+id/half_interstitial_button1"
-                android:layout_width="324dp"
-                android:layout_height="40dp"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/inapp_button_height"
                 android:textSize="16sp"
                 android:visibility="invisible" />
 
             <Button
                 android:id="@+id/half_interstitial_button2"
-                android:layout_width="324dp"
-                android:layout_height="40dp"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/inapp_button_height"
                 android:textSize="16sp"
                 android:layout_marginTop="12dp"
                 android:visibility="invisible" />
@@ -78,8 +78,5 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_gravity="top|end"
-        android:layout_marginRight="40dp"
-        android:layout_marginTop="220dp"
-        android:adjustViewBounds="true"
-        android:layout_marginEnd="40dp" />
+        android:adjustViewBounds="true" />
 </FrameLayout>

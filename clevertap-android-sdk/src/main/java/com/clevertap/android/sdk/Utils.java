@@ -30,6 +30,7 @@ import java.util.Iterator;
 import javax.net.ssl.HttpsURLConnection;
 
 public final class Utils {
+    private static final String TAG = "Utils";
     static long getMemoryConsumption() {
         long free = Runtime.getRuntime().freeMemory();
         long total = Runtime.getRuntime().totalMemory();
@@ -271,7 +272,7 @@ public final class Utils {
      *
      * @param runnable - task to be run
      */
-    static void runOnUiThread(Runnable runnable) {
+    public static void runOnUiThread(Runnable runnable) {
         if (runnable != null) {
             //run if already on the UI thread
             if (Looper.myLooper() == Looper.getMainLooper()) {
@@ -300,4 +301,5 @@ public final class Utils {
         }
         return bundle;
     }
+
 }
