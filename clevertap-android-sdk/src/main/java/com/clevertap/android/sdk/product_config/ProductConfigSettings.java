@@ -45,20 +45,21 @@ class ProductConfigSettings {
     /**
      * loads settings by reading from file. It's a sync call, please make sure to call this from a background thread
      */
-    //TODO @atul Do not leave catch empty, put proper logging in all catches
     synchronized void loadSettings() {
         String content = null;
         try {
-            content = FileUtils.readFromFile(context, getFullPath());
+            content = FileUtils.readFromFile(context, config, getFullPath());
         } catch (Exception e) {
             e.printStackTrace();
+            config.getLogger().verbose(config.getAccountId(), "Product Config : loadSettings failed while reading file: " + e.getLocalizedMessage());
         }
         if (!TextUtils.isEmpty(content)) {
             JSONObject jsonObject = null;
             try {
                 jsonObject = new JSONObject(content);
             } catch (JSONException e) {
-
+                e.printStackTrace();
+                config.getLogger().verbose(config.getAccountId(), "Product Config : loadSettings failed: " + e.getLocalizedMessage());
             }
             if (jsonObject != null) {
                 Iterator<String> iterator = jsonObject.keys();
@@ -92,7 +93,9 @@ class ProductConfigSettings {
         try {
             if (value != null)
                 minInterVal = Long.parseLong(value);
-        } catch (Exception ignored) {//TODO @atul why ignoring? should add logs
+        } catch (Exception e) {
+            e.printStackTrace();
+            config.getLogger().verbose(config.getAccountId(), "Product Config : getMinFetchIntervalInSeconds failed: " + e.getLocalizedMessage());
         }
         return minInterVal;
     }
@@ -103,7 +106,9 @@ class ProductConfigSettings {
         try {
             if (value != null)
                 lastFetchedTimeStamp = Long.parseLong(value);
-        } catch (Exception ignored) {//TODO @atul why ignoring? should add logs
+        } catch (Exception e) {
+            e.printStackTrace();
+            config.getLogger().verbose(config.getAccountId(), "Product Config : getLastFetchTimeStampInMillis failed: " + e.getLocalizedMessage());
         }
         return lastFetchedTimeStamp;
     }
@@ -114,7 +119,9 @@ class ProductConfigSettings {
         try {
             if (value != null)
                 noCallsAllowedInWindow = Integer.parseInt(value);
-        } catch (Exception ignored) {//TODO @atul why ignoring? should add logs
+        } catch (Exception e) {
+            e.printStackTrace();
+            config.getLogger().verbose(config.getAccountId(), "Product Config : getNoOfCallsInAllowedWindow failed: " + e.getLocalizedMessage());
         }
         return noCallsAllowedInWindow;
     }
@@ -125,7 +132,9 @@ class ProductConfigSettings {
         try {
             if (value != null)
                 windowIntervalInMinutes = Integer.parseInt(value);
-        } catch (Exception ignored) {//TODO @atul why ignoring? should add logs
+        } catch (Exception e) {
+            e.printStackTrace();
+            config.getLogger().verbose(config.getAccountId(), "Product Config : getWindowIntervalInMinutes failed: " + e.getLocalizedMessage());
         }
         return windowIntervalInMinutes;
     }
@@ -167,9 +176,10 @@ class ProductConfigSettings {
             @Override
             public Boolean doInBackground(Void aVoid) {
                 try {
-                    FileUtils.writeJsonToFile(context, getDirName(), CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS, new JSONObject(settingsMap));
+                    FileUtils.writeJsonToFile(context, config, getDirName(), CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS, new JSONObject(settingsMap));
                 } catch (Exception e) {
-                    e.printStackTrace();//TODO @atul logging needed?
+                    e.printStackTrace();
+                    config.getLogger().verbose(config.getAccountId(), "Product Config : updateConfigToFile failed: " + e.getLocalizedMessage());
                     return false;
                 }
                 return true;
@@ -209,7 +219,8 @@ class ProductConfigSettings {
                         }
                     }
                 } catch (JSONException e) {
-                    // Ignore//TODO @atul add proper logging, cannot ignore exception in case of ARP
+                    e.printStackTrace();
+                    config.getLogger().verbose(config.getAccountId(), "Product Config setARPValue failed " + e.getLocalizedMessage());
                 }
             }
         }

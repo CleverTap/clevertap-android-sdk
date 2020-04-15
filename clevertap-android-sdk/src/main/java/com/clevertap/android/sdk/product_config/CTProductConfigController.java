@@ -37,14 +37,14 @@ public class CTProductConfigController {
     private HashMap<String, String> defaultConfig = new HashMap<>();
     private final HashMap<String, String> activatedConfig = new HashMap<>();
     private final HashMap<String, String> fetchedConfig = new HashMap<>();
-    private final Listener listener;
+    private final CTProductConfigControllerListener listener;
     private boolean isFetching = false;
     private boolean isActivating = false;
     private boolean isFetchAndActivating = false;
     private final ProductConfigSettings settings;
 
 
-    public CTProductConfigController(Context context, String guid, CleverTapInstanceConfig config, Listener listener) {
+    public CTProductConfigController(Context context, String guid, CleverTapInstanceConfig config, CTProductConfigControllerListener listener) {
         this.context = context;
         this.guid = guid;
         this.config = config;
@@ -67,12 +67,13 @@ public class CTProductConfigController {
                             activatedConfig.putAll(defaultConfig);
                         }
                         activatedConfig.putAll(getStoredValues(getActivatedFullPath()));
-                        FileUtils.writeJsonToFile(context, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(activatedConfig));
+                        FileUtils.writeJsonToFile(context, config, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(activatedConfig));
                         config.getLogger().verbose(config.getAccountId(), "Product Config : activate file write success: from init " + activatedConfig);
                         settings.loadSettings();
                         isInitialized = true;
                     } catch (Exception e) {
                         e.printStackTrace();
+                        config.getLogger().verbose(config.getAccountId(), "initAsync failed - " + e.getLocalizedMessage());
                         return false;
                     }
                     return true;
@@ -92,21 +93,22 @@ public class CTProductConfigController {
         });
     }
 
-    //TODO @atul Do not leave catch clause empty, put logging
     private HashMap<String, String> getStoredValues(String fullFilePath) {
         HashMap<String, String> map = new HashMap<>();
         String content = null;
         try {
-            content = FileUtils.readFromFile(context, fullFilePath);
+            content = FileUtils.readFromFile(context, config, fullFilePath);
         } catch (Exception e) {
-
+            e.printStackTrace();
+            config.getLogger().verbose(config.getAccountId(), "Product Config : getStoredValues reading file failed: " + e.getLocalizedMessage());
         }
         if (!TextUtils.isEmpty(content)) {
             JSONObject jsonObject = null;
             try {
                 jsonObject = new JSONObject(content);
             } catch (JSONException e) {
-
+                e.printStackTrace();
+                config.getLogger().verbose(config.getAccountId(), "Product Config : getStoredValues failed due to malformed json: " + e.getLocalizedMessage());
             }
             if (jsonObject != null) {
                 Iterator<String> iterator = jsonObject.keys();
@@ -118,6 +120,7 @@ public class CTProductConfigController {
                             value = String.valueOf(jsonObject.get(key));
                         } catch (JSONException e) {
                             e.printStackTrace();
+                            config.getLogger().verbose(config.getAccountId(), "Product Config : getStoredValues for key " + key + " while parsing json: " + e.getLocalizedMessage());
                         }
                         if (!TextUtils.isEmpty(value))
                             map.put(key, value);
@@ -129,7 +132,11 @@ public class CTProductConfigController {
         return map;
     }
 
-    //TODO @atul add javadoc
+    /**
+     * Sets default configs using an XML resource.
+     *
+     * @param resourceID
+     */
     public void setDefaults(final int resourceID) {
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
             @Override
@@ -146,7 +153,11 @@ public class CTProductConfigController {
         });
     }
 
-    //TODO @atul add javadoc
+    /**
+     * Sets default configs using the given Map.
+     *
+     * @param map
+     */
     public void setDefaults(final HashMap<String, Object> map) {
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
             @Override
@@ -218,12 +229,13 @@ public class CTProductConfigController {
                             activatedConfig.putAll(fetchedConfig);
                         } else {
                             activatedConfig.putAll(getStoredValues(getFetchedFullPath()));
-                            FileUtils.writeJsonToFile(context, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(activatedConfig));
+                            FileUtils.writeJsonToFile(context, config, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(activatedConfig));
                             config.getLogger().verbose(config.getAccountId(), "Product Config : activate file write success: " + activatedConfig);
-                            FileUtils.deleteFile(context, getFetchedFullPath());
+                            FileUtils.deleteFile(context, config, getFetchedFullPath());
                         }
                     } catch (Exception e) {
-                        e.printStackTrace();//TODO @atul better logging
+                        e.printStackTrace();
+                        config.getLogger().verbose(config.getAccountId(), "Product Config : activate failed: " + e.getLocalizedMessage());
                     }
                     return null;
                 }
@@ -239,8 +251,10 @@ public class CTProductConfigController {
         });
     }
 
-    //TODO @atul add javadoc
     @SuppressWarnings("WeakerAccess")
+    /**
+     * Sets the minimum interval between successive fetch calls.
+     */
     public void setMinimumFetchIntervalInSeconds(long fetchIntervalInSeconds) {
         settings.setMinimumFetchIntervalInSeconds(fetchIntervalInSeconds);
     }
@@ -279,6 +293,7 @@ public class CTProductConfigController {
             try {
                 return Long.parseLong(activatedConfig.get(Key));
             } catch (NumberFormatException e) {
+                e.printStackTrace();
                 config.getLogger().verbose(config.getAccountId(), "Error getting Long for Key-" + Key + " " + e.getMessage());
             }
         }
@@ -296,6 +311,7 @@ public class CTProductConfigController {
             try {
                 return Double.parseDouble(activatedConfig.get(Key));
             } catch (NumberFormatException e) {
+                e.printStackTrace();
                 config.getLogger().verbose(config.getAccountId(), "Error getting Double for Key-" + Key + " " + e.getMessage());
             }
 
@@ -314,7 +330,7 @@ public class CTProductConfigController {
             if (kvResponse != null) {
                 try {
                     parseFetchedResponse(kvResponse);
-                    FileUtils.writeJsonToFile(context, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_FETCHED, new JSONObject(fetchedConfig));
+                    FileUtils.writeJsonToFile(context, config, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_FETCHED, new JSONObject(fetchedConfig));
                     config.getLogger().verbose(config.getAccountId(), "Product Config : fetch file write success: from init " + fetchedConfig);
                     Utils.runOnUiThread(new Runnable() {
                         @Override
@@ -328,6 +344,7 @@ public class CTProductConfigController {
                     }
 
                 } catch (Exception e) {
+                    e.printStackTrace();
                     config.getLogger().verbose(config.getAccountId(), "Product Config: fetch Failed");
                     sendCallback(PROCESSING_STATE.FETCHED);
                     e.printStackTrace();
@@ -338,7 +355,6 @@ public class CTProductConfigController {
         }
     }
 
-    //TODO @atul logging in catch clauses needed
     private void parseFetchedResponse(JSONObject jsonObject) {
         HashMap<String, String> map = convertServerJsonToMap(jsonObject);
         fetchedConfig.clear();
@@ -349,13 +365,13 @@ public class CTProductConfigController {
             timestamp = (Integer) jsonObject.get(CTProductConfigConstants.KEY_LAST_FETCHED_TIMESTAMP);
         } catch (JSONException e) {
             e.printStackTrace();
+            config.getLogger().verbose(config.getAccountId(), "Product Config : parseFetchedResponse failed: " + e.getLocalizedMessage());
         }
         if (timestamp != null) {
             settings.setLastFetchTimeStampInMillis(timestamp);
         }
     }
 
-    //TODO @atul logging in catch clauses needed
     private HashMap<String, String> convertServerJsonToMap(JSONObject jsonObject) {
         HashMap<String, String> map = new HashMap<>();
         JSONArray kvArray = null;
@@ -363,6 +379,7 @@ public class CTProductConfigController {
             kvArray = jsonObject.getJSONArray(Constants.KEY_KV);
         } catch (JSONException e) {
             e.printStackTrace();
+            config.getLogger().verbose(config.getAccountId(), "convertServerJsonToMap failed - " + e.getLocalizedMessage());
         }
 
         if (kvArray != null && kvArray.length() > 0) {
@@ -379,6 +396,7 @@ public class CTProductConfigController {
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    config.getLogger().verbose(config.getAccountId(), "Product Config : convertServerJsonToMap failed: " + e.getLocalizedMessage());
                 }
             }
         }
@@ -407,7 +425,6 @@ public class CTProductConfigController {
     /**
      * Deletes all activated, fetched and defaults configs and resets all Product Config settings.
      */
-    //TODO @atul logging in catch clause needed
     public void reset() {
         synchronized (this) {
             if (null != defaultConfig) {
@@ -416,9 +433,10 @@ public class CTProductConfigController {
 
             activatedConfig.clear();
             try {
-                FileUtils.deleteDirectory(context, getProductConfigDirName());
+                FileUtils.deleteDirectory(context, config, getProductConfigDirName());
             } catch (Exception e) {
                 e.printStackTrace();
+                config.getLogger().verbose(config.getAccountId(), "Product Config : reset failed: " + e.getLocalizedMessage());
             }
             setMinimumFetchIntervalInSeconds(DEFAULT_MIN_FETCH_INTERVAL_SECONDS);
         }
@@ -462,10 +480,5 @@ public class CTProductConfigController {
         INIT_FAILED,
         FETCHED,
         ACTIVATED
-    }
-
-    //TODO @atul Give a better name to this Listener interface and make it a separate file for ease of reading code
-    public interface Listener extends CTProductConfigListener {
-        void fetchProductConfig();
     }
 }

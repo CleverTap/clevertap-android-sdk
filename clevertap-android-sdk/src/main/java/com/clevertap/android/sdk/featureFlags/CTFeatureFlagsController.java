@@ -34,7 +34,7 @@ public class CTFeatureFlagsController {
         this.store = new HashMap<>();
         this.setListener(listener);
         this.mContext = context.getApplicationContext();
-        unarchiveData(false);
+        unarchiveData();
     }
 
     private void setListener(FeatureFlagListener listener) {
@@ -55,8 +55,19 @@ public class CTFeatureFlagsController {
     }
 
 
-    public void updateFeatureFlags(JSONObject featureFlagResponseObj) throws JSONException {
-        updateFeatureFlags(featureFlagResponseObj, true);
+    public void updateFeatureFlags(JSONObject jsonObject) throws JSONException {
+        getConfigLogger().verbose(getAccountId(), "Updating feature flags...");
+        JSONArray featureFlagList = jsonObject.getJSONArray(Constants.KEY_KV);
+        try {
+            for (int i = 0; i < featureFlagList.length(); i++) {
+                JSONObject ff = featureFlagList.getJSONObject(i);
+                store.put(ff.getString("n"), ff.getBoolean("v"));
+            }
+        } catch (JSONException e) {
+            getConfigLogger().verbose(getAccountId(), "Error parsing Feature Flag array " + e.getLocalizedMessage());
+        }
+        archiveData(jsonObject);
+        notifyFeatureFlagUpdate();
     }
 
     private void notifyFeatureFlagUpdate() {
@@ -73,46 +84,26 @@ public class CTFeatureFlagsController {
         }
     }
 
-    //TODO @atul what is the use of isNew boolean here? value is always true
-    private void updateFeatureFlags(JSONObject jsonObject, boolean isNew) throws JSONException {
-        getConfigLogger().verbose(getAccountId(), "Updating feature flags...");
-        JSONArray featureFlagList = jsonObject.getJSONArray(Constants.KEY_KV);
-        try {
-            for (int i = 0; i < featureFlagList.length(); i++) {
-                JSONObject ff = featureFlagList.getJSONObject(i);
-                store.put(ff.getString("n"), ff.getBoolean("v"));
-            }
-        } catch (JSONException e) {
-            getConfigLogger().verbose(getAccountId(), "Error parsing Feature Flag array " + e.getLocalizedMessage());
-        }
-
-        if (isNew) {
-            archiveData(jsonObject, false);
-            notifyFeatureFlagUpdate();
-        }
-    }
-
-    //TODO @atul what is the use of sync? value is not used
-    private synchronized void archiveData(JSONObject featureFlagRespObj, boolean sync) {
+    private synchronized void archiveData(JSONObject featureFlagRespObj) {
 
         if (featureFlagRespObj != null) {
             try {
-                FileUtils.writeJsonToFile(mContext, getCachedDirName(), getCachedFileName(), featureFlagRespObj);
+                FileUtils.writeJsonToFile(mContext, config, getCachedDirName(), getCachedFileName(), featureFlagRespObj);
             } catch (Exception e) {
                 e.printStackTrace();
+                getConfigLogger().verbose(getAccountId(), "archiveData failed - " + e.getLocalizedMessage());
             }
         }
     }
 
-    //TODO @atul what is the use of sync? value is not used
-    private synchronized void unarchiveData(boolean sync) {
+    private synchronized void unarchiveData() {
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Boolean>() {
             @Override
             public Boolean doInBackground(Void aVoid) {
 
                 try {
                     store.clear();
-                    String content = FileUtils.readFromFile(mContext, getCachedFullPath());
+                    String content = FileUtils.readFromFile(mContext, config,getCachedFullPath());
                     if (!TextUtils.isEmpty(content)) {
 
                         JSONObject jsonObject = new JSONObject(content);
@@ -135,6 +126,7 @@ public class CTFeatureFlagsController {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
+                    getConfigLogger().verbose(getAccountId(), "unArchiveData failed - " + e.getLocalizedMessage());
                     return false;
                 }
                 return true;
@@ -148,9 +140,10 @@ public class CTFeatureFlagsController {
 
     }
 
-    private boolean get(String key, boolean defaultValue) {
+    private Boolean get(String key, boolean defaultValue) {
         getConfigLogger().verbose(getAccountId(), "getting feature flag with key - " + key + " and default value - " + defaultValue);
-        if (store.get(key) != null) {
+        Boolean value = store.get(key);
+        if (value != null) {
             return store.get(key);
         } else {
             getConfigLogger().verbose(getAccountId(), "feature flag not found, returning default value - " + defaultValue);
