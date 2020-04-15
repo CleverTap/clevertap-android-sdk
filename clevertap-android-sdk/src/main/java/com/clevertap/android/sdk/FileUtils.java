@@ -2,7 +2,6 @@ package com.clevertap.android.sdk;
 
 import android.content.Context;
 import android.text.TextUtils;
-import android.util.Log;
 
 import org.json.JSONObject;
 
@@ -14,15 +13,15 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 public class FileUtils {
-    private static final String TAG = "FileUtils";
 
-    public static void writeJsonToFile(Context context, String dirName, String fileName, JSONObject jsonObject) throws Exception {
+    public static void writeJsonToFile(Context context, CleverTapInstanceConfig config, String dirName, String fileName, JSONObject jsonObject) {
         try {
             if (jsonObject == null || TextUtils.isEmpty(dirName) || TextUtils.isEmpty(fileName))
                 return;
             File file = new File(context.getFilesDir(), dirName);
             if (!file.exists()) {
-                file.mkdir();//TODO @atul Shouldn't we use the returned boolean value to proceed?
+                if (!file.mkdir())
+                    return;// if directory is not created don't proceed and return
             }
 
             File file1 = new File(file, fileName);
@@ -32,12 +31,12 @@ public class FileUtils {
             writer.close();
         } catch (Exception e) {
             e.printStackTrace();
-            Log.d(TAG, "writeFileOnInternalStorage: failed" + e.getMessage());//TODO @atul Use our Logger
-            throw e;
+            if (config != null)
+                config.getLogger().verbose(config.getAccountId(), "writeFileOnInternalStorage: failed" + e.getLocalizedMessage());
         }
     }
 
-    public static String readFromFile(Context context, String fileNameWithPath) throws Exception {
+    public static String readFromFile(Context context, CleverTapInstanceConfig config, String fileNameWithPath) throws Exception {
 
         String content = "";
         //Make sure to use a try-catch statement to catch any errors
@@ -63,14 +62,14 @@ public class FileUtils {
             inputStream.close();
             content = stringBuilder.toString();
         } catch (Exception e) {
-            Log.d(TAG, "[Exception While Reading: " + fileNameWithPath + "]" + e.getMessage());//TODO @atul use our Logger
-            throw e;//TODO @atul you are throwing exception but not catching it anywhere
+            if (config != null)
+                config.getLogger().verbose(config.getAccountId(), "[Exception While Reading: " + e.getLocalizedMessage());
             //Log your error with Log.e
         }
         return content;
     }
-    //TODO @atul No exception is being thrown but method has a "throws"
-    public static void deleteDirectory(Context context, String dirName) throws Exception {
+
+    public static void deleteDirectory(Context context, CleverTapInstanceConfig config, String dirName) {
         if (TextUtils.isEmpty(dirName) || context == null)
             return;
         try {
@@ -83,31 +82,29 @@ public class FileUtils {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            Log.d(TAG, "writeFileOnInternalStorage: failed" + e.getMessage());//TODO @atul Use our Logger
-            throw e;
+            if (config != null)
+                config.getLogger().verbose(config.getAccountId(), "writeFileOnInternalStorage: failed" + dirName + " Error:" + e.getLocalizedMessage());
         }
     }
 
-    //TODO @atul this method can be void, why boolean?, and use our Logger
-    public static boolean deleteFile(Context context, String fileName) throws Exception {
+    public static void deleteFile(Context context, CleverTapInstanceConfig config, String fileName) throws Exception {
         if (TextUtils.isEmpty(fileName) || context == null)
-            return false;
+            return;
         try {
             File file = new File(context.getFilesDir(), fileName);
             if (file.exists()) {
                 if (file.delete()) {
-                    Log.d(TAG, "File Deleted:" + fileName);
-                    return true;
+                    if (config != null)
+                        config.getLogger().verbose(config.getAccountId(), "File Deleted:" + fileName);
                 } else {
-                    Log.d(TAG, "Failed to delete file" + fileName);
-                    return false;
+                    if (config != null)
+                        config.getLogger().verbose(config.getAccountId(), "Failed to delete file" + fileName);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            Log.d(TAG, "writeFileOnInternalStorage: failed" + e.getMessage());
-            throw e;
+            if (config != null)
+                config.getLogger().verbose(config.getAccountId(), "writeFileOnInternalStorage: failed" + fileName + " Error:" + e.getLocalizedMessage());
         }
-        return false;
     }
 }

@@ -40,25 +40,27 @@ class ProductConfigSettings {
         settingsMap.put(PRODUCT_CONFIG_WINDOW_LENGTH_MINS, String.valueOf(DEFAULT_WINDOW_LENGTH_MINS));
         settingsMap.put(KEY_LAST_FETCHED_TIMESTAMP, String.valueOf(0));
         settingsMap.put(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS, String.valueOf(DEFAULT_MIN_FETCH_INTERVAL_SECONDS));
+        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config :settings loaded with default values: " + settingsMap);
     }
 
     /**
      * loads settings by reading from file. It's a sync call, please make sure to call this from a background thread
      */
-    //TODO @atul Do not leave catch empty, put proper logging in all catches
     synchronized void loadSettings() {
         String content = null;
         try {
-            content = FileUtils.readFromFile(context, getFullPath());
+            content = FileUtils.readFromFile(context, config, getFullPath());
         } catch (Exception e) {
             e.printStackTrace();
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : loadSettings failed while reading file: " + e.getLocalizedMessage());
         }
         if (!TextUtils.isEmpty(content)) {
             JSONObject jsonObject = null;
             try {
                 jsonObject = new JSONObject(content);
             } catch (JSONException e) {
-
+                e.printStackTrace();
+                config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : loadSettings failed: " + e.getLocalizedMessage());
             }
             if (jsonObject != null) {
                 Iterator<String> iterator = jsonObject.keys();
@@ -76,7 +78,7 @@ class ProductConfigSettings {
                     }
                 }
             }
-
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : loadSettings completed with settings: " + settingsMap);
         }
     }
 
@@ -91,8 +93,10 @@ class ProductConfigSettings {
         String value = settingsMap.get(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS);
         try {
             if (value != null)
-                minInterVal = Long.parseLong(value);
-        } catch (Exception ignored) {//TODO @atul why ignoring? should add logs
+                minInterVal = (long) Double.parseDouble(value);
+        } catch (Exception e) {
+            e.printStackTrace();
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : getMinFetchIntervalInSeconds failed: " + e.getLocalizedMessage());
         }
         return minInterVal;
     }
@@ -102,8 +106,10 @@ class ProductConfigSettings {
         String value = settingsMap.get(KEY_LAST_FETCHED_TIMESTAMP);
         try {
             if (value != null)
-                lastFetchedTimeStamp = Long.parseLong(value);
-        } catch (Exception ignored) {//TODO @atul why ignoring? should add logs
+                lastFetchedTimeStamp = (long) Double.parseDouble(value);
+        } catch (Exception e) {
+            e.printStackTrace();
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : getLastFetchTimeStampInMillis failed: " + e.getLocalizedMessage());
         }
         return lastFetchedTimeStamp;
     }
@@ -113,8 +119,10 @@ class ProductConfigSettings {
         String value = settingsMap.get(PRODUCT_CONFIG_NO_OF_CALLS);
         try {
             if (value != null)
-                noCallsAllowedInWindow = Integer.parseInt(value);
-        } catch (Exception ignored) {//TODO @atul why ignoring? should add logs
+                noCallsAllowedInWindow = (int) Double.parseDouble(value);
+        } catch (Exception e) {
+            e.printStackTrace();
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : getNoOfCallsInAllowedWindow failed: " + e.getLocalizedMessage());
         }
         return noCallsAllowedInWindow;
     }
@@ -124,8 +132,10 @@ class ProductConfigSettings {
         String value = settingsMap.get(PRODUCT_CONFIG_WINDOW_LENGTH_MINS);
         try {
             if (value != null)
-                windowIntervalInMinutes = Integer.parseInt(value);
-        } catch (Exception ignored) {//TODO @atul why ignoring? should add logs
+                windowIntervalInMinutes = (int) Double.parseDouble(value);
+        } catch (Exception e) {
+            e.printStackTrace();
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : getWindowIntervalInMinutes failed: " + e.getLocalizedMessage());
         }
         return windowIntervalInMinutes;
     }
@@ -134,7 +144,6 @@ class ProductConfigSettings {
         long minFetchIntervalInSeconds = getMinFetchIntervalInSeconds();
         if (minFetchIntervalInSeconds != intervalInSeconds) {
             settingsMap.put(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS, String.valueOf(intervalInSeconds));
-            updateConfigToFile();
         }
     }
 
@@ -167,9 +176,10 @@ class ProductConfigSettings {
             @Override
             public Boolean doInBackground(Void aVoid) {
                 try {
-                    FileUtils.writeJsonToFile(context, getDirName(), CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS, new JSONObject(settingsMap));
+                    FileUtils.writeJsonToFile(context, config, getDirName(), CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS, new JSONObject(settingsMap));
                 } catch (Exception e) {
-                    e.printStackTrace();//TODO @atul logging needed?
+                    e.printStackTrace();
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : updateConfigToFile failed: " + e.getLocalizedMessage());
                     return false;
                 }
                 return true;
@@ -178,9 +188,9 @@ class ProductConfigSettings {
             @Override
             public void onPostExecute(Boolean isSuccess) {
                 if (isSuccess) {
-                    config.getLogger().verbose(config.getAccountId(), "Product Config settings: writing Success " + settingsMap);
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config settings: writing Success " + settingsMap);
                 } else {
-                    config.getLogger().verbose(config.getAccountId(), "Product Config settings: writing Failed");
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config settings: writing Failed");
                 }
             }
         });
@@ -209,13 +219,14 @@ class ProductConfigSettings {
                         }
                     }
                 } catch (JSONException e) {
-                    // Ignore//TODO @atul add proper logging, cannot ignore exception in case of ARP
+                    e.printStackTrace();
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config setARPValue failed " + e.getLocalizedMessage());
                 }
             }
         }
     }
 
-    void setProductConfigValuesFromARP(String key, int value) {
+    private void setProductConfigValuesFromARP(String key, int value) {
         switch (key) {
             case CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS:
                 setNoOfCallsInAllowedWindow(value);

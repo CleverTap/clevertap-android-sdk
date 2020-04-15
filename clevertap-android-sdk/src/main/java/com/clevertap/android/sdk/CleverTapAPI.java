@@ -53,6 +53,7 @@ import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.featureFlags.FeatureFlagListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
+import com.clevertap.android.sdk.product_config.CTProductConfigControllerListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.google.android.gms.plus.model.people.Person;
 import com.google.firebase.iid.FirebaseInstanceId;
@@ -101,7 +102,7 @@ import static com.clevertap.android.sdk.Utils.runOnUiThread;
 public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationListener,
         InAppNotificationActivity.InAppActivityListener,
         CTInAppBaseFragment.InAppListener,
-        CTInboxActivity.InboxActivityListener, CTABTestListener, FeatureFlagListener, CTProductConfigController.Listener, CTProductConfigListener {
+        CTInboxActivity.InboxActivityListener, CTABTestListener, FeatureFlagListener, CTProductConfigControllerListener, CTProductConfigListener {
     private final HashMap<String, Object> notificationIdTagMap = new HashMap<>();
     private final HashMap<String, Object> notificationViewedIdTagMap = new HashMap<>();
 
@@ -8285,8 +8286,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         queueEvent(context, event, Constants.FETCH_EVENT);
     }
 
-    //TODO @atul this method doesn't throw JSONException
-    private void processProductConfigResponse(JSONObject response) throws JSONException {
+    private void processProductConfigResponse(JSONObject response){
         if (response == null) {
             getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Can't parse Feature Flags Response, JSON response object is null");
             return;
@@ -8302,27 +8302,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         } catch (Throwable t) {
             getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Failed to parse response", t);
         }
-    }
-
-    //TODO remove later
-    private JSONObject mockProductConfigResponse() throws JSONException {
-        JSONObject object = new JSONObject();
-        JSONArray jsonArray = new JSONArray();
-        object.put("kv", jsonArray);
-        jsonArray.put(getJSONObject("discount", 10));
-        jsonArray.put(getJSONObject("customer-type", "gold"));
-        jsonArray.put(getJSONObject("loading_phrase", "Loading From Remote "));
-        jsonArray.put(getJSONObject("welcome_message_caps", true));
-        jsonArray.put(getJSONObject("welcome_message", "welcome from remote"));
-        jsonArray.put(getJSONObject("ts", 1245));
-        return object;
-    }
-
-    //TODO remove later
-    private JSONObject getJSONObject(String key, Object value) throws JSONException {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put(key, value);
-        return jsonObject;
     }
 
     private void parseProductConfigs(JSONObject responseKV) throws JSONException {

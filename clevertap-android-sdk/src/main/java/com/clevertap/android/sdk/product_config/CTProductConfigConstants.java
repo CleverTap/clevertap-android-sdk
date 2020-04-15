@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.product_config;
 import java.util.concurrent.TimeUnit;
 
 public interface CTProductConfigConstants {
+    String TAG_PRODUCT_CONFIG = "[Product Config]:";
     String DIR_PRODUCT_CONFIG = "Product_Config";
     String FILE_NAME_FETCHED = "fetched.json";
     String FILE_NAME_ACTIVATED = "activated.json";
@@ -18,7 +19,7 @@ public interface CTProductConfigConstants {
 
     //static values
     String DEFAULT_VALUE_FOR_STRING = "";
-    Boolean DEFAULT_VALUE_FOR_BOOLEAN = false; //TODO @atul why is this not used? if there is no need, remove it
+    Boolean DEFAULT_VALUE_FOR_BOOLEAN = false;
     Long DEFAULT_VALUE_FOR_LONG = 0L;
     Double DEFAULT_VALUE_FOR_DOUBLE = 0.0;
     //arp
