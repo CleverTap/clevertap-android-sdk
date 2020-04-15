@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.product_config;
 import java.util.concurrent.TimeUnit;
 
 public interface CTProductConfigConstants {
+    String TAG_PRODUCT_CONFIG = "[Product Config]:";
     String DIR_PRODUCT_CONFIG = "Product_Config";
     String FILE_NAME_FETCHED = "fetched.json";
     String FILE_NAME_ACTIVATED = "activated.json";
