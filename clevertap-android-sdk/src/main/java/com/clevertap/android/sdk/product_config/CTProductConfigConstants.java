@@ -18,6 +18,7 @@ public interface CTProductConfigConstants {
 
     //static values
     String DEFAULT_VALUE_FOR_STRING = "";
+    Boolean DEFAULT_VALUE_FOR_BOOLEAN = false;
     Long DEFAULT_VALUE_FOR_LONG = 0L;
     Double DEFAULT_VALUE_FOR_DOUBLE = 0.0;
     //arp

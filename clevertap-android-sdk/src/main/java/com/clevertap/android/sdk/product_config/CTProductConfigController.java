@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_MIN_FETCH_INTERVAL_SECONDS;
+import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_VALUE_FOR_BOOLEAN;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_VALUE_FOR_STRING;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_JSON_KEY_FOR_KEY;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_JSON_KEY_FOR_VALUE;
@@ -68,7 +69,7 @@ public class CTProductConfigController {
                         }
                         activatedConfig.putAll(getStoredValues(getActivatedFullPath()));
                         FileUtils.writeJsonToFile(context, config, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(activatedConfig));
-                        config.getLogger().verbose(config.getAccountId(), "Product Config : activate file write success: from init " + activatedConfig);
+                        config.getLogger().verbose(config.getAccountId(), "Product Config : initialized with configs: " + activatedConfig);
                         settings.loadSettings();
                         isInitialized = true;
                     } catch (Exception e) {
@@ -83,10 +84,8 @@ public class CTProductConfigController {
             @Override
             public void onPostExecute(Boolean isInitSuccess) {
                 if (isInitSuccess) {
-                    config.getLogger().verbose(config.getAccountId(), "Product Config: Init Success");
                     sendCallback(PROCESSING_STATE.INIT_SUCCESS);
                 } else {
-                    config.getLogger().verbose(config.getAccountId(), "Product Config: Init Failed");
                     sendCallback(PROCESSING_STATE.INIT_FAILED);
                 }
             }
@@ -148,6 +147,7 @@ public class CTProductConfigController {
 
             @Override
             public void onPostExecute(Void aVoid) {
+                config.getLogger().verbose(config.getAccountId(), "Product Config: setDefaults Completed with: " + defaultConfig);
                 initAsync();
             }
         });
@@ -179,6 +179,7 @@ public class CTProductConfigController {
 
             @Override
             public void onPostExecute(Void aVoid) {
+                config.getLogger().verbose(config.getAccountId(), "Product Config: setDefaults Completed with: " + defaultConfig);
                 initAsync();
             }
         });
@@ -230,7 +231,6 @@ public class CTProductConfigController {
                         } else {
                             activatedConfig.putAll(getStoredValues(getFetchedFullPath()));
                             FileUtils.writeJsonToFile(context, config, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(activatedConfig));
-                            config.getLogger().verbose(config.getAccountId(), "Product Config : activate file write success: " + activatedConfig);
                             FileUtils.deleteFile(context, config, getFetchedFullPath());
                         }
                     } catch (Exception e) {
@@ -243,7 +243,7 @@ public class CTProductConfigController {
 
             @Override
             public void onPostExecute(Void isSuccess) {
-                config.getLogger().verbose(config.getAccountId(), "Product Config: Activated " + activatedConfig);
+                config.getLogger().verbose(config.getAccountId(), "Product Config : activated successfully with configs: " + activatedConfig);
                 sendCallback(PROCESSING_STATE.ACTIVATED);
                 isActivating = false;
                 isFetchAndActivating = false;
@@ -267,8 +267,12 @@ public class CTProductConfigController {
      * @return String
      */
     public String getString(String Key) {
-        if (isInitialized)
-            return activatedConfig.get(Key);
+        if (isInitialized && !TextUtils.isEmpty(Key)) {
+            String value = activatedConfig.get(Key);
+            if (value != null) {
+                return value;
+            }
+        }
         return DEFAULT_VALUE_FOR_STRING;
     }
 
@@ -279,7 +283,10 @@ public class CTProductConfigController {
      * @return String
      */
     public Boolean getBoolean(String Key) {
-        return Boolean.parseBoolean(activatedConfig.get(Key));
+        if (isInitialized && !TextUtils.isEmpty(Key)) {
+            return Boolean.parseBoolean(activatedConfig.get(Key));
+        }
+        return DEFAULT_VALUE_FOR_BOOLEAN;
     }
 
     /**
@@ -289,7 +296,7 @@ public class CTProductConfigController {
      * @return String
      */
     public Long getLong(String Key) {
-        if (isInitialized) {
+        if (isInitialized && !TextUtils.isEmpty(Key)) {
             try {
                 return Long.parseLong(activatedConfig.get(Key));
             } catch (NumberFormatException e) {
@@ -307,7 +314,7 @@ public class CTProductConfigController {
      * @return String
      */
     public Double getDouble(String Key) {
-        if (isInitialized) {
+        if (isInitialized && !TextUtils.isEmpty(Key)) {
             try {
                 return Double.parseDouble(activatedConfig.get(Key));
             } catch (NumberFormatException e) {

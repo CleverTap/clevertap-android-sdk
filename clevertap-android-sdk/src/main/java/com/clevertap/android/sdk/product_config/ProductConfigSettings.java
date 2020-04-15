@@ -40,6 +40,7 @@ class ProductConfigSettings {
         settingsMap.put(PRODUCT_CONFIG_WINDOW_LENGTH_MINS, String.valueOf(DEFAULT_WINDOW_LENGTH_MINS));
         settingsMap.put(KEY_LAST_FETCHED_TIMESTAMP, String.valueOf(0));
         settingsMap.put(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS, String.valueOf(DEFAULT_MIN_FETCH_INTERVAL_SECONDS));
+        config.getLogger().verbose(config.getAccountId(), "Product Config :settings loaded with default values: " + settingsMap);
     }
 
     /**
@@ -77,7 +78,7 @@ class ProductConfigSettings {
                     }
                 }
             }
-
+            config.getLogger().verbose(config.getAccountId(), "Product Config : loadSettings completed with settings: " + settingsMap);
         }
     }
 
