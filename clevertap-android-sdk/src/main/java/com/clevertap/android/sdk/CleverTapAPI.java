@@ -227,6 +227,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private int currentRequestTimestamp = 0;
     private Location locationFromUser = null;
     private SyncListener syncListener = null;
+    private CTPushListener pushListener = null;
     private ArrayList<PushType> enabledPushTypes = null;
     private long appLastSeen = 0;
     private int currentSessionId = 0;
@@ -6193,7 +6194,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 }
                 if (!pushBundle.isEmpty() && !dbAdapter.doesPushNotificationIdExist(pushObject.getString("wzrk_pid"))) {
                     getConfigLogger().verbose("Creating Push Notification locally");
-                    createNotification(context, pushBundle);
+                    if(pushListener != null){
+                        pushListener.onPushPayloadReceived(pushBundle);
+                    }else {
+                        createNotification(context, pushBundle);
+                    }
                 } else {
                     getConfigLogger().verbose(getAccountId(), "Push Notification already shown, ignoring local notification :" + pushObject.getString("wzrk_pid"));
                 }
@@ -6588,6 +6593,37 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             return;
         }
         pushNotificationViewedEvent(extras);
+    }
+
+    /**
+     * Pass Push Notification Payload to CleverTap for smooth functioning of Push Amplification
+     * @param extras - Bundle received via FCM/Push Amplification
+     */
+    @SuppressWarnings("unused")
+    public void passPushNotification(final Bundle extras){
+        postAsyncSafely("customHandlePushAmplification", new Runnable() {
+            @Override
+            public void run() {
+                String notifMessage = extras.getString(Constants.NOTIF_MSG);
+                notifMessage = (notifMessage != null) ? notifMessage : "";
+                if (notifMessage.isEmpty()) {
+                    //silent notification
+                    getConfigLogger().verbose(getAccountId(), "Push notification message is empty, not rendering");
+                    loadDBAdapter(context).storeUninstallTimestamp();
+                    String pingFreq = extras.getString("pf", "");
+                    if (!TextUtils.isEmpty(pingFreq)) {
+                        updatePingFrequencyIfNeeded(context, Integer.parseInt(pingFreq));
+                    }
+                }else{
+                    String wzrk_pid = extras.getString(Constants.WZRK_PUSH_ID);
+                    String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE, (System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL) / 1000 + "");
+                    long wzrk_ttl = Long.parseLong(ttl);
+                    DBAdapter dbAdapter = loadDBAdapter(context);
+                    getConfigLogger().verbose("Storing Push Notification..." + wzrk_pid + " - with ttl - " + ttl);
+                    dbAdapter.storePushNotificationId(wzrk_pid, wzrk_ttl);
+                }
+            }
+        });
     }
 
     /**
@@ -7336,6 +7372,26 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 }
             }
         });
+    }
+
+    /**
+     * Returns the CTPushListener object
+     *
+     * @return The {@link CTPushListener} object
+     */
+    @SuppressWarnings("WeakerAccess")
+    public CTPushListener getCTPushListener() {
+        return pushListener;
+    }
+
+    /**
+     * This method is used to set the CTPushListener
+     *
+     * @param pushListener - The{@link CTPushListener} object
+     */
+    @SuppressWarnings("unused")
+    public void setCTPushListener(CTPushListener pushListener) {
+        this.pushListener = pushListener;
     }
 
     /**
