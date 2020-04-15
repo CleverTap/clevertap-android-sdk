@@ -143,7 +143,6 @@ class ProductConfigSettings {
         long minFetchIntervalInSeconds = getMinFetchIntervalInSeconds();
         if (minFetchIntervalInSeconds != intervalInSeconds) {
             settingsMap.put(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS, String.valueOf(intervalInSeconds));
-            updateConfigToFile();
         }
     }
 
