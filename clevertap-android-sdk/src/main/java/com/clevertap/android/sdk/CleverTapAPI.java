@@ -6596,12 +6596,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         pushNotificationViewedEvent(extras);
     }
 
+
     /**
-     * Pass Push Notification Payload to CleverTap for smooth functioning of Push Amplification
-     * @param extras - Bundle received via FCM/Push Amplification
+     * Stores silent push notification in DB for smooth working of Push Amplification
+     * Background Job Service and also stores wzrk_pid to the DB to avoid duplication of Push
+     * Notifications from Push Amplification.
+     * @param extras - Bundle
      */
-    @SuppressWarnings("unused")
-    public void passPushNotification(final Bundle extras){
+    private void processCustomPushNotification(final Bundle extras){
         postAsyncSafely("customHandlePushAmplification", new Runnable() {
             @Override
             public void run() {
@@ -6625,6 +6627,29 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 }
             }
         });
+    }
+
+    /**
+     * Pass Push Notification Payload to CleverTap for smooth functioning of Push Amplification
+     * @param context - Application Context
+     * @param extras - Bundle received via FCM/Push Amplification
+     */
+    @SuppressWarnings("unused")
+    public static void processPushNotification(Context context, Bundle extras){
+        String _accountId = extras.getString(Constants.WZRK_ACCT_ID_KEY);
+        if (instances == null) {
+            CleverTapAPI instance = createInstanceIfAvailable(context, _accountId);
+            if (instance != null)
+                instance.processCustomPushNotification(extras);
+            return;
+        }
+
+        for (String accountId : CleverTapAPI.instances.keySet()) {
+            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+            if (instance != null) {
+                instance.processCustomPushNotification(extras);
+            }
+        }
     }
 
     /**
