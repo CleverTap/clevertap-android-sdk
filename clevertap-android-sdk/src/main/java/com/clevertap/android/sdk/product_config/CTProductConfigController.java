@@ -233,7 +233,6 @@ public class CTProductConfigController {
                         }
                         FileUtils.writeJsonToFile(context, config, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(activatedConfig));
                         FileUtils.deleteFile(context, config, getFetchedFullPath());
-                        FileUtils.deleteFile(context, config, getFetchedFullPath());
                     } catch (Exception e) {
                         e.printStackTrace();
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : activate failed: " + e.getLocalizedMessage());
