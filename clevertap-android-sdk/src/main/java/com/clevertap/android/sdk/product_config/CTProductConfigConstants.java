@@ -8,7 +8,6 @@ public interface CTProductConfigConstants {
     String FILE_NAME_FETCHED = "fetched.json";
     String FILE_NAME_ACTIVATED = "activated.json";
     String FILE_NAME_CONFIG_SETTINGS = "config_settings.json";
-    String PRODUCT_CONFIG_PREF = "PRODUCT_CONFIG_PREF";
     String PRODUCT_CONFIG_JSON_KEY_FOR_KEY = "n";
     String PRODUCT_CONFIG_JSON_KEY_FOR_VALUE = "v";
     String KEY_LAST_FETCHED_TIMESTAMP = "ts";
