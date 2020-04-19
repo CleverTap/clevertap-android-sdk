@@ -243,6 +243,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private long referrerClickTime = 0;
     private long appInstallTime = 0;
     private String cachedGUID = null;
+    private boolean firstRequestInSession = false;
 
     /**
      * Method to check whether app has ExoPlayer dependencies
@@ -1927,6 +1928,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     //Session
     private void lazyCreateSession(Context context) {
         if (!inCurrentSession()) {
+            setFirstRequestInSession(true);
             createSession(context);
             pushInitialEventsAsync();
         }
@@ -2546,6 +2548,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 event.put("ep", System.currentTimeMillis() / 1000);
                 event.put("f", isFirstSession());
                 event.put("lsl", getLastSessionLength());
+                //event.put("frs", firstRequestInSession);
+                //firstRequestInSession = false;
                 attachPackageNameIfRequired(context, event);
 
                 // Report any pending validation error
@@ -3186,6 +3190,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return getIntFromPrefs(Constants.KEY_FIRST_TS, 0);
     }
 
+    private boolean isFirstRequestInSession() {
+        return firstRequestInSession;
+    }
+
+    private void setFirstRequestInSession(boolean firstRequestInSession) {
+        this.firstRequestInSession = firstRequestInSession;
+    }
+
     //Session
 
     private int getLastRequestTimestamp() {
@@ -3241,6 +3253,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 header.put("rct", getReferrerClickTime());
                 header.put("ait", getAppInstallTime());
             }
+            header.put("frs", isFirstRequestInSession());
+            setFirstRequestInSession(false);
 
 
             // Attach ARP
@@ -3561,6 +3575,13 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 } catch (Throwable t) {
                     getConfigLogger().verbose("Error handling Product Config response: " + t.getLocalizedMessage());
                 }
+            }
+
+            //Handle Discarded Events
+            try {
+                processDiscardedEventsList(response);
+            }catch (Throwable t){
+                getConfigLogger().verbose("Error handling discarded events response: " + t.getLocalizedMessage());
             }
 
         } catch (Throwable t) {
@@ -5652,6 +5673,13 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         // Check for a restricted event name
         if (validationResult.getErrorCode() > 0) {
             pushValidationResult(validationResult);
+            return;
+        }
+
+        ValidationResult discardedResult = validator.isEventDiscarded(eventName);
+        // Check for a discarded event name
+        if (discardedResult.getErrorCode() > 0) {
+            pushValidationResult(discardedResult);
             return;
         }
 
@@ -8403,5 +8431,29 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (productConfigListener != null && productConfigListener.get() != null) {
             productConfigListener.get().onInitSuccess();
         }
+    }
+
+    private void processDiscardedEventsList(JSONObject response){
+        if (!response.has(Constants.DISCARDED_EVENT_JSON_KEY)) {
+            getConfigLogger().verbose(getAccountId(), "JSON object doesn't contain the Discarded Events key");
+            return;
+        }
+
+        try {
+            ArrayList<String> discardedEventsList = new ArrayList<>();
+            JSONArray discardedEventsArray = response.getJSONArray(Constants.DISCARDED_EVENT_JSON_KEY);
+
+            if(discardedEventsArray != null){
+                for(int i = 0; i < discardedEventsArray.length(); i++){
+                    discardedEventsList.add(discardedEventsArray.getString(i));
+                }
+            }
+            if (validator != null){
+                validator.setDiscardedEvents(discardedEventsList);
+            }
+        } catch (JSONException e) {
+            getConfigLogger().verbose(getAccountId(), "Error parsing discarded events list" + e.getLocalizedMessage());
+        }
+
     }
 }
