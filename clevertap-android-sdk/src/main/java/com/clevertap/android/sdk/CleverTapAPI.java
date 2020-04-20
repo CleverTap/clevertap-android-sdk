@@ -3420,6 +3420,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         if(ctProductConfigController!=null){
                             ctProductConfigController.setArpValue(arp);
                         }
+                        //Handle Discarded events in ARP
+                        try {
+                            processDiscardedEventsList(response);
+                        }catch (Throwable t){
+                            getConfigLogger().verbose("Error handling discarded events response: " + t.getLocalizedMessage());
+                        }
                         handleARPUpdate(context, arp);
                     }
                 }
@@ -3575,13 +3581,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 } catch (Throwable t) {
                     getConfigLogger().verbose("Error handling Product Config response: " + t.getLocalizedMessage());
                 }
-            }
-
-            //Handle Discarded Events
-            try {
-                processDiscardedEventsList(response);
-            }catch (Throwable t){
-                getConfigLogger().verbose("Error handling discarded events response: " + t.getLocalizedMessage());
             }
 
         } catch (Throwable t) {
