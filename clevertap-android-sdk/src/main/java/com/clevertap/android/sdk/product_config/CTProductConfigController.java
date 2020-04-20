@@ -20,6 +20,8 @@ import java.util.concurrent.TimeUnit;
 
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_MIN_FETCH_INTERVAL_SECONDS;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_VALUE_FOR_BOOLEAN;
+import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_VALUE_FOR_DOUBLE;
+import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_VALUE_FOR_LONG;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_VALUE_FOR_STRING;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_JSON_KEY_FOR_KEY;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_JSON_KEY_FOR_VALUE;
@@ -67,8 +69,9 @@ public class CTProductConfigController {
                         if (!defaultConfig.isEmpty()) {
                             activatedConfig.putAll(defaultConfig);
                         }
-                        activatedConfig.putAll(getStoredValues(getActivatedFullPath()));
-                        FileUtils.writeJsonToFile(context, config, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(activatedConfig));
+                        HashMap<String, String> storedConfig = getStoredValues(getActivatedFullPath());
+                        activatedConfig.putAll(storedConfig);
+                        FileUtils.writeJsonToFile(context, config, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(storedConfig));
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : initialized with configs: " + activatedConfig);
                         settings.loadSettings();
                         isInitialized = true;
@@ -226,12 +229,15 @@ public class CTProductConfigController {
                             activatedConfig.putAll(defaultConfig);
                         }
                         //read fetched info
+                        HashMap<String, String> toWriteValues = new HashMap<>();
                         if (!fetchedConfig.isEmpty()) {
+                            toWriteValues.putAll(fetchedConfig);
                             activatedConfig.putAll(fetchedConfig);
                         } else {
-                            activatedConfig.putAll(getStoredValues(getFetchedFullPath()));
+                            toWriteValues = getStoredValues(getFetchedFullPath());
+                            activatedConfig.putAll(toWriteValues);
                         }
-                        FileUtils.writeJsonToFile(context, config, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(activatedConfig));
+                        FileUtils.writeJsonToFile(context, config, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(toWriteValues));
                         FileUtils.deleteFile(context, config, getFetchedFullPath());
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -269,7 +275,7 @@ public class CTProductConfigController {
     public String getString(String Key) {
         if (isInitialized && !TextUtils.isEmpty(Key)) {
             String value = activatedConfig.get(Key);
-            if (value != null) {
+            if (!TextUtils.isEmpty(value)) {
                 return value;
             }
         }
@@ -284,7 +290,10 @@ public class CTProductConfigController {
      */
     public Boolean getBoolean(String Key) {
         if (isInitialized && !TextUtils.isEmpty(Key)) {
-            return Boolean.parseBoolean(activatedConfig.get(Key));
+            String value = activatedConfig.get(Key);
+            if (!TextUtils.isEmpty(value)) {
+                return Boolean.parseBoolean(value);
+            }
         }
         return DEFAULT_VALUE_FOR_BOOLEAN;
     }
@@ -298,13 +307,16 @@ public class CTProductConfigController {
     public Long getLong(String Key) {
         if (isInitialized && !TextUtils.isEmpty(Key)) {
             try {
-                return Long.parseLong(activatedConfig.get(Key));
+                String value = activatedConfig.get(Key);
+                if (!TextUtils.isEmpty(value)) {
+                    return Long.parseLong(value);
+                }
             } catch (NumberFormatException e) {
                 e.printStackTrace();
                 config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Error getting Long for Key-" + Key + " " + e.getMessage());
             }
         }
-        return CTProductConfigConstants.DEFAULT_VALUE_FOR_LONG;
+        return DEFAULT_VALUE_FOR_LONG;
     }
 
     /**
@@ -316,14 +328,16 @@ public class CTProductConfigController {
     public Double getDouble(String Key) {
         if (isInitialized && !TextUtils.isEmpty(Key)) {
             try {
-                return Double.parseDouble(activatedConfig.get(Key));
+                String value = activatedConfig.get(Key);
+                if (!TextUtils.isEmpty(value)) {
+                    return Double.parseDouble(value);
+                }
             } catch (NumberFormatException e) {
                 e.printStackTrace();
                 config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Error getting Double for Key-" + Key + " " + e.getMessage());
             }
-
         }
-        return CTProductConfigConstants.DEFAULT_VALUE_FOR_DOUBLE;
+        return DEFAULT_VALUE_FOR_DOUBLE;
     }
 
     private boolean canRequest(long minimumFetchIntervalInSeconds) {
@@ -332,7 +346,12 @@ public class CTProductConfigController {
                 && ((System.currentTimeMillis() - settings.getLastFetchTimeStampInMillis()) > TimeUnit.SECONDS.toMillis(minimumFetchIntervalInSeconds));
     }
 
-    public void afterFetchProductConfig(JSONObject kvResponse) {
+    public void onFetchFailed() {
+        isFetching = false;
+        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config: fetch Failed");
+    }
+
+    public void onFetchSuccess(JSONObject kvResponse) {
         synchronized (this) {
             if (kvResponse != null) {
                 try {
