@@ -329,7 +329,7 @@ public class CTProductConfigController {
     private boolean canRequest(long minimumFetchIntervalInSeconds) {
         return !isFetching
                 && !TextUtils.isEmpty(guid)
-                && (System.currentTimeMillis() - settings.getLastFetchTimeStampInMillis()) > TimeUnit.SECONDS.toMillis(minimumFetchIntervalInSeconds);
+                && ((System.currentTimeMillis() - settings.getLastFetchTimeStampInMillis()) > TimeUnit.SECONDS.toMillis(minimumFetchIntervalInSeconds));
     }
 
     public void afterFetchProductConfig(JSONObject kvResponse) {

@@ -147,9 +147,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (this.deviceInfo.getDeviceID() != null) {
             Logger.v("Initializing InAppFC with device Id = " + this.deviceInfo.getDeviceID());
             this.inAppFCManager = new InAppFCManager(context, config, this.deviceInfo.getDeviceID());
-            initFeatureFlags();
-
         }
+        initFeatureFlags(false);
 
         this.validator = new Validator();
 
@@ -6161,7 +6160,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         this.inAppFCManager = new InAppFCManager(context, config, deviceId);
         Logger.v("Initializing ABTesting after Device ID Created = " + deviceId);
         initABTesting();
-        initFeatureFlags();
+        initFeatureFlags(true);
         initProductConfig(true);
         getConfigLogger().verbose("Got device id from DeviceInfo, notifying user profile initialized to SyncListener");
         notifyUserProfileInitialized(deviceId);
@@ -8279,21 +8278,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         this.featureFlagsListener = featureFlagsListener;
     }
 
-    private void initFeatureFlags() {
+    private void initFeatureFlags(boolean fromPlayServices) {
         Logger.v("Initializing Feature Flags with device Id = " + getCleverTapID());
-        if (config.isAnalyticsOnly()) {
-            getConfigLogger().debug(config.getAccountId(), "Feature Flags is not enabled for this instance");
-            return;
-        }
-
-        if (getCleverTapID() == null) {
-            getConfigLogger().verbose(config.getAccountId(), "GUID not set yet, deferring Feature Flags initialization");
-            return;
-        }
 
         if (ctFeatureFlagsController == null) {
             ctFeatureFlagsController = new CTFeatureFlagsController(context, getCleverTapID(), config, this);
             getConfigLogger().verbose(config.getAccountId(), "Feature Flags initialized");
+        }
+
+        if (fromPlayServices && ctFeatureFlagsController != null && !ctFeatureFlagsController.isInitialized()) {
+            ctFeatureFlagsController.setGuidAndInit(getCleverTapID());
         }
     }
 
@@ -8377,11 +8371,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     private void initProductConfig(boolean fromPlayServices) {
         Logger.v("Initializing Product Config with device Id = " + getCleverTapID());
-
-        if (config.isAnalyticsOnly()) {
-            getConfigLogger().debug(config.getAccountId(), "Feature Flags is not enabled for this instance");
-            return;
-        }
 
         if (ctProductConfigController == null) {
             ctProductConfigController = new CTProductConfigController(context, getCleverTapID(), config, this);
