@@ -3,8 +3,11 @@ package com.clevertap.android.sdk;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Bundle;
+
+import java.util.List;
 
 
 public class CTPushNotificationReceiver extends BroadcastReceiver {
@@ -22,6 +25,16 @@ public class CTPushNotificationReceiver extends BroadcastReceiver {
 
             if (extras.containsKey(Constants.DEEP_LINK_KEY)){
                 launchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(intent.getStringExtra(Constants.DEEP_LINK_KEY)));
+                List<ResolveInfo> resolveInfoList = context.getPackageManager().queryIntentActivities(launchIntent,0);
+                if(resolveInfoList != null){
+                    String appPackageName = context.getPackageName();
+                    for(ResolveInfo resolveInfo : resolveInfoList){
+                        if(appPackageName.equals(resolveInfo.activityInfo.packageName)){
+                            launchIntent.setPackage(appPackageName);
+                            break;
+                        }
+                    }
+                }
             } else {
                 launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
                 if (launchIntent == null) {

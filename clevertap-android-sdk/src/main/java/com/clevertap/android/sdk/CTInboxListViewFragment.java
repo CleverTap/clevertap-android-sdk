@@ -2,6 +2,7 @@ package com.clevertap.android.sdk;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ResolveInfo;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
@@ -26,6 +27,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 public class CTInboxListViewFragment extends Fragment {
 
@@ -253,6 +255,18 @@ public class CTInboxListViewFragment extends Fragment {
     void fireUrlThroughIntent(String url) {
         try {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url.replace("\n", "").replace("\r", "")));
+            if(getActivity() != null) {
+                List<ResolveInfo> resolveInfoList = getActivity().getPackageManager().queryIntentActivities(intent, 0);
+                if (resolveInfoList != null) {
+                    String appPackageName = getActivity().getPackageName();
+                    for (ResolveInfo resolveInfo : resolveInfoList) {
+                        if (appPackageName.equals(resolveInfo.activityInfo.packageName)) {
+                            intent.setPackage(appPackageName);
+                            break;
+                        }
+                    }
+                }
+            }
             startActivity(intent);
         } catch (Throwable t) {
             // Ignore
