@@ -348,6 +348,7 @@ public class CTProductConfigController {
 
     public void onFetchFailed() {
         isFetching = false;
+        isFetchAndActivating = false;
         config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config: fetch Failed");
     }
 
@@ -499,6 +500,7 @@ public class CTProductConfigController {
         if (isFetchAndActivating)
             return;
         fetch();
+        isFetchAndActivating = true;
     }
 
     private enum PROCESSING_STATE {
