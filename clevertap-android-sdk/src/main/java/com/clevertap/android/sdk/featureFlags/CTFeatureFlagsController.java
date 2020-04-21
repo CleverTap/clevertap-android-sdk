@@ -16,6 +16,7 @@ import org.json.JSONObject;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 
+import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_VALUE_FOR_BOOLEAN;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_JSON_KEY_FOR_KEY;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_JSON_KEY_FOR_VALUE;
 
@@ -34,7 +35,12 @@ public class CTFeatureFlagsController {
         this.store = new HashMap<>();
         this.setListener(listener);
         this.mContext = context.getApplicationContext();
-        unarchiveData();
+        init();
+    }
+
+    public void setGuidAndInit(String cleverTapID) {
+        this.guid = cleverTapID;
+        init();
     }
 
     private void setListener(FeatureFlagListener listener) {
@@ -96,14 +102,16 @@ public class CTFeatureFlagsController {
         }
     }
 
-    private synchronized void unarchiveData() {
+    private synchronized void init() {
+        if (TextUtils.isEmpty(guid))
+            return;
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Boolean>() {
             @Override
             public Boolean doInBackground(Void aVoid) {
 
                 try {
                     store.clear();
-                    String content = FileUtils.readFromFile(mContext, config,getCachedFullPath());
+                    String content = FileUtils.readFromFile(mContext, config, getCachedFullPath());
                     if (!TextUtils.isEmpty(content)) {
 
                         JSONObject jsonObject = new JSONObject(content);
@@ -122,7 +130,7 @@ public class CTFeatureFlagsController {
                                 }
                             }
                         }
-
+                        isInitialized = true;
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -141,6 +149,8 @@ public class CTFeatureFlagsController {
     }
 
     private Boolean get(String key, boolean defaultValue) {
+        if(!isInitialized)
+            return DEFAULT_VALUE_FOR_BOOLEAN;
         getConfigLogger().verbose(getAccountId(), "getting feature flag with key - " + key + " and default value - " + defaultValue);
         Boolean value = store.get(key);
         if (value != null) {
