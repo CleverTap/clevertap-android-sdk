@@ -41,8 +41,6 @@ public class CTProductConfigController {
     private final HashMap<String, String> activatedConfig = new HashMap<>();
     private final HashMap<String, String> fetchedConfig = new HashMap<>();
     private final CTProductConfigControllerListener listener;
-    private boolean isFetching = false;
-    private boolean isActivating = false;
     private boolean isFetchAndActivating = false;
     private final ProductConfigSettings settings;
 
@@ -203,7 +201,6 @@ public class CTProductConfigController {
     @SuppressWarnings("WeakerAccess")
     public void fetch(long minimumFetchIntervalInSeconds) {
         if (canRequest(minimumFetchIntervalInSeconds)) {
-            isFetching = true;
             listener.fetchProductConfig();
         } else {
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config: Throttled");
@@ -215,13 +212,10 @@ public class CTProductConfigController {
      */
     @SuppressWarnings("WeakerAccess")
     public void activate() {
-        if (isActivating)
-            return;
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
             @Override
             public Void doInBackground(Void params) {
                 synchronized (this) {
-                    isActivating = true;
                     try {
                         activatedConfig.clear();
                         //apply default config first
@@ -251,7 +245,6 @@ public class CTProductConfigController {
             public void onPostExecute(Void isSuccess) {
                 config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : activated successfully with configs: " + activatedConfig);
                 sendCallback(PROCESSING_STATE.ACTIVATED);
-                isActivating = false;
                 isFetchAndActivating = false;
             }
         });
@@ -341,13 +334,11 @@ public class CTProductConfigController {
     }
 
     private boolean canRequest(long minimumFetchIntervalInSeconds) {
-        return !isFetching
-                && !TextUtils.isEmpty(guid)
+        return !TextUtils.isEmpty(guid)
                 && ((System.currentTimeMillis() - settings.getLastFetchTimeStampInMillis()) > TimeUnit.SECONDS.toMillis(minimumFetchIntervalInSeconds));
     }
 
     public void onFetchFailed() {
-        isFetching = false;
         isFetchAndActivating = false;
         config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config: fetch Failed");
     }
@@ -378,7 +369,6 @@ public class CTProductConfigController {
                     isFetchAndActivating = false;// set fetchAndActivating flag to false if fetch fails.
                 }
             }
-            isFetching = false;
         }
     }
 
@@ -497,8 +487,6 @@ public class CTProductConfigController {
      * Asynchronously fetches and then activates the fetched configs.
      */
     public void fetchAndActivate() {
-        if (isFetchAndActivating)
-            return;
         fetch();
         isFetchAndActivating = true;
     }
