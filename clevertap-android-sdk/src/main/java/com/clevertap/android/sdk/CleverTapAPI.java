@@ -1929,6 +1929,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private void lazyCreateSession(Context context) {
         if (!inCurrentSession()) {
             setFirstRequestInSession(true);
+            if(validator != null) {
+                validator.setDiscardedEvents(null);
+            }
             createSession(context);
             pushInitialEventsAsync();
         }
@@ -8450,7 +8453,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     private void processDiscardedEventsList(JSONObject response){
         if (!response.has(Constants.DISCARDED_EVENT_JSON_KEY)) {
-            getConfigLogger().verbose(getAccountId(), "JSON object doesn't contain the Discarded Events key");
+            getConfigLogger().verbose(getAccountId(), "ARP doesn't contain the Discarded Events key");
             return;
         }
 
@@ -8465,6 +8468,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
             if (validator != null){
                 validator.setDiscardedEvents(discardedEventsList);
+            }else{
+                getConfigLogger().verbose(getAccountId(),"Validator object is NULL");
             }
         } catch (JSONException e) {
             getConfigLogger().verbose(getAccountId(), "Error parsing discarded events list" + e.getLocalizedMessage());
