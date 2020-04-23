@@ -69,7 +69,9 @@ class ProductConfigSettings {
                     if (!TextUtils.isEmpty(key)) {
                         String value = null;
                         try {
-                            value = String.valueOf(jsonObject.get(key));
+                            Object obj = jsonObject.get(key);
+                            if (obj != null)
+                                value = String.valueOf(obj);
                         } catch (JSONException e) {
                             e.printStackTrace();
                         }
@@ -92,7 +94,7 @@ class ProductConfigSettings {
         long minInterVal = DEFAULT_MIN_FETCH_INTERVAL_SECONDS;
         String value = settingsMap.get(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS);
         try {
-            if (value != null)
+            if (!TextUtils.isEmpty(value))
                 minInterVal = (long) Double.parseDouble(value);
         } catch (Exception e) {
             e.printStackTrace();
@@ -105,7 +107,7 @@ class ProductConfigSettings {
         long lastFetchedTimeStamp = 0L;
         String value = settingsMap.get(KEY_LAST_FETCHED_TIMESTAMP);
         try {
-            if (value != null)
+            if (!TextUtils.isEmpty(value))
                 lastFetchedTimeStamp = (long) Double.parseDouble(value);
         } catch (Exception e) {
             e.printStackTrace();
@@ -118,7 +120,7 @@ class ProductConfigSettings {
         int noCallsAllowedInWindow = DEFAULT_NO_OF_CALLS;
         String value = settingsMap.get(PRODUCT_CONFIG_NO_OF_CALLS);
         try {
-            if (value != null)
+            if (!TextUtils.isEmpty(value))
                 noCallsAllowedInWindow = (int) Double.parseDouble(value);
         } catch (Exception e) {
             e.printStackTrace();
@@ -131,7 +133,7 @@ class ProductConfigSettings {
         int windowIntervalInMinutes = DEFAULT_WINDOW_LENGTH_MINS;
         String value = settingsMap.get(PRODUCT_CONFIG_WINDOW_LENGTH_MINS);
         try {
-            if (value != null)
+            if (!TextUtils.isEmpty(value))
                 windowIntervalInMinutes = (int) Double.parseDouble(value);
         } catch (Exception e) {
             e.printStackTrace();
@@ -210,14 +212,17 @@ class ProductConfigSettings {
             while (keys.hasNext()) {
                 final String key = keys.next();
                 try {
-                    final Object o = arp.get(key);
-                    if (o instanceof Number) {
-                        final int update = ((Number) o).intValue();
-                        if (CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS.equalsIgnoreCase(key)
-                                || CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS.equalsIgnoreCase(key)) {
-                            setProductConfigValuesFromARP(key, update);
+                    if (!TextUtils.isEmpty(key)) {
+                        final Object object = arp.get(key);
+                        if (object instanceof Number) {
+                            final int update = (int) ((Number) object).doubleValue();
+                            if (CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS.equalsIgnoreCase(key)
+                                    || CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS.equalsIgnoreCase(key)) {
+                                setProductConfigValuesFromARP(key, update);
+                            }
                         }
                     }
+
                 } catch (JSONException e) {
                     e.printStackTrace();
                     config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config setARPValue failed " + e.getLocalizedMessage());
