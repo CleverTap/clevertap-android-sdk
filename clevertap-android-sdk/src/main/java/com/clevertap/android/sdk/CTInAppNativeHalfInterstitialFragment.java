@@ -112,8 +112,8 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
                         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1.getLayoutParams();
                         if (!inAppNotification.isTablet() || !isTablet()) {
                             if (isTablet()) {
-                                layoutParams.setMargins(getScaledPixels(140), getScaledPixels(140), getScaledPixels(140), getScaledPixels(140));
-                                layoutParams.height = relativeLayout1.getMeasuredHeight()-getScaledPixels(210);
+                                layoutParams.setMargins(getScaledPixels(140), getScaledPixels(100), getScaledPixels(140), getScaledPixels(100));
+                                layoutParams.height = relativeLayout1.getMeasuredHeight()-getScaledPixels(130);
                                 layoutParams.width = (int) (layoutParams.height *1.3f);
                                 layoutParams.gravity=Gravity.CENTER;
                                 relativeLayout1.setLayoutParams(layoutParams);
