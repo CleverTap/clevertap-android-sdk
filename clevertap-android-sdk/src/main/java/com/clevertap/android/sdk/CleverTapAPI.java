@@ -1929,9 +1929,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private void lazyCreateSession(Context context) {
         if (!inCurrentSession()) {
             setFirstRequestInSession(true);
-            if(validator != null) {
-                validator.setDiscardedEvents(null);
-            }
             createSession(context);
             pushInitialEventsAsync();
         }
