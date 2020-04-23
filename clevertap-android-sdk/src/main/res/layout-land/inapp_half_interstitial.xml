@@ -31,7 +31,7 @@
             android:layout_marginTop="23dp"
             android:gravity="center"
             android:maxLines="1"
-            android:textSize="24sp"
+            android:textSize="@dimen/txt_size_inapp_half_title"
             android:textStyle="bold"
             android:textColor="@android:color/black"/>
 
@@ -49,7 +49,7 @@
             android:gravity="center"
             android:maxLines="3"
             android:textColor="@android:color/black"
-            android:textSize="18sp"/>
+            android:textSize="@dimen/txt_size_inapp_half_message"/>
 
         <LinearLayout
             android:id="@+id/half_interstitial_linear_layout"
@@ -71,7 +71,7 @@
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="@dimen/inapp_button_height"
-                android:textSize="16sp"
+                android:textSize="@dimen/txt_size_inapp_half_button"
                 android:visibility="gone"/>
 
             <Button
@@ -79,7 +79,7 @@
                 android:layout_width="0dp"
                 android:layout_weight="1"
                 android:layout_height="@dimen/inapp_button_height"
-                android:textSize="16sp"
+                android:textSize="@dimen/txt_size_inapp_half_button"
                 android:layout_marginLeft="20dp"
                 android:visibility="gone"
                 android:layout_marginStart="10dp" />

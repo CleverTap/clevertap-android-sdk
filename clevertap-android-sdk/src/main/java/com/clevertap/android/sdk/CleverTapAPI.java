@@ -1929,9 +1929,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private void lazyCreateSession(Context context) {
         if (!inCurrentSession()) {
             setFirstRequestInSession(true);
-            if(validator != null) {
-                validator.setDiscardedEvents(null);
-            }
             createSession(context);
             pushInitialEventsAsync();
         }
@@ -8230,10 +8227,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @Override
     public void fetchFeatureFlags() {
+        if(config.isAnalyticsOnly())
+            return;
         JSONObject event = new JSONObject();
         JSONObject notif = new JSONObject();
         try {
-            notif.put("t", 1);
+            notif.put("t", Constants.FETCH_TYPE_FF);
             event.put("evtName", Constants.WZRK_FETCH);
             event.put("evtData", notif);
         } catch (JSONException e) {
@@ -8245,6 +8244,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     /**
      * @return object of {@link CTFeatureFlagsController}
+     * handler to get the feature flag values
      */
     public CTFeatureFlagsController featureFlag() {
         return ctFeatureFlagsController;
@@ -8271,8 +8271,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private void parseFeatureFlags(JSONObject responseKV) throws JSONException {
         JSONArray kvArray = responseKV.getJSONArray(Constants.KEY_KV);
 
-        if (kvArray != null && featureFlag() != null) {
-            featureFlag().updateFeatureFlags(responseKV);
+        if (kvArray != null && ctFeatureFlagsController != null) {
+            ctFeatureFlagsController.updateFeatureFlags(responseKV);
         }
     }
 
@@ -8327,13 +8327,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     private void resetFeatureFlags() {
-        if (!this.config.isAnalyticsOnly()) {
-            getConfigLogger().debug(config.getAccountId(), "AB Testing is not enabled for this instance");
-            return;
-        }
-
         if (ctFeatureFlagsController != null && ctFeatureFlagsController.isInitialized()) {
-            ctFeatureFlagsController.resetWithGuid(getCleverTapID());//TODO @atul check whether needed
+            ctFeatureFlagsController.resetWithGuid(getCleverTapID());
             ctFeatureFlagsController.fetchFeatureFlags();
         }
     }
@@ -8342,6 +8337,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * PRODUCT CONFIG
      */
 
+    /**
+     * The handle to call fetch/Activate remote values.
+     * @return
+     */
     @SuppressWarnings("WeakerAccess")
     public CTProductConfigController productConfig() {
         if (ctProductConfigController == null)
@@ -8357,7 +8356,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         JSONObject event = new JSONObject();
         JSONObject notif = new JSONObject();
         try {
-            notif.put("t", 0);
+            notif.put("t", Constants.FETCH_TYPE_PC);
             event.put("evtName", Constants.WZRK_FETCH);
             event.put("evtData", notif);
         } catch (JSONException e) {
@@ -8410,7 +8409,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     private void resetProductConfigs() {
-        if (!this.config.isAnalyticsOnly()) {
+        if (this.config.isAnalyticsOnly()) {
             getConfigLogger().debug(config.getAccountId(), "Product Config is not enabled for this instance");
             return;
         }

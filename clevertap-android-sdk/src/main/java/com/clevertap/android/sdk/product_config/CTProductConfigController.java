@@ -69,7 +69,6 @@ public class CTProductConfigController {
                         }
                         HashMap<String, String> storedConfig = getStoredValues(getActivatedFullPath());
                         activatedConfig.putAll(storedConfig);
-                        FileUtils.writeJsonToFile(context, config, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(storedConfig));
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : initialized with configs: " + activatedConfig);
                         settings.loadSettings();
                         isInitialized = true;
@@ -141,7 +140,6 @@ public class CTProductConfigController {
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
             @Override
             public Void doInBackground(Void aVoid) {
-                defaultConfig.clear();
                 defaultConfig.putAll(DefaultXmlParser.getDefaultsFromXml(context, resourceID));
                 return null;
             }
@@ -164,7 +162,6 @@ public class CTProductConfigController {
             @Override
             public Void doInBackground(Void aVoid) {
                 if (map != null && !map.isEmpty()) {
-                    defaultConfig.clear();
                     for (Map.Entry<String, Object> entry : map.entrySet()) {
                         if (entry != null) {
                             String key = entry.getKey();
@@ -385,7 +382,7 @@ public class CTProductConfigController {
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : parseFetchedResponse failed: " + e.getLocalizedMessage());
         }
         if (timestamp != null) {
-            settings.setLastFetchTimeStampInMillis(timestamp);
+            settings.setLastFetchTimeStampInMillis(timestamp * 1000L);
         }
     }
 

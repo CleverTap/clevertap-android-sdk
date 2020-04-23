@@ -114,9 +114,22 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                             });
                         } else {
                             if (isTablet()) {
+                                int aspectHeight = (int) ((relativeLayout1.getMeasuredWidth()-getScaledPixels(200)) * 1.78f);
+                                int requiredHeight=fl.getMeasuredHeight()-getScaledPixels(280);
+
+                                if (aspectHeight>requiredHeight)
+                                {
+                                    layoutParams.height=requiredHeight;
+                                    layoutParams.width= (int) (requiredHeight/1.78f);
+                                }
+                                else {
+                                    layoutParams.height=aspectHeight;
+                                    layoutParams.width = relativeLayout1.getMeasuredWidth()-getScaledPixels(200);
+                                }
+
                                 layoutParams.setMargins(getScaledPixels(140), getScaledPixels(140), getScaledPixels(140), getScaledPixels(140));
-                                layoutParams.width = relativeLayout1.getMeasuredWidth()-getScaledPixels(200);
-                                layoutHeight = layoutParams.height = (int) (layoutParams.width * 1.78f);
+                                layoutHeight = layoutParams.height;
+
                                 relativeLayout1.setLayoutParams(layoutParams);
 
                                 new Handler().post(new Runnable() {
@@ -183,9 +196,20 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1.getLayoutParams();
                         if (!inAppNotification.isTablet() || !isTablet()) {
                             if (isTablet()) {
-                                layoutParams.setMargins(getScaledPixels(140), getScaledPixels(140), getScaledPixels(140), getScaledPixels(140));
-                                layoutParams.height = relativeLayout1.getMeasuredHeight()-getScaledPixels(200);
-                                layoutParams.width = (int) (layoutParams.height *1.78f);
+                                int aspectWidth = (int) ((relativeLayout1.getMeasuredHeight()-getScaledPixels(120)) * 1.78f);
+                                int requiredWidth=fl.getMeasuredWidth()-getScaledPixels(280);
+
+                                if (aspectWidth>requiredWidth)
+                                {
+                                    layoutParams.width=requiredWidth;
+                                    layoutParams.height= (int) (requiredWidth/1.78f);
+                                }
+                                else {
+                                    layoutParams.width=aspectWidth;
+                                    layoutParams.height = relativeLayout1.getMeasuredHeight()-getScaledPixels(120);
+                                }
+
+                                layoutParams.setMargins(getScaledPixels(140), getScaledPixels(100), getScaledPixels(140), getScaledPixels(100));
                                 layoutParams.gravity=Gravity.CENTER;
                                 relativeLayout1.setLayoutParams(layoutParams);
 

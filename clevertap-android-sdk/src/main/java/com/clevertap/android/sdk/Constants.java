@@ -235,4 +235,6 @@ public class Constants {
     public static final String CT_PUSH_AMP_NOTIFICATION_CREATED = "PushAmp Notification Created";
     public static final String FEATURE_FLAG_UNIT = "Feature Flag : ";
     public static final String LOG_TAG_PRODUCT_CONFIG = "Product Config : ";
+    public static final int FETCH_TYPE_PC = 0;
+    public static final int FETCH_TYPE_FF = 1;
 }

@@ -148,7 +148,7 @@ public class CTFeatureFlagsController {
 
     }
 
-    private Boolean get(String key, boolean defaultValue) {
+    public Boolean get(String key, boolean defaultValue) {
         if(!isInitialized)
             return DEFAULT_VALUE_FOR_BOOLEAN;
         getConfigLogger().verbose(getAccountId(), "getting feature flag with key - " + key + " and default value - " + defaultValue);
@@ -171,6 +171,7 @@ public class CTFeatureFlagsController {
 
     public void resetWithGuid(String guid) {
         this.guid = guid;
+        init();
     }
 
     public boolean isInitialized() {
