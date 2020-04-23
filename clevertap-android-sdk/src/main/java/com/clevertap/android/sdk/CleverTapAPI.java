@@ -134,6 +134,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private WeakReference<DisplayUnitListener> displayUnitListenerWeakReference;
 
     private CTProductConfigController ctProductConfigController;
+    private boolean isProductConfigRequested;
 
     // Initialize
     private CleverTapAPI(final Context context, final CleverTapInstanceConfig config, String cleverTapID) {
@@ -147,9 +148,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (this.deviceInfo.getDeviceID() != null) {
             Logger.v("Initializing InAppFC with device Id = " + this.deviceInfo.getDeviceID());
             this.inAppFCManager = new InAppFCManager(context, config, this.deviceInfo.getDeviceID());
-            initFeatureFlags();
-
         }
+        initFeatureFlags(false);
 
         this.validator = new Validator();
 
@@ -1929,6 +1929,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private void lazyCreateSession(Context context) {
         if (!inCurrentSession()) {
             setFirstRequestInSession(true);
+            if(validator != null) {
+                validator.setDiscardedEvents(null);
+            }
             createSession(context);
             pushInitialEventsAsync();
         }
@@ -3440,6 +3443,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         if(ctProductConfigController!=null){
                             ctProductConfigController.setArpValue(arp);
                         }
+                        //Handle Discarded events in ARP
+                        try {
+                            processDiscardedEventsList(response);
+                        }catch (Throwable t){
+                            getConfigLogger().verbose("Error handling discarded events response: " + t.getLocalizedMessage());
+                        }
                         handleARPUpdate(context, arp);
                     }
                 }
@@ -3595,13 +3604,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 } catch (Throwable t) {
                     getConfigLogger().verbose("Error handling Product Config response: " + t.getLocalizedMessage());
                 }
-            }
-
-            //Handle Discarded Events
-            try {
-                processDiscardedEventsList(response);
-            }catch (Throwable t){
-                getConfigLogger().verbose("Error handling discarded events response: " + t.getLocalizedMessage());
             }
 
         } catch (Throwable t) {
@@ -6185,7 +6187,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         this.inAppFCManager = new InAppFCManager(context, config, deviceId);
         Logger.v("Initializing ABTesting after Device ID Created = " + deviceId);
         initABTesting();
-        initFeatureFlags();
+        initFeatureFlags(true);
         initProductConfig(true);
         getConfigLogger().verbose("Got device id from DeviceInfo, notifying user profile initialized to SyncListener");
         notifyUserProfileInitialized(deviceId);
@@ -8306,21 +8308,21 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         this.featureFlagsListener = featureFlagsListener;
     }
 
-    private void initFeatureFlags() {
+    private void initFeatureFlags(boolean fromPlayServices) {
         Logger.v("Initializing Feature Flags with device Id = " + getCleverTapID());
-        if (config.isAnalyticsOnly()) {
-            getConfigLogger().debug(config.getAccountId(), "Feature Flags is not enabled for this instance");
-            return;
-        }
 
-        if (getCleverTapID() == null) {
-            getConfigLogger().verbose(config.getAccountId(), "GUID not set yet, deferring Feature Flags initialization");
+        if (config.isAnalyticsOnly()) {
+            getConfigLogger().debug(config.getAccountId(), "Product Config is not enabled for this instance");
             return;
         }
 
         if (ctFeatureFlagsController == null) {
             ctFeatureFlagsController = new CTFeatureFlagsController(context, getCleverTapID(), config, this);
             getConfigLogger().verbose(config.getAccountId(), "Feature Flags initialized");
+        }
+
+        if (fromPlayServices && ctFeatureFlagsController != null && !ctFeatureFlagsController.isInitialized()) {
+            ctFeatureFlagsController.setGuidAndInit(getCleverTapID());
         }
     }
 
@@ -8363,31 +8365,47 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
 
         queueEvent(context, event, Constants.FETCH_EVENT);
+        isProductConfigRequested = true;
+        getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Fetching product config");
     }
 
     private void processProductConfigResponse(JSONObject response){
         if (response == null) {
             getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Can't parse Feature Flags Response, JSON response object is null");
+            onProductConfigFailed();
             return;
         }
 
         if (!response.has(Constants.REMOTE_CONFIG_FLAG_JSON_RESPONSE_KEY)) {
             getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "JSON object doesn't contain the Product Config key");
+            onProductConfigFailed();
             return;
         }
         try {
             getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Processing Feature Flags response");
             parseProductConfigs(response.getJSONObject(Constants.REMOTE_CONFIG_FLAG_JSON_RESPONSE_KEY));
         } catch (Throwable t) {
+            onProductConfigFailed();
             getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Failed to parse response", t);
+        }
+    }
+
+    private void onProductConfigFailed() {
+        if (isProductConfigRequested) {
+            if (ctProductConfigController != null) {
+                ctProductConfigController.onFetchFailed();
+            }
+            isProductConfigRequested = false;
         }
     }
 
     private void parseProductConfigs(JSONObject responseKV) throws JSONException {
         JSONArray kvArray = responseKV.getJSONArray(Constants.KEY_KV);
 
-        if (kvArray != null && productConfig() != null) {
-            productConfig().afterFetchProductConfig(responseKV);
+        if (kvArray != null && ctProductConfigController != null) {
+            productConfig().onFetchSuccess(responseKV);
+        }else {
+            onProductConfigFailed();
         }
     }
 
@@ -8406,7 +8424,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         Logger.v("Initializing Product Config with device Id = " + getCleverTapID());
 
         if (config.isAnalyticsOnly()) {
-            getConfigLogger().debug(config.getAccountId(), "Feature Flags is not enabled for this instance");
+            getConfigLogger().debug(config.getAccountId(), "Product Config is not enabled for this instance");
             return;
         }
 
@@ -8461,7 +8479,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     private void processDiscardedEventsList(JSONObject response){
         if (!response.has(Constants.DISCARDED_EVENT_JSON_KEY)) {
-            getConfigLogger().verbose(getAccountId(), "JSON object doesn't contain the Discarded Events key");
+            getConfigLogger().verbose(getAccountId(), "ARP doesn't contain the Discarded Events key");
             return;
         }
 
@@ -8476,6 +8494,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
             if (validator != null){
                 validator.setDiscardedEvents(discardedEventsList);
+            }else{
+                getConfigLogger().verbose(getAccountId(),"Validator object is NULL");
             }
         } catch (JSONException e) {
             getConfigLogger().verbose(getAccountId(), "Error parsing discarded events list" + e.getLocalizedMessage());
