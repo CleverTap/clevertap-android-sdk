@@ -1910,7 +1910,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (canShow) {
             if (currentlyDisplayingInApp != null) {
                 Fragment inAppFragment = activity.getFragmentManager().getFragment(new Bundle(), currentlyDisplayingInApp.getType());
-                if (getCurrentActivity() != null) {
+                if (getCurrentActivity() != null && inAppFragment!=null) {
                     FragmentTransaction fragmentTransaction = getCurrentActivity().getFragmentManager().beginTransaction();
                     Bundle bundle = new Bundle();
                     bundle.putParcelable("inApp", currentlyDisplayingInApp);
