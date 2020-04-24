@@ -1929,6 +1929,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private void lazyCreateSession(Context context) {
         if (!inCurrentSession()) {
             setFirstRequestInSession(true);
+            if(validator != null){
+                validator.setDiscardedEvents(null);
+            }
             createSession(context);
             pushInitialEventsAsync();
         }
@@ -3422,7 +3425,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         }
                         //Handle Discarded events in ARP
                         try {
-                            processDiscardedEventsList(response);
+                            processDiscardedEventsList(arp);
                         }catch (Throwable t){
                             getConfigLogger().verbose("Error handling discarded events response: " + t.getLocalizedMessage());
                         }
