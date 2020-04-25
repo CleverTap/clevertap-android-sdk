@@ -256,16 +256,7 @@ public class CTInboxListViewFragment extends Fragment {
         try {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url.replace("\n", "").replace("\r", "")));
             if(getActivity() != null) {
-                List<ResolveInfo> resolveInfoList = getActivity().getPackageManager().queryIntentActivities(intent, 0);
-                if (resolveInfoList != null) {
-                    String appPackageName = getActivity().getPackageName();
-                    for (ResolveInfo resolveInfo : resolveInfoList) {
-                        if (appPackageName.equals(resolveInfo.activityInfo.packageName)) {
-                            intent.setPackage(appPackageName);
-                            break;
-                        }
-                    }
-                }
+                Utils.setPackageNameFromResolveInfoList(getActivity(),intent);
             }
             startActivity(intent);
         } catch (Throwable t) {

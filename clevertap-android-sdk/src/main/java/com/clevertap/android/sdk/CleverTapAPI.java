@@ -2551,8 +2551,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 event.put("ep", System.currentTimeMillis() / 1000);
                 event.put("f", isFirstSession());
                 event.put("lsl", getLastSessionLength());
-                //event.put("frs", firstRequestInSession);
-                //firstRequestInSession = false;
                 attachPackageNameIfRequired(context, event);
 
                 // Report any pending validation error

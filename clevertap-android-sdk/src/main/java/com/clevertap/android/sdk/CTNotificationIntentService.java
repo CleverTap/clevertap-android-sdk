@@ -4,11 +4,8 @@ import android.app.IntentService;
 import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Bundle;
-
-import java.util.List;
 
 public class CTNotificationIntentService extends IntentService {
 
@@ -43,16 +40,7 @@ public class CTNotificationIntentService extends IntentService {
             Intent launchIntent;
             if (dl != null) {
                 launchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(dl));
-                List<ResolveInfo> resolveInfoList = context.getPackageManager().queryIntentActivities(launchIntent,0);
-                if(resolveInfoList != null){
-                    String appPackageName = context.getPackageName();
-                    for(ResolveInfo resolveInfo : resolveInfoList){
-                        if(appPackageName.equals(resolveInfo.activityInfo.packageName)){
-                            launchIntent.setPackage(appPackageName);
-                            break;
-                        }
-                    }
-                }
+                Utils.setPackageNameFromResolveInfoList(context,launchIntent);
             } else {
                 launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
             }
