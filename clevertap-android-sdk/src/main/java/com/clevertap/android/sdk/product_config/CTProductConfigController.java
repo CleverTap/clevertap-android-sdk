@@ -13,6 +13,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -29,11 +30,6 @@ import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.
 public class CTProductConfigController {
 
     private String guid;
-
-    public boolean isInitialized() {
-        return isInitialized;
-    }
-
     private boolean isInitialized = false;
     private final CleverTapInstanceConfig config;
     private final Context context;
@@ -44,7 +40,6 @@ public class CTProductConfigController {
     private boolean isFetchAndActivating = false;
     private final ProductConfigSettings settings;
 
-
     public CTProductConfigController(Context context, String guid, CleverTapInstanceConfig config, CTProductConfigControllerListener listener) {
         this.context = context;
         this.guid = guid;
@@ -52,6 +47,10 @@ public class CTProductConfigController {
         this.listener = listener;
         this.settings = new ProductConfigSettings(context, guid, config);
         initAsync();
+    }
+
+    public boolean isInitialized() {
+        return isInitialized;
     }
 
     private void initAsync() {
@@ -83,11 +82,7 @@ public class CTProductConfigController {
 
             @Override
             public void onPostExecute(Boolean isInitSuccess) {
-                if (isInitSuccess) {
-                    sendCallback(PROCESSING_STATE.INIT_SUCCESS);
-                } else {
-                    sendCallback(PROCESSING_STATE.INIT_FAILED);
-                }
+                sendCallback(PROCESSING_STATE.INIT);
             }
         });
     }
@@ -199,8 +194,6 @@ public class CTProductConfigController {
     public void fetch(long minimumFetchIntervalInSeconds) {
         if (canRequest(minimumFetchIntervalInSeconds)) {
             listener.fetchProductConfig();
-        } else {
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config: Throttled");
         }
     }
 
@@ -209,6 +202,8 @@ public class CTProductConfigController {
      */
     @SuppressWarnings("WeakerAccess")
     public void activate() {
+        if (TextUtils.isEmpty(guid))
+            return;
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
             @Override
             public Void doInBackground(Void params) {
@@ -331,8 +326,18 @@ public class CTProductConfigController {
     }
 
     private boolean canRequest(long minimumFetchIntervalInSeconds) {
-        return !TextUtils.isEmpty(guid)
-                && ((System.currentTimeMillis() - settings.getLastFetchTimeStampInMillis()) > TimeUnit.SECONDS.toMillis(minimumFetchIntervalInSeconds));
+        boolean validGuid = !TextUtils.isEmpty(guid);
+        if (!validGuid) {
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config: Throttled due to empty Guid");
+        }
+        long lastRequestTime = settings.getLastFetchTimeStampInMillis();
+
+        boolean isTimeExpired = (System.currentTimeMillis() - lastRequestTime) > TimeUnit.SECONDS.toMillis(minimumFetchIntervalInSeconds);
+        if (!isTimeExpired) {
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config: Throttled since you made frequent request- [Last Request Time-" + new Date(lastRequestTime) + "], Try again in " + TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - lastRequestTime - minimumFetchIntervalInSeconds * 1000L));
+        }
+        return validGuid
+                && isTimeExpired;
     }
 
     public void onFetchFailed() {
@@ -341,6 +346,8 @@ public class CTProductConfigController {
     }
 
     public void onFetchSuccess(JSONObject kvResponse) {
+        if (TextUtils.isEmpty(guid))
+            return;
         synchronized (this) {
             if (kvResponse != null) {
                 try {
@@ -463,11 +470,8 @@ public class CTProductConfigController {
     private void sendCallback(PROCESSING_STATE state) {
         if (state != null) {
             switch (state) {
-                case INIT_SUCCESS:
-                    listener.onInitSuccess();
-                    break;
-                case INIT_FAILED:
-                    listener.onInitFailed();
+                case INIT:
+                    listener.onInit();
                     break;
                 case FETCHED:
                     listener.onFetched();
@@ -489,8 +493,7 @@ public class CTProductConfigController {
     }
 
     private enum PROCESSING_STATE {
-        INIT_SUCCESS,
-        INIT_FAILED,
+        INIT,
         FETCHED,
         ACTIVATED
     }

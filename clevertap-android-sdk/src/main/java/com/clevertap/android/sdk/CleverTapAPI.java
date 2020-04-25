@@ -8417,7 +8417,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param listener The {@link CTProductConfigListener} object
      */
     @SuppressWarnings("unused")
-    public void setProductConfigListener(CTProductConfigListener listener) {
+    public void setCTProductConfigListener(CTProductConfigListener listener) {
         if (listener != null)
             this.productConfigListener = new WeakReference<>(listener);
     }
@@ -8438,16 +8438,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     @Override
-    public void onInitFailed() {
+    public void onInit() {
         if (productConfigListener != null && productConfigListener.get() != null) {
-            productConfigListener.get().onInitFailed();
-        }
-    }
-
-    @Override
-    public void onInitSuccess() {
-        if (productConfigListener != null && productConfigListener.get() != null) {
-            productConfigListener.get().onInitSuccess();
+            productConfigListener.get().onInit();
         }
     }
 
