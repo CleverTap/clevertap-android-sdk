@@ -209,20 +209,23 @@ public class CTProductConfigController {
             public Void doInBackground(Void params) {
                 synchronized (this) {
                     try {
+                        //read fetched info
+                        HashMap<String, String> toWriteValues = new HashMap<>();
+                        if (!fetchedConfig.isEmpty()) {
+                            toWriteValues.putAll(fetchedConfig);
+                        } else {
+                            toWriteValues = getStoredValues(getFetchedFullPath());
+                        }
+                        //return if we don't have any fetched values
+                        if (toWriteValues.isEmpty())
+                            return null;
+
                         activatedConfig.clear();
                         //apply default config first
                         if (defaultConfig != null && !defaultConfig.isEmpty()) {
                             activatedConfig.putAll(defaultConfig);
                         }
-                        //read fetched info
-                        HashMap<String, String> toWriteValues = new HashMap<>();
-                        if (!fetchedConfig.isEmpty()) {
-                            toWriteValues.putAll(fetchedConfig);
-                            activatedConfig.putAll(fetchedConfig);
-                        } else {
-                            toWriteValues = getStoredValues(getFetchedFullPath());
-                            activatedConfig.putAll(toWriteValues);
-                        }
+                        activatedConfig.putAll(toWriteValues);
                         FileUtils.writeJsonToFile(context, config, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(toWriteValues));
                         FileUtils.deleteFile(context, config, getFetchedFullPath());
                     } catch (Exception e) {
