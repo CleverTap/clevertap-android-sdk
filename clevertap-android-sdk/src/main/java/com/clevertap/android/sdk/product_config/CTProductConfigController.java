@@ -475,7 +475,14 @@ public class CTProductConfigController {
                     break;
             }
         }
+    }
 
+    /**
+     * Returns the last fetched timestamp in millis.
+     * @return
+     */
+    public long getLastFetchTimeStampInMillis() {
+        return settings.getLastFetchTimeStampInMillis();
     }
 
     /**
