@@ -35,7 +35,7 @@ public class CTProductConfigController {
     private final Context context;
     private HashMap<String, String> defaultConfig = new HashMap<>();
     private final HashMap<String, String> activatedConfig = new HashMap<>();
-    private final HashMap<String, String> fetchedConfig = new HashMap<>();
+    private final HashMap<String, String> waitingTobeActivatedConfig = new HashMap<>();
     private final CTProductConfigControllerListener listener;
     private boolean isFetchAndActivating = false;
     private final ProductConfigSettings settings;
@@ -61,13 +61,10 @@ public class CTProductConfigController {
             public Boolean doInBackground(Void params) {
                 synchronized (this) {
                     try {
-                        activatedConfig.clear();
-                        //apply default config first
-                        if (!defaultConfig.isEmpty()) {
-                            activatedConfig.putAll(defaultConfig);
-                        }
                         HashMap<String, String> storedConfig = getStoredValues(getActivatedFullPath());
-                        activatedConfig.putAll(storedConfig);
+                        if(!storedConfig.isEmpty()){
+                            waitingTobeActivatedConfig.putAll(storedConfig);
+                        }
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : initialized with configs: " + activatedConfig);
                         settings.loadSettings();
                         isInitialized = true;
@@ -211,10 +208,10 @@ public class CTProductConfigController {
                     try {
                         //read fetched info
                         HashMap<String, String> toWriteValues = new HashMap<>();
-                        if (!fetchedConfig.isEmpty()) {
-                            toWriteValues.putAll(fetchedConfig);
+                        if (!waitingTobeActivatedConfig.isEmpty()) {
+                            toWriteValues.putAll(waitingTobeActivatedConfig);
                         } else {
-                            toWriteValues = getStoredValues(getFetchedFullPath());
+                            toWriteValues = getStoredValues(getActivatedFullPath());
                         }
                         //return if we don't have any fetched values
                         if (toWriteValues.isEmpty())
@@ -226,8 +223,6 @@ public class CTProductConfigController {
                             activatedConfig.putAll(defaultConfig);
                         }
                         activatedConfig.putAll(toWriteValues);
-                        FileUtils.writeJsonToFile(context, config, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(toWriteValues));
-                        FileUtils.deleteFile(context, config, getFetchedFullPath());
                     } catch (Exception e) {
                         e.printStackTrace();
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : activate failed: " + e.getLocalizedMessage());
@@ -355,8 +350,8 @@ public class CTProductConfigController {
             if (kvResponse != null) {
                 try {
                     parseFetchedResponse(kvResponse);
-                    FileUtils.writeJsonToFile(context, config, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_FETCHED, new JSONObject(fetchedConfig));
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : fetch file write success: from init " + fetchedConfig);
+                    FileUtils.writeJsonToFile(context, config, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(waitingTobeActivatedConfig));
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : fetch file write success: from init " + waitingTobeActivatedConfig);
                     Utils.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -381,8 +376,8 @@ public class CTProductConfigController {
 
     private void parseFetchedResponse(JSONObject jsonObject) {
         HashMap<String, String> map = convertServerJsonToMap(jsonObject);
-        fetchedConfig.clear();
-        fetchedConfig.putAll(map);
+        waitingTobeActivatedConfig.clear();
+        waitingTobeActivatedConfig.putAll(map);
         config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config: Fetched response:" + jsonObject);
         Integer timestamp = null;
         try {
@@ -436,10 +431,6 @@ public class CTProductConfigController {
 
     private String getProductConfigDirName() {
         return CTProductConfigConstants.DIR_PRODUCT_CONFIG + "_" + config.getAccountId() + "_" + guid;
-    }
-
-    private String getFetchedFullPath() {
-        return getProductConfigDirName() + "/" + CTProductConfigConstants.FILE_NAME_FETCHED;
     }
 
     private String getActivatedFullPath() {
