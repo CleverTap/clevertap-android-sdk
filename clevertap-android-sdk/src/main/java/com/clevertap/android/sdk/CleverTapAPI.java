@@ -1910,7 +1910,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (canShow) {
             if (currentlyDisplayingInApp != null) {
                 Fragment inAppFragment = activity.getFragmentManager().getFragment(new Bundle(), currentlyDisplayingInApp.getType());
-                if (getCurrentActivity() != null) {
+                if (getCurrentActivity() != null && inAppFragment!=null) {
                     FragmentTransaction fragmentTransaction = getCurrentActivity().getFragmentManager().beginTransaction();
                     Bundle bundle = new Bundle();
                     bundle.putParcelable("inApp", currentlyDisplayingInApp);
@@ -2561,8 +2561,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 event.put("ep", System.currentTimeMillis() / 1000);
                 event.put("f", isFirstSession());
                 event.put("lsl", getLastSessionLength());
-                //event.put("frs", firstRequestInSession);
-                //firstRequestInSession = false;
                 attachPackageNameIfRequired(context, event);
 
                 // Report any pending validation error
@@ -8445,7 +8443,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param listener The {@link CTProductConfigListener} object
      */
     @SuppressWarnings("unused")
-    public void setProductConfigListener(CTProductConfigListener listener) {
+    public void setCTProductConfigListener(CTProductConfigListener listener) {
         if (listener != null)
             this.productConfigListener = new WeakReference<>(listener);
     }
@@ -8466,16 +8464,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     @Override
-    public void onInitFailed() {
+    public void onInit() {
         if (productConfigListener != null && productConfigListener.get() != null) {
-            productConfigListener.get().onInitFailed();
-        }
-    }
-
-    @Override
-    public void onInitSuccess() {
-        if (productConfigListener != null && productConfigListener.get() != null) {
-            productConfigListener.get().onInitSuccess();
+            productConfigListener.get().onInit();
         }
     }
 

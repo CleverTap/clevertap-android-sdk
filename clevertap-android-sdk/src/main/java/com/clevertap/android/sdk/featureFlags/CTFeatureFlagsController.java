@@ -8,6 +8,7 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.FileUtils;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.TaskManager;
+import com.clevertap.android.sdk.Utils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -23,11 +24,11 @@ import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.
 public class CTFeatureFlagsController {
 
     private String guid;
-    private CleverTapInstanceConfig config;
+    private final CleverTapInstanceConfig config;
     private HashMap<String, Boolean> store;
     private boolean isInitialized = false;
     private WeakReference<FeatureFlagListener> listenerWeakReference;
-    private Context mContext;
+    private final Context mContext;
 
     public CTFeatureFlagsController(Context context, String guid, CleverTapInstanceConfig config, FeatureFlagListener listener) {
         this.guid = guid;
@@ -73,7 +74,12 @@ public class CTFeatureFlagsController {
             getConfigLogger().verbose(getAccountId(), "Error parsing Feature Flag array " + e.getLocalizedMessage());
         }
         archiveData(jsonObject);
-        notifyFeatureFlagUpdate();
+        Utils.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                notifyFeatureFlagUpdate();
+            }
+        });
     }
 
     private void notifyFeatureFlagUpdate() {
@@ -149,7 +155,7 @@ public class CTFeatureFlagsController {
     }
 
     public Boolean get(String key, boolean defaultValue) {
-        if(!isInitialized)
+        if (!isInitialized)
             return DEFAULT_VALUE_FOR_BOOLEAN;
         getConfigLogger().verbose(getAccountId(), "getting feature flag with key - " + key + " and default value - " + defaultValue);
         Boolean value = store.get(key);

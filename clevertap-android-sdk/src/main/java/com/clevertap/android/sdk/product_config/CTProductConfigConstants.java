@@ -5,7 +5,6 @@ import java.util.concurrent.TimeUnit;
 public interface CTProductConfigConstants {
     String TAG_PRODUCT_CONFIG = "[Product Config]:";
     String DIR_PRODUCT_CONFIG = "Product_Config";
-    String FILE_NAME_FETCHED = "fetched.json";
     String FILE_NAME_ACTIVATED = "activated.json";
     String FILE_NAME_CONFIG_SETTINGS = "config_settings.json";
     String PRODUCT_CONFIG_JSON_KEY_FOR_KEY = "n";

@@ -13,6 +13,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -29,21 +30,15 @@ import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.
 public class CTProductConfigController {
 
     private String guid;
-
-    public boolean isInitialized() {
-        return isInitialized;
-    }
-
     private boolean isInitialized = false;
     private final CleverTapInstanceConfig config;
     private final Context context;
     private HashMap<String, String> defaultConfig = new HashMap<>();
     private final HashMap<String, String> activatedConfig = new HashMap<>();
-    private final HashMap<String, String> fetchedConfig = new HashMap<>();
+    private final HashMap<String, String> waitingTobeActivatedConfig = new HashMap<>();
     private final CTProductConfigControllerListener listener;
     private boolean isFetchAndActivating = false;
     private final ProductConfigSettings settings;
-
 
     public CTProductConfigController(Context context, String guid, CleverTapInstanceConfig config, CTProductConfigControllerListener listener) {
         this.context = context;
@@ -54,6 +49,10 @@ public class CTProductConfigController {
         initAsync();
     }
 
+    public boolean isInitialized() {
+        return isInitialized;
+    }
+
     private void initAsync() {
         if (TextUtils.isEmpty(guid))
             return;
@@ -62,13 +61,10 @@ public class CTProductConfigController {
             public Boolean doInBackground(Void params) {
                 synchronized (this) {
                     try {
-                        activatedConfig.clear();
-                        //apply default config first
-                        if (!defaultConfig.isEmpty()) {
-                            activatedConfig.putAll(defaultConfig);
-                        }
                         HashMap<String, String> storedConfig = getStoredValues(getActivatedFullPath());
-                        activatedConfig.putAll(storedConfig);
+                        if(!storedConfig.isEmpty()){
+                            waitingTobeActivatedConfig.putAll(storedConfig);
+                        }
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : initialized with configs: " + activatedConfig);
                         settings.loadSettings();
                         isInitialized = true;
@@ -83,11 +79,7 @@ public class CTProductConfigController {
 
             @Override
             public void onPostExecute(Boolean isInitSuccess) {
-                if (isInitSuccess) {
-                    sendCallback(PROCESSING_STATE.INIT_SUCCESS);
-                } else {
-                    sendCallback(PROCESSING_STATE.INIT_FAILED);
-                }
+                sendCallback(PROCESSING_STATE.INIT);
             }
         });
     }
@@ -199,8 +191,6 @@ public class CTProductConfigController {
     public void fetch(long minimumFetchIntervalInSeconds) {
         if (canRequest(minimumFetchIntervalInSeconds)) {
             listener.fetchProductConfig();
-        } else {
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config: Throttled");
         }
     }
 
@@ -209,27 +199,30 @@ public class CTProductConfigController {
      */
     @SuppressWarnings("WeakerAccess")
     public void activate() {
+        if (TextUtils.isEmpty(guid))
+            return;
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
             @Override
             public Void doInBackground(Void params) {
                 synchronized (this) {
                     try {
+                        //read fetched info
+                        HashMap<String, String> toWriteValues = new HashMap<>();
+                        if (!waitingTobeActivatedConfig.isEmpty()) {
+                            toWriteValues.putAll(waitingTobeActivatedConfig);
+                        } else {
+                            toWriteValues = getStoredValues(getActivatedFullPath());
+                        }
+                        //return if we don't have any fetched values
+                        if (toWriteValues.isEmpty())
+                            return null;
+
                         activatedConfig.clear();
                         //apply default config first
                         if (defaultConfig != null && !defaultConfig.isEmpty()) {
                             activatedConfig.putAll(defaultConfig);
                         }
-                        //read fetched info
-                        HashMap<String, String> toWriteValues = new HashMap<>();
-                        if (!fetchedConfig.isEmpty()) {
-                            toWriteValues.putAll(fetchedConfig);
-                            activatedConfig.putAll(fetchedConfig);
-                        } else {
-                            toWriteValues = getStoredValues(getFetchedFullPath());
-                            activatedConfig.putAll(toWriteValues);
-                        }
-                        FileUtils.writeJsonToFile(context, config, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(toWriteValues));
-                        FileUtils.deleteFile(context, config, getFetchedFullPath());
+                        activatedConfig.putAll(toWriteValues);
                     } catch (Exception e) {
                         e.printStackTrace();
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : activate failed: " + e.getLocalizedMessage());
@@ -331,8 +324,18 @@ public class CTProductConfigController {
     }
 
     private boolean canRequest(long minimumFetchIntervalInSeconds) {
-        return !TextUtils.isEmpty(guid)
-                && ((System.currentTimeMillis() - settings.getLastFetchTimeStampInMillis()) > TimeUnit.SECONDS.toMillis(minimumFetchIntervalInSeconds));
+        boolean validGuid = !TextUtils.isEmpty(guid);
+        if (!validGuid) {
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config: Throttled due to empty Guid");
+        }
+        long lastRequestTime = settings.getLastFetchTimeStampInMillis();
+
+        boolean isTimeExpired = (System.currentTimeMillis() - lastRequestTime) > TimeUnit.SECONDS.toMillis(minimumFetchIntervalInSeconds);
+        if (!isTimeExpired) {
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config: Throttled since you made frequent request- [Last Request Time-" + new Date(lastRequestTime) + "], Try again in " + TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - lastRequestTime - minimumFetchIntervalInSeconds * 1000L));
+        }
+        return validGuid
+                && isTimeExpired;
     }
 
     public void onFetchFailed() {
@@ -341,12 +344,14 @@ public class CTProductConfigController {
     }
 
     public void onFetchSuccess(JSONObject kvResponse) {
+        if (TextUtils.isEmpty(guid))
+            return;
         synchronized (this) {
             if (kvResponse != null) {
                 try {
                     parseFetchedResponse(kvResponse);
-                    FileUtils.writeJsonToFile(context, config, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_FETCHED, new JSONObject(fetchedConfig));
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : fetch file write success: from init " + fetchedConfig);
+                    FileUtils.writeJsonToFile(context, config, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(waitingTobeActivatedConfig));
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : fetch file write success: from init " + waitingTobeActivatedConfig);
                     Utils.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -371,8 +376,8 @@ public class CTProductConfigController {
 
     private void parseFetchedResponse(JSONObject jsonObject) {
         HashMap<String, String> map = convertServerJsonToMap(jsonObject);
-        fetchedConfig.clear();
-        fetchedConfig.putAll(map);
+        waitingTobeActivatedConfig.clear();
+        waitingTobeActivatedConfig.putAll(map);
         config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config: Fetched response:" + jsonObject);
         Integer timestamp = null;
         try {
@@ -428,10 +433,6 @@ public class CTProductConfigController {
         return CTProductConfigConstants.DIR_PRODUCT_CONFIG + "_" + config.getAccountId() + "_" + guid;
     }
 
-    private String getFetchedFullPath() {
-        return getProductConfigDirName() + "/" + CTProductConfigConstants.FILE_NAME_FETCHED;
-    }
-
     private String getActivatedFullPath() {
         return getProductConfigDirName() + "/" + CTProductConfigConstants.FILE_NAME_ACTIVATED;
     }
@@ -463,11 +464,8 @@ public class CTProductConfigController {
     private void sendCallback(PROCESSING_STATE state) {
         if (state != null) {
             switch (state) {
-                case INIT_SUCCESS:
-                    listener.onInitSuccess();
-                    break;
-                case INIT_FAILED:
-                    listener.onInitFailed();
+                case INIT:
+                    listener.onInit();
                     break;
                 case FETCHED:
                     listener.onFetched();
@@ -477,7 +475,14 @@ public class CTProductConfigController {
                     break;
             }
         }
+    }
 
+    /**
+     * Returns the last fetched timestamp in millis.
+     * @return
+     */
+    public long getLastFetchTimeStampInMillis() {
+        return settings.getLastFetchTimeStampInMillis();
     }
 
     /**
@@ -489,8 +494,7 @@ public class CTProductConfigController {
     }
 
     private enum PROCESSING_STATE {
-        INIT_SUCCESS,
-        INIT_FAILED,
+        INIT,
         FETCHED,
         ACTIVATED
     }

@@ -2,6 +2,8 @@ package com.clevertap.android.sdk;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -26,6 +28,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 
@@ -300,6 +303,19 @@ public final class Utils {
             bundle.putString(key,value);
         }
         return bundle;
+    }
+
+    static void setPackageNameFromResolveInfoList(Context context, Intent launchIntent){
+        List<ResolveInfo> resolveInfoList = context.getPackageManager().queryIntentActivities(launchIntent,0);
+        if(resolveInfoList != null){
+            String appPackageName = context.getPackageName();
+            for(ResolveInfo resolveInfo : resolveInfoList){
+                if(appPackageName.equals(resolveInfo.activityInfo.packageName)){
+                    launchIntent.setPackage(appPackageName);
+                    break;
+                }
+            }
+        }
     }
 
 }

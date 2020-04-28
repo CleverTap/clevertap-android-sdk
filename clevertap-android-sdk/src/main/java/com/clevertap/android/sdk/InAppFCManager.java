@@ -83,41 +83,45 @@ class InAppFCManager {
     }
 
     private void init(String deviceId){
-        migrateToNewPrefsKey(deviceId);
-        final String today = ddMMyyyy.format(new Date());
-        final String lastUpdated = getStringFromPrefs(getKeyWithDeviceId("ict_date",deviceId), "20140428");
-        if (!today.equals(lastUpdated)) {
-            StorageHelper.putString(context, storageKeyWithSuffix(getKeyWithDeviceId("ict_date",deviceId)), today);
+        try {
+            migrateToNewPrefsKey(deviceId);
+            final String today = ddMMyyyy.format(new Date());
+            final String lastUpdated = getStringFromPrefs(getKeyWithDeviceId("ict_date", deviceId), "20140428");
+            if (!today.equals(lastUpdated)) {
+                StorageHelper.putString(context, storageKeyWithSuffix(getKeyWithDeviceId("ict_date", deviceId)), today);
 
-            // Reset today count
-            StorageHelper.putInt(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY,deviceId)), 0);
+                // Reset today count
+                StorageHelper.putInt(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId)), 0);
 
-            // Reset the counts for each inapp
-            final SharedPreferences prefs = getPreferences(context, getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP,deviceId));
-            final SharedPreferences.Editor editor = prefs.edit();
-            final Map<String, ?> all = prefs.getAll();
-            for (String inapp : all.keySet()) {
-                Object ov = all.get(inapp);
-                if (!(ov instanceof String)) {
-                    editor.remove(inapp);
-                    continue;
+                // Reset the counts for each inapp
+                final SharedPreferences prefs = getPreferences(context, getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId));
+                final SharedPreferences.Editor editor = prefs.edit();
+                final Map<String, ?> all = prefs.getAll();
+                for (String inapp : all.keySet()) {
+                    Object ov = all.get(inapp);
+                    if (!(ov instanceof String)) {
+                        editor.remove(inapp);
+                        continue;
+                    }
+
+                    String[] oldValues = ((String) ov).split(",");
+                    if (oldValues.length != 2) {
+                        editor.remove(inapp);
+                        continue;
+                    }
+
+                    // protocol: todayCount,lifeTimeCount
+                    try {
+                        editor.putString(inapp, "0," + oldValues[1]);
+                    } catch (Throwable t) {
+                        getConfigLogger().verbose(getConfigAccountId(), "Failed to reset todayCount for inapp " + inapp, t);
+                    }
                 }
 
-                String[] oldValues = ((String) ov).split(",");
-                if (oldValues.length != 2) {
-                    editor.remove(inapp);
-                    continue;
-                }
-
-                // protocol: todayCount,lifeTimeCount
-                try {
-                    editor.putString(inapp, "0," + oldValues[1]);
-                } catch (Throwable t) {
-                    getConfigLogger().verbose(getConfigAccountId(),"Failed to reset todayCount for inapp " + inapp, t);
-                }
+                StorageHelper.persist(editor);
             }
-
-            StorageHelper.persist(editor);
+        } catch (Exception e) {
+            getConfigLogger().verbose(getConfigAccountId(), "Failed to init inapp manager " + e.getLocalizedMessage());
         }
     }
 

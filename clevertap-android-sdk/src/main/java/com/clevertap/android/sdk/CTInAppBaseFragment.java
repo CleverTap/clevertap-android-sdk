@@ -124,16 +124,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
             if (!queryBundle.isEmpty()) {
                 intent.putExtras(queryBundle);
             }
-            List<ResolveInfo> resolveInfoList = getActivity().getPackageManager().queryIntentActivities(intent,0);
-            if(resolveInfoList != null){
-                String appPackageName = getActivity().getPackageName();
-                for(ResolveInfo resolveInfo : resolveInfoList){
-                    if(appPackageName.equals(resolveInfo.activityInfo.packageName)){
-                        intent.setPackage(appPackageName);
-                        break;
-                    }
-                }
-            }
+            Utils.setPackageNameFromResolveInfoList(getActivity(),intent);
             startActivity(intent);
         } catch (Throwable t) {
             // Ignore
