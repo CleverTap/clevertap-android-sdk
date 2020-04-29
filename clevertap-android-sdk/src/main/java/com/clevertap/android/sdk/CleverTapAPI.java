@@ -315,7 +315,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private CTDisplayUnitController mCTDisplayUnitController;
 
     private CTFeatureFlagsController ctFeatureFlagsController;
-    private CTFeatureFlagsListener featureFlagsListener = null;
+    private WeakReference<CTFeatureFlagsListener> featureFlagsListener;
     private WeakReference<CTProductConfigListener> productConfigListener;
 
     // static lifecycle callbacks
@@ -7980,7 +7980,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     // -----------------------------------------------------------------------//
-    // ********                        Display Unit LOGIC                      *****//
+    // ********                        Display Unit LOGIC                *****//
     // -----------------------------------------------------------------------//
 
     /**
@@ -8193,16 +8193,56 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     // -----------------------------------------------------------------------//
-    // ********                        Feature Flags Logic                      *****//
+    // ********                        Feature Flags Logic               *****//
     // -----------------------------------------------------------------------//
 
+    // ********                       Feature Flags Public API           *****//
 
     /**
-     * Use this method to raise fetch event for Feature Flags
+     * @return object of {@link CTFeatureFlagsController}
+     * handler to get the feature flag values
+     */
+    public CTFeatureFlagsController featureFlag() {
+        return ctFeatureFlagsController;
+    }
+
+    /**
+     * This method is used to set the CTFeatureFlagsListener to get
+     *
+     * @param featureFlagsListener The {@link CTFeatureFlagsListener} object
+     */
+    @SuppressWarnings("unused")
+    public void setCTFeatureFlagsListener(CTFeatureFlagsListener featureFlagsListener) {
+        this.featureFlagsListener = new WeakReference<>(featureFlagsListener);
+    }
+
+    // ********                        Feature Flags Internal methods        *****//
+
+    private void initFeatureFlags(boolean fromPlayServices) {
+        Logger.v("Initializing Feature Flags with device Id = " + getCleverTapID());
+
+        if (config.isAnalyticsOnly()) {
+            getConfigLogger().debug(config.getAccountId(), "Feature Flag is not enabled for this instance");
+            return;
+        }
+
+        if (ctFeatureFlagsController == null) {
+            ctFeatureFlagsController = new CTFeatureFlagsController(context, getCleverTapID(), config, this);
+            getConfigLogger().verbose(config.getAccountId(), "Feature Flags initialized");
+        }
+
+        if (fromPlayServices && !ctFeatureFlagsController.isInitialized()) {
+            ctFeatureFlagsController.setGuidAndInit(getCleverTapID());
+        }
+    }
+
+    /**
+     * This method is internal to the clevertap SDK.
+     * Developer should not use this method to raise fetch event for Feature Flags manually
      */
     @Override
     public void fetchFeatureFlags() {
-        if(config.isAnalyticsOnly())
+        if (config.isAnalyticsOnly())
             return;
         JSONObject event = new JSONObject();
         JSONObject notif = new JSONObject();
@@ -8215,14 +8255,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
 
         queueEvent(context, event, Constants.FETCH_EVENT);
-    }
-
-    /**
-     * @return object of {@link CTFeatureFlagsController}
-     * handler to get the feature flag values
-     */
-    public CTFeatureFlagsController featureFlag() {
-        return ctFeatureFlagsController;
     }
 
     private void processFeatureFlagsResponse(JSONObject response) {
@@ -8251,56 +8283,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
-    @Override
-    public void featureFlagsDidUpdate() {
-        try {
-            final CTFeatureFlagsListener sl = getCTFeatureFlagsListener();
-            if (sl != null) {
-                sl.featureFlagsUpdated();
-            }
-        } catch (Throwable t) {
-            // no-op
-        }
-    }
-
-    /**
-     * Returns the CTFeatureFlagsListener object
-     *
-     * @return The {@link CTFeatureFlagsListener} object
-     */
-    @SuppressWarnings("WeakerAccess")
-    public CTFeatureFlagsListener getCTFeatureFlagsListener() {
-        return featureFlagsListener;
-    }
-
-    /**
-     * This method is used to set the CTFeatureFlagsListener
-     *
-     * @param featureFlagsListener The {@link CTFeatureFlagsListener} object
-     */
-    @SuppressWarnings("unused")
-    public void setCTFeatureFlagsListener(CTFeatureFlagsListener featureFlagsListener) {
-        this.featureFlagsListener = featureFlagsListener;
-    }
-
-    private void initFeatureFlags(boolean fromPlayServices) {
-        Logger.v("Initializing Feature Flags with device Id = " + getCleverTapID());
-
-        if (config.isAnalyticsOnly()) {
-            getConfigLogger().debug(config.getAccountId(), "Product Config is not enabled for this instance");
-            return;
-        }
-
-        if (ctFeatureFlagsController == null) {
-            ctFeatureFlagsController = new CTFeatureFlagsController(context, getCleverTapID(), config, this);
-            getConfigLogger().verbose(config.getAccountId(), "Feature Flags initialized");
-        }
-
-        if (fromPlayServices && ctFeatureFlagsController != null && !ctFeatureFlagsController.isInitialized()) {
-            ctFeatureFlagsController.setGuidAndInit(getCleverTapID());
-        }
-    }
-
     private void resetFeatureFlags() {
         if (ctFeatureFlagsController != null && ctFeatureFlagsController.isInitialized()) {
             ctFeatureFlagsController.resetWithGuid(getCleverTapID());
@@ -8309,12 +8291,29 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
-     * PRODUCT CONFIG
+     * This method is internal to the CleverTap SDK.
+     * Developers should not use this method
      */
+    @Override
+    public void featureFlagsDidUpdate() {
+        try {
+            if (featureFlagsListener != null && featureFlagsListener.get()!= null) {
+                featureFlagsListener.get().featureFlagsUpdated();
+            }
+        } catch (Throwable t) {
+            // no-op
+        }
+    }
+    // -----------------------------------------------------------------------//
+    // ********                        PRODUCT CONFIG Logic               *****//
+    // -----------------------------------------------------------------------//
+
+    // ********                       PRODUCT CONFIG Public API           *****//
+
 
     /**
-     * The handle to call fetch/Activate remote values.
-     * @return
+     * The handle for product config functionalities(fetch/activate etc.)
+     * @return - the instance of {@link CTProductConfigController}
      */
     @SuppressWarnings("WeakerAccess")
     public CTProductConfigController productConfig() {
@@ -8324,7 +8323,20 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
-     * Use this method to raise fetch event for Product Config
+     * This method is used to set the product config listener to receive callbacks
+     *
+     * @param listener The {@link CTProductConfigListener} instance
+     */
+    @SuppressWarnings("unused")
+    public void setCTProductConfigListener(CTProductConfigListener listener) {
+        if (listener != null)
+            this.productConfigListener = new WeakReference<>(listener);
+    }
+
+    // ********                       PRODUCT CONFIG Internal API           *****//
+    /**
+     * This method is internal to CleverTap SDK.
+     * Developer should not use this method manually.
      */
     @Override
     public void fetchProductConfig() {
@@ -8345,7 +8357,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     private void processProductConfigResponse(JSONObject response){
         if (response == null) {
-            getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Can't parse Feature Flags Response, JSON response object is null");
+            getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Can't parse Product Config Response, JSON response object is null");
             onProductConfigFailed();
             return;
         }
@@ -8356,11 +8368,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             return;
         }
         try {
-            getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Processing Feature Flags response");
+            getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Processing Product Config response");
             parseProductConfigs(response.getJSONObject(Constants.REMOTE_CONFIG_FLAG_JSON_RESPONSE_KEY));
         } catch (Throwable t) {
             onProductConfigFailed();
-            getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Failed to parse response", t);
+            getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Failed to parse Product Config response", t);
         }
     }
 
@@ -8404,25 +8416,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         if (ctProductConfigController == null) {
             ctProductConfigController = new CTProductConfigController(context, getCleverTapID(), config, this);
-            getConfigLogger().verbose(config.getAccountId(), "Product Config initialized");
         }
-        if (fromPlayServices && ctProductConfigController != null && !ctProductConfigController.isInitialized()) {
+        if (fromPlayServices && !ctProductConfigController.isInitialized()) {
             ctProductConfigController.setGuidAndInit(getCleverTapID());
         }
     }
 
     /**
-     * This method is used to set` the {@link CTProductConfigListener} object
-     *
-     * @param listener The {@link CTProductConfigListener} object
+     * This method is internal to CleverTap SDK.
+     * Developer should not use this method manually.
      */
-    @SuppressWarnings("unused")
-    public void setCTProductConfigListener(CTProductConfigListener listener) {
-        if (listener != null)
-            this.productConfigListener = new WeakReference<>(listener);
-    }
-
-
     @Override
     public void onActivated() {
         if (productConfigListener != null && productConfigListener.get() != null) {
@@ -8430,6 +8433,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+    /**
+     * This method is internal to CleverTap SDK.
+     * Developer should not use this method manually.
+     */
     @Override
     public void onFetched() {
         if (productConfigListener != null && productConfigListener.get() != null) {
@@ -8437,9 +8444,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+    /**
+     * This method is internal to CleverTap SDK.
+     * Developer should not use this method manually.
+     */
     @Override
     public void onInit() {
         if (productConfigListener != null && productConfigListener.get() != null) {
+            getConfigLogger().verbose(config.getAccountId(), "Product Config initialized");
             productConfigListener.get().onInit();
         }
     }
@@ -8467,6 +8479,5 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         } catch (JSONException e) {
             getConfigLogger().verbose(getAccountId(), "Error parsing discarded events list" + e.getLocalizedMessage());
         }
-
     }
 }

@@ -17,7 +17,6 @@ import org.json.JSONObject;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 
-import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_VALUE_FOR_BOOLEAN;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_JSON_KEY_FOR_KEY;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_JSON_KEY_FOR_VALUE;
 
@@ -27,41 +26,58 @@ public class CTFeatureFlagsController {
     private final CleverTapInstanceConfig config;
     private HashMap<String, Boolean> store;
     private boolean isInitialized = false;
-    private WeakReference<FeatureFlagListener> listenerWeakReference;
+    private final WeakReference<FeatureFlagListener> listenerWeakReference;
     private final Context mContext;
 
     public CTFeatureFlagsController(Context context, String guid, CleverTapInstanceConfig config, FeatureFlagListener listener) {
         this.guid = guid;
         this.config = config;
         this.store = new HashMap<>();
-        this.setListener(listener);
+        listenerWeakReference = new WeakReference<>(listener);
         this.mContext = context.getApplicationContext();
         init();
     }
 
+    // -----------------------------------------------------------------------//
+    // ********                        Public API                        *****//
+    // -----------------------------------------------------------------------//
+
+    public boolean isInitialized() {
+        return isInitialized;
+    }
+
+    public Boolean get(String key, boolean defaultValue) {
+        if (!isInitialized) {
+            getConfigLogger().verbose(getAccountId(), "Controller not initialized, returning default value - " + defaultValue);
+            return defaultValue;
+        }
+        getConfigLogger().verbose(getAccountId(), "getting feature flag with key - " + key + " and default value - " + defaultValue);
+        Boolean value = store.get(key);
+        if (value != null) {
+            return store.get(key);
+        } else {
+            getConfigLogger().verbose(getAccountId(), "feature flag not found, returning default value - " + defaultValue);
+            return defaultValue;
+        }
+    }
+
+    // -----------------------------------------------------------------------//
+    // ********                        Internal API                      *****//
+    // -----------------------------------------------------------------------//
+
+    /**
+     * This method is internal to the CleverTap SDK.
+     * Developers should not use this method
+     */
     public void setGuidAndInit(String cleverTapID) {
         this.guid = cleverTapID;
         init();
     }
 
-    private void setListener(FeatureFlagListener listener) {
-        listenerWeakReference = new WeakReference<>(listener);
-    }
-
-    private FeatureFlagListener getListener() {
-        FeatureFlagListener listener = null;
-        try {
-            listener = listenerWeakReference.get();
-        } catch (Throwable t) {
-            // no-op
-        }
-        if (listener == null) {
-            config.getLogger().verbose(config.getAccountId(), "CTABTestListener is null in CTABTestController");
-        }
-        return listener;
-    }
-
-
+    /**
+     * This method is internal to the CleverTap SDK.
+     * Developers should not use this method
+     */
     public void updateFeatureFlags(JSONObject jsonObject) throws JSONException {
         getConfigLogger().verbose(getAccountId(), "Updating feature flags...");
         JSONArray featureFlagList = jsonObject.getJSONArray(Constants.KEY_KV);
@@ -74,25 +90,32 @@ public class CTFeatureFlagsController {
             getConfigLogger().verbose(getAccountId(), "Error parsing Feature Flag array " + e.getLocalizedMessage());
         }
         archiveData(jsonObject);
-        Utils.runOnUiThread(new Runnable() {
-            @Override
-            public void run() {
-                notifyFeatureFlagUpdate();
-            }
-        });
+        notifyFeatureFlagUpdate();
     }
 
     private void notifyFeatureFlagUpdate() {
-        FeatureFlagListener listener = getListener();
-        if (listener != null) {
-            listener.featureFlagsDidUpdate();
+        if (listenerWeakReference != null && listenerWeakReference.get() != null) {
+            Utils.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    listenerWeakReference.get().featureFlagsDidUpdate();
+                }
+            });
         }
     }
 
+    /**
+     * This method is internal to the CleverTap SDK.
+     * Developers should not use this method
+     */
     public void fetchFeatureFlags() {
-        FeatureFlagListener listener = getListener();
-        if (listener != null) {
-            listener.fetchFeatureFlags();
+        if (listenerWeakReference != null && listenerWeakReference.get() != null) {
+            Utils.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    listenerWeakReference.get().fetchFeatureFlags();
+                }
+            });
         }
     }
 
@@ -154,19 +177,6 @@ public class CTFeatureFlagsController {
 
     }
 
-    public Boolean get(String key, boolean defaultValue) {
-        if (!isInitialized)
-            return DEFAULT_VALUE_FOR_BOOLEAN;
-        getConfigLogger().verbose(getAccountId(), "getting feature flag with key - " + key + " and default value - " + defaultValue);
-        Boolean value = store.get(key);
-        if (value != null) {
-            return store.get(key);
-        } else {
-            getConfigLogger().verbose(getAccountId(), "feature flag not found, returning default value - " + defaultValue);
-            return defaultValue;
-        }
-    }
-
     private Logger getConfigLogger() {
         return config.getLogger();
     }
@@ -175,15 +185,14 @@ public class CTFeatureFlagsController {
         return config.getAccountId();
     }
 
+    /**
+     * This method is internal to the CleverTap SDK.
+     * Developers should not use this method
+     */
     public void resetWithGuid(String guid) {
         this.guid = guid;
         init();
     }
-
-    public boolean isInitialized() {
-        return isInitialized;
-    }
-
 
     private String getCachedFileName() {
         return CTFeatureFlagConstants.CACHED_FILE_NAME;
