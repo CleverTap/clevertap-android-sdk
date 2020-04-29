@@ -22,6 +22,7 @@ public class CTPushNotificationReceiver extends BroadcastReceiver {
 
             if (extras.containsKey(Constants.DEEP_LINK_KEY)){
                 launchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(intent.getStringExtra(Constants.DEEP_LINK_KEY)));
+                Utils.setPackageNameFromResolveInfoList(context,launchIntent);
             } else {
                 launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
                 if (launchIntent == null) {

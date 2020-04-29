@@ -66,6 +66,7 @@ public class Constants {
     static final String DISPLAY_UNIT_JSON_RESPONSE_KEY = "adUnit_notifs";
     static final String FEATURE_FLAG_JSON_RESPONSE_KEY = "ff_notifs";
     static final String REMOTE_CONFIG_FLAG_JSON_RESPONSE_KEY = "pc_notifs";
+    static final String DISCARDED_EVENT_JSON_KEY = "d_e";
     static final String INAPP_MAX_DISPLAY_COUNT = "mdc";
     static final String INAPP_MAX_PER_SESSION = "imc";
     static final String INAPP_WINDOW = "w";
@@ -234,4 +235,6 @@ public class Constants {
     public static final String CT_PUSH_AMP_NOTIFICATION_CREATED = "PushAmp Notification Created";
     public static final String FEATURE_FLAG_UNIT = "Feature Flag : ";
     public static final String LOG_TAG_PRODUCT_CONFIG = "Product Config : ";
+    public static final int FETCH_TYPE_PC = 0;
+    public static final int FETCH_TYPE_FF = 1;
 }

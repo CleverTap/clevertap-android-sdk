@@ -30,7 +30,7 @@
             android:layout_centerHorizontal="true"
             android:layout_marginTop="34dp"
             android:gravity="center"
-            android:textSize="21sp"
+            android:textSize="@dimen/txt_size_inapp_half_title"
             android:textStyle="bold"
             android:textColor="@android:color/black"/>
 
@@ -42,7 +42,7 @@
             android:layout_below="@+id/half_interstitial_title"
             android:layout_marginTop="30dp"
             android:gravity="center"
-            android:textSize="16sp"/>
+            android:textSize="@dimen/txt_size_inapp_half_message"/>
 
         <LinearLayout
             android:id="@+id/half_interstitial_linear_layout"
@@ -62,14 +62,14 @@
                 android:id="@+id/half_interstitial_button1"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/inapp_button_height"
-                android:textSize="16sp"
+                android:textSize="@dimen/txt_size_inapp_half_button"
                 android:visibility="invisible" />
 
             <Button
                 android:id="@+id/half_interstitial_button2"
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/inapp_button_height"
-                android:textSize="16sp"
+                android:textSize="@dimen/txt_size_inapp_half_button"
                 android:layout_marginTop="12dp"
                 android:visibility="invisible" />
         </LinearLayout>

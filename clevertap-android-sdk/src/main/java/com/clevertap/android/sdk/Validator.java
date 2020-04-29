@@ -24,6 +24,7 @@ final class Validator {
     static final String ADD_VALUES_OPERATION = "multiValuePropertyAddValues";
     static final String REMOVE_VALUES_OPERATION = "multiValuePropertyRemoveValues";
 
+
     @SuppressWarnings("unused")
     private enum RestrictedMultiValueFields {
         Name(), Email(), Education(),
@@ -33,6 +34,16 @@ final class Validator {
 
     enum ValidationContext {
         Profile(), Event()
+    }
+
+    private ArrayList<String> discardedEvents;
+
+    private ArrayList<String> getDiscardedEvents() {
+        return discardedEvents;
+    }
+
+    public void setDiscardedEvents(ArrayList<String> discardedEvents) {
+        this.discardedEvents = discardedEvents;
     }
 
     /**
@@ -302,6 +313,33 @@ final class Validator {
                 Logger.v(name + " is a restricted system event name. Last event aborted.");
                 return error;
             }
+        return error;
+    }
+
+    /**
+     * Checks whether the specified event name has been discarded from Dashboard. If it is,
+     * then create a pending error, and abort.
+     *
+     * @param name The event name
+     * @return Boolean indication whether the event name has been discarded from Dashboard
+     */
+    ValidationResult isEventDiscarded(String name) {
+        ValidationResult error = new ValidationResult();
+        if (name == null) {
+            error.setErrorCode(510);
+            error.setErrorDesc("Event Name is null");
+            return error;
+        }
+        if(getDiscardedEvents() != null) {
+            for (String x : getDiscardedEvents())
+                if (name.equalsIgnoreCase(x)) {
+                    // The event name is discarded
+                    error.setErrorCode(513);
+                    error.setErrorDesc(name + " is a discarded event name. Last event aborted.");
+                    Logger.v(name + " is a discarded event name. Last event aborted.");
+                    return error;
+                }
+        }
         return error;
     }
 

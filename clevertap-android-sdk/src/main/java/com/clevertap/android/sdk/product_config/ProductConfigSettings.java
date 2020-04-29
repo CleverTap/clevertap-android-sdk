@@ -44,7 +44,8 @@ class ProductConfigSettings {
     }
 
     /**
-     * loads settings by reading from file. It's a sync call, please make sure to call this from a background thread
+     * loads settings by reading from file.
+     * It's a sync call, please make sure to call this from a background thread
      */
     synchronized void loadSettings() {
         String content = null;
@@ -53,6 +54,7 @@ class ProductConfigSettings {
         } catch (Exception e) {
             e.printStackTrace();
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : loadSettings failed while reading file: " + e.getLocalizedMessage());
+            return;
         }
         if (!TextUtils.isEmpty(content)) {
             JSONObject jsonObject = null;
@@ -61,21 +63,24 @@ class ProductConfigSettings {
             } catch (JSONException e) {
                 e.printStackTrace();
                 config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : loadSettings failed: " + e.getLocalizedMessage());
+                return;
             }
-            if (jsonObject != null) {
-                Iterator<String> iterator = jsonObject.keys();
-                while (iterator.hasNext()) {
-                    String key = iterator.next();
-                    if (!TextUtils.isEmpty(key)) {
-                        String value = null;
-                        try {
-                            value = String.valueOf(jsonObject.get(key));
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                        if (!TextUtils.isEmpty(value))
-                            settingsMap.put(key, value);
+            Iterator<String> iterator = jsonObject.keys();
+            while (iterator.hasNext()) {
+                String key = iterator.next();
+                if (!TextUtils.isEmpty(key)) {
+                    String value = null;
+                    try {
+                        Object obj = jsonObject.get(key);
+                        if (obj != null)
+                            value = String.valueOf(obj);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : failed loading setting for key " + key + " Error: " + e.getLocalizedMessage());
+                        continue;
                     }
+                    if (!TextUtils.isEmpty(value))
+                        settingsMap.put(key, value);
                 }
             }
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : loadSettings completed with settings: " + settingsMap);
@@ -92,7 +97,7 @@ class ProductConfigSettings {
         long minInterVal = DEFAULT_MIN_FETCH_INTERVAL_SECONDS;
         String value = settingsMap.get(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS);
         try {
-            if (value != null)
+            if (!TextUtils.isEmpty(value))
                 minInterVal = (long) Double.parseDouble(value);
         } catch (Exception e) {
             e.printStackTrace();
@@ -105,7 +110,7 @@ class ProductConfigSettings {
         long lastFetchedTimeStamp = 0L;
         String value = settingsMap.get(KEY_LAST_FETCHED_TIMESTAMP);
         try {
-            if (value != null)
+            if (!TextUtils.isEmpty(value))
                 lastFetchedTimeStamp = (long) Double.parseDouble(value);
         } catch (Exception e) {
             e.printStackTrace();
@@ -118,7 +123,7 @@ class ProductConfigSettings {
         int noCallsAllowedInWindow = DEFAULT_NO_OF_CALLS;
         String value = settingsMap.get(PRODUCT_CONFIG_NO_OF_CALLS);
         try {
-            if (value != null)
+            if (!TextUtils.isEmpty(value))
                 noCallsAllowedInWindow = (int) Double.parseDouble(value);
         } catch (Exception e) {
             e.printStackTrace();
@@ -131,7 +136,7 @@ class ProductConfigSettings {
         int windowIntervalInMinutes = DEFAULT_WINDOW_LENGTH_MINS;
         String value = settingsMap.get(PRODUCT_CONFIG_WINDOW_LENGTH_MINS);
         try {
-            if (value != null)
+            if (!TextUtils.isEmpty(value))
                 windowIntervalInMinutes = (int) Double.parseDouble(value);
         } catch (Exception e) {
             e.printStackTrace();
@@ -176,7 +181,10 @@ class ProductConfigSettings {
             @Override
             public Boolean doInBackground(Void aVoid) {
                 try {
-                    FileUtils.writeJsonToFile(context, config, getDirName(), CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS, new JSONObject(settingsMap));
+                    //Ensure that we are not saving min interval in seconds
+                    HashMap<String, String> toWriteMap = new HashMap<>(settingsMap);
+                    toWriteMap.remove(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS);
+                    FileUtils.writeJsonToFile(context, config, getDirName(), CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS, new JSONObject(toWriteMap));
                 } catch (Exception e) {
                     e.printStackTrace();
                     config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : updateConfigToFile failed: " + e.getLocalizedMessage());
@@ -210,15 +218,18 @@ class ProductConfigSettings {
             while (keys.hasNext()) {
                 final String key = keys.next();
                 try {
-                    final Object o = arp.get(key);
-                    if (o instanceof Number) {
-                        final int update = ((Number) o).intValue();
-                        if (CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS.equalsIgnoreCase(key)
-                                || CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS.equalsIgnoreCase(key)) {
-                            setProductConfigValuesFromARP(key, update);
+                    if (!TextUtils.isEmpty(key)) {
+                        final Object object = arp.get(key);
+                        if (object instanceof Number) {
+                            final int update = (int) ((Number) object).doubleValue();
+                            if (CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS.equalsIgnoreCase(key)
+                                    || CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS.equalsIgnoreCase(key)) {
+                                setProductConfigValuesFromARP(key, update);
+                            }
                         }
                     }
-                } catch (JSONException e) {
+
+                } catch (Exception e) {
                     e.printStackTrace();
                     config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config setARPValue failed " + e.getLocalizedMessage());
                 }
