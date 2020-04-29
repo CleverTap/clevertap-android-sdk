@@ -148,6 +148,7 @@ public class CTProductConfigController {
                         HashMap<String, String> toWriteValues = new HashMap<>();
                         if (!waitingTobeActivatedConfig.isEmpty()) {
                             toWriteValues.putAll(waitingTobeActivatedConfig);
+                            waitingTobeActivatedConfig.clear();
                         } else {
                             toWriteValues = getStoredValues(getActivatedFullPath());
                         }
