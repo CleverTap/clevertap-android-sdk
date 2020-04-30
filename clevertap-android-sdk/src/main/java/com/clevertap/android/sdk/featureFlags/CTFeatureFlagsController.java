@@ -48,15 +48,15 @@ public class CTFeatureFlagsController {
 
     public Boolean get(String key, boolean defaultValue) {
         if (!isInitialized) {
-            getConfigLogger().verbose(getAccountId(), "Controller not initialized, returning default value - " + defaultValue);
+            getConfigLogger().verbose(getAccountId(), "Feature Flag : Controller not initialized, returning default value - " + defaultValue);
             return defaultValue;
         }
-        getConfigLogger().verbose(getAccountId(), "getting feature flag with key - " + key + " and default value - " + defaultValue);
+        getConfigLogger().verbose(getAccountId(), "Feature Flag : getting feature flag with key - " + key + " and default value - " + defaultValue);
         Boolean value = store.get(key);
         if (value != null) {
             return store.get(key);
         } else {
-            getConfigLogger().verbose(getAccountId(), "feature flag not found, returning default value - " + defaultValue);
+            getConfigLogger().verbose(getAccountId(), "Feature Flag : feature flag not found, returning default value - " + defaultValue);
             return defaultValue;
         }
     }
@@ -79,15 +79,16 @@ public class CTFeatureFlagsController {
      * Developers should not use this method
      */
     public void updateFeatureFlags(JSONObject jsonObject) throws JSONException {
-        getConfigLogger().verbose(getAccountId(), "Updating feature flags...");
+
         JSONArray featureFlagList = jsonObject.getJSONArray(Constants.KEY_KV);
         try {
             for (int i = 0; i < featureFlagList.length(); i++) {
                 JSONObject ff = featureFlagList.getJSONObject(i);
                 store.put(ff.getString("n"), ff.getBoolean("v"));
             }
+            getConfigLogger().verbose(getAccountId(), "Feature Flag : Updating feature flags...");
         } catch (JSONException e) {
-            getConfigLogger().verbose(getAccountId(), "Error parsing Feature Flag array " + e.getLocalizedMessage());
+            getConfigLogger().verbose(getAccountId(), "Feature Flag : Error parsing Feature Flag array " + e.getLocalizedMessage());
         }
         archiveData(jsonObject);
         notifyFeatureFlagUpdate();
@@ -124,9 +125,10 @@ public class CTFeatureFlagsController {
         if (featureFlagRespObj != null) {
             try {
                 FileUtils.writeJsonToFile(mContext, config, getCachedDirName(), getCachedFileName(), featureFlagRespObj);
+                getConfigLogger().verbose(getAccountId(), "Feature Flag : feature flags saved into file " + store);
             } catch (Exception e) {
                 e.printStackTrace();
-                getConfigLogger().verbose(getAccountId(), "archiveData failed - " + e.getLocalizedMessage());
+                getConfigLogger().verbose(getAccountId(), "Feature Flag : archiveData failed - " + e.getLocalizedMessage());
             }
         }
     }
@@ -159,11 +161,12 @@ public class CTFeatureFlagsController {
                                 }
                             }
                         }
+                        getConfigLogger().verbose(getAccountId(), "Feature Flag : feature flags initialized with configs " + store);
                         isInitialized = true;
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    getConfigLogger().verbose(getAccountId(), "unArchiveData failed - " + e.getLocalizedMessage());
+                    getConfigLogger().verbose(getAccountId(), "Feature Flag : unArchiveData failed - " + e.getLocalizedMessage());
                     return false;
                 }
                 return true;
