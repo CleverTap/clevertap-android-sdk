@@ -44,11 +44,11 @@ class ProductConfigSettings {
     }
 
     /**
-     * loads settings by reading from file.
+     * loads settings from file.
      * It's a sync call, please make sure to call this from a background thread
      */
     synchronized void loadSettings() {
-        String content = null;
+        String content;
         try {
             content = FileUtils.readFromFile(context, config, getFullPath());
         } catch (Exception e) {
@@ -184,6 +184,7 @@ class ProductConfigSettings {
                     //Ensure that we are not saving min interval in seconds
                     HashMap<String, String> toWriteMap = new HashMap<>(settingsMap);
                     toWriteMap.remove(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS);
+
                     FileUtils.writeJsonToFile(context, config, getDirName(), CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS, new JSONObject(toWriteMap));
                 } catch (Exception e) {
                     e.printStackTrace();

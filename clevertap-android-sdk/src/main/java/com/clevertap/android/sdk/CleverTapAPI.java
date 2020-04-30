@@ -8200,14 +8200,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     /**
      * @return object of {@link CTFeatureFlagsController}
-     * handler to get the feature flag values
+     * Handler to get the feature flag values
      */
     public CTFeatureFlagsController featureFlag() {
         return ctFeatureFlagsController;
     }
 
     /**
-     * This method is used to set the CTFeatureFlagsListener to get
+     * This method is used to set the CTFeatureFlagsListener
+     * Register to receive feature flag callbacks
      *
      * @param featureFlagsListener The {@link CTFeatureFlagsListener} object
      */
@@ -8237,8 +8238,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
-     * This method is internal to the clevertap SDK.
-     * Developer should not use this method to raise fetch event for Feature Flags manually
+     * This method is internal to the CleverTap SDK.
+     * Developers should not use this method manually
      */
     @Override
     public void fetchFeatureFlags() {
@@ -8305,7 +8306,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
     // -----------------------------------------------------------------------//
-    // ********                        PRODUCT CONFIG Logic               *****//
+    // ********                        PRODUCT CONFIG Logic              *****//
     // -----------------------------------------------------------------------//
 
     // ********                       PRODUCT CONFIG Public API           *****//
@@ -8323,7 +8324,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
-     * This method is used to set the product config listener to receive callbacks
+     * This method is used to set the product config listener
+     * Register to receive callbacks
      *
      * @param listener The {@link CTProductConfigListener} instance
      */
@@ -8336,7 +8338,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     // ********                       PRODUCT CONFIG Internal API           *****//
     /**
      * This method is internal to CleverTap SDK.
-     * Developer should not use this method manually.
+     * Developers should not use this method manually.
      */
     @Override
     public void fetchProductConfig() {
@@ -8424,7 +8426,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     /**
      * This method is internal to CleverTap SDK.
-     * Developer should not use this method manually.
+     * Developers should not use this method manually.
      */
     @Override
     public void onActivated() {
@@ -8446,7 +8448,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     /**
      * This method is internal to CleverTap SDK.
-     * Developer should not use this method manually.
+     * Developers should not use this method manually.
      */
     @Override
     public void onInit() {

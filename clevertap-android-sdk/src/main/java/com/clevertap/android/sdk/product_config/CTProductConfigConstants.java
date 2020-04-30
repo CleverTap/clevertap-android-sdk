@@ -10,6 +10,7 @@ public interface CTProductConfigConstants {
     String PRODUCT_CONFIG_JSON_KEY_FOR_KEY = "n";
     String PRODUCT_CONFIG_JSON_KEY_FOR_VALUE = "v";
     String KEY_LAST_FETCHED_TIMESTAMP = "ts";
+
     int DEFAULT_NO_OF_CALLS = 5;
     int DEFAULT_WINDOW_LENGTH_MINS = 60;
 
@@ -20,6 +21,7 @@ public interface CTProductConfigConstants {
     Boolean DEFAULT_VALUE_FOR_BOOLEAN = false;
     Long DEFAULT_VALUE_FOR_LONG = 0L;
     Double DEFAULT_VALUE_FOR_DOUBLE = 0.0;
+
     //arp
     String PRODUCT_CONFIG_NO_OF_CALLS = "rc_n";
     String PRODUCT_CONFIG_WINDOW_LENGTH_MINS = "rc_w";

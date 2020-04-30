@@ -42,10 +42,20 @@ public class CTFeatureFlagsController {
     // ********                        Public API                        *****//
     // -----------------------------------------------------------------------//
 
+    /**
+     * Method to check Feature Flag has been initialized
+     * @return boolean- true if initialized, else false.
+     */
     public boolean isInitialized() {
         return isInitialized;
     }
 
+    /**
+     * Getter to return the feature flag configured at the dashboard
+     * @param key - Key of the Feature flag
+     * @param defaultValue - default value of the Key, in case we don't find any Feature Flag with the Key.
+     * @return boolean- Value of the Feature flag.
+     */
     public Boolean get(String key, boolean defaultValue) {
         if (!isInitialized) {
             getConfigLogger().verbose(getAccountId(), "Feature Flag : Controller not initialized, returning default value - " + defaultValue);

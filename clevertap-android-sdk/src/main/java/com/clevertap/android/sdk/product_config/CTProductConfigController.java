@@ -59,7 +59,6 @@ public class CTProductConfigController {
 
     /**
      * Sets default configs using an XML resource.
-     *
      * @param resourceID - resource Id of the XML.
      */
     public void setDefaults(final int resourceID) {
@@ -79,9 +78,8 @@ public class CTProductConfigController {
     }
 
     /**
-     * Sets default configs using the given Map.
-     *
-     * @param map
+     * Sets default configs using the given HashMap.
+     * @param map - HashMap of the default configs
      */
     public void setDefaults(final HashMap<String, Object> map) {
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
@@ -187,24 +185,19 @@ public class CTProductConfigController {
         isFetchAndActivating = true;
     }
 
-
-    public void fetchAndActivate(int interval) {
-        fetch(interval);
-        isFetchAndActivating = true;
-    }
-
     @SuppressWarnings("WeakerAccess")
     /**
      * Sets the minimum interval between successive fetch calls.
+     * @param fetchIntervalInSeconds- interval in seconds.
      */
+
     public void setMinimumFetchIntervalInSeconds(long fetchIntervalInSeconds) {
         settings.setMinimumFetchIntervalInSeconds(fetchIntervalInSeconds);
     }
 
     /**
      * Returns the last fetched timestamp in millis.
-     *
-     * @return
+     * @return - long value of timestamp in millis.
      */
     public long getLastFetchTimeStampInMillis() {
         return settings.getLastFetchTimeStampInMillis();
@@ -212,9 +205,8 @@ public class CTProductConfigController {
 
     /**
      * Returns the parameter value for the given key as a String.
-     *
      * @param Key - String
-     * @return String
+     * @return String - value of the product config,if key is not present return {@link CTProductConfigConstants#DEFAULT_VALUE_FOR_STRING}
      */
     public String getString(String Key) {
         if (isInitialized && !TextUtils.isEmpty(Key)) {
@@ -230,7 +222,7 @@ public class CTProductConfigController {
      * Returns the parameter value for the given key as a boolean.
      *
      * @param Key - String
-     * @return String
+     * @return Boolean - value of the product config,if key is not present return {@link CTProductConfigConstants#DEFAULT_VALUE_FOR_BOOLEAN}
      */
     public Boolean getBoolean(String Key) {
         if (isInitialized && !TextUtils.isEmpty(Key)) {
@@ -246,7 +238,7 @@ public class CTProductConfigController {
      * Returns the parameter value for the given key as a long.
      *
      * @param Key - String
-     * @return String
+     * @return Long - value of the product config,if key is not present return {@link CTProductConfigConstants#DEFAULT_VALUE_FOR_LONG}
      */
     public Long getLong(String Key) {
         if (isInitialized && !TextUtils.isEmpty(Key)) {
@@ -267,7 +259,7 @@ public class CTProductConfigController {
      * Returns the parameter value for the given key as a double.
      *
      * @param Key String
-     * @return String
+     * @return Double - value of the product config,if key is not present return {@link CTProductConfigConstants#DEFAULT_VALUE_FOR_DOUBLE}
      */
     public Double getDouble(String Key) {
         if (isInitialized && !TextUtils.isEmpty(Key)) {
@@ -285,7 +277,7 @@ public class CTProductConfigController {
     }
 
     /**
-     * Deletes all activated, fetched and defaults configs and resets all Product Config settings.
+     * Deletes all activated, fetched and defaults configs as well as all Product Config settings.
      */
     public void reset() {
         synchronized (this) {
@@ -406,7 +398,7 @@ public class CTProductConfigController {
 
     /**
      * This method is internal to CleverTap SDK.
-     * Developer should not use this method manually.
+     * Developers should not use this method manually.
      */
     public void onFetchFailed() {
         isFetchAndActivating = false;
@@ -415,7 +407,7 @@ public class CTProductConfigController {
 
     /**
      * This method is internal to CleverTap SDK.
-     * Developer should not use this method manually.
+     * Developers should not use this method manually.
      */
     public void onFetchSuccess(JSONObject kvResponse) {
         if (TextUtils.isEmpty(guid))
@@ -497,7 +489,7 @@ public class CTProductConfigController {
 
     /**
      * This method is internal to CleverTap SDK.
-     * Developer should not use this method manually.
+     * Developers should not use this method manually.
      */
     public void setGuidAndInit(String cleverTapID) {
         if (TextUtils.isEmpty(guid))
@@ -516,7 +508,7 @@ public class CTProductConfigController {
 
     /**
      * This method is internal to CleverTap SDK.
-     * Developer should not use this method manually.
+     * Developers should not use this method manually.
      */
     public void setArpValue(JSONObject arp) {
         settings.setARPValue(arp);
