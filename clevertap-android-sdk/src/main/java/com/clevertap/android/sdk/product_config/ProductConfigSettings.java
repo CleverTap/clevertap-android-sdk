@@ -250,14 +250,25 @@ class ProductConfigSettings {
     }
 
     public void reset() {
-        try {
-            String fileName = getFullPath();
-            FileUtils.deleteFile(context, config, fileName);
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Deleted settings file" + fileName);
-        } catch (Exception e) {
-            e.printStackTrace();
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Error while resetting settings" + e.getLocalizedMessage());
-        }
+        TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
+            @Override
+            public Void doInBackground(Void aVoid) {
+                try {
+                    String fileName = getFullPath();
+                    FileUtils.deleteFile(context, config, fileName);
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Deleted settings file" + fileName);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Error while resetting settings" + e.getLocalizedMessage());
+                }
+                return null;
+            }
+
+            @Override
+            public void onPostExecute(Void aVoid) {
+
+            }
+        });
         initMapWithDefault();
     }
 }

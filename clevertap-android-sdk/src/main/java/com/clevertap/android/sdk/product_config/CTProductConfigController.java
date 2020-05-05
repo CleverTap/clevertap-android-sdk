@@ -59,6 +59,7 @@ public class CTProductConfigController {
 
     /**
      * Sets default configs using an XML resource.
+     *
      * @param resourceID - resource Id of the XML.
      */
     public void setDefaults(final int resourceID) {
@@ -79,6 +80,7 @@ public class CTProductConfigController {
 
     /**
      * Sets default configs using the given HashMap.
+     *
      * @param map - HashMap of the default configs
      */
     public void setDefaults(final HashMap<String, Object> map) {
@@ -194,6 +196,7 @@ public class CTProductConfigController {
 
     /**
      * Returns the last fetched timestamp in millis.
+     *
      * @return - long value of timestamp in millis.
      */
     public long getLastFetchTimeStampInMillis() {
@@ -202,6 +205,7 @@ public class CTProductConfigController {
 
     /**
      * Returns the parameter value for the given key as a String.
+     *
      * @param Key - String
      * @return String - value of the product config,if key is not present return {@link CTProductConfigConstants#DEFAULT_VALUE_FOR_STRING}
      */
@@ -283,12 +287,23 @@ public class CTProductConfigController {
             }
 
             activatedConfig.clear();
-            try {
-                FileUtils.deleteDirectory(context, config, getProductConfigDirName());
-            } catch (Exception e) {
-                e.printStackTrace();
-                config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : reset failed: " + e.getLocalizedMessage());
-            }
+            TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
+                @Override
+                public Void doInBackground(Void aVoid) {
+                    try {
+                        FileUtils.deleteDirectory(context, config, getProductConfigDirName());
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : reset failed: " + e.getLocalizedMessage());
+                    }
+                    return null;
+                }
+
+                @Override
+                public void onPostExecute(Void aVoid) {
+
+                }
+            });
             setMinimumFetchIntervalInSeconds(DEFAULT_MIN_FETCH_INTERVAL_SECONDS);
         }
     }
