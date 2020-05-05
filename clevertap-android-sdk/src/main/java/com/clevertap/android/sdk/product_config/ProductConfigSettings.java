@@ -147,14 +147,14 @@ class ProductConfigSettings {
 
     synchronized void setMinimumFetchIntervalInSeconds(long intervalInSeconds) {
         long minFetchIntervalInSeconds = getMinFetchIntervalInSeconds();
-        if (minFetchIntervalInSeconds != intervalInSeconds) {
+        if (intervalInSeconds > 0 && minFetchIntervalInSeconds != intervalInSeconds) {
             settingsMap.put(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS, String.valueOf(intervalInSeconds));
         }
     }
 
     synchronized void setLastFetchTimeStampInMillis(long timeStampInMillis) {
         long lastFetchTimeStampInMillis = getLastFetchTimeStampInMillis();
-        if (lastFetchTimeStampInMillis != timeStampInMillis) {
+        if (timeStampInMillis > 0 && lastFetchTimeStampInMillis != timeStampInMillis) {
             settingsMap.put(KEY_LAST_FETCHED_TIMESTAMP, String.valueOf(timeStampInMillis));
             updateConfigToFile();
         }
@@ -162,7 +162,7 @@ class ProductConfigSettings {
 
     private synchronized void setNoOfCallsInAllowedWindow(int callsInAllowedWindow) {
         long noOfCallsInAllowedWindow = getNoOfCallsInAllowedWindow();
-        if (noOfCallsInAllowedWindow != callsInAllowedWindow) {
+        if (callsInAllowedWindow > 0 && noOfCallsInAllowedWindow != callsInAllowedWindow) {
             settingsMap.put(PRODUCT_CONFIG_NO_OF_CALLS, String.valueOf(callsInAllowedWindow));
             updateConfigToFile();
         }
@@ -170,7 +170,7 @@ class ProductConfigSettings {
 
     private synchronized void setWindowIntervalInMinutes(int intervalInMinutes) {
         int windowIntervalInMinutes = getWindowIntervalInMinutes();
-        if (windowIntervalInMinutes != intervalInMinutes) {
+        if (intervalInMinutes > 0 && windowIntervalInMinutes != intervalInMinutes) {
             settingsMap.put(PRODUCT_CONFIG_WINDOW_LENGTH_MINS, String.valueOf(intervalInMinutes));
             updateConfigToFile();
         }
@@ -247,5 +247,17 @@ class ProductConfigSettings {
                 setWindowIntervalInMinutes(value);
                 break;
         }
+    }
+
+    public void reset() {
+        try {
+            String fileName = getFullPath();
+            FileUtils.deleteFile(context, config, fileName);
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Deleted settings file" + fileName);
+        } catch (Exception e) {
+            e.printStackTrace();
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Error while resetting settings" + e.getLocalizedMessage());
+        }
+        initMapWithDefault();
     }
 }

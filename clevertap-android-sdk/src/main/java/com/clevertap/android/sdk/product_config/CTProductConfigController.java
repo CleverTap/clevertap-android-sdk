@@ -150,9 +150,6 @@ public class CTProductConfigController {
                         } else {
                             toWriteValues = getStoredValues(getActivatedFullPath());
                         }
-                        //return if we don't have any values to be activated
-                        if (toWriteValues.isEmpty())
-                            return null;
 
                         activatedConfig.clear();
                         //apply default config first
@@ -528,6 +525,10 @@ public class CTProductConfigController {
                     break;
             }
         }
+    }
+
+    public void resetSettings() {
+        settings.reset();
     }
 
     private enum PROCESSING_STATE {

@@ -8402,7 +8402,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             getConfigLogger().debug(config.getAccountId(), "Product Config is not enabled for this instance");
             return;
         }
-
+        if(ctProductConfigController!= null){
+            ctProductConfigController.resetSettings();
+        }
         ctProductConfigController = new CTProductConfigController(context, getCleverTapID(), config, this);
         getConfigLogger().verbose(config.getAccountId(), "Product Config reset");
         ctProductConfigController.fetch();
