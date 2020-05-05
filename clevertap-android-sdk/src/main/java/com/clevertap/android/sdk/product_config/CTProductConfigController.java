@@ -431,8 +431,8 @@ public class CTProductConfigController {
                 try {
                     parseFetchedResponse(kvResponse);
                     FileUtils.writeJsonToFile(context, config, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(waitingTobeActivatedConfig));
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Fetch file " + getProductConfigDirName() + "/" + CTProductConfigConstants.FILE_NAME_ACTIVATED
-                            + " write success: " + waitingTobeActivatedConfig);
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Fetch file-[" + getActivatedFullPath()
+                            + "] write success: " + waitingTobeActivatedConfig);
                     Utils.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
