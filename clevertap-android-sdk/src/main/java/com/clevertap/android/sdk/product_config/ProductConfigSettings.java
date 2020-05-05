@@ -154,7 +154,7 @@ class ProductConfigSettings {
 
     synchronized void setLastFetchTimeStampInMillis(long timeStampInMillis) {
         long lastFetchTimeStampInMillis = getLastFetchTimeStampInMillis();
-        if (timeStampInMillis > 0 && lastFetchTimeStampInMillis != timeStampInMillis) {
+        if (timeStampInMillis >= 0 && lastFetchTimeStampInMillis != timeStampInMillis) {
             settingsMap.put(KEY_LAST_FETCHED_TIMESTAMP, String.valueOf(timeStampInMillis));
             updateConfigToFile();
         }
