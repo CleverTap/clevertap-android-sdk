@@ -32,15 +32,15 @@ class ProductConfigSettings {
         this.context = context.getApplicationContext();
         this.guid = guid;
         this.config = config;
-        initMapWithDefault();
+        initDefaults();
     }
 
-    private void initMapWithDefault() {
+    void initDefaults() {
         settingsMap.put(PRODUCT_CONFIG_NO_OF_CALLS, String.valueOf(DEFAULT_NO_OF_CALLS));
         settingsMap.put(PRODUCT_CONFIG_WINDOW_LENGTH_MINS, String.valueOf(DEFAULT_WINDOW_LENGTH_MINS));
         settingsMap.put(KEY_LAST_FETCHED_TIMESTAMP, String.valueOf(0));
         settingsMap.put(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS, String.valueOf(DEFAULT_MIN_FETCH_INTERVAL_SECONDS));
-        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config :settings loaded with default values: " + settingsMap);
+        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Settings loaded with default values: " + settingsMap);
     }
 
     /**
@@ -53,7 +53,7 @@ class ProductConfigSettings {
             content = FileUtils.readFromFile(context, config, getFullPath());
         } catch (Exception e) {
             e.printStackTrace();
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : loadSettings failed while reading file: " + e.getLocalizedMessage());
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "LoadSettings failed while reading file: " + e.getLocalizedMessage());
             return;
         }
         if (!TextUtils.isEmpty(content)) {
@@ -62,7 +62,7 @@ class ProductConfigSettings {
                 jsonObject = new JSONObject(content);
             } catch (JSONException e) {
                 e.printStackTrace();
-                config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : loadSettings failed: " + e.getLocalizedMessage());
+                config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "LoadSettings failed: " + e.getLocalizedMessage());
                 return;
             }
             Iterator<String> iterator = jsonObject.keys();
@@ -76,14 +76,14 @@ class ProductConfigSettings {
                             value = String.valueOf(obj);
                     } catch (Exception e) {
                         e.printStackTrace();
-                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : failed loading setting for key " + key + " Error: " + e.getLocalizedMessage());
+                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Failed loading setting for key " + key + " Error: " + e.getLocalizedMessage());
                         continue;
                     }
                     if (!TextUtils.isEmpty(value))
                         settingsMap.put(key, value);
                 }
             }
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : loadSettings completed with settings: " + settingsMap);
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "LoadSettings completed with settings: " + settingsMap);
         }
     }
 
@@ -101,7 +101,7 @@ class ProductConfigSettings {
                 minInterVal = (long) Double.parseDouble(value);
         } catch (Exception e) {
             e.printStackTrace();
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : getMinFetchIntervalInSeconds failed: " + e.getLocalizedMessage());
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "GetMinFetchIntervalInSeconds failed: " + e.getLocalizedMessage());
         }
         return minInterVal;
     }
@@ -114,7 +114,7 @@ class ProductConfigSettings {
                 lastFetchedTimeStamp = (long) Double.parseDouble(value);
         } catch (Exception e) {
             e.printStackTrace();
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : getLastFetchTimeStampInMillis failed: " + e.getLocalizedMessage());
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "GetLastFetchTimeStampInMillis failed: " + e.getLocalizedMessage());
         }
         return lastFetchedTimeStamp;
     }
@@ -127,7 +127,7 @@ class ProductConfigSettings {
                 noCallsAllowedInWindow = (int) Double.parseDouble(value);
         } catch (Exception e) {
             e.printStackTrace();
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : getNoOfCallsInAllowedWindow failed: " + e.getLocalizedMessage());
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "GetNoOfCallsInAllowedWindow failed: " + e.getLocalizedMessage());
         }
         return noCallsAllowedInWindow;
     }
@@ -140,7 +140,7 @@ class ProductConfigSettings {
                 windowIntervalInMinutes = (int) Double.parseDouble(value);
         } catch (Exception e) {
             e.printStackTrace();
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : getWindowIntervalInMinutes failed: " + e.getLocalizedMessage());
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "GetWindowIntervalInMinutes failed: " + e.getLocalizedMessage());
         }
         return windowIntervalInMinutes;
     }
@@ -188,7 +188,7 @@ class ProductConfigSettings {
                     FileUtils.writeJsonToFile(context, config, getDirName(), CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS, new JSONObject(toWriteMap));
                 } catch (Exception e) {
                     e.printStackTrace();
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : updateConfigToFile failed: " + e.getLocalizedMessage());
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "UpdateConfigToFile failed: " + e.getLocalizedMessage());
                     return false;
                 }
                 return true;
@@ -269,6 +269,6 @@ class ProductConfigSettings {
 
             }
         });
-        initMapWithDefault();
+        initDefaults();
     }
 }

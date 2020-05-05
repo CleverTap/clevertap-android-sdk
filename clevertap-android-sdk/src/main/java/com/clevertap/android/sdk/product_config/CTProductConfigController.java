@@ -18,7 +18,6 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
-import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_MIN_FETCH_INTERVAL_SECONDS;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_VALUE_FOR_BOOLEAN;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_VALUE_FOR_DOUBLE;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_VALUE_FOR_LONG;
@@ -161,7 +160,7 @@ public class CTProductConfigController {
                         activatedConfig.putAll(toWriteValues);
                     } catch (Exception e) {
                         e.printStackTrace();
-                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : activate failed: " + e.getLocalizedMessage());
+                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Activate failed: " + e.getLocalizedMessage());
                     }
                     return null;
                 }
@@ -169,7 +168,7 @@ public class CTProductConfigController {
 
             @Override
             public void onPostExecute(Void isSuccess) {
-                config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : activated successfully with configs: " + activatedConfig);
+                config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Activated successfully with configs: " + activatedConfig);
                 sendCallback(PROCESSING_STATE.ACTIVATED);
                 isFetchAndActivating = false;
             }
@@ -291,10 +290,12 @@ public class CTProductConfigController {
                 @Override
                 public Void doInBackground(Void aVoid) {
                     try {
-                        FileUtils.deleteDirectory(context, config, getProductConfigDirName());
+                        String dirName = getProductConfigDirName();
+                        FileUtils.deleteDirectory(context, config, dirName);
+                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Reset Deleted Dir: " + dirName);
                     } catch (Exception e) {
                         e.printStackTrace();
-                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : reset failed: " + e.getLocalizedMessage());
+                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Reset failed: " + e.getLocalizedMessage());
                     }
                     return null;
                 }
@@ -304,7 +305,7 @@ public class CTProductConfigController {
 
                 }
             });
-            setMinimumFetchIntervalInSeconds(DEFAULT_MIN_FETCH_INTERVAL_SECONDS);
+            settings.initDefaults();
         }
     }
 
@@ -328,12 +329,12 @@ public class CTProductConfigController {
                         if (!storedConfig.isEmpty()) {
                             waitingTobeActivatedConfig.putAll(storedConfig);
                         }
-                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : loaded configs ready to be applied: " + waitingTobeActivatedConfig);
+                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Loaded configs ready to be applied: " + waitingTobeActivatedConfig);
                         settings.loadSettings();
                         isInitialized = true;
                     } catch (Exception e) {
                         e.printStackTrace();
-                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "initAsync failed - " + e.getLocalizedMessage());
+                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "InitAsync failed - " + e.getLocalizedMessage());
                         return false;
                     }
                     return true;
@@ -352,9 +353,10 @@ public class CTProductConfigController {
         String content;
         try {
             content = FileUtils.readFromFile(context, config, fullFilePath);
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "GetStoredValues reading file success:[ " + fullFilePath + "]--[Content]" + content);
         } catch (Exception e) {
             e.printStackTrace();
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : getStoredValues reading file failed: " + e.getLocalizedMessage());
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "GetStoredValues reading file failed: " + e.getLocalizedMessage());
             return map;
         }
         if (!TextUtils.isEmpty(content)) {
@@ -363,7 +365,7 @@ public class CTProductConfigController {
                 jsonObject = new JSONObject(content);
             } catch (Exception e) {
                 e.printStackTrace();
-                config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : getStoredValues failed due to malformed json: " + e.getLocalizedMessage());
+                config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "GetStoredValues failed due to malformed json: " + e.getLocalizedMessage());
                 return map;
             }
             Iterator<String> iterator = jsonObject.keys();
@@ -375,7 +377,7 @@ public class CTProductConfigController {
                         value = String.valueOf(jsonObject.get(key));
                     } catch (Exception e) {
                         e.printStackTrace();
-                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : getStoredValues for key " + key + " while parsing json: " + e.getLocalizedMessage());
+                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "GetStoredValues for key " + key + " while parsing json: " + e.getLocalizedMessage());
                         continue;
                     }
                     if (!TextUtils.isEmpty(value))
@@ -400,7 +402,7 @@ public class CTProductConfigController {
         boolean isTimeExpired = timeDifference > 0;
         if (!isTimeExpired) {
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                    "Product Config: Throttled since you made frequent request- [Last Request Time-"
+                    "Throttled since you made frequent request- [Last Request Time-"
                             + new Date(lastRequestTime) + "], " +
                             "Try again in " + (-timeDifference / 1000L) + " seconds");
             return false;
@@ -414,7 +416,7 @@ public class CTProductConfigController {
      */
     public void onFetchFailed() {
         isFetchAndActivating = false;
-        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config: fetch Failed");
+        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Fetch Failed");
     }
 
     /**
@@ -429,7 +431,8 @@ public class CTProductConfigController {
                 try {
                     parseFetchedResponse(kvResponse);
                     FileUtils.writeJsonToFile(context, config, getProductConfigDirName(), CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(waitingTobeActivatedConfig));
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : fetch file write success: from init " + waitingTobeActivatedConfig);
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Fetch file " + getProductConfigDirName() + "/" + CTProductConfigConstants.FILE_NAME_ACTIVATED
+                            + " write success: " + waitingTobeActivatedConfig);
                     Utils.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
@@ -460,7 +463,7 @@ public class CTProductConfigController {
             timestamp = (Integer) jsonObject.get(CTProductConfigConstants.KEY_LAST_FETCHED_TIMESTAMP);
         } catch (Exception e) {
             e.printStackTrace();
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : parseFetchedResponse failed: " + e.getLocalizedMessage());
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "ParseFetchedResponse failed: " + e.getLocalizedMessage());
         }
         if (timestamp != null) {
             settings.setLastFetchTimeStampInMillis(timestamp * 1000L);
@@ -474,7 +477,7 @@ public class CTProductConfigController {
             kvArray = jsonObject.getJSONArray(Constants.KEY_KV);
         } catch (Exception e) {
             e.printStackTrace();
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "convertServerJsonToMap failed - " + e.getLocalizedMessage());
+            config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "ConvertServerJsonToMap failed - " + e.getLocalizedMessage());
             return map;
         }
 
@@ -492,7 +495,7 @@ public class CTProductConfigController {
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : convertServerJsonToMap failed: " + e.getLocalizedMessage());
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "ConvertServerJsonToMap failed: " + e.getLocalizedMessage());
                 }
             }
         }
