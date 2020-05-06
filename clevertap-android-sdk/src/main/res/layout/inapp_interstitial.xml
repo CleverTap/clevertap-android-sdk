@@ -11,10 +11,7 @@
         android:layout_gravity="center"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="60dp"
-        android:layout_marginLeft="45dp"
-        android:layout_marginRight="45dp"
-        android:layout_marginBottom="60dp"
+        android:layout_margin="35dp"
         >
 
         <TextView
@@ -26,7 +23,7 @@
             android:gravity="center"
             android:textStyle="bold"
             android:textColor="@android:color/black"
-            android:textSize="22sp"
+            android:textSize="@dimen/txt_size_inapp_title"
             android:maxLines="1" />
 
         <ImageView
@@ -66,7 +63,7 @@
             android:layout_marginTop="14dp"
             android:layout_below="@+id/backgroundImage"
             android:gravity="center"
-            android:textSize="18sp"
+            android:textSize="@dimen/txt_size_inapp_message"
             android:maxLines="3"
             android:textColor="@android:color/black" />
 
@@ -87,16 +84,16 @@
             <Button
                 android:id="@+id/interstitial_button1"
                 android:layout_width="match_parent"
-                android:layout_height="42dp"
-                android:textSize="16sp"
+                android:layout_height="@dimen/inapp_button_height"
+                android:textSize="@dimen/txt_size_inapp_button"
                 android:visibility="invisible" />
 
             <Button
                 android:id="@+id/interstitial_button2"
                 android:layout_width="match_parent"
                 android:layout_marginTop="14dp"
-                android:layout_height="42dp"
-                android:textSize="16sp"
+                android:layout_height="@dimen/inapp_button_height"
+                android:textSize="@dimen/txt_size_inapp_button"
                 android:visibility="invisible"
                 />
         </LinearLayout>
@@ -105,8 +102,5 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_gravity="top|end"
-        android:layout_marginRight="30dp"
-        android:layout_marginTop="45dp"
-        android:adjustViewBounds="true"
-        android:layout_marginEnd="30dp" />
+        android:adjustViewBounds="true"/>
 </FrameLayout>

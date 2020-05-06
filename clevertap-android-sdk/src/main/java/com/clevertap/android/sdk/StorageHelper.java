@@ -2,12 +2,9 @@ package com.clevertap.android.sdk;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Build;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+public final class StorageHelper {
 
-final class StorageHelper {
     static void putString(Context context, String key, String value) {
         SharedPreferences prefs = getPreferences(context);
         SharedPreferences.Editor editor = prefs.edit().putString(key, value);
@@ -66,7 +63,7 @@ final class StorageHelper {
         return getPreferences(context).getBoolean(key, defaultValue);
     }
 
-    static SharedPreferences getPreferences(Context context, String namespace) {
+    public static SharedPreferences getPreferences(Context context, String namespace) {
         String path = Constants.CLEVERTAP_STORAGE_TAG;
 
         if (namespace != null) {
@@ -79,7 +76,7 @@ final class StorageHelper {
         return getPreferences(context, null);
     }
 
-    static void persist(final SharedPreferences.Editor editor) {
+    public static void persist(final SharedPreferences.Editor editor) {
         try {
             editor.apply();
         } catch (Throwable t) {

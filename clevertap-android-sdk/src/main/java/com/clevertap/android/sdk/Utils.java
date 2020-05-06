@@ -2,6 +2,8 @@ package com.clevertap.android.sdk;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
+import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -26,10 +28,12 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 
 public final class Utils {
+    private static final String TAG = "Utils";
     static long getMemoryConsumption() {
         long free = Runtime.getRuntime().freeMemory();
         long total = Runtime.getRuntime().totalMemory();
@@ -271,7 +275,7 @@ public final class Utils {
      *
      * @param runnable - task to be run
      */
-    static void runOnUiThread(Runnable runnable) {
+    public static void runOnUiThread(Runnable runnable) {
         if (runnable != null) {
             //run if already on the UI thread
             if (Looper.myLooper() == Looper.getMainLooper()) {
@@ -300,4 +304,18 @@ public final class Utils {
         }
         return bundle;
     }
+
+    static void setPackageNameFromResolveInfoList(Context context, Intent launchIntent){
+        List<ResolveInfo> resolveInfoList = context.getPackageManager().queryIntentActivities(launchIntent,0);
+        if(resolveInfoList != null){
+            String appPackageName = context.getPackageName();
+            for(ResolveInfo resolveInfo : resolveInfoList){
+                if(appPackageName.equals(resolveInfo.activityInfo.packageName)){
+                    launchIntent.setPackage(appPackageName);
+                    break;
+                }
+            }
+        }
+    }
+
 }

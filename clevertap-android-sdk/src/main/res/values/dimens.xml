@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="inapp_button_height">42dp</dimen>
+    <dimen name="txt_size_inapp_half_title">21sp</dimen>
+    <dimen name="txt_size_inapp_half_message">16sp</dimen>
+    <dimen name="txt_size_inapp_half_button">16sp</dimen>
+
+    <dimen name="txt_size_inapp_title">22sp</dimen>
+    <dimen name="txt_size_inapp_message">18sp</dimen>
+    <dimen name="txt_size_inapp_button">16sp</dimen>
+</resources>

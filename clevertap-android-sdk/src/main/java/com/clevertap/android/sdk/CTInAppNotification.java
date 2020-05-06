@@ -264,6 +264,9 @@ class CTInAppNotification implements Parcelable {
                         if (!ImageCache.addBitmap(media.getCacheKey(), imageBitmap)) {
                             this.error = "Error processing image";
                         }
+                    }else {
+                        Logger.d("Image Bitmap is null");
+                        this.error = "Error processing image as bitmap was NULL";
                     }
                 }
             }else if(media.isVideo() || media.isAudio()){

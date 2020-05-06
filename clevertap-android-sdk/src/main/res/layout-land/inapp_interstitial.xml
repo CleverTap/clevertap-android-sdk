@@ -10,10 +10,8 @@
         android:id="@+id/interstitial_relative_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="35dp"
-        android:layout_marginLeft="80dp"
-        android:layout_marginRight="80dp"
-        android:layout_marginBottom="35dp"
+        android:layout_margin="35dp"
+        android:layout_gravity="center"
         >
 
         <TextView
@@ -24,7 +22,7 @@
             android:gravity="center"
             android:textStyle="bold"
             android:textColor="@android:color/black"
-            android:textSize="21sp"
+            android:textSize="@dimen/txt_size_inapp_title"
             android:layout_marginTop="10dp"
             android:maxLines="1" />
 
@@ -66,7 +64,7 @@
             android:layout_marginTop="12dp"
             android:layout_below="@+id/backgroundImage"
             android:gravity="center"
-            android:textSize="17sp"
+            android:textSize="@dimen/txt_size_inapp_message"
             android:maxLines="2"
             android:layout_marginLeft="35dp"
             android:layout_marginStart="35dp"
@@ -83,23 +81,26 @@
             android:orientation="horizontal"
             android:layout_marginLeft="30dp"
             android:layout_marginRight="30dp"
+            android:layout_marginBottom="30dp"
             android:layout_marginTop="12dp"
-            android:visibility="visible">
+            android:layout_alignParentBottom="true"
+            android:visibility="visible"
+            android:gravity="bottom">
 
             <Button
                 android:id="@+id/interstitial_button1"
                 android:layout_width="0dp"
                 android:layout_weight="1"
-                android:layout_height="40dp"
-                android:textSize="16sp"
+                android:layout_height="@dimen/inapp_button_height"
+                android:textSize="@dimen/txt_size_inapp_button"
                 android:visibility="gone" />
 
             <Button
                 android:id="@+id/interstitial_button2"
                 android:layout_width="0dp"
                 android:layout_weight="1"
-                android:layout_height="40dp"
-                android:textSize="16sp"
+                android:layout_height="@dimen/inapp_button_height"
+                android:textSize="@dimen/txt_size_inapp_button"
                 android:layout_marginLeft="18dp"
                 android:visibility="gone"
                 android:layout_marginStart="10dp" />
@@ -109,8 +110,5 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_gravity="top|end"
-        android:layout_marginRight="55dp"
-        android:layout_marginTop="20dp"
-        android:adjustViewBounds="true"
-        android:layout_marginEnd="55dp" />
+        android:adjustViewBounds="true"/>
 </FrameLayout>

@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ResolveInfo;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -12,6 +13,7 @@ import android.view.View;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -122,6 +124,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
             if (!queryBundle.isEmpty()) {
                 intent.putExtras(queryBundle);
             }
+            Utils.setPackageNameFromResolveInfoList(getActivity(),intent);
             startActivity(intent);
         } catch (Throwable t) {
             // Ignore
