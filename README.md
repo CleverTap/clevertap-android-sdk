@@ -19,7 +19,7 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
 
     ```markdown
     dependencies {      
-         implementation 'com.clevertap.android:clevertap-android-sdk:3.7.2'     
+         implementation 'com.clevertap.android:clevertap-android-sdk:3.8.0'
     }
     ```
 
@@ -27,7 +27,7 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
 
     ```markdown
     dependencies {      
-        implementation (name: 'clevertap-android-sdk-3.7.2', ext: 'aar') 
+        implementation (name: 'clevertap-android-sdk-3.8.0', ext: 'aar')
     }
     ```
 
@@ -35,7 +35,7 @@ For more information check out our [website](https://clevertap.com "CleverTap") 
 
      ```markdown
      dependencies {      
-         implementation 'com.clevertap.android:clevertap-android-sdk:3.7.2'     
+         implementation 'com.clevertap.android:clevertap-android-sdk:3.8.0'
          implementation 'com.android.support:support-v4:28.0.0'
          implementation 'com.google.firebase:firebase-messaging:17.3.0'
          implementation 'com.google.android.gms:play-services-ads:15.0.1' // Required only if you enable Google ADID collection in the SDK (turned off by default).
