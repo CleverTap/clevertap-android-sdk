@@ -44,7 +44,8 @@ class ProductConfigSettings {
     }
 
     /**
-     * loads settings by reading from file. It's a sync call, please make sure to call this from a background thread
+     * loads settings by reading from file.
+     * It's a sync call, please make sure to call this from a background thread
      */
     synchronized void loadSettings() {
         String content = null;
@@ -53,6 +54,7 @@ class ProductConfigSettings {
         } catch (Exception e) {
             e.printStackTrace();
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : loadSettings failed while reading file: " + e.getLocalizedMessage());
+            return;
         }
         if (!TextUtils.isEmpty(content)) {
             JSONObject jsonObject = null;
@@ -61,23 +63,24 @@ class ProductConfigSettings {
             } catch (JSONException e) {
                 e.printStackTrace();
                 config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : loadSettings failed: " + e.getLocalizedMessage());
+                return;
             }
-            if (jsonObject != null) {
-                Iterator<String> iterator = jsonObject.keys();
-                while (iterator.hasNext()) {
-                    String key = iterator.next();
-                    if (!TextUtils.isEmpty(key)) {
-                        String value = null;
-                        try {
-                            Object obj = jsonObject.get(key);
-                            if (obj != null)
-                                value = String.valueOf(obj);
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
-                        if (!TextUtils.isEmpty(value))
-                            settingsMap.put(key, value);
+            Iterator<String> iterator = jsonObject.keys();
+            while (iterator.hasNext()) {
+                String key = iterator.next();
+                if (!TextUtils.isEmpty(key)) {
+                    String value = null;
+                    try {
+                        Object obj = jsonObject.get(key);
+                        if (obj != null)
+                            value = String.valueOf(obj);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : failed loading setting for key " + key + " Error: " + e.getLocalizedMessage());
+                        continue;
                     }
+                    if (!TextUtils.isEmpty(value))
+                        settingsMap.put(key, value);
                 }
             }
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config : loadSettings completed with settings: " + settingsMap);
@@ -226,7 +229,7 @@ class ProductConfigSettings {
                         }
                     }
 
-                } catch (JSONException e) {
+                } catch (Exception e) {
                     e.printStackTrace();
                     config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config setARPValue failed " + e.getLocalizedMessage());
                 }
