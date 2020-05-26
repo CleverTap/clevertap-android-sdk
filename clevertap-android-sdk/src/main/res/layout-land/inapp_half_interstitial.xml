@@ -10,12 +10,8 @@
         android:id="@+id/half_interstitial_relative_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginLeft="124dp"
-        android:layout_marginStart="124dp"
-        android:layout_marginRight="124dp"
-        android:layout_marginEnd="124dp"
-        android:layout_marginTop="33dp"
-        android:layout_marginBottom="33dp"
+        android:layout_margin="30dp"
+        android:layout_gravity="center"
         >
 
         <ImageView
@@ -35,7 +31,7 @@
             android:layout_marginTop="23dp"
             android:gravity="center"
             android:maxLines="1"
-            android:textSize="24sp"
+            android:textSize="@dimen/txt_size_inapp_half_title"
             android:textStyle="bold"
             android:textColor="@android:color/black"/>
 
@@ -53,32 +49,37 @@
             android:gravity="center"
             android:maxLines="3"
             android:textColor="@android:color/black"
-            android:textSize="18sp"/>
+            android:textSize="@dimen/txt_size_inapp_half_message"/>
 
         <LinearLayout
             android:id="@+id/half_interstitial_linear_layout"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerHorizontal="true"
             android:layout_below="@+id/half_interstitial_message"
-            android:gravity="center"
+            android:gravity="bottom"
             android:layout_alignParentBottom="true"
             android:layout_marginTop="96dp"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp"
+            android:layout_marginBottom="30dp"
             android:orientation="horizontal"
             android:visibility="visible">
 
             <Button
                 android:id="@+id/half_interstitial_button1"
-                android:layout_width="160dp"
-                android:layout_height="40dp"
-                android:textSize="16sp"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="@dimen/inapp_button_height"
+                android:textSize="@dimen/txt_size_inapp_half_button"
                 android:visibility="gone"/>
 
             <Button
                 android:id="@+id/half_interstitial_button2"
-                android:layout_width="160dp"
-                android:layout_height="40dp"
-                android:textSize="16sp"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="@dimen/inapp_button_height"
+                android:textSize="@dimen/txt_size_inapp_half_button"
                 android:layout_marginLeft="20dp"
                 android:visibility="gone"
                 android:layout_marginStart="10dp" />
@@ -88,8 +89,5 @@
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_gravity="top|end"
-        android:layout_marginRight="132dp"
-        android:layout_marginTop="24dp"
-        android:adjustViewBounds="true"
-        android:layout_marginEnd="132dp"/>
+        android:adjustViewBounds="true"/>
 </FrameLayout>

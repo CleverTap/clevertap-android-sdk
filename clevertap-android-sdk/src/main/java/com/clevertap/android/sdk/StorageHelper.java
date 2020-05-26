@@ -2,14 +2,8 @@ package com.clevertap.android.sdk;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Build;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-final class StorageHelper {
-    private static long EXECUTOR_THREAD_ID = 0;
-    private static ExecutorService es;
+public final class StorageHelper {
 
     static void putString(Context context, String key, String value) {
         SharedPreferences prefs = getPreferences(context);
@@ -69,7 +63,7 @@ final class StorageHelper {
         return getPreferences(context).getBoolean(key, defaultValue);
     }
 
-    static SharedPreferences getPreferences(Context context, String namespace) {
+    public static SharedPreferences getPreferences(Context context, String namespace) {
         String path = Constants.CLEVERTAP_STORAGE_TAG;
 
         if (namespace != null) {
@@ -82,46 +76,11 @@ final class StorageHelper {
         return getPreferences(context, null);
     }
 
-    static void persist(final SharedPreferences.Editor editor) {
+    public static void persist(final SharedPreferences.Editor editor) {
         try {
-            if (android.os.Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                editor.apply();
-            } else {
-                postAsyncSafely(new Runnable() {
-                    @Override
-                    public void run() {
-                        editor.commit();
-                    }
-                });
-            }
+            editor.apply();
         } catch (Throwable t) {
             Logger.v("CRITICAL: Failed to persist shared preferences!", t);
-        }
-    }
-
-    private static void postAsyncSafely(final Runnable runnable) {
-        try {
-            if (es == null)
-                es = Executors.newFixedThreadPool(1);
-            final boolean executeSync = Thread.currentThread().getId() == EXECUTOR_THREAD_ID;
-
-            if (executeSync) {
-                runnable.run();
-            } else {
-                es.submit(new Runnable() {
-                    @Override
-                    public void run() {
-                        EXECUTOR_THREAD_ID = Thread.currentThread().getId();
-                        try {
-                            runnable.run();
-                        } catch (Throwable t) {
-                            Logger.v("Executor service: Failed to complete the scheduled task", t);
-                        }
-                    }
-                });
-            }
-        } catch (Throwable t) {
-            Logger.v("Failed to submit task to the executor service", t);
         }
     }
 }

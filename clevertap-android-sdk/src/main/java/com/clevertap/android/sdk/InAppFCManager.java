@@ -23,12 +23,14 @@ class InAppFCManager {
     private final ArrayList<String> mDismissedThisSession = new ArrayList<>();
     private final HashMap<String, Integer> mShownThisSession = new HashMap<>();
     private int mShownThisSessionCount = 0;
+    private String deviceId;
 
 
-    InAppFCManager(Context context, CleverTapInstanceConfig config){
+    InAppFCManager(Context context, CleverTapInstanceConfig config, String deviceId){
         this.config = config;
         this.context = context;
-        init();
+        this.deviceId = deviceId;
+        init(deviceId);
     }
 
     private Logger getConfigLogger(){
@@ -39,41 +41,87 @@ class InAppFCManager {
         return this.config.getAccountId();
     }
 
-    private void init(){
-        final String today = ddMMyyyy.format(new Date());
-        final String lastUpdated = getStringFromPrefs("ict_date", "20140428");
-        if (!today.equals(lastUpdated)) {
-            StorageHelper.putString(context, storageKeyWithSuffix("ict_date"), today);
+    private String getKeyWithDeviceId(String key, String deviceId){
+        return key +":"+deviceId;
+    }
 
-            // Reset today count
-            StorageHelper.putInt(context, storageKeyWithSuffix(Constants.KEY_COUNTS_SHOWN_TODAY), 0);
+    private void migrateToNewPrefsKey(String deviceId){
 
-            // Reset the counts for each inapp
-            final SharedPreferences prefs = getPreferences(context, Constants.KEY_COUNTS_PER_INAPP);
-            final SharedPreferences.Editor editor = prefs.edit();
-            final Map<String, ?> all = prefs.getAll();
-            for (String inapp : all.keySet()) {
-                Object ov = all.get(inapp);
-                if (!(ov instanceof String)) {
-                    editor.remove(inapp);
-                    continue;
-                }
+        if(getStringFromPrefs(storageKeyWithSuffix(getKeyWithDeviceId("ict_date",deviceId)), null) != null
+                    || getStringFromPrefs("ict_date",null) == null ) return;
 
-                String[] oldValues = ((String) ov).split(",");
-                if (oldValues.length != 2) {
-                    editor.remove(inapp);
-                    continue;
-                }
+        Logger.v("Migrating InAppFC Prefs");
 
-                // protocol: todayCount,lifeTimeCount
-                try {
-                    editor.putString(inapp, "0," + oldValues[1]);
-                } catch (Throwable t) {
-                    getConfigLogger().verbose(getConfigAccountId(),"Failed to reset todayCount for inapp " + inapp, t);
-                }
+        String ict_date = getStringFromPrefs("ict_date","20140428");
+        StorageHelper.putString(context,storageKeyWithSuffix(getKeyWithDeviceId("ict_date",deviceId)),ict_date);
+
+        int keyCountsShownToday = getIntFromPrefs(storageKeyWithSuffix(Constants.KEY_COUNTS_SHOWN_TODAY),0);
+        StorageHelper.putInt(context,storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY,deviceId)),keyCountsShownToday);
+
+        final SharedPreferences oldPrefs = getPreferences(context, Constants.KEY_COUNTS_PER_INAPP);
+        final SharedPreferences.Editor editor = oldPrefs.edit();
+
+        final SharedPreferences newPrefs = getPreferences(context, getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP,deviceId));
+        final SharedPreferences.Editor newEditor = newPrefs.edit();
+
+        final Map<String, ?> all = oldPrefs.getAll();
+        for (String inapp : all.keySet()) {
+            Object ov = all.get(inapp);
+            if (!(ov instanceof String)) {
+                editor.remove(inapp);
+                continue;
             }
+            String[] oldValues = ((String) ov).split(",");
+            if (oldValues.length != 2) {
+                editor.remove(inapp);
+                continue;
+            }
+            newEditor.putString(inapp,ov.toString());
+        }
+        StorageHelper.persist(newEditor);
+        editor.clear().apply();
+    }
 
-            StorageHelper.persist(editor);
+    private void init(String deviceId){
+        try {
+            migrateToNewPrefsKey(deviceId);
+            final String today = ddMMyyyy.format(new Date());
+            final String lastUpdated = getStringFromPrefs(getKeyWithDeviceId("ict_date", deviceId), "20140428");
+            if (!today.equals(lastUpdated)) {
+                StorageHelper.putString(context, storageKeyWithSuffix(getKeyWithDeviceId("ict_date", deviceId)), today);
+
+                // Reset today count
+                StorageHelper.putInt(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId)), 0);
+
+                // Reset the counts for each inapp
+                final SharedPreferences prefs = getPreferences(context, getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId));
+                final SharedPreferences.Editor editor = prefs.edit();
+                final Map<String, ?> all = prefs.getAll();
+                for (String inapp : all.keySet()) {
+                    Object ov = all.get(inapp);
+                    if (!(ov instanceof String)) {
+                        editor.remove(inapp);
+                        continue;
+                    }
+
+                    String[] oldValues = ((String) ov).split(",");
+                    if (oldValues.length != 2) {
+                        editor.remove(inapp);
+                        continue;
+                    }
+
+                    // protocol: todayCount,lifeTimeCount
+                    try {
+                        editor.putString(inapp, "0," + oldValues[1]);
+                    } catch (Throwable t) {
+                        getConfigLogger().verbose(getConfigAccountId(), "Failed to reset todayCount for inapp " + inapp, t);
+                    }
+                }
+
+                StorageHelper.persist(editor);
+            }
+        } catch (Exception e) {
+            getConfigLogger().verbose(getConfigAccountId(), "Failed to init inapp manager " + e.getLocalizedMessage());
         }
     }
 
@@ -112,8 +160,8 @@ class InAppFCManager {
 
         incrementInAppCountsInPersistentStore(id);
 
-        int shownToday = getIntFromPrefs(Constants.KEY_COUNTS_SHOWN_TODAY, 0);
-        StorageHelper.putInt(context, storageKeyWithSuffix(Constants.KEY_COUNTS_SHOWN_TODAY), ++shownToday);
+        int shownToday = getIntFromPrefs(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY,deviceId), 0);
+        StorageHelper.putInt(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY,deviceId)), ++shownToday);
     }
 
     void didDismiss(CTInAppNotification inapp) {
@@ -154,7 +202,7 @@ class InAppFCManager {
         }
 
         // 3. Have we shown enough of in-apps this session?
-        final int c = getIntFromPrefs(Constants.INAPP_MAX_PER_SESSION, 1);
+        final int c = getIntFromPrefs(getKeyWithDeviceId(Constants.INAPP_MAX_PER_SESSION,deviceId), 1);
         return (mShownThisSessionCount >= c);
     }
 
@@ -179,8 +227,8 @@ class InAppFCManager {
         if (id == null) return false;
 
         // 1. Has the daily count maxed out globally?
-        int shownTodayCount = getIntFromPrefs(Constants.KEY_COUNTS_SHOWN_TODAY, 0);
-        int maxPerDayCount = getIntFromPrefs(Constants.KEY_MAX_PER_DAY, 1);
+        int shownTodayCount = getIntFromPrefs(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY,deviceId), 0);
+        int maxPerDayCount = getIntFromPrefs(getKeyWithDeviceId(Constants.KEY_MAX_PER_DAY,deviceId), 1);
         if (shownTodayCount >= maxPerDayCount) return true;
 
         // 2. Has the daily count been maxed out for this inapp?
@@ -198,8 +246,8 @@ class InAppFCManager {
     }
 
     synchronized void updateLimits(final Context context, int perDay, int perSession) {
-        StorageHelper.putInt(context, storageKeyWithSuffix(Constants.KEY_MAX_PER_DAY), perDay);
-        StorageHelper.putInt(context, storageKeyWithSuffix(Constants.INAPP_MAX_PER_SESSION), perSession);
+        StorageHelper.putInt(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_MAX_PER_DAY,deviceId)), perDay);
+        StorageHelper.putInt(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.INAPP_MAX_PER_SESSION,deviceId)), perSession);
     }
 
     private void incrementInAppCountsInPersistentStore(String inappID) {
@@ -207,7 +255,7 @@ class InAppFCManager {
         current[0] = current[0] + 1;
         current[1] = current[1] + 1;
 
-        final SharedPreferences prefs = getPreferences(context, Constants.KEY_COUNTS_PER_INAPP);
+        final SharedPreferences prefs = getPreferences(context, getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP,deviceId));
         final SharedPreferences.Editor editor = prefs.edit();
 
         // protocol: todayCount,lifeTimeCount
@@ -216,7 +264,7 @@ class InAppFCManager {
     }
 
     private int[] getInAppCountsFromPersistentStore(String inappID) {
-        final SharedPreferences prefs = getPreferences(context, Constants.KEY_COUNTS_PER_INAPP);
+        final SharedPreferences prefs = getPreferences(context, getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP,deviceId));
         final String str = prefs.getString(inappID, null);
         if (str == null) return new int[]{0, 0};
 
@@ -235,11 +283,11 @@ class InAppFCManager {
         try {
             // Trigger reset for dates
 
-            header.put("imp", getIntFromPrefs(Constants.KEY_COUNTS_SHOWN_TODAY, 0));
+            header.put("imp", getIntFromPrefs(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY,deviceId), 0));
 
             // tlc: [[targetID, todayCount, lifetime]]
             JSONArray arr = new JSONArray();
-            final SharedPreferences prefs = StorageHelper.getPreferences(context, Constants.KEY_COUNTS_PER_INAPP);
+            final SharedPreferences prefs = StorageHelper.getPreferences(context, getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP,deviceId));
             final Map<String, ?> all = prefs.getAll();
             for (String inapp : all.keySet()) {
                 final Object o = all.get(inapp);
@@ -268,7 +316,7 @@ class InAppFCManager {
             final JSONArray arr = response.getJSONArray("inapp_stale");
 
 
-            final SharedPreferences prefs = getPreferences(context, Constants.KEY_COUNTS_PER_INAPP);
+            final SharedPreferences prefs = getPreferences(context, getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP,deviceId));
             final SharedPreferences.Editor editor = prefs.edit();
 
             for (int i = 0; i < arr.length(); i++) {
@@ -288,17 +336,13 @@ class InAppFCManager {
         }
     }
 
-    void changeUser(final Context context) {
+    void changeUser(String deviceId) {
         // reset counters
-        StorageHelper.putInt(context, Constants.KEY_COUNTS_SHOWN_TODAY, 0);
         mShownThisSession.clear();
         mShownThisSessionCount = 0;
         mDismissedThisSession.clear();
-
-        final SharedPreferences prefs = getPreferences(context, Constants.KEY_COUNTS_PER_INAPP);
-        final SharedPreferences.Editor editor = prefs.edit();
-        editor.clear();
-        StorageHelper.persist(editor);
+        this.deviceId = deviceId;
+        init(deviceId);
     }
 
     @SuppressWarnings("SameParameterValue")

@@ -40,6 +40,7 @@ public class CTNotificationIntentService extends IntentService {
             Intent launchIntent;
             if (dl != null) {
                 launchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(dl));
+                Utils.setPackageNameFromResolveInfoList(context,launchIntent);
             } else {
                 launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
             }

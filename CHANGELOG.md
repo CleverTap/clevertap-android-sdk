@@ -1,5 +1,34 @@
 ## CHANGE LOG
 
+### Version 3.8.0 (May 06, 2020)
+* Adds support for Product Config and Feature Flag as a part of Product Experiences feature
+* Fixed InApp center alignment issue for tablets
+* Adds support for custom handling payload when using Push Amplification.
+* Other bug fixes
+
+### Version 3.7.2 (March 27, 2020)
+* Adds fix for a crash caused when InApp with Frequency Caps was shown on first App Launched
+
+### Version 3.7.1 (March 19, 2020)
+* Adds fix for a crash caused when CleverTap instance was created from background
+
+### Version 3.7.0 (March 11, 2020)
+* Adds support for Xiaomi & Baidu Push Notification Services
+* Adds public APIs for raising Notification Clicked and Viewed events for App Inbox
+* Adds public APIS for marking inbox message as read and deleting inbox message per message ID
+* Fixes center alignment issue of Native InApps on Mobile devices
+* Performance improvements
+
+### Version 3.6.4 (February 26, 2020)
+* Reverting Google Play Install Library to v1.0
+* Bug Fixes
+
+### Version 3.6.3 (January 13, 2020)
+* Adds support for capturing Install Referrer via Google Play Install Referrer Library
+* Deprecation warning for `InstallReferrerBroadcastReceiver`
+* Changes retry mechanism in case CleverTap back end doesn't respond
+* Bug fixes and performance improvements
+
 ### Version 3.6.2 (December 11, 2019)
 * Adds support for Native Display.
 * Bug fixes and performance improvements

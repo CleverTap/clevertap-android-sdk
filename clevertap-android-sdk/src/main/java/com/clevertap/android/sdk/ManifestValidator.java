@@ -15,7 +15,7 @@ final class ManifestValidator {
     private final static String ourApplicationClassName = "com.clevertap.android.sdk.Application";
 
     static void validate(final Context context, DeviceInfo deviceInfo) {
-        if (!deviceInfo.testPermission(context,"android.permission.INTERNET")) {
+        if (!deviceInfo.testPermission(context, "android.permission.INTERNET")) {
             Logger.d("Missing Permission: android.permission.INTERNET");
         }
         checkSDKVersion(deviceInfo);
@@ -23,20 +23,18 @@ final class ManifestValidator {
         checkReceiversServices(context, deviceInfo);
     }
 
-    private static void checkSDKVersion(DeviceInfo deviceInfo){
+    private static void checkSDKVersion(DeviceInfo deviceInfo) {
         Logger.i("SDK Version Code is " + deviceInfo.getSdkVersion());
     }
 
-    private static void checkReceiversServices(final Context context, DeviceInfo deviceInfo){
+    private static void checkReceiversServices(final Context context, DeviceInfo deviceInfo) {
         try {
             validateReceiverInManifest((Application) context.getApplicationContext(), CTPushNotificationReceiver.class.getName());
-            validateReceiverInManifest((Application) context.getApplicationContext(), InstallReferrerBroadcastReceiver.class.getName());
             validateServiceInManifest((Application) context.getApplicationContext(), CTNotificationIntentService.class.getName());
             validateServiceInManifest((Application) context.getApplicationContext(), CTBackgroundJobService.class.getName());
             validateServiceInManifest((Application) context.getApplicationContext(), CTBackgroundIntentService.class.getName());
             validateActivityInManifest((Application) context.getApplicationContext(), InAppNotificationActivity.class);
-        }
-        catch (Exception e){
+        } catch (Exception e) {
             Logger.v("Receiver/Service issue : " + e.toString());
 
         }
@@ -70,11 +68,11 @@ final class ManifestValidator {
 
         for (ActivityInfo activityInfo : receivers) {
             if (activityInfo.name.equals(receiverClassName)) {
-                Logger.i(receiverClassName.replaceFirst("com.clevertap.android.sdk.","") + " is present");
+                Logger.i(receiverClassName.replaceFirst("com.clevertap.android.sdk.", "") + " is present");
                 return;
             }
         }
-        Logger.i(receiverClassName.replaceFirst("com.clevertap.android.sdk.","") + " not present" );
+        Logger.i(receiverClassName.replaceFirst("com.clevertap.android.sdk.", "") + " not present");
     }
 
 
@@ -86,11 +84,11 @@ final class ManifestValidator {
         ServiceInfo[] services = packageInfo.services;
         for (ServiceInfo serviceInfo : services) {
             if (serviceInfo.name.equals(serviceClassName)) {
-                Logger.i(serviceClassName.replaceFirst("com.clevertap.android.sdk.","")+" is present");
+                Logger.i(serviceClassName.replaceFirst("com.clevertap.android.sdk.", "") + " is present");
                 return;
             }
         }
-        Logger.i(serviceClassName.replaceFirst("com.clevertap.android.sdk.","") + " not present" );
+        Logger.i(serviceClassName.replaceFirst("com.clevertap.android.sdk.", "") + " not present");
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -103,17 +101,17 @@ final class ManifestValidator {
         String activityClassName = activityClass.getName();
         for (ActivityInfo activityInfo : activities) {
             if (activityInfo.name.equals(activityClassName)) {
-                Logger.i(activityClassName.replaceFirst("com.clevertap.android.sdk.","") + " is present");
+                Logger.i(activityClassName.replaceFirst("com.clevertap.android.sdk.", "") + " is present");
                 return;
             }
         }
-        Logger.i(activityClassName.replaceFirst("com.clevertap.android.sdk.","") + " not present");
+        Logger.i(activityClassName.replaceFirst("com.clevertap.android.sdk.", "") + " not present");
     }
 
-    private static void validationApplicationLifecyleCallback(final Context context){
+    private static void validationApplicationLifecyleCallback(final Context context) {
         // some of the ancillary SDK wrappers have to manage the activity lifecycle manually because they don't have access to the application object or whatever
         // for those cases also consider CleverTapAPI.isAppForeground() as a proxy for the SDK being in sync with the activity lifecycle
-        if(!ActivityLifecycleCallback.registered && !CleverTapAPI.isAppForeground()){
+        if (!ActivityLifecycleCallback.registered && !CleverTapAPI.isAppForeground()) {
             Logger.i("Activity Lifecycle Callback not registered. Either set the android:name in your AndroidManifest.xml application tag to com.clevertap.android.sdk.Application, \n or, " +
                     "if you have a custom Application class, call ActivityLifecycleCallback.register(this); before super.onCreate() in your class");
             //Check for Application class only if the application lifecycle seems to be a problem
@@ -121,16 +119,16 @@ final class ManifestValidator {
         }
     }
 
-    private static void checkApplicationClass(final Context context){
+    private static void checkApplicationClass(final Context context) {
         String appName = context.getApplicationInfo().className;
-        if(appName == null || appName.isEmpty()) {
+        if (appName == null || appName.isEmpty()) {
             Logger.i("Unable to determine Application Class");
-        } else if(appName.equals(ourApplicationClassName)) {
+        } else if (appName.equals(ourApplicationClassName)) {
             Logger.i("AndroidManifest.xml uses the CleverTap Application class, " +
                     "be sure you have properly added the CleverTap Account ID and Token to your AndroidManifest.xml, \n" +
                     "or set them programmatically in the onCreate method of your custom application class prior to calling super.onCreate()");
         } else {
-            Logger.i("Application Class is "+ appName);
+            Logger.i("Application Class is " + appName);
         }
     }
 }
