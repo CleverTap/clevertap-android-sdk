@@ -31,7 +31,7 @@ dependencies {
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
     //CleverTap Android SDK, make sure the AAR file is in the libs folder
-    implementation (name: 'clevertap-android-sdk-3.7.2', ext: 'aar')
+    implementation (name: 'clevertap-android-sdk-3.8.0', ext: 'aar')
 
     implementation 'com.google.firebase:firebase-messaging:17.3.0' //Needed for FCM
     implementation 'com.google.android.gms:play-services-ads:15.0.1' //Needed to use Google Ad Ids

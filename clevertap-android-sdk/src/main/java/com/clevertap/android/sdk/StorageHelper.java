@@ -3,11 +3,7 @@ package com.clevertap.android.sdk;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import java.util.concurrent.ExecutorService;
-
 public final class StorageHelper {
-    private static long EXECUTOR_THREAD_ID = 0;
-    private static ExecutorService es;
 
     static void putString(Context context, String key, String value) {
         SharedPreferences prefs = getPreferences(context);

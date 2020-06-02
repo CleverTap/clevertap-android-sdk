@@ -1,12 +1,21 @@
 package com.clevertap.android.sdk.product_config;
 
 /**
- * public interface for product config callbacks
+ * Interface definition for a callback to be invoked when Product Config APIs are invoked
  */
 public interface CTProductConfigListener {
+    /**
+     * Receives a callback whenever Product Config initialises.
+     */
     void onInit();
 
+    /**
+     * Receives a callback whenever Product Config is fetched.
+     */
     void onFetched();
 
+    /**
+     * Receives a callback whenever Product Config gets activated.
+     */
     void onActivated();
 }
