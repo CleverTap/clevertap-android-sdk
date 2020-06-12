@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.clevertap.android.sdk"
+    android:versionCode="30801"
+    android:versionName="3.8.1">
+
+    <uses-sdk
+        android:minSdkVersion="16"
+        android:targetSdkVersion="28" />
+
+    <application android:name=".TestApplication">
+        <meta-data
+            android:name="CLEVERTAP_APP_PACKAGE"
+            android:value="com.clevertap.beardedrobot" />
+
+        <meta-data
+            android:name="FCM_SENDER_ID"
+            android:value="id:112273261716" />
+
+        <meta-data
+            android:name="CLEVERTAP_ACCOUNT_ID"
+            android:value="@string/ct_acc_id" />
+        <meta-data
+            android:name="CLEVERTAP_TOKEN"
+            android:value="@string/ct_acc_token" />
+        <meta-data
+            android:name="CLEVERTAP_USE_GOOGLE_AD_ID"
+            android:value="1" />
+    </application>
+
+</manifest>

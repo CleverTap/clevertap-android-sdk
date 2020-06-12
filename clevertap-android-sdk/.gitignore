@@ -9,4 +9,3 @@ docs
 build/
 .gradle/
 gradle/
-test/
