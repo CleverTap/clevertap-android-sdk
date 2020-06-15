@@ -80,7 +80,11 @@ android {
             }
         }
     }
-    testOptions.unitTests.includeAndroidResources = true
+    testOptions{
+        unitTests{
+            includeAndroidResources = true
+        }
+    }
 }
 
 Properties properties = new Properties()
@@ -167,6 +171,8 @@ dependencies {
     // AndroidJUnitRunner and JUnit Rules
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test:rules:1.2.0'
+
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 }
 
 task sourcesJar(type: Jar) {

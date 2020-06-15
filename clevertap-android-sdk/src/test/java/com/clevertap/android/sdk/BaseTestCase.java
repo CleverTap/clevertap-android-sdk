@@ -1,5 +1,3 @@
-/* Copyright Airship and Contributors */
-
 package com.clevertap.android.sdk;
 
 import android.os.Bundle;
