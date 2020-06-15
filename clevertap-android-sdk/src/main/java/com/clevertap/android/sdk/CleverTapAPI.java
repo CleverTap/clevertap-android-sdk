@@ -102,7 +102,11 @@ import static com.clevertap.android.sdk.Utils.runOnUiThread;
 public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationListener,
         InAppNotificationActivity.InAppActivityListener,
         CTInAppBaseFragment.InAppListener,
-        CTInboxActivity.InboxActivityListener, CTABTestListener, FeatureFlagListener, CTProductConfigControllerListener, CTProductConfigListener {
+        CTInboxActivity.InboxActivityListener,
+        CTABTestListener,
+        FeatureFlagListener,
+        CTProductConfigControllerListener,
+        CTProductConfigListener {
     private final HashMap<String, Object> notificationIdTagMap = new HashMap<>();
     private final HashMap<String, Object> notificationViewedIdTagMap = new HashMap<>();
 
@@ -229,6 +233,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private Location locationFromUser = null;
     private SyncListener syncListener = null;
     private CTPushListener pushListener = null;
+    private CTPushNotificationListener pushNotificationListener = null;
     private ArrayList<PushType> enabledPushTypes = null;
     private long appLastSeen = 0;
     private int currentSessionId = 0;
@@ -317,6 +322,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private CTFeatureFlagsController ctFeatureFlagsController;
     private WeakReference<CTFeatureFlagsListener> featureFlagsListener;
     private WeakReference<CTProductConfigListener> productConfigListener;
+    //private Bundle pushPayload = null;
 
     // static lifecycle callbacks
     static void onActivityCreated(Activity activity, String cleverTapID) {
@@ -5395,6 +5401,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         } catch (Throwable t) {
             // We won't get here
         }
+        if(getCTPushNotificationListener() != null){
+            getCTPushNotificationListener().onNotificationClickedPayloadReceived(Utils.convertBundleObjectToHashMap(extras));
+        }else{
+            Logger.d("CTPushNotificationListener is not set");
+        }
     }
 
     /**
@@ -7446,6 +7457,26 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @SuppressWarnings("unused")
     public void setCTPushListener(CTPushListener pushListener) {
         this.pushListener = pushListener;
+    }
+
+    /**
+     * Returns the CTPushNotificationListener object
+     *
+     * @return The {@link CTPushNotificationListener} object
+     */
+    @SuppressWarnings("WeakerAccess")
+    public CTPushNotificationListener getCTPushNotificationListener() {
+        return pushNotificationListener;
+    }
+
+    /**
+     * This method is used to set the CTPushNotificationListener
+     *
+     * @param pushNotificationListener - The{@link CTPushNotificationListener} object
+     */
+    @SuppressWarnings("unused")
+    public void setCTPushNotificationListener(CTPushNotificationListener pushNotificationListener) {
+        this.pushNotificationListener = pushNotificationListener;
     }
 
     /**
