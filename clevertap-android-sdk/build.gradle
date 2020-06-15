@@ -4,7 +4,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:3.4.2'
+        classpath 'com.android.tools.build:gradle:4.0.0'
         classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.1'
         classpath 'com.google.gms:google-services:4.3.0'
@@ -80,6 +80,7 @@ android {
             }
         }
     }
+    testOptions.unitTests.includeAndroidResources = true
 }
 
 Properties properties = new Properties()
@@ -156,9 +157,16 @@ dependencies {
     compileOnly 'com.github.bumptech.glide:glide:4.11.0'
     implementation 'com.android.installreferrer:installreferrer:1.0'
     // Unit testing dependencies
-    testImplementation 'junit:junit:4.12'
-    testImplementation 'org.mockito:mockito-core:2.11.0'
-    testImplementation 'org.robolectric:robolectric:3.0'
+    testImplementation 'junit:junit:4.13'
+    testImplementation 'org.mockito:mockito-core:2.25.0'
+    testImplementation 'org.robolectric:robolectric:4.3.1'
+
+    testImplementation 'androidx.test:core:1.2.0'
+    testImplementation "androidx.test.ext:junit:1.1.1"
+
+    // AndroidJUnitRunner and JUnit Rules
+    androidTestImplementation 'androidx.test:runner:1.2.0'
+    androidTestImplementation 'androidx.test:rules:1.2.0'
 }
 
 task sourcesJar(type: Jar) {
