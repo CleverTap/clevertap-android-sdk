@@ -14,14 +14,9 @@ import static org.mockito.Mockito.verify;
 @RunWith(RobolectricTestRunner.class)
 public class CleverTapAPITest extends BaseTestCase {
 
-    private CleverTapAPI cleverTapAPI;
-
-    private TestApplication application;
-
     @Before
     public void setUp() throws Exception {
-        application = TestApplication.getApplication();
-        cleverTapAPI = mock(CleverTapAPI.class);
+        super.setUp();
     }
 
     @Test
