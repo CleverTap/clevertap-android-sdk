@@ -3,7 +3,8 @@ package com.clevertap.android.sdk;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
 
 import org.json.JSONObject;
 
@@ -146,7 +147,7 @@ public class CleverTapInstanceConfig implements Parcelable {
     }
 
     @SuppressWarnings("unused")
-    public static CleverTapInstanceConfig createInstance(Context context, @NonNull  String accountId, @NonNull  String accountToken) {
+    public static CleverTapInstanceConfig createInstance(Context context, @NonNull String accountId, @NonNull  String accountToken) {
         //noinspection ConstantConditions
         if (accountId == null || accountToken == null) {
             Logger.i("CleverTap accountId and accountToken cannot be null");

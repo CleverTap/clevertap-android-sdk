@@ -1,7 +1,8 @@
 package com.clevertap.android.sdk.displayunits;
 
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
+
+import androidx.annotation.Nullable;
 
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;

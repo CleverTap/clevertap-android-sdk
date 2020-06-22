@@ -2,7 +2,8 @@ package com.clevertap.android.sdk.displayunits.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.NonNull;
+
+import androidx.annotation.NonNull;
 
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;

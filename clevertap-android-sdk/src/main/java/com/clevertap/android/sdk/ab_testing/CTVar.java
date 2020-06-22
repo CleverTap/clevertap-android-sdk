@@ -1,7 +1,9 @@
 package com.clevertap.android.sdk.ab_testing;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
+
 import com.clevertap.android.sdk.Logger;
+
 import org.json.JSONObject;
 
 import java.util.ArrayList;

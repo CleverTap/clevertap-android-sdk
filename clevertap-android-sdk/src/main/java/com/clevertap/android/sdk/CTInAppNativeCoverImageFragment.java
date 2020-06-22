@@ -3,13 +3,14 @@ package com.clevertap.android.sdk;
 import android.annotation.SuppressLint;
 import android.graphics.Color;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+
+import androidx.annotation.Nullable;
 
 public class CTInAppNativeCoverImageFragment extends CTInAppBaseFullFragment {
     @Nullable

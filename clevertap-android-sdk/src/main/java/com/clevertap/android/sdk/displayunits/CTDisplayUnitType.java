@@ -1,9 +1,10 @@
 package com.clevertap.android.sdk.displayunits;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.clevertap.android.sdk.Constants;
 

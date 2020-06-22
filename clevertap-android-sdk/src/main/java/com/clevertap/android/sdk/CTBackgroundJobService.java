@@ -3,7 +3,8 @@ package com.clevertap.android.sdk;
 import android.app.job.JobParameters;
 import android.app.job.JobService;
 import android.os.Build;
-import android.support.annotation.RequiresApi;
+
+import androidx.annotation.RequiresApi;
 
 /**
  * Background Job service to sync up for new notifications

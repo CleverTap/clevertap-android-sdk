@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 public enum PushType {
     FCM("fcm"),
