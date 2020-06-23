@@ -17,34 +17,6 @@ public class CTInboxStyleConfig implements Parcelable {
 
     private final static int MAX_TABS = 2;
 
-    /**
-     * CleverTap Android SDK targets to Android 28 (Pie), hence the support libraries
-     * support-appcompat, support-v4 and support-design also point to version 28.0.0.
-     * In this version of support-design, TabLayout.OnTabSelectedListener extends TabLayout.BaseOnTabSelectedListener.
-     * While in previous versions of the support-design library (27.1.1 and below),
-     * TabLayout.OnTabSelectedListener was a standalone interface. So if your app is targeting to
-     * Android 26 or Android 27, the support-design library is missing a crucial interface needed to show
-     * Tabs on the App Inbox. To ensure that this doesn't cause your app to crash, this method checks for
-     * TabLayout.BaseOnTabSelectedListener before setting Tabs as a part of your App Inbox.
-     */
-    private static boolean platformSupportsTabs;
-    static {
-        try {
-            TabLayout.OnTabSelectedListener test = new TabLayout.OnTabSelectedListener() {
-                @Override
-                public void onTabSelected(TabLayout.Tab tab) {}
-                @Override
-                public void onTabUnselected(TabLayout.Tab tab) {}
-                @Override
-                public void onTabReselected(TabLayout.Tab tab) {}
-            };
-            // noinspection ConstantConditions
-            platformSupportsTabs = test instanceof TabLayout.BaseOnTabSelectedListener;
-        } catch (Throwable t){
-            // no-op
-        }
-    }
-
     private String navBarColor;
     private String navBarTitle;
     private String navBarTitleColor;
@@ -185,17 +157,13 @@ public class CTInboxStyleConfig implements Parcelable {
     public void setTabs(ArrayList<String>tabs) {
         if (tabs == null || tabs.size() <= 0) return;
 
-        if (platformSupportsTabs) {
-            ArrayList<String> toAdd;
-            if (tabs.size() > MAX_TABS) {
-                toAdd = new ArrayList<>(tabs.subList(0, MAX_TABS));
-            } else {
-                toAdd = tabs;
-            }
-            this.tabs = toAdd.toArray(new String[0]);
+        ArrayList<String> toAdd;
+        if (tabs.size() > MAX_TABS) {
+            toAdd = new ArrayList<>(tabs.subList(0, MAX_TABS));
         } else {
-            Logger.d("Please upgrade com.android.support:design library to v28.0.0 to enable Tabs for App Inbox, dropping Tabs");
+            toAdd = tabs;
         }
+        this.tabs = toAdd.toArray(new String[0]);
     }
 
     public ArrayList<String> getTabs() {
