@@ -28,7 +28,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 
-import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
@@ -45,6 +44,8 @@ import com.google.android.exoplayer2.upstream.TransferListener;
 import com.google.android.exoplayer2.util.Util;
 
 import java.util.ArrayList;
+
+import static com.google.android.exoplayer2.ui.PlayerView.SHOW_BUFFERING_WHEN_PLAYING;
 
 public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFragment {
 
@@ -403,24 +404,24 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
             layoutParams.setMargins(0,iconTop,iconRight,0);
             fullScreenIcon.setLayoutParams(layoutParams);
         }
-        playerView.setShowBuffering(true);
+        playerView.setShowBuffering(SHOW_BUFFERING_WHEN_PLAYING);
         playerView.setUseArtwork(true);
         playerView.setControllerAutoShow(false);
         videoFrameLayout.addView(playerView);
         videoFrameLayout.addView(fullScreenIcon);
         Drawable artwork = getActivity().getBaseContext().getResources().getDrawable(R.drawable.ct_audio);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            playerView.setDefaultArtwork(Utils.drawableToBitmap(artwork));
+            playerView.setDefaultArtwork(artwork);
         }else{
-            playerView.setDefaultArtwork(Utils.drawableToBitmap(artwork));
+            playerView.setDefaultArtwork(artwork);
         }
 
         // 1. Create a default TrackSelector
-        BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
-        TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory(bandwidthMeter);
-        TrackSelector trackSelector = new DefaultTrackSelector(videoTrackSelectionFactory);
+        BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter.Builder(getActivity().getBaseContext()).build();
+        TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory();
+        TrackSelector trackSelector = new DefaultTrackSelector(getActivity().getBaseContext(),videoTrackSelectionFactory);
         // 2. Create the player
-        player = ExoPlayerFactory.newSimpleInstance(getActivity().getBaseContext(), trackSelector);
+        player = new SimpleExoPlayer.Builder(getActivity().getBaseContext()).setTrackSelector(trackSelector).build();
         // 3. Produces DataSource instances through which media data is loaded.
         DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(getActivity().getBaseContext(),
                 Util.getUserAgent(getActivity().getBaseContext(), getActivity().getApplication().getPackageName()), (TransferListener) bandwidthMeter);

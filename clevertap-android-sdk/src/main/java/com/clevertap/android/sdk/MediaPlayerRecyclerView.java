@@ -15,7 +15,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.ExoPlayerFactory;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
@@ -28,8 +27,6 @@ import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.PlayerView;
-import com.google.android.exoplayer2.upstream.BandwidthMeter;
-import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 
 public class MediaPlayerRecyclerView extends RecyclerView {
 
@@ -86,15 +83,14 @@ public class MediaPlayerRecyclerView extends RecyclerView {
         }
         videoSurfaceView.setUseArtwork(true);
         Drawable artwork = context.getResources().getDrawable(R.drawable.ct_audio);
-        videoSurfaceView.setDefaultArtwork(Utils.drawableToBitmap(artwork));
+        videoSurfaceView.setDefaultArtwork(artwork);
 
-        BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter();
         TrackSelection.Factory videoTrackSelectionFactory =
-                new AdaptiveTrackSelection.Factory(bandwidthMeter);
+                new AdaptiveTrackSelection.Factory();
         TrackSelector trackSelector =
-                new DefaultTrackSelector(videoTrackSelectionFactory);
+                new DefaultTrackSelector(appContext,videoTrackSelectionFactory);
 
-        player = ExoPlayerFactory.newSimpleInstance(appContext, trackSelector);
+        player = new SimpleExoPlayer.Builder(context).setTrackSelector(trackSelector).build();
         player.setVolume(0f); // start off muted
         videoSurfaceView.setUseController(true);
         videoSurfaceView.setControllerAutoShow(false);
