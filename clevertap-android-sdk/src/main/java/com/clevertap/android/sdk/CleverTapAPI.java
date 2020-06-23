@@ -5397,6 +5397,29 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+    public static void pushNewToken(Context context, String fcmId){
+        if (instances == null) {
+            CleverTapAPI.createInstanceIfAvailable(context.getApplicationContext(), null);
+        }
+
+        if (instances == null) {
+            Logger.v("Instances is null in pushNewToken!");
+            return;
+        }
+
+        for (String accountId : CleverTapAPI.instances.keySet()) {
+            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+            try {
+                if (instance != null) {
+                    Logger.v("Pushing token from onNewToken");
+                    instance.pushFcmRegistrationId(fcmId,true);
+                }
+            } catch (Throwable t) {
+                Logger.v("Throwable - " + t.getLocalizedMessage());
+            }
+        }
+    }
+
     /**
      * Sends the FCM registration ID to CleverTap.
      *

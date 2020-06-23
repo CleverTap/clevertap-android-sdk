@@ -32,9 +32,9 @@ public class FcmMessageListenerService extends FirebaseMessagingService {
     }
 
     @Override
-    public void onNewToken(@NonNull String s) {
-        super.onNewToken(s);
-        Logger.d("FcmMessageListenerService: onNewToken");
-        CleverTapAPI.tokenRefresh(this);
+    public void onNewToken(@NonNull String token) {
+        super.onNewToken(token);
+        Logger.d("New token received from FCM - "+token);
+        CleverTapAPI.pushNewToken(getApplicationContext(),token);
     }
 }
