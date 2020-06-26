@@ -19,7 +19,8 @@ final class Validator {
     private static final String[] objectValueCharsNotAllowed = {"'", "\"", "\\"};
     private static final String[] restrictedNames = {"Stayed", "Notification Clicked",
             "Notification Viewed", "UTM Visited", "Notification Sent", "App Launched", "wzrk_d",
-            "App Uninstalled", "Notification Bounced"};
+            "App Uninstalled", "Notification Bounced", Constants.GEOFENCE_ENTERED_EVENT_NAME,
+            Constants.GEOFENCE_EXITED_EVENT_NAME};
 
     static final String ADD_VALUES_OPERATION = "multiValuePropertyAddValues";
     static final String REMOVE_VALUES_OPERATION = "multiValuePropertyRemoveValues";

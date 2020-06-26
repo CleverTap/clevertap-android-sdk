@@ -317,6 +317,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private CTFeatureFlagsController ctFeatureFlagsController;
     private WeakReference<CTFeatureFlagsListener> featureFlagsListener;
     private WeakReference<CTProductConfigListener> productConfigListener;
+    private GeoFenceInterface geoFenceInterface;
 
     // static lifecycle callbacks
     static void onActivityCreated(Activity activity, String cleverTapID) {
@@ -3584,6 +3585,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 }
             }
 
+            //Handle GeoFences Response
+            if (!getConfig().isAnalyticsOnly()) {
+                try {
+                    getConfigLogger().verbose(getAccountId(),"Processing GeoFences response...");
+                    processGeoFenceResponse(response);
+                } catch (Throwable t) {
+                    getConfigLogger().verbose("Error handling GeoFences response: " + t.getLocalizedMessage());
+                }
+            }
         } catch (Throwable t) {
             mResponseFailureCount++;
             getConfigLogger().verbose(getAccountId(), "Problem process send queue response", t);
@@ -8482,5 +8492,57 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         } catch (JSONException e) {
             getConfigLogger().verbose(getAccountId(), "Error parsing discarded events list" + e.getLocalizedMessage());
         }
+    }
+
+    //GEOFENCE APIs
+
+    public void pushGeoFenceEnteredEvent(Map<String,Object> geoFenceProperties){
+        //TODO
+    }
+
+    public void pushGeoFenceExitedEvent(Map<String,Object> geoFenceProperties){
+        //TODO
+    }
+    /**
+     * This method is used to set the geofences interface
+     * Register to handle geofence responses from CleverTap
+     * This is to be used only by clevertap-geofence-sdk
+     *
+     * @param geoFenceInterface The {@link GeoFenceInterface} instance
+     */
+    public void setGeoFenceInterface(GeoFenceInterface geoFenceInterface){
+        this.geoFenceInterface = geoFenceInterface;
+    }
+
+    /**
+     * Returns the GeoFenceInterface object
+     *
+     * @return The {@link GeoFenceInterface} object
+     */
+    public GeoFenceInterface getGeoFenceInterface(){
+        return  this.geoFenceInterface;
+    }
+
+    private void processGeoFenceResponse(JSONObject response) throws JSONException {
+        if (response == null) {
+            getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_GEOFENCES + "Can't parse Geofences Response, JSON response object is null");
+            return;
+        }
+
+        if (!response.has(Constants.GEOFENCES_JSON_RESPONSE_KEY)) {
+            getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_GEOFENCES + "JSON object doesn't contain the Geofences key");
+            return;
+        }
+        try {
+            if(this.geoFenceInterface != null){
+                getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_GEOFENCES + "Processing Geofences response");
+                this.geoFenceInterface.handleGeoFences(response.getJSONArray(Constants.GEOFENCES_JSON_RESPONSE_KEY));
+            }else{
+                getConfigLogger().debug(getAccountId(), Constants.LOG_TAG_GEOFENCES + "Geofence SDK has not been initialized to handle the response");
+            }
+        } catch (Throwable t) {
+            getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_GEOFENCES + "Failed to handle Geofences response", t);
+        }
+
     }
 }
