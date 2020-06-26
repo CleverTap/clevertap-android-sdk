@@ -153,7 +153,6 @@ install {
     }
 }
 dependencies {
-    compileOnly 'com.google.android.gms:play-services-plus:16.0.0'
     compileOnly 'com.google.firebase:firebase-messaging:17.3.0'
     compileOnly 'com.android.support:support-v4:28.0.0'
     compileOnly 'com.google.android.exoplayer:exoplayer:2.8.4'
@@ -176,6 +175,11 @@ dependencies {
     androidTestImplementation 'androidx.test:rules:1.2.0'
 
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
+    testImplementation 'org.powermock:powermock-core:2.0.7'
+    testImplementation 'org.powermock:powermock-module-junit4:2.0.7'
+    testImplementation 'org.powermock:powermock-api-mockito2:2.0.7'
+
 }
 
 task sourcesJar(type: Jar) {
