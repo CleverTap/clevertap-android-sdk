@@ -321,7 +321,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private CTFeatureFlagsController ctFeatureFlagsController;
     private WeakReference<CTFeatureFlagsListener> featureFlagsListener;
     private WeakReference<CTProductConfigListener> productConfigListener;
-    //private Bundle pushPayload = null;
 
     // static lifecycle callbacks
     static void onActivityCreated(Activity activity, String cleverTapID) {
@@ -4256,7 +4255,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * @param name String
      * @return {@link JSONArray}, String or null
      */
-//    @SuppressWarnings({"unused"})
+    @SuppressWarnings({"unused"})
     public Object getProperty(String name) {
         if (!this.config.isPersonalizationEnabled()) return null;
         return getLocalDataStore().getProfileProperty(name);
