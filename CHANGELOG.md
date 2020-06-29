@@ -1,4 +1,7 @@
 ## CHANGE LOG
+### Version 3.8.1 (June 30, 2020)
+* Adds a callback to provide Push Notifications custom key-value pairs
+* Other bug fixes
 
 ### Version 3.8.0 (May 06, 2020)
 * Adds support for Product Config and Feature Flag as a part of Product Experiences feature
