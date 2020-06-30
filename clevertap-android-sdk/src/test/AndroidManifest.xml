@@ -14,10 +14,6 @@
             android:value="com.clevertap.beardedrobot" />
 
         <meta-data
-            android:name="FCM_SENDER_ID"
-            android:value="id:112273261716" />
-
-        <meta-data
             android:name="CLEVERTAP_ACCOUNT_ID"
             android:value="@string/ct_acc_id" />
         <meta-data
