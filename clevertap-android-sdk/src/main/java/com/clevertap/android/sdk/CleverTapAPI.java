@@ -373,28 +373,32 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         if (alreadyProcessedByCleverTap && deepLink == null) return;
 
-        for (String accountId : CleverTapAPI.instances.keySet()) {
-            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+        try {
+            for (String accountId : CleverTapAPI.instances.keySet()) {
+                CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
 
-            boolean shouldProcess = false;
-            if (instance != null) {
-                shouldProcess = (_accountId == null && instance.config.isDefaultInstance()) || instance.getAccountId().equals(_accountId);
-            }
-
-            if (shouldProcess) {
-                if (notification != null && !notification.isEmpty() && notification.containsKey(Constants.NOTIFICATION_TAG)) {
-                    instance.pushNotificationClickedEvent(notification);
+                boolean shouldProcess = false;
+                if (instance != null) {
+                    shouldProcess = (_accountId == null && instance.config.isDefaultInstance()) || instance.getAccountId().equals(_accountId);
                 }
 
-                if (deepLink != null) {
-                    try {
-                        instance.pushDeepLink(deepLink);
-                    } catch (Throwable t) {
-                        // no-op
+                if (shouldProcess) {
+                    if (notification != null && !notification.isEmpty() && notification.containsKey(Constants.NOTIFICATION_TAG)) {
+                        instance.pushNotificationClickedEvent(notification);
                     }
+
+                    if (deepLink != null) {
+                        try {
+                            instance.pushDeepLink(deepLink);
+                        } catch (Throwable t) {
+                            // no-op
+                        }
+                    }
+                    break;
                 }
-                break;
             }
+        }catch (Throwable t){
+            Logger.v("Throwable - " + t.getLocalizedMessage());
         }
     }
 
