@@ -318,6 +318,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private WeakReference<CTFeatureFlagsListener> featureFlagsListener;
     private WeakReference<CTProductConfigListener> productConfigListener;
     private GeoFenceInterface geoFenceInterface;
+    private boolean isLocationForGeofence = false;
 
     // static lifecycle callbacks
     static void onActivityCreated(Activity activity, String cleverTapID) {
@@ -3257,6 +3258,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
             header.put("frs", isFirstRequestInSession());
             setFirstRequestInSession(false);
+
+            if(isLocationForGeofence()){
+                header.put("gf", true);
+                setLocationForGeofence(false);
+            }
 
 
             // Attach ARP
@@ -8496,12 +8502,37 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //GEOFENCE APIs
 
-    public void pushGeoFenceEnteredEvent(Map<String,Object> geoFenceProperties){
-        //TODO
+    /**
+     * Pushes the GeoFence Cluster Entered event to CleverTap.
+     *
+     * @param geoFenceProperties The {@link JSONObject} object that contains the
+     *               event properties regarding GeoFence Cluster Entered event
+     */
+    @SuppressWarnings("unused")
+    public void pushGeoFenceEnteredEvent(JSONObject geoFenceProperties){
+        raiseEventForGeoFences(Constants.GEOFENCE_ENTERED_EVENT_NAME,geoFenceProperties);
     }
 
-    public void pushGeoFenceExitedEvent(Map<String,Object> geoFenceProperties){
-        //TODO
+    /**
+     * Pushes the GeoFence Cluster Exited event to CleverTap.
+     *
+     * @param geoFenceProperties The {@link JSONObject} object that contains the
+     *               event properties regarding GeoFence Cluster Exited event
+     */
+    @SuppressWarnings("unused")
+    public void pushGeoFenceExitedEvent(JSONObject geoFenceProperties){
+        raiseEventForGeoFences(Constants.GEOFENCE_EXITED_EVENT_NAME,geoFenceProperties);
+    }
+
+    /**
+     * Sets the location in CleverTap to get updated GeoFences
+     *
+     * @param location android.location.Location
+     */
+    @SuppressWarnings("unused")
+    public void setLocationForGeofences(Location location){
+        setLocationForGeofence(true);
+        _setLocation(location);
     }
     /**
      * This method is used to set the geofences interface
@@ -8510,6 +8541,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      *
      * @param geoFenceInterface The {@link GeoFenceInterface} instance
      */
+    @SuppressWarnings("unused")
     public void setGeoFenceInterface(GeoFenceInterface geoFenceInterface){
         this.geoFenceInterface = geoFenceInterface;
     }
@@ -8519,8 +8551,30 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      *
      * @return The {@link GeoFenceInterface} object
      */
+    @SuppressWarnings("unused")
     public GeoFenceInterface getGeoFenceInterface(){
         return  this.geoFenceInterface;
+    }
+
+    private boolean isLocationForGeofence() {
+        return isLocationForGeofence;
+    }
+
+    private void setLocationForGeofence(boolean locationForGeofence) {
+        isLocationForGeofence = locationForGeofence;
+    }
+
+    private void raiseEventForGeoFences(String eventName, JSONObject geoFenceProperties){
+        JSONObject event = new JSONObject();
+        try {
+            event.put("evtName", eventName);
+            event.put("evtData", geoFenceProperties);
+            queueEvent(context, event, Constants.RAISED_EVENT);
+        } catch (JSONException e) {
+            getConfigLogger().debug(getAccountId(),Constants.LOG_TAG_GEOFENCES +
+                    "JSON Exception when raising GeoFence event "
+                    +eventName +" - "+e.getLocalizedMessage());
+        }
     }
 
     private void processGeoFenceResponse(JSONObject response) throws JSONException {

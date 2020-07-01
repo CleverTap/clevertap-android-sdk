@@ -40,8 +40,8 @@ public class Constants {
     static final String ICON_BASE_URL = "http://static.wizrocket.com/android/ico/";
     static final String NOTIFICATION_CLICKED_EVENT_NAME = "Notification Clicked";
     static final String NOTIFICATION_VIEWED_EVENT_NAME = "Notification Viewed";
-    static final String GEOFENCE_ENTERED_EVENT_NAME = "GeoFence Entered";
-    static final String GEOFENCE_EXITED_EVENT_NAME = "GeoFence Exited";
+    static final String GEOFENCE_ENTERED_EVENT_NAME = "GeoFence Cluster Entered";
+    static final String GEOFENCE_EXITED_EVENT_NAME = "GeoFence Cluster Exited";
     static final String APP_LAUNCHED_EVENT = "App Launched";
     static final String ERROR_KEY = "wzrk_error";
     static final int PUSH_DELAY_MS = 1000;
@@ -67,7 +67,7 @@ public class Constants {
     static final String DISPLAY_UNIT_JSON_RESPONSE_KEY = "adUnit_notifs";
     static final String FEATURE_FLAG_JSON_RESPONSE_KEY = "ff_notifs";
     static final String REMOTE_CONFIG_FLAG_JSON_RESPONSE_KEY = "pc_notifs";
-    static final String GEOFENCES_JSON_RESPONSE_KEY = "gf_notifs";
+    static final String GEOFENCES_JSON_RESPONSE_KEY = "geofences";
     static final String DISCARDED_EVENT_JSON_KEY = "d_e";
     static final String INAPP_MAX_DISPLAY_COUNT = "mdc";
     static final String INAPP_MAX_PER_SESSION = "imc";
