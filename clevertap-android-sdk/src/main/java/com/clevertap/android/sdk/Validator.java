@@ -336,7 +336,7 @@ final class Validator {
                     // The event name is discarded
                     error.setErrorCode(513);
                     error.setErrorDesc(name + " is a discarded event name. Last event aborted.");
-                    Logger.v(name + " is a discarded event name. Last event aborted.");
+                    Logger.d(name + " s a discarded event name as per CleverTap. Dropping event at SDK level. Check discarded events in CleverTap Dashboard settings.");
                     return error;
                 }
         }

@@ -1,4 +1,14 @@
 ## CHANGE LOG
+### Version 3.8.1 (June 30, 2020)
+* Adds a callback to provide Push Notifications custom key-value pairs
+* Removed `pushGooglePlusPerson` API as Google Plus sign-in is deprecated
+* Other bug fixes
+
+### Version 3.8.0 (May 06, 2020)
+* Adds support for Product Config and Feature Flag as a part of Product Experiences feature
+* Fixed InApp center alignment issue for tablets
+* Adds support for custom handling payload when using Push Amplification.
+* Other bug fixes
 
 ### Version 3.7.2 (March 27, 2020)
 * Adds fix for a crash caused when InApp with Frequency Caps was shown on first App Launched
