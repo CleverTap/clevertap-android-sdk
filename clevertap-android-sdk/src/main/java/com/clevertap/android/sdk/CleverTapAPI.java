@@ -6588,6 +6588,29 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
+     * Utility method to check if a notification is already rendered.
+     * Apps can use this method to dedup notifications.
+     */
+
+    public void isPushNotificationRendered(final String id,final CTCustomNotificationListener listener){
+        if(listener!= null && !TextUtils.isEmpty(id)){
+            postAsyncSafely("CleverTapAPI#isPushNotificationRendered", new Runnable() {
+                @Override
+                public void run() {
+                    dbAdapter = loadDBAdapter(context);
+                    final boolean isAlreadyRendered = dbAdapter.doesPushNotificationIdExist(id);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if(listener!= null)
+                                listener.onLoaded(isAlreadyRendered);
+                        }
+                    });
+                }
+            });
+        }
+    }
+    /**
      * This method is used to push install referrer via Intent
      * Deprecation warning because Google Play install referrer via intent will be deprecated in March 2020
      *
