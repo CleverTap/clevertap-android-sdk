@@ -111,7 +111,13 @@ public class CTFeatureFlagsController {
             Utils.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    listenerWeakReference.get().featureFlagsDidUpdate();
+                    try {
+                        if (listenerWeakReference.get() != null) {
+                            listenerWeakReference.get().featureFlagsDidUpdate();
+                        }
+                    } catch (Exception e) {
+                        getConfigLogger().verbose(getLogTag(), e.getLocalizedMessage());
+                    }
                 }
             });
         }
@@ -126,7 +132,13 @@ public class CTFeatureFlagsController {
             Utils.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    listenerWeakReference.get().fetchFeatureFlags();
+                    try {
+                        if (listenerWeakReference.get() != null) {
+                            listenerWeakReference.get().fetchFeatureFlags();
+                        }
+                    } catch (Exception e) {
+                        getConfigLogger().verbose(getLogTag(), e.getLocalizedMessage());
+                    }
                 }
             });
         }
