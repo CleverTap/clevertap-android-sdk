@@ -1,5 +1,5 @@
 ## CHANGE LOG
-### Version 3.8.1 (June 30, 2020)
+### Version 3.8.1 (July 08, 2020)
 * Adds a callback to provide Push Notifications custom key-value pairs
 * Removed `pushGooglePlusPerson` API as Google Plus sign-in is deprecated
 * Other bug fixes
