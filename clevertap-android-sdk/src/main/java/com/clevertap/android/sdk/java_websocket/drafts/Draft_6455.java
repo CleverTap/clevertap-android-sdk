@@ -40,6 +40,7 @@ import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -117,7 +118,7 @@ public class Draft_6455 extends Draft {
 	/**
 	 * Attribute for the reusable random instance
 	 */
-	private final Random reuseableRandom = new Random();
+	private final SecureRandom reuseableRandom = new SecureRandom();
 
 	/**
 	 * Attribute for the maximum allowed size of a frame
