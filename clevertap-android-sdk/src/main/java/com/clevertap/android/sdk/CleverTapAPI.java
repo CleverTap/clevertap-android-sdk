@@ -8448,8 +8448,13 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(context);
         ctGeofenceAPI.setGeofenceInterface(this);
         ctGeofenceAPI.setGeofenceSettings(ctGeofenceSettings);
+        ctGeofenceAPI.setOnGeofenceApiInitializedListener(new CTGeofenceAPI.OnGeofenceApiInitializedListener() {
+            @Override
+            public void OnGeofenceApiInitialized() {
+                isGeofenceInitialized=true;
+            }
+        });
         ctGeofenceAPI.activate();
-        isGeofenceInitialized=true;
     }
 
     /**
