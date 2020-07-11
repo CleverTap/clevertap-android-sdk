@@ -1905,6 +1905,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
         checkExistingInAppNotifications(activity);
         checkPendingInAppNotifications(activity);
+        CTGeofenceAPI.getInstance(context.getApplicationContext()).triggerLocation();
     }
 
     private void checkPendingInAppNotifications(Activity activity) {
@@ -8454,6 +8455,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 isGeofenceInitialized=true;
             }
         });
+        ctGeofenceAPI.setAccountId(getAccountId());
+        ctGeofenceAPI.setGUID(getCleverTapID());
         ctGeofenceAPI.activate();
     }
 
