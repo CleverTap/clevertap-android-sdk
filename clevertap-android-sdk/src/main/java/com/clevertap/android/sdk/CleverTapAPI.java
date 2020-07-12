@@ -55,7 +55,6 @@ import com.clevertap.android.sdk.featureFlags.FeatureFlagListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigControllerListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
-import com.google.android.gms.plus.model.people.Person;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
 
@@ -322,7 +321,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private CTFeatureFlagsController ctFeatureFlagsController;
     private WeakReference<CTFeatureFlagsListener> featureFlagsListener;
     private WeakReference<CTProductConfigListener> productConfigListener;
-    //private Bundle pushPayload = null;
 
     // static lifecycle callbacks
     static void onActivityCreated(Activity activity, String cleverTapID) {
@@ -375,28 +373,32 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         if (alreadyProcessedByCleverTap && deepLink == null) return;
 
-        for (String accountId : CleverTapAPI.instances.keySet()) {
-            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+        try {
+            for (String accountId : CleverTapAPI.instances.keySet()) {
+                CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
 
-            boolean shouldProcess = false;
-            if (instance != null) {
-                shouldProcess = (_accountId == null && instance.config.isDefaultInstance()) || instance.getAccountId().equals(_accountId);
-            }
-
-            if (shouldProcess) {
-                if (notification != null && !notification.isEmpty() && notification.containsKey(Constants.NOTIFICATION_TAG)) {
-                    instance.pushNotificationClickedEvent(notification);
+                boolean shouldProcess = false;
+                if (instance != null) {
+                    shouldProcess = (_accountId == null && instance.config.isDefaultInstance()) || instance.getAccountId().equals(_accountId);
                 }
 
-                if (deepLink != null) {
-                    try {
-                        instance.pushDeepLink(deepLink);
-                    } catch (Throwable t) {
-                        // no-op
+                if (shouldProcess) {
+                    if (notification != null && !notification.isEmpty() && notification.containsKey(Constants.NOTIFICATION_TAG)) {
+                        instance.pushNotificationClickedEvent(notification);
                     }
+
+                    if (deepLink != null) {
+                        try {
+                            instance.pushDeepLink(deepLink);
+                        } catch (Throwable t) {
+                            // no-op
+                        }
+                    }
+                    break;
                 }
-                break;
             }
+        }catch (Throwable t){
+            Logger.v("Throwable - " + t.getLocalizedMessage());
         }
     }
 
@@ -4272,112 +4274,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
-     * Pushes everything useful within the Google Plus
-     * {@link com.google.android.gms.plus.model.people.Person} object.
-     *
-     * @param person The {@link com.google.android.gms.plus.model.people.Person} object
-     * @see com.google.android.gms.plus.model.people.Person
-     */
-    @SuppressWarnings({"all"})
-    public void pushGooglePlusPerson(final com.google.android.gms.plus.model.people.Person person) {
-        postAsyncSafely("pushGooglePlusPerson", new Runnable() {
-            @Override
-            public void run() {
-                _pushGooglePlusPerson(person);
-            }
-        });
-    }
-
-    @SuppressWarnings("all")
-    private void _pushGooglePlusPerson(com.google.android.gms.plus.model.people.Person person) {
-        if (person == null) {
-            return;
-        }
-        try {
-            // Note: No validations are required here, as everything is controlled
-            String name = "";
-            if (person.hasDisplayName()) {
-                try {
-                    // Certain users have nasty looking names - unicode chars, validate for any
-                    // not allowed chars
-                    name = person.getDisplayName();
-                    ValidationResult vr = validator.cleanObjectValue(name, Validator.ValidationContext.Profile);
-                    name = vr.getObject().toString();
-
-                    if (vr.getErrorCode() != 0) {
-                        pushValidationResult(vr);
-                    }
-                } catch (Throwable t) {
-                    // Weird name, wasn't a string, or any number
-                    // This would never happen with G+
-                    name = "";
-                }
-            }
-
-            String gender = null;
-            if (person.hasGender()) {
-                if (person.getGender() == com.google.android.gms.plus.model.people.Person.Gender.MALE) {
-                    gender = "M";
-                } else if (person.getGender() == com.google.android.gms.plus.model.people.Person.Gender.FEMALE) {
-                    gender = "F";
-                }
-            }
-
-            String birthday = null;
-
-            if (person.hasBirthday()) {
-                // We have the string as YYYY-MM-DD
-                try {
-                    Date date = Constants.GP_DOB_DATE_FORMAT.parse(person.getBirthday());
-                    birthday = "$D_" + (int) (date.getTime() / 1000);
-                } catch (Throwable t) {
-                    // Differs from the specs
-                    birthday = null;
-                }
-            }
-
-            String work = null;
-            if (person.hasOrganizations()) {
-                List<Person.Organizations> organizations = person.getOrganizations();
-                for (com.google.android.gms.plus.model.people.Person.Organizations o : organizations) {
-                    if (o.getType() == com.google.android.gms.plus.model.people.Person.Organizations.Type.WORK) {
-                        work = "Y";
-                        break;
-                    }
-                }
-            }
-
-            String id = "";
-            if (person.hasId()) {
-                id = person.getId();
-            }
-
-            String married = null;
-            if (person.hasRelationshipStatus()) {
-                if (person.getRelationshipStatus() == com.google.android.gms.plus.model.people.Person.RelationshipStatus.MARRIED) {
-                    married = "Y";
-                } else {
-                    married = "N";
-                }
-            }
-
-            // Construct json object from the data
-            final JSONObject profile = new JSONObject();
-            if (id != null && id.trim().length() > 0) profile.put("GPID", id);
-            if (name != null && name.trim().length() > 0) profile.put("Name", name);
-            if (gender != null && gender.trim().length() > 0) profile.put("Gender", gender);
-            if (work != null && work.trim().length() > 0) profile.put("Employed", work);
-            if (birthday != null && birthday.trim().length() > 4) profile.put("DOB", birthday);
-            if (married != null && married.trim().length() > 0) profile.put("Married", married);
-
-            pushBasicProfile(profile);
-        } catch (Throwable t) {
-            // We won't get here
-            getConfigLogger().verbose(getAccountId(), "FATAL: Creating G+ profile update event failed!");
-        }
-    }
-
-    /**
      * Return the user profile property value for the specified key
      *
      * @param name String
@@ -6717,6 +6613,29 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     /**
+     * Utility method to check if a notification is already rendered.
+     * Apps can use this method to dedup notifications.
+     */
+
+    public void isPushNotificationRendered(final String id,final CTCustomNotificationListener listener){
+        if(listener!= null && !TextUtils.isEmpty(id)){
+            postAsyncSafely("CleverTapAPI#isPushNotificationRendered", new Runnable() {
+                @Override
+                public void run() {
+                    dbAdapter = loadDBAdapter(context);
+                    final boolean isAlreadyRendered = dbAdapter.doesPushNotificationIdExist(id);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if(listener!= null)
+                                listener.onLoaded(isAlreadyRendered);
+                        }
+                    });
+                }
+            });
+        }
+    }
+    /**
      * This method is used to push install referrer via Intent
      * Deprecation warning because Google Play install referrer via intent will be deprecated in March 2020
      *
@@ -8540,4 +8459,5 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             getConfigLogger().verbose(getAccountId(), "Error parsing discarded events list" + e.getLocalizedMessage());
         }
     }
+
 }

@@ -413,7 +413,6 @@ class DBAdapter {
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
 
             cursor = db.query(tName,null,"_id =?",new String[]{id},null,null,null);
-            //cursor = db.rawQuery("SELECT * FROM " + tName + " WHERE _id = ?", new String[]{id});
 
             if (cursor != null && cursor.moveToFirst()) {
                 try {
@@ -524,9 +523,6 @@ class DBAdapter {
         try {
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
             cursor = db.query(tName,null,null,null,null,null,KEY_CREATED_AT + " ASC",String.valueOf(limit));
-            //cursor = db.rawQuery("SELECT * FROM " + tName +
-              //      " ORDER BY " + KEY_CREATED_AT + " ASC LIMIT " + limit, null);
-
 
             while (cursor.moveToNext()) {
                 if (cursor.isLast()) {
@@ -601,8 +597,6 @@ class DBAdapter {
         try{
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
             cursor = db.query(tName,null,KEY_DATA + " =?",new String[]{id},null,null,null);
-            //cursor = db.rawQuery("SELECT * FROM " + tName +
-              //      " WHERE " + KEY_DATA + " = ?" , new String[]{id});
             if(cursor!=null && cursor.moveToFirst()){
                 pushId = cursor.getString(cursor.getColumnIndex(KEY_DATA));
             }
@@ -627,7 +621,6 @@ class DBAdapter {
 
         try{
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
-            //cursor = db.rawQuery("SELECT * FROM " + tName + " WHERE " + IS_READ + " = 0", null);
             cursor = db.query(tName,null,IS_READ + " =?",new String[]{"0"},null,null,null);
             if(cursor!=null){
                 while(cursor.moveToNext()) {
@@ -719,8 +712,6 @@ class DBAdapter {
         try {
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
             cursor = db.query(tName,null,null,null,null,null,KEY_CREATED_AT + " DESC","1");
-            //cursor = db.rawQuery("SELECT * FROM " + tName +
-              //      " ORDER BY " + KEY_CREATED_AT + " DESC LIMIT 1",null);
             if(cursor!=null && cursor.moveToFirst()){
                 timestamp = cursor.getLong(cursor.getColumnIndex(KEY_CREATED_AT));
             }
@@ -827,7 +818,6 @@ class DBAdapter {
         ArrayList<CTMessageDAO> messageDAOArrayList = new ArrayList<>();
         try{
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
-            //cursor= db.rawQuery("SELECT * FROM "+tName+" WHERE " + USER_ID + " = ? ORDER BY " + KEY_CREATED_AT+ " DESC", new String[]{userId});
             cursor = db.query(tName,null,USER_ID + " =?",new String[]{userId},null,null,KEY_CREATED_AT+ " DESC");
             if(cursor != null) {
                 while(cursor.moveToNext()){

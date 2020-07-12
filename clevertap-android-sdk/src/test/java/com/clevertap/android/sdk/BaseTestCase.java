@@ -1,5 +1,3 @@
-/* Copyright Airship and Contributors */
-
 package com.clevertap.android.sdk;
 
 import android.os.Bundle;
@@ -7,14 +5,30 @@ import android.os.Bundle;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.robolectric.annotation.Config;
+
+import static com.clevertap.android.sdk.Constant.ACC_ID;
+import static com.clevertap.android.sdk.Constant.ACC_TOKEN;
+import static org.mockito.Mockito.mock;
 
 @Config(sdk = 28,
         application = TestApplication.class
 )
 @RunWith(AndroidJUnit4.class)
 public abstract class BaseTestCase {
+
+    protected CleverTapAPI cleverTapAPI;
+    protected TestApplication application;
+    protected CleverTapInstanceConfig cleverTapInstanceConfig;
+
+    @Before
+    public void setUp() throws Exception {
+        application = TestApplication.getApplication();
+        cleverTapAPI = mock(CleverTapAPI.class);
+        cleverTapInstanceConfig = CleverTapInstanceConfig.createInstance(application, ACC_ID, ACC_TOKEN);
+    }
 
     public TestApplication getApplication() {
         return TestApplication.getApplication();

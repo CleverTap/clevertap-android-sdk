@@ -1,4 +1,8 @@
 ## CHANGE LOG
+### Version 3.8.1 (July 08, 2020)
+* Adds a callback to provide Push Notifications custom key-value pairs
+* Removed `pushGooglePlusPerson` API as Google Plus sign-in is deprecated
+* Other bug fixes
 
 ### Version 3.8.0 (May 06, 2020)
 * Adds support for Product Config and Feature Flag as a part of Product Experiences feature
