@@ -45,6 +45,10 @@ import android.text.TextUtils;
 import com.android.installreferrer.api.InstallReferrerClient;
 import com.android.installreferrer.api.InstallReferrerStateListener;
 import com.android.installreferrer.api.ReferrerDetails;
+import com.clevertap.android.geofence.CTGeofenceAPI;
+import com.clevertap.android.geofence.interfaces.CTGeofenceCallback;
+import com.clevertap.android.geofence.interfaces.CTGeofenceInterface;
+import com.clevertap.android.geofence.model.CTGeofenceSettings;
 import com.clevertap.android.sdk.ab_testing.CTABTestController;
 import com.clevertap.android.sdk.ab_testing.CTABTestListener;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
@@ -105,7 +109,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         CTABTestListener,
         FeatureFlagListener,
         CTProductConfigControllerListener,
-        CTProductConfigListener {
+        CTProductConfigListener,
+        CTGeofenceInterface{
     private final HashMap<String, Object> notificationIdTagMap = new HashMap<>();
     private final HashMap<String, Object> notificationViewedIdTagMap = new HashMap<>();
 
@@ -138,6 +143,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     private CTProductConfigController ctProductConfigController;
     private boolean isProductConfigRequested;
+    private CTGeofenceCallback ctGeofenceCallback;
+    private CTGeofenceSettings ctGeofenceSettings;
+    private boolean isGeofenceInitialized;
 
     // Initialize
     private CleverTapAPI(final Context context, final CleverTapInstanceConfig config, String cleverTapID) {
@@ -321,6 +329,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private CTFeatureFlagsController ctFeatureFlagsController;
     private WeakReference<CTFeatureFlagsListener> featureFlagsListener;
     private WeakReference<CTProductConfigListener> productConfigListener;
+    private GeofenceInterface geofenceInterface;
+    private boolean isLocationForGeofence = false;
 
     // static lifecycle callbacks
     static void onActivityCreated(Activity activity, String cleverTapID) {
@@ -1877,6 +1887,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private void activityResumed(Activity activity) {
         getConfigLogger().verbose(getAccountId(), "App in foreground");
         checkTimeoutSession();
+        //Anything in this If block will run once per App Launch.
+        //Will not run for Apps which disable App Launched event
         if (!isAppLaunchPushed()) {
             pushAppLaunchedEvent();
             fetchFeatureFlags();
@@ -1889,6 +1901,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     }
                 }
             });
+            CTGeofenceAPI.getInstance(context.getApplicationContext()).triggerLocation();
         }
         if (!inCurrentSession()) {
             pushInitialEventsAsync();
@@ -3283,6 +3296,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             header.put("frs", isFirstRequestInSession());
             setFirstRequestInSession(false);
 
+            if(isLocationForGeofence()){
+                header.put("gf", true);
+                setLocationForGeofence(false);
+            }
+
 
             // Attach ARP
             if (cachedGUID != null) {
@@ -3612,6 +3630,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 }
             }
 
+            //Handle GeoFences Response
+            if (!getConfig().isAnalyticsOnly()) {
+                try {
+                    getConfigLogger().verbose(getAccountId(),"Processing GeoFences response...");
+                    processGeofenceResponse(response);
+                } catch (Throwable t) {
+                    getConfigLogger().verbose("Error handling GeoFences response: " + t.getLocalizedMessage());
+                }
+            }
         } catch (Throwable t) {
             mResponseFailureCount++;
             getConfigLogger().verbose(getAccountId(), "Problem process send queue response", t);
@@ -8460,4 +8487,155 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
+    //GEOFENCE APIs
+    public void initGeofenceAPI(CTGeofenceAPI ctGeofenceAPI){
+        ctGeofenceAPI.setGeofenceInterface(this);
+        ctGeofenceAPI.activate();
+        isGeofenceInitialized=true;
+    }
+
+    public void initGeofenceAPI(CTGeofenceSettings ctGeofenceSettings){
+        CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(context);
+        ctGeofenceAPI.setGeofenceInterface(this);
+        ctGeofenceAPI.setGeofenceSettings(ctGeofenceSettings);
+        ctGeofenceAPI.setOnGeofenceApiInitializedListener(new CTGeofenceAPI.OnGeofenceApiInitializedListener() {
+            @Override
+            public void OnGeofenceApiInitialized() {
+                isGeofenceInitialized=true;
+            }
+        });
+        ctGeofenceAPI.setAccountId(getAccountId());
+        ctGeofenceAPI.setGUID(getCleverTapID());
+        ctGeofenceAPI.activate();
+    }
+
+    /**
+     * unregister geofences, location updates and cleanup all resources used by clevertap-geofence-sdk
+     */
+    public void deactivateGeofenceAPI(){
+       CTGeofenceAPI.getInstance(context).deactivate();
+       isGeofenceInitialized=false;
+    }
+
+    /**
+     * Pushes the Geofence Cluster Entered event to CleverTap.
+     *
+     * @param geofenceProperties The {@link JSONObject} object that contains the
+     *               event properties regarding GeoFence Cluster Entered event
+     */
+    @Override
+    @SuppressWarnings("unused")
+    public void pushGeofenceEnteredEvent(JSONObject geofenceProperties){
+        raiseEventForGeofences(Constants.GEOFENCE_ENTERED_EVENT_NAME,geofenceProperties);
+    }
+
+    /**
+     * Pushes the Geofence Cluster Exited event to CleverTap.
+     *
+     * @param geoFenceProperties The {@link JSONObject} object that contains the
+     *               event properties regarding GeoFence Cluster Exited event
+     */
+    @Override
+    @SuppressWarnings("unused")
+    public void pushGeoFenceExitedEvent(JSONObject geoFenceProperties){
+        raiseEventForGeofences(Constants.GEOFENCE_EXITED_EVENT_NAME,geoFenceProperties);
+    }
+
+    /**
+     * Sets the location in CleverTap to get updated GeoFences
+     *
+     * @param location android.location.Location
+     */
+    @Override
+    @SuppressWarnings("unused")
+    public void setLocationForGeofences(Location location){
+        setLocationForGeofence(true);
+        _setLocation(location);
+    }
+
+    /**
+     * This method is used to set the geofence callback
+     * Register to handle geofence responses from CleverTap
+     * This is to be used only by clevertap-geofence-sdk
+     *
+     * @param callback The {@link CTGeofenceCallback} instance
+     */
+
+    @Override
+    public void setGeoFenceCallback(CTGeofenceCallback callback) {
+        ctGeofenceCallback=callback;
+    }
+
+
+   /* @SuppressWarnings("unused")
+    public void setGeofenceInterface(GeofenceInterface geofenceInterface){
+        this.geofenceInterface = geofenceInterface;
+    }*/
+
+    /**
+     * Returns the GeofenceInterface object
+     *
+     * @return The {@link GeofenceInterface} object
+     */
+    @SuppressWarnings("unused")
+    public GeofenceInterface getGeofenceInterface(){
+        return  this.geofenceInterface;
+    }
+
+    private boolean isLocationForGeofence() {
+        return isLocationForGeofence;
+    }
+
+    private void setLocationForGeofence(boolean locationForGeofence) {
+        isLocationForGeofence = locationForGeofence;
+    }
+
+    private void raiseEventForGeofences(String eventName, JSONObject geofenceProperties){
+        JSONObject event = new JSONObject();
+        try {
+            event.put("evtName", eventName);
+            event.put("evtData", geofenceProperties);
+            queueEvent(context, event, Constants.RAISED_EVENT);
+        } catch (JSONException e) {
+            getConfigLogger().debug(getAccountId(),Constants.LOG_TAG_GEOFENCES +
+                    "JSON Exception when raising GeoFence event "
+                    +eventName +" - "+e.getLocalizedMessage());
+        }
+    }
+
+    private void processGeofenceResponse(JSONObject response) throws JSONException {
+        if (response == null) {
+            getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_GEOFENCES + "Can't parse Geofences Response, JSON response object is null");
+            return;
+        }
+
+        if (!response.has(Constants.GEOFENCES_JSON_RESPONSE_KEY)) {
+            getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_GEOFENCES + "JSON object doesn't contain the Geofences key");
+            return;
+        }
+     /*   try {
+            if(this.geofenceInterface != null){
+                getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_GEOFENCES + "Processing Geofences response");
+                this.geofenceInterface.handleGeoFences(response.getJSONArray(Constants.GEOFENCES_JSON_RESPONSE_KEY));
+            }else{
+                getConfigLogger().debug(getAccountId(), Constants.LOG_TAG_GEOFENCES + "Geofence SDK has not been initialized to handle the response");
+            }
+        } catch (Throwable t) {
+            getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_GEOFENCES + "Failed to handle Geofences response", t);
+        }*/
+
+        try {
+            if(ctGeofenceCallback != null){
+                JSONObject jsonObject=new JSONObject();
+                jsonObject.put("geofences",response.getJSONArray(Constants.GEOFENCES_JSON_RESPONSE_KEY));
+                getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_GEOFENCES + "Processing Geofences response");
+                ctGeofenceCallback.onSuccess(jsonObject);
+            }else{
+                getConfigLogger().debug(getAccountId(), Constants.LOG_TAG_GEOFENCES + "Geofence SDK has not been initialized to handle the response");
+            }
+        } catch (Throwable t) {
+            getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_GEOFENCES + "Failed to handle Geofences response", t);
+        }
+
+    }
 }
