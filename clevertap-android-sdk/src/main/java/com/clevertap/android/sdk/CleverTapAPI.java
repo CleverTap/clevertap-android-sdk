@@ -1887,6 +1887,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private void activityResumed(Activity activity) {
         getConfigLogger().verbose(getAccountId(), "App in foreground");
         checkTimeoutSession();
+        //Anything in this If block will run once per App Launch.
+        //Will not run for Apps which disable App Launched event
         if (!isAppLaunchPushed()) {
             pushAppLaunchedEvent();
             fetchFeatureFlags();
@@ -1899,13 +1901,13 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     }
                 }
             });
+            CTGeofenceAPI.getInstance(context.getApplicationContext()).triggerLocation();
         }
         if (!inCurrentSession()) {
             pushInitialEventsAsync();
         }
         checkExistingInAppNotifications(activity);
         checkPendingInAppNotifications(activity);
-        CTGeofenceAPI.getInstance(context.getApplicationContext()).triggerLocation();
     }
 
     private void checkPendingInAppNotifications(Activity activity) {
@@ -8437,8 +8439,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //GEOFENCE APIs
-
-
     public void initGeofenceAPI(CTGeofenceAPI ctGeofenceAPI){
         ctGeofenceAPI.setGeofenceInterface(this);
         ctGeofenceAPI.activate();
