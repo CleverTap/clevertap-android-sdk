@@ -8546,6 +8546,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         try {
             event.put("evtName", eventName);
             event.put("evtData", geofenceProperties);
+
+            Location location=new Location("");
+            location.setLatitude(geofenceProperties.getDouble("triggered_lat"));
+            location.setLongitude(geofenceProperties.getDouble("triggered_lng"));
+
+            geofenceProperties.remove("triggered_lat");
+            geofenceProperties.remove("triggered_lng");
+
+            locationFromUser=location;
+
             queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (JSONException e) {
             getConfigLogger().debug(getAccountId(),Constants.LOG_TAG_GEOFENCES +
