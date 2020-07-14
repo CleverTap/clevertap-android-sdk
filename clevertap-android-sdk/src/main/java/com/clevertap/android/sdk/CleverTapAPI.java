@@ -46,9 +46,9 @@ import com.android.installreferrer.api.InstallReferrerClient;
 import com.android.installreferrer.api.InstallReferrerStateListener;
 import com.android.installreferrer.api.ReferrerDetails;
 import com.clevertap.android.geofence.CTGeofenceAPI;
+import com.clevertap.android.geofence.CTGeofenceSettings;
 import com.clevertap.android.geofence.interfaces.CTGeofenceCallback;
 import com.clevertap.android.geofence.interfaces.CTGeofenceInterface;
-import com.clevertap.android.geofence.model.CTGeofenceSettings;
 import com.clevertap.android.sdk.ab_testing.CTABTestController;
 import com.clevertap.android.sdk.ab_testing.CTABTestListener;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
@@ -2549,6 +2549,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         isBgPing = true;
                         event.remove("bk");
                     }
+
+                    //Add a flag to denote, PING event is for geofences
+                    if(isLocationForGeofence()){
+                        event.put("gf", true);
+                        setLocationForGeofence(false);
+                    }
                 } else if (eventType == Constants.PROFILE_EVENT) {
                     type = "profile";
                 } else if (eventType == Constants.DATA_EVENT) {
@@ -2562,12 +2568,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 String currentActivityName = getScreenName();
                 if (currentActivityName != null) {
                     event.put("n", currentActivityName);
-                }
-
-                //Add a flag to denote, PING event is for geofences
-                if(isLocationForGeofence()){
-                    event.put("gf", true);
-                    setLocationForGeofence(false);
                 }
 
                 int session = getCurrentSession();
