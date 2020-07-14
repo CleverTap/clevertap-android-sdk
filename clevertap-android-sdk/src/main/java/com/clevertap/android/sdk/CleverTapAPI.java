@@ -46,9 +46,9 @@ import com.android.installreferrer.api.InstallReferrerClient;
 import com.android.installreferrer.api.InstallReferrerStateListener;
 import com.android.installreferrer.api.ReferrerDetails;
 import com.clevertap.android.geofence.CTGeofenceAPI;
+import com.clevertap.android.geofence.CTGeofenceSettings;
 import com.clevertap.android.geofence.interfaces.CTGeofenceCallback;
 import com.clevertap.android.geofence.interfaces.CTGeofenceInterface;
-import com.clevertap.android.geofence.model.CTGeofenceSettings;
 import com.clevertap.android.sdk.ab_testing.CTABTestController;
 import com.clevertap.android.sdk.ab_testing.CTABTestListener;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
@@ -144,7 +144,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private CTProductConfigController ctProductConfigController;
     private boolean isProductConfigRequested;
     private CTGeofenceCallback ctGeofenceCallback;
-    private CTGeofenceSettings ctGeofenceSettings;
     private boolean isGeofenceInitialized;
 
     // Initialize
@@ -8488,13 +8487,33 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //GEOFENCE APIs
-    public void initGeofenceAPI(CTGeofenceAPI ctGeofenceAPI){
-        ctGeofenceAPI.setGeofenceInterface(this);
-        ctGeofenceAPI.activate();
-        isGeofenceInitialized=true;
+    public static void initGeofenceAPI(Context context,String _accountId,CTGeofenceAPI ctGeofenceAPI){
+
+        if (instances == null) {
+            CleverTapAPI instance = createInstanceIfAvailable(context, _accountId);
+            if (instance != null) {
+                ctGeofenceAPI.setGeofenceInterface(instance);
+                ctGeofenceAPI.activate();
+            }
+            return;
+        }
+
+        for (String accountId : instances.keySet()) {
+            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+            boolean shouldProcess = false;
+            if (instance != null) {
+                shouldProcess = (_accountId == null && instance.config.isDefaultInstance()) || instance.getAccountId().equals(_accountId);
+            }
+            if (shouldProcess) {
+                ctGeofenceAPI.setGeofenceInterface(instance);
+                ctGeofenceAPI.activate();
+                break;
+            }
+        }
+
     }
 
-    public void initGeofenceAPI(CTGeofenceSettings ctGeofenceSettings){
+    public  void initGeofenceAPI(CTGeofenceSettings ctGeofenceSettings){
         CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(context);
         ctGeofenceAPI.setGeofenceInterface(this);
         ctGeofenceAPI.setGeofenceSettings(ctGeofenceSettings);
@@ -8508,6 +8527,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         ctGeofenceAPI.setGUID(getCleverTapID());
         ctGeofenceAPI.activate();
     }
+
 
     /**
      * unregister geofences, location updates and cleanup all resources used by clevertap-geofence-sdk
