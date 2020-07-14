@@ -46,9 +46,9 @@ import com.android.installreferrer.api.InstallReferrerClient;
 import com.android.installreferrer.api.InstallReferrerStateListener;
 import com.android.installreferrer.api.ReferrerDetails;
 import com.clevertap.android.geofence.CTGeofenceAPI;
-import com.clevertap.android.geofence.CTGeofenceSettings;
 import com.clevertap.android.geofence.interfaces.CTGeofenceCallback;
 import com.clevertap.android.geofence.interfaces.CTGeofenceInterface;
+import com.clevertap.android.geofence.model.CTGeofenceSettings;
 import com.clevertap.android.sdk.ab_testing.CTABTestController;
 import com.clevertap.android.sdk.ab_testing.CTABTestListener;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
@@ -2564,6 +2564,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     event.put("n", currentActivityName);
                 }
 
+                //Add a flag to denote, PING event is for geofences
+                if(isLocationForGeofence()){
+                    event.put("gf", true);
+                    setLocationForGeofence(false);
+                }
+
                 int session = getCurrentSession();
                 event.put("s", session);
                 event.put("pg", activityCount);
@@ -3276,12 +3282,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
             header.put("frs", isFirstRequestInSession());
             setFirstRequestInSession(false);
-
-            if(isLocationForGeofence()){
-                header.put("gf", true);
-                setLocationForGeofence(false);
-            }
-
 
             // Attach ARP
             if (cachedGUID != null) {
