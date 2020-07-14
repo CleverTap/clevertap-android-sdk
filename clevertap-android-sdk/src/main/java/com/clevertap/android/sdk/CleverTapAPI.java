@@ -2559,6 +2559,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         isBgPing = true;
                         event.remove("bk");
                     }
+
+                    //Add a flag to denote, PING event is for geofences
+                    if(isLocationForGeofence()){
+                        event.put("gf", true);
+                        setLocationForGeofence(false);
+                    }
                 } else if (eventType == Constants.PROFILE_EVENT) {
                     type = "profile";
                 } else if (eventType == Constants.DATA_EVENT) {
@@ -3294,12 +3300,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
             header.put("frs", isFirstRequestInSession());
             setFirstRequestInSession(false);
-
-            if(isLocationForGeofence()){
-                header.put("gf", true);
-                setLocationForGeofence(false);
-            }
-
 
             // Attach ARP
             if (cachedGUID != null) {
