@@ -40,8 +40,8 @@ public class Constants {
     static final String ICON_BASE_URL = "http://static.wizrocket.com/android/ico/";
     static final String NOTIFICATION_CLICKED_EVENT_NAME = "Notification Clicked";
     static final String NOTIFICATION_VIEWED_EVENT_NAME = "Notification Viewed";
-    static final String GEOFENCE_ENTERED_EVENT_NAME = "Geofence Cluster Entered";
-    static final String GEOFENCE_EXITED_EVENT_NAME = "Geofence Cluster Exited";
+    static final String GEOFENCE_ENTERED_EVENT_NAME = "Geocluster Entered";
+    static final String GEOFENCE_EXITED_EVENT_NAME = "Geocluster Exited";
     static final String APP_LAUNCHED_EVENT = "App Launched";
     static final String ERROR_KEY = "wzrk_error";
     static final int PUSH_DELAY_MS = 1000;
