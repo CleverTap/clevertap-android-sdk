@@ -6811,7 +6811,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         Logger.v("Location updated (" + location.getLatitude() + ", " + location.getLongitude() + ")");
 
         // only queue the location ping if we are in the foreground
-        if (!isAppForeground()) return;
+        if (!isLocationForGeofence()&&!isAppForeground()) return;
 
         // Queue the ping event to transmit location update to server
         // min 10 second interval between location pings
@@ -8444,6 +8444,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             CleverTapAPI instance = createInstanceIfAvailable(context, _accountId);
             if (instance != null) {
                 ctGeofenceAPI.setGeofenceInterface(instance);
+                ctGeofenceAPI.setAccountId(instance.getAccountId());
+                ctGeofenceAPI.setGUID(instance.getCleverTapID());
                 ctGeofenceAPI.activate();
             }
             return;
@@ -8457,6 +8459,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
             if (shouldProcess) {
                 ctGeofenceAPI.setGeofenceInterface(instance);
+                ctGeofenceAPI.setAccountId(instance.getAccountId());
+                ctGeofenceAPI.setGUID(instance.getCleverTapID());
                 ctGeofenceAPI.activate();
                 break;
             }
