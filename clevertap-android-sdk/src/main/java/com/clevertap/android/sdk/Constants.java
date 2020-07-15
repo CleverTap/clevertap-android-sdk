@@ -170,6 +170,7 @@ public class Constants {
     static final String KEY_PACKAGE_NAME = "packageName";
     static final String KEY_ENABLE_UIEDITOR = "enableUIEditor";
     static final String KEY_ENABLE_ABTEST = "enableABTesting";
+    static final String KEY_STAGING = "staging";
     static final String WZRK_PUSH_ID = "wzrk_pid";
     static final String NOTIF_MSG = "nm";
     static final String NOTIF_TITLE = "nt";

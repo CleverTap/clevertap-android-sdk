@@ -120,8 +120,8 @@ public class CleverTapInstanceConfig implements Parcelable {
             if(configJsonObject.has(Constants.KEY_BETA)) {
                 this.beta = configJsonObject.getBoolean(Constants.KEY_BETA);
             }
-            if(configJsonObject.has("staging"))
-                this.staging = configJsonObject.getInt("staging");
+            if(configJsonObject.has(Constants.KEY_STAGING))
+                this.staging = configJsonObject.getInt(Constants.KEY_STAGING);
         } catch (Throwable t){
             Logger.v("Error constructing CleverTapInstanceConfig from JSON: " + jsonString +": ", t.getCause());
             throw(t);
@@ -379,6 +379,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         dest.writeByte((byte) (enableUIEditor ? 0x01 : 0x00));
         dest.writeString(packageName);
         dest.writeByte((byte) (beta ? 0x01 : 0x00));
+        dest.writeInt(staging);
     }
 
     String toJSONString() {
@@ -402,6 +403,7 @@ public class CleverTapInstanceConfig implements Parcelable {
             configJsonObject.put(Constants.KEY_BETA, isBeta());
             configJsonObject.put(Constants.KEY_ENABLE_UIEDITOR,isUIEditorEnabled());
             configJsonObject.put(Constants.KEY_ENABLE_ABTEST,isABTestingEnabled());
+            configJsonObject.put(Constants.KEY_STAGING,isABTestingEnabled());
             return configJsonObject.toString();
         }catch (Throwable e){
             Logger.v("Unable to convert config to JSON : ",e.getCause());
