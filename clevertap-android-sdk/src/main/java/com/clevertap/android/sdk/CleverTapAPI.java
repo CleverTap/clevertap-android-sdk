@@ -89,6 +89,7 @@ import java.util.Random;
 import java.util.TimeZone;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -2413,8 +2414,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //Event
-    private void queueEvent(final Context context, final JSONObject event, final int eventType) {
-        postAsyncSafely("queueEvent", new Runnable() {
+    private Future<?> queueEvent(final Context context, final JSONObject event, final int eventType) {
+        return postAsyncSafely("queueEvent", new Runnable() {
             @Override
             public void run() {
                 if (shouldDropEvent(event, eventType)) {
@@ -5442,14 +5443,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * It adds try/catch blocks around the runnable and the handler itself.
      */
     @SuppressWarnings("UnusedParameters")
-    private void postAsyncSafely(final String name, final Runnable runnable) {
+    private Future<?> postAsyncSafely(final String name, final Runnable runnable) {
+        Future<?> future = null;
         try {
             final boolean executeSync = Thread.currentThread().getId() == EXECUTOR_THREAD_ID;
 
             if (executeSync) {
                 runnable.run();
             } else {
-                es.submit(new Runnable() {
+                future = es.submit(new Runnable() {
                     @Override
                     public void run() {
                         EXECUTOR_THREAD_ID = Thread.currentThread().getId();
@@ -5464,6 +5466,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         } catch (Throwable t) {
             getConfigLogger().verbose(getAccountId(), "Failed to submit task to the executor service", t);
         }
+
+        return future;
     }
 
     //InApp
@@ -6804,23 +6808,26 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         _setLocation(location);
     }
 
-    private void _setLocation(Location location) {
-        if (location == null) return;
+    private Future<?> _setLocation(Location location) {
+        if (location == null) return null;
 
         locationFromUser = location;
         Logger.v("Location updated (" + location.getLatitude() + ", " + location.getLongitude() + ")");
 
         // only queue the location ping if we are in the foreground
-        if (!isLocationForGeofence()&&!isAppForeground()) return;
+        if (!isLocationForGeofence()&&!isAppForeground()) return null;
 
         // Queue the ping event to transmit location update to server
         // min 10 second interval between location pings
         final int now = (int) (System.currentTimeMillis() / 1000);
+        Future<?> future = null;
         if (now > (lastLocationPingTime + Constants.LOCATION_PING_INTERVAL_IN_SECONDS)) {
-            queueEvent(context, new JSONObject(), Constants.PING_EVENT);
+            future = queueEvent(context, new JSONObject(), Constants.PING_EVENT);
             lastLocationPingTime = now;
             Logger.v("Queuing location ping event for location (" + location.getLatitude() + ", " + location.getLongitude() + ")");
         }
+
+        return future;
     }
 
     @SuppressLint("MissingPermission")
@@ -8500,8 +8507,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @Override
     @SuppressWarnings("unused")
-    public void pushGeofenceEnteredEvent(JSONObject geofenceProperties){
-        raiseEventForGeofences(Constants.GEOFENCE_ENTERED_EVENT_NAME,geofenceProperties);
+    public Future<?> pushGeofenceEnteredEvent(JSONObject geofenceProperties){
+        return raiseEventForGeofences(Constants.GEOFENCE_ENTERED_EVENT_NAME,geofenceProperties);
     }
 
     /**
@@ -8512,20 +8519,21 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @Override
     @SuppressWarnings("unused")
-    public void pushGeoFenceExitedEvent(JSONObject geoFenceProperties){
-        raiseEventForGeofences(Constants.GEOFENCE_EXITED_EVENT_NAME,geoFenceProperties);
+    public Future<?> pushGeoFenceExitedEvent(JSONObject geoFenceProperties){
+        return raiseEventForGeofences(Constants.GEOFENCE_EXITED_EVENT_NAME,geoFenceProperties);
     }
 
     /**
      * Sets the location in CleverTap to get updated GeoFences
      *
      * @param location android.location.Location
+     * @return
      */
     @Override
     @SuppressWarnings("unused")
-    public void setLocationForGeofences(Location location){
+    public Future<?> setLocationForGeofences(Location location){
         setLocationForGeofence(true);
-        _setLocation(location);
+         return _setLocation(location);
     }
 
     /**
@@ -8565,7 +8573,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         isLocationForGeofence = locationForGeofence;
     }
 
-    private void raiseEventForGeofences(String eventName, JSONObject geofenceProperties){
+    private Future<?> raiseEventForGeofences(String eventName, JSONObject geofenceProperties){
+
+        Future<?> future = null;
+
         JSONObject event = new JSONObject();
         try {
             event.put("evtName", eventName);
@@ -8580,12 +8591,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
             locationFromUser=location;
 
-            queueEvent(context, event, Constants.RAISED_EVENT);
+            future = queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (JSONException e) {
             getConfigLogger().debug(getAccountId(),Constants.LOG_TAG_GEOFENCES +
                     "JSON Exception when raising GeoFence event "
                     +eventName +" - "+e.getLocalizedMessage());
         }
+
+        return future;
     }
 
     private void processGeofenceResponse(JSONObject response) throws JSONException {
