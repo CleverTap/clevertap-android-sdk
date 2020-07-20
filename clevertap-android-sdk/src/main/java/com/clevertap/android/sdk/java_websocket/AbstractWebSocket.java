@@ -25,6 +25,7 @@
 
 package com.clevertap.android.sdk.java_websocket;
 
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.java_websocket.framing.CloseFrame;
 
 import java.util.ArrayList;
@@ -191,6 +192,7 @@ public abstract class AbstractWebSocket extends WebSocketAdapter {
 		}
 		WebSocketImpl webSocketImpl = (WebSocketImpl) webSocket;
 		if( webSocketImpl.getLastPong() < current ) {
+			Logger.d("The connection was closed because the other endpoint did not respond with a pong in time. For more information check: https://github.com/TooTallNate/Java-WebSocket/wiki/Lost-connection-detection");
 			webSocketImpl.closeConnection( CloseFrame.ABNORMAL_CLOSE, "The connection was closed because the other endpoint did not respond with a pong in time. For more information check: https://github.com/TooTallNate/Java-WebSocket/wiki/Lost-connection-detection" );
 		} else {
 			if( webSocketImpl.isOpen() ) {

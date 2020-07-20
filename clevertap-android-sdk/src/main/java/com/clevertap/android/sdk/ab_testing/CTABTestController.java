@@ -41,6 +41,7 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -484,7 +485,7 @@ public class CTABTestController {
         private CleverTapInstanceConfig config;
         private final Lock lock = new ReentrantLock();
         private DashboardClient wsClient;
-        private static final int CONNECT_TIMEOUT = 5000;
+        private static final int CONNECT_TIMEOUT = 5000*12*2;
         private Context context;
         private Set<CTABVariant> variants;
         private CTABVariant editorSessionVariant;
@@ -604,7 +605,15 @@ public class CTABTestController {
             final String url =  protocol+"://"+domain+"/"+getAccountId()+"/"+"websocket/screenab/sdk?tk="+config.getAccountToken();
             getConfigLogger().verbose(getAccountId(), "Websocket URL - " + url);
             try {
-                wsClient = new DashboardClient(new URI(url), CONNECT_TIMEOUT);
+                String userAgent = System.getProperty("http.agent");
+                Map<String,String> httpHeaders = new HashMap<>();
+                if(userAgent != null){
+                    Logger.d("User Agent found "+ userAgent);
+                    httpHeaders.put("user-agent",userAgent);
+                }else{
+                    Logger.d("No User Agent found ");
+                }
+                wsClient = new DashboardClient(new URI(url),CONNECT_TIMEOUT,httpHeaders);
                 wsClient.connectBlocking();
             }  catch (final Exception e) {
                 getConfigLogger().verbose(getAccountId(), "Unable to connect to dashboard", e);
@@ -961,8 +970,8 @@ public class CTABTestController {
 
         private class DashboardClient extends WebSocketClient {
             private URI dashboardURI;
-            private DashboardClient(URI uri, int connectTimeout) {
-                super(uri, new Draft_6455(), null, connectTimeout);
+            private DashboardClient(URI uri, int connectTimeout, Map<String,String> httpHeaders) {
+                super(uri, new Draft_6455(), httpHeaders, connectTimeout);
                 this.dashboardURI = uri;
                 setSocketFactory(SSLSocketFactory);
             }
@@ -994,7 +1003,7 @@ public class CTABTestController {
 
             @Override
             public void onClose(int code, String reason, boolean remote) {
-                getConfigLogger().verbose(getAccountId(),"WebSocket closed. Code: " + code + ", reason: " + reason + "\nURI: " + dashboardURI);
+                getConfigLogger().verbose(getAccountId(),"WebSocket closed. Code: " + code + ", reason: " + reason + "\nURI: " + dashboardURI + "\nRemote - "+remote);
                 handleOnClose();
             }
 

@@ -44,6 +44,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSocketFactory;
 
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.java_websocket.AbstractWebSocket;
 import com.clevertap.android.sdk.java_websocket.WebSocket;
 import com.clevertap.android.sdk.java_websocket.WebSocketImpl;
@@ -272,6 +273,7 @@ public abstract class WebSocketClient extends AbstractWebSocket implements Runna
 			}
 		} catch ( Exception e ) {
 			onError( e );
+			Logger.d("CloseFrame - ABNORMAL_CLOSE - "+e.getMessage());
 			engine.closeConnection( CloseFrame.ABNORMAL_CLOSE, e.getMessage() );
 			return;
 		}
@@ -410,6 +412,7 @@ public abstract class WebSocketClient extends AbstractWebSocket implements Runna
 			sendHandshake();
 		} catch ( /*IOException | SecurityException | UnresolvedAddressException | InvalidHandshakeException | ClosedByInterruptException | SocketTimeoutException */Exception e ) {
 			onWebsocketError( engine, e );
+			Logger.d("CloseFrame - NEVER_CONNECTED - "+e.getMessage());
 			engine.closeConnection( CloseFrame.NEVER_CONNECTED, e.getMessage() );
 			return;
 		}
@@ -424,12 +427,14 @@ public abstract class WebSocketClient extends AbstractWebSocket implements Runna
 			while ( !isClosing() && !isClosed() && ( readBytes = istream.read( rawbuffer ) ) != -1 ) {
 				engine.decode( ByteBuffer.wrap( rawbuffer, 0, readBytes ) );
 			}
+			Logger.d("inside try/catch of run()");
 			engine.eot();
 		} catch ( IOException e ) {
 			handleIOException(e);
 		} catch ( RuntimeException e ) {
 			// this catch case covers internal errors only and indicates a bug in this websocket implementation
 			onError( e );
+			Logger.d("CloseFrame - ABNORMAL_CLOSE - "+e.getMessage());
 			engine.closeConnection( CloseFrame.ABNORMAL_CLOSE, e.getMessage() );
 		}
 		connectReadThread = null;
@@ -778,6 +783,7 @@ public abstract class WebSocketClient extends AbstractWebSocket implements Runna
 
 	@Override
 	public void closeConnection( int code, String message ) {
+		Logger.d("Inside overriden closeConnection");
 		engine.closeConnection( code, message );
 	}
 
@@ -819,6 +825,7 @@ public abstract class WebSocketClient extends AbstractWebSocket implements Runna
 		if (e instanceof SSLException) {
 			onError( e );
 		}
+		Logger.d("inside handleIOException");
 		engine.eot();
 	}
 }
