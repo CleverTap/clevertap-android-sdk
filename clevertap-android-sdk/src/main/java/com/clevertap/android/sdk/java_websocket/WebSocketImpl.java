@@ -25,6 +25,7 @@
 
 package com.clevertap.android.sdk.java_websocket;
 
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.java_websocket.drafts.Draft;
 import com.clevertap.android.sdk.java_websocket.drafts.Draft_6455;
 import com.clevertap.android.sdk.java_websocket.enums.*;
@@ -217,8 +218,10 @@ public class WebSocketImpl implements WebSocket {
 	 * In case of a broken handshake this will be never the case.
 	 **/
 	private boolean decodeHandshake( ByteBuffer socketBufferNew ) {
+		Logger.d("Inside decodeHandshake ");
 		ByteBuffer socketBuffer;
 		if( tmpHandshakeBytes.capacity() == 0 ) {
+			Logger.d("Inside decodeHandshake -  tmpHandshakeBytes.capacity() == 0");
 			socketBuffer = socketBufferNew;
 		} else {
 			if( tmpHandshakeBytes.remaining() < socketBufferNew.remaining() ) {
@@ -237,6 +240,7 @@ public class WebSocketImpl implements WebSocket {
 			HandshakeState handshakestate;
 			try {
 				if( role == Role.SERVER ) {
+					Logger.d("Inside SERVER");
 					if( draft == null ) {
 						for( Draft d : knownDrafts ) {
 							d = d.copyInstance();
@@ -280,6 +284,7 @@ public class WebSocketImpl implements WebSocket {
 						// special case for multiple step handshakes
 						Handshakedata tmphandshake = draft.translateHandshake( socketBuffer );
 						if( !( tmphandshake instanceof ClientHandshake ) ) {
+							Logger.d("CloseFrame - PROTOCOL_ERROR - message - wrong http function");
 							flushAndClose( CloseFrame.PROTOCOL_ERROR, "wrong http function", false );
 							return false;
 						}
@@ -295,9 +300,11 @@ public class WebSocketImpl implements WebSocket {
 						return false;
 					}
 				} else if( role == Role.CLIENT ) {
+					Logger.d("Inside CLIENT");
 					draft.setParseMode( role );
 					Handshakedata tmphandshake = draft.translateHandshake( socketBuffer );
 					if( !( tmphandshake instanceof ServerHandshake ) ) {
+						Logger.d("CloseFrame - PROTOCOL_ERROR - message - wrong http function");
 						flushAndClose( CloseFrame.PROTOCOL_ERROR, "wrong http function", false );
 						return false;
 					}
@@ -307,10 +314,12 @@ public class WebSocketImpl implements WebSocket {
 						try {
 							wsl.onWebsocketHandshakeReceivedAsClient( this, handshakerequest, handshake );
 						} catch ( InvalidDataException e ) {
+							Logger.d(" inside invalid data exception message - "+e.getMessage());
 							flushAndClose( e.getCloseCode(), e.getMessage(), false );
 							return false;
 						} catch ( RuntimeException e ) {
 							wsl.onWebsocketError( this, e );
+							Logger.d("CloseFrame.NEVER_CONNECTED - inside Runtime exception message - "+e.getMessage());
 							flushAndClose( CloseFrame.NEVER_CONNECTED, e.getMessage(), false );
 							return false;
 						}
@@ -321,6 +330,7 @@ public class WebSocketImpl implements WebSocket {
 					}
 				}
 			} catch ( InvalidHandshakeException e ) {
+				Logger.d("Inside InvalidHandshakeException");
 				close( e );
 			}
 		} catch ( IncompleteHandshakeException e ) {
@@ -347,6 +357,7 @@ public class WebSocketImpl implements WebSocket {
 	private void decodeFrames( ByteBuffer socketBuffer ) {
 		List<Framedata> frames;
 		try {
+			Logger.d("Inside decodeFrames");
 			frames = draft.translateFrame( socketBuffer );
 			for( Framedata f : frames ) {
 				draft.processFrame( this, f );
@@ -355,9 +366,11 @@ public class WebSocketImpl implements WebSocket {
 			if (e.getLimit() == Integer.MAX_VALUE) {
 				wsl.onWebsocketError(this, e);
 			}
+			Logger.d("Inside LimitExceededException of decodeFrames");
 			close(e);
 		} catch ( InvalidDataException e ) {
 			wsl.onWebsocketError( this, e );
+			Logger.d("Inside InvalidDataException of decodeFrames");
 			close(e);
 		}
 	}
@@ -369,6 +382,7 @@ public class WebSocketImpl implements WebSocket {
 	 */
 	private void closeConnectionDueToWrongHandshake( InvalidDataException exception ) {
 		write( generateHttpResponseDueToError( 404 ) );
+		Logger.d("Close code - "+ exception.getCloseCode() +" inside closeConnectionDueToWrongHandshake - errorCode - 404 -" + exception.getMessage());
 		flushAndClose( exception.getCloseCode(), exception.getMessage(), false );
 	}
 
@@ -379,6 +393,7 @@ public class WebSocketImpl implements WebSocket {
 	 */
 	private void closeConnectionDueToInternalServerError( RuntimeException exception ) {
 		write( generateHttpResponseDueToError( 500 ) );
+		Logger.d("CloseFrame.NEVER_CONNECTED - inside closeConnectionDueToInternalServerError - errorCode - 500 -" + exception.getMessage());
 		flushAndClose( CloseFrame.NEVER_CONNECTED, exception.getMessage(), false );
 	}
 
@@ -407,6 +422,7 @@ public class WebSocketImpl implements WebSocket {
 				if( code == CloseFrame.ABNORMAL_CLOSE ) {
 					assert ( !remote );
 					readyState = ReadyState.CLOSING ;
+					Logger.d("Close 1 code - "+code+" inside close - message -"+message);
 					flushAndClose( code, message, false );
 					return;
 				}
@@ -428,16 +444,21 @@ public class WebSocketImpl implements WebSocket {
 						}
 					} catch ( InvalidDataException e ) {
 						wsl.onWebsocketError( this, e );
+						Logger.d("CloseFrame.ABNORMAL_CLOSE - inside close - Inside invalid data exception - message -"+ message);
 						flushAndClose( CloseFrame.ABNORMAL_CLOSE, "generated frame is invalid", false );
 					}
 				}
+				Logger.d("Close 2 code - "+code+" inside close - message -"+message);
 				flushAndClose( code, message, remote );
 			} else if( code == CloseFrame.FLASHPOLICY ) {
 				assert ( remote );
+				Logger.d("CloseFrame.FLASHPOLICY inside close - message - "+message);
 				flushAndClose( CloseFrame.FLASHPOLICY, message, true );
 			} else if( code == CloseFrame.PROTOCOL_ERROR ) { // this endpoint found a PROTOCOL_ERROR
+				Logger.d("Close 3 code - "+code+" inside close - message -"+message);
 				flushAndClose( code, message, remote );
 			} else {
+				Logger.d("CloseFrame.NEVER_CONNECTED - inside close - message -"+message);
 				flushAndClose( CloseFrame.NEVER_CONNECTED, message, false );
 			}
 			readyState = ReadyState.CLOSING;
@@ -448,6 +469,7 @@ public class WebSocketImpl implements WebSocket {
 
 	@Override
 	public void close( int code, String message ) {
+		Logger.d("Inside overriden close");
 		close( code, message, false );
 	}
 
@@ -520,7 +542,7 @@ public class WebSocketImpl implements WebSocket {
 		closecode = code;
 		closemessage = message;
 		closedremotely = remote;
-
+		Logger.d("Setting flushandclosestate to true");
 		flushandclosestate = true;
 
 		wsl.onWriteDemand( this ); // ensures that all outgoing frames are flushed before closing the connection
@@ -538,6 +560,7 @@ public class WebSocketImpl implements WebSocket {
 		if( readyState == ReadyState.NOT_YET_CONNECTED ) {
 			closeConnection( CloseFrame.NEVER_CONNECTED, true );
 		} else if( flushandclosestate ) {
+			Logger.d("inside eot()");
 			closeConnection( closecode, closemessage, closedremotely );
 		} else if( draft.getCloseHandshakeType() == CloseHandshakeType.NONE ) {
 			closeConnection( CloseFrame.NORMAL, true );
@@ -553,10 +576,12 @@ public class WebSocketImpl implements WebSocket {
 
 	@Override
 	public void close( int code ) {
+		Logger.d("inside overriden close with no message");
 		close( code, "", false );
 	}
 
 	public void close( InvalidDataException e ) {
+		Logger.d("inside overriden close with invalid data exception" + e.getMessage());
 		close( e.getCloseCode(), e.getMessage(), false );
 	}
 

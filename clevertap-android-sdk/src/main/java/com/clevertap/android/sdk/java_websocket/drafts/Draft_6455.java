@@ -25,6 +25,7 @@
 
 package com.clevertap.android.sdk.java_websocket.drafts;
 
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.java_websocket.WebSocketImpl;
 import com.clevertap.android.sdk.java_websocket.enums.*;
 import com.clevertap.android.sdk.java_websocket.exceptions.*;
@@ -751,6 +752,7 @@ public class Draft_6455 extends Draft {
 	public void processFrame( WebSocketImpl webSocketImpl, Framedata frame ) throws InvalidDataException {
 		Opcode curop = frame.getOpcode();
 		if( curop == Opcode.CLOSING ) {
+			Logger.d("Opcode - Opcode.CLOSING ");
 			processFrameClosing(webSocketImpl, frame);
 		} else if( curop == Opcode.PING ) {
 			webSocketImpl.getWebSocketListener().onWebsocketPing( webSocketImpl, frame );
@@ -892,13 +894,18 @@ public class Draft_6455 extends Draft {
 		}
 		if( webSocketImpl.getReadyState() == ReadyState.CLOSING ) {
 			// complete the close handshake by disconnecting
+			Logger.d("ReadyState.CLOSING - Inside draft 6455 - code -"+code+" message -"+reason);
 			webSocketImpl.closeConnection( code, reason, true );
 		} else {
 			// echo close handshake
-			if( getCloseHandshakeType() == CloseHandshakeType.TWOWAY )
-				webSocketImpl.close( code, reason, true );
-			else
-				webSocketImpl.flushAndClose( code, reason, false );
+			if( getCloseHandshakeType() == CloseHandshakeType.TWOWAY ) {
+				Logger.d("CloseHandshakeType.TWOWAY - Inside draft 6455 - code -"+code+" message -"+reason);
+				webSocketImpl.close(code, reason, true);
+			}
+			else {
+				Logger.d("Inside draft 6455 - code -"+code+" message -"+reason);
+				webSocketImpl.flushAndClose(code, reason, false);
+			}
 		}
 	}
 
