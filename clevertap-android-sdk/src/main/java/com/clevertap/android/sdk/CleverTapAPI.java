@@ -331,6 +331,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private WeakReference<CTProductConfigListener> productConfigListener;
     private GeofenceInterface geofenceInterface;
     private boolean isLocationForGeofence = false;
+    private int geofenceSDKVersion = 0;
 
     // static lifecycle callbacks
     static void onActivityCreated(Activity activity, String cleverTapID) {
@@ -2565,6 +2566,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     if(isLocationForGeofence()){
                         event.put("gf", true);
                         setLocationForGeofence(false);
+                        event.put("gfSDKVersion",getGeofenceSDKVersion());
+                        setGeofenceSDKVersion(0);
                     }
                 } else if (eventType == Constants.PROFILE_EVENT) {
                     type = "profile";
@@ -5463,7 +5466,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * It adds try/catch blocks around the runnable and the handler itself.
      */
     @SuppressWarnings("UnusedParameters")
-    private Future<?> postAsyncSafely(final String name, final Runnable runnable) {
+    private @Nullable Future<?> postAsyncSafely(final String name, final Runnable runnable) {
         Future<?> future = null;
         try {
             final boolean executeSync = Thread.currentThread().getId() == EXECUTOR_THREAD_ID;
@@ -8580,9 +8583,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @Override
     @SuppressWarnings("unused")
-    public Future<?> setLocationForGeofences(Location location){
+    public Future<?> setLocationForGeofences(Location location, int sdkVersion){
         setLocationForGeofence(true);
-         return _setLocation(location);
+        setGeofenceSDKVersion(sdkVersion);
+        return _setLocation(location);
     }
 
     /**
@@ -8620,6 +8624,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     private void setLocationForGeofence(boolean locationForGeofence) {
         isLocationForGeofence = locationForGeofence;
+    }
+
+    private int getGeofenceSDKVersion() {
+        return geofenceSDKVersion;
+    }
+
+    private void setGeofenceSDKVersion(int geofenceSDKVersion) {
+        this.geofenceSDKVersion = geofenceSDKVersion;
     }
 
     private Future<?> raiseEventForGeofences(String eventName, JSONObject geofenceProperties){
