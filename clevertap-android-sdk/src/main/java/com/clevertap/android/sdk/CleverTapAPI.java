@@ -3267,19 +3267,13 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
 
             // Attach ARP
-            if (cachedGUID != null) {
-                if (cachedGUID.equals(getCleverTapID())) {
-                    try {
-                        final JSONObject arp = getARP();
-                        if (arp != null && arp.length() > 0) {
-                            header.put("arp", arp);
-                        }
-                    } catch (Throwable t) {
-                        getConfigLogger().verbose(getAccountId(), "Failed to attach ARP", t);
-                    }
+            try {
+                final JSONObject arp = getARP();
+                if (arp != null && arp.length() > 0) {
+                    header.put("arp", arp);
                 }
-            } else {
-                getConfigLogger().verbose(getAccountId(), "Not attaching ARP because ");
+            } catch (Throwable t) {
+                getConfigLogger().verbose(getAccountId(), "Failed to attach ARP", t);
             }
 
             JSONObject ref = new JSONObject();
