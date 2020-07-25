@@ -2963,6 +2963,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //Session
+    //Old namespace for ARP Shared Prefs
     private String getNamespaceARPKey() {
 
         final String accountId = getAccountId();
@@ -2972,6 +2973,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return "ARP:" + accountId;
     }
 
+    //New namespace for ARP Shared Prefs
     private String getNewNamespaceARPKey() {
 
         final String accountId = getAccountId();
@@ -3367,10 +3369,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             //if not empty, using prefs of new namespace to send ARP
             //if empty, checking for old prefs
             if(!StorageHelper.getPreferences(context, nameSpaceKey).getAll().isEmpty()){
-                getConfigLogger().debug("Prefs is new!! - "+ nameSpaceKey);
+                //prefs point to new namespace
                 prefs = StorageHelper.getPreferences(context, nameSpaceKey);
             }else{
-                getConfigLogger().debug("Prefs is old!! - "+ getNamespaceARPKey());
+                //prefs point to new namespace
                 prefs = migrateARPToNewNameSpace(nameSpaceKey, getNamespaceARPKey());
             }
 
@@ -3624,6 +3626,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         StorageHelper.persist(editor);
     }
 
+    //Saves ARP directly to new namespace
     private void handleARPUpdate(final Context context, final JSONObject arp) {
         if (arp == null || arp.length() == 0) return;
 
@@ -3656,7 +3659,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 // Ignore
             }
         }
-        //getConfigLogger().verbose(getAccountId(), "Completed ARP update for namespace key: " + nameSpaceKey + "");//TODO remove
         getConfigLogger().verbose(getAccountId(), "Stored ARP for namespace key: " + nameSpaceKey + " values: " + arp.toString());
         StorageHelper.persist(editor);
     }

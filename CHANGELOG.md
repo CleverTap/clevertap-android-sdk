@@ -1,6 +1,6 @@
 ## CHANGE LOG
 ### Version 3.8.2 (July 25, 2020)
-* Fixes ARP not being sent to server bug
+* Fixes a bug where ARP was not being sent back to servers
 
 ### Version 3.8.1 (July 08, 2020)
 * Use v3.8.2
