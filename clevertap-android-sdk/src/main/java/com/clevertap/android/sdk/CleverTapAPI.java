@@ -3372,7 +3372,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 //prefs point to new namespace
                 prefs = StorageHelper.getPreferences(context, nameSpaceKey);
             }else{
-                //prefs point to new namspace migrated from old namespace
+                //prefs point to new namespace migrated from old namespace
                 prefs = migrateARPToNewNameSpace(nameSpaceKey, getNamespaceARPKey());
             }
 
