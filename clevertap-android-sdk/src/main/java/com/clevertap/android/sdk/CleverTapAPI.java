@@ -298,6 +298,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private InAppNotificationListener inAppNotificationListener;
     private InAppFCManager inAppFCManager;
     private int lastLocationPingTime = 0;
+    private int lastLocationPingTimeForGeofence = 0;
     private final Object tokenLock = new Object();
     private final Object notificationMapLock = new Object();
     private boolean havePushedFCMToken = false;
@@ -6907,7 +6908,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         // min 10 second interval between location pings
         final int now = (int) (System.currentTimeMillis() / 1000);
         Future<?> future = null;
-        if (now > (lastLocationPingTime + Constants.LOCATION_PING_INTERVAL_IN_SECONDS)) {
+
+        if (isLocationForGeofence() && now > (lastLocationPingTimeForGeofence + Constants.LOCATION_PING_INTERVAL_IN_SECONDS)) {
+            future = queueEvent(context, new JSONObject(), Constants.PING_EVENT);
+            lastLocationPingTimeForGeofence = now;
+            Logger.v("Queuing location ping event for geofence location (" + location.getLatitude() + ", " + location.getLongitude() + ")");
+        } else if (now > (lastLocationPingTime + Constants.LOCATION_PING_INTERVAL_IN_SECONDS)) {
             future = queueEvent(context, new JSONObject(), Constants.PING_EVENT);
             lastLocationPingTime = now;
             Logger.v("Queuing location ping event for location (" + location.getLatitude() + ", " + location.getLongitude() + ")");
