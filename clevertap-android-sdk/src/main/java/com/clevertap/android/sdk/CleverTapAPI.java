@@ -3025,6 +3025,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //Session
+    //Old namespace for ARP Shared Prefs
     private String getNamespaceARPKey() {
 
         final String accountId = getAccountId();
@@ -3034,6 +3035,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return "ARP:" + accountId;
     }
 
+    //New namespace for ARP Shared Prefs
     private String getNewNamespaceARPKey() {
 
         final String accountId = getAccountId();
@@ -3330,19 +3332,13 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             setFirstRequestInSession(false);
 
             // Attach ARP
-            if (cachedGUID != null) {
-                if (cachedGUID.equals(getCleverTapID())) {
-                    try {
-                        final JSONObject arp = getARP();
-                        if (arp != null && arp.length() > 0) {
-                            header.put("arp", arp);
-                        }
-                    } catch (Throwable t) {
-                        getConfigLogger().verbose(getAccountId(), "Failed to attach ARP", t);
-                    }
+            try {
+                final JSONObject arp = getARP();
+                if (arp != null && arp.length() > 0) {
+                    header.put("arp", arp);
                 }
-            } else {
-                getConfigLogger().verbose(getAccountId(), "Not attaching ARP because ");
+            } catch (Throwable t) {
+                getConfigLogger().verbose(getAccountId(), "Failed to attach ARP", t);
             }
 
             JSONObject ref = new JSONObject();
@@ -3430,7 +3426,19 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             final String nameSpaceKey = getNewNamespaceARPKey();
             if (nameSpaceKey == null) return null;
 
-            final SharedPreferences prefs = migrateARPToNewNameSpace(nameSpaceKey, getNamespaceARPKey());
+            SharedPreferences prefs = null;
+
+            //checking whether new namespace is empty or not
+            //if not empty, using prefs of new namespace to send ARP
+            //if empty, checking for old prefs
+            if(!StorageHelper.getPreferences(context, nameSpaceKey).getAll().isEmpty()){
+                //prefs point to new namespace
+                prefs = StorageHelper.getPreferences(context, nameSpaceKey);
+            }else{
+                //prefs point to new namespace migrated from old namespace
+                prefs = migrateARPToNewNameSpace(nameSpaceKey, getNamespaceARPKey());
+            }
+
             final Map<String, ?> all = prefs.getAll();
             final Iterator<? extends Map.Entry<String, ?>> iter = all.entrySet().iterator();
 
@@ -3692,6 +3700,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         StorageHelper.persist(editor);
     }
 
+    //Saves ARP directly to new namespace
     private void handleARPUpdate(final Context context, final JSONObject arp) {
         if (arp == null || arp.length() == 0) return;
 
@@ -3724,7 +3733,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 // Ignore
             }
         }
-        getConfigLogger().verbose(getAccountId(), "Completed ARP update for namespace key: " + nameSpaceKey + "");
+        getConfigLogger().verbose(getAccountId(), "Stored ARP for namespace key: " + nameSpaceKey + " values: " + arp.toString());
         StorageHelper.persist(editor);
     }
 
