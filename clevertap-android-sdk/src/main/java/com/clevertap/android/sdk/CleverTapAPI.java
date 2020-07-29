@@ -8649,4 +8649,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
 
     }
+
+    public void connectManually(){
+        if(ctABTestController != null){
+            ctABTestController.connectManually();
+        }else{
+            getConfigLogger().debug(getAccountId(),"AB Test Controller is null, cannot connect manually");
+        }
+    }
 }

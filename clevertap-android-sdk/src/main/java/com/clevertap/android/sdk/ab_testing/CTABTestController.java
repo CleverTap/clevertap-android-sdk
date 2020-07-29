@@ -1080,6 +1080,11 @@ public class CTABTestController {
         }
     }
 
+    public void connectManually(){
+        final Message message = executionThreadHandler.obtainMessage(ExecutionThreadHandler.MESSAGE_CONNECT_TO_EDITOR);
+        executionThreadHandler.sendMessage(message);
+    }
+
     private class LifecycleCallbacks implements Application.ActivityLifecycleCallbacks, ConnectionGesture.OnGestureListener {
         private ConnectionGesture gesture;
         private EmulatorConnectRunnable emulatorConnectRunnable;
