@@ -117,7 +117,9 @@ public class Constants {
     static final String KEY_COUNTS_PER_INAPP = "counts_per_inapp";
     static final String INAPP_ID_IN_PAYLOAD = "ti";
     static final int LOCATION_PING_INTERVAL_IN_SECONDS = 10;
-    static final String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME, NOTIFICATION_VIEWED_EVENT_NAME};
+    static final String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME,
+            NOTIFICATION_VIEWED_EVENT_NAME, GEOFENCE_ENTERED_EVENT_NAME,
+            GEOFENCE_EXITED_EVENT_NAME};
     static final long DEFAULT_PUSH_TTL = 1000 * 60 * 60 * 24 * 4;
     static final String PF_JOB_ID = "pfjobid";
     static final int PING_FREQUENCY_VALUE = 240;
