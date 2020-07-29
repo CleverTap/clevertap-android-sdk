@@ -177,8 +177,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         // Default (flag is set in the config init) or first non-default instance gets the ABTestController
         if (!config.isDefaultInstance()) {
             if (instances == null || instances.size() <= 0) {
-                config.setEnableABTesting(true);
+                this.config.setEnableABTesting(true);
             }
+        }else {
+            this.config.setEnableABTesting(true);
         }
         initABTesting();
 
