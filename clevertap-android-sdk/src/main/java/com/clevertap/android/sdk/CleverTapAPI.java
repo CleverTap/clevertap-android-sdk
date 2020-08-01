@@ -57,6 +57,9 @@ import com.clevertap.android.sdk.product_config.CTProductConfigControllerListene
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
+import com.orhanobut.logger.CsvFormatStrategy;
+import com.orhanobut.logger.DiskLogAdapter;
+import com.orhanobut.logger.FormatStrategy;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -154,6 +157,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             this.inAppFCManager = new InAppFCManager(context, config, this.deviceInfo.getDeviceID());
         }
         initFeatureFlags(false);
+        FormatStrategy formatStrategy = CsvFormatStrategy.newBuilder()
+                .tag("CleverTap")
+                .build(context);
+        com.orhanobut.logger.Logger.addLogAdapter(new DiskLogAdapter(formatStrategy));
 
         this.validator = new Validator();
 
