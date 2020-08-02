@@ -108,7 +108,7 @@ public class CTABTestController {
     private static final String TYPE_KEY = "type";
 
     private boolean enableEditor;
-    private final ExecutionThreadHandler executionThreadHandler;
+    private ExecutionThreadHandler executionThreadHandler;
     private CleverTapInstanceConfig config;
     private String guid;
     private JSONObject cachedDeviceInfo;
@@ -190,26 +190,32 @@ public class CTABTestController {
     }
 
     public CTABTestController(Context context, CleverTapInstanceConfig config, String guid, CTABTestListener listener) {
-        this.varCache = new CTVarCache();
-        this.enableEditor = config.isUIEditorEnabled();
-        this.config = config;
-        this.guid = guid;
-        this.setListener(listener);
-        this.uiEditor = new UIEditor(context, config);
+        try{
+            this.varCache = new CTVarCache();
+            this.enableEditor = config.isUIEditorEnabled();
+            this.config = config;
+            this.guid = guid;
+            this.setListener(listener);
+            this.uiEditor = new UIEditor(context, config);
 
-        final HandlerThread thread = new HandlerThread(CTABTestController.class.getCanonicalName());
-        thread.setPriority(Process.THREAD_PRIORITY_BACKGROUND);
-        thread.start();
-        executionThreadHandler = new ExecutionThreadHandler(context, config, thread.getLooper());
-        executionThreadHandler.start();
+            final HandlerThread thread = new HandlerThread(CTABTestController.class.getCanonicalName());
+            thread.setPriority(Process.THREAD_PRIORITY_BACKGROUND);
+            thread.start();
+            executionThreadHandler = new ExecutionThreadHandler(context, config, thread.getLooper());
+            executionThreadHandler.start();
 
-        if (enableEditor) {
-            final Application app = (Application) context.getApplicationContext();
-            app.registerActivityLifecycleCallbacks(new LifecycleCallbacks());
-        } else {
-            config.getLogger().debug(config.getAccountId(), "UIEditor connection is disabled");
+            if (enableEditor) {
+                final Application app = (Application) context.getApplicationContext();
+                app.registerActivityLifecycleCallbacks(new LifecycleCallbacks());
+            } else {
+                config.getLogger().debug(config.getAccountId(), "UIEditor connection is disabled");
+            }
+            applyStoredExperiments();
+        }catch (Throwable t){
+            config.setEnableABTesting(false);
+            config.setEnableUIEditor(false);
+            config.getLogger().debug(config.getAccountId(), t);
         }
-        applyStoredExperiments();
     }
 
     public void resetWithGuid(String guid){

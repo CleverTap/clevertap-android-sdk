@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.RestrictTo;
 
 import org.json.JSONObject;
 
@@ -310,7 +311,8 @@ public class CleverTapInstanceConfig implements Parcelable {
     }
 
     @SuppressWarnings({"unused"})
-    void setEnableUIEditor(boolean enableUIEditor) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public void setEnableUIEditor(boolean enableUIEditor) {
         this.enableUIEditor = enableUIEditor;
     }
 
