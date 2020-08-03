@@ -6,10 +6,10 @@ import android.os.Bundle;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.powermock.api.mockito.PowerMockito.mock;
 
 @RunWith(RobolectricTestRunner.class)
 public class CleverTapAPITest extends BaseTestCase {
@@ -25,7 +25,7 @@ public class CleverTapAPITest extends BaseTestCase {
         Bundle bundle = new Bundle();
         //create
         activity.onCreate(bundle, null);
-        verify(cleverTapAPI).onActivityCreated(activity, null);
+        Mockito.verify(cleverTapAPI).onActivityCreated(activity, null);
     }
 
 }

@@ -6,11 +6,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.mock;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 public class FeatureFlagTest extends BaseTestCase {
@@ -25,7 +25,7 @@ public class FeatureFlagTest extends BaseTestCase {
     public void testFetch() {
         when(cleverTapAPI.featureFlag()).thenReturn(new CTFeatureFlagsController(application, "12121", cleverTapInstanceConfig, cleverTapAPI));
         cleverTapAPI.featureFlag().fetchFeatureFlags();
-        verify(cleverTapAPI).fetchFeatureFlags();
+        Mockito.verify(cleverTapAPI).fetchFeatureFlags();
     }
 
     @Test
