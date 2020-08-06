@@ -828,13 +828,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         CleverTapAPI instance = null;
         for (String accountId : instances.keySet()) {
             instance = CleverTapAPI.instances.get(accountId);
-            boolean shouldProcess = false;
-            if (instance != null) {
-                shouldProcess = (_accountId == null && instance.config.isDefaultInstance()) || instance.getAccountId().equals(_accountId);
-            }
-            if (shouldProcess) {
-                break;
-            }
         }
 
         return instance;
@@ -8487,6 +8480,20 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //GEOFENCE APIs
+
+    /**
+     * Used to record errors of the Geofence module
+     *
+     * @param errorCode - int - predefined error code for geofences
+     * @param errorMessage - String - error message
+     */
+    @SuppressWarnings("unused")
+    public void pushGeoFenceError(int errorCode, String errorMessage){
+        ValidationResult validationResult = new ValidationResult();
+        validationResult.setErrorCode(errorCode);
+        validationResult.setErrorDesc(errorMessage);
+        pushValidationResult(validationResult);
+    }
 
     /**
      * Pushes the Geofence Cluster Entered event to CleverTap.
