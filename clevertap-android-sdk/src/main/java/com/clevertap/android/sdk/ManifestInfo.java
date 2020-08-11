@@ -4,8 +4,10 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.annotation.RestrictTo;
 
-class ManifestInfo {
+@RestrictTo(RestrictTo.Scope.LIBRARY)
+public class ManifestInfo {
     private static String accountId;
     private static String accountToken;
     private static String accountRegion;
@@ -67,7 +69,7 @@ class ManifestInfo {
         }
     }
 
-    synchronized static ManifestInfo getInstance(Context context){
+    public synchronized static ManifestInfo getInstance(Context context){
         if (instance == null) {
             instance = new ManifestInfo(context);
         }
@@ -86,7 +88,7 @@ class ManifestInfo {
         return accountRegion;
     }
 
-    String getFCMSenderId() {
+    public String getFCMSenderId() {
         return fcmSenderId;
     }
 

@@ -7,6 +7,9 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 
+import com.clevertap.android.sdk.pushprovider.PushConstants.PushType;
+import com.clevertap.android.sdk.pushprovider.PushProviders;
+
 import java.util.ArrayList;
 
 
@@ -14,20 +17,20 @@ final class ManifestValidator {
 
     private final static String ourApplicationClassName = "com.clevertap.android.sdk.Application";
 
-    static void validate(final Context context, DeviceInfo deviceInfo) {
+    static void validate(final Context context, DeviceInfo deviceInfo, PushProviders pushProviders) {
         if (!deviceInfo.testPermission(context, "android.permission.INTERNET")) {
             Logger.d("Missing Permission: android.permission.INTERNET");
         }
         checkSDKVersion(deviceInfo);
         validationApplicationLifecyleCallback(context);
-        checkReceiversServices(context, deviceInfo);
+        checkReceiversServices(context, pushProviders);
     }
 
     private static void checkSDKVersion(DeviceInfo deviceInfo) {
         Logger.i("SDK Version Code is " + deviceInfo.getSdkVersion());
     }
 
-    private static void checkReceiversServices(final Context context, DeviceInfo deviceInfo) {
+    private static void checkReceiversServices(final Context context, PushProviders pushProviders) {
         try {
             validateReceiverInManifest((Application) context.getApplicationContext(), CTPushNotificationReceiver.class.getName());
             validateServiceInManifest((Application) context.getApplicationContext(), CTNotificationIntentService.class.getName());
@@ -38,7 +41,7 @@ final class ManifestValidator {
             Logger.v("Receiver/Service issue : " + e.toString());
 
         }
-        ArrayList<PushType> enabledPushTypes = deviceInfo.getEnabledPushTypes();
+        ArrayList<PushType> enabledPushTypes = pushProviders.getAvailablePushTypes();
         if (enabledPushTypes == null) return;
         for (PushType pushType : enabledPushTypes) {
             //no-op

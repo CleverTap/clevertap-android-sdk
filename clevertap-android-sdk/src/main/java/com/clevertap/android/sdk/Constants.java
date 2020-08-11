@@ -102,10 +102,6 @@ public class Constants {
     static final String MULTI_USER_PREFIX = "mt_";
     static final String NOTIFICATION_TAG = "wzrk_pn";
     static final String CHARGED_EVENT = "Charged";
-    static final String FCM_PROPERTY_REG_ID = "fcm_token";
-    static final String XPS_PROPERTY_REG_ID = "xps_token";
-    static final String BPS_PROPERTY_REG_ID = "bps_token";
-    static final String HPS_PROPERTY_REG_ID = "hps_token";
     static final String KEY_MUTED = "comms_mtd";
     static final int EMPTY_NOTIFICATION_ID = -1000;
     static final String KEY_MAX_PER_DAY = "istmcd_inapp";
@@ -166,6 +162,7 @@ public class Constants {
     static final String KEY_PACKAGE_NAME = "packageName";
     static final String KEY_ENABLE_UIEDITOR = "enableUIEditor";
     static final String KEY_ENABLE_ABTEST = "enableABTesting";
+    static final String KEY_ALLOWED_TRANSPORT = "allowedTransport";
     static final String WZRK_PUSH_ID = "wzrk_pid";
     static final String NOTIF_MSG = "nm";
     static final String NOTIF_TITLE = "nt";

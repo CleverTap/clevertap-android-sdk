@@ -55,6 +55,10 @@ import com.clevertap.android.sdk.featureFlags.FeatureFlagListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigControllerListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
+import com.clevertap.android.sdk.pushprovider.PushConstants;
+import com.clevertap.android.sdk.pushprovider.PushConstants.PushType;
+import com.clevertap.android.sdk.pushprovider.PushProviders;
+import com.clevertap.android.sdk.pushprovider.PushUtils;
 import com.google.android.gms.plus.model.people.Person;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -152,6 +156,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         initFeatureFlags(false);
 
         this.validator = new Validator();
+        this.pushProviders = PushProviders.load(context, this.config);
 
         postAsyncSafely("CleverTapAPI#initializeDeviceInfo", new Runnable() {
             @Override
@@ -194,7 +199,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     Logger.v("Unable to save config to SharedPrefs, config Json is null");
                     return;
                 }
-                StorageHelper.putString(context, storageKeyWithSuffix("instance"), configJson);
+                StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, "instance"), configJson);
             }
         });
 
@@ -229,7 +234,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private Location locationFromUser = null;
     private SyncListener syncListener = null;
     private CTPushListener pushListener = null;
-    private ArrayList<PushType> enabledPushTypes = null;
     private long appLastSeen = 0;
     private int currentSessionId = 0;
     private boolean firstSession = false;
@@ -317,6 +321,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private CTFeatureFlagsController ctFeatureFlagsController;
     private WeakReference<CTFeatureFlagsListener> featureFlagsListener;
     private WeakReference<CTProductConfigListener> productConfigListener;
+    private final PushProviders pushProviders;
 
     // static lifecycle callbacks
     static void onActivityCreated(Activity activity, String cleverTapID) {
@@ -1172,12 +1177,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //Push
     private void onTokenRefresh() {
-        if (enabledPushTypes == null) {
-            enabledPushTypes = this.deviceInfo.getEnabledPushTypes();
-        }
-        if (enabledPushTypes == null) return;
-        for (PushType pushType : enabledPushTypes) {
-            if (pushType == PushType.FCM) {
+        for (PushType pushType : pushProviders.getAvailablePushTypes()) {
+            if (pushType == PushConstants.PushType.FCM) {
                 doFCMRefresh();
                 break;
             }
@@ -1259,112 +1260,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
-    //Push
-    private void cacheFCMToken(String token) {
-        try {
-            if (token == null || alreadyHaveFCMToken(token)) return;
-
-            final SharedPreferences prefs = getPreferences();
-            if (prefs == null) return;
-
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putString(storageKeyWithSuffix(Constants.FCM_PROPERTY_REG_ID), token);
-            StorageHelper.persist(editor);
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getAccountId(), "FcmManager: Unable to cache FCM Token", t);
-        }
-    }
-
-    private void cacheXPSToken(String token) {
-        try {
-            if (token == null || alreadyHaveXPSToken(token)) return;
-
-            final SharedPreferences prefs = getPreferences();
-            if (prefs == null) return;
-
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putString(storageKeyWithSuffix(Constants.XPS_PROPERTY_REG_ID), token);
-            StorageHelper.persist(editor);
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getAccountId(), "FcmManager: Unable to cache FCM Token", t);
-        }
-    }
-
-    private void cacheBPSToken(String token) {
-        try {
-            if (token == null || alreadyHaveBPSToken(token)) return;
-
-            final SharedPreferences prefs = getPreferences();
-            if (prefs == null) return;
-
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putString(storageKeyWithSuffix(Constants.BPS_PROPERTY_REG_ID), token);
-            StorageHelper.persist(editor);
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getAccountId(), "FcmManager: Unable to cache FCM Token", t);
-        }
-    }
-
-    private void cacheHPSToken(String token) {
-        try {
-            if (token == null || alreadyHaveHPSToken(token)) return;
-
-            final SharedPreferences prefs = getPreferences();
-            if (prefs == null) return;
-
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putString(storageKeyWithSuffix(Constants.HPS_PROPERTY_REG_ID), token);
-            StorageHelper.persist(editor);
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getAccountId(), "FcmManager: Unable to cache FCM Token", t);
-        }
-    }
-
-    //Push
-    private boolean alreadyHaveFCMToken(final String newToken) {
-        if (newToken == null) return false;
-        String cachedToken = getCachedFCMToken();
-        return (cachedToken != null && cachedToken.equals(newToken));
-    }
-
-    private boolean alreadyHaveXPSToken(final String newToken) {
-        if (newToken == null) return false;
-        String cachedToken = getCachedXPSToken();
-        return (cachedToken != null && cachedToken.equals(newToken));
-    }
-
-    private boolean alreadyHaveBPSToken(final String newToken) {
-        if (newToken == null) return false;
-        String cachedToken = getCachedBPSToken();
-        return (cachedToken != null && cachedToken.equals(newToken));
-    }
-
-    private boolean alreadyHaveHPSToken(final String newToken) {
-        if (newToken == null) return false;
-        String cachedToken = getCachedHPSToken();
-        return (cachedToken != null && cachedToken.equals(newToken));
-    }
-
-    //Push
-    private String getCachedFCMToken() {
-        SharedPreferences prefs = getPreferences();
-        return (prefs == null) ? null : getStringFromPrefs(Constants.FCM_PROPERTY_REG_ID, null);
-    }
-
-    private String getCachedXPSToken() {
-        SharedPreferences prefs = getPreferences();
-        return (prefs == null) ? null : getStringFromPrefs(Constants.XPS_PROPERTY_REG_ID, null);
-    }
-
-    private String getCachedBPSToken() {
-        SharedPreferences prefs = getPreferences();
-        return (prefs == null) ? null : getStringFromPrefs(Constants.BPS_PROPERTY_REG_ID, null);
-    }
-
-    private String getCachedHPSToken() {
-        SharedPreferences prefs = getPreferences();
-        return (prefs == null) ? null : getStringFromPrefs(Constants.HPS_PROPERTY_REG_ID, null);
-    }
 
     /**
      * Launches an asynchronous task to delete the notification channel from CleverTap
@@ -1402,15 +1297,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
-    private SharedPreferences getPreferences() {
-        try {
-            return (context == null) ? null : StorageHelper.getPreferences(context);
-        } catch (Throwable t) {
-            return null;
-        }
-    }
-
-    //Deprecation warning because Google Play install referrer via intent will be deprecated in March 2020 
+    //Deprecation warning because Google Play install referrer via intent will be deprecated in March 2020
     @Deprecated
     static void handleInstallReferrer(Context context, Intent intent) {
         if (instances == null) {
@@ -1496,7 +1383,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
 
             try {
-                token = (token != null) ? token : getCachedFCMToken();
+                token = (token != null) ? token : PushUtils.getCachedToken(context, config, PushType.FCM);
                 if (token == null) return;
                 pushDeviceToken(context, token, register, PushType.FCM);
                 havePushedFCMToken = true;
@@ -1514,7 +1401,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
 
             try {
-                token = (token != null) ? token : getCachedXPSToken();
+                token = (token != null) ? token : PushUtils.getCachedToken(context, config, PushType.XPS);
                 if (token == null) return;
                 pushDeviceToken(context, token, register, PushType.XPS);
                 havePushedXPSToken = true;
@@ -1532,7 +1419,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
 
             try {
-                token = (token != null) ? token : getCachedBPSToken();
+                token = (token != null) ? token : PushUtils.getCachedToken(context, config, PushType.BPS);
                 if (token == null) return;
                 pushDeviceToken(context, token, register, PushType.BPS);
                 havePushedBPSToken = true;
@@ -1550,7 +1437,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
 
             try {
-                token = (token != null) ? token : getCachedHPSToken();
+                token = (token != null) ? token : PushUtils.getCachedToken(context, config, PushType.HPS);
                 if (token == null) return;
                 pushDeviceToken(context, token, register, PushType.HPS);
                 havePushedHPSToken = true;
@@ -1772,7 +1659,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             getConfigLogger().verbose(getAccountId(), "Unable to set current user OptOut state from storage: storage key is null");
             return;
         }
-        boolean storedOptOut = getBooleanFromPrefs(key);
+        boolean storedOptOut = StorageHelper.getBooleanFromPrefs(context, config, key);
         setCurrentUserOptedOut(storedOptOut);
         getConfigLogger().verbose(getAccountId(), "Set current user OptOut state from storage to: " + storedOptOut + " for key: " + key);
     }
@@ -1785,7 +1672,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         final int now = (int) (System.currentTimeMillis() / 1000);
         if (inCurrentSession()) {
             try {
-                StorageHelper.putInt(context, storageKeyWithSuffix(Constants.LAST_SESSION_EPOCH), now);
+                StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.LAST_SESSION_EPOCH), now);
                 getConfigLogger().verbose(getAccountId(), "Updated session time: " + now);
             } catch (Throwable t) {
                 getConfigLogger().verbose(getAccountId(), "Failed to update session time time: " + t.getMessage());
@@ -1831,10 +1718,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @SuppressWarnings("unused")
     public String getDevicePushToken(final PushType type) {
-        if (type == PushType.FCM) {
-            return getCachedFCMToken();
-        }
-        return null;
+        return PushUtils.getCachedToken(context, config, type);
     }
 
     // SessionManager/session management
@@ -1946,8 +1830,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         SharedPreferences prefs = StorageHelper.getPreferences(context);
 
-        final int lastSessionID = getIntFromPrefs(Constants.SESSION_ID_LAST, 0);
-        final int lastSessionTime = getIntFromPrefs(Constants.LAST_SESSION_EPOCH, 0);
+        final int lastSessionID = StorageHelper.getIntFromPrefs(context, config, Constants.SESSION_ID_LAST, 0);
+        final int lastSessionTime = StorageHelper.getIntFromPrefs(context, config, Constants.LAST_SESSION_EPOCH, 0);
         if (lastSessionTime > 0) {
             lastSessionLength = lastSessionTime - lastSessionID;
         }
@@ -1958,7 +1842,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             firstSession = true;
         }
 
-        final SharedPreferences.Editor editor = prefs.edit().putInt(storageKeyWithSuffix(Constants.SESSION_ID_LAST), currentSessionId);
+        final SharedPreferences.Editor editor = prefs.edit().putInt(StorageHelper.storageKeyWithSuffix(config, Constants.SESSION_ID_LAST), currentSessionId);
         StorageHelper.persist(editor);
     }
 
@@ -1970,7 +1854,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //Push
     private void doFCMRefresh() {
-        final DeviceInfo _deviceInfo = this.deviceInfo;
         postAsyncSafely("FcmManager#doFCMRefresh", new Runnable() {
             @Override
             public void run() {
@@ -1980,10 +1863,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         return;
                     }
 
-                    String freshToken = FCMGetFreshToken(_deviceInfo.getFCMSenderID());
+                    String freshToken = FCMGetFreshToken(PushUtils.getFCMSenderID(context));
                     if (freshToken == null) return;
 
-                    cacheFCMToken(freshToken);
+                    PushUtils.cacheToken(context, config, freshToken, PushType.FCM);
 
                     // better safe to always force a push from here
                     pushFCMDeviceToken(freshToken, true, true);
@@ -2005,7 +1888,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     private boolean isMuted() {
         final int now = (int) (System.currentTimeMillis() / 1000);
-        final int muteTS = getIntFromPrefs(Constants.KEY_MUTED, 0);
+        final int muteTS = StorageHelper.getIntFromPrefs(context, config, Constants.KEY_MUTED, 0);
 
         return now - muteTS < 24 * 60 * 60;
     }
@@ -2029,11 +1912,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             getConfigLogger().verbose(getAccountId(), "FcmManager: Error requesting FCM token", t);
         }
         return token;
-    }
-
-    //Preferences
-    private String storageKeyWithSuffix(String key) {
-        return key + ":" + getConfig().getAccountId();
     }
 
     //Session
@@ -2078,27 +1956,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             o.put("nt", Utils.getCurrentNetworkType(context));
         } catch (Throwable t) {
             // Ignore
-        }
-    }
-
-    private String getStringFromPrefs(String rawKey, String defaultValue) {
-        if (this.config.isDefaultInstance()) {
-            String _new = StorageHelper.getString(this.context, storageKeyWithSuffix(rawKey), defaultValue);
-            //noinspection ConstantConditions
-            return _new != null ? _new : StorageHelper.getString(this.context, rawKey, defaultValue);
-        } else {
-            return StorageHelper.getString(this.context, storageKeyWithSuffix(rawKey), defaultValue);
-        }
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private int getIntFromPrefs(String rawKey, int defaultValue) {
-        if (this.config.isDefaultInstance()) {
-            int dummy = -1000;
-            int _new = StorageHelper.getInt(this.context, storageKeyWithSuffix(rawKey), dummy);
-            return _new != dummy ? _new : StorageHelper.getInt(this.context, rawKey, defaultValue);
-        } else {
-            return StorageHelper.getInt(this.context, storageKeyWithSuffix(rawKey), defaultValue);
         }
     }
 
@@ -2147,27 +2004,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @SuppressWarnings({"unused"})
     public void disablePersonalization() {
         this.config.enablePersonalization(false);
-    }
-
-    private boolean getBooleanFromPrefs(String rawKey) {
-        if (this.config.isDefaultInstance()) {
-            boolean _new = StorageHelper.getBoolean(this.context, storageKeyWithSuffix(rawKey), false);
-            //noinspection ConstantConditions
-            return !_new ? StorageHelper.getBoolean(this.context, rawKey, false) : _new;
-        } else {
-            return StorageHelper.getBoolean(this.context, storageKeyWithSuffix(rawKey), false);
-        }
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private long getLongFromPrefs(String rawKey, int defaultValue, String nameSpace) {
-        if (this.config.isDefaultInstance()) {
-            long dummy = -1000;
-            long _new = StorageHelper.getLong(this.context, nameSpace, storageKeyWithSuffix(rawKey), dummy);
-            return _new != dummy ? _new : StorageHelper.getLong(this.context, nameSpace, rawKey, defaultValue);
-        } else {
-            return StorageHelper.getLong(this.context, nameSpace, storageKeyWithSuffix(rawKey), defaultValue);
-        }
     }
 
     /**
@@ -2220,12 +2056,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @SuppressWarnings({"unused"})
     public void enableDeviceNetworkInfoReporting(boolean value) {
         enableNetworkInfoReporting = value;
-        StorageHelper.putBoolean(context, storageKeyWithSuffix(Constants.NETWORK_INFO), enableNetworkInfoReporting);
+        StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(config, Constants.NETWORK_INFO), enableNetworkInfoReporting);
         getConfigLogger().verbose(getAccountId(), "Device Network Information reporting set to " + enableNetworkInfoReporting);
     }
 
     private void setDeviceNetworkInfoReportingFromStorage() {
-        boolean enabled = getBooleanFromPrefs(Constants.NETWORK_INFO);
+        boolean enabled = StorageHelper.getBooleanFromPrefs(context, config, Constants.NETWORK_INFO);
         getConfigLogger().verbose(getAccountId(), "Setting device network info reporting state from storage to " + enabled);
         enableNetworkInfoReporting = enabled;
     }
@@ -2235,7 +2071,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         postAsyncSafely("Manifest Validation", new Runnable() {
             @Override
             public void run() {
-                ManifestValidator.validate(context, deviceInfo);
+                ManifestValidator.validate(context, deviceInfo, pushProviders);
             }
         });
     }
@@ -2271,7 +2107,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     getConfigLogger().verbose(getAccountId(), "Unable to persist user OptOut state, storage key is null");
                     return;
                 }
-                StorageHelper.putBoolean(context, storageKeyWithSuffix(key), enable);
+                StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(config, key), enable);
                 getConfigLogger().verbose(getAccountId(), "Set current user OptOut state to: " + enable);
             }
         });
@@ -2293,7 +2129,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     private void setDomain(final Context context, String domainName) {
         getConfigLogger().verbose(getAccountId(), "Setting domain to " + domainName);
-        StorageHelper.putString(context, storageKeyWithSuffix(Constants.KEY_DOMAIN_NAME), domainName);
+        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_DOMAIN_NAME), domainName);
     }
 
     private boolean isErrorDeviceId() {
@@ -2467,7 +2303,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private void setMuted(final Context context, boolean mute) {
         if (mute) {
             final int now = (int) (System.currentTimeMillis() / 1000);
-            StorageHelper.putInt(context, storageKeyWithSuffix(Constants.KEY_MUTED), now);
+            StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_MUTED), now);
             setDomain(context, null);
 
             // Clear all the queues
@@ -2478,7 +2314,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 }
             });
         } else {
-            StorageHelper.putInt(context, storageKeyWithSuffix(Constants.KEY_MUTED), 0);
+            StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_MUTED), 0);
         }
     }
 
@@ -2571,12 +2407,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //Session
     private void clearFirstRequestTimestampIfNeeded(Context context) {
-        StorageHelper.putInt(context, storageKeyWithSuffix(Constants.KEY_FIRST_TS), 0);
+        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_FIRST_TS), 0);
     }
 
     //Session
     private void clearLastRequestTimestamp(Context context) {
-        StorageHelper.putInt(context, storageKeyWithSuffix(Constants.KEY_LAST_TS), 0);
+        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_LAST_TS), 0);
     }
 
     private void processPushNotificationViewedEvent(final Context context, final JSONObject event) {
@@ -2667,7 +2503,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     private boolean hasDomainChanged(final String newDomain) {
-        final String oldDomain = getStringFromPrefs(Constants.KEY_DOMAIN_NAME, null);
+        final String oldDomain = StorageHelper.getStringFromPrefs(context, config, Constants.KEY_DOMAIN_NAME, null);
         return !newDomain.equals(oldDomain);
     }
 
@@ -2821,15 +2657,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             // Ignore
         }
         if (eventGroup.equals(EventGroup.PUSH_NOTIFICATION_VIEWED)) {
-            return getStringFromPrefs(Constants.SPIKY_KEY_DOMAIN_NAME, null);
+            return StorageHelper.getStringFromPrefs(context, config, Constants.SPIKY_KEY_DOMAIN_NAME, null);
         } else {
-            return getStringFromPrefs(Constants.KEY_DOMAIN_NAME, null);
+            return StorageHelper.getStringFromPrefs(context, config, Constants.KEY_DOMAIN_NAME, null);
         }
     }
 
     private void setSpikyDomain(final Context context, String spikyDomainName) {
         getConfigLogger().verbose(getAccountId(), "Setting spiky domain to " + spikyDomainName);
-        StorageHelper.putString(context, storageKeyWithSuffix(Constants.SPIKY_KEY_DOMAIN_NAME), spikyDomainName);
+        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.SPIKY_KEY_DOMAIN_NAME), spikyDomainName);
     }
 
     private void performHandshakeForDomain(final Context context, final EventGroup eventGroup, final Runnable handshakeSuccessCallback) {
@@ -3179,16 +3015,16 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //Session
     private void setLastRequestTimestamp(Context context, int ts) {
-        StorageHelper.putInt(context, storageKeyWithSuffix(Constants.KEY_LAST_TS), ts);
+        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_LAST_TS), ts);
     }
 
     private void setFirstRequestTimestampIfNeeded(Context context, int ts) {
         if (getFirstRequestTimestamp() > 0) return;
-        StorageHelper.putInt(context, storageKeyWithSuffix(Constants.KEY_FIRST_TS), ts);
+        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_FIRST_TS), ts);
     }
 
     private int getFirstRequestTimestamp() {
-        return getIntFromPrefs(Constants.KEY_FIRST_TS, 0);
+        return StorageHelper.getIntFromPrefs(context, config, Constants.KEY_FIRST_TS, 0);
     }
 
     private boolean isFirstRequestInSession() {
@@ -3202,7 +3038,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     //Session
 
     private int getLastRequestTimestamp() {
-        return getIntFromPrefs(Constants.KEY_LAST_TS, 0);
+        return StorageHelper.getIntFromPrefs(context, config, Constants.KEY_LAST_TS, 0);
     }
 
     //Networking
@@ -3244,7 +3080,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             header.put("tk", token);
             header.put("l_ts", getLastRequestTimestamp());
             header.put("f_ts", getFirstRequestTimestamp());
-            header.put("ddnd", !(this.deviceInfo.getNotificationsEnabledForUser() && (getCachedFCMToken() != null)));
+            header.put("ddnd", !(this.deviceInfo.getNotificationsEnabledForUser() && (PushUtils.getCachedToken(context, config, PushType.FCM) != null)));
             if (isBgPing) {
                 header.put("bk", 1);
                 isBgPing = false;
@@ -3591,14 +3427,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     private long getJ() {
-        return getLongFromPrefs(Constants.KEY_J, 0, Constants.NAMESPACE_IJ);
+        return StorageHelper.getLongFromPrefs(context, config, Constants.KEY_J, 0, Constants.NAMESPACE_IJ);
     }
 
     @SuppressLint("CommitPrefEdits")
     private void setJ(Context context, long j) {
         final SharedPreferences prefs = StorageHelper.getPreferences(context, Constants.NAMESPACE_IJ);
         final SharedPreferences.Editor editor = prefs.edit();
-        editor.putLong(storageKeyWithSuffix(Constants.KEY_J), j);
+        editor.putLong(StorageHelper.storageKeyWithSuffix(config, Constants.KEY_J), j);
         StorageHelper.persist(editor);
     }
 
@@ -3606,7 +3442,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private void setI(Context context, long i) {
         final SharedPreferences prefs = StorageHelper.getPreferences(context, Constants.NAMESPACE_IJ);
         final SharedPreferences.Editor editor = prefs.edit();
-        editor.putLong(storageKeyWithSuffix(Constants.KEY_I), i);
+        editor.putLong(StorageHelper.storageKeyWithSuffix(config, Constants.KEY_I), i);
         StorageHelper.persist(editor);
     }
 
@@ -3657,7 +3493,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     //Profile
     private JSONObject getCachedGUIDs() {
         JSONObject cache = null;
-        String json = getStringFromPrefs(Constants.CACHED_GUIDS_KEY, null);
+        String json = StorageHelper.getStringFromPrefs(context, config, Constants.CACHED_GUIDS_KEY, null);
         if (json != null) {
             try {
                 cache = new JSONObject(json);
@@ -3725,7 +3561,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             SharedPreferences prefs = StorageHelper.getPreferences(context);
             SharedPreferences.Editor editor = prefs.edit();
             try {
-                JSONArray inappsFromPrefs = new JSONArray(getStringFromPrefs(Constants.INAPP_KEY, "[]"));
+                JSONArray inappsFromPrefs = new JSONArray(StorageHelper.getStringFromPrefs(context, config, Constants.INAPP_KEY, "[]"));
 
                 // Now add the rest of them :)
                 if (inappNotifs != null && inappNotifs.length() > 0) {
@@ -3740,7 +3576,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 }
 
                 // Commit all the changes
-                editor.putString(storageKeyWithSuffix(Constants.INAPP_KEY), inappsFromPrefs.toString());
+                editor.putString(StorageHelper.storageKeyWithSuffix(config, Constants.INAPP_KEY), inappsFromPrefs.toString());
                 StorageHelper.persist(editor);
             } catch (Throwable e) {
                 getConfigLogger().verbose(getAccountId(), "InApp: Failed to parse the in-app notifications properly");
@@ -3839,7 +3675,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private void setCachedGUIDs(JSONObject cachedGUIDs) {
         if (cachedGUIDs == null) return;
         try {
-            StorageHelper.putString(context, storageKeyWithSuffix(Constants.CACHED_GUIDS_KEY), cachedGUIDs.toString());
+            StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.CACHED_GUIDS_KEY), cachedGUIDs.toString());
         } catch (Throwable t) {
             getConfigLogger().verbose(getAccountId(), "Error persisting guid cache: " + t.toString());
         }
@@ -3961,7 +3797,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
             checkPendingNotifications(context, config);  // see if we have any pending notifications
 
-            JSONArray inapps = new JSONArray(getStringFromPrefs(Constants.INAPP_KEY, "[]"));
+            JSONArray inapps = new JSONArray(StorageHelper.getStringFromPrefs(context, config, Constants.INAPP_KEY, "[]"));
             if (inapps.length() < 1) {
                 return;
             }
@@ -3976,7 +3812,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 if (i == 0) continue;
                 inappsUpdated.put(inapps.get(i));
             }
-            SharedPreferences.Editor editor = prefs.edit().putString(storageKeyWithSuffix(Constants.INAPP_KEY), inappsUpdated.toString());
+            SharedPreferences.Editor editor = prefs.edit().putString(StorageHelper.storageKeyWithSuffix(config, Constants.INAPP_KEY), inappsUpdated.toString());
             StorageHelper.persist(editor);
         } catch (Throwable t) {
             // We won't get here
@@ -4690,7 +4526,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     private long getI() {
-        return getLongFromPrefs(Constants.KEY_I, 0, Constants.NAMESPACE_IJ);
+        return StorageHelper.getLongFromPrefs(context, config, Constants.KEY_I, 0, Constants.NAMESPACE_IJ);
     }
 
     /**
@@ -5259,10 +5095,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     @SuppressWarnings("SameParameterValue")
     private void pushDeviceToken(final boolean register, final boolean force) {
-        if (enabledPushTypes == null) {
-            enabledPushTypes = this.deviceInfo.getEnabledPushTypes();
-        }
-        for (PushType pushType : enabledPushTypes) {
+        for (PushType pushType : pushProviders.getAvailablePushTypes()) {
             if (pushType == PushType.FCM) {
                 pushFCMDeviceToken(null, register, force);
             } else if (pushType == PushType.XPS) {
@@ -5409,7 +5242,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @SuppressWarnings("unused")
     public void pushFcmRegistrationId(String fcmId, boolean register) {
         pushDeviceToken(fcmId, register, PushType.FCM);
-        cacheFCMToken(fcmId);
+        PushUtils.cacheToken(context, config, fcmId, PushType.FCM);
     }
 
     /**
@@ -5424,7 +5257,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @SuppressWarnings("unused")
     public void pushXiaomiRegistrationId(String regId, boolean register) {
         pushDeviceToken(regId, register, PushType.XPS);
-        cacheXPSToken(regId);
+        PushUtils.cacheToken(context, config, regId, PushType.XPS);
     }
 
     /**
@@ -5439,7 +5272,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @SuppressWarnings("unused")
     public void pushBaiduRegistrationId(String regId, boolean register) {
         pushDeviceToken(regId, register, PushType.BPS);
-        cacheBPSToken(regId);
+        PushUtils.cacheToken(context, config, regId, PushType.BPS);
     }
 
     /**
@@ -5454,7 +5287,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @SuppressWarnings("unused")
     public void pushHuaweiRegistrationId(String regId, boolean register) {
         pushDeviceToken(regId, register, PushType.HPS);
-        cacheHPSToken(regId);
+        PushUtils.cacheToken(context, config, regId, PushType.HPS);
     }
 
     //Util
@@ -7374,7 +7207,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         postAsyncSafely("runningJobService", new Runnable() {
             @Override
             public void run() {
-                if (getCachedFCMToken() == null) {
+                if (PushUtils.getCachedToken(context, config, PushType.FCM) == null) {
                     Logger.v(getAccountId(), "Token is not present, not running the Job");
                     return;
                 }
