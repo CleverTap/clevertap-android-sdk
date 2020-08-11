@@ -11,7 +11,7 @@ import org.robolectric.annotation.Config;
 
 import static com.clevertap.android.sdk.Constant.ACC_ID;
 import static com.clevertap.android.sdk.Constant.ACC_TOKEN;
-import static org.mockito.Mockito.mock;
+import static org.powermock.api.mockito.PowerMockito.mock;
 
 @Config(sdk = 28,
         application = TestApplication.class
