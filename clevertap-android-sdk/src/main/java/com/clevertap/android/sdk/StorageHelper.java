@@ -3,6 +3,7 @@ package com.clevertap.android.sdk;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.support.annotation.RestrictTo;
+import android.support.annotation.WorkerThread;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public final class StorageHelper {
@@ -81,6 +82,19 @@ public final class StorageHelper {
     public static void persist(final SharedPreferences.Editor editor) {
         try {
             editor.apply();
+        } catch (Throwable t) {
+            Logger.v("CRITICAL: Failed to persist shared preferences!", t);
+        }
+    }
+
+    /**
+     * Use this method, when you are sure that you are on background thread
+     * @param editor
+     */
+    @WorkerThread
+    public static void persistImmediately(final SharedPreferences.Editor editor) {
+        try {
+            editor.commit();
         } catch (Throwable t) {
             Logger.v("CRITICAL: Failed to persist shared preferences!", t);
         }

@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import android.support.annotation.RestrictTo;
 import android.text.TextUtils;
 
+import com.clevertap.android.sdk.CTExecutors;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.StorageHelper;
@@ -19,19 +20,25 @@ public class PushUtils {
         return ManifestInfo.getInstance(context.getApplicationContext()).getFCMSenderId();
     }
 
-    public static void cacheToken(Context context, CleverTapInstanceConfig config, String token, PushConstants.PushType pushType) {
+    public static void cacheToken(final Context context, final CleverTapInstanceConfig config, final String token, final PushConstants.PushType pushType) {
         if (config == null || TextUtils.isEmpty(token) || pushType == null) return;
 
         try {
-            if (alreadyHaveToken(context, config, token, pushType)) return;
+            CTExecutors.getInstance().diskIO().execute(new Runnable() {
+                @Override
+                public void run() {
+                    if (alreadyHaveToken(context, config, token, pushType)) return;
 
-            final SharedPreferences prefs = StorageHelper.getPreferences(context);
-            @PushConstants.RegKeyType String key = pushType.getTokenPrefKey();
-            if (prefs == null || TextUtils.isEmpty(key)) return;
+                    final SharedPreferences prefs = StorageHelper.getPreferences(context);
+                    @PushConstants.RegKeyType String key = pushType.getTokenPrefKey();
+                    if (prefs == null || TextUtils.isEmpty(key)) return;
 
-            SharedPreferences.Editor editor = prefs.edit();
-            editor.putString(StorageHelper.storageKeyWithSuffix(config, key), token);
-            StorageHelper.persist(editor);
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putString(StorageHelper.storageKeyWithSuffix(config, key), token);
+                    StorageHelper.persistImmediately(editor);
+                }
+            });
+
         } catch (Throwable t) {
             config.getLogger()
                     .verbose(config.getAccountId(), "Unable to cache " + pushType.name() + "Token", t);

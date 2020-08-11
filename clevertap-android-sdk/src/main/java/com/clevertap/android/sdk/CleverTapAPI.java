@@ -39,6 +39,7 @@ import android.os.SystemClock;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
+import android.support.annotation.RestrictTo;
 import android.support.v4.app.NotificationCompat;
 import android.text.TextUtils;
 
@@ -55,13 +56,11 @@ import com.clevertap.android.sdk.featureFlags.FeatureFlagListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigControllerListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
-import com.clevertap.android.sdk.pushprovider.PushConstants;
 import com.clevertap.android.sdk.pushprovider.PushConstants.PushType;
+import com.clevertap.android.sdk.pushprovider.PushProvider;
 import com.clevertap.android.sdk.pushprovider.PushProviders;
 import com.clevertap.android.sdk.pushprovider.PushUtils;
 import com.google.android.gms.plus.model.people.Person;
-import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.messaging.FirebaseMessaging;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -299,10 +298,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private int lastLocationPingTime = 0;
     private final Object tokenLock = new Object();
     private final Object notificationMapLock = new Object();
-    private boolean havePushedFCMToken = false;
-    private boolean havePushedXPSToken = false;
-    private boolean havePushedBPSToken = false;
-    private boolean havePushedHPSToken = false;
     private String processingUserLoginIdentifier = null;
     private final Boolean processingUserLoginLock = true;
     private long EXECUTOR_THREAD_ID = 0;
@@ -595,7 +590,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     //Push
-    static void tokenRefresh(Context context) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static void tokenRefresh(Context context) {
         if (instances == null) {
             CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
             if (instance != null) {
@@ -1177,12 +1173,61 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //Push
     private void onTokenRefresh() {
-        for (PushType pushType : pushProviders.getAvailablePushTypes()) {
-            if (pushType == PushConstants.PushType.FCM) {
-                doFCMRefresh();
-                break;
+        for (PushProvider pushProvider : pushProviders.availableProviders()) {
+            try {
+                String freshToken = pushProvider.getRegistrationToken();
+                PushType pushType = pushProvider.getPushType();
+                if (!TextUtils.isEmpty(freshToken)) {
+                    doTokenRefresh(freshToken, pushType);
+                    deviceTokenDidRefresh(freshToken, pushType);
+                }
+            } catch (Throwable t) {
+                //no-op
+                getConfigLogger().verbose(getAccountId(), "Token Refresh error "+ pushProvider, t);
             }
         }
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static void tokenRefresh(Context context, String token, PushType pushType) {
+        for (CleverTapAPI instance : getAvailableInstances(context)) {
+            instance.doTokenRefresh(token, pushType);
+        }
+    }
+
+    private void doTokenRefresh(String token, PushType pushType){
+        if (TextUtils.isEmpty(token) || pushType == null)
+            return;
+        switch (pushType) {
+            case FCM:
+                pushFcmRegistrationId(token, true);
+                break;
+            case XPS:
+                pushXiaomiRegistrationId(token, true);
+                break;
+            case HPS:
+                pushHuaweiRegistrationId(token, true);
+                break;
+            case BPS:
+                pushBaiduRegistrationId(token, true);
+                break;
+            case ADM:
+                pushAmazonRegistrationId(token, true);
+                break;
+        }
+    }
+
+    private static ArrayList<CleverTapAPI> getAvailableInstances(Context context) {
+        ArrayList<CleverTapAPI> apiArrayList = new ArrayList<>();
+        if (instances == null || instances.isEmpty()) {
+            CleverTapAPI cleverTapAPI = CleverTapAPI.getDefaultInstance(context);
+            if (cleverTapAPI != null) {
+                apiArrayList.add(cleverTapAPI);
+            }
+        } else {
+            apiArrayList.addAll(CleverTapAPI.instances.values());
+        }
+        return apiArrayList;
     }
 
     /**
@@ -1374,78 +1419,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
-    //Push
-    private void pushFCMDeviceToken(String token, final boolean register, final boolean forceUpdate) {
-        synchronized (tokenLock) {
-            if (havePushedFCMToken && !forceUpdate) {
-                getConfigLogger().verbose(getAccountId(), "FcmManager: skipping device token push - already sent.");
-                return;
-            }
-
-            try {
-                token = (token != null) ? token : PushUtils.getCachedToken(context, config, PushType.FCM);
-                if (token == null) return;
-                pushDeviceToken(context, token, register, PushType.FCM);
-                havePushedFCMToken = true;
-            } catch (Throwable t) {
-                getConfigLogger().verbose(getAccountId(), "FcmManager: pushing device token failed", t);
-            }
-        }
-    }
-
-    private void pushXPSDeviceToken(String token, final boolean register, final boolean forceUpdate) {
-        synchronized (tokenLock) {
-            if (havePushedXPSToken && !forceUpdate) {
-                getConfigLogger().verbose(getAccountId(), "Xiaomi: skipping device token push - already sent.");
-                return;
-            }
-
-            try {
-                token = (token != null) ? token : PushUtils.getCachedToken(context, config, PushType.XPS);
-                if (token == null) return;
-                pushDeviceToken(context, token, register, PushType.XPS);
-                havePushedXPSToken = true;
-            } catch (Throwable t) {
-                getConfigLogger().verbose(getAccountId(), "Xiaomi: pushing device token failed", t);
-            }
-        }
-    }
-
-    private void pushBPSDeviceToken(String token, final boolean register, final boolean forceUpdate) {
-        synchronized (tokenLock) {
-            if (havePushedBPSToken && !forceUpdate) {
-                getConfigLogger().verbose(getAccountId(), "Baidu: skipping device token push - already sent.");
-                return;
-            }
-
-            try {
-                token = (token != null) ? token : PushUtils.getCachedToken(context, config, PushType.BPS);
-                if (token == null) return;
-                pushDeviceToken(context, token, register, PushType.BPS);
-                havePushedBPSToken = true;
-            } catch (Throwable t) {
-                getConfigLogger().verbose(getAccountId(), "Baidu: pushing device token failed", t);
-            }
-        }
-    }
-
-    private void pushHPSDeviceToken(String token, final boolean register, final boolean forceUpdate) {
-        synchronized (tokenLock) {
-            if (havePushedHPSToken && !forceUpdate) {
-                getConfigLogger().verbose(getAccountId(), "Huawei: skipping device token push - already sent.");
-                return;
-            }
-
-            try {
-                token = (token != null) ? token : PushUtils.getCachedToken(context, config, PushType.HPS);
-                if (token == null) return;
-                pushDeviceToken(context, token, register, PushType.HPS);
-                havePushedHPSToken = true;
-            } catch (Throwable t) {
-                getConfigLogger().verbose(getAccountId(), "Huawei: pushing device token failed", t);
-            }
-        }
-    }
 
     //Push
     @SuppressWarnings("SameParameterValue")
@@ -1458,6 +1431,10 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //Push
 
+    private void pushAmazonRegistrationId(String token, boolean register) {
+        pushDeviceToken(token, register, PushType.ADM);
+        PushUtils.cacheToken(context, config, token, PushType.FCM);
+    }
     /**
      * Implement to get called back when the device push token is refreshed
      */
@@ -1852,37 +1829,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return currentSessionId;
     }
 
-    //Push
-    private void doFCMRefresh() {
-        postAsyncSafely("FcmManager#doFCMRefresh", new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    if (getConfig().isAnalyticsOnly()) {
-                        getConfigLogger().debug(getAccountId(), "Instance is set for Analytics only, not refreshing token");
-                        return;
-                    }
-
-                    String freshToken = FCMGetFreshToken(PushUtils.getFCMSenderID(context));
-                    if (freshToken == null) return;
-
-                    PushUtils.cacheToken(context, config, freshToken, PushType.FCM);
-
-                    // better safe to always force a push from here
-                    pushFCMDeviceToken(freshToken, true, true);
-
-                    try {
-                        deviceTokenDidRefresh(freshToken, PushType.FCM);
-                    } catch (Throwable t) {
-                        //no-op
-                    }
-                } catch (Throwable t) {
-                    getConfigLogger().verbose(getAccountId(), "FcmManager: FCM Token error", t);
-                }
-            }
-        });
-    }
-
     /**
      * @return true if the mute command was sent anytime between now and now - 24 hours.
      */
@@ -1891,27 +1837,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         final int muteTS = StorageHelper.getIntFromPrefs(context, config, Constants.KEY_MUTED, 0);
 
         return now - muteTS < 24 * 60 * 60;
-    }
-
-    /**
-     * request token from FCM
-     */
-    private String FCMGetFreshToken(final String senderID) {
-        String token = null;
-        try {
-            if (senderID != null) {
-                getConfigLogger().verbose(getAccountId(), "FcmManager: Requesting a FCM token with Sender Id - " + senderID);
-                token = FirebaseInstanceId.getInstance().getToken(senderID, FirebaseMessaging.INSTANCE_ID_SCOPE);
-            } else {
-                getConfigLogger().verbose(getAccountId(), "FcmManager: Requesting a FCM token");
-                //noinspection deprecation
-                token = FirebaseInstanceId.getInstance().getToken();
-            }
-            getConfigLogger().info(getAccountId(), "FCM token: " + token);
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getAccountId(), "FcmManager: Error requesting FCM token", t);
-        }
-        return token;
     }
 
     //Session
@@ -5090,25 +5015,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      * push the device token outside of the normal course
      */
     private void forcePushDeviceToken(final boolean register) {
-        pushDeviceToken(register, true);
-    }
 
-    @SuppressWarnings("SameParameterValue")
-    private void pushDeviceToken(final boolean register, final boolean force) {
         for (PushType pushType : pushProviders.getAvailablePushTypes()) {
-            if (pushType == PushType.FCM) {
-                pushFCMDeviceToken(null, register, force);
-            } else if (pushType == PushType.XPS) {
-                pushXPSDeviceToken(null, register, force);
-            } else if (pushType == PushType.BPS) {
-                pushBPSDeviceToken(null, register, force);
-            } else if (pushType == PushType.HPS) {
-                pushHPSDeviceToken(null, register, force);
-            }
+            pushDeviceToken(null, register, pushType);
         }
     }
-
-    //Push
 
     //Event
     private void forcePushAppLaunchedEvent() {
@@ -5288,16 +5199,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     public void pushHuaweiRegistrationId(String regId, boolean register) {
         pushDeviceToken(regId, register, PushType.HPS);
         PushUtils.cacheToken(context, config, regId, PushType.HPS);
-    }
-
-    //Util
-
-    /**
-     * For internal use, don't call the public API internally
-     */
-    @SuppressWarnings("SameParameterValue")
-    private void pushDeviceToken(final String token, final boolean register, final PushType type) {
-        pushDeviceToken(this.context, token, register, type);
     }
 
     //Util
@@ -5896,21 +5797,27 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         flushQueueAsync(context, EventGroup.REGULAR);
     }
 
-    private void pushDeviceToken(final Context context, final String token, final boolean register, final PushType type) {
-        if (token == null || type == null) return;
-
-        JSONObject event = new JSONObject();
-        JSONObject data = new JSONObject();
-        try {
-            String action = register ? "register" : "unregister";
-            data.put("action", action);
-            data.put("id", token);
-            data.put("type", type.toString());
-            event.put("data", data);
-            getConfigLogger().verbose(getAccountId(), "Pushing device token with action " + action + " and type " + type.toString());
-            queueEvent(context, event, Constants.DATA_EVENT);
-        } catch (JSONException e) {
-            // we won't get here
+    private void pushDeviceToken(String token, boolean register, PushType pushType) {
+        if (pushType == null)
+            return;
+        token = TextUtils.isEmpty(token) ? token : PushUtils.getCachedToken(context, config, pushType);
+        if (TextUtils.isEmpty(token))
+            return;
+        synchronized (tokenLock) {
+            JSONObject event = new JSONObject();
+            JSONObject data = new JSONObject();
+            try {
+                String action = register ? "register" : "unregister";
+                data.put("action", action);
+                data.put("id", token);
+                data.put("type", pushType.toString());
+                event.put("data", data);
+                getConfigLogger().verbose(getAccountId(), "Pushing device token with action " + action + " and type " + pushType.toString());
+                queueEvent(context, event, Constants.DATA_EVENT);
+            } catch (Throwable t) {
+                // we won't get here
+                getConfigLogger().verbose(getAccountId(), "pushing device token failed for "+ pushType.name(), t);
+            }
         }
     }
 

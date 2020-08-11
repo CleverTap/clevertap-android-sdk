@@ -419,10 +419,19 @@ public class CleverTapInstanceConfig implements Parcelable {
             configJsonObject.put(Constants.KEY_BETA, isBeta());
             configJsonObject.put(Constants.KEY_ENABLE_UIEDITOR,isUIEditorEnabled());
             configJsonObject.put(Constants.KEY_ENABLE_ABTEST,isABTestingEnabled());
+            configJsonObject.put(Constants.KEY_ALLOWED_TRANSPORT, jsonArrayOfAllowedPushTypes());
             return configJsonObject.toString();
         }catch (Throwable e){
             Logger.v("Unable to convert config to JSON : ",e.getCause());
             return null;
         }
+    }
+
+    private JSONArray jsonArrayOfAllowedPushTypes() {
+        JSONArray jsonArray = new JSONArray();
+        for (String allowedPushType : allowedPushTypes) {
+            jsonArray.put(allowedPushType);
+        }
+        return jsonArray;
     }
 }

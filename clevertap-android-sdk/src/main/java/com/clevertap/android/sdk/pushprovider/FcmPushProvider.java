@@ -42,18 +42,18 @@ public class FcmPushProvider extends PushProvider {
         String token = null;
         try {
 
-            FirebaseApp app = FirebaseApp.getInstance();
             String senderId = getSenderId();
-            if (senderId == null) {
-                config.getLogger().verbose("The FCM sender ID is not set. Unable to register with FCM.");
-                return null;
+
+            if (senderId != null) {
+                config.getLogger().verbose(config.getAccountId(), "FcmManager: Requesting a FCM token with Sender Id - " + senderId);
+                token = FirebaseInstanceId.getInstance().getToken(senderId, FirebaseMessaging.INSTANCE_ID_SCOPE);
+            } else {
+                config.getLogger().verbose(config.getAccountId(), "FcmManager: Requesting a FCM token");
+                //noinspection deprecation
+                token = FirebaseInstanceId.getInstance().getToken();
             }
-
-            FirebaseInstanceId instanceId = FirebaseInstanceId.getInstance(app);
-            token = instanceId.getToken(senderId, FirebaseMessaging.INSTANCE_ID_SCOPE);
-
-        } catch (Exception e) {
-            config.getLogger().verbose("FCM error " + e.getMessage(), e);
+        } catch (Throwable t) {
+            config.getLogger().verbose("FcmManager: Error requesting FCM token", t);
         }
 
         return token;
@@ -84,9 +84,8 @@ public class FcmPushProvider extends PushProvider {
         if (!TextUtils.isEmpty(senderId)) {
             return senderId;
         }
-
         FirebaseApp app = FirebaseApp.getInstance();
-        return app.getOptions().getGcmSenderId();
+        return app != null ? app.getOptions().getGcmSenderId() : null;
     }
 
     @Override

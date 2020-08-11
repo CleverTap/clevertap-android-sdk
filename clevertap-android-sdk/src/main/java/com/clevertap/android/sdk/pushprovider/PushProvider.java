@@ -65,4 +65,9 @@ public abstract class PushProvider {
      */
     public abstract int minSDKSupportVersionCode();
 
+    @Override
+    public String toString() {
+        return "PushProvider{" +
+                "pushType=" + getPushType() + " className:" + getClass() + "}";
+    }
 }

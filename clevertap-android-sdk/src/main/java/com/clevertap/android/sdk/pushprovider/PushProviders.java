@@ -18,8 +18,8 @@ import java.util.List;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PushProviders {
 
-    private final List<PushProvider> supportedProviders = new ArrayList<>();
-    private final List<PushProvider> availableProviders = new ArrayList<>();
+    private final ArrayList<PushProvider> supportedProviders = new ArrayList<>();
+    private final ArrayList<PushProvider> availableProviders = new ArrayList<>();
     private final CleverTapInstanceConfig config;
     private final Context context;
 
@@ -142,5 +142,9 @@ public class PushProviders {
             pushTypes.add(pushProvider.getPushType());
         }
         return pushTypes;
+    }
+
+    public ArrayList<PushProvider> availableProviders() {
+        return availableProviders;
     }
 }
