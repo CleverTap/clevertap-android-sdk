@@ -36,17 +36,21 @@ public class PushUtils {
                     SharedPreferences.Editor editor = prefs.edit();
                     editor.putString(StorageHelper.storageKeyWithSuffix(config, key), token);
                     StorageHelper.persistImmediately(editor);
+                    config.getLogger().verbose(config.getAccountId(), pushType + "Cached New Token successfully " + token);
                 }
             });
 
         } catch (Throwable t) {
             config.getLogger()
-                    .verbose(config.getAccountId(), "Unable to cache " + pushType.name() + "Token", t);
+                    .verbose(config.getAccountId(), pushType + "Unable to cache token " + token, t);
         }
     }
 
     private static boolean alreadyHaveToken(Context context, CleverTapInstanceConfig config, String newToken, PushConstants.PushType pushType) {
-        return !TextUtils.isEmpty(newToken) && pushType != null && newToken.equalsIgnoreCase(getCachedToken(context, config, pushType));
+        boolean alreadyAvailable = !TextUtils.isEmpty(newToken) && pushType != null && newToken.equalsIgnoreCase(getCachedToken(context, config, pushType));
+        if (pushType != null)
+            config.getLogger().verbose(config.getAccountId(), pushType + "Token Already available value: " + alreadyAvailable);
+        return alreadyAvailable;
     }
 
     public static String getCachedToken(Context context, CleverTapInstanceConfig config, PushConstants.PushType pushType) {
@@ -55,9 +59,14 @@ public class PushUtils {
             if (prefs != null) {
                 @PushConstants.RegKeyType String key = pushType.getTokenPrefKey();
                 if (!TextUtils.isEmpty(key)) {
-                    return StorageHelper.getStringFromPrefs(context, config, key, null);
+                    String cachedToken = StorageHelper.getStringFromPrefs(context, config, key, null);
+                    config.getLogger().verbose(config.getAccountId(), pushType + "getting Cached Token - " + cachedToken);
+                    return cachedToken;
                 }
             }
+        }
+        if (config != null && pushType != null) {
+            config.getLogger().verbose(config.getAccountId(), pushType + " Unable to find cached Token for type ");
         }
         return null;
     }

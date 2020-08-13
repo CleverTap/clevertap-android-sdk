@@ -18,8 +18,6 @@ import static com.clevertap.android.sdk.pushprovider.PushConstants.PushType.FCM;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class FcmPushProvider extends PushProvider {
 
-    private CleverTapInstanceConfig config;
-
     public FcmPushProvider(@NonNull Context context, @NonNull CleverTapInstanceConfig config) {
         super(context, config);
     }
@@ -34,7 +32,6 @@ public class FcmPushProvider extends PushProvider {
     public PushConstants.PushType getPushType() {
         return FCM;
     }
-
 
     @Nullable
     @Override

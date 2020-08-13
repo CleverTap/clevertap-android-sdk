@@ -62,6 +62,10 @@ public interface PushConstants {
 
         private static final ArrayList<String> ALL;
 
+        public String getType() {
+            return type;
+        }
+
         private final String type;
 
         public String getClassName() {
@@ -127,7 +131,7 @@ public interface PushConstants {
         @Override
         public @DeliveryType
         String toString() {
-            return type;
+            return " [PushType:" + name() + "] ";
         }
     }
 

@@ -1173,19 +1173,24 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //Push
     private void onTokenRefresh() {
-        for (PushProvider pushProvider : pushProviders.availableProviders()) {
-            try {
-                String freshToken = pushProvider.getRegistrationToken();
-                PushType pushType = pushProvider.getPushType();
-                if (!TextUtils.isEmpty(freshToken)) {
-                    doTokenRefresh(freshToken, pushType);
-                    deviceTokenDidRefresh(freshToken, pushType);
+        CTExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                for (PushProvider pushProvider : pushProviders.availableProviders()) {
+                    try {
+                        String freshToken = pushProvider.getRegistrationToken();
+                        PushType pushType = pushProvider.getPushType();
+                        if (!TextUtils.isEmpty(freshToken)) {
+                            doTokenRefresh(freshToken, pushType);
+                            deviceTokenDidRefresh(freshToken, pushType);
+                        }
+                    } catch (Throwable t) {
+                        //no-op
+                        getConfigLogger().verbose(getAccountId(), "Token Refresh error " + pushProvider, t);
+                    }
                 }
-            } catch (Throwable t) {
-                //no-op
-                getConfigLogger().verbose(getAccountId(), "Token Refresh error "+ pushProvider, t);
             }
-        }
+        });
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -5800,23 +5805,23 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private void pushDeviceToken(String token, boolean register, PushType pushType) {
         if (pushType == null)
             return;
-        token = TextUtils.isEmpty(token) ? token : PushUtils.getCachedToken(context, config, pushType);
+        token = !TextUtils.isEmpty(token) ? token : PushUtils.getCachedToken(context, config, pushType);
         if (TextUtils.isEmpty(token))
             return;
         synchronized (tokenLock) {
             JSONObject event = new JSONObject();
             JSONObject data = new JSONObject();
+            String action = register ? "register" : "unregister";
             try {
-                String action = register ? "register" : "unregister";
                 data.put("action", action);
                 data.put("id", token);
-                data.put("type", pushType.toString());
+                data.put("type", pushType.getType());
                 event.put("data", data);
-                getConfigLogger().verbose(getAccountId(), "Pushing device token with action " + action + " and type " + pushType.toString());
+                getConfigLogger().verbose(getAccountId(), pushType + action + " device token " + token);
                 queueEvent(context, event, Constants.DATA_EVENT);
             } catch (Throwable t) {
                 // we won't get here
-                getConfigLogger().verbose(getAccountId(), "pushing device token failed for "+ pushType.name(), t);
+                getConfigLogger().verbose(getAccountId(), pushType + action + " device token failed", t);
             }
         }
     }
