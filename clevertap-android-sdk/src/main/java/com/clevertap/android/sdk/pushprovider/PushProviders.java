@@ -53,16 +53,21 @@ public class PushProviders {
 
         for (PushProvider provider : providers) {
             if (!isValid(provider)) {
+                config.getLogger().verbose("Invalid Provider: " + provider.getClass());
                 continue;
             }
 
             if (!provider.isSupported()) {
+                config.getLogger().verbose("Unsupported Provider: " + provider.getClass());
                 continue;
             }
 
             supportedProviders.add(provider);
             if (provider.isAvailable()) {
+                config.getLogger().verbose("Available Provider: " + provider.getClass());
                 availableProviders.add(provider);
+            } else {
+                config.getLogger().verbose("Unavailable Provider: " + provider.getClass());
             }
         }
     }
