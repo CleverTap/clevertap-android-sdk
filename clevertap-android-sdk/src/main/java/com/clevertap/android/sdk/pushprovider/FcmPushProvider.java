@@ -56,6 +56,10 @@ public class FcmPushProvider extends PushProvider {
         return token;
     }
 
+    /**
+     * App supports FCM
+     * @return
+     */
     @Override
     public boolean isAvailable() {
         try {
@@ -85,6 +89,10 @@ public class FcmPushProvider extends PushProvider {
         return app != null ? app.getOptions().getGcmSenderId() : null;
     }
 
+    /**
+     * Device supports FCM
+     * @return
+     */
     @Override
     public boolean isSupported() {
         return PackageUtils.isGooglePlayStoreAvailable(context);

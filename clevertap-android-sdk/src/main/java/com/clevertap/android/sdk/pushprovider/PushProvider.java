@@ -70,4 +70,8 @@ public abstract class PushProvider {
         return "PushProvider{" +
                 "pushType=" + getPushType() + " className:" + getClass() + "}";
     }
+
+    protected String logTag() {
+        return getClass().getSimpleName() + ": ";
+    }
 }

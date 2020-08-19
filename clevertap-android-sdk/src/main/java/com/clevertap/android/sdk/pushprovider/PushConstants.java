@@ -37,10 +37,10 @@ public interface PushConstants {
     }
 
     String FIREBASE_CLASS_NAME = "com.clevertap.android.sdk.pushprovider.FcmPushProvider";
-    String XIAOMI_CLASS_NAME = "com.xiaomi.mipush.sdk.MiPushClient";
-    String BAIDU_CLASS_NAME = "com.baidu.android.pushservice.PushMessageReceiver";
+    String XIAOMI_CLASS_NAME = "com.clevertap.android.xps.XiaomiPushProvider";
+    String BAIDU_CLASS_NAME = "com.clevertap.android.bps.BaiduPushProvider";
     String HUAWEI_CLASS_NAME = "com.clevertap.android.hms.HmsPushProvider";
-    String ADM_CLASS_NAME = "com.amazon.device.messaging.ADMMessageReceiver";
+    String ADM_CLASS_NAME = "com.clevertap.android.adm.AmazonPushProvider";
 
     String FCM_PROPERTY_REG_ID = "fcm_token";
     String XPS_PROPERTY_REG_ID = "xps_token";
