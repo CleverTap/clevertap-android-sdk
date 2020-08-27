@@ -41,6 +41,7 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.annotation.RestrictTo;
 import androidx.core.app.NotificationCompat;
 
 import com.android.installreferrer.api.InstallReferrerClient;
@@ -56,8 +57,6 @@ import com.clevertap.android.sdk.featureFlags.FeatureFlagListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigControllerListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
-import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.messaging.FirebaseMessaging;
 import com.clevertap.android.sdk.pushprovider.PushConstants.PushType;
 import com.clevertap.android.sdk.pushprovider.PushProvider;
 import com.clevertap.android.sdk.pushprovider.PushProviders;

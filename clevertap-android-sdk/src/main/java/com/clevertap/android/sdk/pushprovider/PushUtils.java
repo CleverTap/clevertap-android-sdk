@@ -2,8 +2,9 @@ package com.clevertap.android.sdk.pushprovider;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.support.annotation.RestrictTo;
 import android.text.TextUtils;
+
+import androidx.annotation.RestrictTo;
 
 import com.clevertap.android.sdk.CTExecutors;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;

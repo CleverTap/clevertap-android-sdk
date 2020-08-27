@@ -2,8 +2,9 @@ package com.clevertap.android.sdk;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.support.annotation.RestrictTo;
-import android.support.annotation.WorkerThread;
+
+import androidx.annotation.RestrictTo;
+import androidx.annotation.WorkerThread;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public final class StorageHelper {

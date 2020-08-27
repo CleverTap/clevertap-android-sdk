@@ -1,8 +1,9 @@
 package com.clevertap.android.sdk.pushprovider;
 
 import android.content.Context;
-import android.support.annotation.NonNull;
-import android.support.annotation.RestrictTo;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 import com.clevertap.android.sdk.BuildConfig;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
