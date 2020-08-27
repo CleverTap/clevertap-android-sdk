@@ -1,18 +1,30 @@
 ## CHANGE LOG
+### Version 3.8.2 (July 25, 2020)
+* Fixes a bug where ARP was not being sent back to servers
+
+### Version 3.8.1 (July 08, 2020)
+* Use v3.8.2
+* Adds a callback to provide Push Notifications custom key-value pairs
+* Removed `pushGooglePlusPerson` API as Google Plus sign-in is deprecated
+* Other bug fixes
 
 ### Version 3.8.0 (May 06, 2020)
+* Use v3.8.2
 * Adds support for Product Config and Feature Flag as a part of Product Experiences feature
 * Fixed InApp center alignment issue for tablets
 * Adds support for custom handling payload when using Push Amplification.
 * Other bug fixes
 
 ### Version 3.7.2 (March 27, 2020)
+* Use v3.8.2
 * Adds fix for a crash caused when InApp with Frequency Caps was shown on first App Launched
 
 ### Version 3.7.1 (March 19, 2020)
+* Use v3.8.2
 * Adds fix for a crash caused when CleverTap instance was created from background
 
 ### Version 3.7.0 (March 11, 2020)
+* Use v3.8.2
 * Adds support for Xiaomi & Baidu Push Notification Services
 * Adds public APIs for raising Notification Clicked and Viewed events for App Inbox
 * Adds public APIS for marking inbox message as read and deleting inbox message per message ID

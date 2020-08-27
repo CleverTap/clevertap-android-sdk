@@ -216,6 +216,11 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             setListener(CleverTapAPI.instanceWithConfig(getApplicationContext(), config));
         } catch (Throwable t) {
             Logger.v("Cannot find a valid notification bundle to show!", t);
+            finish();
+            return;
+        }
+        if(inAppNotification == null){
+            finish();
             return;
         }
 

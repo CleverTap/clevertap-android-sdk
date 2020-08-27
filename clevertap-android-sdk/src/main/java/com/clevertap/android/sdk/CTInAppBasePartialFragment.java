@@ -39,4 +39,10 @@ public abstract class CTInAppBasePartialFragment extends CTInAppBaseFragment {
         }
         isCleanedUp.set(true);
     }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        didDismiss(null);
+    }
 }

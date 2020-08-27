@@ -7,6 +7,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteStatement;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -125,6 +126,16 @@ class DBAdapter {
             "CREATE INDEX IF NOT EXISTS time_idx ON " + Table.PUSH_NOTIFICATION_VIEWED.getName() +
                     " (" + KEY_CREATED_AT + ");";
 
+    private static final String DROP_TABLE_UNINSTALL_TS =
+            "DROP TABLE IF EXISTS " + Table.UNINSTALL_TS.getName();
+
+    private static final String DROP_TABLE_INBOX_MESSAGES =
+            "DROP TABLE IF EXISTS " + Table.INBOX_MESSAGES.getName();
+
+    private static final String DROP_TABLE_PUSH_NOTIFICATION_VIEWED =
+            "DROP TABLE IF EXISTS " + Table.PUSH_NOTIFICATION_VIEWED.getName();
+
+
 
     private final DatabaseHelper dbHelper;
     private CleverTapInstanceConfig config;
@@ -146,47 +157,125 @@ class DBAdapter {
         @Override
         public void onCreate(SQLiteDatabase db) {
             Logger.v("Creating CleverTap DB");
-            db.execSQL(CREATE_EVENTS_TABLE);
-            db.execSQL(CREATE_PROFILE_EVENTS_TABLE);
-            db.execSQL(CREATE_USER_PROFILES_TABLE);
-            db.execSQL(CREATE_INBOX_MESSAGES_TABLE);
-            db.execSQL(CREATE_PUSH_NOTIFICATIONS_TABLE);
-            db.execSQL(CREATE_UNINSTALL_TS_TABLE);
-            db.execSQL(CREATE_NOTIFICATION_VIEWED_TABLE);
-            db.execSQL(EVENTS_TIME_INDEX);
-            db.execSQL(PROFILE_EVENTS_TIME_INDEX);
-            db.execSQL(UNINSTALL_TS_INDEX);
-            db.execSQL(PUSH_NOTIFICATIONS_TIME_INDEX);
-            db.execSQL(INBOX_MESSAGES_COMP_ID_USERID_INDEX);
-            db.execSQL(NOTIFICATION_VIEWED_INDEX);
+            SQLiteStatement sqLiteStatement;
+            sqLiteStatement = db.compileStatement(CREATE_EVENTS_TABLE);
+            Logger.v("Executing - "+CREATE_EVENTS_TABLE);
+            sqLiteStatement.execute();
+
+            sqLiteStatement = db.compileStatement(CREATE_PROFILE_EVENTS_TABLE);
+            Logger.v("Executing - "+CREATE_PROFILE_EVENTS_TABLE);
+            sqLiteStatement.execute();
+
+            sqLiteStatement = db.compileStatement(CREATE_USER_PROFILES_TABLE);
+            Logger.v("Executing - "+CREATE_USER_PROFILES_TABLE);
+            sqLiteStatement.execute();
+
+            sqLiteStatement = db.compileStatement(CREATE_INBOX_MESSAGES_TABLE);
+            Logger.v("Executing - "+CREATE_INBOX_MESSAGES_TABLE);
+            sqLiteStatement.execute();
+
+            sqLiteStatement = db.compileStatement(CREATE_PUSH_NOTIFICATIONS_TABLE);
+            Logger.v("Executing - "+CREATE_PUSH_NOTIFICATIONS_TABLE);
+            sqLiteStatement.execute();
+
+            sqLiteStatement = db.compileStatement(CREATE_UNINSTALL_TS_TABLE);
+            Logger.v("Executing - "+CREATE_UNINSTALL_TS_TABLE);
+            sqLiteStatement.execute();
+
+            sqLiteStatement = db.compileStatement(CREATE_NOTIFICATION_VIEWED_TABLE);
+            Logger.v("Executing - "+CREATE_NOTIFICATION_VIEWED_TABLE);
+            sqLiteStatement.execute();
+
+            sqLiteStatement = db.compileStatement(EVENTS_TIME_INDEX);
+            Logger.v("Executing - "+EVENTS_TIME_INDEX);
+            sqLiteStatement.execute();
+
+            sqLiteStatement = db.compileStatement(PROFILE_EVENTS_TIME_INDEX);
+            Logger.v("Executing - "+PROFILE_EVENTS_TIME_INDEX);
+            sqLiteStatement.execute();
+
+            sqLiteStatement = db.compileStatement(UNINSTALL_TS_INDEX);
+            Logger.v("Executing - "+UNINSTALL_TS_INDEX);
+            sqLiteStatement.execute();
+
+            sqLiteStatement = db.compileStatement(PUSH_NOTIFICATIONS_TIME_INDEX);
+            Logger.v("Executing - "+PUSH_NOTIFICATIONS_TIME_INDEX);
+            sqLiteStatement.execute();
+
+            sqLiteStatement = db.compileStatement(INBOX_MESSAGES_COMP_ID_USERID_INDEX);
+            Logger.v("Executing - "+INBOX_MESSAGES_COMP_ID_USERID_INDEX);
+            sqLiteStatement.execute();
+
+            sqLiteStatement = db.compileStatement(NOTIFICATION_VIEWED_INDEX);
+            Logger.v("Executing - "+NOTIFICATION_VIEWED_INDEX);
+            sqLiteStatement.execute();
         }
 
         @SuppressLint("SQLiteString")
         @Override
         public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
             Logger.v("Upgrading CleverTap DB to version " + newVersion);
+            SQLiteStatement sqLiteStatement;
             switch (oldVersion){
                 case 1 :
                     // For DB Version 2, just adding Push Notifications, Uninstall TS and Inbox Messages tables and related indices
-                    db.execSQL("DROP TABLE IF EXISTS " + Table.UNINSTALL_TS.getName());
-                    db.execSQL("DROP TABLE IF EXISTS " + Table.INBOX_MESSAGES.getName());
-                    db.execSQL("DROP TABLE IF EXISTS " + Table.PUSH_NOTIFICATION_VIEWED.getName());
+                    sqLiteStatement = db.compileStatement(DROP_TABLE_UNINSTALL_TS);
+                    Logger.v("Executing - "+DROP_TABLE_UNINSTALL_TS);
+                    sqLiteStatement.execute();
 
-                    db.execSQL(CREATE_PUSH_NOTIFICATIONS_TABLE);
-                    db.execSQL(CREATE_UNINSTALL_TS_TABLE);
-                    db.execSQL(CREATE_INBOX_MESSAGES_TABLE);
-                    db.execSQL(CREATE_NOTIFICATION_VIEWED_TABLE);
+                    sqLiteStatement = db.compileStatement(DROP_TABLE_INBOX_MESSAGES);
+                    Logger.v("Executing - "+DROP_TABLE_INBOX_MESSAGES);
+                    sqLiteStatement.execute();
 
-                    db.execSQL(UNINSTALL_TS_INDEX);
-                    db.execSQL(PUSH_NOTIFICATIONS_TIME_INDEX);
-                    db.execSQL(INBOX_MESSAGES_COMP_ID_USERID_INDEX);
-                    db.execSQL(NOTIFICATION_VIEWED_INDEX);
+                    sqLiteStatement = db.compileStatement(DROP_TABLE_PUSH_NOTIFICATION_VIEWED);
+                    Logger.v("Executing - "+DROP_TABLE_PUSH_NOTIFICATION_VIEWED);
+                    sqLiteStatement.execute();
+
+                    sqLiteStatement = db.compileStatement(CREATE_INBOX_MESSAGES_TABLE);
+                    Logger.v("Executing - "+CREATE_INBOX_MESSAGES_TABLE);
+                    sqLiteStatement.execute();
+
+                    sqLiteStatement = db.compileStatement(CREATE_PUSH_NOTIFICATIONS_TABLE);
+                    Logger.v("Executing - "+CREATE_PUSH_NOTIFICATIONS_TABLE);
+                    sqLiteStatement.execute();
+
+                    sqLiteStatement = db.compileStatement(CREATE_UNINSTALL_TS_TABLE);
+                    Logger.v("Executing - "+CREATE_UNINSTALL_TS_TABLE);
+                    sqLiteStatement.execute();
+
+                    sqLiteStatement = db.compileStatement(CREATE_NOTIFICATION_VIEWED_TABLE);
+                    Logger.v("Executing - "+CREATE_NOTIFICATION_VIEWED_TABLE);
+                    sqLiteStatement.execute();
+
+                    sqLiteStatement = db.compileStatement(UNINSTALL_TS_INDEX);
+                    Logger.v("Executing - "+UNINSTALL_TS_INDEX);
+                    sqLiteStatement.execute();
+
+                    sqLiteStatement = db.compileStatement(PUSH_NOTIFICATIONS_TIME_INDEX);
+                    Logger.v("Executing - "+PUSH_NOTIFICATIONS_TIME_INDEX);
+                    sqLiteStatement.execute();
+
+                    sqLiteStatement = db.compileStatement(INBOX_MESSAGES_COMP_ID_USERID_INDEX);
+                    Logger.v("Executing - "+INBOX_MESSAGES_COMP_ID_USERID_INDEX);
+                    sqLiteStatement.execute();
+
+                    sqLiteStatement = db.compileStatement(NOTIFICATION_VIEWED_INDEX);
+                    Logger.v("Executing - "+NOTIFICATION_VIEWED_INDEX);
+                    sqLiteStatement.execute();
                     break;
                 case 2 :
                     // For DB Version 3, just adding Push Notification Viewed table and index
-                    db.execSQL("DROP TABLE IF EXISTS " + Table.PUSH_NOTIFICATION_VIEWED.getName());
-                    db.execSQL(CREATE_NOTIFICATION_VIEWED_TABLE);
-                    db.execSQL(NOTIFICATION_VIEWED_INDEX);
+                    sqLiteStatement = db.compileStatement(DROP_TABLE_PUSH_NOTIFICATION_VIEWED);
+                    Logger.v("Executing - "+DROP_TABLE_PUSH_NOTIFICATION_VIEWED);
+                    sqLiteStatement.execute();
+
+                    sqLiteStatement = db.compileStatement(CREATE_NOTIFICATION_VIEWED_TABLE);
+                    Logger.v("Executing - "+CREATE_NOTIFICATION_VIEWED_TABLE);
+                    sqLiteStatement.execute();
+
+                    sqLiteStatement = db.compileStatement(NOTIFICATION_VIEWED_INDEX);
+                    Logger.v("Executing - "+NOTIFICATION_VIEWED_INDEX);
+                    sqLiteStatement.execute();
                     break;
             }
         }
@@ -238,8 +327,7 @@ class DBAdapter {
 
         final String tableName = table.getName();
 
-        Cursor cursor = null;
-        int count = DB_UPDATE_ERROR;
+        long count = DB_UPDATE_ERROR;
 
         try {
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
@@ -248,24 +336,17 @@ class DBAdapter {
             cv.put(KEY_DATA, obj.toString());
             cv.put(KEY_CREATED_AT, System.currentTimeMillis());
             db.insert(tableName, null, cv);
-            cursor = db.rawQuery("SELECT COUNT(*) FROM " + tableName, null);
-            cursor.moveToFirst();
-            count = cursor.getInt(0);
+
+            String sql = "SELECT COUNT(*) FROM " + tableName;
+            SQLiteStatement statement = db.compileStatement(sql);
+            count = statement.simpleQueryForLong();
         } catch (final SQLiteException e) {
             getConfigLogger().verbose("Error adding data to table " + tableName + " Recreating DB");
-
-            if (cursor != null) {
-                cursor.close();
-                cursor = null;
-            }
             dbHelper.deleteDatabase();
         } finally {
-            if (cursor != null) {
-                cursor.close();
-            }
             dbHelper.close();
         }
-        return count;
+        return (int) count;
     }
 
     /**
@@ -331,7 +412,7 @@ class DBAdapter {
         try {
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
 
-            cursor = db.rawQuery("SELECT * FROM " + tName + " WHERE _id = ?", new String[]{id});
+            cursor = db.query(tName,null,"_id =?",new String[]{id},null,null,null);
 
             if (cursor != null && cursor.moveToFirst()) {
                 try {
@@ -441,9 +522,7 @@ class DBAdapter {
 
         try {
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
-            cursor = db.rawQuery("SELECT * FROM " + tName +
-                    " ORDER BY " + KEY_CREATED_AT + " ASC LIMIT " + limit, null);
-
+            cursor = db.query(tName,null,null,null,null,null,KEY_CREATED_AT + " ASC",String.valueOf(limit));
 
             while (cursor.moveToNext()) {
                 if (cursor.isLast()) {
@@ -517,8 +596,7 @@ class DBAdapter {
 
         try{
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
-            cursor = db.rawQuery("SELECT * FROM " + tName +
-                    " WHERE " + KEY_DATA + " = ?" , new String[]{id});
+            cursor = db.query(tName,null,KEY_DATA + " =?",new String[]{id},null,null,null);
             if(cursor!=null && cursor.moveToFirst()){
                 pushId = cursor.getString(cursor.getColumnIndex(KEY_DATA));
             }
@@ -543,7 +621,7 @@ class DBAdapter {
 
         try{
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
-            cursor = db.rawQuery("SELECT * FROM " + tName + " WHERE " + IS_READ + " = 0", null);
+            cursor = db.query(tName,null,IS_READ + " =?",new String[]{"0"},null,null,null);
             if(cursor!=null){
                 while(cursor.moveToNext()) {
                     Logger.v("Fetching PID - " + cursor.getString(cursor.getColumnIndex(KEY_DATA)));
@@ -633,8 +711,7 @@ class DBAdapter {
 
         try {
             final SQLiteDatabase db = dbHelper.getReadableDatabase();
-            cursor = db.rawQuery("SELECT * FROM " + tName +
-                    " ORDER BY " + KEY_CREATED_AT + " DESC LIMIT 1",null);
+            cursor = db.query(tName,null,null,null,null,null,KEY_CREATED_AT + " DESC","1");
             if(cursor!=null && cursor.moveToFirst()){
                 timestamp = cursor.getLong(cursor.getColumnIndex(KEY_CREATED_AT));
             }
@@ -741,7 +818,7 @@ class DBAdapter {
         ArrayList<CTMessageDAO> messageDAOArrayList = new ArrayList<>();
         try{
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
-            cursor= db.rawQuery("SELECT * FROM "+tName+" WHERE " + USER_ID + " = ? ORDER BY " + KEY_CREATED_AT+ " DESC", new String[]{userId});
+            cursor = db.query(tName,null,USER_ID + " =?",new String[]{userId},null,null,KEY_CREATED_AT+ " DESC");
             if(cursor != null) {
                 while(cursor.moveToNext()){
                     CTMessageDAO ctMessageDAO = new CTMessageDAO();
