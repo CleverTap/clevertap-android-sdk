@@ -3061,7 +3061,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             header.put("tk", token);
             header.put("l_ts", getLastRequestTimestamp());
             header.put("f_ts", getFirstRequestTimestamp());
-            header.put("ddnd", !(this.deviceInfo.getNotificationsEnabledForUser() && (PushUtils.isAnyTokenAvailable(context, config))));
+            header.put("ddnd", !(this.deviceInfo.getNotificationsEnabledForUser() && (pushProviders.isNotificationSupported())));
             if (isBgPing) {
                 header.put("bk", 1);
                 isBgPing = false;
@@ -7095,7 +7095,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         postAsyncSafely("runningJobService", new Runnable() {
             @Override
             public void run() {
-                if (PushUtils.isAnyTokenAvailable(context, config)) {
+                if (pushProviders.isNotificationSupported()) {
                     Logger.v(getAccountId(), "Token is not present, not running the Job");
                     return;
                 }

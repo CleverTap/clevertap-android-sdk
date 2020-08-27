@@ -153,4 +153,12 @@ public class PushProviders {
     public ArrayList<PushProvider> availableProviders() {
         return availableProviders;
     }
+
+    public boolean isNotificationSupported() {
+        for (PushConstants.PushType pushType : getAvailablePushTypes()) {
+            if (PushUtils.getCachedToken(context, config, pushType) != null)
+                return true;
+        }
+        return false;
+    }
 }
