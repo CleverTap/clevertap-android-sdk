@@ -1465,7 +1465,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     private void pushAmazonRegistrationId(String token, boolean register) {
         pushDeviceToken(token, register, PushType.ADM);
-        PushUtils.cacheToken(context, config, token, PushType.FCM);
+        PushUtils.cacheToken(context, config, token, PushType.ADM);
     }
     /**
      * Implement to get called back when the device push token is refreshed
@@ -3061,7 +3061,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             header.put("tk", token);
             header.put("l_ts", getLastRequestTimestamp());
             header.put("f_ts", getFirstRequestTimestamp());
-            header.put("ddnd", !(this.deviceInfo.getNotificationsEnabledForUser() && (PushUtils.getCachedToken(context, config, PushType.FCM) != null)));
+            header.put("ddnd", !(this.deviceInfo.getNotificationsEnabledForUser() && (PushUtils.isAnyTokenAvailable(context, config))));
             if (isBgPing) {
                 header.put("bk", 1);
                 isBgPing = false;
@@ -5111,29 +5111,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         }
     }
 
-    public static void pushNewToken(Context context, String fcmId){
-        if (instances == null) {
-            CleverTapAPI.createInstanceIfAvailable(context.getApplicationContext(), null);
-        }
-
-        if (instances == null) {
-            Logger.v("Instances is null in pushNewToken!");
-            return;
-        }
-
-        for (String accountId : CleverTapAPI.instances.keySet()) {
-            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
-            try {
-                if (instance != null) {
-                    Logger.v("Pushing token from onNewToken");
-                    instance.pushFcmRegistrationId(fcmId,true);
-                }
-            } catch (Throwable t) {
-                Logger.v("Throwable - " + t.getLocalizedMessage());
-            }
-        }
-    }
-
     /**
      * Sends the FCM registration ID to CleverTap.
      *
@@ -7118,7 +7095,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         postAsyncSafely("runningJobService", new Runnable() {
             @Override
             public void run() {
-                if (PushUtils.getCachedToken(context, config, PushType.FCM) == null) {
+                if (PushUtils.isAnyTokenAvailable(context, config)) {
                     Logger.v(getAccountId(), "Token is not present, not running the Job");
                     return;
                 }

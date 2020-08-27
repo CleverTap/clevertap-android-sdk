@@ -72,4 +72,12 @@ public class PushUtils {
         return null;
     }
 
+    public static boolean isAnyTokenAvailable(Context context, CleverTapInstanceConfig config) {
+        for (PushConstants.PushType pushType : config.getAllowedPushTypes()) {
+            if (getCachedToken(context, config, pushType) != null)
+                return true;
+        }
+        return false;
+    }
+
 }

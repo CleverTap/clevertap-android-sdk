@@ -153,7 +153,7 @@ install {
     }
 }
 dependencies {
-    compileOnly 'com.google.firebase:firebase-messaging:20.2.1'
+    compileOnly 'com.google.firebase:firebase-messaging:20.2.4'
     compileOnly 'com.google.android.exoplayer:exoplayer:2.11.5'
     compileOnly 'com.google.android.exoplayer:exoplayer-hls:2.11.5'
     compileOnly 'com.google.android.exoplayer:exoplayer-ui:2.11.5'
