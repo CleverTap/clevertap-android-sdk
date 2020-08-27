@@ -7,7 +7,12 @@ import android.os.Parcelable;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 
+import com.clevertap.android.sdk.pushprovider.PushConstants;
+
+import org.json.JSONArray;
 import org.json.JSONObject;
+
+import java.util.ArrayList;
 
 public class CleverTapInstanceConfig implements Parcelable {
 
@@ -30,6 +35,8 @@ public class CleverTapInstanceConfig implements Parcelable {
     private boolean enableABTesting;
     private String packageName;
     private boolean beta;
+    @NonNull
+    private final ArrayList<String> allowedPushTypes = PushConstants.PushType.getAll();
 
     private CleverTapInstanceConfig(Context context, String accountId, String accountToken, String accountRegion, boolean isDefault) {
         this.accountId = accountId;
@@ -75,6 +82,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.enableUIEditor = config.enableUIEditor;
         this.packageName = config.packageName;
         this.beta = config.beta;
+        setAllowedPushTypes(PushConstants.PushType.getPushTypes(config.allowedPushTypes));
     }
 
     private CleverTapInstanceConfig(String jsonString) throws Throwable {
@@ -119,6 +127,17 @@ public class CleverTapInstanceConfig implements Parcelable {
             if(configJsonObject.has(Constants.KEY_BETA)) {
                 this.beta = configJsonObject.getBoolean(Constants.KEY_BETA);
             }
+            if (configJsonObject.has(Constants.KEY_ALLOWED_TRANSPORT)) {
+                JSONArray array = configJsonObject.getJSONArray(Constants.KEY_ALLOWED_TRANSPORT);
+                if (array != null) {
+                    ArrayList<String> list = new ArrayList<>();
+                    for (int i = 0; i < array.length(); i++) {
+                        list.add(array.getString(i));
+                    }
+
+                    setAllowedPushTypes(PushConstants.PushType.getPushTypes(list));
+                }
+            }
         } catch (Throwable t){
             Logger.v("Error constructing CleverTapInstanceConfig from JSON: " + jsonString +": ", t.getCause());
             throw(t);
@@ -145,6 +164,22 @@ public class CleverTapInstanceConfig implements Parcelable {
         packageName = in.readString();
         logger = new Logger(debugLevel);
         beta = in.readByte() != 0x00;
+        allowedPushTypes.clear();
+        in.readList(allowedPushTypes, String.class.getClassLoader());
+    }
+
+    @NonNull
+    public PushConstants.PushType[] getAllowedPushTypes() {
+        return PushConstants.PushType.getPushTypes(allowedPushTypes);
+    }
+
+    public void setAllowedPushTypes(PushConstants.PushType... allowedTransports) {
+        if (allowedTransports != null && allowedTransports.length > 0) {
+            this.allowedPushTypes.clear();
+            for (PushConstants.PushType allowedTransport : allowedTransports) {
+                this.allowedPushTypes.add(allowedTransport.name());
+            }
+        }
     }
 
     @SuppressWarnings("unused")
@@ -364,6 +399,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         dest.writeByte((byte) (enableUIEditor ? 0x01 : 0x00));
         dest.writeString(packageName);
         dest.writeByte((byte) (beta ? 0x01 : 0x00));
+        dest.writeList(allowedPushTypes);
     }
 
     String toJSONString() {
@@ -387,10 +423,19 @@ public class CleverTapInstanceConfig implements Parcelable {
             configJsonObject.put(Constants.KEY_BETA, isBeta());
             configJsonObject.put(Constants.KEY_ENABLE_UIEDITOR,isUIEditorEnabled());
             configJsonObject.put(Constants.KEY_ENABLE_ABTEST,isABTestingEnabled());
+            configJsonObject.put(Constants.KEY_ALLOWED_TRANSPORT, jsonArrayOfAllowedPushTypes());
             return configJsonObject.toString();
         }catch (Throwable e){
             Logger.v("Unable to convert config to JSON : ",e.getCause());
             return null;
         }
+    }
+
+    private JSONArray jsonArrayOfAllowedPushTypes() {
+        JSONArray jsonArray = new JSONArray();
+        for (String allowedPushType : allowedPushTypes) {
+            jsonArray.put(allowedPushType);
+        }
+        return jsonArray;
     }
 }
