@@ -27,7 +27,7 @@ public abstract class CTInAppBaseFullFragment extends CTInAppBaseFragment {
         float yInches= dm.heightPixels/dm.ydpi;
         float xInches= dm.widthPixels/dm.xdpi;
         double diagonalInches = Math.sqrt(xInches*xInches + yInches*yInches);
-        if (diagonalInches>=6.5){
+        if (diagonalInches>=7){
             Logger.v("Screen size is : "+diagonalInches);
             return true;
         }else{
