@@ -5,10 +5,10 @@ import com.clevertap.android.sdk.BaseTestCase;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.powermock.api.mockito.PowerMockito.mock;
+import static org.powermock.api.mockito.PowerMockito.when;
 
 public class ProductConfigTest extends BaseTestCase {
 
@@ -22,7 +22,7 @@ public class ProductConfigTest extends BaseTestCase {
     public void testFetch() {
         when(cleverTapAPI.productConfig()).thenReturn(new CTProductConfigController(application, "12121", cleverTapInstanceConfig, cleverTapAPI));
         cleverTapAPI.productConfig().fetch();
-        verify(cleverTapAPI).fetchProductConfig();
+        Mockito.verify(cleverTapAPI).fetchProductConfig();
     }
 
     @Test

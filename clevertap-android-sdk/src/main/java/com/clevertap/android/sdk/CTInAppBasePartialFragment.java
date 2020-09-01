@@ -28,7 +28,7 @@ public abstract class CTInAppBasePartialFragment extends CTInAppBaseFragment {
 
     @Override
     void cleanup() {
-        if (!isCleanedUp.get()) {
+        if (!Utils.isActivityDead(getActivity()) && !isCleanedUp.get()) {
             final FragmentManager fragmentManager = parent.getFragmentManager();
             FragmentTransaction transaction = fragmentManager.beginTransaction();
             try {
@@ -38,5 +38,11 @@ public abstract class CTInAppBasePartialFragment extends CTInAppBaseFragment {
             }
         }
         isCleanedUp.set(true);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        didDismiss(null);
     }
 }
