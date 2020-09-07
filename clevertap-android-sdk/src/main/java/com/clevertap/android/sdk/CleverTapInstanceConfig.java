@@ -7,7 +7,7 @@ import android.os.Parcelable;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 
-import com.clevertap.android.sdk.pushprovider.PushConstants;
+import com.clevertap.android.sdk.pushnotification.PushConstants;
 
 import org.json.JSONArray;
 import org.json.JSONObject;

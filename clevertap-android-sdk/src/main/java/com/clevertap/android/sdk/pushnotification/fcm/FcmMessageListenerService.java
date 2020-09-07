@@ -1,10 +1,13 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.pushnotification.fcm;
 
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 
-import com.clevertap.android.sdk.pushprovider.PushConstants;
+import com.clevertap.android.sdk.CleverTapAPI;
+import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.pushnotification.NotificationInfo;
+import com.clevertap.android.sdk.pushnotification.PushConstants;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 

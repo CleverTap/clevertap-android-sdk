@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.pushnotification;
 
 import java.util.HashMap;
 

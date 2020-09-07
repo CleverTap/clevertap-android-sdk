@@ -15,13 +15,13 @@
             android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar"/>
 
         <receiver
-            android:name="com.clevertap.android.sdk.CTPushNotificationReceiver"
+            android:name="com.clevertap.android.sdk.pushnotification.CTPushNotificationReceiver"
             android:exported="false"
             android:enabled="true">
         </receiver>
 
         <service
-            android:name="com.clevertap.android.sdk.CTBackgroundIntentService"
+            android:name="com.clevertap.android.sdk.pushnotification.amp.CTBackgroundIntentService"
             android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="false">
             <intent-filter>
@@ -30,7 +30,7 @@
         </service>
 
         <service
-            android:name="com.clevertap.android.sdk.CTBackgroundJobService"
+            android:name="com.clevertap.android.sdk.pushnotification.amp.CTBackgroundJobService"
             android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="false">
         </service>

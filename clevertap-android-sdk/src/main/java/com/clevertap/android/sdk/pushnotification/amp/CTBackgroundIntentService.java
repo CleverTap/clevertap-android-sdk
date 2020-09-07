@@ -1,7 +1,9 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.pushnotification.amp;
 
 import android.app.IntentService;
 import android.content.Intent;
+
+import com.clevertap.android.sdk.CleverTapAPI;
 
 
 /**

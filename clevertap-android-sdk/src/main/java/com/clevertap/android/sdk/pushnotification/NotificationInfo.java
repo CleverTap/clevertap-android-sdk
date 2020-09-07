@@ -1,6 +1,10 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.pushnotification;
 
 import android.os.Bundle;
+
+import androidx.annotation.RestrictTo;
+
+import com.clevertap.android.sdk.CleverTapAPI;
 
 /**
  * Contains information regarding the notification payload in the FCM intent.
@@ -21,7 +25,8 @@ public final class NotificationInfo {
      */
     private final boolean shouldRender;
 
-    NotificationInfo(boolean fromCleverTap, boolean shouldRender) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public NotificationInfo(boolean fromCleverTap, boolean shouldRender) {
         this.fromCleverTap = fromCleverTap;
         this.shouldRender = shouldRender;
     }

@@ -1,10 +1,15 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.pushnotification;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+
+import com.clevertap.android.sdk.CleverTapAPI;
+import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.Utils;
 
 
 public class CTPushNotificationReceiver extends BroadcastReceiver {

@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.pushnotification;
 
 import android.app.IntentService;
 import android.app.NotificationManager;
@@ -6,6 +6,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+
+import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.Utils;
 
 public class CTNotificationIntentService extends IntentService {
 

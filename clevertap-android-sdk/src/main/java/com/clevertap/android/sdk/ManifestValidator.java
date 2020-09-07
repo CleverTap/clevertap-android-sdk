@@ -7,8 +7,12 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 
-import com.clevertap.android.sdk.pushprovider.PushConstants.PushType;
-import com.clevertap.android.sdk.pushprovider.PushProviders;
+import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
+import com.clevertap.android.sdk.pushnotification.CTPushNotificationReceiver;
+import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
+import com.clevertap.android.sdk.pushnotification.PushProviders;
+import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundIntentService;
+import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundJobService;
 
 import java.util.ArrayList;
 
@@ -48,7 +52,7 @@ final class ManifestValidator {
             if (pushType == PushType.FCM) {
                 try {
                     // use class name string directly here to avoid class not found issues on class import, because we only use FCM
-                    validateServiceInManifest((Application) context.getApplicationContext(), "com.clevertap.android.sdk.FcmMessageListenerService");
+                    validateServiceInManifest((Application) context.getApplicationContext(), "com.clevertap.android.sdk.pushnotification.fcm.FcmMessageListenerService");
                     validateServiceInManifest((Application) context.getApplicationContext(), "com.clevertap.android.sdk.FcmTokenListenerService");
                 } catch (Exception e) {
                     Logger.v("Receiver/Service issue : " + e.toString());

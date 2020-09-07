@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.pushprovider;
+package com.clevertap.android.sdk.pushnotification;
 
 import android.content.Context;
 import android.content.SharedPreferences;

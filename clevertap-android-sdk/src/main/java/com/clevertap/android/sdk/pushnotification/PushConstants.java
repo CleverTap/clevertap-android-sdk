@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.pushprovider;
+package com.clevertap.android.sdk.pushnotification;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
@@ -10,6 +10,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 
 public interface PushConstants {
+
+    String LOG_TAG = "PushProvider";
 
     @StringDef({FCM_DELIVERY_TYPE, XIAOMI_DELIVERY_TYPE, HMS_DELIVERY_TYPE, BAIDU_DELIVERY_TYPE, ADM_DELIVERY_TYPE})
     @Retention(RetentionPolicy.SOURCE)
@@ -36,7 +38,7 @@ public interface PushConstants {
     @interface DeliveryClassName {
     }
 
-    String FIREBASE_CLASS_NAME = "com.clevertap.android.sdk.pushprovider.FcmPushProvider";
+    String FIREBASE_CLASS_NAME = "com.clevertap.android.sdk.pushnotification.fcm.FcmPushProvider";
     String XIAOMI_CLASS_NAME = "com.clevertap.android.xps.XiaomiPushProvider";
     String BAIDU_CLASS_NAME = "com.clevertap.android.bps.BaiduPushProvider";
     String HUAWEI_CLASS_NAME = "com.clevertap.android.hms.HmsPushProvider";

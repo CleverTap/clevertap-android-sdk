@@ -7,7 +7,7 @@ import android.os.Bundle;
 
 import androidx.annotation.RestrictTo;
 
-@RestrictTo(RestrictTo.Scope.LIBRARY)
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ManifestInfo {
     private static String accountId;
     private static String accountToken;
@@ -24,6 +24,8 @@ public class ManifestInfo {
     private static String packageName;
     private static boolean beta;
     private static String intentServiceName;
+    private static String xiaomiAppKey;
+    private static String xiaomiAppID;
 
     private static String _getManifestStringValueForKey(Bundle manifest, String name) {
         try {
@@ -68,6 +70,9 @@ public class ManifestInfo {
         if(intentServiceName == null){
             intentServiceName = _getManifestStringValueForKey(metaData, Constants.LABEL_INTENT_SERVICE);
         }
+
+        xiaomiAppKey = _getManifestStringValueForKey(metaData, Constants.LABEL_XIAOMI_APP_KEY);
+        xiaomiAppID = _getManifestStringValueForKey(metaData, Constants.LABEL_XIAOMI_APP_ID);
     }
 
     public synchronized static ManifestInfo getInstance(Context context){
@@ -133,5 +138,13 @@ public class ManifestInfo {
         accountId = id;
         accountToken = token;
         accountRegion = region;
+    }
+
+    public String getXiaomiAppKey(){
+        return xiaomiAppKey;
+    }
+
+    public String getXiaomiAppID(){
+        return xiaomiAppID;
     }
 }

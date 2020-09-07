@@ -57,10 +57,17 @@ import com.clevertap.android.sdk.featureFlags.FeatureFlagListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigControllerListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
-import com.clevertap.android.sdk.pushprovider.PushConstants.PushType;
-import com.clevertap.android.sdk.pushprovider.PushProvider;
-import com.clevertap.android.sdk.pushprovider.PushProviders;
-import com.clevertap.android.sdk.pushprovider.PushUtils;
+import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
+import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
+import com.clevertap.android.sdk.pushnotification.CTPushNotificationReceiver;
+import com.clevertap.android.sdk.pushnotification.IPushProvider;
+import com.clevertap.android.sdk.pushnotification.NotificationInfo;
+import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
+import com.clevertap.android.sdk.pushnotification.PushProviders;
+import com.clevertap.android.sdk.pushnotification.PushUtils;
+import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundIntentService;
+import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundJobService;
+import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -237,7 +244,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private int currentRequestTimestamp = 0;
     private Location locationFromUser = null;
     private SyncListener syncListener = null;
-    private CTPushListener pushListener = null;
+    private CTPushAmpListener pushListener = null;
     private CTPushNotificationListener pushNotificationListener = null;
     private long appLastSeen = 0;
     private int currentSessionId = 0;
@@ -465,7 +472,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     }
 
     // other static handlers
-    static void handleNotificationClicked(Context context, Bundle notification) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public static void handleNotificationClicked(Context context, Bundle notification) {
         if (notification == null) return;
 
         String _accountId = null;
@@ -1203,7 +1211,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         CTExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
-                for (PushProvider pushProvider : pushProviders.availableProviders()) {
+                for (IPushProvider pushProvider : pushProviders.availableProviders()) {
                     try {
                         String freshToken = pushProvider.getRegistrationToken();
                         PushType pushType = pushProvider.getPushType();
@@ -1425,7 +1433,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         ManifestInfo.changeCredentials(accountID, token, region);
     }
 
-    static void runJobWork(Context context, JobParameters parameters) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public static void runJobWork(Context context, JobParameters parameters) {
         if (instances == null) {
             CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
             if (instance != null) {
@@ -1505,7 +1514,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         debugLevel = level.intValue();
     }
 
-    static void runBackgroundIntentService(Context context) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public static void runBackgroundIntentService(Context context) {
         if (instances == null) {
             CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
             if (instance != null) {
@@ -2802,7 +2812,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             cursor = getQueuedEvents(context, 50, previousCursor, eventGroup);
 
             if (cursor == null || cursor.isEmpty()) {
-                getConfigLogger().verbose(getAccountId(), "No events in the queue, bailing");
+                getConfigLogger().verbose(getAccountId(), "No events in the queue, failing");
                 break;
             }
 
@@ -2810,7 +2820,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             JSONArray queue = cursor.getData();
 
             if (queue == null || queue.length() <= 0) {
-                getConfigLogger().verbose(getAccountId(), "No events in the queue, bailing");
+                getConfigLogger().verbose(getAccountId(), "No events in the queue, failing");
                 break;
             }
 
@@ -3526,7 +3536,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             getConfigLogger().verbose(getAccountId(), "InApp: Processing response");
 
             if (!response.has("inapp_notifs")) {
-                getConfigLogger().verbose(getAccountId(), "InApp: Response JSON object doesn't contain the inapp key, bailing");
+                getConfigLogger().verbose(getAccountId(), "InApp: Response JSON object doesn't contain the inapp key, failing");
                 return;
             }
 
@@ -5937,7 +5947,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 if (!pushBundle.isEmpty() && !dbAdapter.doesPushNotificationIdExist(pushObject.getString("wzrk_pid"))) {
                     getConfigLogger().verbose("Creating Push Notification locally");
                     if(pushListener != null){
-                        pushListener.onPushPayloadReceived(pushBundle);
+                        pushListener.onPushAmpPayloadReceived(pushBundle);
                     }else {
                         createNotification(context, pushBundle);
                     }
@@ -6233,14 +6243,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 clazz = Class.forName(intentServiceName);
             } catch (ClassNotFoundException e) {
                 try {
-                    clazz = Class.forName("com.clevertap.android.sdk.CTNotificationIntentService");
+                    clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService");
                 } catch (ClassNotFoundException ex) {
                     Logger.d("No Intent Service found");
                 }
             }
         } else {
             try {
-                clazz = Class.forName("com.clevertap.android.sdk.CTNotificationIntentService");
+                clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService");
             } catch (ClassNotFoundException ex) {
                 Logger.d("No Intent Service found");
             }
@@ -7152,20 +7162,20 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     /**
      * Returns the CTPushListener object
      *
-     * @return The {@link CTPushListener} object
+     * @return The {@link CTPushAmpListener} object
      */
     @SuppressWarnings("WeakerAccess")
-    public CTPushListener getCTPushListener() {
+    public CTPushAmpListener getCTPushListener() {
         return pushListener;
     }
 
     /**
      * This method is used to set the CTPushListener
      *
-     * @param pushListener - The{@link CTPushListener} object
+     * @param pushListener - The{@link CTPushAmpListener} object
      */
     @SuppressWarnings("unused")
-    public void setCTPushListener(CTPushListener pushListener) {
+    public void setCTPushListener(CTPushAmpListener pushListener) {
         this.pushListener = pushListener;
     }
 

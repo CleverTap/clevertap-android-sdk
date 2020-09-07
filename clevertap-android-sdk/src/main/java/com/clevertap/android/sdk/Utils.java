@@ -18,6 +18,8 @@ import android.os.Handler;
 import android.os.Looper;
 import android.telephony.TelephonyManager;
 
+import androidx.annotation.RestrictTo;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -33,7 +35,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
-
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class Utils {
     private static final String TAG = "Utils";
     static long getMemoryConsumption() {
@@ -307,7 +309,7 @@ public final class Utils {
         return bundle;
     }
 
-    static void setPackageNameFromResolveInfoList(Context context, Intent launchIntent){
+    public static void setPackageNameFromResolveInfoList(Context context, Intent launchIntent){
         List<ResolveInfo> resolveInfoList = context.getPackageManager().queryIntentActivities(launchIntent,0);
         if(resolveInfoList != null){
             String appPackageName = context.getPackageName();
