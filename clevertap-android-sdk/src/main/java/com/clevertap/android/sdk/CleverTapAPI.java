@@ -6588,7 +6588,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (location == null) return null;
 
         locationFromUser = location;
-        Logger.v("Location updated (" + location.getLatitude() + ", " + location.getLongitude() + ")");
+        getConfigLogger().verbose(getAccountId(),"Location updated (" + location.getLatitude() + ", " + location.getLongitude() + ")");
 
         // only queue the location ping if we are in the foreground
         if (!isLocationForGeofence()&&!isAppForeground()) return null;
@@ -6601,11 +6601,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (isLocationForGeofence() && now > (lastLocationPingTimeForGeofence + Constants.LOCATION_PING_INTERVAL_IN_SECONDS)) {
             future = queueEvent(context, new JSONObject(), Constants.PING_EVENT);
             lastLocationPingTimeForGeofence = now;
-            Logger.v("Queuing location ping event for geofence location (" + location.getLatitude() + ", " + location.getLongitude() + ")");
+            getConfigLogger().verbose(getAccountId(),"Queuing location ping event for geofence location (" + location.getLatitude() + ", " + location.getLongitude() + ")");
         } else if (!isLocationForGeofence() && now > (lastLocationPingTime + Constants.LOCATION_PING_INTERVAL_IN_SECONDS)) {
             future = queueEvent(context, new JSONObject(), Constants.PING_EVENT);
             lastLocationPingTime = now;
-            Logger.v("Queuing location ping event for location (" + location.getLatitude() + ", " + location.getLongitude() + ")");
+            getConfigLogger().verbose(getAccountId(),"Queuing location ping event for location (" + location.getLatitude() + ", " + location.getLongitude() + ")");
         }
 
         return future;

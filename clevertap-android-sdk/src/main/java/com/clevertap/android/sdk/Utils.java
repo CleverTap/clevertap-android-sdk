@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ResolveInfo;
@@ -11,6 +12,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -316,6 +318,16 @@ public final class Utils {
                 }
             }
         }
+    }
+
+    public static boolean isActivityDead(Activity activity) {
+        if (activity == null)
+            return true;
+        boolean isActivityDead = activity.isFinishing();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            isActivityDead = isActivityDead || activity.isDestroyed();
+        }
+        return isActivityDead;
     }
 
 }

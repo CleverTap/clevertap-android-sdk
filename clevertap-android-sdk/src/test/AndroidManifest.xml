@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.clevertap.android.sdk"
-    android:versionCode="30801"
-    android:versionName="3.8.1">
+    android:versionCode="30900"
+    android:versionName="3.9.0">
 
     <uses-sdk
         android:minSdkVersion="16"

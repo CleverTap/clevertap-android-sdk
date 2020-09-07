@@ -1,4 +1,10 @@
 ## CHANGE LOG
+
+### Version 3.9.0 (August 31, 2020)
+* Adds support for CleverTap Geofence SDK
+* Fixed all InApp related bugs and crashes
+* Fixed the Product Experiences AB Testing crash on few Samsung devices
+
 ### Version 3.8.2 (July 25, 2020)
 * Fixes a bug where ARP was not being sent back to servers
 
