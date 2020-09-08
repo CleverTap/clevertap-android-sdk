@@ -111,6 +111,8 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             if (cleverTapAPI != null && cleverTapAPI.getInboxMessageCount() == 0) {
                 noMessageView.setBackgroundColor(Color.parseColor(styleConfig.getInboxBackgroundColor()));
                 noMessageView.setVisibility(View.VISIBLE);
+                noMessageView.setText(styleConfig.getNoMessageViewText());
+                noMessageView.setTextColor(Color.parseColor(styleConfig.getNoMessageViewTextColor()));
             } else {
                 boolean fragmentExists = false;
                 noMessageView.setVisibility(View.GONE);

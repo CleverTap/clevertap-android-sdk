@@ -115,6 +115,8 @@ public class CTInboxListViewFragment extends Fragment {
 
         if (inboxMessages.size() <= 0) {
             noMessageView.setVisibility(View.VISIBLE);
+            noMessageView.setText(styleConfig.getNoMessageViewText());
+            noMessageView.setTextColor(Color.parseColor(styleConfig.getNoMessageViewTextColor()));
             return allView;
         }
 

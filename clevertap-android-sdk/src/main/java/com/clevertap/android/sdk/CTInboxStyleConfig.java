@@ -26,6 +26,8 @@ public class CTInboxStyleConfig implements Parcelable {
     private String unselectedTabColor;
     private String selectedTabIndicatorColor;
     private String tabBackgroundColor;
+    private String noMessageViewText;
+    private String noMessageViewTextColor;
 
     private String[] tabs;
 
@@ -40,6 +42,8 @@ public class CTInboxStyleConfig implements Parcelable {
         this.selectedTabIndicatorColor = "#1C84FE";
         this.tabBackgroundColor = "#FFFFFF";
         this.tabs = new String[0];
+        this.noMessageViewText = "No Message(s) to show";
+        this.noMessageViewTextColor = "#000000";
     }
 
     CTInboxStyleConfig(CTInboxStyleConfig config){
@@ -53,6 +57,8 @@ public class CTInboxStyleConfig implements Parcelable {
         this.selectedTabIndicatorColor = config.selectedTabIndicatorColor;
         this.tabBackgroundColor = config.tabBackgroundColor;
         this.tabs = (config.tabs == null) ? new String[0] : Arrays.copyOf(config.tabs, config.tabs.length);
+        this.noMessageViewText = config.noMessageViewText;
+        this.noMessageViewTextColor = config.noMessageViewTextColor;
     }
 
     protected CTInboxStyleConfig(Parcel in) {
@@ -66,6 +72,8 @@ public class CTInboxStyleConfig implements Parcelable {
         unselectedTabColor = in.readString();
         selectedTabIndicatorColor = in.readString();
         tabBackgroundColor = in.readString();
+        noMessageViewText = in.readString();
+        noMessageViewTextColor = in.readString();
     }
 
     @Override
@@ -85,6 +93,8 @@ public class CTInboxStyleConfig implements Parcelable {
         dest.writeString(unselectedTabColor);
         dest.writeString(selectedTabIndicatorColor);
         dest.writeString(tabBackgroundColor);
+        dest.writeString(noMessageViewText);
+        dest.writeString(noMessageViewTextColor);
     }
 
     @SuppressWarnings("unused")
@@ -232,5 +242,29 @@ public class CTInboxStyleConfig implements Parcelable {
      */
     public void setTabBackgroundColor(String tabBackgroundColor) {
         this.tabBackgroundColor = tabBackgroundColor;
+    }
+
+    public String getNoMessageViewText() {
+        return noMessageViewText;
+    }
+
+    /**
+     * Sets the text for when there are no messages in the App Inbox
+     * @param noMessageViewText String
+     */
+    public void setNoMessageViewText(String noMessageViewText) {
+        this.noMessageViewText = noMessageViewText;
+    }
+
+    public String getNoMessageViewTextColor() {
+        return noMessageViewTextColor;
+    }
+
+    /**
+     * Sets the color of the text for when there are no messages in the App Inbox
+     * @param noMessageViewTextColor String - hexcode of the color
+     */
+    public void setNoMessageViewTextColor(String noMessageViewTextColor) {
+        this.noMessageViewTextColor = noMessageViewTextColor;
     }
 }
