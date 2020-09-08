@@ -3,7 +3,9 @@
     package="com.clevertap.android.sdk"
     android:versionCode="40000"
     android:versionName="4.0.0">
+
     <application>
+
         <activity
             android:name="com.clevertap.android.sdk.InAppNotificationActivity"
             android:configChanges="keyboardHidden"
@@ -34,5 +36,6 @@
             android:permission="android.permission.BIND_JOB_SERVICE"
             android:exported="false">
         </service>
+
     </application>
 </manifest>

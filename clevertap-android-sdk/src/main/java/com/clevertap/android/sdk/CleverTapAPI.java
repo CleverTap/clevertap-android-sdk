@@ -60,7 +60,8 @@ import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationReceiver;
-import com.clevertap.android.sdk.pushnotification.IPushProvider;
+import com.clevertap.android.sdk.pushnotification.CTPushProvider;
+import com.clevertap.android.sdk.pushnotification.CTRegistrationListener;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
@@ -1211,14 +1212,19 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         CTExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
-                for (IPushProvider pushProvider : pushProviders.availableProviders()) {
+                for (final CTPushProvider pushProvider : pushProviders.availableProviders()) {
                     try {
-                        String freshToken = pushProvider.getRegistrationToken();
-                        PushType pushType = pushProvider.getPushType();
-                        if (!TextUtils.isEmpty(freshToken)) {
-                            doTokenRefresh(freshToken, pushType);
-                            deviceTokenDidRefresh(freshToken, pushType);
-                        }
+                        pushProvider.getRegistrationToken(new CTRegistrationListener() {
+                            @Override
+                            public void complete(String token) {
+                                PushType pushType = pushProvider.getPushType();
+                                if (!TextUtils.isEmpty(token)) {
+                                    doTokenRefresh(token, pushType);
+                                    deviceTokenDidRefresh(token, pushType);
+                                }
+                            }
+                        });
+
                     } catch (Throwable t) {
                         //no-op
                         getConfigLogger().verbose(getAccountId(), "Token Refresh error " + pushProvider, t);

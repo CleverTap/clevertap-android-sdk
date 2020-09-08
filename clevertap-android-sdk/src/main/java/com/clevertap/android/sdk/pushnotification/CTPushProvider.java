@@ -6,13 +6,14 @@ import androidx.annotation.Nullable;
 /**
  * Defines a push provider.
  */
-public interface IPushProvider {
+public interface CTPushProvider {
 
     /**
      * Set this listener to communicate with core SDK.
+     *
      * @param listener
      */
-    void setListener(IPushCallback listener);
+    void setCTPushListener(CTPushListener listener);
 
     /**
      * Returns the platform type. Value must be either {@link PushConstants#ANDROID_PLATFORM}.
@@ -32,11 +33,10 @@ public interface IPushProvider {
 
     /**
      * Gets the push registration token.
-     *
-     * @return The registration ID.
+     * @param callback - pass the callback to get the token
      */
     @Nullable
-    String getRegistrationToken();
+    void getRegistrationToken(CTRegistrationListener callback);
 
     /**
      * If the underlying push provider is currently available.

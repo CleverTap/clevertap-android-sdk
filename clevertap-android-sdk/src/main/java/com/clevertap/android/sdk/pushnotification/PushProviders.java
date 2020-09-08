@@ -17,9 +17,9 @@ import java.util.List;
  */
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class PushProviders implements IPushCallback {
+public class PushProviders implements CTPushListener {
 
-    private final ArrayList<IPushProvider> availableProviders = new ArrayList<>();
+    private final ArrayList<CTPushProvider> availableProviders = new ArrayList<>();
     private final CleverTapInstanceConfig config;
     private final Context context;
 
@@ -44,14 +44,14 @@ public class PushProviders implements IPushCallback {
      * Loads all the plugins that are currently supported by the device.
      */
     private void init() {
-        List<IPushProvider> providers = createProviders();
+        List<CTPushProvider> providers = createProviders();
 
         if (providers.isEmpty()) {
             log("No push providers found!. Make sure to install at least one push provider");
             return;
         }
 
-        for (IPushProvider provider : providers) {
+        for (CTPushProvider provider : providers) {
             if (!isValid(provider)) {
                 log("Invalid Provider: " + provider.getClass());
                 continue;
@@ -71,7 +71,7 @@ public class PushProviders implements IPushCallback {
         }
     }
 
-    private boolean isValid(IPushProvider provider) {
+    private boolean isValid(CTPushProvider provider) {
 
         if (BuildConfig.VERSION_CODE < provider.minSDKSupportVersionCode()) {
             log("Provider: %s version %s does not match the SDK version %s. Make sure all Airship dependencies are the same version.");
@@ -83,14 +83,14 @@ public class PushProviders implements IPushCallback {
             case XPS:
             case BPS:
                 if (provider.getPlatform() != PushConstants.ANDROID_PLATFORM) {
-                    log(config.getAccountId(), "Invalid Provider: " + provider.getClass() +
+                    log("Invalid Provider: " + provider.getClass() +
                             " delivery is only available for Android platforms." + provider.getPushType());
                     return false;
                 }
                 break;
             case ADM:
                 if (provider.getPlatform() != PushConstants.AMAZON_PLATFORM) {
-                    log(config.getAccountId(), "Invalid Provider: " +
+                    log("Invalid Provider: " +
                             provider.getClass() +
                             " ADM delivery is only available for Amazon platforms." + provider.getPushType());
                     return false;
@@ -107,24 +107,24 @@ public class PushProviders implements IPushCallback {
      * @return The list of push providers.
      */
     @NonNull
-    private List<IPushProvider> createProviders() {
-        List<IPushProvider> providers = new ArrayList<>();
+    private List<CTPushProvider> createProviders() {
+        List<CTPushProvider> providers = new ArrayList<>();
 
         for (PushConstants.PushType pushType : config.getAllowedPushTypes()) {
-            IPushProvider pushProvider = null;
+            CTPushProvider pushProvider = null;
             try {
                 Class<?> providerClass = Class.forName(pushType.getClassName());
-                pushProvider = (IPushProvider) providerClass.newInstance();
-                pushProvider.setListener(this);
-                log(config.getAccountId(), "Found provider:" + providerClass);
+                pushProvider = (CTPushProvider) providerClass.newInstance();
+                pushProvider.setCTPushListener(this);
+                log("Found provider:" + providerClass);
             } catch (InstantiationException e) {
-                log(config.getAccountId(), "Unable to create provider " + pushType.getClassName());
+                log("Unable to create provider " + pushType.getClassName());
             } catch (IllegalAccessException e) {
-                log(config.getAccountId(), "Unable to create provider " + pushType.getClassName());
+                log("Unable to create provider " + pushType.getClassName());
             } catch (ClassNotFoundException e) {
-                log(config.getAccountId(), "Unable to create provider " + pushType.getClassName());
+                log("Unable to create provider " + pushType.getClassName());
             } catch (Exception e) {
-                log(config.getAccountId(), "Unable to create provider " + pushType.getClassName());
+                log("Unable to create provider " + pushType.getClassName());
             }
 
             if (pushProvider == null) {
@@ -140,13 +140,13 @@ public class PushProviders implements IPushCallback {
     @NonNull
     public ArrayList<PushConstants.PushType> getAvailablePushTypes() {
         ArrayList<PushConstants.PushType> pushTypes = new ArrayList<>();
-        for (IPushProvider pushProvider : availableProviders) {
+        for (CTPushProvider pushProvider : availableProviders) {
             pushTypes.add(pushProvider.getPushType());
         }
         return pushTypes;
     }
 
-    public ArrayList<IPushProvider> availableProviders() {
+    public ArrayList<CTPushProvider> availableProviders() {
         return availableProviders;
     }
 
@@ -169,11 +169,15 @@ public class PushProviders implements IPushCallback {
 
     @Override
     public void log(String tag, String message) {
-        config.getLogger().verbose("[" + PushConstants.LOG_TAG + "]" + (!TextUtils.isEmpty(tag) ? tag + ":" : "") + message);
+        config.getLogger().verbose(getDefaultSuffix(tag), message);
     }
 
     @Override
     public void log(String tag, String message, Throwable throwable) {
-        config.getLogger().verbose("[" + PushConstants.LOG_TAG + "]" + (!TextUtils.isEmpty(tag) ? tag + ":" : "") + message, throwable);
+        config.getLogger().verbose(getDefaultSuffix(tag), message, throwable);
+    }
+
+    private String getDefaultSuffix(String tag) {
+        return "[" + PushConstants.LOG_TAG + ":" + config.getAccountId() + "]" + (!TextUtils.isEmpty(tag) ? ": " + tag : "");
     }
 }

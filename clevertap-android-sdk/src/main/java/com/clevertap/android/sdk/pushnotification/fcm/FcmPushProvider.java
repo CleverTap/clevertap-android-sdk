@@ -7,25 +7,28 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 
 import com.clevertap.android.sdk.PackageUtils;
-import com.clevertap.android.sdk.pushnotification.IPushCallback;
-import com.clevertap.android.sdk.pushnotification.IPushProvider;
+import com.clevertap.android.sdk.pushnotification.CTPushListener;
+import com.clevertap.android.sdk.pushnotification.CTPushProvider;
+import com.clevertap.android.sdk.pushnotification.CTRegistrationListener;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
 import com.clevertap.android.sdk.pushnotification.PushUtils;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.iid.InstanceIdResult;
 
 import static com.clevertap.android.sdk.pushnotification.PushConstants.ANDROID_PLATFORM;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class FcmPushProvider implements IPushProvider {
-    private IPushCallback listener;
+public class FcmPushProvider implements CTPushProvider {
+    private CTPushListener ctPushListener;
     private static String LOG_TAG = FcmPushProvider.class.getSimpleName();
 
     @Override
-    public void setListener(IPushCallback listener) {
-        this.listener = listener;
+    public void setCTPushListener(CTPushListener listener) {
+        this.ctPushListener = listener;
     }
 
     @Override
@@ -41,27 +44,35 @@ public class FcmPushProvider implements IPushProvider {
 
     @Nullable
     @Override
-    public String getRegistrationToken() {
-        String token = null;
+    public void getRegistrationToken(final CTRegistrationListener registrationListener) {
         try {
+            FirebaseInstanceId.getInstance().getInstanceId()
+                    .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
+                        @Override
+                        public void onComplete(@NonNull Task<InstanceIdResult> task) {
+                            if (!task.isSuccessful()) {
+                                ctPushListener.log(LOG_TAG, "getInstanceId failed", task.getException());
+                                if (registrationListener != null) {
+                                    registrationListener.complete(null);
+                                }
+                                return;
+                            }
 
-            String senderId = getSenderId();
-
-            if (senderId != null) {
-                token = FirebaseInstanceId.getInstance().getToken(senderId, FirebaseMessaging.INSTANCE_ID_SCOPE);
-                listener.log(LOG_TAG, "FCM token for Sender Id - " + senderId + " is " + token);
-            } else {
-
-                //noinspection deprecation
-                token = FirebaseInstanceId.getInstance().getToken();
-                listener.log(LOG_TAG, "FCM token is " + token);
-            }
+                            // Get new Instance ID token
+                            String token = task.getResult().getToken();
+                            ctPushListener.log(LOG_TAG, "FCM token for Sender Id - " + token);
+                            if (registrationListener != null) {
+                                registrationListener.complete(token);
+                            }
+                        }
+                    });
 
         } catch (Throwable t) {
-            listener.log(LOG_TAG, "Error requesting FCM token", t);
+            ctPushListener.log(LOG_TAG, "Error requesting FCM token", t);
+            if (registrationListener != null) {
+                registrationListener.complete(null);
+            }
         }
-
-        return token;
     }
 
     /**
@@ -72,25 +83,25 @@ public class FcmPushProvider implements IPushProvider {
     @Override
     public boolean isAvailable() {
         try {
-            if (!PackageUtils.isGooglePlayServicesAvailable(listener.context())) {
-                listener.log(LOG_TAG, "Google Play services is currently unavailable.");
+            if (!PackageUtils.isGooglePlayServicesAvailable(ctPushListener.context())) {
+                ctPushListener.log(LOG_TAG, "Google Play services is currently unavailable.");
                 return false;
             }
 
             String senderId = getSenderId();
             if (senderId == null) {
-                listener.log(LOG_TAG, "The FCM sender ID is not set. Unable to register for FCM.");
+                ctPushListener.log(LOG_TAG, "The FCM sender ID is not set. Unable to register for FCM.");
                 return false;
             }
         } catch (Exception e) {
-            listener.log(LOG_TAG, "Unable to register with FCM.", e);
+            ctPushListener.log(LOG_TAG, "Unable to register with FCM.", e);
             return false;
         }
         return true;
     }
 
     private String getSenderId() {
-        String senderId = PushUtils.getFCMSenderID(listener.context());
+        String senderId = PushUtils.getFCMSenderID(ctPushListener.context());
         if (!TextUtils.isEmpty(senderId)) {
             return senderId;
         }
@@ -105,7 +116,7 @@ public class FcmPushProvider implements IPushProvider {
      */
     @Override
     public boolean isSupported() {
-        return PackageUtils.isGooglePlayStoreAvailable(listener.context());
+        return PackageUtils.isGooglePlayStoreAvailable(ctPushListener.context());
     }
 
     @Override
