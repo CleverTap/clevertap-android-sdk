@@ -104,6 +104,9 @@ import javax.net.ssl.SSLSocketFactory;
 
 import static android.content.Context.JOB_SCHEDULER_SERVICE;
 import static android.content.Context.NOTIFICATION_SERVICE;
+import static com.clevertap.android.sdk.CTJsonConverter.getErrorObject;
+import static com.clevertap.android.sdk.CTJsonConverter.getRenderedTargetList;
+import static com.clevertap.android.sdk.CTJsonConverter.getWzrkFields;
 import static com.clevertap.android.sdk.Utils.runOnUiThread;
 
 /**
@@ -125,11 +128,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     public static final String NOTIFICATION_TAG = "wzrk_pn";
 
     private static int debugLevel = CleverTapAPI.LogLevel.INFO.intValue();
-    private static final Boolean pendingValidationResultsLock = true;
     private static CleverTapInstanceConfig defaultConfig;
     private static HashMap<String, CleverTapAPI> instances;
     private static boolean appForeground = false;
     private static int activityCount = 0;
+    private final ValidationResultStack validationResultStack;
     private String currentScreenName = "";
     private static ArrayList<CTInAppNotification> pendingNotifications = new ArrayList<>();
     private Runnable pendingInappRunnable = null;
@@ -159,6 +162,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         this.es = Executors.newFixedThreadPool(1);
         this.ns = Executors.newFixedThreadPool(1);
         this.localDataStore = new LocalDataStore(context, config);
+        validationResultStack = new ValidationResultStack();
         this.deviceInfo = new DeviceInfo(context, config, cleverTapID);
         if (this.deviceInfo.getDeviceID() != null) {
             Logger.v("Initializing InAppFC with device Id = " + this.deviceInfo.getDeviceID());
@@ -304,7 +308,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private boolean currentUserOptedOut = false;
     private final HashMap<String, Integer> installReferrerMap = new HashMap<>(8);
     private boolean enableNetworkInfoReporting = false;
-    private ArrayList<ValidationResult> pendingValidationResults = new ArrayList<>();
     private HashSet<String> inappActivityExclude = null;
     private InAppNotificationListener inAppNotificationListener;
     private InAppFCManager inAppFCManager;
@@ -1552,28 +1555,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return null;
     }
 
-    //Validation
-    private void pushValidationResult(ValidationResult vr) {
-        synchronized (pendingValidationResultsLock) {
-            try {
-                int len = pendingValidationResults.size();
-                if (len > 50) {
-                    ArrayList<ValidationResult> trimmed = new ArrayList<>();
-                    // Trim down the list to 40, so that this loop needn't run for the next 10 events
-                    // Hence, skip the first 10 elements
-                    for (int i = 10; i < len; i++)
-                        trimmed.add(pendingValidationResults.get(i));
-                    trimmed.add(vr);
-                    pendingValidationResults = trimmed;
-                } else {
-                    pendingValidationResults.add(vr);
-                }
-            } catch (Exception e) {
-                // no-op
-            }
-        }
-    }
-
     /**
      * Returns whether or not the app is in the foreground.
      *
@@ -1668,7 +1649,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     private void recordDeviceIDErrors() {
         for (ValidationResult validationResult : this.deviceInfo.getValidationResults()) {
-            pushValidationResult(validationResult);
+            validationResultStack.pushValidationResult(validationResult);
         }
     }
 
@@ -1938,35 +1919,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         } catch (Throwable t) {
             // Ignore
         }
-    }
-
-    //Validation
-    private ValidationResult popValidationResult() {
-        // really a shift
-        ValidationResult vr = null;
-
-        synchronized (pendingValidationResultsLock) {
-            try {
-                if (!pendingValidationResults.isEmpty()) {
-                    vr = pendingValidationResults.remove(0);
-                }
-            } catch (Exception e) {
-                // no-op
-            }
-        }
-        return vr;
-    }
-
-    //Validation
-    private JSONObject getErrorObject(ValidationResult vr) {
-        JSONObject error = new JSONObject();
-        try {
-            error.put("c", vr.getErrorCode());
-            error.put("d", vr.getErrorDesc());
-        } catch (JSONException e) {
-            // Won't reach here
-        }
-        return error;
     }
 
     /**
@@ -2379,7 +2331,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 attachPackageNameIfRequired(context, event);
 
                 // Report any pending validation error
-                ValidationResult vr = popValidationResult();
+                ValidationResult vr = validationResultStack.popValidationResult();
                 if (vr != null) {
                     event.put(Constants.ERROR_KEY, getErrorObject(vr));
                 }
@@ -2412,7 +2364,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 event.put("type", "event");
                 event.put("ep", System.currentTimeMillis() / 1000);
                 // Report any pending validation error
-                ValidationResult vr = popValidationResult();
+                ValidationResult vr = validationResultStack.popValidationResult();
                 if (vr != null) {
                     event.put(Constants.ERROR_KEY, getErrorObject(vr));
                 }
@@ -3076,7 +3028,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 header.put("bk", 1);
                 isBgPing = false;
             }
-            header.put("rtl", getRenderedTargetList());
+            header.put("rtl", getRenderedTargetList(this.dbAdapter));
             if (!installReferrerDataSent) {
                 header.put("rct", getReferrerClickTime());
                 header.put("ait", getAppInstallTime());
@@ -3356,7 +3308,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                             boolean ack = pushAmpObject.getBoolean("ack");
                             getConfigLogger().verbose("Received ACK -" + ack);
                             if (ack) {
-                                JSONArray rtlArray = getRenderedTargetList();
+                                JSONArray rtlArray = getRenderedTargetList(this.dbAdapter);
                                 String[] rtlStringArray = new String[0];
                                 if (rtlArray != null) {
                                     rtlStringArray = new String[rtlArray.length()];
@@ -3498,18 +3450,8 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //Profile
     private JSONObject getCachedGUIDs() {
-        JSONObject cache = null;
         String json = StorageHelper.getStringFromPrefs(context, config, Constants.CACHED_GUIDS_KEY, null);
-        if (json != null) {
-            try {
-                cache = new JSONObject(json);
-            } catch (Throwable t) {
-                // no-op
-                getConfigLogger().verbose(getAccountId(), "Error reading guid cache: " + t.toString());
-            }
-        }
-
-        return (cache != null) ? cache : new JSONObject();
+        return CTJsonConverter.toJsonObject(json,getConfigLogger(),getAccountId());
     }
 
     private int getPingFrequency(Context context) {
@@ -3518,16 +3460,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     private void setPingFrequency(Context context, int pingFrequency) {
         StorageHelper.putInt(context, Constants.PING_FREQUENCY, pingFrequency);
-    }
-
-    private JSONArray getRenderedTargetList() {
-        String[] pushIds = this.dbAdapter.fetchPushNotificationIds();
-        JSONArray renderedTargets = new JSONArray();
-        for (String pushId : pushIds) {
-            Logger.v("RTL IDs -" + pushId);
-            renderedTargets.put(pushId);
-        }
-        return renderedTargets;
     }
 
     //InApp
@@ -4121,7 +4053,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
         // Check for an error
         if (vr.getErrorCode() != 0) {
-            pushValidationResult(vr);
+            validationResultStack.pushValidationResult(vr);
         }
 
         // reset the key
@@ -4198,27 +4130,15 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         return (stringified != null) ? new JSONArray().put(stringified) : _default;
     }
 
-    private String _stringifyScalarProfilePropValue(Object value) {
-        String val = null;
-
-        try {
-            val = value.toString();
-        } catch (Exception e) {
-            // no-op
-        }
-
-        return val;
-    }
-
     private String _stringifyAndCleanScalarProfilePropValue(Object value) {
-        String val = _stringifyScalarProfilePropValue(value);
+        String val = CTJsonConverter.toJsonString(value);
 
         if (val != null) {
             ValidationResult vr = validator.cleanMultiValuePropertyValue(val);
 
             // Check for an error
             if (vr.getErrorCode() != 0) {
-                pushValidationResult(vr);
+                validationResultStack.pushValidationResult(vr);
             }
 
             Object _value = vr.getObject();
@@ -4245,7 +4165,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
                 // Check for an error
                 if (vr.getErrorCode() != 0) {
-                    pushValidationResult(vr);
+                    validationResultStack.pushValidationResult(vr);
                 }
 
                 // reset the value
@@ -4286,7 +4206,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
             // Check for an error
             if (vr.getErrorCode() != 0) {
-                pushValidationResult(vr);
+                validationResultStack.pushValidationResult(vr);
             }
 
             // set the merged local values array
@@ -4322,7 +4242,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         String msg = "Invalid multi value for key " + key + ", profile multi value operation aborted.";
         error.setErrorCode(512);
         error.setErrorDesc(msg);
-        pushValidationResult(error);
+        validationResultStack.pushValidationResult(error);
         getConfigLogger().debug(getAccountId(), msg);
     }
 
@@ -4330,7 +4250,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         ValidationResult error = new ValidationResult();
         error.setErrorCode(523);
         error.setErrorDesc("Invalid multi-value property key " + key);
-        pushValidationResult(error);
+        validationResultStack.pushValidationResult(error);
         getConfigLogger().debug(getAccountId(), "Invalid multi-value property key " + key + " profile multi value operation aborted");
     }
 
@@ -4354,71 +4274,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //Event
     private JSONObject getAppLaunchedFields() {
+
         try {
-            final JSONObject evtData = new JSONObject();
-            evtData.put("Build", this.deviceInfo.getBuild() + "");
-            evtData.put("Version", this.deviceInfo.getVersionName());
-            evtData.put("OS Version", this.deviceInfo.getOsVersion());
-            evtData.put("SDK Version", this.deviceInfo.getSdkVersion());
-
-            if (locationFromUser != null) {
-                evtData.put("Latitude", locationFromUser.getLatitude());
-                evtData.put("Longitude", locationFromUser.getLongitude());
+            boolean deviceIsMultiUser = false;
+            if (deviceInfo.getGoogleAdID() != null) {
+                deviceIsMultiUser = deviceIsMultiUser();
             }
-
-            // send up googleAdID
-            if (this.deviceInfo.getGoogleAdID() != null) {
-                String baseAdIDKey = "GoogleAdID";
-                String adIDKey = deviceIsMultiUser() ? Constants.MULTI_USER_PREFIX + baseAdIDKey : baseAdIDKey;
-                evtData.put(adIDKey, this.deviceInfo.getGoogleAdID());
-                evtData.put("GoogleAdIDLimit", this.deviceInfo.isLimitAdTrackingEnabled());
-            }
-
-            try {
-                // Device data
-                evtData.put("Make", this.deviceInfo.getManufacturer());
-                evtData.put("Model", this.deviceInfo.getModel());
-                evtData.put("Carrier", this.deviceInfo.getCarrier());
-                evtData.put("useIP", enableNetworkInfoReporting);
-                evtData.put("OS", this.deviceInfo.getOsName());
-                evtData.put("wdt", this.deviceInfo.getWidth());
-                evtData.put("hgt", this.deviceInfo.getHeight());
-                evtData.put("dpi", this.deviceInfo.getDPI());
-                if (this.deviceInfo.getLibrary() != null) {
-                    evtData.put("lib", this.deviceInfo.getLibrary());
-                }
-
-                String cc = this.deviceInfo.getCountryCode();
-                if (cc != null && !cc.equals(""))
-                    evtData.put("cc", cc);
-
-                if (enableNetworkInfoReporting) {
-                    final Boolean isWifi = this.deviceInfo.isWifiConnected();
-                    if (isWifi != null) {
-                        evtData.put("wifi", isWifi);
-                    }
-
-                    final Boolean isBluetoothEnabled = this.deviceInfo.isBluetoothEnabled();
-                    if (isBluetoothEnabled != null) {
-                        evtData.put("BluetoothEnabled", isBluetoothEnabled);
-                    }
-
-                    final String bluetoothVersion = this.deviceInfo.getBluetoothVersion();
-                    if (bluetoothVersion != null) {
-                        evtData.put("BluetoothVersion", bluetoothVersion);
-                    }
-
-                    final String radio = this.deviceInfo.getNetworkType();
-                    if (radio != null) {
-                        evtData.put("Radio", radio);
-                    }
-                }
-
-            } catch (Throwable t) {
-                // Ignore
-            }
-
-            return evtData;
+            return CTJsonConverter.from(deviceInfo,locationFromUser,enableNetworkInfoReporting,
+                    deviceIsMultiUser);
         } catch (Throwable t) {
             getConfigLogger().verbose(getAccountId(), "Failed to construct App Launched event", t);
             return new JSONObject();
@@ -4447,29 +4310,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     @SuppressWarnings("unused")
     public void setSyncListener(SyncListener syncListener) {
         this.syncListener = syncListener;
-    }
-
-    private JSONObject getWzrkFields(Bundle root) throws JSONException {
-        final JSONObject fields = new JSONObject();
-        for (String s : root.keySet()) {
-            final Object o = root.get(s);
-            if (o instanceof Bundle) {
-                final JSONObject wzrkFields = getWzrkFields((Bundle) o);
-                final Iterator<String> keys = wzrkFields.keys();
-                while (keys.hasNext()) {
-                    final String k = keys.next();
-                    fields.put(k, wzrkFields.get(k));
-                }
-            } else if (s.startsWith(Constants.WZRK_PREFIX)) {
-                fields.put(s, root.get(s));
-            }
-        }
-
-        return fields;
-    }
-
-    private JSONObject getWzrkFields(CTInboxMessage root) {
-        return root.getWzrkParams();
     }
 
     /**
@@ -4656,7 +4496,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 key = vr.getObject().toString();
                 // Check for an error
                 if (vr.getErrorCode() != 0) {
-                    pushValidationResult(vr);
+                    validationResultStack.pushValidationResult(vr);
                 }
 
                 if (key.isEmpty()) {
@@ -4664,7 +4504,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     keyError.setErrorCode(512);
                     final String keyErr = "Profile push key is empty";
                     keyError.setErrorDesc(keyErr);
-                    pushValidationResult(keyError);
+                    validationResultStack.pushValidationResult(keyError);
                     getConfigLogger().debug(getAccountId(), keyErr);
                     // Skip this property
                     continue;
@@ -4678,7 +4518,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     error.setErrorCode(512);
                     final String err = "Object value wasn't a primitive (" + value + ") for profile field " + key;
                     error.setErrorDesc(err);
-                    pushValidationResult(error);
+                    validationResultStack.pushValidationResult(error);
                     getConfigLogger().debug(getAccountId(), err);
                     // Skip this property
                     continue;
@@ -4686,7 +4526,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 value = vr.getObject();
                 // Check for an error
                 if (vr.getErrorCode() != 0) {
-                    pushValidationResult(vr);
+                    validationResultStack.pushValidationResult(vr);
                 }
 
                 // test Phone:  if no device country code, test if phone starts with +, log but always send
@@ -4701,13 +4541,13 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                                 error.setErrorCode(512);
                                 final String err = "Device country code not available and profile phone: " + value + " does not appear to start with country code";
                                 error.setErrorDesc(err);
-                                pushValidationResult(error);
+                                validationResultStack.pushValidationResult(error);
                                 getConfigLogger().debug(getAccountId(), err);
                             }
                         }
                         getConfigLogger().verbose(getAccountId(), "Profile phone is: " + value + " device country code is: " + ((countryCode != null) ? countryCode : "null"));
                     } catch (Exception e) {
-                        pushValidationResult(new ValidationResult(512, "Invalid phone number"));
+                        validationResultStack.pushValidationResult(new ValidationResult(512, "Invalid phone number"));
                         getConfigLogger().debug(getAccountId(), "Invalid phone number: " + e.getLocalizedMessage());
                         continue;
                     }
@@ -4839,14 +4679,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 ValidationResult error = new ValidationResult();
                 error.setErrorCode(512);
                 error.setErrorDesc("Key is empty, profile removeValueForKey aborted.");
-                pushValidationResult(error);
+                validationResultStack.pushValidationResult(error);
                 getConfigLogger().debug(getAccountId(), "Key is empty, profile removeValueForKey aborted");
                 // Abort
                 return;
             }
             // Check for an error
             if (vr.getErrorCode() != 0) {
-                pushValidationResult(vr);
+                validationResultStack.pushValidationResult(vr);
             }
 
             // remove from the local profile
@@ -4878,7 +4718,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                 name = vr.getObject().toString();
 
                 if (vr.getErrorCode() != 0) {
-                    pushValidationResult(vr);
+                    validationResultStack.pushValidationResult(vr);
                 }
             } catch (IllegalArgumentException e) {
                 // Weird name, wasn't a string, or any number
@@ -5256,20 +5096,6 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         pushInAppNotificationStateEvent(false, inAppNotification, formData);
     }
 
-    private JSONObject getWzrkFields(CTInAppNotification root) throws JSONException {
-        final JSONObject fields = new JSONObject();
-        JSONObject jsonObject = root.getJsonDescription();
-        Iterator<String> iterator = jsonObject.keys();
-
-        while (iterator.hasNext()) {
-            String keyName = iterator.next();
-            if (keyName.startsWith(Constants.WZRK_PREFIX))
-                fields.put(keyName, jsonObject.get(keyName));
-        }
-
-        return fields;
-    }
-
     /**
      * Push Charged event, which describes a purchase made.
      *
@@ -5293,7 +5119,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             error.setErrorCode(522);
             error.setErrorDesc("Charged event contained more than 50 items.");
             getConfigLogger().debug(getAccountId(), "Charged event contained more than 50 items.");
-            pushValidationResult(error);
+            validationResultStack.pushValidationResult(error);
         }
 
         JSONObject evtData = new JSONObject();
@@ -5316,7 +5142,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     error.setErrorCode(511);
                     final String err = "For event Charged: Property value for property " + key + " wasn't a primitive (" + value + ")";
                     error.setErrorDesc(err);
-                    pushValidationResult(error);
+                    validationResultStack.pushValidationResult(error);
                     getConfigLogger().debug(getAccountId(), err);
                     // Skip this property
                     continue;
@@ -5350,7 +5176,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                         error.setErrorDesc(err);
                         getConfigLogger().debug(getAccountId(), err);
 
-                        pushValidationResult(error);
+                        validationResultStack.pushValidationResult(error);
                         // Skip this property
                         continue;
                     }
@@ -5389,14 +5215,14 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         ValidationResult validationResult = validator.isRestrictedEventName(eventName);
         // Check for a restricted event name
         if (validationResult.getErrorCode() > 0) {
-            pushValidationResult(validationResult);
+            validationResultStack.pushValidationResult(validationResult);
             return;
         }
 
         ValidationResult discardedResult = validator.isEventDiscarded(eventName);
         // Check for a discarded event name
         if (discardedResult.getErrorCode() > 0) {
-            pushValidationResult(discardedResult);
+            validationResultStack.pushValidationResult(discardedResult);
             return;
         }
 
@@ -5431,7 +5257,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
                     final String err = "For event \"" + eventName + "\": Property value for property " + key + " wasn't a primitive (" + value + ")";
                     error.setErrorDesc(err);
                     getConfigLogger().debug(getAccountId(), err);
-                    pushValidationResult(error);
+                    validationResultStack.pushValidationResult(error);
                     // Skip this record
                     continue;
                 }
@@ -6047,7 +5873,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             }
             if (channelIdError != null) {
                 getConfigLogger().debug(getAccountId(), channelIdError);
-                pushValidationResult(new ValidationResult(512, channelIdError));
+                validationResultStack.pushValidationResult(new ValidationResult(512, channelIdError));
                 return;
             }
         }
@@ -6341,7 +6167,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         if (!notificationViewedEnabled) {
             String notificationViewedError = "Recording of Notification Viewed is disabled in the CleverTap Dashboard for notification payload: " + extras.toString();
             getConfigLogger().debug(notificationViewedError);
-            pushValidationResult(new ValidationResult(512, notificationViewedError));
+            validationResultStack.pushValidationResult(new ValidationResult(512, notificationViewedError));
             return;
         }
         pushNotificationViewedEvent(extras);
@@ -8248,7 +8074,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         ValidationResult validationResult = new ValidationResult();
         validationResult.setErrorCode(errorCode);
         validationResult.setErrorDesc(errorMessage);
-        pushValidationResult(validationResult);
+        validationResultStack.pushValidationResult(validationResult);
     }
 
     /**
