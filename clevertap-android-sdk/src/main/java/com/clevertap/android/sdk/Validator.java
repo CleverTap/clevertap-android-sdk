@@ -68,8 +68,9 @@ final class Validator {
 
         if (name.length() > Constants.MAX_VALUE_LENGTH) {
             name = name.substring(0, Constants.MAX_VALUE_LENGTH-1);
-            vr.setErrorDesc(name.trim() + "... exceeds the limit of "+ Constants.MAX_VALUE_LENGTH +" characters. Trimmed");
-            vr.setErrorCode(510);
+            ValidationResult error = ValidationResultFactory.create(510, Constants.VALUE_CHARS_LIMIT_EXCEEDED, name.trim(), Constants.MAX_VALUE_LENGTH + "");
+            vr.setErrorDesc(error.getErrorDesc());
+            vr.setErrorCode(error.getErrorCode());
         }
 
         vr.setObject(name.trim());
@@ -92,8 +93,9 @@ final class Validator {
 
         if (name.length() > Constants.MAX_KEY_LENGTH) {
             name = name.substring(0, Constants.MAX_KEY_LENGTH-1);
-            vr.setErrorDesc(name.trim() + "... exceeds the limit of "+ Constants.MAX_KEY_LENGTH + " characters. Trimmed");
-            vr.setErrorCode(520);
+            ValidationResult error = ValidationResultFactory.create(520, Constants.VALUE_CHARS_LIMIT_EXCEEDED, name.trim(), Constants.MAX_KEY_LENGTH + "");
+            vr.setErrorDesc(error.getErrorDesc());
+            vr.setErrorCode(error.getErrorCode());
         }
 
         vr.setObject(name.trim());
@@ -122,8 +124,9 @@ final class Validator {
             RestrictedMultiValueFields rf = RestrictedMultiValueFields.valueOf(name);
             //noinspection ConstantConditions
             if (rf != null) {
-                vr.setErrorDesc(name + "... is a restricted key for multi-value properties. Operation aborted.");
-                vr.setErrorCode(523);
+                ValidationResult error = ValidationResultFactory.create(523, Constants.RESTRICTED_MULTI_VALUE_KEY, name);
+                vr.setErrorDesc(error.getErrorDesc());
+                vr.setErrorCode(error.getErrorCode());
                 vr.setObject(null);
             }
         } catch (Throwable t) {
@@ -158,8 +161,9 @@ final class Validator {
         try {
             if (value.length() > Constants.MAX_MULTI_VALUE_LENGTH) {
                 value = value.substring(0, Constants.MAX_MULTI_VALUE_LENGTH-1);
-                vr.setErrorDesc(value + "... exceeds the limit of " + Constants.MAX_MULTI_VALUE_LENGTH + " chars. Trimmed");
-                vr.setErrorCode(521);
+                ValidationResult error = ValidationResultFactory.create(521, Constants.VALUE_CHARS_LIMIT_EXCEEDED, value, Constants.MAX_MULTI_VALUE_LENGTH + "");
+                vr.setErrorDesc(error.getErrorDesc());
+                vr.setErrorCode(error.getErrorCode());
             }
         } catch (Exception ignore) {
             // We really shouldn't get here
@@ -228,8 +232,9 @@ final class Validator {
             try {
                 if (value.length() > Constants.MAX_VALUE_LENGTH) {
                     value = value.substring(0, Constants.MAX_VALUE_LENGTH-1);
-                    vr.setErrorDesc(value.trim() + "... exceeds the limit of "+ Constants.MAX_VALUE_LENGTH+" chars. Trimmed");
-                    vr.setErrorCode(521);
+                    ValidationResult error = ValidationResultFactory.create(521, Constants.VALUE_CHARS_LIMIT_EXCEEDED, value.trim(), Constants.MAX_VALUE_LENGTH + "");
+                    vr.setErrorDesc(error.getErrorDesc());
+                    vr.setErrorCode(error.getErrorCode());
                 }
             } catch (Exception ignore) {
                 // We really shouldn't get here
@@ -282,8 +287,9 @@ final class Validator {
                 }
                 vr.setObject(jsonObject);
             }else{
-                vr.setErrorDesc("Invalid user profile property array count - "+ values.length +" max is - "+ Constants.MAX_MULTI_VALUE_ARRAY_LENGTH);
-                vr.setErrorCode(521);
+                ValidationResult error = ValidationResultFactory.create(521, Constants.INVALID_PROFILE_PROP_ARRAY_COUNT, values.length+"", Constants.MAX_MULTI_VALUE_ARRAY_LENGTH + "");
+                vr.setErrorDesc(error.getErrorDesc());
+                vr.setErrorCode(error.getErrorCode());
             }
             return vr;
         } else {
@@ -301,17 +307,18 @@ final class Validator {
     ValidationResult isRestrictedEventName(String name) {
         ValidationResult error = new ValidationResult();
         if (name == null) {
-            error.setErrorCode(510);
-            error.setErrorDesc("Event Name is null");
+            ValidationResult vr = ValidationResultFactory.create(510, Constants.EVENT_NAME_NULL);
+            error.setErrorCode(vr.getErrorCode());
+            error.setErrorDesc(vr.getErrorDesc());
             return error;
         }
         for (String x : restrictedNames)
             if (name.equalsIgnoreCase(x)) {
                 // The event name is restricted
-
-                error.setErrorCode(513);
-                error.setErrorDesc(name + " is a restricted event name. Last event aborted.");
-                Logger.v(name + " is a restricted system event name. Last event aborted.");
+                ValidationResult vr = ValidationResultFactory.create(513, Constants.RESTRICTED_EVENT_NAME,name);
+                error.setErrorCode(vr.getErrorCode());
+                error.setErrorDesc(vr.getErrorDesc());
+                Logger.v(vr.getErrorDesc());
                 return error;
             }
         return error;
@@ -327,16 +334,18 @@ final class Validator {
     ValidationResult isEventDiscarded(String name) {
         ValidationResult error = new ValidationResult();
         if (name == null) {
-            error.setErrorCode(510);
-            error.setErrorDesc("Event Name is null");
+            ValidationResult vr = ValidationResultFactory.create(510, Constants.EVENT_NAME_NULL);
+            error.setErrorCode(vr.getErrorCode());
+            error.setErrorDesc(vr.getErrorDesc());
             return error;
         }
         if(getDiscardedEvents() != null) {
             for (String x : getDiscardedEvents())
                 if (name.equalsIgnoreCase(x)) {
                     // The event name is discarded
-                    error.setErrorCode(513);
-                    error.setErrorDesc(name + " is a discarded event name. Last event aborted.");
+                    ValidationResult vr = ValidationResultFactory.create(513, Constants.DISCARDED_EVENT_NAME,name);
+                    error.setErrorCode(vr.getErrorCode());
+                    error.setErrorDesc(vr.getErrorDesc());
                     Logger.d(name + " s a discarded event name as per CleverTap. Dropping event at SDK level. Check discarded events in CleverTap Dashboard settings.");
                     return error;
                 }
@@ -423,8 +432,9 @@ final class Validator {
 
         // check to see if the list got trimmed in the merge
         if (ridx > 0 || lidx > 0) {
-            vr.setErrorDesc("Multi value property for key " + key + " exceeds the limit of " + maxValNum + " items. Trimmed");
-            vr.setErrorCode(521);
+            ValidationResult error = ValidationResultFactory.create(521, Constants.MULTI_VALUE_CHARS_LIMIT_EXCEEDED,key,maxValNum+"");
+            vr.setErrorCode(error.getErrorCode());
+            vr.setErrorDesc(error.getErrorDesc());
         }
 
         vr.setObject(mergedList);
