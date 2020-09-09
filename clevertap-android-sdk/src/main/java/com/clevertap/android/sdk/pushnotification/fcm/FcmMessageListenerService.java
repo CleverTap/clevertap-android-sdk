@@ -15,7 +15,7 @@ import java.util.Map;
 
 public class FcmMessageListenerService extends FirebaseMessagingService {
     @Override
-    public void onMessageReceived(RemoteMessage message) {
+    public void onMessageReceived(@NonNull RemoteMessage message) {
         try {
             if (message.getData().size() > 0) {
                 Bundle extras = new Bundle();

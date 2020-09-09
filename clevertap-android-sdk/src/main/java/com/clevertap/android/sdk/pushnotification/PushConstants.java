@@ -2,7 +2,6 @@ package com.clevertap.android.sdk.pushnotification;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 import androidx.annotation.StringDef;
 
 import java.lang.annotation.Retention;
@@ -98,24 +97,6 @@ public interface PushConstants {
 
         public static ArrayList<String> getAll() {
             return ALL;
-        }
-
-        @SuppressWarnings("unused")
-        static @Nullable
-        PushType fromString(@DeliveryType String type) {
-            switch (type) {
-                case FCM_DELIVERY_TYPE:
-                    return FCM;
-                case BAIDU_DELIVERY_TYPE:
-                    return BPS;
-                case HMS_DELIVERY_TYPE:
-                    return HPS;
-                case XIAOMI_DELIVERY_TYPE:
-                    return XPS;
-                case ADM_DELIVERY_TYPE:
-                    return ADM;
-            }
-            return null;
         }
 
         public static PushType[] getPushTypes(ArrayList<String> types) {

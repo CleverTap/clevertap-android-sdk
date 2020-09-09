@@ -237,7 +237,7 @@ class DeviceInfo {
     }
 
     private void removeDeviceID(){
-        StorageHelper.removeString(this.context, getDeviceIdStorageKey());
+        StorageHelper.remove(this.context, getDeviceIdStorageKey());
     }
 
     private String getFallBackDeviceID(){
