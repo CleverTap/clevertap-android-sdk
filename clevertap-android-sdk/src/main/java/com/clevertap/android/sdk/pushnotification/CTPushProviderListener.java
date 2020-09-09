@@ -2,7 +2,7 @@ package com.clevertap.android.sdk.pushnotification;
 
 import android.content.Context;
 
-public interface CTPushListener {
+public interface CTPushProviderListener {
 
     Context context();
 

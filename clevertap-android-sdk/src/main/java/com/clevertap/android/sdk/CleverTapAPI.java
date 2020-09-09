@@ -61,7 +61,7 @@ import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationReceiver;
 import com.clevertap.android.sdk.pushnotification.CTPushProvider;
-import com.clevertap.android.sdk.pushnotification.CTRegistrationListener;
+import com.clevertap.android.sdk.pushnotification.CTPushRegistrationListener;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
@@ -1217,9 +1217,9 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             public void run() {
                 for (final CTPushProvider pushProvider : pushProviders.availableProviders()) {
                     try {
-                        pushProvider.getRegistrationToken(new CTRegistrationListener() {
+                        pushProvider.getRegistrationToken(new CTPushRegistrationListener() {
                             @Override
-                            public void complete(String token) {
+                            public void onComplete(String token) {
                                 PushType pushType = pushProvider.getPushType();
                                 if (!TextUtils.isEmpty(token)) {
                                     doTokenRefresh(token, pushType);

@@ -17,7 +17,7 @@ import java.util.List;
  */
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class PushProviders implements CTPushListener {
+public class PushProviders implements CTPushProviderListener {
 
     private final ArrayList<CTPushProvider> availableProviders = new ArrayList<>();
     private final CleverTapInstanceConfig config;

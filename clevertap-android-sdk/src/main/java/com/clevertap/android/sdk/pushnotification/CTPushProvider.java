@@ -13,7 +13,7 @@ public interface CTPushProvider {
      *
      * @param listener
      */
-    void setCTPushListener(CTPushListener listener);
+    void setCTPushListener(CTPushProviderListener listener);
 
     /**
      * Returns the platform type. Value must be either {@link PushConstants#ANDROID_PLATFORM}.
@@ -36,7 +36,7 @@ public interface CTPushProvider {
      * @param callback - pass the callback to get the token
      */
     @Nullable
-    void getRegistrationToken(CTRegistrationListener callback);
+    void getRegistrationToken(CTPushRegistrationListener callback);
 
     /**
      * If the underlying push provider is currently available.
