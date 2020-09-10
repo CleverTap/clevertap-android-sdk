@@ -248,27 +248,6 @@ public class PushProviders implements CTPushProviderListener {
 
     public void unregisterToken(String token, PushConstants.PushType pushType) {
         ctApiPushListener.pushDeviceTokenEvent(token, false, pushType);
-        removeCachedToken(pushType);
-    }
-
-    private void removeCachedToken(final PushConstants.PushType pushType) {
-        if (pushType != null) {
-
-            try {
-                CTExecutors.getInstance().diskIO().execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        @PushConstants.RegKeyType String key = pushType.getTokenPrefKey();
-                        if (TextUtils.isEmpty(key)) return;
-                        StorageHelper.removeImmediate(context(), StorageHelper.storageKeyWithSuffix(config(), key));
-                        log( pushType + "Removed Cached Token successfully ");
-                    }
-                });
-
-            } catch (Throwable t) {
-                log(pushType + "Unable to remove cached token ", t);
-            }
-        }
     }
 
     private void registerToken(String token, PushConstants.PushType pushType) {
