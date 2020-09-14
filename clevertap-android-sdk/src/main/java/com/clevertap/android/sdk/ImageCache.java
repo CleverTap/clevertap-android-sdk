@@ -15,7 +15,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 public class ImageCache {
-    private static final int MIN_CACHE_SIZE = 1024 * 10; // 10mb minimum (in KB)
+    private static final int MIN_CACHE_SIZE = 1024 * 20; // 20mb minimum (in KB)
     private final static int maxMemory = (int) (Runtime.getRuntime().maxMemory())/1024;
     private final static int cacheSize = Math.max((maxMemory / 32), MIN_CACHE_SIZE);
     private static final int MAX_BITMAP_SIZE = 10000000; // 10 MB

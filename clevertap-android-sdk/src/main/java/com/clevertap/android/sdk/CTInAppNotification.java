@@ -60,6 +60,7 @@ class CTInAppNotification implements Parcelable {
     private boolean isLandscape;
     private String landscapeImageUrl;
     private String _landscapeImageCacheKey;
+    private long timeToLive;
 
     CTInAppNotification(){}
 
@@ -100,6 +101,7 @@ class CTInAppNotification implements Parcelable {
             this.totalLifetimeCount = jsonObject.has(Constants.KEY_TLC) ? jsonObject.getInt(Constants.KEY_TLC) : -1;
             this.totalDailyCount = jsonObject.has(Constants.KEY_TDC) ? jsonObject.getInt(Constants.KEY_TDC) : -1;
             this.jsEnabled = jsonObject.has(Constants.INAPP_JS_ENABLED) && jsonObject.getBoolean(Constants.INAPP_JS_ENABLED);
+            this.timeToLive = jsonObject.has(Constants.WZRK_TIME_TO_LIVE) ? jsonObject.getLong(Constants.WZRK_TIME_TO_LIVE) : System.currentTimeMillis() + 2 * Constants.ONE_DAY_IN_MILLIS;
 
             JSONObject data = jsonObject.has(Constants.INAPP_DATA_TAG) ? jsonObject.getJSONObject(Constants.INAPP_DATA_TAG) : null;
             if (data != null) {
@@ -154,6 +156,7 @@ class CTInAppNotification implements Parcelable {
             this.backgroundColor = jsonObject.has(Constants.KEY_BG) ? jsonObject.getString(Constants.KEY_BG) : Constants.WHITE;
             this.isPortrait = !jsonObject.has(Constants.KEY_PORTRAIT) || jsonObject.getBoolean(Constants.KEY_PORTRAIT);
             this.isLandscape = jsonObject.has(Constants.KEY_LANDSCAPE) && jsonObject.getBoolean(Constants.KEY_LANDSCAPE);
+            this.timeToLive = jsonObject.has(Constants.WZRK_TIME_TO_LIVE) ? jsonObject.getLong(Constants.WZRK_TIME_TO_LIVE) : System.currentTimeMillis() + 2 * Constants.ONE_DAY_IN_MILLIS;
             JSONObject titleObject = jsonObject.has(Constants.KEY_TITLE) ? jsonObject.getJSONObject(Constants.KEY_TITLE) : null;
             if(titleObject != null) {
                 this.title = titleObject.has(Constants.KEY_TEXT) ? titleObject.getString(Constants.KEY_TEXT) : "";
@@ -491,6 +494,10 @@ class CTInAppNotification implements Parcelable {
         return jsEnabled;
     }
 
+    public long getTimeToLive() {
+        return timeToLive;
+    }
+
     Bitmap getImage(CTInAppNotificationMedia inAppMedia) {
         return ImageCache.getBitmap(inAppMedia.getCacheKey());
     }
@@ -592,6 +599,7 @@ class CTInAppNotification implements Parcelable {
             isLandscape = in.readByte() != 0x00;
             landscapeImageUrl = in.readString();
             _landscapeImageCacheKey = in.readString();
+            timeToLive = in.readLong();
 
         }catch (JSONException e){
             // no-op
@@ -656,6 +664,7 @@ class CTInAppNotification implements Parcelable {
         dest.writeByte((byte) (isLandscape ? 0x01 : 0x00));
         dest.writeString(landscapeImageUrl);
         dest.writeString(_landscapeImageCacheKey);
+        dest.writeLong(timeToLive);
     }
 
     @SuppressWarnings("unused")

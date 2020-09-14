@@ -713,6 +713,11 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
             return;
         }
 
+        if(inAppNotification.getTimeToLive() > System.currentTimeMillis()){
+            Logger.d("InApp has elapsed its time to live, not showing the InApp");
+            return;
+        }
+
         currentlyDisplayingInApp = inAppNotification;
 
         CTInAppBaseFragment inAppFragment = null;
@@ -1812,7 +1817,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private void checkExistingInAppNotifications(Activity activity) {
         final boolean canShow = canShowInAppOnActivity();
         if (canShow) {
-            if (currentlyDisplayingInApp != null) {
+            if (currentlyDisplayingInApp != null && currentlyDisplayingInApp.getTimeToLive() > System.currentTimeMillis()) {
                 Fragment inAppFragment = activity.getFragmentManager().getFragment(new Bundle(), currentlyDisplayingInApp.getType());
                 if (getCurrentActivity() != null && inAppFragment!=null) {
                     FragmentTransaction fragmentTransaction = getCurrentActivity().getFragmentManager().beginTransaction();
