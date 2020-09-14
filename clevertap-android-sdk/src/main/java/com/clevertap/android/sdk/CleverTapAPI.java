@@ -48,24 +48,18 @@ import com.android.installreferrer.api.InstallReferrerClient;
 import com.android.installreferrer.api.InstallReferrerStateListener;
 import com.android.installreferrer.api.ReferrerDetails;
 import com.clevertap.android.sdk.ab_testing.CTABTestController;
-import com.clevertap.android.sdk.ab_testing.CTABTestListener;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
-import com.clevertap.android.sdk.featureFlags.FeatureFlagListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
-import com.clevertap.android.sdk.product_config.CTProductConfigControllerListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationReceiver;
-import com.clevertap.android.sdk.pushnotification.CTPushProvider;
-import com.clevertap.android.sdk.pushnotification.CTPushRegistrationListener;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
-import com.clevertap.android.sdk.pushnotification.PushUtils;
 import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundIntentService;
 import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundJobService;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
@@ -114,14 +108,7 @@ import static com.clevertap.android.sdk.Utils.runOnUiThread;
  * <h1>CleverTapAPI</h1>
  * This is the main CleverTapAPI class that manages the SDK instances
  */
-public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationListener,
-        InAppNotificationActivity.InAppActivityListener,
-        CTInAppBaseFragment.InAppListener,
-        CTInboxActivity.InboxActivityListener,
-        CTABTestListener,
-        FeatureFlagListener,
-        CTProductConfigControllerListener,
-        CTProductConfigListener{
+public class CleverTapAPI implements CleverTapAPIListener{
     private final HashMap<String, Object> notificationIdTagMap = new HashMap<>();
     private final HashMap<String, Object> notificationViewedIdTagMap = new HashMap<>();
 
@@ -172,7 +159,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         initFeatureFlags(false);
 
         this.validator = new Validator();
-        this.pushProviders = PushProviders.load(context, this.config);
+        this.pushProviders = PushProviders.load(this);
 
         postAsyncSafely("CleverTapAPI#initializeDeviceInfo", new Runnable() {
             @Override
@@ -1217,29 +1204,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
 
     //Push
     private void onTokenRefresh() {
-        CTExecutors.getInstance().diskIO().execute(new Runnable() {
-            @Override
-            public void run() {
-                for (final CTPushProvider pushProvider : pushProviders.availableProviders()) {
-                    try {
-                        pushProvider.getRegistrationToken(new CTPushRegistrationListener() {
-                            @Override
-                            public void onComplete(String token) {
-                                PushType pushType = pushProvider.getPushType();
-                                if (!TextUtils.isEmpty(token)) {
-                                    doTokenRefresh(token, pushType);
-                                    deviceTokenDidRefresh(token, pushType);
-                                }
-                            }
-                        });
-
-                    } catch (Throwable t) {
-                        //no-op
-                        getConfigLogger().verbose(getAccountId(), "Token Refresh error " + pushProvider, t);
-                    }
-                }
-            }
-        });
+        pushProviders.refreshAllTokens();
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -1487,9 +1452,27 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     //Push
 
     private void pushAmazonRegistrationId(String token, boolean register) {
-        pushDeviceToken(token, register, PushType.ADM);
-        PushUtils.cacheToken(context, config, token, PushType.ADM);
+        pushProviders.handleToken(token, PushType.ADM, register);
     }
+
+    @Override
+    public Context context() {
+        return context;
+    }
+
+    @Override
+    public CleverTapInstanceConfig config() {
+        return config;
+    }
+
+    @Override
+    public void onNewToken(String freshToken, PushType pushType) {
+        if (!TextUtils.isEmpty(freshToken)) {
+            doTokenRefresh(freshToken, pushType);
+            deviceTokenDidRefresh(freshToken, pushType);
+        }
+    }
+
     /**
      * Implement to get called back when the device push token is refreshed
      */
@@ -1729,7 +1712,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @SuppressWarnings("unused")
     public String getDevicePushToken(final PushType type) {
-        return PushUtils.getCachedToken(context, config, type);
+        return pushProviders.getCachedToken(type);
     }
 
     // SessionManager/session management
@@ -4829,7 +4812,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
     private void forcePushDeviceToken(final boolean register) {
 
         for (PushType pushType : pushProviders.getAvailablePushTypes()) {
-            pushDeviceToken(null, register, pushType);
+            pushDeviceTokenEvent(null, register, pushType);
         }
     }
 
@@ -4969,8 +4952,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @SuppressWarnings("unused")
     public void pushFcmRegistrationId(String fcmId, boolean register) {
-        pushDeviceToken(fcmId, register, PushType.FCM);
-        PushUtils.cacheToken(context, config, fcmId, PushType.FCM);
+        pushProviders.handleToken(fcmId, PushType.FCM, register);
     }
 
     /**
@@ -4984,8 +4966,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @SuppressWarnings("unused")
     public void pushXiaomiRegistrationId(String regId, boolean register) {
-        pushDeviceToken(regId, register, PushType.XPS);
-        PushUtils.cacheToken(context, config, regId, PushType.XPS);
+        pushProviders.handleToken(regId, PushType.XPS, register);
     }
 
     /**
@@ -4999,8 +4980,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @SuppressWarnings("unused")
     public void pushBaiduRegistrationId(String regId, boolean register) {
-        pushDeviceToken(regId, register, PushType.BPS);
-        PushUtils.cacheToken(context, config, regId, PushType.BPS);
+        pushProviders.handleToken(regId, PushType.BPS, register);
     }
 
     /**
@@ -5014,8 +4994,7 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
      */
     @SuppressWarnings("unused")
     public void pushHuaweiRegistrationId(String regId, boolean register) {
-        pushDeviceToken(regId, register, PushType.HPS);
-        PushUtils.cacheToken(context, config, regId, PushType.HPS);
+        pushProviders.handleToken(regId, PushType.HPS, register);
     }
 
     //Util
@@ -5592,10 +5571,12 @@ public class CleverTapAPI implements CTInAppNotification.CTInAppNotificationList
         flushQueueAsync(context, EventGroup.REGULAR);
     }
 
-    private void pushDeviceToken(String token, boolean register, PushType pushType) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    @Override
+    public void pushDeviceTokenEvent(String token, boolean register, PushType pushType) {
         if (pushType == null)
             return;
-        token = !TextUtils.isEmpty(token) ? token : PushUtils.getCachedToken(context, config, pushType);
+        token = !TextUtils.isEmpty(token) ? token : pushProviders.getCachedToken(pushType);
         if (TextUtils.isEmpty(token))
             return;
         synchronized (tokenLock) {

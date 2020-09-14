@@ -9,16 +9,29 @@ import androidx.annotation.WorkerThread;
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public final class StorageHelper {
 
-    static void putString(Context context, String key, String value) {
+    public static void putString(Context context, String key, String value) {
         SharedPreferences prefs = getPreferences(context);
         SharedPreferences.Editor editor = prefs.edit().putString(key, value);
         persist(editor);
     }
 
-    static void removeString(Context context, String key) {
+    public static void putStringImmediate(Context context, String key, String value) {
+
+        SharedPreferences prefs = getPreferences(context);
+        SharedPreferences.Editor editor = prefs.edit().putString(key, value);
+        persistImmediately(editor);
+    }
+
+    public static void remove(Context context, String key) {
         SharedPreferences prefs = getPreferences(context);
         SharedPreferences.Editor editor = prefs.edit().remove(key);
         persist(editor);
+    }
+
+    public static void removeImmediate(Context context, String key) {
+        SharedPreferences prefs = getPreferences(context);
+        SharedPreferences.Editor editor = prefs.edit().remove(key);
+        persistImmediately(editor);
     }
 
     static String getString(Context context, String key, String defaultValue) {

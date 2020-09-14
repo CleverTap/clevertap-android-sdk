@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.pushnotification;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 /**
  * Defines a push provider.
@@ -32,11 +31,10 @@ public interface CTPushProvider {
     PushConstants.PushType getPushType();
 
     /**
-     * Gets the push registration token.
-     * @param callback - pass the callback to get the token
+     * Requests the push registration token.
+     *
      */
-    @Nullable
-    void getRegistrationToken(CTPushRegistrationListener callback);
+    void requestToken();
 
     /**
      * If the underlying push provider is currently available.
