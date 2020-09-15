@@ -24,7 +24,7 @@ public interface PushConstants {
     String BAIDU_DELIVERY_TYPE = "bps";
 
     @NonNull
-    String HMS_DELIVERY_TYPE = "hms";
+    String HMS_DELIVERY_TYPE = "hps";
 
     @NonNull
     String XIAOMI_DELIVERY_TYPE = "xps";
