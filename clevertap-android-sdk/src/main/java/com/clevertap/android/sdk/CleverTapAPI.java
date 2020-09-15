@@ -6333,7 +6333,7 @@ public class CleverTapAPI implements CleverTapAPIListener{
                                 appInstallTime = response.getInstallBeginTimestampSeconds();
                                 pushInstallReferrer(referrerUrl);
                                 installReferrerDataSent = true;
-                                getConfigLogger().debug(getAccountId(), "Install Referrer data set");
+                                getConfigLogger().debug(getAccountId(), "Install Referrer data set [Referrer URL-" + referrerUrl + "]");
                             } catch (RemoteException e) {
                                 getConfigLogger().debug(getAccountId(), "Remote exception caused by Google Play Install Referrer library - " + e.getMessage());
                                 referrerClient.endConnection();
