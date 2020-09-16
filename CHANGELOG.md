@@ -1,5 +1,8 @@
 ## CHANGE LOG
 
+### Version 3.9.1 (September 17, 2020)
+* Handled Security Exception on `getNetworkType` for Android 11 devices
+
 ### Version 3.9.0 (August 31, 2020)
 * Adds support for CleverTap Geofence SDK
 * Fixed all InApp related bugs and crashes
