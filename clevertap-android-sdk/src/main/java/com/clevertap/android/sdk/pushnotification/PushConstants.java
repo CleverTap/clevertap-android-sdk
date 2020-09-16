@@ -32,16 +32,28 @@ public interface PushConstants {
     @NonNull
     String ADM_DELIVERY_TYPE = "adm";
 
-    @StringDef({FIREBASE_CLASS_NAME, XIAOMI_CLASS_NAME, BAIDU_CLASS_NAME, HUAWEI_CLASS_NAME, ADM_CLASS_NAME})
+    @StringDef({CT_FIREBASE_PROVIDER_CLASS, CT_XIAOMI_PROVIDER_CLASS, CT_BAIDU_PROVIDER_CLASS, CT_HUAWEI_PROVIDER_CLASS, CT_ADM_PROVIDER_CLASS})
     @Retention(RetentionPolicy.SOURCE)
-    @interface DeliveryClassName {
+    @interface CTPushProviderClass {
     }
 
-    String FIREBASE_CLASS_NAME = "com.clevertap.android.sdk.pushnotification.fcm.FcmPushProvider";
-    String XIAOMI_CLASS_NAME = "com.clevertap.android.xps.XiaomiPushProvider";
-    String BAIDU_CLASS_NAME = "com.clevertap.android.bps.BaiduPushProvider";
-    String HUAWEI_CLASS_NAME = "com.clevertap.android.hms.HmsPushProvider";
-    String ADM_CLASS_NAME = "com.clevertap.android.adm.AmazonPushProvider";
+    String CT_FIREBASE_PROVIDER_CLASS = "com.clevertap.android.sdk.pushnotification.fcm.FcmPushProvider";
+    String CT_XIAOMI_PROVIDER_CLASS = "com.clevertap.android.xps.XiaomiPushProvider";
+    String CT_BAIDU_PROVIDER_CLASS = "com.clevertap.android.bps.BaiduPushProvider";
+    String CT_HUAWEI_PROVIDER_CLASS = "com.clevertap.android.hms.HmsPushProvider";
+    String CT_ADM_PROVIDER_CLASS = "com.clevertap.android.adm.AmazonPushProvider";
+
+    @StringDef({FIREBASE_SDK_CLASS, XIAOMI_SDK_CLASS, BAIDU_SDK_CLASS, HUAWEI_SDK_CLASS, ADM_SDK_CLASS})
+    @Retention(RetentionPolicy.SOURCE)
+    @interface PushMessagingClass {
+    }
+
+
+    String FIREBASE_SDK_CLASS = "com.google.firebase.messaging.FirebaseMessagingService";
+    String XIAOMI_SDK_CLASS = "com.xiaomi.mipush.sdk.MiPushClient";
+    String BAIDU_SDK_CLASS = "com.baidu.android.pushservice.PushMessageReceiver";
+    String HUAWEI_SDK_CLASS = "com.huawei.hms.push.HmsMessageService";
+    String ADM_SDK_CLASS = "com.amazon.device.messaging.ADM";
 
     String FCM_PROPERTY_REG_ID = "fcm_token";
     String XPS_PROPERTY_REG_ID = "xps_token";
@@ -55,11 +67,11 @@ public interface PushConstants {
     }
 
     enum PushType {
-        FCM(FCM_DELIVERY_TYPE, FCM_PROPERTY_REG_ID, FIREBASE_CLASS_NAME),
-        XPS(XIAOMI_DELIVERY_TYPE, XPS_PROPERTY_REG_ID, XIAOMI_CLASS_NAME),
-        HPS(HMS_DELIVERY_TYPE, HPS_PROPERTY_REG_ID, HUAWEI_CLASS_NAME),
-        BPS(BAIDU_DELIVERY_TYPE, BPS_PROPERTY_REG_ID, BAIDU_CLASS_NAME),
-        ADM(ADM_DELIVERY_TYPE, ADM_PROPERTY_REG_ID, ADM_CLASS_NAME);
+        FCM(FCM_DELIVERY_TYPE, FCM_PROPERTY_REG_ID, CT_FIREBASE_PROVIDER_CLASS, FIREBASE_SDK_CLASS),
+        XPS(XIAOMI_DELIVERY_TYPE, XPS_PROPERTY_REG_ID, CT_XIAOMI_PROVIDER_CLASS, XIAOMI_SDK_CLASS),
+        HPS(HMS_DELIVERY_TYPE, HPS_PROPERTY_REG_ID, CT_HUAWEI_PROVIDER_CLASS, HUAWEI_SDK_CLASS),
+        BPS(BAIDU_DELIVERY_TYPE, BPS_PROPERTY_REG_ID, CT_BAIDU_PROVIDER_CLASS, BAIDU_SDK_CLASS),
+        ADM(ADM_DELIVERY_TYPE, ADM_PROPERTY_REG_ID, CT_ADM_PROVIDER_CLASS, ADM_SDK_CLASS);
 
         private static final ArrayList<String> ALL;
 
@@ -69,11 +81,17 @@ public interface PushConstants {
 
         private final String type;
 
-        public String getClassName() {
-            return className;
+        public String getCtProviderClassName() {
+            return ctProviderClassName;
         }
 
-        private final String className;
+        private final String ctProviderClassName;
+
+        public String getMessagingSDKClassName() {
+            return messagingSDKClassName;
+        }
+
+        private final String messagingSDKClassName;
 
         public @RegKeyType
         String getTokenPrefKey() {
@@ -82,10 +100,11 @@ public interface PushConstants {
 
         private final String tokenPrefKey;
 
-        PushType(@DeliveryType String type, @RegKeyType String prefKey, @DeliveryClassName String className) {
+        PushType(@DeliveryType String type, @RegKeyType String prefKey, @CTPushProviderClass String className, @PushMessagingClass String messagingSDKClassName) {
             this.type = type;
             this.tokenPrefKey = prefKey;
-            this.className = className;
+            this.ctProviderClassName = className;
+            this.messagingSDKClassName = messagingSDKClassName;
         }
 
         static {

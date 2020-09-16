@@ -21,8 +21,9 @@ import static com.clevertap.android.sdk.BuildConfig.VERSION_CODE;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class PushProviders implements CTPushProviderListener {
-
-    private final ArrayList<CTPushProvider> availableProviders = new ArrayList<>();
+    private final ArrayList<PushConstants.PushType> allEnabledPushTypes = new ArrayList<>();
+    private final ArrayList<PushConstants.PushType> customEnabledPushTypes = new ArrayList<>();
+    private final ArrayList<CTPushProvider> availableCTPushProviders = new ArrayList<>();
     private final CTApiPushListener ctApiPushListener;
 
     private PushProviders(CTApiPushListener ctApiPushListener) {
@@ -45,8 +46,17 @@ public class PushProviders implements CTPushProviderListener {
      * Loads all the plugins that are currently supported by the device.
      */
     private void init() {
+
+        findEnabledPushTypes();
+
         List<CTPushProvider> providers = createProviders();
 
+        findCTPushProviders(providers);
+
+        findCustomEnabledPushTypes();
+    }
+
+    private void findCTPushProviders(List<CTPushProvider> providers) {
         if (providers.isEmpty()) {
             log("No push providers found!. Make sure to install at least one push provider");
             return;
@@ -65,9 +75,29 @@ public class PushProviders implements CTPushProviderListener {
 
             if (provider.isAvailable()) {
                 log("Available Provider: " + provider.getClass());
-                availableProviders.add(provider);
+                availableCTPushProviders.add(provider);
             } else {
                 log("Unavailable Provider: " + provider.getClass());
+            }
+        }
+    }
+
+    private void findCustomEnabledPushTypes() {
+        customEnabledPushTypes.addAll(allEnabledPushTypes);
+        for (final CTPushProvider pushProvider : availableCTPushProviders) {
+            customEnabledPushTypes.remove(pushProvider.getPushType());
+        }
+    }
+
+    private void findEnabledPushTypes() {
+        for (PushConstants.PushType pushType : config().getAllowedPushTypes()) {
+            String className = pushType.getMessagingSDKClassName();
+            try {
+                Class.forName(className);
+                allEnabledPushTypes.add(pushType);
+                log("SDK Class Available :" + className);
+            } catch (Exception e) {
+                log("SDK class Not available " + className + " Exception:" + e.getClass().getName());
             }
         }
     }
@@ -111,21 +141,22 @@ public class PushProviders implements CTPushProviderListener {
     private List<CTPushProvider> createProviders() {
         List<CTPushProvider> providers = new ArrayList<>();
 
-        for (PushConstants.PushType pushType : config().getAllowedPushTypes()) {
+        for (PushConstants.PushType pushType : allEnabledPushTypes) {
+            String className = pushType.getCtProviderClassName();
             CTPushProvider pushProvider = null;
             try {
-                Class<?> providerClass = Class.forName(pushType.getClassName());
+                Class<?> providerClass = Class.forName(className);
                 pushProvider = (CTPushProvider) providerClass.newInstance();
                 pushProvider.setCTPushListener(this);
-                log("Found provider:" + providerClass);
+                log("Found provider:" + className);
             } catch (InstantiationException e) {
-                log("Unable to create provider InstantiationException" + pushType.getClassName());
+                log("Unable to create provider InstantiationException" + className);
             } catch (IllegalAccessException e) {
-                log("Unable to create provider IllegalAccessException" + pushType.getClassName());
+                log("Unable to create provider IllegalAccessException" + className);
             } catch (ClassNotFoundException e) {
-                log("Unable to create provider ClassNotFoundException" + pushType.getClassName());
+                log("Unable to create provider ClassNotFoundException" + className);
             } catch (Exception e) {
-                log("Unable to create provider Exception" + pushType.getClassName(), e);
+                log("Unable to create provider " + className + " Exception:" + e.getClass().getName());
             }
 
             if (pushProvider == null) {
@@ -141,14 +172,10 @@ public class PushProviders implements CTPushProviderListener {
     @NonNull
     public ArrayList<PushConstants.PushType> getAvailablePushTypes() {
         ArrayList<PushConstants.PushType> pushTypes = new ArrayList<>();
-        for (CTPushProvider pushProvider : availableProviders) {
+        for (CTPushProvider pushProvider : availableCTPushProviders) {
             pushTypes.add(pushProvider.getPushType());
         }
         return pushTypes;
-    }
-
-    public ArrayList<CTPushProvider> availableProviders() {
-        return availableProviders;
     }
 
     public boolean isNotificationSupported() {
@@ -212,14 +239,14 @@ public class PushProviders implements CTPushProviderListener {
             });
 
         } catch (Throwable t) {
-            log( pushType + "Unable to cache token " + token, t);
+            log(pushType + "Unable to cache token " + token, t);
         }
     }
 
     private boolean alreadyHaveToken(String newToken, PushConstants.PushType pushType) {
         boolean alreadyAvailable = !TextUtils.isEmpty(newToken) && pushType != null && newToken.equalsIgnoreCase(getCachedToken(pushType));
         if (pushType != null)
-            log( pushType + "Token Already available value: " + alreadyAvailable);
+            log(pushType + "Token Already available value: " + alreadyAvailable);
         return alreadyAvailable;
     }
 
@@ -228,12 +255,12 @@ public class PushProviders implements CTPushProviderListener {
             @PushConstants.RegKeyType String key = pushType.getTokenPrefKey();
             if (!TextUtils.isEmpty(key)) {
                 String cachedToken = StorageHelper.getStringFromPrefs(context(), config(), key, null);
-                log( pushType + "getting Cached Token - " + cachedToken);
+                log(pushType + "getting Cached Token - " + cachedToken);
                 return cachedToken;
             }
         }
         if (pushType != null) {
-            log( pushType + " Unable to find cached Token for type ");
+            log(pushType + " Unable to find cached Token for type ");
         }
         return null;
     }
@@ -259,15 +286,33 @@ public class PushProviders implements CTPushProviderListener {
         CTExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
-                for (final CTPushProvider pushProvider : availableProviders()) {
-                    try {
-                        pushProvider.requestToken();
-                    } catch (Throwable t) {
-                        //no-op
-                        log("Token Refresh error " + pushProvider, t);
-                    }
-                }
+                // refresh tokens of Push Providers
+                refreshCTProviderTokens();
+
+                // refresh tokens of custom Providers
+                refreshCustomProviderTokens();
             }
         });
+    }
+
+    private void refreshCustomProviderTokens() {
+        for (PushConstants.PushType pushType : customEnabledPushTypes) {
+            try {
+                ctApiPushListener.pushDeviceTokenEvent(getCachedToken(pushType), true, pushType);
+            } catch (Throwable t) {
+                log("Token Refresh error " + pushType, t);
+            }
+        }
+    }
+
+    private void refreshCTProviderTokens() {
+        for (final CTPushProvider pushProvider : availableCTPushProviders) {
+            try {
+                pushProvider.requestToken();
+            } catch (Throwable t) {
+                //no-op
+                log("Token Refresh error " + pushProvider, t);
+            }
+        }
     }
 }
