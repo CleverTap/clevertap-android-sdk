@@ -122,7 +122,7 @@ public class CleverTapAPI implements CleverTapAPIListener{
     private static int activityCount = 0;
     private final ValidationResultStack validationResultStack;
     private String currentScreenName = "";
-    private static ArrayList<CTInAppNotification> pendingNotifications = new ArrayList<>();
+    private static List<CTInAppNotification> pendingNotifications = Collections.synchronizedList(new ArrayList<CTInAppNotification>());
     private Runnable pendingInappRunnable = null;
     private static CTInAppNotification currentlyDisplayingInApp = null;
 

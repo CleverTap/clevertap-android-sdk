@@ -17,7 +17,10 @@ public abstract class CTInAppBaseFullFragment extends CTInAppBaseFragment {
     }
 
     boolean isTablet(){
-        WindowManager wm = (WindowManager) getActivity().getBaseContext().getSystemService(Context.WINDOW_SERVICE);
+        if(Utils.isActivityDead(getActivity())){
+            return false;
+        }
+        WindowManager wm = (WindowManager) parent.getBaseContext().getSystemService(Context.WINDOW_SERVICE);
         if (wm == null) {
             Logger.v("Screen size is null ");
             return false;
