@@ -1,0 +1,1 @@
+include ':clevertap-geofence-sdk',':clevertap-android-sdk', ':AndroidStarter'

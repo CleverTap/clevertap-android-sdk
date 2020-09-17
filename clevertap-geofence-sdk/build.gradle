@@ -1,0 +1,184 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
+
+ext {
+    bintrayRepo = 'Maven'
+    bintrayName = 'GeofenceSDK'
+    org = 'clevertap'
+
+    publishedGroupId = 'com.clevertap.android'
+    libraryName = 'GeofenceSDK'
+    artifact = 'clevertap-geofence-sdk'
+    libraryDescription = 'The CleverTap Android Geofence SDK'
+
+    siteUrl = 'https://github.com/CleverTap/clevertap-geofence-android'
+    gitUrl = 'https://github.com/CleverTap/clevertap-geofence-android.git'
+
+    libraryVersion = '1.0.0'
+
+    developerId = 'clevertap'
+    developerName = 'CleverTap'
+    developerEmail = 'support@clevertap.com'
+
+    licenseName = 'MIT License'
+    licenseUrl = 'https://opensource.org/licenses/MIT'
+    allLicenses = ["MIT"]
+}
+
+android {
+    compileSdkVersion 29
+    buildToolsVersion "29.0.3"
+
+    defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion 29
+        versionCode 10000
+        versionName "1.0.0"
+
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles 'consumer-rules.pro'
+    }
+
+    buildTypes {
+        debug {
+            buildConfigField "String", "SDK_VERSION_STRING", '"!SDK-VERSION-STRING!:com.clevertap.android:clevertap-geofence-sdk:1.0.0.0"'
+        }
+        release {
+            buildConfigField "String", "SDK_VERSION_STRING", '"!SDK-VERSION-STRING!:com.clevertap.android:clevertap-geofence-sdk:1.0.0.0"'
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    libraryVariants.all { variant ->
+        variant.outputs.all {
+            if (variant.getName().toLowerCase().contains('release')) {
+                outputFileName = "${artifact}-${libraryVersion}.aar"
+            } else if (variant.getName().toLowerCase().contains('debug')) {
+                outputFileName = "${artifact}-${variant.name}-${libraryVersion}.aar"
+            }
+        }
+    }
+
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
+
+}
+
+version = libraryVersion
+group = publishedGroupId
+
+install {
+    repositories.mavenInstaller {
+        pom.project {
+            packaging 'aar'
+            groupId publishedGroupId
+            artifactId artifact
+
+            name libraryName
+            description libraryDescription
+            url siteUrl
+
+            licenses {
+                license {
+                    name licenseName
+                    url licenseUrl
+                }
+            }
+            developers {
+                developer {
+                    id developerId
+                    name developerName
+                    email developerEmail
+                }
+            }
+            scm {
+                connection gitUrl
+                developerConnection gitUrl
+                url siteUrl
+            }
+        }
+    }
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.srcDirs
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+Properties properties = new Properties()
+if (project.rootProject.file('local.properties').exists()){
+    properties.load(project.rootProject.file('local.properties').newDataInputStream())
+}
+
+
+bintray {
+    user = properties.getProperty("bintray.user")
+    key = properties.getProperty("bintray.apikey")
+
+    dryRun = false
+    configurations = ['archives']
+    pkg {
+        repo = bintrayRepo
+        name = bintrayName
+        userOrg = org
+        desc = libraryDescription
+        websiteUrl = siteUrl
+        vcsUrl = gitUrl
+        licenses = allLicenses
+        publish = true
+        publicDownloadNumbers = true
+        version {
+            desc = libraryDescription
+        }
+    }
+}
+
+dependencies {
+    compileOnly 'com.clevertap.android:clevertap-android-sdk:3.9.0'
+    compileOnly 'com.google.android.gms:play-services-location:17.0.0'
+    compileOnly 'androidx.work:work-runtime:2.3.4'
+    compileOnly 'androidx.concurrent:concurrent-futures:1.0.0'
+
+    // Unit testing dependencies
+    testImplementation 'junit:junit:4.13'
+    testImplementation 'org.mockito:mockito-core:2.25.0'
+    testImplementation 'org.robolectric:robolectric:4.3.1'
+
+    testImplementation 'androidx.test:core:1.2.0'
+    testImplementation "androidx.test.ext:junit:1.1.1"
+    testImplementation "androidx.appcompat:appcompat:1.1.0"
+
+    testImplementation 'org.powermock:powermock-core:2.0.7'
+    testImplementation 'org.powermock:powermock-api-mockito2:2.0.7'
+    testImplementation 'org.powermock:powermock-module-junit4:2.0.7'
+
+    // AndroidJUnitRunner and JUnit Rules
+    androidTestImplementation 'androidx.test:runner:1.2.0'
+    androidTestImplementation 'androidx.test:rules:1.2.0'
+
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
+    testImplementation 'org.powermock:powermock-core:2.0.7'
+    testImplementation 'org.powermock:powermock-module-junit4:2.0.7'
+    testImplementation 'org.powermock:powermock-module-junit4-rule:1.6.6'
+    testImplementation 'org.powermock:powermock-api-mockito2:2.0.7'
+    testImplementation 'org.powermock:powermock-classloading-xstream:1.6.6'
+    testImplementation 'eu.codearte.catch-exception:catch-exception:2.0'
+    testImplementation 'com.clevertap.android:clevertap-android-sdk:3.9.0'
+
+    testImplementation 'com.android.installreferrer:installreferrer:1.0'
+    testImplementation 'com.google.android.gms:play-services-location:17.0.0'
+    testImplementation 'org.skyscreamer:jsonassert:1.5.0'
+    testImplementation "androidx.work:work-testing:2.3.4"
+    testImplementation 'org.awaitility:awaitility:4.0.3'
+    testImplementation 'androidx.concurrent:concurrent-futures:1.0.0'
+}
