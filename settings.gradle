@@ -1,1 +1,5 @@
-include ':clevertap-geofence-sdk',':clevertap-android-sdk', ':AndroidStarter'
+include ':clevertap-core'
+include ':AndroidStarter'
+include ':clevertap-geofence'
+include ':clevertap-xps'
+include ':clevertap-hms'

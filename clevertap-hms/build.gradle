@@ -1,0 +1,49 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.huawei.agconnect'
+
+android {
+    compileSdkVersion 29
+    buildToolsVersion "29.0.3"
+
+    ext{
+        libraryVersion = "1.0.0"
+        artifact = 'clevertap-hms-sdk'
+    }
+
+    defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion 29
+        versionCode 10000
+        versionName "1.0.0"
+
+        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+    }
+
+    buildTypes {
+        debug {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    libraryVariants.all { variant ->
+        variant.outputs.all {
+            if (variant.getName().toLowerCase().contains('release')) {
+                outputFileName = "${artifact}-${libraryVersion}.aar"
+            } else if (variant.getName().toLowerCase().contains('debug')) {
+                outputFileName = "${artifact}-${variant.name}-${libraryVersion}.aar"
+            }
+        }
+    }
+
+}
+
+dependencies {
+    compileOnly project(':clevertap-core')
+    implementation 'com.huawei.hms:push:5.0.0.300'
+    compileOnly('com.android.support:support-annotations:28.0.0')
+}

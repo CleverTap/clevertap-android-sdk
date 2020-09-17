@@ -2,7 +2,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.clevertap.demo">
     <!--Add Permissions needed for CleverTap -->
-    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:name=".MyApplication"
@@ -23,10 +23,10 @@
         <!-- Add meta data for CleverTap Account Id and Account Token-->
         <meta-data
             android:name="CLEVERTAP_ACCOUNT_ID"
-            android:value="RWW-WWW-WWWZ"/>
+            android:value="RWW-WWW-WWWZ" />
         <meta-data
             android:name="CLEVERTAP_TOKEN"
-            android:value="000-002"/>
+            android:value="000-002" />
         <!--<meta-data-->
         <!--android:name="CLEVERTAP_REGION"-->
         <!--android:value="eu1"/>-->
@@ -34,75 +34,45 @@
         <!-- IMPORTANT: To force use Google AD ID to uniquely identify  users, use the following meta tag. GDPR mandates that if you are using this tag, there is prominent disclousure to your end customer in their application. Read more about GDPR here - https://clevertap.com/blog/in-preparation-of-gdpr-compliance/ -->
         <meta-data
             android:name="CLEVERTAP_USE_GOOGLE_AD_ID"
-            android:value="1"/>
+            android:value="1" />
         <meta-data
             android:name="CLEVERTAP_SSL_PINNING"
-            android:value="0"/>
+            android:value="0" />
         <!-- Add meta data for CleverTap Notification Icon-->
         <meta-data
             android:name="CLEVERTAP_NOTIFICATION_ICON"
-            android:value="ic_launcher_round"/>
+            android:value="ic_launcher_round" />
 
         <meta-data
             android:name="CLEVERTAP_BACKGROUND_SYNC"
-            android:value="1"/>
+            android:value="1" />
 
         <!--Add meta and set to 1 to raise Notification Viewed for Push Notifications-->
         <meta-data
             android:name="CLEVERTAP_RAISE_NOTIFICATION_VIEWED"
-            android:value="1"/>
+            android:value="1" />
 
         <!--Add meta and set to 1 start using custom CleverTap ID-->
         <meta-data
             android:name="CLEVERTAP_USE_CUSTOM_ID"
-            android:value="0"/>
+            android:value="0" />
 
         <!-- Add CleverTap Push Notification Services & Install Referrer Receivers-->
         <service
-            android:name="com.clevertap.android.sdk.FcmTokenListenerService" android:exported="true">
-            <intent-filter>
-                <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
-            </intent-filter>
-        </service>
-
-        <service
-            android:name="com.clevertap.android.sdk.FcmMessageListenerService">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
-            </intent-filter>
-        </service>
-        <receiver
-            android:name="com.clevertap.android.sdk.CTPushNotificationReceiver"
-            android:exported="false"
-            android:enabled="true">
-        </receiver>
-        <service
-            android:name="com.clevertap.android.sdk.CTNotificationIntentService"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.clevertap.PUSH_EVENT"/>
-            </intent-filter>
-        </service>
-
-        <service
-            android:name="com.clevertap.android.sdk.CTBackgroundIntentService"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="com.clevertap.BG_EVENT"/>
-            </intent-filter>
-        </service>
-
-        <service android:name="com.clevertap.android.sdk.CTBackgroundJobService"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:exported="false"/>
-
-        <receiver
-            android:name="com.clevertap.android.sdk.InstallReferrerBroadcastReceiver"
+            android:name="com.clevertap.android.sdk.pushnotification.fcm.FcmMessageListenerService"
             android:exported="true">
             <intent-filter>
-                <action android:name="com.android.vending.INSTALL_REFERRER"/>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
-        </receiver>
+        </service>
+
+        <service
+            android:name="com.clevertap.android.sdk.pushnotification.CTNotificationIntentService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.clevertap.PUSH_EVENT" />
+            </intent-filter>
+        </service>
 
         <activity android:name=".WebViewActivity" />
     </application>
