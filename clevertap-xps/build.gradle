@@ -6,7 +6,7 @@ android {
 
     ext {
         libraryVersion = "1.0.0"
-        artifact = 'clevertap-xps'
+        artifact = 'clevertap-xiaomi-sdk'
     }
 
     defaultConfig {

@@ -7,7 +7,7 @@ android {
 
     ext{
         libraryVersion = "1.0.0"
-        artifact = 'clevertap-hms'
+        artifact = 'clevertap-huawei-sdk'
     }
 
     defaultConfig {
