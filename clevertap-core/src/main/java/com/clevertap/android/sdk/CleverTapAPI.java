@@ -1800,7 +1800,7 @@ public class CleverTapAPI implements CleverTapAPIListener{
     private void checkExistingInAppNotifications(Activity activity) {
         final boolean canShow = canShowInAppOnActivity();
         if (canShow) {
-            if (currentlyDisplayingInApp != null && (System.currentTimeMillis()/1000) > currentlyDisplayingInApp.getTimeToLive()) {
+            if (currentlyDisplayingInApp != null && ((System.currentTimeMillis()/1000) < currentlyDisplayingInApp.getTimeToLive())) {
                 Fragment inAppFragment = activity.getFragmentManager().getFragment(new Bundle(), currentlyDisplayingInApp.getType());
                 if (getCurrentActivity() != null && inAppFragment!=null) {
                     FragmentTransaction fragmentTransaction = getCurrentActivity().getFragmentManager().beginTransaction();
