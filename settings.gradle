@@ -1,3 +1,5 @@
+include ':test_shared'
+include ':gradle-scripts'
 include ':clevertap-core'
 include ':AndroidStarter'
 include ':clevertap-geofence'

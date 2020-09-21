@@ -1,6 +1,10 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.shared.test;
 
 import androidx.test.core.app.ApplicationProvider;
+
+import com.clevertap.android.sdk.ActivityLifecycleCallback;
+import com.clevertap.android.sdk.Application;
+import com.clevertap.android.sdk.CleverTapAPI;
 
 public class TestApplication extends Application {
 
@@ -12,7 +16,7 @@ public class TestApplication extends Application {
         super.onCreate();
     }
 
-    public static TestApplication getApplication() {
-        return (TestApplication) ApplicationProvider.getApplicationContext();
+    public static android.app.Application getApplication() {
+        return ApplicationProvider.getApplicationContext();
     }
 }

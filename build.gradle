@@ -1,5 +1,5 @@
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
-
+//apply from:'./gradle-scripts/test_dependencies.gradle'
 buildscript {
     repositories {
         google()// Google's Maven repository

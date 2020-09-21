@@ -3,6 +3,8 @@ package com.clevertap.android.sdk;
 import android.app.Activity;
 import android.os.Bundle;
 
+import com.clevertap.android.shared.test.BaseTestCase;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;

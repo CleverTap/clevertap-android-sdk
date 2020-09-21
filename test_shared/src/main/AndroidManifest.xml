@@ -1,14 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.clevertap.android.sdk"
-    android:versionCode="30900"
-    android:versionName="3.9.0">
+    package="com.clevertap.android.shared.test">
 
-    <uses-sdk
-        android:minSdkVersion="16"
-        android:targetSdkVersion="28" />
-
-    <application>
+    <application android:name=".TestApplication">
         <meta-data
             android:name="CLEVERTAP_APP_PACKAGE"
             android:value="com.clevertap.beardedrobot" />
@@ -25,3 +19,4 @@
     </application>
 
 </manifest>
+

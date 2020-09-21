@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.product_config;
 
-import com.clevertap.android.sdk.BaseTestCase;
+import com.clevertap.android.shared.test.BaseTestCase;
 
 import org.junit.Assert;
 import org.junit.Before;

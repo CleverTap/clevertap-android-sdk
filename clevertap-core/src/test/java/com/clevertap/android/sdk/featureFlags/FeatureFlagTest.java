@@ -1,14 +1,14 @@
 package com.clevertap.android.sdk.featureFlags;
 
-import com.clevertap.android.sdk.BaseTestCase;
+import com.clevertap.android.shared.test.BaseTestCase;
 
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.mockito.Mockito;
 import org.robolectric.RobolectricTestRunner;
 
+import static org.mockito.Mockito.verify;
 import static org.powermock.api.mockito.PowerMockito.mock;
 import static org.powermock.api.mockito.PowerMockito.when;
 
@@ -25,7 +25,7 @@ public class FeatureFlagTest extends BaseTestCase {
     public void testFetch() {
         when(cleverTapAPI.featureFlag()).thenReturn(new CTFeatureFlagsController(application, "12121", cleverTapInstanceConfig, cleverTapAPI));
         cleverTapAPI.featureFlag().fetchFeatureFlags();
-        Mockito.verify(cleverTapAPI).fetchFeatureFlags();
+        verify(cleverTapAPI).fetchFeatureFlags();
     }
 
     @Test
