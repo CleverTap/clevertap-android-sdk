@@ -1204,7 +1204,7 @@ public class CleverTapAPI implements CleverTapAPIListener{
 
     //Push
     private void onTokenRefresh() {
-        pushProviders.refreshAllTokens();//TODO can this be null here? null check + logs
+        pushProviders.refreshAllTokens();
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
