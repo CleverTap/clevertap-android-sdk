@@ -79,7 +79,6 @@ public class HmsPushProvider implements CTPushProvider {
 
     @Override
     public int minSDKSupportVersionCode() {
-        //TODO -discuss about the use case of this.
         return 30800;
     }
 
