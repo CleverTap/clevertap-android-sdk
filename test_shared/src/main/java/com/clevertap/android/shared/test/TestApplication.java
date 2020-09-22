@@ -16,7 +16,7 @@ public class TestApplication extends Application {
         super.onCreate();
     }
 
-    public static android.app.Application getApplication() {
-        return ApplicationProvider.getApplicationContext();
+    public static TestApplication getApplication() {
+        return (TestApplication) ApplicationProvider.getApplicationContext();
     }
 }

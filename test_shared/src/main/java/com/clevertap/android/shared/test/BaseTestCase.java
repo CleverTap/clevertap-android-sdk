@@ -1,8 +1,6 @@
 package com.clevertap.android.shared.test;
 
 import android.app.Application;
-import android.content.Context;
-import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -14,32 +12,27 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.runner.RunWith;
-import org.powermock.core.classloader.annotations.PrepareForTest;
-import org.robolectric.Shadows;
+import org.mockito.Mockito;
 import org.robolectric.annotation.Config;
-import org.robolectric.shadows.ShadowApplication;
 
 import static com.clevertap.android.shared.test.Constant.ACC_ID;
 import static com.clevertap.android.shared.test.Constant.ACC_TOKEN;
-import static org.powermock.api.mockito.PowerMockito.mock;
 
-@Config(sdk = {Build.VERSION_CODES.P},
+@Config(manifest = Config.NONE, sdk = {Build.VERSION_CODES.P},
         application = TestApplication.class
 )
 @RunWith(AndroidJUnit4.class)
-@PrepareForTest({CleverTapAPI.class, CleverTapInstanceConfig.class, Context.class, Intent.class})
+//@PrepareForTest({CleverTapAPI.class, CleverTapInstanceConfig.class, Context.class, Intent.class})
 public abstract class BaseTestCase {
 
     protected CleverTapAPI cleverTapAPI;
-    protected Application application;
-    protected ShadowApplication shadowApplication;
+    protected TestApplication application;
     protected CleverTapInstanceConfig cleverTapInstanceConfig;
 
     @Before
     public void setUp() throws Exception {
         application = TestApplication.getApplication();
-        shadowApplication = Shadows.shadowOf(application);
-        cleverTapAPI = mock(CleverTapAPI.class);
+        cleverTapAPI = Mockito.mock(CleverTapAPI.class);
         cleverTapInstanceConfig = CleverTapInstanceConfig.createInstance(application, ACC_ID, ACC_TOKEN);
     }
 
