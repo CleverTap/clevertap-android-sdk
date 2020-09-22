@@ -1,13 +1,34 @@
 apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
+
+ext {
+    bintrayRepo = 'Maven'
+    bintrayName = 'XiaomiPushSDK'
+    org = 'clevertap'
+
+    publishedGroupId = 'com.clevertap.android'
+    libraryName = 'XiaomiPushSDK'
+    artifact = 'clevertap-xiaomi-sdk'
+    libraryDescription = 'The CleverTap Android Xiaomi Push SDK'
+
+    siteUrl = 'https://github.com/CleverTap/clevertap-android-sdk/clevertap-xps'
+    gitUrl = 'https://github.com/CleverTap/clevertap-android-sdk.git'
+
+    libraryVersion = '1.0.0'
+
+    developerId = 'clevertap'
+    developerName = 'CleverTap'
+    developerEmail = 'support@clevertap.com'
+
+    licenseName = 'MIT License'
+    licenseUrl = 'https://opensource.org/licenses/MIT'
+    allLicenses = ["MIT"]
+}
 
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.3"
-
-    ext {
-        libraryVersion = "1.0.0"
-        artifact = 'clevertap-xiaomi-sdk'
-    }
 
     defaultConfig {
         minSdkVersion 16
@@ -16,10 +37,15 @@ android {
         versionName "1.0.0"
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        consumerProguardFiles 'consumer-rules.pro'
     }
 
     buildTypes {
+        debug {
+            buildConfigField "String", "SDK_VERSION_STRING", '"!SDK-VERSION-STRING!:com.clevertap.android:clevertap-xiaomi-sdk:1.0.0.0"'
+        }
         release {
+            buildConfigField "String", "SDK_VERSION_STRING", '"!SDK-VERSION-STRING!:com.clevertap.android:clevertap-xiaomi-sdk:1.0.0.0"'
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
@@ -35,6 +61,85 @@ android {
         }
     }
 
+    testOptions {
+        unitTests {
+            includeAndroidResources = true
+        }
+    }
+
+}
+
+version = libraryVersion
+group = publishedGroupId
+
+install {
+    repositories.mavenInstaller {
+        pom.project {
+            packaging 'aar'
+            groupId publishedGroupId
+            artifactId artifact
+
+            name libraryName
+            description libraryDescription
+            url siteUrl
+
+            licenses {
+                license {
+                    name licenseName
+                    url licenseUrl
+                }
+            }
+            developers {
+                developer {
+                    id developerId
+                    name developerName
+                    email developerEmail
+                }
+            }
+            scm {
+                connection gitUrl
+                developerConnection gitUrl
+                url siteUrl
+            }
+        }
+    }
+}
+
+task sourcesJar(type: Jar) {
+    classifier = 'sources'
+    from android.sourceSets.main.java.srcDirs
+}
+
+artifacts {
+    archives sourcesJar
+}
+
+Properties properties = new Properties()
+if (project.rootProject.file('local.properties').exists()){
+    properties.load(project.rootProject.file('local.properties').newDataInputStream())
+}
+
+
+bintray {
+    user = properties.getProperty("bintray.user")
+    key = properties.getProperty("bintray.apikey")
+
+    dryRun = false
+    configurations = ['archives']
+    pkg {
+        repo = bintrayRepo
+        name = bintrayName
+        userOrg = org
+        desc = libraryDescription
+        websiteUrl = siteUrl
+        vcsUrl = gitUrl
+        licenses = allLicenses
+        publish = true
+        publicDownloadNumbers = true
+        version {
+            desc = libraryDescription
+        }
+    }
 }
 
 dependencies {

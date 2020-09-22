@@ -23,14 +23,15 @@
         android:layout_height="wrap_content" />
 
     <TextView
-        android:text="developer.clevertap.com"
+        android:text="@string/developer_clevertap_com"
         android:textColorLink="@color/colorPrimary"
         android:id="@+id/TextView1"
-        android:textSize="30dp"
+        android:textSize="30sp"
         android:textAlignment="center"
         android:layout_height="wrap_content"
         android:layout_width="match_parent"
-        android:autoLink="web">
+        android:autoLink="web"
+        android:gravity="center_horizontal">
     </TextView>
 
     <Button
@@ -46,33 +47,33 @@
         android:layout_width="wrap_content"
         android:layout_marginTop="10dp"
         android:visibility="visible"
-        android:text="Event With Properties" />
+        android:text="@string/event_with_properties" />
     <Button
         android:id="@+id/charged_event"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
         android:layout_marginTop="10dp"
         android:visibility="visible"
-        android:text="Charged Event" />
+        android:text="@string/charged_event" />
     <Button
         android:id="@+id/profile_event"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
         android:layout_marginTop="10dp"
         android:visibility="visible"
-        android:text="Profile Event" />
+        android:text="@string/profile_event" />
     <Button
         android:id="@+id/inbox"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
         android:layout_marginTop="10dp"
         android:visibility="visible"
-        android:text="Inbox" />
+        android:text="@string/inbox" />
     <Button
         android:id="@+id/web"
         android:layout_height="wrap_content"
         android:layout_width="wrap_content"
         android:layout_marginTop="10dp"
         android:visibility="visible"
-        android:text="WebView" />
+        android:text="@string/webview" />
 </LinearLayout>
