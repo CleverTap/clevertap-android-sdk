@@ -32,7 +32,7 @@ android {
     buildToolsVersion "29.0.3"
 
     defaultConfig {
-        minSdkVersion 16
+        minSdkVersion 17
         targetSdkVersion 29
         versionCode 10000
         versionName "1.0.0"
@@ -162,47 +162,6 @@ ext {
     licenseName = 'MIT License'
     licenseUrl = 'https://opensource.org/licenses/MIT'
     allLicenses = ["MIT"]
-}
-
-android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.3"
-
-    ext{
-        libraryVersion = "1.0.0"
-        artifact = 'clevertap-huawei-sdk'
-    }
-
-    defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 29
-        versionCode 10000
-        versionName "1.0.0"
-
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-    }
-
-    buildTypes {
-        debug {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-
-    libraryVariants.all { variant ->
-        variant.outputs.all {
-            if (variant.getName().toLowerCase().contains('release')) {
-                outputFileName = "${artifact}-${libraryVersion}.aar"
-            } else if (variant.getName().toLowerCase().contains('debug')) {
-                outputFileName = "${artifact}-${variant.name}-${libraryVersion}.aar"
-            }
-        }
-    }
-
 }
 
 dependencies {
