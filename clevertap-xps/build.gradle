@@ -65,8 +65,10 @@ android {
         unitTests {
             includeAndroidResources = true
         }
+        unitTests.all {
+            jvmArgs '-noverify'
+        }
     }
-
 }
 
 version = libraryVersion
