@@ -1,8 +1,9 @@
 package com.clevertap.android.hms;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.RestrictTo;
 import android.text.TextUtils;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 
 import com.clevertap.android.sdk.pushnotification.CTPushProvider;
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
