@@ -1,3 +1,34 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'jacoco'
+
+jacoco {
+    toolVersion = "$jacocoVersion"
+}
+
+tasks.withType(Test) {
+    jacoco.includeNoLocationClasses = true
+}
+
+task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'createDebugCoverageReport']) {
+
+    reports {
+        xml.enabled = true
+        html.enabled = true
+    }
+
+    def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*', '**/*Test*.*', 'android/**/*.*']
+    def debugTree = fileTree(dir: "$project.buildDir/intermediates/javac/debug", excludes: fileFilter)
+    def mainSrc = "$project.projectDir/src/main/java"
+
+    sourceDirectories.from = files([mainSrc])
+    classDirectories.from = files([debugTree])
+    executionData.from = fileTree(dir: project.buildDir, includes: [
+            'jacoco/testDebugUnitTest.exec', 'outputs/code_coverage/debugAndroidTest/connected/**/*.ec'
+    ])
+}
+
 buildscript {
     repositories {
         google()
@@ -43,10 +74,6 @@ ext {
 version = libraryVersion
 group = publishedGroupId
 
-apply plugin: 'com.android.library'
-apply plugin: 'com.github.dcendents.android-maven'
-apply plugin: 'com.jfrog.bintray'
-
 android {
     compileSdkVersion 29
     buildToolsVersion '29.0.3'
@@ -57,6 +84,7 @@ android {
 
     buildTypes {
         debug {
+            testCoverageEnabled true //To get coverage reports for instrumentation tests
             buildConfigField "String", "SDK_VERSION_STRING", '"!SDK-VERSION-STRING!:com.clevertap.android:clevertap-android-sdk:4.0.0.0"'
         }
 
@@ -81,6 +109,7 @@ android {
         }
     }
     testOptions {
+        animationsDisabled true
         unitTests {
             includeAndroidResources = true
         }
