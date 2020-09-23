@@ -1,6 +1,5 @@
 package com.clevertap.android.shared.test;
 
-import android.app.Application;
 import android.os.Build;
 import android.os.Bundle;
 
@@ -13,6 +12,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.robolectric.annotation.Config;
 
 import static com.clevertap.android.shared.test.Constant.ACC_ID;
@@ -22,7 +22,7 @@ import static com.clevertap.android.shared.test.Constant.ACC_TOKEN;
         application = TestApplication.class
 )
 @RunWith(AndroidJUnit4.class)
-//@PrepareForTest({CleverTapAPI.class, CleverTapInstanceConfig.class, Context.class, Intent.class})
+@PrepareForTest({CleverTapAPI.class, CleverTapInstanceConfig.class})
 public abstract class BaseTestCase {
 
     protected CleverTapAPI cleverTapAPI;
@@ -36,7 +36,7 @@ public abstract class BaseTestCase {
         cleverTapInstanceConfig = CleverTapInstanceConfig.createInstance(application, ACC_ID, ACC_TOKEN);
     }
 
-    public Application getApplication() {
+    public TestApplication getApplication() {
         return TestApplication.getApplication();
     }
 

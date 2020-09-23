@@ -80,9 +80,12 @@ android {
             }
         }
     }
-    testOptions{
-        unitTests{
+    testOptions {
+        unitTests {
             includeAndroidResources = true
+        }
+        unitTests.all {
+            jvmArgs '-noverify'
         }
     }
 }

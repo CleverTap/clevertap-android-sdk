@@ -1,5 +1,4 @@
 apply plugin: 'com.android.library'
-//apply from: '../gradle-scripts/test_dependencies.gradle'
 
 android {
     compileSdkVersion 29
@@ -26,7 +25,6 @@ android {
 }
 
 dependencies {
-
     api project(':clevertap-core')
     // Unit ing dependencies
     api 'junit:junit:4.13'
