@@ -14,28 +14,26 @@
         <activity
             android:name="com.clevertap.android.sdk.CTInboxActivity"
             android:configChanges="keyboardHidden"
-            android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar"/>
+            android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar" />
 
         <receiver
             android:name="com.clevertap.android.sdk.pushnotification.CTPushNotificationReceiver"
-            android:exported="false"
-            android:enabled="true">
-        </receiver>
+            android:enabled="true"
+            android:exported="false"></receiver>
 
         <service
             android:name="com.clevertap.android.sdk.pushnotification.amp.CTBackgroundIntentService"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:exported="false">
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE">
             <intent-filter>
-                <action android:name="com.clevertap.BG_EVENT"/>
+                <action android:name="com.clevertap.BG_EVENT" />
             </intent-filter>
         </service>
 
         <service
             android:name="com.clevertap.android.sdk.pushnotification.amp.CTBackgroundJobService"
-            android:permission="android.permission.BIND_JOB_SERVICE"
-            android:exported="false">
-        </service>
+            android:exported="false"
+            android:permission="android.permission.BIND_JOB_SERVICE"></service>
 
     </application>
 </manifest>

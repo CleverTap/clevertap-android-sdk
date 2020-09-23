@@ -49,13 +49,12 @@ class PushLocationEventTask implements CTGeofenceTask {
         }
 
         try {
-            Utils.notifyLocationUpdates(context,locationResult.getLastLocation());
+            Utils.notifyLocationUpdates(context, locationResult.getLastLocation());
 
             @SuppressWarnings("ConstantConditions") //getCleverTapApi() won't be null here
                     Future<?> future = null;
 
-            if (locationResult.getLastLocation()!=null)
-            {
+            if (locationResult.getLastLocation() != null) {
                 future = CTGeofenceAPI.getInstance(context)
                         .processTriggeredLocation(locationResult.getLastLocation());
             }

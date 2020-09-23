@@ -12,6 +12,10 @@ final class QueueCursor {
         return data;
     }
 
+    void setData(JSONArray data) {
+        this.data = data;
+    }
+
     Boolean isEmpty() {
         return (lastId == null || data == null || data.length() <= 0);
     }
@@ -27,10 +31,6 @@ final class QueueCursor {
     public String toString() {
         return (this.isEmpty()) ? "tableName: " + tableName + " | numItems: 0" :
                 "tableName: " + tableName + " | lastId: " + lastId + " | numItems: " + data.length() + " | items: " + data.toString();
-    }
-
-    void setData(JSONArray data) {
-        this.data = data;
     }
 
     String getLastId() {

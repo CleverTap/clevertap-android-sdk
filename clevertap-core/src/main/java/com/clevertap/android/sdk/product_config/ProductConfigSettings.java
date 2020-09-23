@@ -119,6 +119,14 @@ class ProductConfigSettings {
         return lastFetchedTimeStamp;
     }
 
+    synchronized void setLastFetchTimeStampInMillis(long timeStampInMillis) {
+        long lastFetchTimeStampInMillis = getLastFetchTimeStampInMillis();
+        if (timeStampInMillis >= 0 && lastFetchTimeStampInMillis != timeStampInMillis) {
+            settingsMap.put(KEY_LAST_FETCHED_TIMESTAMP, String.valueOf(timeStampInMillis));
+            updateConfigToFile();
+        }
+    }
+
     private int getNoOfCallsInAllowedWindow() {
         int noCallsAllowedInWindow = DEFAULT_NO_OF_CALLS;
         String value = settingsMap.get(PRODUCT_CONFIG_NO_OF_CALLS);
@@ -130,6 +138,14 @@ class ProductConfigSettings {
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "GetNoOfCallsInAllowedWindow failed: " + e.getLocalizedMessage());
         }
         return noCallsAllowedInWindow;
+    }
+
+    private synchronized void setNoOfCallsInAllowedWindow(int callsInAllowedWindow) {
+        long noOfCallsInAllowedWindow = getNoOfCallsInAllowedWindow();
+        if (callsInAllowedWindow > 0 && noOfCallsInAllowedWindow != callsInAllowedWindow) {
+            settingsMap.put(PRODUCT_CONFIG_NO_OF_CALLS, String.valueOf(callsInAllowedWindow));
+            updateConfigToFile();
+        }
     }
 
     private int getWindowIntervalInMinutes() {
@@ -145,34 +161,18 @@ class ProductConfigSettings {
         return windowIntervalInMinutes;
     }
 
-    synchronized void setMinimumFetchIntervalInSeconds(long intervalInSeconds) {
-        long minFetchIntervalInSeconds = getMinFetchIntervalInSeconds();
-        if (intervalInSeconds > 0 && minFetchIntervalInSeconds != intervalInSeconds) {
-            settingsMap.put(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS, String.valueOf(intervalInSeconds));
-        }
-    }
-
-    synchronized void setLastFetchTimeStampInMillis(long timeStampInMillis) {
-        long lastFetchTimeStampInMillis = getLastFetchTimeStampInMillis();
-        if (timeStampInMillis >= 0 && lastFetchTimeStampInMillis != timeStampInMillis) {
-            settingsMap.put(KEY_LAST_FETCHED_TIMESTAMP, String.valueOf(timeStampInMillis));
-            updateConfigToFile();
-        }
-    }
-
-    private synchronized void setNoOfCallsInAllowedWindow(int callsInAllowedWindow) {
-        long noOfCallsInAllowedWindow = getNoOfCallsInAllowedWindow();
-        if (callsInAllowedWindow > 0 && noOfCallsInAllowedWindow != callsInAllowedWindow) {
-            settingsMap.put(PRODUCT_CONFIG_NO_OF_CALLS, String.valueOf(callsInAllowedWindow));
-            updateConfigToFile();
-        }
-    }
-
     private synchronized void setWindowIntervalInMinutes(int intervalInMinutes) {
         int windowIntervalInMinutes = getWindowIntervalInMinutes();
         if (intervalInMinutes > 0 && windowIntervalInMinutes != intervalInMinutes) {
             settingsMap.put(PRODUCT_CONFIG_WINDOW_LENGTH_MINS, String.valueOf(intervalInMinutes));
             updateConfigToFile();
+        }
+    }
+
+    synchronized void setMinimumFetchIntervalInSeconds(long intervalInSeconds) {
+        long minFetchIntervalInSeconds = getMinFetchIntervalInSeconds();
+        if (intervalInSeconds > 0 && minFetchIntervalInSeconds != intervalInSeconds) {
+            settingsMap.put(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS, String.valueOf(intervalInSeconds));
         }
     }
 

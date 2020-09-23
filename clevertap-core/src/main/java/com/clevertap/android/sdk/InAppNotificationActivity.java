@@ -219,7 +219,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             finish();
             return;
         }
-        if(inAppNotification == null){
+        if (inAppNotification == null) {
             finish();
             return;
         }
@@ -314,14 +314,6 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         didShow(formData);
     }
 
-    interface InAppActivityListener {
-        void inAppNotificationDidShow(CTInAppNotification inAppNotification, Bundle formData);
-
-        void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData, HashMap<String, String> keyValuePayload);
-
-        void inAppNotificationDidDismiss(Context context, CTInAppNotification inAppNotification, Bundle formData);
-    }
-
     @Override
     public void inAppNotificationDidDismiss(final Context context, final CTInAppNotification inAppNotification, Bundle formData) {
         didDismiss(formData);
@@ -335,5 +327,13 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             // Ignore
         }
         didDismiss(formData);
+    }
+
+    interface InAppActivityListener {
+        void inAppNotificationDidShow(CTInAppNotification inAppNotification, Bundle formData);
+
+        void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData, HashMap<String, String> keyValuePayload);
+
+        void inAppNotificationDidDismiss(Context context, CTInAppNotification inAppNotification, Bundle formData);
     }
 }

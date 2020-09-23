@@ -58,19 +58,19 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
     public Object instantiateItem(@NonNull final ViewGroup container, final int position) {
         layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         //noinspection ConstantConditions
-        view = layoutInflater.inflate(R.layout.inbox_carousel_image_layout,container,false);
+        view = layoutInflater.inflate(R.layout.inbox_carousel_image_layout, container, false);
         try {
             if (inboxMessage.getOrientation().equalsIgnoreCase("l")) {
                 ImageView imageView = view.findViewById(R.id.imageView);
                 imageView.setVisibility(View.VISIBLE);
-                try{
+                try {
                     Glide.with(imageView.getContext())
                             .load(carouselImages.get(position))
                             .apply(new RequestOptions()
-                                    .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
-                                    .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
+                                    .placeholder(Utils.getThumbnailImage(context, Constants.IMAGE_PLACEHOLDER))
+                                    .error(Utils.getThumbnailImage(context, Constants.IMAGE_PLACEHOLDER)))
                             .into(imageView);
-                }catch (NoSuchMethodError error){
+                } catch (NoSuchMethodError error) {
                     Logger.d("CleverTap SDK requires Glide v4.9.0 or above. Please refer CleverTap Documentation for more info");
                     Glide.with(imageView.getContext())
                             .load(carouselImages.get(position))
@@ -94,10 +94,10 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
                     Glide.with(imageView.getContext())
                             .load(carouselImages.get(position))
                             .apply(new RequestOptions()
-                                    .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
-                                    .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
+                                    .placeholder(Utils.getThumbnailImage(context, Constants.IMAGE_PLACEHOLDER))
+                                    .error(Utils.getThumbnailImage(context, Constants.IMAGE_PLACEHOLDER)))
                             .into(imageView);
-                }catch (NoSuchMethodError error){
+                } catch (NoSuchMethodError error) {
                     Logger.d("CleverTap SDK requires Glide v4.9.0 or above. Please refer CleverTap Documentation for more info");
                     Glide.with(imageView.getContext())
                             .load(carouselImages.get(position))
@@ -116,7 +116,7 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
                 });
 
             }
-        }catch (NoClassDefFoundError error) {
+        } catch (NoClassDefFoundError error) {
             Logger.d("CleverTap SDK requires Glide dependency. Please refer CleverTap Documentation for more info");
         }
         return view;

@@ -27,6 +27,7 @@ public class InvalidEncodingException extends RuntimeException {
 
     /**
      * Get the exception which includes more information on the unsupported encoding
+     *
      * @return an UnsupportedEncodingException
      */
     public UnsupportedEncodingException getEncodingException() {

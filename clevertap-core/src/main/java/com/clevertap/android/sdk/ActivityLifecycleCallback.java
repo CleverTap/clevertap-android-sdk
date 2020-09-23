@@ -14,6 +14,7 @@ public final class ActivityLifecycleCallback {
 
     /**
      * Enables lifecycle callbacks for Android devices
+     *
      * @param application App's Application object
      * @param cleverTapID Custom CleverTap ID
      */
@@ -35,21 +36,22 @@ public final class ActivityLifecycleCallback {
 
                     @Override
                     public void onActivityCreated(Activity activity, Bundle bundle) {
-                        if(cleverTapID != null) {
-                            CleverTapAPI.onActivityCreated(activity,cleverTapID);
-                        }else{
+                        if (cleverTapID != null) {
+                            CleverTapAPI.onActivityCreated(activity, cleverTapID);
+                        } else {
                             CleverTapAPI.onActivityCreated(activity);
                         }
                     }
 
                     @Override
-                    public void onActivityStarted(Activity activity) {}
+                    public void onActivityStarted(Activity activity) {
+                    }
 
                     @Override
                     public void onActivityResumed(Activity activity) {
-                        if(cleverTapID != null) {
-                            CleverTapAPI.onActivityResumed(activity,cleverTapID);
-                        }else{
+                        if (cleverTapID != null) {
+                            CleverTapAPI.onActivityResumed(activity, cleverTapID);
+                        } else {
                             CleverTapAPI.onActivityResumed(activity);
                         }
                     }
@@ -60,13 +62,16 @@ public final class ActivityLifecycleCallback {
                     }
 
                     @Override
-                    public void onActivityStopped(Activity activity) {}
+                    public void onActivityStopped(Activity activity) {
+                    }
 
                     @Override
-                    public void onActivitySaveInstanceState(Activity activity, Bundle bundle) {}
+                    public void onActivitySaveInstanceState(Activity activity, Bundle bundle) {
+                    }
 
                     @Override
-                    public void onActivityDestroyed(Activity activity) {}
+                    public void onActivityDestroyed(Activity activity) {
+                    }
                 }
 
         );
@@ -75,10 +80,11 @@ public final class ActivityLifecycleCallback {
 
     /**
      * Enables lifecycle callbacks for Android devices
+     *
      * @param application App's Application object
      */
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static synchronized void register(android.app.Application application) {
-        register(application,null);
+        register(application, null);
     }
 }

@@ -23,17 +23,17 @@ public class CTExecutors {
 
     private final Executor mainThread;
 
+    private CTExecutors(Executor diskIO, Executor mainThread) {
+        this.diskIO = diskIO;
+        this.mainThread = mainThread;
+    }
+
     public static synchronized CTExecutors getInstance() {
         if (sInstance == null) {
             sInstance = new CTExecutors(Executors.newSingleThreadExecutor(),
                     new MainThreadExecutor());
         }
         return sInstance;
-    }
-
-    private CTExecutors(Executor diskIO, Executor mainThread) {
-        this.diskIO = diskIO;
-        this.mainThread = mainThread;
     }
 
     public Executor diskIO() {

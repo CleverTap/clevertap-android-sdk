@@ -15,6 +15,8 @@ import androidx.appcompat.widget.AppCompatImageView;
  * Represents the close button.
  */
 final class CloseImageView extends AppCompatImageView {
+    private final int canvasSize = getScaledPixels(Constants.INAPP_CLOSE_IV_WIDTH);
+
     @SuppressLint("ResourceType")
     public CloseImageView(Context context) {
         super(context);
@@ -61,8 +63,6 @@ final class CloseImageView extends AppCompatImageView {
 
         }
     }
-
-    private final int canvasSize = getScaledPixels(Constants.INAPP_CLOSE_IV_WIDTH);
 
     @SuppressWarnings("SameParameterValue")
     private int getScaledPixels(int raw) {

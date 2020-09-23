@@ -7,6 +7,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
 import java.util.Set;
+
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public interface Constants {
     String LABEL_ACCOUNT_ID = "CLEVERTAP_ACCOUNT_ID";

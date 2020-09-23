@@ -3,7 +3,9 @@ package com.clevertap.android.sdk;
 import android.net.Uri;
 import android.net.UrlQuerySanitizer;
 import android.os.Bundle;
+
 import org.json.JSONObject;
+
 import java.net.URLDecoder;
 import java.util.Set;
 

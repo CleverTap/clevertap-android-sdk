@@ -30,7 +30,7 @@ public class CTInAppNativeCoverFragment extends CTInAppBaseFullNativeFragment {
         ArrayList<Button> inAppButtons = new ArrayList<>();
         View inAppView = inflater.inflate(R.layout.inapp_cover, container, false);
 
-        FrameLayout fl  = inAppView.findViewById(R.id.inapp_cover_frame_layout);
+        FrameLayout fl = inAppView.findViewById(R.id.inapp_cover_frame_layout);
 
         RelativeLayout relativeLayout = fl.findViewById(R.id.cover_relative_layout);
         relativeLayout.setBackgroundColor(Color.parseColor(inAppNotification.getBackgroundColor()));
@@ -41,7 +41,7 @@ public class CTInAppNativeCoverFragment extends CTInAppBaseFullNativeFragment {
         inAppButtons.add(secondaryButton);
         ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
 
-        if(inAppNotification.getInAppMediaForOrientation(currentOrientation) != null) {
+        if (inAppNotification.getInAppMediaForOrientation(currentOrientation) != null) {
             if (inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)) != null) {
                 imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
                 imageView.setTag(0);
@@ -59,20 +59,19 @@ public class CTInAppNativeCoverFragment extends CTInAppBaseFullNativeFragment {
 
 
         ArrayList<CTInAppNotificationButton> buttons = inAppNotification.getButtons();
-        if(buttons.size() ==1){
-            if(currentOrientation == Configuration.ORIENTATION_LANDSCAPE){
+        if (buttons.size() == 1) {
+            if (currentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
                 mainButton.setVisibility(View.GONE);
-            }else if(currentOrientation == Configuration.ORIENTATION_PORTRAIT){
+            } else if (currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
                 mainButton.setVisibility(View.INVISIBLE);
             }
-            setupInAppButton(secondaryButton,buttons.get(0),0);
-        }
-        else if (!buttons.isEmpty()) {
-            for(int i=0; i < buttons.size(); i++) {
+            setupInAppButton(secondaryButton, buttons.get(0), 0);
+        } else if (!buttons.isEmpty()) {
+            for (int i = 0; i < buttons.size(); i++) {
                 if (i >= 2) continue; // only show 2 buttons
                 CTInAppNotificationButton inAppNotificationButton = buttons.get(i);
                 Button button = inAppButtons.get(i);
-                setupInAppButton(button,inAppNotificationButton,i);
+                setupInAppButton(button, inAppNotificationButton, i);
             }
         }
 
@@ -87,7 +86,7 @@ public class CTInAppNativeCoverFragment extends CTInAppBaseFullNativeFragment {
             }
         });
 
-        if(!inAppNotification.isHideCloseButton())
+        if (!inAppNotification.isHideCloseButton())
             closeImageView.setVisibility(View.GONE);
         else
             closeImageView.setVisibility(View.VISIBLE);

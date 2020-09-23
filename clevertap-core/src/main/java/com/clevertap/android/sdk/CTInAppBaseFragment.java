@@ -18,24 +18,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class CTInAppBaseFragment extends Fragment {
 
+    CTInAppNotification inAppNotification;
+    CleverTapInstanceConfig config;
+    CloseImageView closeImageView = null;
+    int currentOrientation;
+    Activity parent;
+    AtomicBoolean isCleanedUp = new AtomicBoolean();
+    private WeakReference<CTInAppBaseFragment.InAppListener> listenerWeakReference;
+
     void didClick(Bundle data, HashMap<String, String> keyValueMap) {
         InAppListener listener = getListener();
         if (listener != null) {
             listener.inAppNotificationDidClick(inAppNotification, data, keyValueMap);
         }
-    }
-
-    CTInAppNotification inAppNotification;
-    CleverTapInstanceConfig config;
-    private WeakReference<CTInAppBaseFragment.InAppListener> listenerWeakReference;
-    CloseImageView closeImageView = null;
-    int currentOrientation;
-
-    Activity parent;
-    AtomicBoolean isCleanedUp = new AtomicBoolean();
-
-    void setListener(InAppListener listener) {
-        listenerWeakReference = new WeakReference<>(listener);
     }
 
     InAppListener getListener() {
@@ -51,7 +46,12 @@ public abstract class CTInAppBaseFragment extends Fragment {
         return listener;
     }
 
+    void setListener(InAppListener listener) {
+        listenerWeakReference = new WeakReference<>(listener);
+    }
+
     abstract void cleanup();
+
     abstract void generateListener();
 
     @Override
@@ -123,7 +123,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
             if (!queryBundle.isEmpty()) {
                 intent.putExtras(queryBundle);
             }
-            Utils.setPackageNameFromResolveInfoList(getActivity(),intent);
+            Utils.setPackageNameFromResolveInfoList(getActivity(), intent);
             startActivity(intent);
         } catch (Throwable t) {
             // Ignore

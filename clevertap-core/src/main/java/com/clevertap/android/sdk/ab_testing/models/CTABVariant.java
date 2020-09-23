@@ -14,38 +14,24 @@ import java.util.List;
 
 public class CTABVariant {
 
-    final public class CTVariantAction {
-        private String name;
-        private String activityName;
-        private JSONObject change;
-
-        CTVariantAction(String name, String activityName, JSONObject change) {
-            this.name = name;
-            this.activityName = activityName;
-            this.change = change;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getActivityName() {
-            return activityName;
-        }
-
-        public JSONObject getChange() {
-            return change;
-        }
-    }
-
+    private final Object actionsLock = new Object();
     private String id;
     private String variantId;
     private String experimentId;
     private int version;
     private ArrayList<CTVariantAction> actions = new ArrayList<>();
     private JSONArray vars;
-    private final Object actionsLock = new Object();
     private ArrayList<String> imageUrls;
+
+    private CTABVariant(String experimentId, String variantId, int version, JSONArray actions, JSONArray vars) {
+        this.experimentId = experimentId;
+        this.variantId = variantId;
+        this.id = variantId + ":" + experimentId;
+        this.version = version;
+        imageUrls = new ArrayList<>();
+        addActions(actions);
+        this.vars = vars == null ? new JSONArray() : vars;
+    }
 
     public static CTABVariant initWithJSON(JSONObject json) {
         try {
@@ -61,16 +47,6 @@ public class CTABVariant {
             Logger.v("Error creating variant", t);
             return null;
         }
-    }
-
-    private CTABVariant(String experimentId, String variantId, int version, JSONArray actions, JSONArray vars) {
-        this.experimentId = experimentId;
-        this.variantId = variantId;
-        this.id = variantId+":"+experimentId;
-        this.version = version;
-        imageUrls = new ArrayList<>();
-        addActions(actions);
-        this.vars = vars == null ? new JSONArray() : vars;
     }
 
     public String getId() {
@@ -104,12 +80,14 @@ public class CTABVariant {
     @NonNull
     @Override
     public String toString() {
-        return "< id: " + getId() + ", version: " + getVersion()+ ", actions count: " + actions.size() + ", vars count: " + getVars().length() + " >";
+        return "< id: " + getId() + ", version: " + getVersion() + ", actions count: " + actions.size() + ", vars count: " + getVars().length() + " >";
     }
 
     public void addActions(JSONArray actions) {
         synchronized (actionsLock) {
-            if (actions == null || actions.length() <= 0) { return; }
+            if (actions == null || actions.length() <= 0) {
+                return;
+            }
             final int actionsLength = actions.length();
             try {
                 for (int j = 0; j < actionsLength; j++) {
@@ -121,14 +99,14 @@ public class CTABVariant {
                     final String name = change.getString("name");
                     boolean exists = false;
                     CTVariantAction existingAction = null;
-                    for(CTVariantAction action: this.actions){
-                        if(action.getName().equals(name)){
+                    for (CTVariantAction action : this.actions) {
+                        if (action.getName().equals(name)) {
                             exists = true;
                             existingAction = action;
                             break;
                         }
                     }
-                    if(exists) {
+                    if (exists) {
                         this.actions.remove(existingAction);
                     }
                     final CTVariantAction action = new CTVariantAction(name, targetActivity, change);
@@ -141,12 +119,12 @@ public class CTABVariant {
     }
 
     public void removeActionsByName(JSONArray names) {
-        if (names == null || names.length() <=0) {
+        if (names == null || names.length() <= 0) {
             return;
         }
         synchronized (actionsLock) {
             ArrayList<String> _names = new ArrayList<>();
-            for (int i=0; i<names.length(); i++ ) {
+            for (int i = 0; i < names.length(); i++) {
                 try {
                     _names.add(names.getString(i));
                 } catch (Throwable t) {
@@ -154,7 +132,7 @@ public class CTABVariant {
                 }
             }
             ArrayList<CTVariantAction> newActions = new ArrayList<>();
-            for (CTVariantAction action: actions) {
+            for (CTVariantAction action : actions) {
                 if (!_names.contains(action.getName())) {
                     newActions.add(action);
                 }
@@ -183,14 +161,38 @@ public class CTABVariant {
         return version;
     }
 
-    public void addImageUrls(List<String>urls) {
+    public void addImageUrls(List<String> urls) {
         if (urls == null) return;
         this.imageUrls.addAll(urls);
     }
 
     public void cleanup() {
-        for (String url: imageUrls) {
+        for (String url : imageUrls) {
             ImageCache.removeBitmap(url, true);
+        }
+    }
+
+    final public class CTVariantAction {
+        private String name;
+        private String activityName;
+        private JSONObject change;
+
+        CTVariantAction(String name, String activityName, JSONObject change) {
+            this.name = name;
+            this.activityName = activityName;
+            this.change = change;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getActivityName() {
+            return activityName;
+        }
+
+        public JSONObject getChange() {
+            return change;
         }
     }
 }

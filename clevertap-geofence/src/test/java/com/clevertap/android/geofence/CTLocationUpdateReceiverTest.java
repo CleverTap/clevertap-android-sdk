@@ -41,15 +41,15 @@ public class CTLocationUpdateReceiverTest extends BaseTestCase {
 
     @Rule
     public PowerMockRule rule = new PowerMockRule();
-    private Logger logger;
     @Mock
     public CTGeofenceAPI ctGeofenceAPI;
     @Mock
     public BroadcastReceiver.PendingResult pendingResult;
-    private Location location;
-    private LocationResult locationResult;
     @Mock
     public CTGeofenceTaskManager taskManager;
+    private Logger logger;
+    private Location location;
+    private LocationResult locationResult;
 
     @Before
     public void setUp() throws Exception {

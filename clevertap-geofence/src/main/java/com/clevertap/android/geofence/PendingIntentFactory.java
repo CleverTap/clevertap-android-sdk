@@ -23,9 +23,10 @@ class PendingIntentFactory {
 
     /**
      * Creates {@link PendingIntent} based on type and flags provided by caller
-     * @param context Application {@link Context}
+     *
+     * @param context           Application {@link Context}
      * @param pendingIntentType {@link #PENDING_INTENT_LOCATION} or {@link #PENDING_INTENT_GEOFENCE}
-     * @param flags {@link PendingIntent#FLAG_NO_CREATE} or {@link PendingIntent#FLAG_UPDATE_CURRENT}
+     * @param flags             {@link PendingIntent#FLAG_NO_CREATE} or {@link PendingIntent#FLAG_UPDATE_CURRENT}
      * @return
      */
     @Nullable

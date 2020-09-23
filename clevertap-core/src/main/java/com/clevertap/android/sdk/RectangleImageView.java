@@ -24,7 +24,7 @@ public class RectangleImageView extends ImageView {
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
 
-        float width = getMeasuredWidth()*0.5625f;
+        float width = getMeasuredWidth() * 0.5625f;
         int finalWidth = Math.round(width);
         //noinspection SuspiciousNameCombination
         setMeasuredDimension(getMeasuredWidth(), finalWidth);

@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -56,7 +55,6 @@ public class GoogleGeofenceAdapterTest extends BaseTestCase {
 
     @Rule
     public PowerMockRule rule = new PowerMockRule();
-    private Logger logger;
     @Mock
     public CTGeofenceAPI ctGeofenceAPI;
     @Mock
@@ -73,7 +71,7 @@ public class GoogleGeofenceAdapterTest extends BaseTestCase {
     public Task<Void> task;
     @Mock
     public PendingIntent pendingIntent;
-
+    private Logger logger;
 
     @Before
     public void setUp() throws Exception {

@@ -68,6 +68,7 @@ class CTInboxButtonClickListener implements View.OnClickListener {
 
     /**
      * Returns Custom Key Value pairs if present in the payload
+     *
      * @param inboxMessage - InboxMessage object
      * @return HashMap<String, String>
      */

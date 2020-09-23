@@ -71,13 +71,6 @@ public abstract class FramedataImpl1 implements Framedata {
     private boolean rsv3;
 
     /**
-     * Check if the frame is valid due to specification
-     *
-     * @throws InvalidDataException thrown if the frame is not a valid frame
-     */
-    public abstract void isValid() throws InvalidDataException;
-
-    /**
      * Constructor for a FramedataImpl without any attributes set apart from the opcode
      *
      * @param op the opcode to use
@@ -92,9 +85,53 @@ public abstract class FramedataImpl1 implements Framedata {
         rsv3 = false;
     }
 
+    /**
+     * Get a frame with a specific opcode
+     *
+     * @param opcode the opcode representing the frame
+     * @return the frame with a specific opcode
+     */
+    public static FramedataImpl1 get(Opcode opcode) {
+        if (opcode == null) {
+            throw new IllegalArgumentException("Supplied opcode cannot be null");
+        }
+        switch (opcode) {
+            case PING:
+                return new PingFrame();
+            case PONG:
+                return new PongFrame();
+            case TEXT:
+                return new TextFrame();
+            case BINARY:
+                return new BinaryFrame();
+            case CLOSING:
+                return new CloseFrame();
+            case CONTINUOUS:
+                return new ContinuousFrame();
+            default:
+                throw new IllegalArgumentException("Supplied opcode is invalid");
+        }
+    }
+
+    /**
+     * Check if the frame is valid due to specification
+     *
+     * @throws InvalidDataException thrown if the frame is not a valid frame
+     */
+    public abstract void isValid() throws InvalidDataException;
+
     @Override
     public boolean isRSV1() {
         return rsv1;
+    }
+
+    /**
+     * Set the rsv1 of this frame to the provided boolean
+     *
+     * @param rsv1 true if fin has to be set
+     */
+    public void setRSV1(boolean rsv1) {
+        this.rsv1 = rsv1;
     }
 
     @Override
@@ -102,14 +139,41 @@ public abstract class FramedataImpl1 implements Framedata {
         return rsv2;
     }
 
+    /**
+     * Set the rsv2 of this frame to the provided boolean
+     *
+     * @param rsv2 true if fin has to be set
+     */
+    public void setRSV2(boolean rsv2) {
+        this.rsv2 = rsv2;
+    }
+
     @Override
     public boolean isRSV3() {
         return rsv3;
     }
 
+    /**
+     * Set the rsv3 of this frame to the provided boolean
+     *
+     * @param rsv3 true if fin has to be set
+     */
+    public void setRSV3(boolean rsv3) {
+        this.rsv3 = rsv3;
+    }
+
     @Override
     public boolean isFin() {
         return fin;
+    }
+
+    /**
+     * Set the fin of this frame to the provided boolean
+     *
+     * @param fin true if fin has to be set
+     */
+    public void setFin(boolean fin) {
+        this.fin = fin;
     }
 
     @Override
@@ -159,7 +223,7 @@ public abstract class FramedataImpl1 implements Framedata {
 
     @Override
     public String toString() {
-        return "Framedata{ optcode:" + getOpcode() + ", fin:" + isFin() + ", rsv1:" + isRSV1() + ", rsv2:" + isRSV2() + ", rsv3:" + isRSV3() + ", payloadlength:[pos:" + unmaskedpayload.position() + ", len:" + unmaskedpayload.remaining() + "], payload:" + ( unmaskedpayload.remaining() > 1000 ? "(too big to display)" : new String( unmaskedpayload.array() ) ) + '}';
+        return "Framedata{ optcode:" + getOpcode() + ", fin:" + isFin() + ", rsv1:" + isRSV1() + ", rsv2:" + isRSV2() + ", rsv3:" + isRSV3() + ", payloadlength:[pos:" + unmaskedpayload.position() + ", len:" + unmaskedpayload.remaining() + "], payload:" + (unmaskedpayload.remaining() > 1000 ? "(too big to display)" : new String(unmaskedpayload.array())) + '}';
     }
 
     /**
@@ -172,42 +236,6 @@ public abstract class FramedataImpl1 implements Framedata {
     }
 
     /**
-     * Set the fin of this frame to the provided boolean
-     *
-     * @param fin true if fin has to be set
-     */
-    public void setFin(boolean fin) {
-        this.fin = fin;
-    }
-
-    /**
-     * Set the rsv1 of this frame to the provided boolean
-     *
-     * @param rsv1 true if fin has to be set
-     */
-    public void setRSV1(boolean rsv1) {
-        this.rsv1 = rsv1;
-    }
-
-    /**
-     * Set the rsv2 of this frame to the provided boolean
-     *
-     * @param rsv2 true if fin has to be set
-     */
-    public void setRSV2(boolean rsv2) {
-        this.rsv2 = rsv2;
-    }
-
-    /**
-     * Set the rsv3 of this frame to the provided boolean
-     *
-     * @param rsv3 true if fin has to be set
-     */
-    public void setRSV3(boolean rsv3) {
-        this.rsv3 = rsv3;
-    }
-
-    /**
      * Set the tranferemask of this frame to the provided boolean
      *
      * @param transferemasked true if transferemasked has to be set
@@ -216,59 +244,31 @@ public abstract class FramedataImpl1 implements Framedata {
         this.transferemasked = transferemasked;
     }
 
-    /**
-     * Get a frame with a specific opcode
-     *
-     * @param opcode the opcode representing the frame
-     * @return the frame with a specific opcode
-     */
-    public static FramedataImpl1 get(Opcode opcode) {
-        if (opcode== null) {
-            throw new IllegalArgumentException("Supplied opcode cannot be null");
-        }
-        switch (opcode) {
-            case PING:
-                return new PingFrame();
-            case PONG:
-                return new PongFrame();
-            case TEXT:
-                return new TextFrame();
-            case BINARY:
-                return new BinaryFrame();
-            case CLOSING:
-                return new CloseFrame();
-            case CONTINUOUS:
-                return new ContinuousFrame();
-            default:
-                throw new IllegalArgumentException("Supplied opcode is invalid");
-        }
-    }
-
     @Override
-    public boolean equals( Object o ) {
-        if( this == o ) return true;
-        if( o == null || getClass() != o.getClass() ) return false;
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
-        FramedataImpl1 that = ( FramedataImpl1 ) o;
+        FramedataImpl1 that = (FramedataImpl1) o;
 
-        if( fin != that.fin ) return false;
-        if( transferemasked != that.transferemasked ) return false;
-        if( rsv1 != that.rsv1 ) return false;
-        if( rsv2 != that.rsv2 ) return false;
-        if( rsv3 != that.rsv3 ) return false;
-        if( optcode != that.optcode ) return false;
-        return unmaskedpayload != null ? unmaskedpayload.equals( that.unmaskedpayload ) : that.unmaskedpayload == null;
+        if (fin != that.fin) return false;
+        if (transferemasked != that.transferemasked) return false;
+        if (rsv1 != that.rsv1) return false;
+        if (rsv2 != that.rsv2) return false;
+        if (rsv3 != that.rsv3) return false;
+        if (optcode != that.optcode) return false;
+        return unmaskedpayload != null ? unmaskedpayload.equals(that.unmaskedpayload) : that.unmaskedpayload == null;
     }
 
     @Override
     public int hashCode() {
-        int result = ( fin ? 1 : 0 );
+        int result = (fin ? 1 : 0);
         result = 31 * result + optcode.hashCode();
-        result = 31 * result + ( unmaskedpayload != null ? unmaskedpayload.hashCode() : 0 );
-        result = 31 * result + ( transferemasked ? 1 : 0 );
-        result = 31 * result + ( rsv1 ? 1 : 0 );
-        result = 31 * result + ( rsv2 ? 1 : 0 );
-        result = 31 * result + ( rsv3 ? 1 : 0 );
+        result = 31 * result + (unmaskedpayload != null ? unmaskedpayload.hashCode() : 0);
+        result = 31 * result + (transferemasked ? 1 : 0);
+        result = 31 * result + (rsv1 ? 1 : 0);
+        result = 31 * result + (rsv2 ? 1 : 0);
+        result = 31 * result + (rsv3 ? 1 : 0);
         return result;
     }
 }

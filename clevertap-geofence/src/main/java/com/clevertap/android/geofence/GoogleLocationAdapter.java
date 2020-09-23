@@ -94,7 +94,7 @@ class GoogleLocationAdapter implements CTLocationAdapter {
         if (!backgroundLocationUpdatesEnabled) {
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
                     "not requesting location updates since background location updates is not enabled");
-            if(CTGeofenceAPI.getInstance(context).getCleverTapApi() != null){
+            if (CTGeofenceAPI.getInstance(context).getCleverTapApi() != null) {
                 CTGeofenceAPI.getInstance(context)
                         .getCleverTapApi()
                         .pushGeoFenceError(CTGeofenceConstants.ERROR_CODE,
@@ -151,7 +151,7 @@ class GoogleLocationAdapter implements CTLocationAdapter {
         if (!Utils.isConcurrentFuturesDependencyAvailable()) {
             CTGeofenceAPI.getLogger().info(CTGeofenceAPI.GEOFENCE_LOG_TAG,
                     "concurrent-futures dependency is missing");
-            if(CTGeofenceAPI.getInstance(context).getCleverTapApi() != null){
+            if (CTGeofenceAPI.getInstance(context).getCleverTapApi() != null) {
                 CTGeofenceAPI.getInstance(context)
                         .getCleverTapApi()
                         .pushGeoFenceError(CTGeofenceConstants.ERROR_CODE,
@@ -188,12 +188,12 @@ class GoogleLocationAdapter implements CTLocationAdapter {
 
     /**
      * Helper method to remove location updates for both fetch modes ({@link CTGeofenceSettings#FETCH_CURRENT_LOCATION_PERIODIC}) and
-     *({@link CTGeofenceSettings#FETCH_LAST_LOCATION_PERIODIC})
+     * ({@link CTGeofenceSettings#FETCH_LAST_LOCATION_PERIODIC})
      * <br><br>
      * <b>Must be called from background thread</b>
      *
      * @param pendingIntent instance of {@link PendingIntent} of type
-     * {@link PendingIntentFactory#PENDING_INTENT_LOCATION}
+     *                      {@link PendingIntentFactory#PENDING_INTENT_LOCATION}
      */
     @WorkerThread
     @Override
@@ -261,6 +261,7 @@ class GoogleLocationAdapter implements CTLocationAdapter {
     /**
      * Retrieves config settings from {@link CTGeofenceSettings} provided by client through
      * {@link CTGeofenceAPI#init(CTGeofenceSettings, CleverTapAPI)}
+     *
      * @param context application {@link Context}
      */
     private void applySettings(Context context) {

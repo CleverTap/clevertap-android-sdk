@@ -26,6 +26,27 @@ class ViewCaller {
         this.targetClass = targetMethod.getDeclaringClass();
     }
 
+    private static Class<?> assignableArgType(Class<?> type) {
+        if (type == Byte.class) {
+            type = byte.class;
+        } else if (type == Short.class) {
+            type = short.class;
+        } else if (type == Integer.class) {
+            type = int.class;
+        } else if (type == Long.class) {
+            type = long.class;
+        } else if (type == Float.class) {
+            type = float.class;
+        } else if (type == Double.class) {
+            type = double.class;
+        } else if (type == Boolean.class) {
+            type = boolean.class;
+        } else if (type == Character.class) {
+            type = char.class;
+        }
+        return type;
+    }
+
     String getMethodName() {
         return methodName;
     }
@@ -66,7 +87,7 @@ class ViewCaller {
 
             final Class<?> assignType = assignableArgType(methodResultType);
             final Class<?> resultType = assignableArgType(method.getReturnType());
-            if (! assignType.isAssignableFrom(resultType)) {
+            if (!assignType.isAssignableFrom(resultType)) {
                 continue;
             }
 
@@ -84,27 +105,6 @@ class ViewCaller {
             return method;
         }
         return null;
-    }
-
-    private static Class<?> assignableArgType(Class<?> type) {
-        if (type == Byte.class) {
-            type = byte.class;
-        } else if (type == Short.class) {
-            type = short.class;
-        } else if (type == Integer.class) {
-            type = int.class;
-        } else if (type == Long.class) {
-            type = long.class;
-        } else if (type == Float.class) {
-            type = float.class;
-        } else if (type == Double.class) {
-            type = double.class;
-        } else if (type == Boolean.class) {
-            type = boolean.class;
-        } else if (type == Character.class) {
-            type = char.class;
-        }
-        return type;
     }
 
     Object[] getArgs() {
@@ -132,12 +132,12 @@ class ViewCaller {
                 }
             } else {
                 final Class<?> argumentType = assignableArgType(proposedArgs[i].getClass());
-                if(argumentType.getCanonicalName() != null
+                if (argumentType.getCanonicalName() != null
                         && (argumentType.getCanonicalName().equals("android.content.res.ColorStateList") ||
-                            argumentType.getCanonicalName().equals("android.graphics.drawable.ColorDrawable") ||
-                            argumentType.getCanonicalName().equals("android.graphics.drawable.RippleDrawable"))){
+                        argumentType.getCanonicalName().equals("android.graphics.drawable.ColorDrawable") ||
+                        argumentType.getCanonicalName().equals("android.graphics.drawable.RippleDrawable"))) {
                     //no-op to skip
-                }else if (!paramType.isAssignableFrom(argumentType)) {
+                } else if (!paramType.isAssignableFrom(argumentType)) {
                     return false;
                 }
             }

@@ -16,8 +16,8 @@ public abstract class CTInAppBaseFullFragment extends CTInAppBaseFragment {
         }
     }
 
-    boolean isTablet(){
-        if(Utils.isActivityDead(getActivity())){
+    boolean isTablet() {
+        if (Utils.isActivityDead(getActivity())) {
             return false;
         }
         WindowManager wm = (WindowManager) parent.getBaseContext().getSystemService(Context.WINDOW_SERVICE);
@@ -27,14 +27,14 @@ public abstract class CTInAppBaseFullFragment extends CTInAppBaseFragment {
         }
         DisplayMetrics dm = new DisplayMetrics();
         wm.getDefaultDisplay().getMetrics(dm);
-        float yInches= dm.heightPixels/dm.ydpi;
-        float xInches= dm.widthPixels/dm.xdpi;
-        double diagonalInches = Math.sqrt(xInches*xInches + yInches*yInches);
-        if (diagonalInches>=7){
-            Logger.v("Screen size is : "+diagonalInches);
+        float yInches = dm.heightPixels / dm.ydpi;
+        float xInches = dm.widthPixels / dm.xdpi;
+        double diagonalInches = Math.sqrt(xInches * xInches + yInches * yInches);
+        if (diagonalInches >= 7) {
+            Logger.v("Screen size is : " + diagonalInches);
             return true;
-        }else{
-            Logger.v("Screen size is : "+diagonalInches);
+        } else {
+            Logger.v("Screen size is : " + diagonalInches);
             return false;
         }
     }

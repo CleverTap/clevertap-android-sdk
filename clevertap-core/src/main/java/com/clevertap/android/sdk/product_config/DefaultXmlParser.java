@@ -24,7 +24,7 @@ public class DefaultXmlParser {
     }
 
     static HashMap<String, String> getDefaultsFromXml(Context context, int resourceId) {
-        HashMap<String,String> defaultsMap = new HashMap<>();
+        HashMap<String, String> defaultsMap = new HashMap<>();
 
         try {
             Resources resources = context.getResources();

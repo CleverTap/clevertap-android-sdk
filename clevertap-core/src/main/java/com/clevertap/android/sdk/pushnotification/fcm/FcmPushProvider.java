@@ -21,8 +21,8 @@ import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class FcmPushProvider implements CTPushProvider {
-    private CTPushProviderListener listener;
     private static String LOG_TAG = FcmPushProvider.class.getSimpleName();
+    private CTPushProviderListener listener;
 
     @Override
     public void setCTPushListener(CTPushProviderListener listener) {

@@ -2,11 +2,6 @@ package com.clevertap.android.hms;
 
 public class TestHmsSdkHandler implements IHmsSdkHandler {
     private boolean isAvailable;
-
-    public void setSupported(boolean supported) {
-        isSupported = supported;
-    }
-
     private boolean isSupported;
 
     public void setAvailable(boolean available) {
@@ -27,5 +22,9 @@ public class TestHmsSdkHandler implements IHmsSdkHandler {
     @Override
     public boolean isSupported() {
         return isSupported;
+    }
+
+    public void setSupported(boolean supported) {
+        isSupported = supported;
     }
 }

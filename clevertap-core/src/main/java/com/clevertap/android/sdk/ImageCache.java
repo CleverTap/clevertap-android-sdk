@@ -16,20 +16,19 @@ import java.security.NoSuchAlgorithmException;
 
 public class ImageCache {
     private static final int MIN_CACHE_SIZE = 1024 * 20; // 20mb minimum (in KB)
-    private final static int maxMemory = (int) (Runtime.getRuntime().maxMemory())/1024;
+    private final static int maxMemory = (int) (Runtime.getRuntime().maxMemory()) / 1024;
     private final static int cacheSize = Math.max((maxMemory / 32), MIN_CACHE_SIZE);
     private static final int MAX_BITMAP_SIZE = 10000000; // 10 MB
-    private static LruCache<String, Bitmap> mMemoryCache;
-
     private static final String DIRECTORY_NAME = "CleverTap.Images.";
     private static final String FILE_PREFIX = "CT_IMAGE_";
+    private static LruCache<String, Bitmap> mMemoryCache;
     private static File imageFileDirectory;
     private static MessageDigest messageDigest;
 
     public static void initWithPersistence(Context context) {
         synchronized (ImageCache.class) {
             if (imageFileDirectory == null) {
-                imageFileDirectory = context.getDir(DIRECTORY_NAME,Context.MODE_PRIVATE);
+                imageFileDirectory = context.getDir(DIRECTORY_NAME, Context.MODE_PRIVATE);
             }
             if (messageDigest == null) {
                 try {
@@ -42,9 +41,9 @@ public class ImageCache {
         init();
     }
 
-    public static void init(){
+    public static void init() {
         synchronized (ImageCache.class) {
-            if(mMemoryCache == null) {
+            if (mMemoryCache == null) {
                 Logger.v("CleverTap.ImageCache: init with max device memory: " + maxMemory + "KB and allocated cache size: " + cacheSize + "KB");
                 try {
                     mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
@@ -53,12 +52,12 @@ public class ImageCache {
                             // The cache size will be measured in kilobytes rather than
                             // number of items.
                             int size = getImageSizeInKB(bitmap);
-                            Logger.v( "CleverTap.ImageCache: have image of size: "+size + "KB for key: " + key);
+                            Logger.v("CleverTap.ImageCache: have image of size: " + size + "KB for key: " + key);
                             return size;
                         }
                     };
                 } catch (Throwable t) {
-                    Logger.v( "CleverTap.ImageCache: unable to initialize cache: ", t.getCause());
+                    Logger.v("CleverTap.ImageCache: unable to initialize cache: ", t.getCause());
                 }
             }
         }
@@ -72,13 +71,13 @@ public class ImageCache {
             synchronized (ImageCache.class) {
                 int imageSize = getImageSizeInKB(bitmap);
                 int available = getAvailableMemory();
-                Logger.v( "CleverTap.ImageCache: image size: "+ imageSize +"KB. Available mem: "+available+ "KB.");
+                Logger.v("CleverTap.ImageCache: image size: " + imageSize + "KB. Available mem: " + available + "KB.");
                 if (imageSize > getAvailableMemory()) {
-                    Logger.v( "CleverTap.ImageCache: insufficient memory to add image: " + key);
+                    Logger.v("CleverTap.ImageCache: insufficient memory to add image: " + key);
                     return false;
                 }
                 mMemoryCache.put(key, bitmap);
-                Logger.v( "CleverTap.ImageCache: added image for key: " + key);
+                Logger.v("CleverTap.ImageCache: added image for key: " + key);
             }
         }
         return true;
@@ -95,15 +94,16 @@ public class ImageCache {
             }
         }
     }
+
     // potentially blocking, will always persist to the file system.  for mem cache only use addBitmap + getBitmap
     public static Bitmap getOrFetchBitmap(String url) {
         Bitmap bitmap = getBitmap(url);
-        if(bitmap == null){
+        if (bitmap == null) {
             final File imageFile = getOrFetchAndWriteImageFile(url);
-            if(imageFile != null) {
+            if (imageFile != null) {
                 bitmap = decodeImageFromFile(imageFile);
                 addBitmap(url, bitmap);
-            } else{
+            } else {
                 return null;
             }
         }
@@ -117,7 +117,7 @@ public class ImageCache {
             }
             if (mMemoryCache == null) return;
             mMemoryCache.remove(key);
-            Logger.v( "CleverTap.ImageCache: removed image for key: " + key);
+            Logger.v("CleverTap.ImageCache: removed image for key: " + key);
             cleanup();
         }
     }
@@ -141,7 +141,7 @@ public class ImageCache {
     private static void cleanup() {
         synchronized (ImageCache.class) {
             if (isEmpty()) {
-                Logger.v( "CTInAppNotification.ImageCache: cache is empty, removing it");
+                Logger.v("CTInAppNotification.ImageCache: cache is empty, removing it");
                 mMemoryCache = null;
             }
         }
@@ -175,17 +175,17 @@ public class ImageCache {
                         out = new FileOutputStream(file);
                         out.write(bytes);
                     } catch (FileNotFoundException e) {
-                        Logger.v( "CleverTap.ImageCache: error writing image file", e);
+                        Logger.v("CleverTap.ImageCache: error writing image file", e);
                         return null;
                     } catch (IOException e) {
-                        Logger.v( "CleverTap.ImageCache: error writing image file", e);
+                        Logger.v("CleverTap.ImageCache: error writing image file", e);
                         return null;
                     } finally {
                         if (out != null) {
                             try {
                                 out.close();
                             } catch (IOException e) {
-                                Logger.v( "CleverTap.ImageCache: error closing image output file", e);
+                                Logger.v("CleverTap.ImageCache: error closing image output file", e);
                             }
                         }
                     }
@@ -209,9 +209,9 @@ public class ImageCache {
         options.inJustDecodeBounds = false;
         BitmapFactory.decodeFile(file.getAbsolutePath(), options);
         float imageSize = (float) options.outHeight * options.outWidth * 4;
-        float imageSizeKb = imageSize/1024;
+        float imageSizeKb = imageSize / 1024;
         if (imageSizeKb > getAvailableMemory()) {
-            Logger.v( "CleverTap.ImageCache: image too large to decode");
+            Logger.v("CleverTap.ImageCache: image too large to decode");
             return null;
         }
         Bitmap bitmap = BitmapFactory.decodeFile(file.getAbsolutePath());

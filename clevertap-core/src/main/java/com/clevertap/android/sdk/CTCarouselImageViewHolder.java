@@ -39,12 +39,12 @@ class CTCarouselImageViewHolder extends CTInboxBaseMessageViewHolder {
         final Context appContext = parent.getActivity().getApplicationContext();
         CTInboxMessageContent content = inboxMessage.getInboxMessageContents().get(0);
         this.carouselTimestamp.setVisibility(View.VISIBLE);
-        if(inboxMessage.isRead()){
+        if (inboxMessage.isRead()) {
             this.carouselReadDot.setVisibility(View.GONE);
-        }else{
+        } else {
             this.carouselReadDot.setVisibility(View.VISIBLE);
         }
-        String carouselImageDisplayTimestamp  = calculateDisplayTimestamp(inboxMessage.getDate());
+        String carouselImageDisplayTimestamp = calculateDisplayTimestamp(inboxMessage.getDate());
         this.carouselTimestamp.setText(carouselImageDisplayTimestamp);
         this.carouselTimestamp.setTextColor(Color.parseColor(content.getTitleColor()));
 
@@ -52,29 +52,29 @@ class CTCarouselImageViewHolder extends CTInboxBaseMessageViewHolder {
 
         //Loads the viewpager
         LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams) this.imageViewPager.getLayoutParams();
-        CTCarouselViewPagerAdapter carouselViewPagerAdapter = new CTCarouselViewPagerAdapter(appContext, parent, inboxMessage,layoutParams,position);
+        CTCarouselViewPagerAdapter carouselViewPagerAdapter = new CTCarouselViewPagerAdapter(appContext, parent, inboxMessage, layoutParams, position);
         this.imageViewPager.setAdapter(carouselViewPagerAdapter);
         //Adds the dots for the carousel
         int dotsCount = inboxMessage.getInboxMessageContents().size();
-        if(this.sliderDots.getChildCount()>0){
+        if (this.sliderDots.getChildCount() > 0) {
             this.sliderDots.removeAllViews();
         }
         ImageView[] dots = new ImageView[dotsCount];
-        for(int k=0;k<dotsCount;k++){
+        for (int k = 0; k < dotsCount; k++) {
             dots[k] = new ImageView(parent.getActivity());
             dots[k].setVisibility(View.VISIBLE);
             dots[k].setImageDrawable(appContext.getResources().getDrawable(R.drawable.ct_unselected_dot));
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
             params.setMargins(8, 6, 4, 6);
             params.gravity = Gravity.CENTER;
-            if(this.sliderDots.getChildCount() < dotsCount)
-                this.sliderDots.addView(dots[k],params);
+            if (this.sliderDots.getChildCount() < dotsCount)
+                this.sliderDots.addView(dots[k], params);
         }
         dots[0].setImageDrawable(parent.getActivity().getApplicationContext().getResources().getDrawable(R.drawable.ct_selected_dot));
         CTCarouselImageViewHolder.CarouselPageChangeListener carouselPageChangeListener = new CTCarouselImageViewHolder.CarouselPageChangeListener(parent.getActivity().getApplicationContext(), this, dots, inboxMessage);
         this.imageViewPager.addOnPageChangeListener(carouselPageChangeListener);
 
-        this.clickLayout.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage,null, parentWeak, this.imageViewPager));
+        this.clickLayout.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, null, parentWeak, this.imageViewPager));
 
         Runnable carouselRunnable = new Runnable() {
             @Override
@@ -84,7 +84,7 @@ class CTCarouselImageViewHolder extends CTInboxBaseMessageViewHolder {
                 activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if(carouselReadDot.getVisibility() == View.VISIBLE){
+                        if (carouselReadDot.getVisibility() == View.VISIBLE) {
                             if (parentWeak != null) {
                                 parentWeak.didShow(null, position);
                             }
@@ -95,7 +95,7 @@ class CTCarouselImageViewHolder extends CTInboxBaseMessageViewHolder {
             }
         };
         Handler carouselHandler = new Handler();
-        carouselHandler.postDelayed(carouselRunnable,2000);
+        carouselHandler.postDelayed(carouselRunnable, 2000);
     }
 
     /**

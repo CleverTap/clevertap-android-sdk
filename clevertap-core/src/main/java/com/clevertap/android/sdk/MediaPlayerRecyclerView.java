@@ -76,9 +76,9 @@ public class MediaPlayerRecyclerView extends RecyclerView {
         appContext = context.getApplicationContext();
         videoSurfaceView = new PlayerView(appContext);
         videoSurfaceView.setBackgroundColor(Color.TRANSPARENT);
-        if(CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+        if (CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             videoSurfaceView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FILL);
-        }else{
+        } else {
             videoSurfaceView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
         }
         videoSurfaceView.setUseArtwork(true);
@@ -88,7 +88,7 @@ public class MediaPlayerRecyclerView extends RecyclerView {
         TrackSelection.Factory videoTrackSelectionFactory =
                 new AdaptiveTrackSelection.Factory();
         TrackSelector trackSelector =
-                new DefaultTrackSelector(appContext,videoTrackSelectionFactory);
+                new DefaultTrackSelector(appContext, videoTrackSelectionFactory);
 
         player = new SimpleExoPlayer.Builder(context).setTrackSelector(trackSelector).build();
         player.setVolume(0f); // start off muted
@@ -113,7 +113,9 @@ public class MediaPlayerRecyclerView extends RecyclerView {
 
         addOnChildAttachStateChangeListener(new RecyclerView.OnChildAttachStateChangeListener() {
             @Override
-            public void onChildViewAttachedToWindow(@NonNull View view) {}
+            public void onChildViewAttachedToWindow(@NonNull View view) {
+            }
+
             @Override
             public void onChildViewDetachedFromWindow(@NonNull View view) {
                 if (playingHolder != null && playingHolder.itemView.equals(view)) {
@@ -126,7 +128,7 @@ public class MediaPlayerRecyclerView extends RecyclerView {
             public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
                 switch (playbackState) {
                     case Player.STATE_BUFFERING:
-                        if(playingHolder != null){
+                        if (playingHolder != null) {
                             playingHolder.playerBuffering();
                         }
                         break;
@@ -150,24 +152,42 @@ public class MediaPlayerRecyclerView extends RecyclerView {
                         break;
                 }
             }
+
             @Override
-            public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {}
+            public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
+            }
+
             @Override
-            public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {}
+            public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
+            }
+
             @Override
-            public void onLoadingChanged(boolean isLoading) {}
+            public void onLoadingChanged(boolean isLoading) {
+            }
+
             @Override
-            public void onRepeatModeChanged(int repeatMode) {}
+            public void onRepeatModeChanged(int repeatMode) {
+            }
+
             @Override
-            public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {}
+            public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
+            }
+
             @Override
-            public void onPlayerError(ExoPlaybackException error) {}
+            public void onPlayerError(ExoPlaybackException error) {
+            }
+
             @Override
-            public void onPositionDiscontinuity(int reason) {}
+            public void onPositionDiscontinuity(int reason) {
+            }
+
             @Override
-            public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {}
+            public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
+            }
+
             @Override
-            public void onSeekProcessed() {}
+            public void onSeekProcessed() {
+            }
         });
     }
 
@@ -179,14 +199,14 @@ public class MediaPlayerRecyclerView extends RecyclerView {
         int endPosition = ((LinearLayoutManager) getLayoutManager()).findLastVisibleItemPosition();
 
         int bestHeight = 0;
-        for (int i=startPosition; i<=endPosition; i++) {
+        for (int i = startPosition; i <= endPosition; i++) {
             int pos = i - startPosition;
             View child = getChildAt(pos);
             if (child == null) {
                 continue;
             }
             CTInboxBaseMessageViewHolder holder = (CTInboxBaseMessageViewHolder) child.getTag();
-            if(holder != null) {
+            if (holder != null) {
                 if (!holder.needsMediaPlayer()) {
                     continue;
                 }
@@ -201,12 +221,13 @@ public class MediaPlayerRecyclerView extends RecyclerView {
         }
         return bestHolder;
     }
+
     public void playVideo() {
         if (videoSurfaceView == null) {
             return;
         }
         CTInboxBaseMessageViewHolder targetHolder = findBestVisibleMediaHolder();
-        if(targetHolder == null) {
+        if (targetHolder == null) {
             stop();
             removeVideoView();
             return;
@@ -259,10 +280,11 @@ public class MediaPlayerRecyclerView extends RecyclerView {
     }
 
     public void onPausePlayer() {
-        if (player != null){
+        if (player != null) {
             player.setPlayWhenReady(false);
         }
     }
+
     @SuppressWarnings({"unused"})
     public void removePlayer() {
         if (videoSurfaceView != null) {
@@ -271,8 +293,8 @@ public class MediaPlayerRecyclerView extends RecyclerView {
         }
     }
 
-    public void stop(){
-        if (player != null){
+    public void stop() {
+        if (player != null) {
             player.stop();
         }
         playingHolder = null;

@@ -54,38 +54,8 @@ import javax.net.ssl.SSLSocketFactory;
 
 public class CTABTestController {
 
-    @SuppressWarnings("unused")
-    public static class LayoutErrorMessage {
-        public LayoutErrorMessage(String type, String name) {
-            errorType = type;
-            errorName = name;
-        }
-        public String getType() {
-            return errorType;
-        }
-        public String getName() {
-            return errorName;
-        }
-        private final String errorType;
-        private final String errorName;
-    }
-
-    private static javax.net.ssl.SSLSocketFactory SSLSocketFactory;
-    static {
-        SSLSocketFactory found;
-        try {
-            final SSLContext sslContext = SSLContext.getInstance("TLS");
-            sslContext.init(null, null, null);
-            found = sslContext.getSocketFactory();
-        } catch (final GeneralSecurityException e) {
-            Logger.d("No SSL support. ABTest editor not available", e.getLocalizedMessage());
-            found = null;
-        }
-        SSLSocketFactory = found;
-    }
     private static final ByteBuffer EMPTY_BYTE_BUFFER = ByteBuffer.allocate(0);
     private static final int EMULATOR_CONNECT_ATTEMPT_INTERVAL_MILLIS = 1000 * 30;
-
     private static final String DASHBOARD_URL = "dashboard.clevertap.com";
     private static final String DEFAULT_REGION = "eu1";
     private static final String MESSAGE_TYPE_HANDSHAKE = "handshake";
@@ -102,9 +72,22 @@ public class CTABTestController {
     private static final String MESSAGE_TYPE_VARS_TEST = "test_vars";
     private static final String MESSAGE_TYPE_MATCHED = "matched";
     private static final String MESSAGE_TYPE_DISCONNECT = "disconnect";
-
     private static final String DATA_KEY = "data";
     private static final String TYPE_KEY = "type";
+    private static javax.net.ssl.SSLSocketFactory SSLSocketFactory;
+
+    static {
+        SSLSocketFactory found;
+        try {
+            final SSLContext sslContext = SSLContext.getInstance("TLS");
+            sslContext.init(null, null, null);
+            found = sslContext.getSocketFactory();
+        } catch (final GeneralSecurityException e) {
+            Logger.d("No SSL support. ABTest editor not available", e.getLocalizedMessage());
+            found = null;
+        }
+        SSLSocketFactory = found;
+    }
 
     private boolean enableEditor;
     private ExecutionThreadHandler executionThreadHandler;
@@ -113,11 +96,35 @@ public class CTABTestController {
     private JSONObject cachedDeviceInfo;
     private CTVarCache varCache;
     private UIEditor uiEditor;
-
     private WeakReference<CTABTestListener> listenerWeakReference;
 
-    private void setListener(CTABTestListener listener) {
-        listenerWeakReference = new WeakReference<>(listener);
+    public CTABTestController(Context context, CleverTapInstanceConfig config, String guid, CTABTestListener listener) {
+        try {
+            this.varCache = new CTVarCache();
+            this.enableEditor = config.isUIEditorEnabled();
+            this.config = config;
+            this.guid = guid;
+            this.setListener(listener);
+            this.uiEditor = new UIEditor(context, config);
+
+            final HandlerThread thread = new HandlerThread(CTABTestController.class.getCanonicalName());
+            thread.setPriority(Process.THREAD_PRIORITY_BACKGROUND);
+            thread.start();
+            executionThreadHandler = new ExecutionThreadHandler(context, config, thread.getLooper());
+            executionThreadHandler.start();
+
+            if (enableEditor) {
+                final Application app = (Application) context.getApplicationContext();
+                app.registerActivityLifecycleCallbacks(new LifecycleCallbacks());
+            } else {
+                config.getLogger().debug(config.getAccountId(), "UIEditor connection is disabled");
+            }
+            applyStoredExperiments();
+        } catch (Throwable t) {
+            config.setEnableABTesting(false);
+            config.setEnableUIEditor(false);
+            config.getLogger().debug(config.getAccountId(), t);
+        }
     }
 
     private CTABTestListener getListener() {
@@ -128,9 +135,13 @@ public class CTABTestController {
             // no-op
         }
         if (listener == null) {
-            config.getLogger().verbose(config.getAccountId(),"CTABTestListener is null in CTABTestController" );
+            config.getLogger().verbose(config.getAccountId(), "CTABTestListener is null in CTABTestController");
         }
         return listener;
+    }
+
+    private void setListener(CTABTestListener listener) {
+        listenerWeakReference = new WeakReference<>(listener);
     }
 
     private void handleDashboardMessage(JSONObject msg) {
@@ -159,7 +170,7 @@ public class CTABTestController {
             case MESSAGE_TYPE_MATCHED:
                 messageCode = ExecutionThreadHandler.MESSAGE_MATCHED;
                 break;
-            case MESSAGE_TYPE_DISCONNECT :
+            case MESSAGE_TYPE_DISCONNECT:
                 messageCode = ExecutionThreadHandler.MESSAGE_HANDLE_DISCONNECT;
             default:
                 break;
@@ -181,43 +192,14 @@ public class CTABTestController {
     @SuppressWarnings("SameParameterValue")
     private void _registerVar(String name, CTVar.CTVarType type, Object value) {
         this.varCache.registerVar(name, type, value);
-        config.getLogger().verbose(config.getAccountId(),"Registered Var with name: " + name + " type: " + type.toString() + " and value: " + ((value != null) ? value.toString() : "null"));
+        config.getLogger().verbose(config.getAccountId(), "Registered Var with name: " + name + " type: " + type.toString() + " and value: " + ((value != null) ? value.toString() : "null"));
     }
 
     private void applyStoredExperiments() {
         executionThreadHandler.sendMessage(executionThreadHandler.obtainMessage(ExecutionThreadHandler.MESSAGE_INITIALIZE_EXPERIMENTS));
     }
 
-    public CTABTestController(Context context, CleverTapInstanceConfig config, String guid, CTABTestListener listener) {
-        try{
-            this.varCache = new CTVarCache();
-            this.enableEditor = config.isUIEditorEnabled();
-            this.config = config;
-            this.guid = guid;
-            this.setListener(listener);
-            this.uiEditor = new UIEditor(context, config);
-
-            final HandlerThread thread = new HandlerThread(CTABTestController.class.getCanonicalName());
-            thread.setPriority(Process.THREAD_PRIORITY_BACKGROUND);
-            thread.start();
-            executionThreadHandler = new ExecutionThreadHandler(context, config, thread.getLooper());
-            executionThreadHandler.start();
-
-            if (enableEditor) {
-                final Application app = (Application) context.getApplicationContext();
-                app.registerActivityLifecycleCallbacks(new LifecycleCallbacks());
-            } else {
-                config.getLogger().debug(config.getAccountId(), "UIEditor connection is disabled");
-            }
-            applyStoredExperiments();
-        }catch (Throwable t){
-            config.setEnableABTesting(false);
-            config.setEnableUIEditor(false);
-            config.getLogger().debug(config.getAccountId(), t);
-        }
-    }
-
-    public void resetWithGuid(String guid){
+    public void resetWithGuid(String guid) {
         this.guid = guid;
         this.varCache.reset();
         uiEditor.stopVariants();
@@ -300,7 +282,7 @@ public class CTABTestController {
                 return var.booleanValue();
             }
         } catch (Throwable t) {
-            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: "+ name, t);
+            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: " + name, t);
             return defaultValue;
         }
         return defaultValue;
@@ -314,7 +296,7 @@ public class CTABTestController {
                 return var.doubleValue();
             }
         } catch (Throwable t) {
-            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: "+ name, t);
+            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: " + name, t);
             return defaultValue;
         }
         return defaultValue;
@@ -328,7 +310,7 @@ public class CTABTestController {
                 return var.integerValue();
             }
         } catch (Throwable t) {
-            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: "+ name, t);
+            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: " + name, t);
             return defaultValue;
         }
         return defaultValue;
@@ -342,7 +324,7 @@ public class CTABTestController {
                 return var.stringValue();
             }
         } catch (Throwable t) {
-            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: "+ name, t);
+            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: " + name, t);
             return defaultValue;
         }
         return defaultValue;
@@ -357,7 +339,7 @@ public class CTABTestController {
                 return (List<Boolean>) var.listValue();
             }
         } catch (Throwable t) {
-            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: "+ name, t);
+            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: " + name, t);
             return defaultValue;
         }
         return defaultValue;
@@ -372,7 +354,7 @@ public class CTABTestController {
                 return (List<Double>) var.listValue();
             }
         } catch (Throwable t) {
-            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: "+ name, t);
+            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: " + name, t);
             return defaultValue;
         }
         return defaultValue;
@@ -387,7 +369,7 @@ public class CTABTestController {
                 return (List<Integer>) var.listValue();
             }
         } catch (Throwable t) {
-            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: "+ name, t);
+            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: " + name, t);
             return defaultValue;
         }
         return defaultValue;
@@ -402,7 +384,7 @@ public class CTABTestController {
                 return (List<String>) var.listValue();
             }
         } catch (Throwable t) {
-            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: "+ name, t);
+            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: " + name, t);
             return defaultValue;
         }
         return defaultValue;
@@ -417,7 +399,7 @@ public class CTABTestController {
                 return (Map<String, Boolean>) var.mapValue();
             }
         } catch (Throwable t) {
-            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: "+ name, t);
+            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: " + name, t);
             return defaultValue;
         }
         return defaultValue;
@@ -432,7 +414,7 @@ public class CTABTestController {
                 return (Map<String, Double>) var.mapValue();
             }
         } catch (Throwable t) {
-            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: "+ name, t);
+            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: " + name, t);
             return defaultValue;
         }
         return defaultValue;
@@ -447,7 +429,7 @@ public class CTABTestController {
                 return (Map<String, Integer>) var.mapValue();
             }
         } catch (Throwable t) {
-            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: "+ name, t);
+            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: " + name, t);
             return defaultValue;
         }
         return defaultValue;
@@ -462,17 +444,36 @@ public class CTABTestController {
                 return (Map<String, String>) var.mapValue();
             }
         } catch (Throwable t) {
-            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: "+ name, t);
+            config.getLogger().debug(config.getAccountId(), "Error getting variable with name: " + name, t);
             return defaultValue;
         }
         return defaultValue;
+    }
+
+    @SuppressWarnings("unused")
+    public static class LayoutErrorMessage {
+        private final String errorType;
+        private final String errorName;
+
+        public LayoutErrorMessage(String type, String name) {
+            errorType = type;
+            errorName = name;
+        }
+
+        public String getType() {
+            return errorType;
+        }
+
+        public String getName() {
+            return errorName;
+        }
     }
 
     private class ExecutionThreadHandler extends Handler {
         static final int MESSAGE_UNKNOWN = -1;
         static final int MESSAGE_INITIALIZE_EXPERIMENTS = 0;
         static final int MESSAGE_CONNECT_TO_EDITOR = 1;
-        static final int MESSAGE_SEND_SNAPSHOT= 2;
+        static final int MESSAGE_SEND_SNAPSHOT = 2;
         static final int MESSAGE_HANDLE_EDITOR_CHANGES_RECEIVED = 3;
         static final int MESSAGE_SEND_DEVICE_INFO = 4;
         static final int MESSAGE_HANDLE_DISCONNECT = 5;
@@ -486,11 +487,10 @@ public class CTABTestController {
         static final int MESSAGE_MATCHED = 13;
 
         private static final String EXPERIMENTS_KEY = "experiments";
-
-        private CleverTapInstanceConfig config;
-        private final Lock lock = new ReentrantLock();
-        private DashboardClient wsClient;
         private static final int CONNECT_TIMEOUT = 5000;
+        private final Lock lock = new ReentrantLock();
+        private CleverTapInstanceConfig config;
+        private DashboardClient wsClient;
         private Context context;
         private Set<CTABVariant> variants;
         private CTABVariant editorSessionVariant;
@@ -509,11 +509,11 @@ public class CTABTestController {
             lock.unlock();
         }
 
-        private Logger getConfigLogger(){
+        private Logger getConfigLogger() {
             return config.getLogger();
         }
 
-        private String getAccountId(){
+        private String getAccountId() {
             return config.getAccountId();
         }
 
@@ -527,7 +527,7 @@ public class CTABTestController {
                     editorSessionVariantSet = new HashSet<>();
                     editorSessionVariantSet.add(editorSessionVariant);
                 } catch (Throwable t) {
-                   getConfigLogger().verbose(getAccountId(), "Error creating editor session variant", t);
+                    getConfigLogger().verbose(getAccountId(), "Error creating editor session variant", t);
                 }
             }
             return editorSessionVariant;
@@ -600,14 +600,14 @@ public class CTABTestController {
 
             final String protocol = "wss";
             String region = config.getAccountRegion() != null ? config.getAccountRegion() : DEFAULT_REGION;
-            region = config.isBeta() ? region+"-dashboard-beta" : region;
+            region = config.isBeta() ? region + "-dashboard-beta" : region;
             final String domain = region + "." + DASHBOARD_URL;
-            final String url =  protocol+"://"+domain+"/"+getAccountId()+"/"+"websocket/screenab/sdk?tk="+config.getAccountToken();
+            final String url = protocol + "://" + domain + "/" + getAccountId() + "/" + "websocket/screenab/sdk?tk=" + config.getAccountToken();
             getConfigLogger().verbose(getAccountId(), "Websocket URL - " + url);
             try {
                 wsClient = new DashboardClient(new URI(url), CONNECT_TIMEOUT);
                 wsClient.connectBlocking();
-            }  catch (final Exception e) {
+            } catch (final Exception e) {
                 getConfigLogger().verbose(getAccountId(), "Unable to connect to dashboard", e);
             }
         }
@@ -649,11 +649,11 @@ public class CTABTestController {
 
         private void sendMessage(String message) {
             if (!connectionIsValid()) {
-                getConfigLogger().debug(getAccountId(), "Unable to send websocket message: " + message +" connection is invalid");
+                getConfigLogger().debug(getAccountId(), "Unable to send websocket message: " + message + " connection is invalid");
                 return;
             }
             final OutputStreamWriter writer = new OutputStreamWriter(getBufferedOutputStream());
-            getConfigLogger().verbose("Sending message to dashboard - "+message);
+            getConfigLogger().verbose("Sending message to dashboard - " + message);
             try {
                 writer.write(message);
             } catch (final IOException e) {
@@ -675,7 +675,7 @@ public class CTABTestController {
         }
 
         private String getSharedPrefsName() {
-            return "clevertap.abtesting."+getAccountId()+"."+guid;
+            return "clevertap.abtesting." + getAccountId() + "." + guid;
         }
 
         private SharedPreferences getSharedPreferences() {
@@ -716,7 +716,7 @@ public class CTABTestController {
             notifyExperimentsUpdated();
         }
 
-        private void loadVariants(JSONArray experiments){
+        private void loadVariants(JSONArray experiments) {
             if (experiments == null) {
                 return;
             }
@@ -736,7 +736,7 @@ public class CTABTestController {
                         }
                     }
                 }
-                if(!allVariants.containsAll(toRemove)) {
+                if (!allVariants.containsAll(toRemove)) {
                     if (toRemove.size() > 0) {
                         for (CTABVariant v : toRemove) {
                             v.cleanup();
@@ -747,7 +747,7 @@ public class CTABTestController {
 
                 //This will revert changes at SDK level when all experiments are stopped/revert without needing
                 //another App Launched event
-                if(experiments.length() == 0){
+                if (experiments.length() == 0) {
                     allVariants.clear();
                 }
 
@@ -771,9 +771,9 @@ public class CTABTestController {
                 JSONObject data = new JSONObject();
                 data.put("id", guid);
                 data.put("os", deviceInfo.getString("osName"));
-                data.put("name", deviceInfo.getString("manufacturer")+" "+deviceInfo.getString("model"));
-                if(deviceInfo.has("library")){
-                    data.put("library",deviceInfo.getString("library"));
+                data.put("name", deviceInfo.getString("manufacturer") + " " + deviceInfo.getString("model"));
+                if (deviceInfo.has("library")) {
+                    data.put("library", deviceInfo.getString("library"));
                 }
                 JSONObject payload = new JSONObject();
                 payload.put(TYPE_KEY, MESSAGE_TYPE_HANDSHAKE);
@@ -795,7 +795,7 @@ public class CTABTestController {
             }
         }
 
-        private void sendSnapshot(JSONObject data){
+        private void sendSnapshot(JSONObject data) {
             final long startSnapshot = System.currentTimeMillis();
             boolean isValidSnapshot = uiEditor.loadSnapshotConfig(data);
             if (!isValidSnapshot) {
@@ -810,8 +810,8 @@ public class CTABTestController {
 
             try {
                 writer.write("{");
-                writer.write("\""+TYPE_KEY+"\": \""+MESSAGE_TYPE_SNAPSHOT_RESPONSE+"\",");
-                writer.write("\""+DATA_KEY+"\": {");
+                writer.write("\"" + TYPE_KEY + "\": \"" + MESSAGE_TYPE_SNAPSHOT_RESPONSE + "\",");
+                writer.write("\"" + DATA_KEY + "\": {");
                 {
                     writer.write("\"activities\":");
                     writer.flush();
@@ -896,14 +896,14 @@ public class CTABTestController {
             try {
                 JSONArray changes = request.optJSONArray("actions");
                 if (changes == null || changes.length() <= 0) {
-                    getConfigLogger().debug(getAccountId(),"No changes received from dashboard");
+                    getConfigLogger().debug(getAccountId(), "No changes received from dashboard");
                     return;
                 } else {
                     getEditorSessionVariant().addActions(changes);
                 }
                 uiEditor.applyVariants(editorSessionVariantSet, true);
             } catch (Throwable t) {
-                getConfigLogger().debug(getAccountId(),"Unable to handle dashboard changes received - "+t);
+                getConfigLogger().debug(getAccountId(), "Unable to handle dashboard changes received - " + t);
             }
         }
 
@@ -912,12 +912,12 @@ public class CTABTestController {
                 JSONArray changes = request.optJSONArray("actions");
                 if (changes == null || changes.length() <= 0) {
                     getEditorSessionVariant().clearActions();
-                }else{
+                } else {
                     getEditorSessionVariant().removeActionsByName(changes);
                 }
                 uiEditor.applyVariants(editorSessionVariantSet, true);
             } catch (Throwable t) {
-                getConfigLogger().debug(getAccountId(),"Unable to clear dashboard changes - "+t);
+                getConfigLogger().debug(getAccountId(), "Unable to clear dashboard changes - " + t);
             }
         }
 
@@ -925,24 +925,24 @@ public class CTABTestController {
             try {
                 JSONArray vars = request.optJSONArray("vars");
                 if (vars == null || vars.length() <= 0) {
-                    getConfigLogger().debug(getAccountId(),"No Vars received from dashboard");
+                    getConfigLogger().debug(getAccountId(), "No Vars received from dashboard");
                     return;
                 }
                 applyVars(vars);
                 notifyExperimentsUpdated();
             } catch (Throwable t) {
-                getConfigLogger().debug(getAccountId(),"Unable to handle dashboard Vars received - "+t);
+                getConfigLogger().debug(getAccountId(), "Unable to handle dashboard Vars received - " + t);
             }
         }
 
         private void applyVars(JSONArray vars) {
             try {
-                for (int i=0;i<vars.length();i++) {
+                for (int i = 0; i < vars.length(); i++) {
                     JSONObject var = vars.getJSONObject(i);
                     _registerVar(var.getString("name"), CTVar.CTVarType.fromString(var.getString("type")), var.get("value"));
                 }
             } catch (Throwable t) {
-                getConfigLogger().debug(getAccountId(),"Unable to apply Vars - "+t);
+                getConfigLogger().debug(getAccountId(), "Unable to apply Vars - " + t);
             }
         }
 
@@ -962,6 +962,7 @@ public class CTABTestController {
 
         private class DashboardClient extends WebSocketClient {
             private URI dashboardURI;
+
             private DashboardClient(URI uri, int connectTimeout) {
                 super(uri, new Draft_6455(), null, connectTimeout);
                 this.dashboardURI = uri;
@@ -978,9 +979,9 @@ public class CTABTestController {
             public void onMessage(String message) {
                 try {
                     final JSONObject messageJson = new JSONObject(message);
-                    if(messageJson.has("data")){
-                        if(messageJson.getJSONObject("data").keys().hasNext()){
-                            getConfigLogger().verbose(getAccountId(),"Received message from dashboard:\n" + message);
+                    if (messageJson.has("data")) {
+                        if (messageJson.getJSONObject("data").keys().hasNext()) {
+                            getConfigLogger().verbose(getAccountId(), "Received message from dashboard:\n" + message);
                         }
                     }
                     if (!connectionIsValid()) {
@@ -989,22 +990,22 @@ public class CTABTestController {
                     }
                     handleDashboardMessage(messageJson);
                 } catch (final JSONException e) {
-                    getConfigLogger().verbose(getAccountId(),"Bad JSON message received:" + message, e);
+                    getConfigLogger().verbose(getAccountId(), "Bad JSON message received:" + message, e);
                 }
             }
 
             @Override
             public void onClose(int code, String reason, boolean remote) {
-                getConfigLogger().verbose(getAccountId(),"WebSocket closed. Code: " + code + ", reason: " + reason + "\nURI: " + dashboardURI);
+                getConfigLogger().verbose(getAccountId(), "WebSocket closed. Code: " + code + ", reason: " + reason + "\nURI: " + dashboardURI);
                 handleOnClose();
             }
 
             @Override
             public void onError(Exception ex) {
                 if (ex != null && ex.getMessage() != null) {
-                    getConfigLogger().verbose(getAccountId(),"Websocket Error: " + ex.getMessage());
+                    getConfigLogger().verbose(getAccountId(), "Websocket Error: " + ex.getMessage());
                 } else {
-                    getConfigLogger().verbose(getAccountId(),"Unknown websocket error");
+                    getConfigLogger().verbose(getAccountId(), "Unknown websocket error");
                 }
             }
         }
@@ -1028,9 +1029,9 @@ public class CTABTestController {
                 try {
                     wsClient.sendFragmentedFrame(Opcode.TEXT, message, false);
                 } catch (final WebsocketNotConnectedException e) {
-                    getConfigLogger().debug(getAccountId(),"Web socket not connected", e);
+                    getConfigLogger().debug(getAccountId(), "Web socket not connected", e);
                 } catch (final NotSendableException e) {
-                    getConfigLogger().debug(getAccountId(),"Unable to send data to web socket", e);
+                    getConfigLogger().debug(getAccountId(), "Unable to send data to web socket", e);
                 }
             }
 
@@ -1039,9 +1040,9 @@ public class CTABTestController {
                 try {
                     wsClient.sendFragmentedFrame(Opcode.TEXT, EMPTY_BYTE_BUFFER, true);
                 } catch (final WebsocketNotConnectedException e) {
-                    getConfigLogger().debug(getAccountId(),"Web socket not connected", e);
+                    getConfigLogger().debug(getAccountId(), "Web socket not connected", e);
                 } catch (final NotSendableException e) {
-                    getConfigLogger().debug(getAccountId(),"Unable to send data to web socket", e);
+                    getConfigLogger().debug(getAccountId(), "Unable to send data to web socket", e);
                 }
             }
         }
@@ -1062,10 +1063,12 @@ public class CTABTestController {
             }
             executionThreadHandler.postDelayed(this, EMULATOR_CONNECT_ATTEMPT_INTERVAL_MILLIS);
         }
+
         void start() {
             stopped = false;
             executionThreadHandler.post(this);
         }
+
         void stop() {
             stopped = true;
             executionThreadHandler.removeCallbacks(this);

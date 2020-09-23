@@ -63,7 +63,7 @@ public class BackgroundLocationWork extends ListenableWorker {
                         }
 
                         try {
-                            Utils.notifyLocationUpdates(getApplicationContext(),location);
+                            Utils.notifyLocationUpdates(getApplicationContext(), location);
 
                             if (future != null) {
                                 future.get();
@@ -99,7 +99,7 @@ public class BackgroundLocationWork extends ListenableWorker {
                                 CTLocationAdapter ctLocationAdapter = CTGeofenceAPI
                                         .getInstance(getApplicationContext()).getCtLocationAdapter();
 
-                                if (ctLocationAdapter!=null) {
+                                if (ctLocationAdapter != null) {
                                     ctLocationAdapter.getLastLocation(ctLocationCallback);
                                 } else {
                                     completer.set(Result.success());

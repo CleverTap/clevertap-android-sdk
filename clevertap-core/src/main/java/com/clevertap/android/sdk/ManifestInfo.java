@@ -27,15 +27,6 @@ public class ManifestInfo {
     private static String xiaomiAppKey;
     private static String xiaomiAppID;
 
-    private static String _getManifestStringValueForKey(Bundle manifest, String name) {
-        try {
-            Object o = manifest.get(name);
-            return (o != null) ? o.toString() : null;
-        } catch (Throwable t) {
-            return null;
-        }
-    }
-
     private ManifestInfo(Context context) {
         Bundle metaData = null;
         try {
@@ -48,26 +39,26 @@ public class ManifestInfo {
         if (metaData == null) {
             metaData = new Bundle();
         }
-        if(accountId==null)
+        if (accountId == null)
             accountId = _getManifestStringValueForKey(metaData, Constants.LABEL_ACCOUNT_ID);
-        if(accountToken==null)
+        if (accountToken == null)
             accountToken = _getManifestStringValueForKey(metaData, Constants.LABEL_TOKEN);
-        if(accountRegion==null)
+        if (accountRegion == null)
             accountRegion = _getManifestStringValueForKey(metaData, Constants.LABEL_REGION);
-        notificationIcon = _getManifestStringValueForKey(metaData,Constants.LABEL_NOTIFICATION_ICON);
+        notificationIcon = _getManifestStringValueForKey(metaData, Constants.LABEL_NOTIFICATION_ICON);
         useADID = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_USE_GOOGLE_AD_ID));
         appLaunchedDisabled = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_DISABLE_APP_LAUNCH));
-        excludedActivities = _getManifestStringValueForKey(metaData,Constants.LABEL_INAPP_EXCLUDE);
-        sslPinning = "1".equals(_getManifestStringValueForKey(metaData,Constants.LABEL_SSL_PINNING));
-        backgroundSync = "1".equals(_getManifestStringValueForKey(metaData,Constants.LABEL_BACKGROUND_SYNC));
-        useCustomID = "1".equals(_getManifestStringValueForKey(metaData,Constants.LABEL_CUSTOM_ID));
+        excludedActivities = _getManifestStringValueForKey(metaData, Constants.LABEL_INAPP_EXCLUDE);
+        sslPinning = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_SSL_PINNING));
+        backgroundSync = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_BACKGROUND_SYNC));
+        useCustomID = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_CUSTOM_ID));
         fcmSenderId = _getManifestStringValueForKey(metaData, Constants.LABEL_FCM_SENDER_ID);
         if (fcmSenderId != null) {
             fcmSenderId = fcmSenderId.replace("id:", "");
         }
-        packageName = _getManifestStringValueForKey(metaData,Constants.LABEL_PACKAGE_NAME);
+        packageName = _getManifestStringValueForKey(metaData, Constants.LABEL_PACKAGE_NAME);
         beta = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_BETA));
-        if(intentServiceName == null){
+        if (intentServiceName == null) {
             intentServiceName = _getManifestStringValueForKey(metaData, Constants.LABEL_INTENT_SERVICE);
         }
 
@@ -75,22 +66,37 @@ public class ManifestInfo {
         xiaomiAppID = _getManifestStringValueForKey(metaData, Constants.LABEL_XIAOMI_APP_ID);
     }
 
-    public synchronized static ManifestInfo getInstance(Context context){
+    private static String _getManifestStringValueForKey(Bundle manifest, String name) {
+        try {
+            Object o = manifest.get(name);
+            return (o != null) ? o.toString() : null;
+        } catch (Throwable t) {
+            return null;
+        }
+    }
+
+    public synchronized static ManifestInfo getInstance(Context context) {
         if (instance == null) {
             instance = new ManifestInfo(context);
         }
         return instance;
     }
 
-    String getAccountId(){
+    static void changeCredentials(String id, String token, String region) {
+        accountId = id;
+        accountToken = token;
+        accountRegion = region;
+    }
+
+    String getAccountId() {
         return accountId;
     }
 
-    String getAcountToken(){
+    String getAcountToken() {
         return accountToken;
     }
 
-    String getAccountRegion(){
+    String getAccountRegion() {
         return accountRegion;
     }
 
@@ -98,31 +104,35 @@ public class ManifestInfo {
         return fcmSenderId;
     }
 
-    boolean useGoogleAdId(){
-         return useADID;
+    boolean useGoogleAdId() {
+        return useADID;
     }
 
-    boolean enableBeta(){
+    boolean enableBeta() {
         return beta;
     }
 
-    boolean isAppLaunchedDisabled(){
-         return appLaunchedDisabled;
+    boolean isAppLaunchedDisabled() {
+        return appLaunchedDisabled;
     }
 
-    boolean isSSLPinningEnabled(){return sslPinning;}
+    boolean isSSLPinningEnabled() {
+        return sslPinning;
+    }
 
     String getNotificationIcon() {
         return notificationIcon;
     }
 
-    String getExcludedActivities(){return excludedActivities;}
+    String getExcludedActivities() {
+        return excludedActivities;
+    }
 
     boolean isBackgroundSync() {
         return backgroundSync;
     }
 
-    boolean useCustomId(){
+    boolean useCustomId() {
         return useCustomID;
     }
 
@@ -130,21 +140,15 @@ public class ManifestInfo {
         return packageName;
     }
 
-    String getIntentServiceName (){
+    String getIntentServiceName() {
         return intentServiceName;
     }
 
-    static void changeCredentials(String id, String token, String region){
-        accountId = id;
-        accountToken = token;
-        accountRegion = region;
-    }
-
-    public String getXiaomiAppKey(){
+    public String getXiaomiAppKey() {
         return xiaomiAppKey;
     }
 
-    public String getXiaomiAppID(){
+    public String getXiaomiAppID() {
         return xiaomiAppID;
     }
 }

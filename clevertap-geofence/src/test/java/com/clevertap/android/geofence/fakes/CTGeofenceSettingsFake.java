@@ -53,7 +53,7 @@ public class CTGeofenceSettingsFake {
                     .setSmallestDisplacement((float) jsonObject.getDouble("last_displacement"))
                     .build();
         } catch (JSONException e) {
-         e.printStackTrace();
+            e.printStackTrace();
         }
 
         return new CTGeofenceSettings.Builder().build();

@@ -24,7 +24,7 @@ public class CTCarouselViewPager extends ViewPager {
      * Constructor
      *
      * @param context the context
-     * @param attrs the attribute set
+     * @param attrs   the attribute set
      */
     public CTCarouselViewPager(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -33,11 +33,11 @@ public class CTCarouselViewPager extends ViewPager {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         int height = 0;
-        for(int i = 0; i < getChildCount(); i++) {
+        for (int i = 0; i < getChildCount(); i++) {
             View child = getChildAt(i);
             child.measure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
             int h = child.getMeasuredHeight();
-            if(h > height) height = h;
+            if (h > height) height = h;
         }
 
         if (height != 0) {
@@ -51,8 +51,7 @@ public class CTCarouselViewPager extends ViewPager {
      * Determines the height of this view
      *
      * @param measureSpec A measureSpec packed into an int
-     * @param view the base view with already measured height
-     *
+     * @param view        the base view with already measured height
      * @return The height of the view, honoring constraints from measureSpec
      */
     @SuppressWarnings({"unused"})

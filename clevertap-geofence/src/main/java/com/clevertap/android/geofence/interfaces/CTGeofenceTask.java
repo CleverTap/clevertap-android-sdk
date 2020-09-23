@@ -13,6 +13,7 @@ public interface CTGeofenceTask {
     /**
      * Sets a listener that is called when the Task completes. The listener will be called
      * on background thread
+     *
      * @param onCompleteListener an instance of {@link OnCompleteListener}
      */
     void setOnCompleteListener(OnCompleteListener onCompleteListener);

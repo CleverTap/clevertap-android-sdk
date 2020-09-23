@@ -9,16 +9,12 @@ import java.lang.annotation.RetentionPolicy;
 
 public final class Logger {
 
-    private @LogLevel int debugLevel;
-
     public static final int OFF = -1;
     public static final int INFO = 0;
     public static final int DEBUG = 2;
     public static final int VERBOSE = 3;
-
-    @IntDef({OFF,INFO,DEBUG,VERBOSE})
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface LogLevel{}
+    private @LogLevel
+    int debugLevel;
 
     Logger(@LogLevel int level) {
         setDebugLevel(level);
@@ -123,6 +119,11 @@ public final class Logger {
         if (debugLevel >= INFO) {
             Log.i(CTGeofenceAPI.GEOFENCE_LOG_TAG, message, t);
         }
+    }
+
+    @IntDef({OFF, INFO, DEBUG, VERBOSE})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface LogLevel {
     }
 
 }

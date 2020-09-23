@@ -30,6 +30,17 @@ import java.util.Iterator;
 
 public class CTInboxListViewFragment extends Fragment {
 
+    ArrayList<CTInboxMessage> inboxMessages = new ArrayList<>();
+    CleverTapInstanceConfig config;
+    boolean haveVideoPlayerSupport = CleverTapAPI.haveVideoPlayerSupport;
+    CTInboxStyleConfig styleConfig;
+    LinearLayout linearLayout;
+    MediaPlayerRecyclerView mediaRecyclerView;
+    RecyclerView recyclerView;
+    private WeakReference<CTInboxListViewFragment.InboxListener> listenerWeakReference;
+    private boolean firstTime = true;
+    private int tabPosition;
+
     void didClick(Bundle data, int position, HashMap<String, String> keyValuePayload) {
         CTInboxListViewFragment.InboxListener listener = getListener();
         if (listener != null) {
@@ -38,24 +49,8 @@ public class CTInboxListViewFragment extends Fragment {
         }
     }
 
-    ArrayList<CTInboxMessage> inboxMessages = new ArrayList<>();
-    CleverTapInstanceConfig config;
-    boolean haveVideoPlayerSupport = CleverTapAPI.haveVideoPlayerSupport;
-    CTInboxStyleConfig styleConfig;
-    private WeakReference<CTInboxListViewFragment.InboxListener> listenerWeakReference;
-    LinearLayout linearLayout;
-    private boolean firstTime = true;
-    private int tabPosition;
-
-    MediaPlayerRecyclerView mediaRecyclerView;
-    RecyclerView recyclerView;
-
     private boolean shouldAutoPlayOnFirstLaunch() {
         return tabPosition <= 0;
-    }
-
-    void setListener(CTInboxListViewFragment.InboxListener listener) {
-        listenerWeakReference = new WeakReference<>(listener);
     }
 
     CTInboxListViewFragment.InboxListener getListener() {
@@ -69,6 +64,10 @@ public class CTInboxListViewFragment extends Fragment {
             Logger.v("InboxListener is null for messages");
         }
         return listener;
+    }
+
+    void setListener(CTInboxListViewFragment.InboxListener listener) {
+        listenerWeakReference = new WeakReference<>(listener);
     }
 
     private ArrayList<CTInboxMessage> filterMessages(ArrayList<CTInboxMessage> messages, String filter) {
@@ -247,17 +246,11 @@ public class CTInboxListViewFragment extends Fragment {
         }
     }
 
-    interface InboxListener {
-        void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data);
-
-        void messageDidClick(Context baseContext, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue);
-    }
-
     void fireUrlThroughIntent(String url) {
         try {
             Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url.replace("\n", "").replace("\r", "")));
-            if(getActivity() != null) {
-                Utils.setPackageNameFromResolveInfoList(getActivity(),intent);
+            if (getActivity() != null) {
+                Utils.setPackageNameFromResolveInfoList(getActivity(), intent);
             }
             startActivity(intent);
         } catch (Throwable t) {
@@ -306,5 +299,11 @@ public class CTInboxListViewFragment extends Fragment {
                 }
             }
         }
+    }
+
+    interface InboxListener {
+        void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data);
+
+        void messageDidClick(Context baseContext, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue);
     }
 }

@@ -11,14 +11,14 @@ import android.webkit.WebView;
 @SuppressLint("ViewConstructor")
 class CTInAppWebView extends WebView {
 
+    final Point dim = new Point();
     private int width;
     private int height;
     private int widthPercentage;
     private int heightPercentage;
-    final Point dim = new Point();
 
     @SuppressLint("ResourceType")
-    public CTInAppWebView(Context context, int width , int height, int widthPercentage, int heightPercentage) {
+    public CTInAppWebView(Context context, int width, int height, int widthPercentage, int heightPercentage) {
         super(context);
         this.width = width;
         this.height = height;

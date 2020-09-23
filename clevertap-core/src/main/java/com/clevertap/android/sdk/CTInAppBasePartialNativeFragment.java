@@ -14,28 +14,28 @@ import android.widget.LinearLayout;
 
 public abstract class CTInAppBasePartialNativeFragment extends CTInAppBasePartialFragment implements View.OnTouchListener, View.OnLongClickListener {
 
-    View inAppView;
     final GestureDetector gd = new GestureDetector(new GestureListener());
+    View inAppView;
 
     @SuppressWarnings({"unused"})
-    void setupInAppButton(Button inAppButton, final CTInAppNotificationButton inAppNotificationButton, final CTInAppNotification inAppNotification, final int buttonIndex){
-        if(inAppNotificationButton!=null) {
+    void setupInAppButton(Button inAppButton, final CTInAppNotificationButton inAppNotificationButton, final CTInAppNotification inAppNotification, final int buttonIndex) {
+        if (inAppNotificationButton != null) {
             inAppButton.setTag(buttonIndex);
             inAppButton.setVisibility(View.VISIBLE);
             inAppButton.setText(inAppNotificationButton.getText());
             inAppButton.setTextColor(Color.parseColor(inAppNotificationButton.getTextColor()));
             inAppButton.setBackgroundColor(Color.parseColor(inAppNotificationButton.getBackgroundColor()));
             inAppButton.setOnClickListener(new CTInAppNativeButtonClickListener());
-        }else{
+        } else {
             inAppButton.setVisibility(View.GONE);
         }
     }
 
-    void hideSecondaryButton(Button mainButton, Button secondaryButton){
+    void hideSecondaryButton(Button mainButton, Button secondaryButton) {
         secondaryButton.setVisibility(View.GONE);
-        LinearLayout.LayoutParams mainLayoutParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT,2);
+        LinearLayout.LayoutParams mainLayoutParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 2);
         mainButton.setLayoutParams(mainLayoutParams);
-        LinearLayout.LayoutParams secondaryLayoutParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT,0);
+        LinearLayout.LayoutParams secondaryLayoutParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 0);
         secondaryButton.setLayoutParams(secondaryLayoutParams);
     }
 

@@ -16,6 +16,18 @@ import java.util.List;
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class CTInboxMessage implements Parcelable {
+    @SuppressWarnings("unused")
+    public static final Parcelable.Creator<CTInboxMessage> CREATOR = new Parcelable.Creator<CTInboxMessage>() {
+        @Override
+        public CTInboxMessage createFromParcel(Parcel in) {
+            return new CTInboxMessage(in);
+        }
+
+        @Override
+        public CTInboxMessage[] newArray(int size) {
+            return new CTInboxMessage[size];
+        }
+    };
     private String title;
     private String body;
     private String imageUrl;
@@ -34,28 +46,27 @@ public class CTInboxMessage implements Parcelable {
     private String campaignId;
     private JSONObject wzrkParams;
 
-
-    CTInboxMessage(JSONObject jsonObject){
+    CTInboxMessage(JSONObject jsonObject) {
         this.data = jsonObject;
         try {
             this.messageId = jsonObject.has(Constants.KEY_ID) ? jsonObject.getString(Constants.KEY_ID) : "0";
             this.campaignId = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject.getString(Constants.NOTIFICATION_ID_TAG) : "0_0";
-            this.date = jsonObject.has(Constants.KEY_DATE) ? jsonObject.getLong(Constants.KEY_DATE) : System.currentTimeMillis()/1000;
-            this.expires = jsonObject.has(Constants.KEY_WZRK_TTL) ? jsonObject.getLong(Constants.KEY_WZRK_TTL) : System.currentTimeMillis() + 1000*60*60*24;
+            this.date = jsonObject.has(Constants.KEY_DATE) ? jsonObject.getLong(Constants.KEY_DATE) : System.currentTimeMillis() / 1000;
+            this.expires = jsonObject.has(Constants.KEY_WZRK_TTL) ? jsonObject.getLong(Constants.KEY_WZRK_TTL) : System.currentTimeMillis() + 1000 * 60 * 60 * 24;
             this.isRead = jsonObject.has(Constants.KEY_IS_READ) && jsonObject.getBoolean(Constants.KEY_IS_READ);
             JSONArray tagsArray = jsonObject.has(Constants.KEY_TAGS) ? jsonObject.getJSONArray(Constants.KEY_TAGS) : null;
-            if(tagsArray != null){
-                for(int i=0; i< tagsArray.length(); i++){
+            if (tagsArray != null) {
+                for (int i = 0; i < tagsArray.length(); i++) {
                     this.tags.add(tagsArray.getString(i));
                 }
             }
             JSONObject cellObject = jsonObject.has(Constants.KEY_MSG) ? jsonObject.getJSONObject(Constants.KEY_MSG) : null;
-            if(cellObject != null){
+            if (cellObject != null) {
                 this.type = cellObject.has(Constants.KEY_TYPE) ? CTInboxMessageType.fromString(cellObject.getString(Constants.KEY_TYPE)) : CTInboxMessageType.fromString("");
                 this.bgColor = cellObject.has(Constants.KEY_BG) ? cellObject.getString(Constants.KEY_BG) : "";
                 JSONArray contentArray = cellObject.has(Constants.KEY_CONTENT) ? cellObject.getJSONArray(Constants.KEY_CONTENT) : null;
-                if(contentArray != null){
-                    for(int i=0 ; i<contentArray.length(); i++){
+                if (contentArray != null) {
+                    for (int i = 0; i < contentArray.length(); i++) {
                         CTInboxMessageContent ctInboxMessageContent = new CTInboxMessageContent().initWithJSON(contentArray.getJSONObject(i));
                         this.inboxMessageContents.add(ctInboxMessageContent);
                     }
@@ -64,7 +75,7 @@ public class CTInboxMessage implements Parcelable {
             }
             this.wzrkParams = jsonObject.has(Constants.KEY_WZRK_PARAMS) ? jsonObject.getJSONObject(Constants.KEY_WZRK_PARAMS) : null;
         } catch (JSONException e) {
-            Logger.v("Unable to init CTInboxMessage with JSON - "+e.getLocalizedMessage());
+            Logger.v("Unable to init CTInboxMessage with JSON - " + e.getLocalizedMessage());
         }
     }
 
@@ -97,9 +108,13 @@ public class CTInboxMessage implements Parcelable {
             orientation = in.readString();
             campaignId = in.readString();
             wzrkParams = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
-        }catch (JSONException e){
-           Logger.v("Unable to parse CTInboxMessage from parcel - "+e.getLocalizedMessage());
+        } catch (JSONException e) {
+            Logger.v("Unable to parse CTInboxMessage from parcel - " + e.getLocalizedMessage());
         }
+    }
+
+    public static Creator<CTInboxMessage> getCREATOR() {
+        return CREATOR;
     }
 
     @Override
@@ -153,19 +168,6 @@ public class CTInboxMessage implements Parcelable {
         }
     }
 
-    @SuppressWarnings("unused")
-    public static final Parcelable.Creator<CTInboxMessage> CREATOR = new Parcelable.Creator<CTInboxMessage>() {
-        @Override
-        public CTInboxMessage createFromParcel(Parcel in) {
-            return new CTInboxMessage(in);
-        }
-
-        @Override
-        public CTInboxMessage[] newArray(int size) {
-            return new CTInboxMessage[size];
-        }
-    };
-
     public String getTitle() {
         return title;
     }
@@ -212,6 +214,7 @@ public class CTInboxMessage implements Parcelable {
 
     /**
      * Returns a List of tags as set on the CleverTap dashboard
+     *
      * @return List of Strings
      */
     public List<String> getTags() {
@@ -226,6 +229,7 @@ public class CTInboxMessage implements Parcelable {
      * Returns an ArrayList of the contents of {@link CTInboxMessage}
      * For Simple Message and Icon Message templates the size of this ArrayList is by default 1.
      * For Carousel templates, the size of the ArrayList is the number of slides in the Carousel
+     *
      * @return ArrayList of {@link CTInboxMessageContent} objects
      */
     public ArrayList<CTInboxMessageContent> getInboxMessageContents() {
@@ -240,17 +244,14 @@ public class CTInboxMessage implements Parcelable {
         return type;
     }
 
-    public static Creator<CTInboxMessage> getCREATOR() {
-        return CREATOR;
-    }
-
     /**
      * Returns an ArrayList of String URLs of the Carousel Images
+     *
      * @return ArrayList of Strings
      */
-    public ArrayList<String> getCarouselImages(){
+    public ArrayList<String> getCarouselImages() {
         ArrayList<String> carouselImages = new ArrayList<>();
-        for(CTInboxMessageContent ctInboxMessageContent: getInboxMessageContents()){
+        for (CTInboxMessageContent ctInboxMessageContent : getInboxMessageContents()) {
             carouselImages.add(ctInboxMessageContent.getMedia());
         }
         return carouselImages;
@@ -258,8 +259,9 @@ public class CTInboxMessage implements Parcelable {
 
     /**
      * Returns the orientation of the media.
+     *
      * @return Returns "l" for landscape
-     *          Returns "p" for portrait
+     * Returns "p" for portrait
      */
     public String getOrientation() {
         return orientation;
@@ -267,6 +269,7 @@ public class CTInboxMessage implements Parcelable {
 
     /**
      * Returns a JSONObject of wzrk_* parameters.
+     *
      * @return JSONObject of wzrk_* parameters
      */
     public JSONObject getWzrkParams() {

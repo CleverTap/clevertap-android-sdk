@@ -40,49 +40,49 @@ import com.clevertap.android.sdk.java_websocket.handshake.ServerHandshakeBuilder
  **/
 public abstract class WebSocketAdapter implements WebSocketListener {
 
-	/**
-	 * This default implementation does not do anything. Go ahead and overwrite it.
-	 *
-	 * @see com.clevertap.android.sdk.java_websocket.WebSocketListener#onWebsocketHandshakeReceivedAsServer(WebSocket, Draft, ClientHandshake)
-	 */
-	@Override
-	public ServerHandshakeBuilder onWebsocketHandshakeReceivedAsServer( WebSocket conn, Draft draft, ClientHandshake request ) throws InvalidDataException {
-		return new HandshakeImpl1Server();
-	}
+    /**
+     * This default implementation does not do anything. Go ahead and overwrite it.
+     *
+     * @see com.clevertap.android.sdk.java_websocket.WebSocketListener#onWebsocketHandshakeReceivedAsServer(WebSocket, Draft, ClientHandshake)
+     */
+    @Override
+    public ServerHandshakeBuilder onWebsocketHandshakeReceivedAsServer(WebSocket conn, Draft draft, ClientHandshake request) throws InvalidDataException {
+        return new HandshakeImpl1Server();
+    }
 
-	@Override
-	public void onWebsocketHandshakeReceivedAsClient( WebSocket conn, ClientHandshake request, ServerHandshake response ) throws InvalidDataException {
-		//To overwrite
-	}
+    @Override
+    public void onWebsocketHandshakeReceivedAsClient(WebSocket conn, ClientHandshake request, ServerHandshake response) throws InvalidDataException {
+        //To overwrite
+    }
 
-	/**
-	 * This default implementation does not do anything which will cause the connections to always progress.
-	 *
-	 * @see com.clevertap.android.sdk.java_websocket.WebSocketListener#onWebsocketHandshakeSentAsClient(WebSocket, ClientHandshake)
-	 */
-	@Override
-	public void onWebsocketHandshakeSentAsClient( WebSocket conn, ClientHandshake request ) throws InvalidDataException {
-		//To overwrite
-	}
+    /**
+     * This default implementation does not do anything which will cause the connections to always progress.
+     *
+     * @see com.clevertap.android.sdk.java_websocket.WebSocketListener#onWebsocketHandshakeSentAsClient(WebSocket, ClientHandshake)
+     */
+    @Override
+    public void onWebsocketHandshakeSentAsClient(WebSocket conn, ClientHandshake request) throws InvalidDataException {
+        //To overwrite
+    }
 
-	/**
-	 * This default implementation will send a pong in response to the received ping.
-	 * The pong frame will have the same payload as the ping frame.
-	 *
-	 * @see com.clevertap.android.sdk.java_websocket.WebSocketListener#onWebsocketPing(WebSocket, Framedata)
-	 */
-	@Override
-	public void onWebsocketPing( WebSocket conn, Framedata f ) {
-		conn.sendFrame( new PongFrame( (PingFrame)f ) );
-	}
+    /**
+     * This default implementation will send a pong in response to the received ping.
+     * The pong frame will have the same payload as the ping frame.
+     *
+     * @see com.clevertap.android.sdk.java_websocket.WebSocketListener#onWebsocketPing(WebSocket, Framedata)
+     */
+    @Override
+    public void onWebsocketPing(WebSocket conn, Framedata f) {
+        conn.sendFrame(new PongFrame((PingFrame) f));
+    }
 
-	/**
-	 * This default implementation does not do anything. Go ahead and overwrite it.
-	 *
-	 * @see com.clevertap.android.sdk.java_websocket.WebSocketListener#onWebsocketPong(WebSocket, Framedata)
-	 */
-	@Override
-	public void onWebsocketPong( WebSocket conn, Framedata f ) {
-		//To overwrite
-	}
+    /**
+     * This default implementation does not do anything. Go ahead and overwrite it.
+     *
+     * @see com.clevertap.android.sdk.java_websocket.WebSocketListener#onWebsocketPong(WebSocket, Framedata)
+     */
+    @Override
+    public void onWebsocketPong(WebSocket conn, Framedata f) {
+        //To overwrite
+    }
 }

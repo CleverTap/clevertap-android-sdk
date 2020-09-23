@@ -25,6 +25,61 @@ class CTMessageDAO {
     private String campaignId;
     private JSONObject wzrkParams;
 
+    CTMessageDAO() {
+    }
+
+    private CTMessageDAO(String id, JSONObject jsonData, boolean read, long date, long expires, String userId, List<String> tags, String campaignId, JSONObject wzrkParams) {
+        this.id = id;
+        this.jsonData = jsonData;
+        this.read = read;
+        this.date = date;
+        this.expires = expires;
+        this.userId = userId;
+        this.tags = tags;
+        this.campaignId = campaignId;
+        this.wzrkParams = wzrkParams;
+    }
+
+    static CTMessageDAO initWithJSON(JSONObject inboxMessage, String userId) {
+        try {
+            String id = inboxMessage.has("_id") ? inboxMessage.getString("_id") : null;
+            long date = inboxMessage.has("date") ? inboxMessage.getInt("date") : System.currentTimeMillis() / 1000;
+            long expires = inboxMessage.has("wzrk_ttl") ? inboxMessage.getInt("wzrk_ttl") : (System.currentTimeMillis() + 24 * 60 * Constants.ONE_MIN_IN_MILLIS) / 1000;
+            JSONObject cellObject = inboxMessage.has("msg") ? inboxMessage.getJSONObject("msg") : null;
+            List<String> tagsList = new ArrayList<>();
+            if (cellObject != null) {//Part of "msg" object
+                JSONArray tagsArray = cellObject.has("tags") ? cellObject.getJSONArray("tags") : null;
+                if (tagsArray != null) {
+                    for (int i = 0; i < tagsArray.length(); i++) {
+                        tagsList.add(tagsArray.getString(i));
+                    }
+                }
+            }
+            String campaignId = inboxMessage.has("wzrk_id") ? inboxMessage.getString("wzrk_id") : "0_0";
+            if (campaignId.equalsIgnoreCase("0_0")) {
+                inboxMessage.put("wzrk_id", campaignId);//For test inbox Notification Viewed
+            }
+            JSONObject wzrkParams = getWzrkFields(inboxMessage);
+            return (id == null) ? null : new CTMessageDAO(id, cellObject, false, date, expires, userId, tagsList, campaignId, wzrkParams);
+        } catch (JSONException e) {
+            Logger.d("Unable to parse Notification inbox message to CTMessageDao - " + e.getLocalizedMessage());
+            return null;
+        }
+    }
+
+    private static JSONObject getWzrkFields(JSONObject root) throws JSONException {
+        final JSONObject fields = new JSONObject();
+        Iterator<String> iterator = root.keys();
+
+        while (iterator.hasNext()) {
+            String keyName = iterator.next();
+            if (keyName.startsWith(Constants.WZRK_PREFIX))
+                fields.put(keyName, root.get(keyName));
+        }
+
+        return fields;
+    }
+
     String getId() {
         return id;
     }
@@ -42,9 +97,9 @@ class CTMessageDAO {
     }
 
     int isRead() {
-        if(read){
+        if (read) {
             return 1;
-        }else{
+        } else {
             return 0;
         }
     }
@@ -78,7 +133,7 @@ class CTMessageDAO {
     }
 
     String getTags() {
-        return TextUtils.join(",",tags);
+        return TextUtils.join(",", tags);
     }
 
     void setTags(String tags) {
@@ -103,80 +158,26 @@ class CTMessageDAO {
         this.wzrkParams = wzrk_params;
     }
 
-    CTMessageDAO(){}
-
-    private CTMessageDAO(String id, JSONObject jsonData, boolean read, long date, long expires, String userId, List<String> tags, String campaignId, JSONObject wzrkParams){
-        this.id = id;
-        this.jsonData = jsonData;
-        this.read = read;
-        this.date = date;
-        this.expires = expires;
-        this.userId = userId;
-        this.tags = tags;
-        this.campaignId = campaignId;
-        this.wzrkParams = wzrkParams;
-    }
-
-    static CTMessageDAO initWithJSON(JSONObject inboxMessage, String userId){
-        try {
-            String id = inboxMessage.has("_id") ? inboxMessage.getString("_id") : null;
-            long date = inboxMessage.has("date") ? inboxMessage.getInt("date") : System.currentTimeMillis()/1000;
-            long expires = inboxMessage.has("wzrk_ttl") ? inboxMessage.getInt("wzrk_ttl") : (System.currentTimeMillis() + 24*60*Constants.ONE_MIN_IN_MILLIS)/1000;
-            JSONObject cellObject = inboxMessage.has("msg") ? inboxMessage.getJSONObject("msg") : null;
-            List<String> tagsList = new ArrayList<>();
-            if(cellObject != null) {//Part of "msg" object
-                JSONArray tagsArray = cellObject.has("tags") ? cellObject.getJSONArray("tags") : null;
-                if(tagsArray != null){
-                    for(int i=0; i< tagsArray.length(); i++){
-                        tagsList.add(tagsArray.getString(i));
-                    }
-                }
-            }
-            String campaignId = inboxMessage.has("wzrk_id") ? inboxMessage.getString("wzrk_id") : "0_0";
-            if(campaignId.equalsIgnoreCase("0_0")){
-                inboxMessage.put("wzrk_id",campaignId);//For test inbox Notification Viewed
-            }
-            JSONObject wzrkParams = getWzrkFields(inboxMessage);
-            return (id == null) ? null: new CTMessageDAO(id, cellObject, false,date,expires,userId, tagsList,campaignId,wzrkParams);
-        }catch (JSONException e){
-            Logger.d("Unable to parse Notification inbox message to CTMessageDao - "+e.getLocalizedMessage());
-            return null;
-        }
-    }
-
-    JSONObject toJSON(){
+    JSONObject toJSON() {
         JSONObject jsonObject = new JSONObject();
         try {
-            jsonObject.put("id",this.id);
-            jsonObject.put("msg",this.jsonData);
-            jsonObject.put("isRead",this.read);
-            jsonObject.put("date",this.date);
-            jsonObject.put("wzrk_ttl",this.expires);
+            jsonObject.put("id", this.id);
+            jsonObject.put("msg", this.jsonData);
+            jsonObject.put("isRead", this.read);
+            jsonObject.put("date", this.date);
+            jsonObject.put("wzrk_ttl", this.expires);
             JSONArray jsonArray = new JSONArray();
-            for(int i=0; i<this.tags.size(); i++){
+            for (int i = 0; i < this.tags.size(); i++) {
                 jsonArray.put(tags.get(i));
             }
-            jsonObject.put("tags",jsonArray);
-            jsonObject.put("wzrk_id",campaignId);
-            jsonObject.put("wzrkParams",wzrkParams);
+            jsonObject.put("tags", jsonArray);
+            jsonObject.put("wzrk_id", campaignId);
+            jsonObject.put("wzrkParams", wzrkParams);
             return jsonObject;
         } catch (JSONException e) {
-            Logger.v("Unable to convert CTMessageDao to JSON - "+e.getLocalizedMessage());
+            Logger.v("Unable to convert CTMessageDao to JSON - " + e.getLocalizedMessage());
             return jsonObject;
         }
-    }
-
-    private static JSONObject getWzrkFields(JSONObject root) throws JSONException {
-        final JSONObject fields = new JSONObject();
-        Iterator<String> iterator = root.keys();
-
-        while(iterator.hasNext()){
-            String keyName = iterator.next();
-            if(keyName.startsWith(Constants.WZRK_PREFIX))
-                fields.put(keyName,root.get(keyName));
-        }
-
-        return fields;
     }
 
     boolean containsVideoOrAudio() {

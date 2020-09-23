@@ -156,10 +156,10 @@ class GeofenceUpdateTask implements CTGeofenceTask {
         } else {
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
                     "Failed to write new geofences to file");
-            if(CTGeofenceAPI.getInstance(context).getCleverTapApi() != null){
+            if (CTGeofenceAPI.getInstance(context).getCleverTapApi() != null) {
                 CTGeofenceAPI.getInstance(context)
                         .getCleverTapApi()
-                        .pushGeoFenceError(CTGeofenceConstants.ERROR_CODE,"Failed to write new geofences to file");
+                        .pushGeoFenceError(CTGeofenceConstants.ERROR_CODE, "Failed to write new geofences to file");
             }
         }
 

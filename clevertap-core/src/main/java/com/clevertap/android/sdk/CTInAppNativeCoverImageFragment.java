@@ -18,13 +18,13 @@ public class CTInAppNativeCoverImageFragment extends CTInAppBaseFullFragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         View inAppView = inflater.inflate(R.layout.inapp_cover_image, container, false);
 
-        FrameLayout fl  = inAppView.findViewById(R.id.inapp_cover_image_frame_layout);
+        FrameLayout fl = inAppView.findViewById(R.id.inapp_cover_image_frame_layout);
         fl.setBackgroundColor(Color.parseColor(inAppNotification.getBackgroundColor()));
 
         RelativeLayout relativeLayout = fl.findViewById(R.id.cover_image_relative_layout);
         ImageView imageView = relativeLayout.findViewById(R.id.cover_image);
 
-        if(inAppNotification.getInAppMediaForOrientation(currentOrientation) != null) {
+        if (inAppNotification.getInAppMediaForOrientation(currentOrientation) != null) {
             if (inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)) != null) {
                 imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
                 imageView.setTag(0);
@@ -43,10 +43,9 @@ public class CTInAppNativeCoverImageFragment extends CTInAppBaseFullFragment {
             }
         });
 
-        if(!inAppNotification.isHideCloseButton()) {
+        if (!inAppNotification.isHideCloseButton()) {
             closeImageView.setVisibility(View.GONE);
-        }
-        else {
+        } else {
             closeImageView.setVisibility(View.VISIBLE);
         }
 

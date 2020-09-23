@@ -29,10 +29,6 @@ public class ConnectionGesture implements SensorEventListener {
     private int gestureState = STATE_NONE;
     private long lastTime = -1;
 
-    public interface OnGestureListener {
-        void onGesture();
-    }
-
     public ConnectionGesture(OnGestureListener listener) {
         this.listener = listener;
     }
@@ -91,7 +87,7 @@ public class ConnectionGesture implements SensorEventListener {
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
-       // no-op
+        // no-op
     }
 
     private float[] smoothSamples(final float[] samples) {
@@ -100,6 +96,10 @@ public class ConnectionGesture implements SensorEventListener {
             smoothed[i] = old + (SMOOTHING_FACTOR * (samples[i] - old));
         }
         return smoothed;
+    }
+
+    public interface OnGestureListener {
+        void onGesture();
     }
 }
 

@@ -10,14 +10,33 @@ import java.util.UUID;
 
 public class CTInAppNotificationMedia implements Parcelable {
 
+    public static final Creator<CTInAppNotificationMedia> CREATOR = new Creator<CTInAppNotificationMedia>() {
+        @Override
+        public CTInAppNotificationMedia createFromParcel(Parcel in) {
+            return new CTInAppNotificationMedia(in);
+        }
+
+        @Override
+        public CTInAppNotificationMedia[] newArray(int size) {
+            return new CTInAppNotificationMedia[size];
+        }
+    };
+    int orientation;
     private String mediaUrl;
     private String contentType;
     private String cacheKey;
-    int orientation;
 
-    CTInAppNotificationMedia(){}
+    CTInAppNotificationMedia() {
+    }
 
-    CTInAppNotificationMedia initWithJSON(JSONObject mediaObject, int orientation){
+    private CTInAppNotificationMedia(Parcel in) {
+        mediaUrl = in.readString();
+        contentType = in.readString();
+        cacheKey = in.readString();
+        orientation = in.readInt();
+    }
+
+    CTInAppNotificationMedia initWithJSON(JSONObject mediaObject, int orientation) {
         this.orientation = orientation;
         try {
             this.contentType = mediaObject.has(Constants.KEY_CONTENT_TYPE) ? mediaObject.getString(Constants.KEY_CONTENT_TYPE) : "";
@@ -34,12 +53,12 @@ public class CTInAppNotificationMedia implements Parcelable {
                     this.mediaUrl = mediaUrl;
                 }
             }
-        }catch (JSONException e){
-            Logger.v("Error parsing Media JSONObject - "+e.getLocalizedMessage());
+        } catch (JSONException e) {
+            Logger.v("Error parsing Media JSONObject - " + e.getLocalizedMessage());
         }
-        if(contentType.isEmpty()){
+        if (contentType.isEmpty()) {
             return null;
-        }else {
+        } else {
             return this;
         }
     }
@@ -48,17 +67,17 @@ public class CTInAppNotificationMedia implements Parcelable {
         return mediaUrl;
     }
 
+    @SuppressWarnings("SameParameterValue")
+    void setMediaUrl(String mediaUrl) {
+        this.mediaUrl = mediaUrl;
+    }
+
     String getContentType() {
         return contentType;
     }
 
     String getCacheKey() {
         return cacheKey;
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    void setMediaUrl(String mediaUrl) {
-        this.mediaUrl = mediaUrl;
     }
 
     public int getOrientation() {
@@ -70,39 +89,20 @@ public class CTInAppNotificationMedia implements Parcelable {
         return contentType != null && this.mediaUrl != null && contentType.startsWith("image") && !contentType.equals("image/gif");
     }
 
-    boolean isGIF () {
+    boolean isGIF() {
         String contentType = this.getContentType();
         return contentType != null && this.mediaUrl != null && contentType.equals("image/gif");
     }
 
-    boolean isVideo () {
+    boolean isVideo() {
         String contentType = this.getContentType();
         return contentType != null && this.mediaUrl != null && contentType.startsWith("video");
     }
 
-    boolean isAudio () {
+    boolean isAudio() {
         String contentType = this.getContentType();
         return contentType != null && this.mediaUrl != null && contentType.startsWith("audio");
     }
-
-    private CTInAppNotificationMedia(Parcel in) {
-        mediaUrl = in.readString();
-        contentType = in.readString();
-        cacheKey = in.readString();
-        orientation = in.readInt();
-    }
-
-    public static final Creator<CTInAppNotificationMedia> CREATOR = new Creator<CTInAppNotificationMedia>() {
-        @Override
-        public CTInAppNotificationMedia createFromParcel(Parcel in) {
-            return new CTInAppNotificationMedia(in);
-        }
-
-        @Override
-        public CTInAppNotificationMedia[] newArray(int size) {
-            return new CTInAppNotificationMedia[size];
-        }
-    };
 
     @Override
     public int describeContents() {

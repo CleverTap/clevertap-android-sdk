@@ -4,8 +4,8 @@ import java.util.ArrayList;
 
 class ValidationResultStack {
 
-    private ArrayList<ValidationResult> pendingValidationResults = new ArrayList<>();
     private static final Boolean pendingValidationResultsLock = true;
+    private ArrayList<ValidationResult> pendingValidationResults = new ArrayList<>();
 
     //Validation
     void pushValidationResult(ValidationResult vr) {

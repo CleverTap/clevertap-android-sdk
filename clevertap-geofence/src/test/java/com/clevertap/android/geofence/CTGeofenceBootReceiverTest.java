@@ -38,13 +38,13 @@ public class CTGeofenceBootReceiverTest extends BaseTestCase {
 
     @Rule
     public PowerMockRule rule = new PowerMockRule();
-    private Logger logger;
     @Mock
     public CTGeofenceAPI ctGeofenceAPI;
     @Mock
     public BroadcastReceiver.PendingResult pendingResult;
     @Mock
     public CTGeofenceTaskManager taskManager;
+    private Logger logger;
 
     @Before
     public void setUp() throws Exception {

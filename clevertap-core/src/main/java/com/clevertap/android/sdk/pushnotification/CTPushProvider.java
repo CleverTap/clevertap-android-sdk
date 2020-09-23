@@ -32,7 +32,6 @@ public interface CTPushProvider {
 
     /**
      * Requests the push registration token.
-     *
      */
     void requestToken();
 

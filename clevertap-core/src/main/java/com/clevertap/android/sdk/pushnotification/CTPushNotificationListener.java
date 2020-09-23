@@ -10,5 +10,5 @@ public interface CTPushNotificationListener {
     /**
      * Receives a callback whenever push notification payload is received.
      */
-    void onNotificationClickedPayloadReceived(HashMap<String,Object> payload);
+    void onNotificationClickedPayloadReceived(HashMap<String, Object> payload);
 }

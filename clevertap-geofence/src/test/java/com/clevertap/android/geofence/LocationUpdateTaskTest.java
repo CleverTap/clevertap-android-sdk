@@ -39,13 +39,13 @@ public class LocationUpdateTaskTest extends BaseTestCase {
 
     @Rule
     public PowerMockRule rule = new PowerMockRule();
-    private Logger logger;
     @Mock
     public CTGeofenceAPI ctGeofenceAPI;
     @Mock
     public CTGeofenceTask.OnCompleteListener onCompleteListener;
     @Mock
     public CTLocationAdapter ctLocationAdapter;
+    private Logger logger;
 
     @Before
     public void setUp() throws Exception {
@@ -104,8 +104,8 @@ public class LocationUpdateTaskTest extends BaseTestCase {
         LocationUpdateTask task = new LocationUpdateTask(application);
         task.execute();
 
-        verify(ctLocationAdapter,never()).requestLocationUpdates();
-        verify(ctLocationAdapter,never()).removeLocationUpdates(any(PendingIntent.class));
+        verify(ctLocationAdapter, never()).requestLocationUpdates();
+        verify(ctLocationAdapter, never()).removeLocationUpdates(any(PendingIntent.class));
 
         verifyStatic(Utils.class);
         Utils.writeSettingsToFile(any(Context.class), any(CTGeofenceSettings.class));
@@ -130,7 +130,7 @@ public class LocationUpdateTaskTest extends BaseTestCase {
 
         // verify that previous update is removed
         verify(ctLocationAdapter).removeLocationUpdates(any(PendingIntent.class));
-        verify(ctLocationAdapter,never()).requestLocationUpdates();
+        verify(ctLocationAdapter, never()).requestLocationUpdates();
 
         verifyStatic(Utils.class);
         Utils.writeSettingsToFile(any(Context.class), any(CTGeofenceSettings.class));

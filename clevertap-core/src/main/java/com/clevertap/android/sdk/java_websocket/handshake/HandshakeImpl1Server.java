@@ -30,33 +30,33 @@ package com.clevertap.android.sdk.java_websocket.handshake;
  */
 public class HandshakeImpl1Server extends HandshakedataImpl1 implements ServerHandshakeBuilder {
 
-	/**
-	 * Attribute for the http status
-	 */
-	private short httpstatus;
+    /**
+     * Attribute for the http status
+     */
+    private short httpstatus;
 
-	/**
-	 * Attribute for the http status message
-	 */
-	private String httpstatusmessage;
+    /**
+     * Attribute for the http status message
+     */
+    private String httpstatusmessage;
 
-	@Override
-	public String getHttpStatusMessage() {
-		return httpstatusmessage;
-	}
+    @Override
+    public String getHttpStatusMessage() {
+        return httpstatusmessage;
+    }
 
-	@Override
-	public short getHttpStatus() {
-		return httpstatus;
-	}
+    @Override
+    public void setHttpStatusMessage(String message) {
+        this.httpstatusmessage = message;
+    }
 
-	@Override
-	public void setHttpStatusMessage( String message ) {
-		this.httpstatusmessage = message;
-	}
+    @Override
+    public short getHttpStatus() {
+        return httpstatus;
+    }
 
-	@Override
-	public void setHttpStatus( short status ) {
-		httpstatus = status;
-	}
+    @Override
+    public void setHttpStatus(short status) {
+        httpstatus = status;
+    }
 }

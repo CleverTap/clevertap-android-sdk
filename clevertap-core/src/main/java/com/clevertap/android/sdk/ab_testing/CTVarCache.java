@@ -1,10 +1,10 @@
 package com.clevertap.android.sdk.ab_testing;
 
+import org.json.JSONArray;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.json.JSONArray;
 
 final class CTVarCache {
 
@@ -43,7 +43,7 @@ final class CTVarCache {
         for (String name : new HashMap<>(vars).keySet()) {
             CTVar var = vars.get(name);
             if (var != null) {
-               serialized.put(var.toJSON());
+                serialized.put(var.toJSON());
             }
         }
         return serialized;

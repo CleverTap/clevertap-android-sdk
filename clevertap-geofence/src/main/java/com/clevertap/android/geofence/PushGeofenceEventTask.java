@@ -28,7 +28,8 @@ import java.util.concurrent.Future;
 class PushGeofenceEventTask implements CTGeofenceTask {
 
     private final Context context;
-    @NonNull private final Intent intent;
+    @NonNull
+    private final Intent intent;
     @Nullable
     private OnCompleteListener onCompleteListener;
 
@@ -65,9 +66,9 @@ class PushGeofenceEventTask implements CTGeofenceTask {
             String errorMessage = GeofenceStatusCodes.getStatusCodeString(geofencingEvent.getErrorCode());
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
                     "error while processing geofence event: " + errorMessage);
-            if(cleverTapApi != null){
+            if (cleverTapApi != null) {
                 cleverTapApi.pushGeoFenceError(CTGeofenceConstants.ERROR_CODE,
-                                "error while processing geofence event: " + errorMessage);
+                        "error while processing geofence event: " + errorMessage);
             }
             sendOnCompleteEvent();
             return;
@@ -95,9 +96,9 @@ class PushGeofenceEventTask implements CTGeofenceTask {
             // Log the error.
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
                     "invalid geofence transition type: " + geofenceTransition);
-            if(cleverTapApi != null){
+            if (cleverTapApi != null) {
                 cleverTapApi.pushGeoFenceError(CTGeofenceConstants.ERROR_CODE,
-                                "invalid geofence transition type: " + geofenceTransition);
+                        "invalid geofence transition type: " + geofenceTransition);
             }
         }
 
@@ -121,8 +122,8 @@ class PushGeofenceEventTask implements CTGeofenceTask {
      * Apps will be notified of events through {@link CTGeofenceEventsListener} on main thread
      *
      * @param triggeringGeofences List of triggered {@link Geofence}
-     * @param triggeringLocation {@link Location} object which triggered geofence event
-     * @param geofenceTransition int value of geofence transition event
+     * @param triggeringLocation  {@link Location} object which triggered geofence event
+     * @param geofenceTransition  int value of geofence transition event
      */
     @WorkerThread
     private void pushGeofenceEvents(@Nullable List<Geofence> triggeringGeofences, @Nullable Location triggeringLocation,
@@ -131,7 +132,7 @@ class PushGeofenceEventTask implements CTGeofenceTask {
         if (triggeringGeofences == null) {
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
                     "fetched triggered geofence list is null");
-            if(CTGeofenceAPI.getInstance(context).getCleverTapApi() != null){
+            if (CTGeofenceAPI.getInstance(context).getCleverTapApi() != null) {
                 CTGeofenceAPI.getInstance(context)
                         .getCleverTapApi()
                         .pushGeoFenceError(CTGeofenceConstants.ERROR_CODE,
@@ -242,7 +243,7 @@ class PushGeofenceEventTask implements CTGeofenceTask {
                         CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
                                 "Triggered geofence with id = " + triggeredGeofence.getRequestId()
                                         + " is not found in file! Dropping this event");
-                        if(CTGeofenceAPI.getInstance(context).getCleverTapApi() != null){
+                        if (CTGeofenceAPI.getInstance(context).getCleverTapApi() != null) {
                             CTGeofenceAPI.getInstance(context)
                                     .getCleverTapApi()
                                     .pushGeoFenceError(CTGeofenceConstants.ERROR_CODE,

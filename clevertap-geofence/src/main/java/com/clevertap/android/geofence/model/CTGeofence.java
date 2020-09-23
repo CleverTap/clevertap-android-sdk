@@ -31,6 +31,59 @@ public class CTGeofence {
         radius = builder.radius;
     }
 
+    /**
+     * Converts {@link JSONObject} containing an array of geofences to list of {@link CTGeofence}
+     *
+     * @param jsonObject containing an array of geofences
+     * @return list of {@link CTGeofence}
+     */
+    @NonNull
+    public static List<CTGeofence> from(@NonNull JSONObject jsonObject) {
+
+        ArrayList<CTGeofence> geofenceList = new ArrayList<>();
+
+        try {
+            JSONArray array = jsonObject.getJSONArray(CTGeofenceConstants.KEY_GEOFENCES);
+
+            for (int i = 0; i < array.length(); i++) {
+
+                JSONObject object = array.getJSONObject(i);
+                CTGeofence geofence = new Builder(String.valueOf(object.getInt(CTGeofenceConstants.KEY_ID)))
+                        .setLatitude(object.getDouble("lat"))
+                        .setLongitude(object.getDouble("lng"))
+                        .setRadius(object.getInt("r"))
+                        .build();
+                geofenceList.add(geofence);
+            }
+        } catch (JSONException e) {
+            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "Could not convert JSON to GeofenceList - " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        return geofenceList;
+
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public int getTransitionType() {
+        return transitionType;
+    }
+
+    public double getLatitude() {
+        return latitude;
+    }
+
+    public double getLongitude() {
+        return longitude;
+    }
+
+    public int getRadius() {
+        return radius;
+    }
+
     public static final class Builder {
 
         private int transitionType;
@@ -66,56 +119,5 @@ public class CTGeofence {
         CTGeofence build() {
             return new CTGeofence(this);
         }
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public int getTransitionType() {
-        return transitionType;
-    }
-
-    public double getLatitude() {
-        return latitude;
-    }
-
-    public double getLongitude() {
-        return longitude;
-    }
-
-    public int getRadius() {
-        return radius;
-    }
-
-    /**
-     * Converts {@link JSONObject} containing an array of geofences to list of {@link CTGeofence}
-     * @param jsonObject containing an array of geofences
-     * @return list of {@link CTGeofence}
-     */
-    @NonNull public static List<CTGeofence> from(@NonNull JSONObject jsonObject) {
-
-        ArrayList<CTGeofence> geofenceList = new ArrayList<>();
-
-        try {
-            JSONArray array = jsonObject.getJSONArray(CTGeofenceConstants.KEY_GEOFENCES);
-
-            for (int i = 0; i < array.length(); i++) {
-
-                JSONObject object = array.getJSONObject(i);
-                CTGeofence geofence = new Builder(String.valueOf(object.getInt(CTGeofenceConstants.KEY_ID)))
-                        .setLatitude(object.getDouble("lat"))
-                        .setLongitude(object.getDouble("lng"))
-                        .setRadius(object.getInt("r"))
-                        .build();
-                geofenceList.add(geofence);
-            }
-        } catch (JSONException e) {
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "Could not convert JSON to GeofenceList - " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return geofenceList;
-
     }
 }

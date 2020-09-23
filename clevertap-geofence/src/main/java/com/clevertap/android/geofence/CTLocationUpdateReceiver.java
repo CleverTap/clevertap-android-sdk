@@ -30,8 +30,9 @@ public class CTLocationUpdateReceiver extends BroadcastReceiver {
 
     /**
      * Creates {@link PushLocationEventTask} and sends it to Queue using {@link CTGeofenceTaskManager}
+     *
      * @param context application {@link Context}
-     * @param intent an instance of {@link Intent} containing current location of user
+     * @param intent  an instance of {@link Intent} containing current location of user
      */
     @MainThread
     @Override

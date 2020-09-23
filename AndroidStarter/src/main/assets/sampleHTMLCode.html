@@ -1,20 +1,28 @@
-
 <html>
-    <title>
-        my title
-    </title>
+<title>
+    my title
+</title>
 
-    <body>
-        <button onclick='invokeEvent()'>Push Event</button><br/><br/>
-        <button onclick='invokeEventWithProps()'>Push Event Props</button><br/><br/>
-        <button onclick='invokePushProfile()'>Push Profile</button><br/><br/>
-        <button onclick='invokeAddProp()'>Add Property</button><br/><br/>
-        <button onclick='invokeAddMultiProps()'>Add Multivalues</button><br/><br/>
-        <button onclick='invokeRemoveProp()'>Remove Property</button><br/><br/>
-        <button onclick='invokeRemoveMultiProps()'>Remove Multivalues</button><br/><br/>
-        <button onclick='invokeRemoveForKey()'>Remove for key</button><br/><br/>
-        <button onclick='invokeSetMultiValue()'>Set Multivalues</button><br/><br/>
-        <script>
+<body>
+<button onclick='invokeEvent()'>Push Event</button>
+<br/><br/>
+<button onclick='invokeEventWithProps()'>Push Event Props</button>
+<br/><br/>
+<button onclick='invokePushProfile()'>Push Profile</button>
+<br/><br/>
+<button onclick='invokeAddProp()'>Add Property</button>
+<br/><br/>
+<button onclick='invokeAddMultiProps()'>Add Multivalues</button>
+<br/><br/>
+<button onclick='invokeRemoveProp()'>Remove Property</button>
+<br/><br/>
+<button onclick='invokeRemoveMultiProps()'>Remove Multivalues</button>
+<br/><br/>
+<button onclick='invokeRemoveForKey()'>Remove for key</button>
+<br/><br/>
+<button onclick='invokeSetMultiValue()'>Set Multivalues</button>
+<br/><br/>
+<script>
         console.log('LOG')
         function invokeEvent() {
             CleverTap.pushEvent('WebView button clicked')
@@ -48,6 +56,9 @@
             var values = ['xyz123','xyz1234']
             CleverTap.setMultiValueForKey('foo', JSON.stringify(values));
         }
-        </script>
-    </body>
+
+
+
+</script>
+</body>
 </html>

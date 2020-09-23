@@ -69,7 +69,6 @@ public class GoogleLocationAdapterTest extends BaseTestCase {
 
     @Rule
     public PowerMockRule rule = new PowerMockRule();
-    private Logger logger;
     @Mock
     public CTGeofenceAPI ctGeofenceAPI;
     @Mock
@@ -80,6 +79,7 @@ public class GoogleLocationAdapterTest extends BaseTestCase {
     public FusedLocationProviderClient providerClient;
     @Mock
     public CleverTapAPI cleverTapAPI;
+    private Logger logger;
 
     @Before
     public void setUp() throws Exception {
@@ -208,7 +208,7 @@ public class GoogleLocationAdapterTest extends BaseTestCase {
         // Get WorkInfo and outputData
         List<WorkInfo> workInfos = workManager.getWorkInfosForUniqueWork(TAG_WORK_LOCATION_UPDATES).get();
         // Assert work is enqueued by locationAdapter.requestLocationUpdates()
-        assertThat(workInfos.get(0).getState(), isIn(new WorkInfo.State[]{WorkInfo.State.ENQUEUED,WorkInfo.State.RUNNING}));
+        assertThat(workInfos.get(0).getState(), isIn(new WorkInfo.State[]{WorkInfo.State.ENQUEUED, WorkInfo.State.RUNNING}));
 
         verify(providerClient).removeLocationUpdates(any(PendingIntent.class));
 
@@ -218,7 +218,7 @@ public class GoogleLocationAdapterTest extends BaseTestCase {
     }
 
     @Test
-    public void testGetLastLocation(){
+    public void testGetLastLocation() {
         final Location expectedLocation = GeofenceEventFake.getTriggeredLocation();
         when(LocationServices.getFusedLocationProviderClient(application))
                 .thenReturn(providerClient);
@@ -237,13 +237,13 @@ public class GoogleLocationAdapterTest extends BaseTestCase {
         locationAdapter.getLastLocation(new CTLocationCallback() {
             @Override
             public void onLocationComplete(Location location) {
-                Assert.assertSame(expectedLocation,location);
+                Assert.assertSame(expectedLocation, location);
             }
         });
     }
 
     @Test
-    public void testApplySettings(){
+    public void testApplySettings() {
 
         CTGeofenceSettings ctGeofenceSettings = new CTGeofenceSettings.Builder()
                 .setLocationFetchMode(CTGeofenceSettings.FETCH_LAST_LOCATION_PERIODIC)
@@ -259,21 +259,21 @@ public class GoogleLocationAdapterTest extends BaseTestCase {
         final GoogleLocationAdapter locationAdapter = new GoogleLocationAdapter(application);
 
         try {
-            WhiteboxImpl.invokeMethod(locationAdapter,"applySettings",application);
+            WhiteboxImpl.invokeMethod(locationAdapter, "applySettings", application);
             LocationRequest actualLocationRequest = WhiteboxImpl.invokeMethod(locationAdapter,
                     "getLocationRequest");
 
-            assertEquals(ctGeofenceSettings.getInterval(),actualLocationRequest.getInterval());
-            assertEquals(ctGeofenceSettings.getFastestInterval(),actualLocationRequest.getFastestInterval());
+            assertEquals(ctGeofenceSettings.getInterval(), actualLocationRequest.getInterval());
+            assertEquals(ctGeofenceSettings.getFastestInterval(), actualLocationRequest.getFastestInterval());
             assertEquals(ctGeofenceSettings.getSmallestDisplacement(),
-                    actualLocationRequest.getSmallestDisplacement(),0);
-            assertEquals(LocationRequest.PRIORITY_LOW_POWER,actualLocationRequest.getPriority());
+                    actualLocationRequest.getSmallestDisplacement(), 0);
+            assertEquals(LocationRequest.PRIORITY_LOW_POWER, actualLocationRequest.getPriority());
 
             Field actualFetchMode = WhiteboxImpl.getField(GoogleLocationAdapter.class, "locationFetchMode");
             Field actualLocationUpdateEnabled = WhiteboxImpl.getField(GoogleLocationAdapter.class,
                     "backgroundLocationUpdatesEnabled");
 
-            assertEquals(ctGeofenceSettings.getLocationFetchMode(),actualFetchMode.getInt(locationAdapter));
+            assertEquals(ctGeofenceSettings.getLocationFetchMode(), actualFetchMode.getInt(locationAdapter));
             assertEquals(ctGeofenceSettings.isBackgroundLocationUpdatesEnabled(),
                     actualLocationUpdateEnabled.getBoolean(locationAdapter));
         } catch (Exception e) {

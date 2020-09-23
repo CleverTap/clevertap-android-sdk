@@ -30,7 +30,7 @@ class Utils {
     /**
      * Checks if Application has provided permission
      *
-     * @param context application {@link Context}
+     * @param context    application {@link Context}
      * @param permission for example, {@link Manifest.permission#ACCESS_FINE_LOCATION}
      * @return
      */
@@ -203,7 +203,7 @@ class Utils {
      * <br>
      * <b>Must be called from background thread</b>
      *
-     * @param context application {@link Context}
+     * @param context            application {@link Context}
      * @param ctGeofenceSettings new {@link CTGeofenceSettings}
      */
     @WorkerThread
@@ -286,11 +286,10 @@ class Utils {
     /**
      * Creates sub array from provided {@link JSONArray}
      *
-     * @param arr {@link JSONArray}
+     * @param arr       {@link JSONArray}
      * @param fromIndex fromIndex
-     * @param toIndex toIndex
+     * @param toIndex   toIndex
      * @return sub array exclusive of toIndex
-     *
      * @throws IllegalStateException if fromIndex > toIndex
      */
     @NonNull
@@ -320,7 +319,7 @@ class Utils {
     /**
      * Notifies Listener for location update on main thread through {@link CTLocationUpdatesListener}
      *
-     * @param context application {@link Context}
+     * @param context  application {@link Context}
      * @param location instance of {@link Location}
      */
     static void notifyLocationUpdates(@NonNull Context context, @Nullable final Location location) {

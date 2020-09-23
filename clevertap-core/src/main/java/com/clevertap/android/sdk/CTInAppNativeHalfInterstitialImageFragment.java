@@ -23,27 +23,27 @@ public class CTInAppNativeHalfInterstitialImageFragment extends CTInAppBaseFullF
     @SuppressWarnings({"unused"})
     private int layoutHeight = 0;
     private int layoutWidth = 0;
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
 
         View inAppView;
-        if(inAppNotification.isTablet() && isTablet()) {
+        if (inAppNotification.isTablet() && isTablet()) {
             inAppView = inflater.inflate(R.layout.tab_inapp_half_interstitial_image, container, false);
-        }else{
+        } else {
             inAppView = inflater.inflate(R.layout.inapp_half_interstitial_image, container, false);
         }
 
-        final FrameLayout fl  = inAppView.findViewById(R.id.inapp_half_interstitial_image_frame_layout);
+        final FrameLayout fl = inAppView.findViewById(R.id.inapp_half_interstitial_image_frame_layout);
 
-        @SuppressLint("ResourceType")
-        final CloseImageView closeImageView = fl.findViewById(199272);
+        @SuppressLint("ResourceType") final CloseImageView closeImageView = fl.findViewById(199272);
 
         fl.setBackgroundDrawable(new ColorDrawable(0xBB000000));
         relativeLayout = fl.findViewById(R.id.half_interstitial_image_relative_layout);
         relativeLayout.setBackgroundColor(Color.parseColor(inAppNotification.getBackgroundColor()));
         ImageView imageView = relativeLayout.findViewById(R.id.half_interstitial_image);
-        switch (currentOrientation){
+        switch (currentOrientation) {
             case Configuration.ORIENTATION_PORTRAIT:
                 relativeLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                     @Override
@@ -64,7 +64,7 @@ public class CTInAppNativeHalfInterstitialImageFragment extends CTInAppBaseFullF
                         } else {
                             if (isTablet()) {
                                 layoutParams.setMargins(getScaledPixels(140), getScaledPixels(140), getScaledPixels(140), getScaledPixels(140));
-                                layoutParams.width = relativeLayout1.getMeasuredWidth()-getScaledPixels(210);
+                                layoutParams.width = relativeLayout1.getMeasuredWidth() - getScaledPixels(210);
                                 layoutHeight = layoutParams.height = (int) (layoutParams.width * 1.3f);
                                 relativeLayout1.setLayoutParams(layoutParams);
                                 new Handler().post(new Runnable() {
@@ -106,9 +106,9 @@ public class CTInAppNativeHalfInterstitialImageFragment extends CTInAppBaseFullF
                         if (!inAppNotification.isTablet() || !isTablet()) {
                             if (isTablet()) {
                                 layoutParams.setMargins(getScaledPixels(140), getScaledPixels(140), getScaledPixels(140), getScaledPixels(140));
-                                layoutParams.height = relativeLayout1.getMeasuredHeight()-getScaledPixels(210);
-                                layoutParams.width = (int) (layoutParams.height *1.3f);
-                                layoutParams.gravity=Gravity.CENTER;
+                                layoutParams.height = relativeLayout1.getMeasuredHeight() - getScaledPixels(210);
+                                layoutParams.width = (int) (layoutParams.height * 1.3f);
+                                layoutParams.gravity = Gravity.CENTER;
                                 relativeLayout1.setLayoutParams(layoutParams);
 
                                 new Handler().post(new Runnable() {
@@ -132,7 +132,7 @@ public class CTInAppNativeHalfInterstitialImageFragment extends CTInAppBaseFullF
                                     }
                                 });
                             }
-                        } else{
+                        } else {
                             layoutParams.width = (int) (relativeLayout1.getMeasuredHeight() * 1.3f);
                             layoutParams.gravity = Gravity.CENTER;
                             relativeLayout1.setLayoutParams(layoutParams);
@@ -156,7 +156,7 @@ public class CTInAppNativeHalfInterstitialImageFragment extends CTInAppBaseFullF
                 break;
 
         }
-        if(inAppNotification.getInAppMediaForOrientation(currentOrientation) != null) {
+        if (inAppNotification.getInAppMediaForOrientation(currentOrientation) != null) {
             if (inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)) != null) {
                 imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
                 imageView.setTag(0);
@@ -172,10 +172,9 @@ public class CTInAppNativeHalfInterstitialImageFragment extends CTInAppBaseFullF
             }
         });
 
-        if(!inAppNotification.isHideCloseButton()) {
+        if (!inAppNotification.isHideCloseButton()) {
             closeImageView.setVisibility(View.GONE);
-        }
-        else {
+        } else {
             closeImageView.setVisibility(View.VISIBLE);
         }
 

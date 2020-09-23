@@ -38,13 +38,17 @@ public class CTGeofenceAPI implements GeofenceCallback {
 
     public static final String GEOFENCE_LOG_TAG = "CTGeofence";
     private static CTGeofenceAPI ctGeofenceAPI;
-    private final Context context;
     private static Logger logger;
+
+    static {
+        logger = new Logger(Logger.DEBUG);
+    }
+
+    private final Context context;
     @Nullable
     private CTLocationAdapter ctLocationAdapter;
     @Nullable
     private CTGeofenceAdapter ctGeofenceAdapter;
-
     @Nullable
     private CTGeofenceSettings ctGeofenceSettings;
     @Nullable
@@ -72,12 +76,9 @@ public class CTGeofenceAPI implements GeofenceCallback {
         }
     }
 
-    static {
-        logger = new Logger(Logger.DEBUG);
-    }
-
     /**
      * Retrieves the {@code default} singleton instance of {@link CTGeofenceAPI}.
+     *
      * @param context A {@link Context} for Application
      * @return The singleton instance of {@link CTGeofenceAPI}
      */
@@ -94,12 +95,17 @@ public class CTGeofenceAPI implements GeofenceCallback {
         return ctGeofenceAPI;
     }
 
+    public static Logger getLogger() {
+        return logger;
+    }
+
     /**
      * Initializes and activates SDK with provided {@link CTGeofenceSettings} and {@link CleverTapAPI}
      * instance.
+     *
      * @param ctGeofenceSettings instance of {@link CTGeofenceSettings}.Can be null in which case
      *                           default settings will be applied.
-     * @param cleverTapAPI NonNull instance of  {@link CleverTapAPI}.
+     * @param cleverTapAPI       NonNull instance of  {@link CleverTapAPI}.
      */
     public void init(CTGeofenceSettings ctGeofenceSettings, @NonNull CleverTapAPI cleverTapAPI) {
 
@@ -114,33 +120,6 @@ public class CTGeofenceAPI implements GeofenceCallback {
     }
 
     /**
-     * Sets geofence API configuration settings with provided {@link CTGeofenceSettings}
-     *
-     * @param ctGeofenceSettings instance of {@link CTGeofenceSettings}
-     */
-    @SuppressWarnings("unused")
-    private void setGeofenceSettings(CTGeofenceSettings ctGeofenceSettings) {
-
-        if (this.ctGeofenceSettings != null) {
-            logger.verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Settings already configured");
-            return;
-        }
-
-        this.ctGeofenceSettings = ctGeofenceSettings;
-    }
-
-    /**
-     * Sets {@link CleverTapAPI} instance to be used by SDK
-     *
-     * @param cleverTapAPI instance of {@link CleverTapAPI}
-     */
-    @SuppressWarnings("unused")
-    private void setCleverTapApi(CleverTapAPI cleverTapAPI) {
-        this.cleverTapAPI = cleverTapAPI;
-    }
-
-    /**
      * Sets {@link OnGeofenceApiInitializedListener} for Geofence SDK initialized callback on main thread
      *
      * @param onGeofenceApiInitializedListener instance of {@link OnGeofenceApiInitializedListener}
@@ -150,28 +129,6 @@ public class CTGeofenceAPI implements GeofenceCallback {
             @NonNull OnGeofenceApiInitializedListener onGeofenceApiInitializedListener) {
         this.onGeofenceApiInitializedListener = onGeofenceApiInitializedListener;
     }
-
-    /**
-     * Sets CleverTap account id which will be used by SDK to recreate {@link CleverTapAPI}
-     * instance when an app is in killed state. Error will be sent to CleverTap in case null or empty.
-     *
-     * @param accountId CleverTap account id
-     */
-    @SuppressWarnings("unused")
-    private void setAccountId(String accountId) {
-
-        if (accountId == null || accountId.isEmpty()) {
-            logger.debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                    "Account Id is null or empty");
-            if (this.cleverTapAPI != null) {
-                this.cleverTapAPI.pushGeoFenceError(CTGeofenceConstants.ERROR_CODE, "Account Id is null or empty");
-            }
-            return;
-        }
-
-        this.accountId = accountId;
-    }
-
 
     /**
      * Activates SDK by registering {@link GeofenceCallback}
@@ -210,6 +167,7 @@ public class CTGeofenceAPI implements GeofenceCallback {
      * if application has {@link Manifest.permission#ACCESS_FINE_LOCATION} permission. SDK initialization
      * callback({@link OnGeofenceApiInitializedListener#OnGeofenceApiInitialized()}) will be raised as soon as
      * {@link LocationUpdateTask} finishes it's execution.
+     *
      * @throws IllegalStateException if Geofence SDK is not initialized before calling this method
      */
     @SuppressWarnings("WeakerAccess")
@@ -290,7 +248,7 @@ public class CTGeofenceAPI implements GeofenceCallback {
                 GeofenceStorageHelper.putDouble(context
                         , CTGeofenceConstants.KEY_LONGITUDE, DEFAULT_LONGITUDE);
                 GeofenceStorageHelper.putLong(context
-                        , CTGeofenceConstants.KEY_LAST_LOCATION_EP,0);
+                        , CTGeofenceConstants.KEY_LAST_LOCATION_EP, 0);
 
                 isActivated = false;
             }
@@ -412,7 +370,8 @@ public class CTGeofenceAPI implements GeofenceCallback {
      * @return a Future representing pending completion of the task of sending location to server,
      * can be null if CleverTap SDK decides not to send it to server
      */
-    @Nullable Future<?> processTriggeredLocation(@NonNull Location location) {
+    @Nullable
+    Future<?> processTriggeredLocation(@NonNull Location location) {
         Future<?> future = null;
 
         try {
@@ -466,6 +425,7 @@ public class CTGeofenceAPI implements GeofenceCallback {
 
     /**
      * Creates default instance of {@link CTGeofenceSettings}
+     *
      * @return default instance of {@link CTGeofenceSettings}
      */
     @NonNull
@@ -482,13 +442,13 @@ public class CTGeofenceAPI implements GeofenceCallback {
         this.ctGeofenceEventsListener = ctGeofenceEventsListener;
     }
 
-    public void setCtLocationUpdatesListener(@NonNull CTLocationUpdatesListener ctLocationUpdatesListener) {
-        this.ctLocationUpdatesListener = ctLocationUpdatesListener;
-    }
-
     @Nullable
     public CTLocationUpdatesListener getCtLocationUpdatesListener() {
         return ctLocationUpdatesListener;
+    }
+
+    public void setCtLocationUpdatesListener(@NonNull CTLocationUpdatesListener ctLocationUpdatesListener) {
+        this.ctLocationUpdatesListener = ctLocationUpdatesListener;
     }
 
     @Nullable
@@ -506,18 +466,37 @@ public class CTGeofenceAPI implements GeofenceCallback {
         return cleverTapAPI;
     }
 
+    /**
+     * Sets {@link CleverTapAPI} instance to be used by SDK
+     *
+     * @param cleverTapAPI instance of {@link CleverTapAPI}
+     */
+    @SuppressWarnings("unused")
+    private void setCleverTapApi(CleverTapAPI cleverTapAPI) {
+        this.cleverTapAPI = cleverTapAPI;
+    }
+
     @SuppressWarnings("WeakerAccess")
     public @Nullable
     CTGeofenceSettings getGeofenceSettings() {
         return ctGeofenceSettings;
     }
 
-    public static Logger getLogger() {
-        return logger;
-    }
+    /**
+     * Sets geofence API configuration settings with provided {@link CTGeofenceSettings}
+     *
+     * @param ctGeofenceSettings instance of {@link CTGeofenceSettings}
+     */
+    @SuppressWarnings("unused")
+    private void setGeofenceSettings(CTGeofenceSettings ctGeofenceSettings) {
 
-    public interface OnGeofenceApiInitializedListener {
-        void OnGeofenceApiInitialized();
+        if (this.ctGeofenceSettings != null) {
+            logger.verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                    "Settings already configured");
+            return;
+        }
+
+        this.ctGeofenceSettings = ctGeofenceSettings;
     }
 
     @NonNull
@@ -525,7 +504,32 @@ public class CTGeofenceAPI implements GeofenceCallback {
         return Utils.emptyIfNull(accountId);
     }
 
+    /**
+     * Sets CleverTap account id which will be used by SDK to recreate {@link CleverTapAPI}
+     * instance when an app is in killed state. Error will be sent to CleverTap in case null or empty.
+     *
+     * @param accountId CleverTap account id
+     */
+    @SuppressWarnings("unused")
+    private void setAccountId(String accountId) {
+
+        if (accountId == null || accountId.isEmpty()) {
+            logger.debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                    "Account Id is null or empty");
+            if (this.cleverTapAPI != null) {
+                this.cleverTapAPI.pushGeoFenceError(CTGeofenceConstants.ERROR_CODE, "Account Id is null or empty");
+            }
+            return;
+        }
+
+        this.accountId = accountId;
+    }
+
     boolean isActivated() {
         return isActivated;
+    }
+
+    public interface OnGeofenceApiInitializedListener {
+        void OnGeofenceApiInitialized();
     }
 }

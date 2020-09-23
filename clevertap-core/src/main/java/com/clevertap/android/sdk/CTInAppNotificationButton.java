@@ -13,6 +13,18 @@ import java.util.Iterator;
 
 class CTInAppNotificationButton implements Parcelable {
 
+    @SuppressWarnings("unused")
+    public static final Parcelable.Creator<CTInAppNotificationButton> CREATOR = new Parcelable.Creator<CTInAppNotificationButton>() {
+        @Override
+        public CTInAppNotificationButton createFromParcel(Parcel in) {
+            return new CTInAppNotificationButton(in);
+        }
+
+        @Override
+        public CTInAppNotificationButton[] newArray(int size) {
+            return new CTInAppNotificationButton[size];
+        }
+    };
     private String text;
     private String textColor;
     private String backgroundColor;
@@ -21,10 +33,27 @@ class CTInAppNotificationButton implements Parcelable {
     private String error;
     private String borderColor;
     private String borderRadius;
-
     private HashMap<String, String> keyValues;
 
     CTInAppNotificationButton() {
+    }
+
+    @SuppressWarnings("unchecked")
+    protected CTInAppNotificationButton(Parcel in) {
+        text = in.readString();
+        textColor = in.readString();
+        backgroundColor = in.readString();
+        actionUrl = in.readString();
+        borderColor = in.readString();
+        borderRadius = in.readString();
+
+        try {
+            jsonDescription = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        error = in.readString();
+        keyValues = in.readHashMap(null);
     }
 
     String getText() {
@@ -97,24 +126,6 @@ class CTInAppNotificationButton implements Parcelable {
         this.borderRadius = borderRadius;
     }
 
-    @SuppressWarnings("unchecked")
-    protected CTInAppNotificationButton(Parcel in) {
-        text = in.readString();
-        textColor = in.readString();
-        backgroundColor = in.readString();
-        actionUrl = in.readString();
-        borderColor = in.readString();
-        borderRadius = in.readString();
-
-        try {
-            jsonDescription = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        error = in.readString();
-        keyValues = in.readHashMap(null);
-    }
-
     public HashMap<String, String> getKeyValues() {
         return keyValues;
     }
@@ -163,6 +174,7 @@ class CTInAppNotificationButton implements Parcelable {
 
     /**
      * Checks if custom Key Value pair is present or not
+     *
      * @param actions - action object in the payload
      * @return
      * @throws JSONException
@@ -194,17 +206,4 @@ class CTInAppNotificationButton implements Parcelable {
         dest.writeString(error);
         dest.writeMap(keyValues);
     }
-
-    @SuppressWarnings("unused")
-    public static final Parcelable.Creator<CTInAppNotificationButton> CREATOR = new Parcelable.Creator<CTInAppNotificationButton>() {
-        @Override
-        public CTInAppNotificationButton createFromParcel(Parcel in) {
-            return new CTInAppNotificationButton(in);
-        }
-
-        @Override
-        public CTInAppNotificationButton[] newArray(int size) {
-            return new CTInAppNotificationButton[size];
-        }
-    };
 }

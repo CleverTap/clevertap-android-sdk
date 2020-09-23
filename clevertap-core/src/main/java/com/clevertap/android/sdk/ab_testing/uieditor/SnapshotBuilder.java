@@ -44,35 +44,16 @@ import java.util.concurrent.TimeoutException;
 
 final class SnapshotBuilder {
 
-    final static class ViewSnapshotConfig {
-        ResourceIds resourceIds;
-        final List<ViewProperty> propertyDescriptionList;
-
-        ViewSnapshotConfig(List<ViewProperty> propertyDescriptions, ResourceIds resourceIds) {
-            this.resourceIds = resourceIds;
-            this.propertyDescriptionList = propertyDescriptions;
-        }
-    }
     private static final int MAX_CLASS_CACHE_SIZE = 255;
     private static final Handler mainThreadHandler = new Handler(Looper.getMainLooper());
     private static final RootViewsGenerator rootViewsGenerator = new RootViewsGenerator();
     static private final ClassCache classCache = new ClassCache(MAX_CLASS_CACHE_SIZE);
 
-    private static class ClassCache extends LruCache<Class<?>, String> {
-        ClassCache(int maxSize) {
-            super(maxSize);
-        }
-        @Override
-        protected String create(Class<?> klass) {
-            return klass.getCanonicalName();
-        }
-    }
-
-    private static Logger getConfigLogger(CleverTapInstanceConfig config){
+    private static Logger getConfigLogger(CleverTapInstanceConfig config) {
         return config.getLogger();
     }
 
-    private static String getAccountId(CleverTapInstanceConfig config){
+    private static String getAccountId(CleverTapInstanceConfig config) {
         return config.getAccountId();
     }
 
@@ -88,11 +69,11 @@ final class SnapshotBuilder {
         try {
             rootViewList = rootViewsFuture.get(1, TimeUnit.SECONDS);
         } catch (final InterruptedException e) {
-            getConfigLogger(config).debug(getAccountId(config),"Screenshot interrupted.", e);
+            getConfigLogger(config).debug(getAccountId(config), "Screenshot interrupted.", e);
         } catch (final TimeoutException e) {
             getConfigLogger(config).debug(getAccountId(config), "Screenshot timed out.", e);
         } catch (final ExecutionException e) {
-            getConfigLogger(config).verbose(getAccountId(config),"Screenshot error", e);
+            getConfigLogger(config).verbose(getAccountId(config), "Screenshot error", e);
         }
 
         final int viewCount = rootViewList.size();
@@ -153,7 +134,7 @@ final class SnapshotBuilder {
         j.name("ct_id_name").value(viewName);
 
         final CharSequence contentDescription = view.getContentDescription();
-        if ( contentDescription == null) {
+        if (contentDescription == null) {
             j.name("contentDescription").nullValue();
         } else {
             j.name("contentDescription").value(contentDescription.toString());
@@ -239,7 +220,7 @@ final class SnapshotBuilder {
                 //noinspection StatementWithEmptyBody
                 if (null == value) {
                     // no-op
-                }  else if (value instanceof Boolean) {
+                } else if (value instanceof Boolean) {
                     j.name(desc.name).value((Boolean) value);
                 } else if (value instanceof Number) {
                     j.name(desc.name).value((Number) value);
@@ -279,6 +260,27 @@ final class SnapshotBuilder {
         }
     }
 
+    final static class ViewSnapshotConfig {
+        final List<ViewProperty> propertyDescriptionList;
+        ResourceIds resourceIds;
+
+        ViewSnapshotConfig(List<ViewProperty> propertyDescriptions, ResourceIds resourceIds) {
+            this.resourceIds = resourceIds;
+            this.propertyDescriptionList = propertyDescriptions;
+        }
+    }
+
+    private static class ClassCache extends LruCache<Class<?>, String> {
+        ClassCache(int maxSize) {
+            super(maxSize);
+        }
+
+        @Override
+        protected String create(Class<?> klass) {
+            return klass.getCanonicalName();
+        }
+    }
+
     private static class RootView {
         private final static String UNSPECIFIED = "unspecified";
         private final static String LANDSCAPE = "landscape";
@@ -304,8 +306,8 @@ final class SnapshotBuilder {
     }
 
     private static class Screenshot {
-        private Bitmap cachedScreenshot;
         private final Paint paint;
+        private Bitmap cachedScreenshot;
 
         Screenshot() {
             cachedScreenshot = null;
@@ -347,12 +349,11 @@ final class SnapshotBuilder {
     }
 
     private static class RootViewsGenerator implements Callable<List<RootView>> {
-        private UIEditor.ActivitySet activitySet;
         private final List<RootView> rootViews;
         private final DisplayMetrics displayMetrics;
         private final Screenshot screenshot;
-
         private final int clientDensity = DisplayMetrics.DENSITY_DEFAULT;
+        private UIEditor.ActivitySet activitySet;
 
         RootViewsGenerator() {
             displayMetrics = new DisplayMetrics();
@@ -393,8 +394,7 @@ final class SnapshotBuilder {
             Bitmap bitmap = null;
 
             try {
-                @SuppressWarnings("JavaReflectionMemberAccess") @SuppressLint("PrivateApi")
-                final Method createSnapshot = View.class.getDeclaredMethod("createSnapshot", Bitmap.Config.class, Integer.TYPE, Boolean.TYPE);
+                @SuppressWarnings("JavaReflectionMemberAccess") @SuppressLint("PrivateApi") final Method createSnapshot = View.class.getDeclaredMethod("createSnapshot", Bitmap.Config.class, Integer.TYPE, Boolean.TYPE);
                 createSnapshot.setAccessible(true);
                 bitmap = (Bitmap) createSnapshot.invoke(rootView, Bitmap.Config.RGB_565, Color.WHITE, false);
             } catch (final NoSuchMethodException e) {

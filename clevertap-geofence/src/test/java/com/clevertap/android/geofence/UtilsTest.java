@@ -5,9 +5,9 @@ import android.content.Context;
 import android.location.Location;
 import android.os.Build;
 
-import com.clevertap.android.geofence.interfaces.CTLocationUpdatesListener;
 import com.clevertap.android.geofence.fakes.CTGeofenceSettingsFake;
 import com.clevertap.android.geofence.fakes.GeofenceJSON;
+import com.clevertap.android.geofence.interfaces.CTLocationUpdatesListener;
 import com.clevertap.android.sdk.CleverTapAPI;
 
 import org.hamcrest.CoreMatchers;
@@ -57,13 +57,12 @@ import static org.powermock.api.mockito.PowerMockito.when;
 @PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*", "androidx.*", "org.json.*"})
 @PrepareForTest({FileUtils.class, CTGeofenceAPI.class, CleverTapAPI.class, com.clevertap.android.sdk.Utils.class})
 public class UtilsTest extends BaseTestCase {
-    private ShadowApplication shadowApplication;
-
-   /* @Mock
-    private static Logger logger;*/
-
     @Rule
     public PowerMockRule rule = new PowerMockRule();
+
+    /* @Mock
+     private static Logger logger;*/
+    private ShadowApplication shadowApplication;
     private Logger logger;
     private CTGeofenceAPI ctGeofenceAPI;
 
@@ -283,14 +282,14 @@ public class UtilsTest extends BaseTestCase {
     }
 
     @Test
-    public void testNotifyLocationUpdates(){
+    public void testNotifyLocationUpdates() {
         mockStatic(com.clevertap.android.sdk.Utils.class);
 
         CTLocationUpdatesListener locationUpdatesListener = Mockito.mock(CTLocationUpdatesListener.class);
 
         Mockito.when(ctGeofenceAPI.getCtLocationUpdatesListener()).thenReturn(locationUpdatesListener);
 
-        Utils.notifyLocationUpdates(application,Mockito.mock(Location.class));
+        Utils.notifyLocationUpdates(application, Mockito.mock(Location.class));
 
         ArgumentCaptor<Runnable> runnableArgumentCaptor = ArgumentCaptor.forClass(Runnable.class);
 

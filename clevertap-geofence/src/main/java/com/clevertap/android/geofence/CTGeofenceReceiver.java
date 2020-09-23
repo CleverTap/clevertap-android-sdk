@@ -23,16 +23,16 @@ public class CTGeofenceReceiver extends BroadcastReceiver {
 
     /**
      * Creates {@link PushGeofenceEventTask} and sends it to Queue using {@link CTGeofenceTaskManager}
+     *
      * @param context application {@link Context}
-     * @param intent an instance of {@link Intent} containing triggered
-     * {@link com.google.android.gms.location.GeofencingEvent}
+     * @param intent  an instance of {@link Intent} containing triggered
+     *                {@link com.google.android.gms.location.GeofencingEvent}
      */
     @MainThread
     @Override
     public void onReceive(final Context context, final Intent intent) {
 
-        if (intent == null)
-        {
+        if (intent == null) {
             return;
         }
 

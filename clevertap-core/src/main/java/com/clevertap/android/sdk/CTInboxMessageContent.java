@@ -17,6 +17,18 @@ import java.util.Iterator;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class CTInboxMessageContent implements Parcelable {
 
+    @SuppressWarnings("unused")
+    public static final Parcelable.Creator<CTInboxMessageContent> CREATOR = new Parcelable.Creator<CTInboxMessageContent>() {
+        @Override
+        public CTInboxMessageContent createFromParcel(Parcel in) {
+            return new CTInboxMessageContent(in);
+        }
+
+        @Override
+        public CTInboxMessageContent[] newArray(int size) {
+            return new CTInboxMessageContent[size];
+        }
+    };
     private String title;
     private String titleColor;
     private String message;
@@ -122,19 +134,6 @@ public class CTInboxMessageContent implements Parcelable {
         dest.writeString(contentType);
         dest.writeString(posterUrl);
     }
-
-    @SuppressWarnings("unused")
-    public static final Parcelable.Creator<CTInboxMessageContent> CREATOR = new Parcelable.Creator<CTInboxMessageContent>() {
-        @Override
-        public CTInboxMessageContent createFromParcel(Parcel in) {
-            return new CTInboxMessageContent(in);
-        }
-
-        @Override
-        public CTInboxMessageContent[] newArray(int size) {
-            return new CTInboxMessageContent[size];
-        }
-    };
 
     /**
      * Returns the title section of the inbox message

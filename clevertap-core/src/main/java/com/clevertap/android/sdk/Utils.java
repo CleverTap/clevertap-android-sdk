@@ -35,9 +35,11 @@ import java.util.Iterator;
 import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
+
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class Utils {
     private static final String TAG = "Utils";
+
     static long getMemoryConsumption() {
         long free = Runtime.getRuntime().freeMemory();
         long total = Runtime.getRuntime().totalMemory();
@@ -301,20 +303,20 @@ public final class Utils {
         JSONObject jsonObject = new JSONObject(content);
         Bundle bundle = new Bundle();
         Iterator iter = jsonObject.keys();
-        while(iter.hasNext()){
-            String key = (String)iter.next();
+        while (iter.hasNext()) {
+            String key = (String) iter.next();
             String value = jsonObject.getString(key);
-            bundle.putString(key,value);
+            bundle.putString(key, value);
         }
         return bundle;
     }
 
-    public static void setPackageNameFromResolveInfoList(Context context, Intent launchIntent){
-        List<ResolveInfo> resolveInfoList = context.getPackageManager().queryIntentActivities(launchIntent,0);
-        if(resolveInfoList != null){
+    public static void setPackageNameFromResolveInfoList(Context context, Intent launchIntent) {
+        List<ResolveInfo> resolveInfoList = context.getPackageManager().queryIntentActivities(launchIntent, 0);
+        if (resolveInfoList != null) {
             String appPackageName = context.getPackageName();
-            for(ResolveInfo resolveInfo : resolveInfoList){
-                if(appPackageName.equals(resolveInfo.activityInfo.packageName)){
+            for (ResolveInfo resolveInfo : resolveInfoList) {
+                if (appPackageName.equals(resolveInfo.activityInfo.packageName)) {
                     launchIntent.setPackage(appPackageName);
                     break;
                 }

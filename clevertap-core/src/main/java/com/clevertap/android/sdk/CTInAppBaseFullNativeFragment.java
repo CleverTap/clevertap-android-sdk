@@ -15,8 +15,8 @@ import android.widget.Button;
 
 public abstract class CTInAppBaseFullNativeFragment extends CTInAppBaseFullFragment {
 
-    void setupInAppButton(Button inAppButton, final CTInAppNotificationButton inAppNotificationButton, final int buttonIndex){
-        if(inAppNotificationButton!=null) {
+    void setupInAppButton(Button inAppButton, final CTInAppNotificationButton inAppNotificationButton, final int buttonIndex) {
+        if (inAppNotificationButton != null) {
             inAppButton.setVisibility(View.VISIBLE);
             inAppButton.setTag(buttonIndex);
             inAppButton.setText(inAppNotificationButton.getText());
@@ -26,48 +26,48 @@ public abstract class CTInAppBaseFullNativeFragment extends CTInAppBaseFullFragm
             ShapeDrawable borderDrawable = null;
             ShapeDrawable shapeDrawable = null;
 
-            if(!inAppNotificationButton.getBorderRadius().isEmpty()) {
-               shapeDrawable = new ShapeDrawable(new RoundRectShape(new float[]{
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2,
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2,
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2,
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2,
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2,
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2,
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2,
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2},null,
-                        new float[]{0,0,0,0,0,0,0,0}));
+            if (!inAppNotificationButton.getBorderRadius().isEmpty()) {
+                shapeDrawable = new ShapeDrawable(new RoundRectShape(new float[]{
+                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2}, null,
+                        new float[]{0, 0, 0, 0, 0, 0, 0, 0}));
                 shapeDrawable.getPaint().setColor(Color.parseColor(inAppNotificationButton.getBackgroundColor()));
                 shapeDrawable.getPaint().setStyle(Paint.Style.FILL);
                 shapeDrawable.getPaint().setAntiAlias(true);
                 borderDrawable = new ShapeDrawable(new RoundRectShape(new float[]{
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2,
-                      Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2,
-                      Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2,
-                      Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2,
-                      Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2,
-                      Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2,
-                      Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2,
-                      Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2},null,
-                        new float[]{Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2,
-                                Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2,
-                                Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2,
-                                Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2,
-                                Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2,
-                                Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2,
-                                Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2,
-                                Float.parseFloat(inAppNotificationButton.getBorderRadius())*(480.0f/getDPI())*2}));
+                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2}, null,
+                        new float[]{Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                                Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                                Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                                Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                                Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                                Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                                Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                                Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2}));
             }
 
-            if(!inAppNotificationButton.getBorderColor().isEmpty()) {
-                if(borderDrawable!=null) {
+            if (!inAppNotificationButton.getBorderColor().isEmpty()) {
+                if (borderDrawable != null) {
                     borderDrawable.getPaint().setColor(Color.parseColor(inAppNotificationButton.getBorderColor()));
-                    borderDrawable.setPadding(1,1,1,1);
+                    borderDrawable.setPadding(1, 1, 1, 1);
                     borderDrawable.getPaint().setStyle(Paint.Style.FILL);
                 }
             }
 
-            if(shapeDrawable!=null) {
+            if (shapeDrawable != null) {
                 Drawable[] drawables = new Drawable[]{
                         borderDrawable,
                         shapeDrawable
@@ -81,12 +81,12 @@ public abstract class CTInAppBaseFullNativeFragment extends CTInAppBaseFullFragm
                     inAppButton.setBackgroundDrawable(layerDrawable);
                 }
             }
-        }else{
+        } else {
             inAppButton.setVisibility(View.GONE);
         }
     }
 
-    int getDPI(){
+    int getDPI() {
         WindowManager wm = (WindowManager) getActivity().getBaseContext().getSystemService(Context.WINDOW_SERVICE);
         if (wm == null) {
             return 0;

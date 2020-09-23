@@ -30,7 +30,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
     private TextView message;
     private TextView timestamp;
     private ImageView readDot;
-    private Button cta1,cta2,cta3;
+    private Button cta1, cta2, cta3;
 
     CTSimpleMessageViewHolder(@NonNull View itemView) {
         super(itemView);
@@ -65,23 +65,23 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
         this.message.setText(content.getMessage());
         this.message.setTextColor(Color.parseColor(content.getMessageColor()));
         this.bodyRelativeLayout.setBackgroundColor(Color.parseColor(inboxMessage.getBgColor()));
-        String displayTimestamp  = calculateDisplayTimestamp(inboxMessage.getDate());
+        String displayTimestamp = calculateDisplayTimestamp(inboxMessage.getDate());
         this.timestamp.setText(displayTimestamp);
         this.timestamp.setTextColor(Color.parseColor(content.getTitleColor()));
-        if(inboxMessage.isRead()){
+        if (inboxMessage.isRead()) {
             this.readDot.setVisibility(View.GONE);
-        }else{
+        } else {
             this.readDot.setVisibility(View.VISIBLE);
         }
         frameLayout.setVisibility(View.GONE);
         //Shows the CTA layout only if links are present, also handles the display of the CTAs depending on the number
         JSONArray linksArray = content.getLinks();
-        if(linksArray != null){
+        if (linksArray != null) {
             this.ctaLinearLayout.setVisibility(View.VISIBLE);
             int size = linksArray.length();
-            JSONObject cta1Object,cta2Object,cta3Object;
+            JSONObject cta1Object, cta2Object, cta3Object;
             try {
-                switch (size){
+                switch (size) {
                     case 1:
                         cta1Object = linksArray.getJSONObject(0);
                         this.cta1.setVisibility(View.VISIBLE);
@@ -89,8 +89,8 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         this.cta1.setTextColor(Color.parseColor(content.getLinkColor(cta1Object)));
                         this.cta1.setBackgroundColor(Color.parseColor(content.getLinkBGColor(cta1Object)));
                         hideTwoButtons(this.cta1, this.cta2, this.cta3);
-                        if(parentWeak != null) {
-                            this.cta1.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta1.getText().toString(),cta1Object, parentWeak));
+                        if (parentWeak != null) {
+                            this.cta1.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta1.getText().toString(), cta1Object, parentWeak));
                         }
                         break;
                     case 2:
@@ -104,10 +104,10 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         this.cta2.setText(content.getLinkText(cta2Object));
                         this.cta2.setTextColor(Color.parseColor(content.getLinkColor(cta2Object)));
                         this.cta2.setBackgroundColor(Color.parseColor(content.getLinkBGColor(cta2Object)));
-                        hideOneButton(this.cta1,this.cta2,this.cta3);
-                        if(parentWeak != null) {
-                            this.cta1.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta1.getText().toString(),cta1Object, parentWeak));
-                            this.cta2.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta2.getText().toString(),cta2Object, parentWeak));
+                        hideOneButton(this.cta1, this.cta2, this.cta3);
+                        if (parentWeak != null) {
+                            this.cta1.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta1.getText().toString(), cta1Object, parentWeak));
+                            this.cta2.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta2.getText().toString(), cta2Object, parentWeak));
                         }
                         break;
                     case 3:
@@ -126,17 +126,17 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         this.cta3.setText(content.getLinkText(cta3Object));
                         this.cta3.setTextColor(Color.parseColor(content.getLinkColor(cta3Object)));
                         this.cta3.setBackgroundColor(Color.parseColor(content.getLinkBGColor(cta3Object)));
-                        if(parentWeak != null) {
-                            this.cta1.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta1.getText().toString(),cta1Object, parentWeak));
-                            this.cta2.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta2.getText().toString(),cta2Object, parentWeak));
-                            this.cta3.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta3.getText().toString(),cta3Object, parentWeak));
+                        if (parentWeak != null) {
+                            this.cta1.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta1.getText().toString(), cta1Object, parentWeak));
+                            this.cta2.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta2.getText().toString(), cta2Object, parentWeak));
+                            this.cta3.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, this.cta3.getText().toString(), cta3Object, parentWeak));
                         }
                         break;
                 }
-            }catch (JSONException e){
-                Logger.d("Error parsing CTA JSON - "+e.getLocalizedMessage());
+            } catch (JSONException e) {
+                Logger.d("Error parsing CTA JSON - " + e.getLocalizedMessage());
             }
-        }else{
+        } else {
             this.ctaLinearLayout.setVisibility(View.GONE);
         }
         this.mediaImage.setVisibility(View.GONE);
@@ -159,7 +159,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                                             .placeholder(Utils.getThumbnailImage(context, Constants.IMAGE_PLACEHOLDER))
                                             .error(Utils.getThumbnailImage(context, Constants.IMAGE_PLACEHOLDER)))
                                     .into(this.mediaImage);
-                        }catch (NoSuchMethodError error){
+                        } catch (NoSuchMethodError error) {
                             Logger.d("CleverTap SDK requires Glide v4.9.0 or above. Please refer CleverTap Documentation for more info");
                             Glide.with(this.mediaImage.getContext())
                                     .load(content.getMedia())
@@ -174,10 +174,10 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                                     .asGif()
                                     .load(content.getMedia())
                                     .apply(new RequestOptions()
-                                            .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
-                                            .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
+                                            .placeholder(Utils.getThumbnailImage(context, Constants.IMAGE_PLACEHOLDER))
+                                            .error(Utils.getThumbnailImage(context, Constants.IMAGE_PLACEHOLDER)))
                                     .into(this.mediaImage);
-                        }catch (NoSuchMethodError error){
+                        } catch (NoSuchMethodError error) {
                             Logger.d("CleverTap SDK requires Glide v4.9.0 or above. Please refer CleverTap Documentation for more info");
                             Glide.with(this.mediaImage.getContext())
                                     .asGif()
@@ -186,7 +186,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         }
 
                     } else if (content.mediaIsVideo()) {
-                        if(!content.getPosterUrl().isEmpty()) {
+                        if (!content.getPosterUrl().isEmpty()) {
                             this.mediaLayout.setVisibility(View.VISIBLE);
                             this.mediaImage.setVisibility(View.VISIBLE);
                             this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
@@ -194,10 +194,10 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                                 Glide.with(this.mediaImage.getContext())
                                         .load(content.getPosterUrl())
                                         .apply(new RequestOptions()
-                                                .placeholder(Utils.getThumbnailImage(context,Constants.VIDEO_THUMBNAIL))
-                                                .error(Utils.getThumbnailImage(context,Constants.VIDEO_THUMBNAIL)))
+                                                .placeholder(Utils.getThumbnailImage(context, Constants.VIDEO_THUMBNAIL))
+                                                .error(Utils.getThumbnailImage(context, Constants.VIDEO_THUMBNAIL)))
                                         .into(this.mediaImage);
-                            }catch (NoSuchMethodError error){
+                            } catch (NoSuchMethodError error) {
                                 Logger.d("CleverTap SDK requires Glide v4.9.0 or above. Please refer CleverTap Documentation for more info");
                                 Glide.with(this.mediaImage.getContext())
                                         .load(content.getPosterUrl())
@@ -208,20 +208,20 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                             this.mediaLayout.setVisibility(View.VISIBLE);
                             this.mediaImage.setVisibility(View.VISIBLE);
                             this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                            int drawableId = Utils.getThumbnailImage(context,Constants.VIDEO_THUMBNAIL);
-                            if(drawableId != -1) {
+                            int drawableId = Utils.getThumbnailImage(context, Constants.VIDEO_THUMBNAIL);
+                            if (drawableId != -1) {
                                 Glide.with(this.mediaImage.getContext())
                                         .load(drawableId)
                                         .into(this.mediaImage);
                             }
                         }
-                    }else if(content.mediaIsAudio()){
+                    } else if (content.mediaIsAudio()) {
                         this.mediaLayout.setVisibility(View.VISIBLE);
                         this.mediaImage.setVisibility(View.VISIBLE);
                         this.mediaImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
                         this.mediaImage.setBackgroundColor(getImageBackgroundColor());
-                        int drawableId = Utils.getThumbnailImage(context,Constants.AUDIO_THUMBNAIL);
-                        if(drawableId != -1) {
+                        int drawableId = Utils.getThumbnailImage(context, Constants.AUDIO_THUMBNAIL);
+                        if (drawableId != -1) {
                             Glide.with(this.mediaImage.getContext())
                                     .load(drawableId)
                                     .into(this.mediaImage);
@@ -233,14 +233,14 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         this.mediaLayout.setVisibility(View.VISIBLE);
                         this.squareImage.setVisibility(View.VISIBLE);
                         this.squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                        try{
+                        try {
                             Glide.with(this.squareImage.getContext())
                                     .load(content.getMedia())
                                     .apply(new RequestOptions()
-                                            .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
-                                            .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
+                                            .placeholder(Utils.getThumbnailImage(context, Constants.IMAGE_PLACEHOLDER))
+                                            .error(Utils.getThumbnailImage(context, Constants.IMAGE_PLACEHOLDER)))
                                     .into(this.squareImage);
-                        }catch (NoSuchMethodError error){
+                        } catch (NoSuchMethodError error) {
                             Logger.d("CleverTap SDK requires Glide v4.9.0 or above. Please refer CleverTap Documentation for more info");
                             Glide.with(this.squareImage.getContext())
                                     .load(content.getMedia())
@@ -255,10 +255,10 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                                     .asGif()
                                     .load(content.getMedia())
                                     .apply(new RequestOptions()
-                                            .placeholder(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER))
-                                            .error(Utils.getThumbnailImage(context,Constants.IMAGE_PLACEHOLDER)))
+                                            .placeholder(Utils.getThumbnailImage(context, Constants.IMAGE_PLACEHOLDER))
+                                            .error(Utils.getThumbnailImage(context, Constants.IMAGE_PLACEHOLDER)))
                                     .into(this.squareImage);
-                        }catch (NoSuchMethodError error){
+                        } catch (NoSuchMethodError error) {
                             Logger.d("CleverTap SDK requires Glide v4.9.0 or above. Please refer CleverTap Documentation for more info");
                             Glide.with(this.squareImage.getContext())
                                     .asGif()
@@ -266,50 +266,50 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                                     .into(this.squareImage);
                         }
                     } else if (content.mediaIsVideo()) {
-                        if(!content.getPosterUrl().isEmpty()) {
+                        if (!content.getPosterUrl().isEmpty()) {
                             this.mediaLayout.setVisibility(View.VISIBLE);
                             this.squareImage.setVisibility(View.VISIBLE);
-                            if(CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE){
+                            if (CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                                 this.squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                            }else {
+                            } else {
                                 this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
                             }
                             try {
                                 Glide.with(this.squareImage.getContext())
                                         .load(content.getPosterUrl())
                                         .apply(new RequestOptions()
-                                                .placeholder(Utils.getThumbnailImage(context,Constants.VIDEO_THUMBNAIL))
-                                                .error(Utils.getThumbnailImage(context,Constants.VIDEO_THUMBNAIL)))
+                                                .placeholder(Utils.getThumbnailImage(context, Constants.VIDEO_THUMBNAIL))
+                                                .error(Utils.getThumbnailImage(context, Constants.VIDEO_THUMBNAIL)))
                                         .into(this.squareImage);
-                            }catch (NoSuchMethodError error){
+                            } catch (NoSuchMethodError error) {
                                 Logger.d("CleverTap SDK requires Glide v4.9.0 or above. Please refer CleverTap Documentation for more info");
                                 Glide.with(this.squareImage.getContext())
                                         .load(content.getPosterUrl())
                                         .into(this.squareImage);
                             }
 
-                        }else{
+                        } else {
                             this.mediaLayout.setVisibility(View.VISIBLE);
                             this.squareImage.setVisibility(View.VISIBLE);
-                            if(CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE){
+                            if (CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
                                 this.squareImage.setScaleType(ImageView.ScaleType.CENTER_CROP);
-                            }else {
+                            } else {
                                 this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
                             }
-                            int drawableId = Utils.getThumbnailImage(context,Constants.VIDEO_THUMBNAIL);
-                            if(drawableId != -1) {
+                            int drawableId = Utils.getThumbnailImage(context, Constants.VIDEO_THUMBNAIL);
+                            if (drawableId != -1) {
                                 Glide.with(this.squareImage.getContext())
                                         .load(drawableId)
                                         .into(this.squareImage);
                             }
                         }
-                    }else if(content.mediaIsAudio()){
+                    } else if (content.mediaIsAudio()) {
                         this.mediaLayout.setVisibility(View.VISIBLE);
                         this.squareImage.setVisibility(View.VISIBLE);
                         this.squareImage.setScaleType(ImageView.ScaleType.FIT_CENTER);
                         this.squareImage.setBackgroundColor(getImageBackgroundColor());
-                        int drawableId = Utils.getThumbnailImage(context,Constants.AUDIO_THUMBNAIL);
-                        if(drawableId != -1) {
+                        int drawableId = Utils.getThumbnailImage(context, Constants.AUDIO_THUMBNAIL);
+                        if (drawableId != -1) {
                             Glide.with(this.squareImage.getContext())
                                     .load(drawableId)
                                     .into(this.squareImage);
@@ -317,17 +317,17 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                     }
                     break;
             }
-        }catch (NoClassDefFoundError error) {
+        } catch (NoClassDefFoundError error) {
             Logger.d("CleverTap SDK requires Glide dependency. Please refer CleverTap Documentation for more info");
         }
         //Set the height and width of Progress Bar Frame to match the thumbnail size
         final Resources resources = context.getResources();
-        int width ;
+        int width;
         int height;
-        if(CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
-                height = resources.getDisplayMetrics().heightPixels/2;
-                width = resources.getDisplayMetrics().widthPixels/2;
-        }else {
+        if (CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
+            height = resources.getDisplayMetrics().heightPixels / 2;
+            width = resources.getDisplayMetrics().widthPixels / 2;
+        } else {
             width = resources.getDisplayMetrics().widthPixels;
             height = inboxMessage.getOrientation().equalsIgnoreCase("l") ? Math.round(width * 0.5625f) : width;
         }
@@ -339,13 +339,13 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
             @Override
             public void run() {
                 final CTInboxListViewFragment parent = getParent();
-                if(parent != null){
+                if (parent != null) {
                     Activity activity = parent.getActivity();
                     if (activity == null) return;
                     activity.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
-                            if(readDot.getVisibility() == View.VISIBLE) {
+                            if (readDot.getVisibility() == View.VISIBLE) {
                                 parent.didShow(null, position);
                             }
                             readDot.setVisibility(View.GONE);
@@ -356,9 +356,9 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
             }
         };
         Handler simpleHandler = new Handler();
-        simpleHandler.postDelayed(simpleRunnable,2000);
-        if(parentWeak != null) {
-            this.clickLayout.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, null,null, parentWeak));
+        simpleHandler.postDelayed(simpleRunnable, 2000);
+        if (parentWeak != null) {
+            this.clickLayout.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage, null, null, parentWeak));
         }
 
     }

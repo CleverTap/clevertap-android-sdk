@@ -20,8 +20,8 @@ public class CTBackgroundJobService extends JobService {
         new Thread(new Runnable() {
             @Override
             public void run() {
-                CleverTapAPI.runJobWork(getApplicationContext(),params);
-                jobFinished(params,true);
+                CleverTapAPI.runJobWork(getApplicationContext(), params);
+                jobFinished(params, true);
             }
         }).start();
         return true;

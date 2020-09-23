@@ -14,6 +14,17 @@ import org.json.JSONObject;
  * Content class for holding Display Unit Content Data
  */
 public class CleverTapDisplayUnitContent implements Parcelable {
+    public static final Creator<CleverTapDisplayUnitContent> CREATOR = new Creator<CleverTapDisplayUnitContent>() {
+        @Override
+        public CleverTapDisplayUnitContent createFromParcel(Parcel in) {
+            return new CleverTapDisplayUnitContent(in);
+        }
+
+        @Override
+        public CleverTapDisplayUnitContent[] newArray(int size) {
+            return new CleverTapDisplayUnitContent[size];
+        }
+    };
     private String title;
     private String titleColor;
     private String message;
@@ -24,6 +35,7 @@ public class CleverTapDisplayUnitContent implements Parcelable {
     private String actionUrl;
     private String icon;
     private String error;
+
 
     private CleverTapDisplayUnitContent(String title, String titleColor, String message, String messageColor,
                                         String icon, String media, String contentType, String posterUrl,
@@ -40,7 +52,6 @@ public class CleverTapDisplayUnitContent implements Parcelable {
         this.error = error;
     }
 
-
     private CleverTapDisplayUnitContent(Parcel in) {
         title = in.readString();
         titleColor = in.readString();
@@ -52,20 +63,6 @@ public class CleverTapDisplayUnitContent implements Parcelable {
         posterUrl = in.readString();
         actionUrl = in.readString();
         error = in.readString();
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(title);
-        dest.writeString(titleColor);
-        dest.writeString(message);
-        dest.writeString(messageColor);
-        dest.writeString(icon);
-        dest.writeString(media);
-        dest.writeString(contentType);
-        dest.writeString(posterUrl);
-        dest.writeString(actionUrl);
-        dest.writeString(error);
     }
 
     /**
@@ -118,13 +115,28 @@ public class CleverTapDisplayUnitContent implements Parcelable {
                     actionUrl, null);
 
         } catch (Exception e) {
-            Logger.d(Constants.FEATURE_DISPLAY_UNIT,"Unable to init CleverTapDisplayUnitContent with JSON - " + e.getLocalizedMessage());
+            Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Unable to init CleverTapDisplayUnitContent with JSON - " + e.getLocalizedMessage());
             return new CleverTapDisplayUnitContent("", "", "", "", "", "", "", "", "", "Error Creating DisplayUnit Content from JSON : " + e.getLocalizedMessage());
         }
     }
 
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(title);
+        dest.writeString(titleColor);
+        dest.writeString(message);
+        dest.writeString(messageColor);
+        dest.writeString(icon);
+        dest.writeString(media);
+        dest.writeString(contentType);
+        dest.writeString(posterUrl);
+        dest.writeString(actionUrl);
+        dest.writeString(error);
+    }
+
     /**
      * Getter for the title section of the Display Unit Content
+     *
      * @return String
      */
     public String getTitle() {
@@ -133,6 +145,7 @@ public class CleverTapDisplayUnitContent implements Parcelable {
 
     /**
      * Getter for the message section of the Display Unit Content
+     *
      * @return String
      */
     public String getMessage() {
@@ -141,6 +154,7 @@ public class CleverTapDisplayUnitContent implements Parcelable {
 
     /**
      * Getter for the media URL of the Display Unit Content
+     *
      * @return String
      */
     @SuppressWarnings("unused")
@@ -150,6 +164,7 @@ public class CleverTapDisplayUnitContent implements Parcelable {
 
     /**
      * Getter for the action URL of the body of the Display Unit Content
+     *
      * @return String
      */
     @SuppressWarnings("unused")
@@ -159,6 +174,7 @@ public class CleverTapDisplayUnitContent implements Parcelable {
 
     /**
      * Getter for the URL as String for the icon in case of Icon Message template
+     *
      * @return String
      */
     @SuppressWarnings("unused")
@@ -168,6 +184,7 @@ public class CleverTapDisplayUnitContent implements Parcelable {
 
     /**
      * Getter for the hex-code value of the title color e.g. #000000
+     *
      * @return String
      */
     @SuppressWarnings("unused")
@@ -177,6 +194,7 @@ public class CleverTapDisplayUnitContent implements Parcelable {
 
     /**
      * Getter for the hex-code value of the message color e.g. #000000
+     *
      * @return String
      */
     public String getMessageColor() {
@@ -185,6 +203,7 @@ public class CleverTapDisplayUnitContent implements Parcelable {
 
     /**
      * Getter for the URL for the thumbnail of the video
+     *
      * @return String
      */
     @SuppressWarnings("unused")
@@ -194,9 +213,10 @@ public class CleverTapDisplayUnitContent implements Parcelable {
 
     /**
      * Getter for the content type of the media(image/gif/audio/video etc.)
-     *
+     * <p>
      * Refer{@link #mediaIsImage()}, {@link #mediaIsGIF()},
-     *      {@link #mediaIsAudio()} ,{@link #mediaIsVideo()}
+     * {@link #mediaIsAudio()} ,{@link #mediaIsVideo()}
+     *
      * @return String
      */
     @SuppressWarnings("unused")
@@ -208,9 +228,9 @@ public class CleverTapDisplayUnitContent implements Parcelable {
      * Method to check whether media in the {@link CleverTapDisplayUnitContent} object is an image.
      *
      * @return boolean - | true, if the media type is image
-     *                   | false, if the media type is not an image
+     * | false, if the media type is not an image
      */
-    @SuppressWarnings({"unused","WeakerAccess"})
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public boolean mediaIsImage() {
         return contentType != null && this.media != null && contentType.startsWith("image") && !contentType.equals("image/gif");
     }
@@ -219,9 +239,9 @@ public class CleverTapDisplayUnitContent implements Parcelable {
      * Method to check whether media in the {@link CleverTapDisplayUnitContent} object is a GIF.
      *
      * @return boolean - | true, if the media type is GIF
-     *                   | false, if the media type is not a GIF
+     * | false, if the media type is not a GIF
      */
-    @SuppressWarnings({"unused","WeakerAccess"})
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public boolean mediaIsGIF() {
         return contentType != null && this.media != null && contentType.equals("image/gif");
     }
@@ -230,9 +250,9 @@ public class CleverTapDisplayUnitContent implements Parcelable {
      * Method to check whether media in the {@link CleverTapDisplayUnitContent} object is a video.
      *
      * @return boolean - | true, if the media type is video
-     *                   | false, if the media type is not a video
+     * | false, if the media type is not a video
      */
-    @SuppressWarnings({"unused","WeakerAccess"})
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public boolean mediaIsVideo() {
         return contentType != null && this.media != null && contentType.startsWith("video");
     }
@@ -241,9 +261,9 @@ public class CleverTapDisplayUnitContent implements Parcelable {
      * Method to check whether media in the {@link CleverTapDisplayUnitContent} object is an audio.
      *
      * @return boolean - | true, if the media type is audio
-     *                   | false, if the media type is not an audio
+     * | false, if the media type is not an audio
      */
-    @SuppressWarnings({"unused","WeakerAccess"})
+    @SuppressWarnings({"unused", "WeakerAccess"})
     public boolean mediaIsAudio() {
         return contentType != null && this.media != null && contentType.startsWith("audio");
     }
@@ -251,18 +271,6 @@ public class CleverTapDisplayUnitContent implements Parcelable {
     public String getError() {
         return error;
     }
-
-    public static final Creator<CleverTapDisplayUnitContent> CREATOR = new Creator<CleverTapDisplayUnitContent>() {
-        @Override
-        public CleverTapDisplayUnitContent createFromParcel(Parcel in) {
-            return new CleverTapDisplayUnitContent(in);
-        }
-
-        @Override
-        public CleverTapDisplayUnitContent[] newArray(int size) {
-            return new CleverTapDisplayUnitContent[size];
-        }
-    };
 
     @Override
     public int describeContents() {

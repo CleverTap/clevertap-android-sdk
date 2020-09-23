@@ -23,25 +23,18 @@ import java.util.UUID;
 
 class DeviceInfo {
 
+    private static final String GUID_PREFIX = "__";
+    private static final String OS_NAME = "Android";
+    private final Object deviceIDLock = new Object();
+    private final Object adIDLock = new Object();
     private Context context;
     private CleverTapInstanceConfig config;
     private String library;
-    private static final String GUID_PREFIX = "__";
-    private final Object deviceIDLock = new Object();
-    private final Object adIDLock = new Object();
     private String googleAdID = null;
     private boolean limitAdTracking = false;
     private boolean adIdRun = false;
-    private static final String OS_NAME = "Android";
     private DeviceCachedInfo cachedInfo;
     private ArrayList<ValidationResult> validationResults = new ArrayList<>();
-
-    ArrayList<ValidationResult> getValidationResults() {
-        // noinspection unchecked
-        ArrayList<ValidationResult> tempValidationResults = (ArrayList<ValidationResult>) validationResults.clone();
-        validationResults.clear();
-        return tempValidationResults;
-    }
 
     DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID) {
         this.context = context;
@@ -55,6 +48,33 @@ class DeviceInfo {
         });
         deviceInfoCacheThread.start();
         initDeviceID(cleverTapID);
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    static boolean hasPermission(final Context context, String permission) {
+        try {
+            return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permission);
+        } catch (Throwable t) {
+            return false;
+        }
+    }
+
+    /**
+     * Returns the integer identifier for the default app icon.
+     *
+     * @param context The Android context
+     * @return The integer identifier for the image resource
+     */
+    static int getAppIconAsIntId(final Context context) {
+        ApplicationInfo ai = context.getApplicationInfo();
+        return ai.icon;
+    }
+
+    ArrayList<ValidationResult> getValidationResults() {
+        // noinspection unchecked
+        ArrayList<ValidationResult> tempValidationResults = (ArrayList<ValidationResult>) validationResults.clone();
+        validationResults.clear();
+        return tempValidationResults;
     }
 
     String getLibrary() {
@@ -84,41 +104,41 @@ class DeviceInfo {
         return cachedInfo;
     }
 
-    private Logger getConfigLogger(){
-        return  this.config.getLogger();
+    private Logger getConfigLogger() {
+        return this.config.getLogger();
     }
 
     private void initDeviceID(String cleverTapID) {
 
         //Show logging as per Manifest flag
-        if(config.getEnableCustomCleverTapId()){
-            if(cleverTapID == null){
+        if (config.getEnableCustomCleverTapId()) {
+            if (cleverTapID == null) {
                 String error = recordDeviceError(Constants.USE_CUSTOM_ID_FALLBACK);
                 config.getLogger().info(error);
             }
-        }else{
-            if(cleverTapID != null){
+        } else {
+            if (cleverTapID != null) {
                 String error = recordDeviceError(Constants.USE_CUSTOM_ID_MISSING_IN_MANIFEST);
                 config.getLogger().info(error);
             }
         }
 
         String deviceID = _getDeviceID();
-        if(deviceID != null && deviceID.trim().length() > 2){
-            getConfigLogger().verbose(config.getAccountId(),"CleverTap ID already present for profile");
-            if(cleverTapID != null) {
+        if (deviceID != null && deviceID.trim().length() > 2) {
+            getConfigLogger().verbose(config.getAccountId(), "CleverTap ID already present for profile");
+            if (cleverTapID != null) {
                 String error = recordDeviceError(Constants.UNABLE_TO_SET_CT_CUSTOM_ID, deviceID, cleverTapID);
-                getConfigLogger().info(config.getAccountId(),error);
+                getConfigLogger().info(config.getAccountId(), error);
             }
             return;
         }
 
-        if(this.config.getEnableCustomCleverTapId()) {
+        if (this.config.getEnableCustomCleverTapId()) {
             forceUpdateCustomCleverTapID(cleverTapID);
             return;
         }
 
-        if(!this.config.isUseGoogleAdId()){
+        if (!this.config.isUseGoogleAdId()) {
             generateDeviceID();
             return;
         }
@@ -130,36 +150,36 @@ class DeviceInfo {
             public void run() {
                 fetchGoogleAdID();
                 generateDeviceID();
-                CleverTapAPI.instanceWithConfig(context,config).deviceIDCreated(getDeviceID());
+                CleverTapAPI.instanceWithConfig(context, config).deviceIDCreated(getDeviceID());
             }
         });
         generateGUIDFromAdIDThread.start();
     }
 
-    void forceUpdateCustomCleverTapID(String cleverTapID){
-        if(Utils.validateCTID(cleverTapID)){
+    void forceUpdateCustomCleverTapID(String cleverTapID) {
+        if (Utils.validateCTID(cleverTapID)) {
             getConfigLogger().info(config.getAccountId(), "Setting CleverTap ID to custom CleverTap ID : " + cleverTapID);
-            forceUpdateDeviceId(Constants.CUSTOM_CLEVERTAP_ID_PREFIX+cleverTapID);
-        }else {
+            forceUpdateDeviceId(Constants.CUSTOM_CLEVERTAP_ID_PREFIX + cleverTapID);
+        } else {
             setOrGenerateFallbackDeviceID();
             removeDeviceID();
             String error = recordDeviceError(Constants.INVALID_CT_CUSTOM_ID, cleverTapID, getFallBackDeviceID());
-            getConfigLogger().info(config.getAccountId(),error);
+            getConfigLogger().info(config.getAccountId(), error);
         }
     }
 
-    private String recordDeviceError(int messageCode,String ...varargs){
-        ValidationResult validationResult = ValidationResultFactory.create(514,messageCode,varargs);
+    private String recordDeviceError(int messageCode, String... varargs) {
+        ValidationResult validationResult = ValidationResultFactory.create(514, messageCode, varargs);
         validationResults.add(validationResult);
         return validationResult.getErrorDesc();
     }
 
-    boolean isErrorDeviceId(){
+    boolean isErrorDeviceId() {
         return getDeviceID() != null && getDeviceID().startsWith(Constants.ERROR_PROFILE_PREFIX);
     }
 
     private synchronized void fetchGoogleAdID() {
-        if(getGoogleAdID() == null && !adIdRun) {
+        if (getGoogleAdID() == null && !adIdRun) {
             String advertisingID = null;
             try {
                 adIdRun = true;
@@ -171,15 +191,15 @@ class DeviceInfo {
                 Boolean limitedAdTracking = (Boolean) isLimitAdTracking.invoke(adInfo);
                 synchronized (adIDLock) {
                     limitAdTracking = limitedAdTracking != null && limitedAdTracking;
-                    if(limitAdTracking)
+                    if (limitAdTracking)
                         return;
                 }
                 Method getAdId = adInfo.getClass().getMethod("getId");
                 advertisingID = (String) getAdId.invoke(adInfo);
             } catch (Throwable t) {
-                if(t.getCause() != null) {
+                if (t.getCause() != null) {
                     getConfigLogger().verbose(config.getAccountId(), "Failed to get Advertising ID: " + t.toString() + t.getCause().toString());
-                }else{
+                } else {
                     getConfigLogger().verbose(config.getAccountId(), "Failed to get Advertising ID: " + t.toString());
                 }
             }
@@ -191,8 +211,8 @@ class DeviceInfo {
         }
     }
 
-    private synchronized void setOrGenerateFallbackDeviceID(){
-        if(getFallBackDeviceID() == null) {
+    private synchronized void setOrGenerateFallbackDeviceID() {
+        if (getFallBackDeviceID() == null) {
             synchronized (deviceIDLock) {
                 String fallbackDeviceID = Constants.ERROR_PROFILE_PREFIX + UUID.randomUUID().toString().replace("-", "");
                 if (fallbackDeviceID.trim().length() > 2) {
@@ -209,7 +229,7 @@ class DeviceInfo {
         String adId = getGoogleAdID();
         if (adId != null) {
             generatedDeviceID = Constants.GUID_PREFIX_GOOGLE_AD_ID + adId;
-        }else{
+        } else {
             synchronized (deviceIDLock) {
                 generatedDeviceID = generateGUID();
             }
@@ -225,7 +245,7 @@ class DeviceInfo {
         return _getDeviceID() != null ? _getDeviceID() : getFallBackDeviceID();
     }
 
-    private String _getDeviceID(){
+    private String _getDeviceID() {
         synchronized (deviceIDLock) {
             if (this.config.isDefaultInstance()) {
                 String _new = StorageHelper.getString(this.context, getDeviceIdStorageKey(), null);
@@ -236,11 +256,11 @@ class DeviceInfo {
         }
     }
 
-    private void removeDeviceID(){
+    private void removeDeviceID() {
         StorageHelper.remove(this.context, getDeviceIdStorageKey());
     }
 
-    private String getFallBackDeviceID(){
+    private String getFallBackDeviceID() {
         return StorageHelper.getString(this.context, getFallbackIdStorageKey(), null);
     }
 
@@ -254,15 +274,15 @@ class DeviceInfo {
     }
 
     private String getDeviceIdStorageKey() {
-        return Constants.DEVICE_ID_TAG+":"+this.config.getAccountId();
+        return Constants.DEVICE_ID_TAG + ":" + this.config.getAccountId();
     }
 
-    private String getFallbackIdStorageKey(){
-        return Constants.FALLBACK_ID_TAG +":"+this.config.getAccountId();
+    private String getFallbackIdStorageKey() {
+        return Constants.FALLBACK_ID_TAG + ":" + this.config.getAccountId();
     }
 
-    private void updateFallbackID(String fallbackId){
-        getConfigLogger().verbose(this.config.getAccountId(),"Updating the fallback id - " + fallbackId);
+    private void updateFallbackID(String fallbackId) {
+        getConfigLogger().verbose(this.config.getAccountId(), "Updating the fallback id - " + fallbackId);
         StorageHelper.putString(context, getFallbackIdStorageKey(), fallbackId);
     }
 
@@ -272,15 +292,16 @@ class DeviceInfo {
      * This is used internally by the SDK, there is no need to call this explicitly.
      * </p>
      *
-     * @param id      The new device ID
+     * @param id The new device ID
      */
     @SuppressLint("CommitPrefEdits")
     void forceUpdateDeviceId(String id) {
-        getConfigLogger().verbose(this.config.getAccountId(),"Force updating the device ID to " + id);
+        getConfigLogger().verbose(this.config.getAccountId(), "Force updating the device ID to " + id);
         synchronized (deviceIDLock) {
             StorageHelper.putString(context, getDeviceIdStorageKey(), id);
         }
     }
+
     /**
      * Tests whether a particular permission is available or not.
      *
@@ -291,26 +312,6 @@ class DeviceInfo {
     boolean testPermission(final Context context, String permission) {
         this.context = context;
         return hasPermission(context, permission);
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    static boolean hasPermission(final Context context, String permission) {
-        try {
-            return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permission);
-        } catch (Throwable t) {
-            return false;
-        }
-    }
-
-    /**
-     * Returns the integer identifier for the default app icon.
-     *
-     * @param context The Android context
-     * @return The integer identifier for the image resource
-     */
-    static int getAppIconAsIntId(final Context context) {
-        ApplicationInfo ai = context.getApplicationInfo();
-        return ai.icon;
     }
 
     Boolean isWifiConnected() {
@@ -334,8 +335,8 @@ class DeviceInfo {
         Boolean isBluetoothEnabled = null;
         try {
             PackageManager pm = context.getPackageManager();
-            int hasBluetoothPermission = pm.checkPermission(Manifest.permission.BLUETOOTH,context.getPackageName());
-            if(hasBluetoothPermission == PackageManager.PERMISSION_GRANTED) {
+            int hasBluetoothPermission = pm.checkPermission(Manifest.permission.BLUETOOTH, context.getPackageName());
+            if (hasBluetoothPermission == PackageManager.PERMISSION_GRANTED) {
                 BluetoothAdapter bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
                 if (bluetoothAdapter != null) {
                     isBluetoothEnabled = bluetoothAdapter.isEnabled();
@@ -347,71 +348,71 @@ class DeviceInfo {
         return isBluetoothEnabled;
     }
 
-    String getVersionName(){
+    String getVersionName() {
         return getDeviceCachedInfo().versionName;
     }
 
-    int getBuild(){
+    int getBuild() {
         return getDeviceCachedInfo().build;
     }
 
-    String getOsName(){
+    String getOsName() {
         return getDeviceCachedInfo().osName;
     }
 
-    String getOsVersion(){
+    String getOsVersion() {
         return getDeviceCachedInfo().osVersion;
     }
 
-    String getManufacturer(){
+    String getManufacturer() {
         return getDeviceCachedInfo().manufacturer;
     }
 
-    String getModel(){
+    String getModel() {
         return getDeviceCachedInfo().model;
     }
 
-    String getCarrier(){
+    String getCarrier() {
         return getDeviceCachedInfo().carrier;
     }
 
-    String getNetworkType(){
+    String getNetworkType() {
         return getDeviceCachedInfo().networkType;
     }
 
-    String getBluetoothVersion(){
+    String getBluetoothVersion() {
         return getDeviceCachedInfo().bluetoothVersion;
     }
 
-    String getCountryCode(){
+    String getCountryCode() {
         return getDeviceCachedInfo().countryCode;
     }
 
-    int getSdkVersion(){
+    int getSdkVersion() {
         return getDeviceCachedInfo().sdkVersion;
     }
 
-    double getHeight(){
+    double getHeight() {
         return getDeviceCachedInfo().height;
     }
 
-    double getWidth(){
+    double getWidth() {
         return getDeviceCachedInfo().width;
     }
 
-    int getDPI(){
+    int getDPI() {
         return getDeviceCachedInfo().dpi;
     }
 
-    int getHeightPixels(){
+    int getHeightPixels() {
         return getDeviceCachedInfo().heightPixels;
     }
 
-    int getWidthPixels(){
+    int getWidthPixels() {
         return getDeviceCachedInfo().widthPixels;
     }
 
-    boolean getNotificationsEnabledForUser(){
+    boolean getNotificationsEnabledForUser() {
         return getDeviceCachedInfo().notificationsEnabled;
     }
 
@@ -498,7 +499,7 @@ class DeviceInfo {
             return null;
         }
 
-        private int getBuild(){
+        private int getBuild() {
             PackageInfo packageInfo;
             try {
                 packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
@@ -520,16 +521,16 @@ class DeviceInfo {
             int networkType = TelephonyManager.NETWORK_TYPE_UNKNOWN;
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                if(testPermission(context,"android.permission.READ_PHONE_STATE")){
+                if (testPermission(context, "android.permission.READ_PHONE_STATE")) {
                     try {
                         networkType = mTelephonyManager.getDataNetworkType();
-                    }catch (SecurityException se){
+                    } catch (SecurityException se) {
                         Logger.d("Security Exception caught while fetch network type" + se.getMessage());
                     }
-                }else{
+                } else {
                     Logger.d("READ_PHONE_STATE permission not asked by the app or not granted by the user");
                 }
-            }else{
+            } else {
                 networkType = mTelephonyManager.getNetworkType();
             }
 
@@ -559,10 +560,10 @@ class DeviceInfo {
 
         private String getBluetoothVersion() {
             String bluetoothVersion = "none";
-            if(android.os.Build.VERSION.SDK_INT >= 18 &&
+            if (android.os.Build.VERSION.SDK_INT >= 18 &&
                     context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
                 bluetoothVersion = "ble";
-            } else if(context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)) {
+            } else if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)) {
                 bluetoothVersion = "classic";
             }
 
@@ -581,11 +582,11 @@ class DeviceInfo {
             return "";
         }
 
-        private int getSdkVersion(){
+        private int getSdkVersion() {
             return BuildConfig.VERSION_CODE;
         }
 
-        private int getHeightPixels(){
+        private int getHeightPixels() {
             WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
             if (wm == null) {
                 return 0;
@@ -595,7 +596,7 @@ class DeviceInfo {
             return dm.heightPixels;
         }
 
-        private double getHeight(){
+        private double getHeight() {
             WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
             if (wm == null) {
                 return 0.0;
@@ -607,7 +608,7 @@ class DeviceInfo {
             return toTwoPlaces(rHeight);
         }
 
-        private int getWidthPixels(){
+        private int getWidthPixels() {
             WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
             if (wm == null) {
                 return 0;
@@ -617,7 +618,7 @@ class DeviceInfo {
             return dm.widthPixels;
         }
 
-        private double getWidth(){
+        private double getWidth() {
             WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
             if (wm == null) {
                 return 0.0;
@@ -630,7 +631,7 @@ class DeviceInfo {
 
         }
 
-        private int getDPI(){
+        private int getDPI() {
             WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
             if (wm == null) {
                 return 0;
@@ -647,7 +648,7 @@ class DeviceInfo {
             return result;
         }
 
-        private boolean getNotificationEnabledForUser(){
+        private boolean getNotificationEnabledForUser() {
             return NotificationManagerCompat.from(context).areNotificationsEnabled();
         }
     }

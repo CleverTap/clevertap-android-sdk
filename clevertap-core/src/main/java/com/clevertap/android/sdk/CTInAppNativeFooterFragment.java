@@ -31,7 +31,7 @@ public class CTInAppNativeFooterFragment extends CTInAppBasePartialNativeFragmen
         ArrayList<Button> inAppButtons = new ArrayList<>();
         inAppView = inflater.inflate(R.layout.inapp_footer, container, false);
 
-        FrameLayout fl  = inAppView.findViewById(R.id.footer_frame_layout);
+        FrameLayout fl = inAppView.findViewById(R.id.footer_frame_layout);
         @SuppressWarnings({"unused"})
         FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
 
@@ -47,14 +47,14 @@ public class CTInAppNativeFooterFragment extends CTInAppBasePartialNativeFragmen
         inAppButtons.add(secondaryButton);
 
         ImageView imageView = linearLayout1.findViewById(R.id.footer_icon);
-        if(!inAppNotification.getMediaList().isEmpty()) {
+        if (!inAppNotification.getMediaList().isEmpty()) {
             Bitmap image = inAppNotification.getImage(inAppNotification.getMediaList().get(0));
             if (image != null) {
                 imageView.setImageBitmap(image);
             } else {
                 imageView.setVisibility(View.GONE);
             }
-        }else {
+        } else {
             imageView.setVisibility(View.GONE);
         }
 
@@ -68,24 +68,24 @@ public class CTInAppNativeFooterFragment extends CTInAppBasePartialNativeFragmen
 
         ArrayList<CTInAppNotificationButton> buttons = inAppNotification.getButtons();
         if (buttons != null && !buttons.isEmpty()) {
-            for(int i=0; i < buttons.size(); i++) {
+            for (int i = 0; i < buttons.size(); i++) {
                 if (i >= 2) continue; // only show 2 buttons
                 CTInAppNotificationButton inAppNotificationButton = buttons.get(i);
                 Button button = inAppButtons.get(i);
-                setupInAppButton(button,inAppNotificationButton,inAppNotification,i);
+                setupInAppButton(button, inAppNotificationButton, inAppNotification, i);
             }
         }
 
-        if(inAppNotification.getButtonCount()==1){
-            hideSecondaryButton(mainButton,secondaryButton);
+        if (inAppNotification.getButtonCount() == 1) {
+            hideSecondaryButton(mainButton, secondaryButton);
         }
 
         inAppView.setOnTouchListener(new View.OnTouchListener() {
             @SuppressLint("ClickableViewAccessibility")
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                    gd.onTouchEvent(event);
-                    return true;
+                gd.onTouchEvent(event);
+                return true;
             }
         });
 

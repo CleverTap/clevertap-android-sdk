@@ -49,6 +49,7 @@ import static com.google.android.exoplayer2.ui.PlayerView.SHOW_BUFFERING_WHEN_PL
 
 public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFragment {
 
+    private static long mediaPosition = 0;
     private GifImageView gifImageView;
     private PlayerView playerView;
     private SimpleExoPlayer player;
@@ -56,8 +57,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     private ImageView fullScreenIcon;
     private boolean exoPlayerFullscreen = false;
     private RelativeLayout relativeLayout;
-    private ViewGroup.LayoutParams videoFramelayoutParams,playerViewLayoutParams,imageViewLayoutParams;
-    private static long mediaPosition = 0;
+    private ViewGroup.LayoutParams videoFramelayoutParams, playerViewLayoutParams, imageViewLayoutParams;
     private FrameLayout videoFrameLayout;
     @SuppressWarnings({"unused"})
     private int layoutHeight = 0;
@@ -72,20 +72,19 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         ArrayList<Button> inAppButtons = new ArrayList<>();
 
         View inAppView;
-        if(inAppNotification.isTablet() && isTablet()) {
+        if (inAppNotification.isTablet() && isTablet()) {
             inAppView = inflater.inflate(R.layout.tab_inapp_interstitial, container, false);
-        }else{
+        } else {
             inAppView = inflater.inflate(R.layout.inapp_interstitial, container, false);
         }
 
-        final FrameLayout fl  = inAppView.findViewById(R.id.inapp_interstitial_frame_layout);
+        final FrameLayout fl = inAppView.findViewById(R.id.inapp_interstitial_frame_layout);
 
-        @SuppressLint("ResourceType")
-        final CloseImageView closeImageView = fl.findViewById(199272);
+        @SuppressLint("ResourceType") final CloseImageView closeImageView = fl.findViewById(199272);
         relativeLayout = fl.findViewById(R.id.interstitial_relative_layout);
         relativeLayout.setBackgroundColor(Color.parseColor(inAppNotification.getBackgroundColor()));
 
-        switch (currentOrientation){
+        switch (currentOrientation) {
             case Configuration.ORIENTATION_PORTRAIT:
                 relativeLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                     @Override
@@ -94,15 +93,13 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1.getLayoutParams();
                         if (inAppNotification.isTablet() && isTablet()) {
                             int aspectHeight = (int) (relativeLayout1.getMeasuredWidth() * 1.78f);
-                            int requiredHeight=fl.getMeasuredHeight()-getScaledPixels(80);
+                            int requiredHeight = fl.getMeasuredHeight() - getScaledPixels(80);
 
-                            if (aspectHeight>requiredHeight)
-                            {
-                                layoutParams.height=requiredHeight;
-                                layoutParams.width= (int) (requiredHeight/1.78f);
-                            }
-                            else {
-                                layoutParams.height=aspectHeight;
+                            if (aspectHeight > requiredHeight) {
+                                layoutParams.height = requiredHeight;
+                                layoutParams.width = (int) (requiredHeight / 1.78f);
+                            } else {
+                                layoutParams.height = aspectHeight;
                             }
 
                             relativeLayout1.setLayoutParams(layoutParams);
@@ -116,17 +113,15 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                             });
                         } else {
                             if (isTablet()) {
-                                int aspectHeight = (int) ((relativeLayout1.getMeasuredWidth()-getScaledPixels(200)) * 1.78f);
-                                int requiredHeight=fl.getMeasuredHeight()-getScaledPixels(280);
+                                int aspectHeight = (int) ((relativeLayout1.getMeasuredWidth() - getScaledPixels(200)) * 1.78f);
+                                int requiredHeight = fl.getMeasuredHeight() - getScaledPixels(280);
 
-                                if (aspectHeight>requiredHeight)
-                                {
-                                    layoutParams.height=requiredHeight;
-                                    layoutParams.width= (int) (requiredHeight/1.78f);
-                                }
-                                else {
-                                    layoutParams.height=aspectHeight;
-                                    layoutParams.width = relativeLayout1.getMeasuredWidth()-getScaledPixels(200);
+                                if (aspectHeight > requiredHeight) {
+                                    layoutParams.height = requiredHeight;
+                                    layoutParams.width = (int) (requiredHeight / 1.78f);
+                                } else {
+                                    layoutParams.height = aspectHeight;
+                                    layoutParams.width = relativeLayout1.getMeasuredWidth() - getScaledPixels(200);
                                 }
 
                                 layoutParams.setMargins(getScaledPixels(140), getScaledPixels(140), getScaledPixels(140), getScaledPixels(140));
@@ -164,7 +159,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                         }
                     }
                 });
-                if(!inAppNotification.getMediaList().isEmpty()) {
+                if (!inAppNotification.getMediaList().isEmpty()) {
                     if (inAppNotification.getMediaList().get(0).isImage()) {
                         Bitmap image = inAppNotification.getImage(inAppNotification.getMediaList().get(0));
                         if (image != null) {
@@ -198,21 +193,19 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                         FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1.getLayoutParams();
                         if (!inAppNotification.isTablet() || !isTablet()) {
                             if (isTablet()) {
-                                int aspectWidth = (int) ((relativeLayout1.getMeasuredHeight()-getScaledPixels(120)) * 1.78f);
-                                int requiredWidth=fl.getMeasuredWidth()-getScaledPixels(280);
+                                int aspectWidth = (int) ((relativeLayout1.getMeasuredHeight() - getScaledPixels(120)) * 1.78f);
+                                int requiredWidth = fl.getMeasuredWidth() - getScaledPixels(280);
 
-                                if (aspectWidth>requiredWidth)
-                                {
-                                    layoutParams.width=requiredWidth;
-                                    layoutParams.height= (int) (requiredWidth/1.78f);
-                                }
-                                else {
-                                    layoutParams.width=aspectWidth;
-                                    layoutParams.height = relativeLayout1.getMeasuredHeight()-getScaledPixels(120);
+                                if (aspectWidth > requiredWidth) {
+                                    layoutParams.width = requiredWidth;
+                                    layoutParams.height = (int) (requiredWidth / 1.78f);
+                                } else {
+                                    layoutParams.width = aspectWidth;
+                                    layoutParams.height = relativeLayout1.getMeasuredHeight() - getScaledPixels(120);
                                 }
 
                                 layoutParams.setMargins(getScaledPixels(140), getScaledPixels(100), getScaledPixels(140), getScaledPixels(100));
-                                layoutParams.gravity=Gravity.CENTER;
+                                layoutParams.gravity = Gravity.CENTER;
                                 relativeLayout1.setLayoutParams(layoutParams);
 
                                 new Handler().post(new Runnable() {
@@ -239,15 +232,13 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                         } else {
 
                             int aspectWidth = (int) (relativeLayout1.getMeasuredHeight() * 1.78f);
-                            int requiredWidth=fl.getMeasuredWidth()-getScaledPixels(80);
+                            int requiredWidth = fl.getMeasuredWidth() - getScaledPixels(80);
 
-                            if (aspectWidth>requiredWidth)
-                            {
-                                layoutParams.width=requiredWidth;
-                                layoutParams.height= (int) (requiredWidth/1.78f);
-                            }
-                            else {
-                                layoutParams.width=aspectWidth;
+                            if (aspectWidth > requiredWidth) {
+                                layoutParams.width = requiredWidth;
+                                layoutParams.height = (int) (requiredWidth / 1.78f);
+                            } else {
+                                layoutParams.width = aspectWidth;
                             }
 
                             layoutParams.gravity = Gravity.CENTER;
@@ -269,7 +260,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                         }
                     }
                 });
-                if(!inAppNotification.getMediaList().isEmpty()) {
+                if (!inAppNotification.getMediaList().isEmpty()) {
                     if (inAppNotification.getMediaList().get(0).isImage()) {
                         Bitmap image = inAppNotification.getImage(inAppNotification.getMediaList().get(0));
                         if (image != null) {
@@ -312,53 +303,51 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         textView2.setTextColor(Color.parseColor(inAppNotification.getMessageColor()));
 
         ArrayList<CTInAppNotificationButton> buttons = inAppNotification.getButtons();
-        if(buttons.size() == 1){
-            if(currentOrientation == Configuration.ORIENTATION_LANDSCAPE){
+        if (buttons.size() == 1) {
+            if (currentOrientation == Configuration.ORIENTATION_LANDSCAPE) {
                 mainButton.setVisibility(View.GONE);
-            }else if(currentOrientation == Configuration.ORIENTATION_PORTRAIT){
+            } else if (currentOrientation == Configuration.ORIENTATION_PORTRAIT) {
                 mainButton.setVisibility(View.INVISIBLE);
             }
-            setupInAppButton(secondaryButton,buttons.get(0),0);
-        }
-        else if (!buttons.isEmpty()) {
-            for(int i=0; i < buttons.size(); i++) {
+            setupInAppButton(secondaryButton, buttons.get(0), 0);
+        } else if (!buttons.isEmpty()) {
+            for (int i = 0; i < buttons.size(); i++) {
                 if (i >= 2) continue; // only show 2 buttons
                 CTInAppNotificationButton inAppNotificationButton = buttons.get(i);
                 Button button = inAppButtons.get(i);
-                setupInAppButton(button,inAppNotificationButton,i);
+                setupInAppButton(button, inAppNotificationButton, i);
             }
         }
 
         fl.setBackgroundDrawable(new ColorDrawable(0xBB000000));
 
-       closeImageView.setOnClickListener(new View.OnClickListener() {
+        closeImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 didDismiss(null);
-                if(gifImageView != null)
+                if (gifImageView != null)
                     gifImageView.clear();
                 getActivity().finish();
             }
         });
 
-       if(!inAppNotification.isHideCloseButton()) {
-           closeImageView.setVisibility(View.GONE);
-       }
-       else {
-           closeImageView.setVisibility(View.VISIBLE);
-       }
+        if (!inAppNotification.isHideCloseButton()) {
+            closeImageView.setVisibility(View.GONE);
+        } else {
+            closeImageView.setVisibility(View.VISIBLE);
+        }
 
         return inAppView;
     }
 
-    private void playMedia(){
+    private void playMedia() {
         playerView.requestFocus();
         playerView.setVisibility(View.VISIBLE);
         playerView.setPlayer(player);
         player.setPlayWhenReady(true);
     }
 
-    private void prepareMedia(){
+    private void prepareMedia() {
         videoFrameLayout = relativeLayout.findViewById(R.id.video_frame);
         videoFrameLayout.setVisibility(View.VISIBLE);
 
@@ -375,7 +364,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                 }
             }
         });
-        if(inAppNotification.isTablet() && isTablet()) {
+        if (inAppNotification.isTablet() && isTablet()) {
 
             int playerWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 408, getResources().getDisplayMetrics());
             int playerHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 229, getResources().getDisplayMetrics());
@@ -383,25 +372,24 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
             playerView.setLayoutParams(new FrameLayout.LayoutParams(playerWidth, playerHeight));
             int iconWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
             int iconHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
-            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(iconWidth,iconHeight);
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(iconWidth, iconHeight);
             layoutParams.gravity = Gravity.END;
             int iconTop = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics());
             int iconRight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics());
-            layoutParams.setMargins(0,iconTop,iconRight,0);
+            layoutParams.setMargins(0, iconTop, iconRight, 0);
             fullScreenIcon.setLayoutParams(layoutParams);
-        }
-        else {
+        } else {
             int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 240, getResources().getDisplayMetrics());
             int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 134, getResources().getDisplayMetrics());
 
             playerView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
             int iconWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics());
             int iconHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics());
-            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(iconWidth,iconHeight);
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(iconWidth, iconHeight);
             layoutParams.gravity = Gravity.END;
             int iconTop = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics());
             int iconRight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics());
-            layoutParams.setMargins(0,iconTop,iconRight,0);
+            layoutParams.setMargins(0, iconTop, iconRight, 0);
             fullScreenIcon.setLayoutParams(layoutParams);
         }
         playerView.setShowBuffering(SHOW_BUFFERING_WHEN_PLAYING);
@@ -412,14 +400,14 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         Drawable artwork = getActivity().getBaseContext().getResources().getDrawable(R.drawable.ct_audio);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             playerView.setDefaultArtwork(artwork);
-        }else{
+        } else {
             playerView.setDefaultArtwork(artwork);
         }
 
         // 1. Create a default TrackSelector
         BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter.Builder(getActivity().getBaseContext()).build();
         TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory();
-        TrackSelector trackSelector = new DefaultTrackSelector(getActivity().getBaseContext(),videoTrackSelectionFactory);
+        TrackSelector trackSelector = new DefaultTrackSelector(getActivity().getBaseContext(), videoTrackSelectionFactory);
         // 2. Create the player
         player = new SimpleExoPlayer.Builder(getActivity().getBaseContext()).setTrackSelector(trackSelector).build();
         // 3. Produces DataSource instances through which media data is loaded.
@@ -436,7 +424,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     @Override
     public void onStart() {
         super.onStart();
-        if(gifImageView != null){
+        if (gifImageView != null) {
             gifImageView.setBytes(inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)));
             gifImageView.startAnimation();
         }
@@ -445,10 +433,10 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     @Override
     public void onStop() {
         super.onStop();
-        if(gifImageView != null) {
+        if (gifImageView != null) {
             gifImageView.clear();
         }
-        if(player != null){
+        if (player != null) {
             player.stop();
             player.release();
         }
@@ -458,10 +446,10 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     @Override
     public void onPause() {
         super.onPause();
-        if(gifImageView != null) {
+        if (gifImageView != null) {
             gifImageView.clear();
         }
-        if(exoPlayerFullscreen){
+        if (exoPlayerFullscreen) {
             closeFullscreenDialog();
         }
         if (player != null) {
@@ -475,7 +463,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     @Override
     public void onResume() {
         super.onResume();
-        if(!inAppNotification.getMediaList().isEmpty()) {
+        if (!inAppNotification.getMediaList().isEmpty()) {
             if (player == null && (inAppNotification.getMediaList().get(0).isVideo() || inAppNotification.getMediaList().get(0).isAudio())) {
                 prepareMedia();
                 playMedia();
@@ -491,10 +479,10 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     @Override
     void cleanup() {
         super.cleanup();
-        if(gifImageView != null) {
+        if (gifImageView != null) {
             gifImageView.clear();
         }
-        if(player != null){
+        if (player != null) {
             player.stop();
             player.release();
             player = null;
@@ -536,7 +524,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         fullScreenIcon.setImageDrawable(ContextCompat.getDrawable(getActivity().getApplicationContext(), R.drawable.ct_ic_fullscreen_expand));
     }
 
-    private void disableFullScreenButton(){
+    private void disableFullScreenButton() {
         fullScreenIcon.setVisibility(View.GONE);
     }
 }

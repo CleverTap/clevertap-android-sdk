@@ -27,16 +27,16 @@ import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.
 
 public class CTProductConfigController {
 
-    private String guid;
-    private boolean isInitialized = false;
     private final CleverTapInstanceConfig config;
     private final Context context;
-    private HashMap<String, String> defaultConfig = new HashMap<>();
     private final HashMap<String, String> activatedConfig = new HashMap<>();
     private final HashMap<String, String> waitingTobeActivatedConfig = new HashMap<>();
     private final CTProductConfigControllerListener listener;
-    private boolean isFetchAndActivating = false;
     private final ProductConfigSettings settings;
+    private String guid;
+    private boolean isInitialized = false;
+    private HashMap<String, String> defaultConfig = new HashMap<>();
+    private boolean isFetchAndActivating = false;
 
     public CTProductConfigController(Context context, String guid, CleverTapInstanceConfig config, CTProductConfigControllerListener listener) {
         this.context = context;
@@ -490,7 +490,7 @@ public class CTProductConfigController {
                         String Key = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_KEY);
                         String Value = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_VALUE);
                         if (!TextUtils.isEmpty(Key)) {
-                            map.put(Key, String.valueOf(Value));
+                            map.put(Key, Value);
                         }
                     }
                 } catch (Exception e) {

@@ -8,15 +8,15 @@ import com.clevertap.android.sdk.CleverTapAPI;
 
 public class TestApplication extends Application {
 
+    public static TestApplication getApplication() {
+        return (TestApplication) ApplicationProvider.getApplicationContext();
+    }
+
     @Override
     public void onCreate() {
         CleverTapAPI.setUIEditorConnectionEnabled(true);
         CleverTapAPI.setDebugLevel(3);
         ActivityLifecycleCallback.register(this);
         super.onCreate();
-    }
-
-    public static TestApplication getApplication() {
-        return (TestApplication) ApplicationProvider.getApplicationContext();
     }
 }

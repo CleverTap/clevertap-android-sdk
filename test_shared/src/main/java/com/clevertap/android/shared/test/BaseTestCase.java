@@ -29,17 +29,6 @@ public abstract class BaseTestCase {
     protected TestApplication application;
     protected CleverTapInstanceConfig cleverTapInstanceConfig;
 
-    @Before
-    public void setUp() throws Exception {
-        application = TestApplication.getApplication();
-        cleverTapAPI = Mockito.mock(CleverTapAPI.class);
-        cleverTapInstanceConfig = CleverTapInstanceConfig.createInstance(application, ACC_ID, ACC_TOKEN);
-    }
-
-    public TestApplication getApplication() {
-        return TestApplication.getApplication();
-    }
-
     public static void assertBundlesEquals(Bundle expected, Bundle actual) {
         assertBundlesEquals(null, expected, actual);
     }
@@ -89,6 +78,17 @@ public abstract class BaseTestCase {
         }
 
         return true;
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        application = TestApplication.getApplication();
+        cleverTapAPI = Mockito.mock(CleverTapAPI.class);
+        cleverTapInstanceConfig = CleverTapInstanceConfig.createInstance(application, ACC_ID, ACC_TOKEN);
+    }
+
+    public TestApplication getApplication() {
+        return TestApplication.getApplication();
     }
 
 }

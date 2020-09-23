@@ -3,8 +3,6 @@ package com.clevertap.android.sdk;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.google.android.material.tabs.TabLayout;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -15,8 +13,19 @@ import java.util.Arrays;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class CTInboxStyleConfig implements Parcelable {
 
-    private final static int MAX_TABS = 2;
+    @SuppressWarnings("unused")
+    public static final Parcelable.Creator<CTInboxStyleConfig> CREATOR = new Parcelable.Creator<CTInboxStyleConfig>() {
+        @Override
+        public CTInboxStyleConfig createFromParcel(Parcel in) {
+            return new CTInboxStyleConfig(in);
+        }
 
+        @Override
+        public CTInboxStyleConfig[] newArray(int size) {
+            return new CTInboxStyleConfig[size];
+        }
+    };
+    private final static int MAX_TABS = 2;
     private String navBarColor;
     private String navBarTitle;
     private String navBarTitleColor;
@@ -28,10 +37,9 @@ public class CTInboxStyleConfig implements Parcelable {
     private String tabBackgroundColor;
     private String noMessageViewText;
     private String noMessageViewTextColor;
-
     private String[] tabs;
 
-    public CTInboxStyleConfig(){
+    public CTInboxStyleConfig() {
         this.navBarColor = "#FFFFFF";
         this.navBarTitle = "App Inbox";
         this.navBarTitleColor = "#333333";
@@ -46,7 +54,7 @@ public class CTInboxStyleConfig implements Parcelable {
         this.noMessageViewTextColor = "#000000";
     }
 
-    CTInboxStyleConfig(CTInboxStyleConfig config){
+    CTInboxStyleConfig(CTInboxStyleConfig config) {
         this.navBarColor = config.navBarColor;
         this.navBarTitle = config.navBarTitle;
         this.navBarTitleColor = config.navBarTitleColor;
@@ -97,26 +105,13 @@ public class CTInboxStyleConfig implements Parcelable {
         dest.writeString(noMessageViewTextColor);
     }
 
-    @SuppressWarnings("unused")
-    public static final Parcelable.Creator<CTInboxStyleConfig> CREATOR = new Parcelable.Creator<CTInboxStyleConfig>() {
-        @Override
-        public CTInboxStyleConfig createFromParcel(Parcel in) {
-            return new CTInboxStyleConfig(in);
-        }
-
-        @Override
-        public CTInboxStyleConfig[] newArray(int size) {
-            return new CTInboxStyleConfig[size];
-        }
-    };
-
-
     public String getNavBarColor() {
         return navBarColor;
     }
 
     /**
      * Sets the color for the top navigation toolbar
+     *
      * @param navBarColor String - hexcode of the color
      */
     public void setNavBarColor(String navBarColor) {
@@ -129,6 +124,7 @@ public class CTInboxStyleConfig implements Parcelable {
 
     /**
      * Sets the text for the top navigation toolbar
+     *
      * @param navBarTitle String
      */
     public void setNavBarTitle(String navBarTitle) {
@@ -141,6 +137,7 @@ public class CTInboxStyleConfig implements Parcelable {
 
     /**
      * Sets the color for the title in the top navigation toolbar
+     *
      * @param navBarTitleColor String - hexcode of the color
      */
     public void setNavBarTitleColor(String navBarTitleColor) {
@@ -153,18 +150,24 @@ public class CTInboxStyleConfig implements Parcelable {
 
     /**
      * Sets the background color for the entire inbox
+     *
      * @param inboxBackgroundColor - String - hexcode of the color
      */
     public void setInboxBackgroundColor(String inboxBackgroundColor) {
         this.inboxBackgroundColor = inboxBackgroundColor;
     }
 
+    public ArrayList<String> getTabs() {
+        return this.tabs == null ? new ArrayList<String>() : new ArrayList<>(Arrays.asList(this.tabs));
+    }
+
     /**
      * Sets the name of the optional two tabs.
      * The contents of the tabs are filtered based on the name of the tab.
+     *
      * @param tabs ArrayList of Strings
      */
-    public void setTabs(ArrayList<String>tabs) {
+    public void setTabs(ArrayList<String> tabs) {
         if (tabs == null || tabs.size() <= 0) return;
 
         ArrayList<String> toAdd;
@@ -174,10 +177,6 @@ public class CTInboxStyleConfig implements Parcelable {
             toAdd = tabs;
         }
         this.tabs = toAdd.toArray(new String[0]);
-    }
-
-    public ArrayList<String> getTabs() {
-        return this.tabs == null ? new ArrayList<String>() : new ArrayList<>(Arrays.asList(this.tabs));
     }
 
     boolean isUsingTabs() {
@@ -190,7 +189,8 @@ public class CTInboxStyleConfig implements Parcelable {
 
     /**
      * Sets the color of the back button on the top navigation toolbar
-     * @param backButtonColor  String - hexcode of the color
+     *
+     * @param backButtonColor String - hexcode of the color
      */
     public void setBackButtonColor(String backButtonColor) {
         this.backButtonColor = backButtonColor;
@@ -202,6 +202,7 @@ public class CTInboxStyleConfig implements Parcelable {
 
     /**
      * Sets the color of the selected tab
+     *
      * @param selectedTabColor String - hexcode of the color
      */
     public void setSelectedTabColor(String selectedTabColor) {
@@ -214,6 +215,7 @@ public class CTInboxStyleConfig implements Parcelable {
 
     /**
      * Sets the color of the unselected tab
+     *
      * @param unselectedTabColor String - hexcode of the color
      */
     public void setUnselectedTabColor(String unselectedTabColor) {
@@ -226,6 +228,7 @@ public class CTInboxStyleConfig implements Parcelable {
 
     /**
      * Sets the color of the indicator of the selected tab
+     *
      * @param selectedTabIndicatorColor String - hexcode of the color
      */
     public void setSelectedTabIndicatorColor(String selectedTabIndicatorColor) {
@@ -238,6 +241,7 @@ public class CTInboxStyleConfig implements Parcelable {
 
     /**
      * Sets the background color for the tabs
+     *
      * @param tabBackgroundColor String - hexcode of the color
      */
     public void setTabBackgroundColor(String tabBackgroundColor) {
@@ -250,6 +254,7 @@ public class CTInboxStyleConfig implements Parcelable {
 
     /**
      * Sets the text for when there are no messages in the App Inbox
+     *
      * @param noMessageViewText String
      */
     public void setNoMessageViewText(String noMessageViewText) {
@@ -262,6 +267,7 @@ public class CTInboxStyleConfig implements Parcelable {
 
     /**
      * Sets the color of the text for when there are no messages in the App Inbox
+     *
      * @param noMessageViewTextColor String - hexcode of the color
      */
     public void setNoMessageViewTextColor(String noMessageViewTextColor) {

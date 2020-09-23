@@ -27,8 +27,9 @@ public class CTGeofenceBootReceiver extends BroadcastReceiver {
      * Validates necessary location permissions and creates {@link GeofenceUpdateTask} and
      * {@link LocationUpdateTask} to sends it to Queue
      * using {@link CTGeofenceTaskManager}
+     *
      * @param context application {@link Context}
-     * @param intent an instance of {@link Intent}
+     * @param intent  an instance of {@link Intent}
      */
     @MainThread
     @Override

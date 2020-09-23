@@ -5,9 +5,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 
-import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
 import com.clevertap.android.geofence.fakes.GeofenceEventFake;
 import com.clevertap.android.geofence.fakes.GeofenceJSON;
+import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingEvent;
@@ -55,13 +55,13 @@ public class PushGeofenceEventTaskTest extends BaseTestCase {
 
     @Rule
     public PowerMockRule rule = new PowerMockRule();
-    private Logger logger;
     @Mock
     public CTGeofenceAPI ctGeofenceAPI;
     @Mock
     public CleverTapAPI cleverTapAPI;
     @Mock
     public CTGeofenceTask.OnCompleteListener onCompleteListener;
+    private Logger logger;
     private Location location;
     private Intent intent;
     @Mock
@@ -197,15 +197,15 @@ public class PushGeofenceEventTaskTest extends BaseTestCase {
         PushGeofenceEventTask task = new PushGeofenceEventTask(application, intent);
 
         try {
-            WhiteboxImpl.invokeMethod(task,"pushGeofenceEvents",(Object)null,
-                  null,1);
+            WhiteboxImpl.invokeMethod(task, "pushGeofenceEvents", (Object) null,
+                    null, 1);
         } catch (Exception e) {
             e.printStackTrace();
         }
 
         verify(cleverTapAPI).pushGeoFenceError(anyInt(), anyString());
 
-        verifyStatic(FileUtils.class,times(0));
+        verifyStatic(FileUtils.class, times(0));
         FileUtils.readFromFile(any(Context.class), anyString());
 
     }
@@ -228,9 +228,9 @@ public class PushGeofenceEventTaskTest extends BaseTestCase {
         try {
 
             // Geofence Entered event
-            WhiteboxImpl.invokeMethod(task,"pushGeofenceEvents",
+            WhiteboxImpl.invokeMethod(task, "pushGeofenceEvents",
                     triggeredGeofenceList,
-                    triggeredLocation,Geofence.GEOFENCE_TRANSITION_ENTER);
+                    triggeredLocation, Geofence.GEOFENCE_TRANSITION_ENTER);
 
             JSONObject firstFromGeofenceArray = GeofenceJSON.getFirstFromGeofenceArray().getJSONObject(0);
             firstFromGeofenceArray.put("triggered_lat", triggeredLocation.getLatitude());
@@ -239,13 +239,12 @@ public class PushGeofenceEventTaskTest extends BaseTestCase {
             ArgumentCaptor<JSONObject> objectArgumentCaptor = ArgumentCaptor.forClass(JSONObject.class);
 
             verify(cleverTapAPI).pushGeofenceEnteredEvent(objectArgumentCaptor.capture());
-            JSONAssert.assertEquals(firstFromGeofenceArray,objectArgumentCaptor.getValue(),true);
+            JSONAssert.assertEquals(firstFromGeofenceArray, objectArgumentCaptor.getValue(), true);
 
             verify(future).get();
         } catch (Exception e) {
             e.printStackTrace();
         }
-
 
 
     }
@@ -265,11 +264,11 @@ public class PushGeofenceEventTaskTest extends BaseTestCase {
 
         try {
 
-            WhiteboxImpl.invokeMethod(task,"pushGeofenceEvents",
+            WhiteboxImpl.invokeMethod(task, "pushGeofenceEvents",
                     triggeredGeofenceList,
-                    triggeredLocation,Geofence.GEOFENCE_TRANSITION_ENTER);
+                    triggeredLocation, Geofence.GEOFENCE_TRANSITION_ENTER);
 
-            verify(cleverTapAPI,never()).pushGeofenceEnteredEvent(any(JSONObject.class));
+            verify(cleverTapAPI, never()).pushGeofenceEnteredEvent(any(JSONObject.class));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -291,11 +290,11 @@ public class PushGeofenceEventTaskTest extends BaseTestCase {
 
         try {
 
-            WhiteboxImpl.invokeMethod(task,"pushGeofenceEvents",
+            WhiteboxImpl.invokeMethod(task, "pushGeofenceEvents",
                     triggeredGeofenceList,
-                    triggeredLocation,Geofence.GEOFENCE_TRANSITION_ENTER);
+                    triggeredLocation, Geofence.GEOFENCE_TRANSITION_ENTER);
 
-            verify(cleverTapAPI,never()).pushGeofenceEnteredEvent(any(JSONObject.class));
+            verify(cleverTapAPI, never()).pushGeofenceEnteredEvent(any(JSONObject.class));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -317,11 +316,11 @@ public class PushGeofenceEventTaskTest extends BaseTestCase {
 
         try {
 
-            WhiteboxImpl.invokeMethod(task,"pushGeofenceEvents",
+            WhiteboxImpl.invokeMethod(task, "pushGeofenceEvents",
                     triggeredGeofenceList,
-                    triggeredLocation,Geofence.GEOFENCE_TRANSITION_ENTER);
+                    triggeredLocation, Geofence.GEOFENCE_TRANSITION_ENTER);
 
-            verify(cleverTapAPI,never()).pushGeofenceEnteredEvent(any(JSONObject.class));
+            verify(cleverTapAPI, never()).pushGeofenceEnteredEvent(any(JSONObject.class));
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -343,11 +342,11 @@ public class PushGeofenceEventTaskTest extends BaseTestCase {
 
         try {
 
-            WhiteboxImpl.invokeMethod(task,"pushGeofenceEvents",
+            WhiteboxImpl.invokeMethod(task, "pushGeofenceEvents",
                     triggeredGeofenceList,
-                    triggeredLocation,Geofence.GEOFENCE_TRANSITION_ENTER);
+                    triggeredLocation, Geofence.GEOFENCE_TRANSITION_ENTER);
 
-            verify(cleverTapAPI,never()).pushGeofenceEnteredEvent(any(JSONObject.class));
+            verify(cleverTapAPI, never()).pushGeofenceEnteredEvent(any(JSONObject.class));
             verify(cleverTapAPI).pushGeoFenceError(anyInt(), anyString());
 
         } catch (Exception e) {
@@ -375,9 +374,9 @@ public class PushGeofenceEventTaskTest extends BaseTestCase {
         try {
 
             // Geofence Exit event
-            WhiteboxImpl.invokeMethod(task,"pushGeofenceEvents",
+            WhiteboxImpl.invokeMethod(task, "pushGeofenceEvents",
                     triggeredGeofenceList,
-                    triggeredLocation,Geofence.GEOFENCE_TRANSITION_EXIT);
+                    triggeredLocation, Geofence.GEOFENCE_TRANSITION_EXIT);
 
             JSONObject firstFromGeofenceArray = GeofenceJSON.getFirstFromGeofenceArray().getJSONObject(0);
             firstFromGeofenceArray.put("triggered_lat", triggeredLocation.getLatitude());
@@ -386,7 +385,7 @@ public class PushGeofenceEventTaskTest extends BaseTestCase {
             ArgumentCaptor<JSONObject> objectArgumentCaptor = ArgumentCaptor.forClass(JSONObject.class);
 
             verify(cleverTapAPI).pushGeoFenceExitedEvent(objectArgumentCaptor.capture());
-            JSONAssert.assertEquals(firstFromGeofenceArray,objectArgumentCaptor.getValue(),true);
+            JSONAssert.assertEquals(firstFromGeofenceArray, objectArgumentCaptor.getValue(), true);
 
             verify(future).get();
         } catch (Exception e) {
@@ -413,9 +412,9 @@ public class PushGeofenceEventTaskTest extends BaseTestCase {
         try {
 
             // Multiple Geofence Exit event
-            WhiteboxImpl.invokeMethod(task,"pushGeofenceEvents",
+            WhiteboxImpl.invokeMethod(task, "pushGeofenceEvents",
                     triggeredGeofenceList,
-                    triggeredLocation,Geofence.GEOFENCE_TRANSITION_EXIT);
+                    triggeredLocation, Geofence.GEOFENCE_TRANSITION_EXIT);
 
             JSONObject firstFromGeofenceArray = GeofenceJSON.getFirstFromGeofenceArray().getJSONObject(0);
             firstFromGeofenceArray.put("triggered_lat", triggeredLocation.getLatitude());
@@ -423,19 +422,19 @@ public class PushGeofenceEventTaskTest extends BaseTestCase {
 
             ArgumentCaptor<JSONObject> objectArgumentCaptor = ArgumentCaptor.forClass(JSONObject.class);
 
-            verify(cleverTapAPI,times(2)).pushGeoFenceExitedEvent(objectArgumentCaptor.capture());
+            verify(cleverTapAPI, times(2)).pushGeoFenceExitedEvent(objectArgumentCaptor.capture());
 
             // assert geofence with id 310001
-            JSONAssert.assertEquals(firstFromGeofenceArray,objectArgumentCaptor.getAllValues().get(0),true);
+            JSONAssert.assertEquals(firstFromGeofenceArray, objectArgumentCaptor.getAllValues().get(0), true);
 
             JSONObject lastFromGeofenceArray = GeofenceJSON.getLastFromGeofenceArray().getJSONObject(0);
             lastFromGeofenceArray.put("triggered_lat", triggeredLocation.getLatitude());
             lastFromGeofenceArray.put("triggered_lng", triggeredLocation.getLongitude());
 
             // assert geofence with id 310002
-            JSONAssert.assertEquals(lastFromGeofenceArray,objectArgumentCaptor.getAllValues().get(1),true);
+            JSONAssert.assertEquals(lastFromGeofenceArray, objectArgumentCaptor.getAllValues().get(1), true);
 
-            verify(future,times(2)).get();
+            verify(future, times(2)).get();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -443,13 +442,13 @@ public class PushGeofenceEventTaskTest extends BaseTestCase {
     }
 
     @Test
-    public void testSendOnCompleteEventWhenListenerNotNull(){
+    public void testSendOnCompleteEventWhenListenerNotNull() {
         // when listener not null
         PushGeofenceEventTask task = new PushGeofenceEventTask(application, intent);
 
         task.setOnCompleteListener(onCompleteListener);
         try {
-            WhiteboxImpl.invokeMethod(task,"sendOnCompleteEvent");
+            WhiteboxImpl.invokeMethod(task, "sendOnCompleteEvent");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -458,17 +457,17 @@ public class PushGeofenceEventTaskTest extends BaseTestCase {
     }
 
     @Test
-    public void testSendOnCompleteEventWhenListenerIsNull(){
+    public void testSendOnCompleteEventWhenListenerIsNull() {
         // when listener is null
         PushGeofenceEventTask task = new PushGeofenceEventTask(application, intent);
 
         task.setOnCompleteListener(null);
         try {
-            WhiteboxImpl.invokeMethod(task,"sendOnCompleteEvent");
+            WhiteboxImpl.invokeMethod(task, "sendOnCompleteEvent");
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Mockito.verify(onCompleteListener,times(0)).onComplete();
+        Mockito.verify(onCompleteListener, times(0)).onComplete();
 
     }
 }

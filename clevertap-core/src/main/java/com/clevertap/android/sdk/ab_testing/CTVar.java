@@ -14,78 +14,6 @@ import java.util.Map;
 
 final class CTVar {
 
-    enum CTVarType {
-        CTVarTypeBool("bool"),
-        CTVarTypeDouble("double"),
-        CTVarTypeInteger("integer"),
-        CTVarTypeString("string"),
-        CTVarTypeListOfBool("arrayofbool"),
-        CTVarTypeListOfDouble("arrayofdouble"),
-        CTVarTypeListOfInteger("arrayofinteger"),
-        CTVarTypeListOfString("arrayofstring"),
-        CTVarTypeMapOfBool("dictionaryofbool"),
-        CTVarTypeMapOfDouble("dictionaryofdouble"),
-        CTVarTypeMapOfInteger("dictionaryofinteger"),
-        CTVarTypeMapOfString("dictionaryofstring"),
-        CTVarTypeUnknown("unknown");
-
-        private final String varType;
-        CTVarType(String type) {
-            this.varType = type;
-        }
-
-        @SuppressWarnings({"unused"})
-        static CTVarType fromString(String type) {
-            switch(type){
-                case "bool" : {
-                    return CTVarTypeBool;
-                }
-                case "double" : {
-                    return CTVarTypeDouble;
-                }
-                case "integer" : {
-                    return CTVarTypeInteger;
-                }
-                case "string" : {
-                    return CTVarTypeString;
-                }
-                case "arrayofbool" : {
-                    return CTVarTypeListOfBool;
-                }
-                case "arrayofdouble" : {
-                    return CTVarTypeListOfDouble;
-                }
-                case "arrayofinteger" : {
-                    return CTVarTypeListOfInteger;
-                }
-                case "arrayofstring" : {
-                    return CTVarTypeListOfString;
-                }
-                case "dictionaryofbool" : {
-                    return CTVarTypeMapOfBool;
-                }
-                case "dictionaryofdouble" : {
-                    return CTVarTypeMapOfDouble;
-                }
-                case "dictionaryofinteger" : {
-                    return CTVarTypeMapOfInteger;
-                }
-                case "dictionaryofstring" : {
-                    return CTVarTypeMapOfString;
-                }
-                default:
-                    return CTVarTypeUnknown;
-            }
-        }
-
-        @NonNull
-        @Override
-        public String toString() {
-            return varType;
-        }
-
-    }
-
     private String name;
     private CTVarType type;
     private Object _value;
@@ -93,6 +21,13 @@ final class CTVar {
     private Double _numberValue;
     private List<?> _listValue;
     private Map<?, ?> _mapValue;
+
+    CTVar(String name, CTVarType type, Object value) {
+        this.name = name;
+        this.type = type;
+        this._value = value;
+        _computeValue();
+    }
 
     private void _computeValue() {
         _stringValue = null;
@@ -122,7 +57,7 @@ final class CTVar {
             }
         }
 
-        switch (type){
+        switch (type) {
             case CTVarTypeListOfBool:
             case CTVarTypeListOfDouble:
             case CTVarTypeListOfInteger:
@@ -140,15 +75,15 @@ final class CTVar {
 
     private Map<String, ?> mapFromString(String stringValue, CTVarType type) {
         try {
-            String[] stringArray = stringValue.replace("\"","")
-                    .replace("{","")
-                    .replace("}","")
+            String[] stringArray = stringValue.replace("\"", "")
+                    .replace("{", "")
+                    .replace("}", "")
                     .split(",");  // ["key:value", "key:value"...]
 
             Map<String, Object> objectMap = new HashMap<>();
 
-            for(String s : stringArray){
-                String [] stringValuesArray = s.split(":");
+            for (String s : stringArray) {
+                String[] stringValuesArray = s.split(":");
                 String key = stringValuesArray[0];
                 String _stringValue = stringValuesArray[1];
                 Object value = null;
@@ -179,8 +114,8 @@ final class CTVar {
 
     private List<?> listFromString(String stringValue, CTVarType type) {
         try {
-            String[] stringArray = stringValue.replace("[","")
-                    .replace("]","").replace("\"","")
+            String[] stringArray = stringValue.replace("[", "")
+                    .replace("]", "").replace("\"", "")
                     .split(","); // ["value", "value"...]
 
             if (type == CTVarType.CTVarTypeListOfString) {
@@ -207,13 +142,6 @@ final class CTVar {
             Logger.d("Unable to parse list of type: " + type.toString() + " from : " + stringValue);
             return null;
         }
-    }
-
-    CTVar(String name, CTVarType type, Object value) {
-        this.name = name;
-        this.type = type;
-        this._value = value;
-        _computeValue();
     }
 
     @SuppressWarnings("unused")
@@ -283,5 +211,78 @@ final class CTVar {
             // no-op
         }
         return json;
+    }
+
+    enum CTVarType {
+        CTVarTypeBool("bool"),
+        CTVarTypeDouble("double"),
+        CTVarTypeInteger("integer"),
+        CTVarTypeString("string"),
+        CTVarTypeListOfBool("arrayofbool"),
+        CTVarTypeListOfDouble("arrayofdouble"),
+        CTVarTypeListOfInteger("arrayofinteger"),
+        CTVarTypeListOfString("arrayofstring"),
+        CTVarTypeMapOfBool("dictionaryofbool"),
+        CTVarTypeMapOfDouble("dictionaryofdouble"),
+        CTVarTypeMapOfInteger("dictionaryofinteger"),
+        CTVarTypeMapOfString("dictionaryofstring"),
+        CTVarTypeUnknown("unknown");
+
+        private final String varType;
+
+        CTVarType(String type) {
+            this.varType = type;
+        }
+
+        @SuppressWarnings({"unused"})
+        static CTVarType fromString(String type) {
+            switch (type) {
+                case "bool": {
+                    return CTVarTypeBool;
+                }
+                case "double": {
+                    return CTVarTypeDouble;
+                }
+                case "integer": {
+                    return CTVarTypeInteger;
+                }
+                case "string": {
+                    return CTVarTypeString;
+                }
+                case "arrayofbool": {
+                    return CTVarTypeListOfBool;
+                }
+                case "arrayofdouble": {
+                    return CTVarTypeListOfDouble;
+                }
+                case "arrayofinteger": {
+                    return CTVarTypeListOfInteger;
+                }
+                case "arrayofstring": {
+                    return CTVarTypeListOfString;
+                }
+                case "dictionaryofbool": {
+                    return CTVarTypeMapOfBool;
+                }
+                case "dictionaryofdouble": {
+                    return CTVarTypeMapOfDouble;
+                }
+                case "dictionaryofinteger": {
+                    return CTVarTypeMapOfInteger;
+                }
+                case "dictionaryofstring": {
+                    return CTVarTypeMapOfString;
+                }
+                default:
+                    return CTVarTypeUnknown;
+            }
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            return varType;
+        }
+
     }
 }

@@ -22,7 +22,6 @@ import static org.awaitility.Awaitility.await;
 public class CTGeofenceTaskManagerTest extends BaseTestCase {
 
 
-
     @Before
     public void setUp() throws Exception {
 
@@ -31,16 +30,16 @@ public class CTGeofenceTaskManagerTest extends BaseTestCase {
     }
 
     @Test
-    public void testGetInstance(){
+    public void testGetInstance() {
         CTGeofenceTaskManager instance = CTGeofenceTaskManager.getInstance();
         Assert.assertNotNull(instance);
 
         CTGeofenceTaskManager instance1 = CTGeofenceTaskManager.getInstance();
-        Assert.assertSame(instance,instance1);
+        Assert.assertSame(instance, instance1);
     }
 
     @Test
-    public void testPostAsyncSafelyRunnable(){
+    public void testPostAsyncSafelyRunnable() {
 
         final boolean[] isFinish = {false};
         Future<?> future = CTGeofenceTaskManager.getInstance().postAsyncSafely("", new Runnable() {
@@ -61,7 +60,7 @@ public class CTGeofenceTaskManagerTest extends BaseTestCase {
     }
 
     @Test
-    public void testPostAsyncSafelyRunnableNestedCall(){
+    public void testPostAsyncSafelyRunnableNestedCall() {
 
         // when called multiple times from same thread
 
@@ -93,12 +92,12 @@ public class CTGeofenceTaskManagerTest extends BaseTestCase {
     }
 
     @Test
-    public void testPostAsyncSafelyRunnableFlatCall(){
+    public void testPostAsyncSafelyRunnableFlatCall() {
 
         // when called multiple times from same thread
 
-        final boolean[] isFinish = {false,false};
-        final Future<?>[] flatFuture = {null,null};
+        final boolean[] isFinish = {false, false};
+        final Future<?>[] flatFuture = {null, null};
         flatFuture[0] = CTGeofenceTaskManager.getInstance().postAsyncSafely("", new Runnable() {
             @Override
             public void run() {
@@ -126,7 +125,7 @@ public class CTGeofenceTaskManagerTest extends BaseTestCase {
 
 
     @Test
-    public void testPostAsyncSafelyTask(){
+    public void testPostAsyncSafelyTask() {
 
         final boolean[] isFinish = {false};
         Future<?> future = CTGeofenceTaskManager.getInstance().postAsyncSafely("", new CTGeofenceTask() {
@@ -152,7 +151,7 @@ public class CTGeofenceTaskManagerTest extends BaseTestCase {
     }
 
     @Test
-    public void testPostAsyncSafelyTaskNestedCall(){
+    public void testPostAsyncSafelyTaskNestedCall() {
 
         // when called multiple times from same thread
 
@@ -194,12 +193,12 @@ public class CTGeofenceTaskManagerTest extends BaseTestCase {
     }
 
     @Test
-    public void testPostAsyncSafelyTaskFlatCall(){
+    public void testPostAsyncSafelyTaskFlatCall() {
 
         // when called multiple times from same thread
 
-        final boolean[] isFinish = {false,false};
-        final Future<?>[] flatFuture = {null,null};
+        final boolean[] isFinish = {false, false};
+        final Future<?>[] flatFuture = {null, null};
         flatFuture[0] = CTGeofenceTaskManager.getInstance().postAsyncSafely("", new CTGeofenceTask() {
             @Override
             public void execute() {
@@ -238,7 +237,7 @@ public class CTGeofenceTaskManagerTest extends BaseTestCase {
 
 
     @Test
-    public void testPostAsyncSafelyTaskRunnableNestedCall(){
+    public void testPostAsyncSafelyTaskRunnableNestedCall() {
 
         // when task and runnable called from same thread
 

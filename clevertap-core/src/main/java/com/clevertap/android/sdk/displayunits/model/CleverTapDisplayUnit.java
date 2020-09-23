@@ -22,34 +22,38 @@ import java.util.Iterator;
  */
 public class CleverTapDisplayUnit implements Parcelable {
 
+    public static final Creator<CleverTapDisplayUnit> CREATOR = new Creator<CleverTapDisplayUnit>() {
+        @Override
+        public CleverTapDisplayUnit createFromParcel(Parcel in) {
+            return new CleverTapDisplayUnit(in);
+        }
+
+        @Override
+        public CleverTapDisplayUnit[] newArray(int size) {
+            return new CleverTapDisplayUnit[size];
+        }
+    };
     /**
      * Display unit identifier
      */
     private String unitID;
-
     /**
      * Display Type Could be (banner,carousel,custom key value etc.)
      */
     private CTDisplayUnitType type;
-
     /**
      * Background Color
      */
     private String bgColor;
-
-
     /**
      * List of Display Content Items
      */
     private ArrayList<CleverTapDisplayUnitContent> contents;
-
     /**
      * Custom Key Value Pairs
      */
     private HashMap<String, String> customExtras;
-
     private JSONObject jsonObject;
-
     private String error;
 
     //constructors
@@ -63,6 +67,29 @@ public class CleverTapDisplayUnit implements Parcelable {
         this.contents = contentArray;
         this.customExtras = getKeyValues(kvObject);
         this.error = error;
+    }
+
+    @SuppressWarnings("unchecked")
+    private CleverTapDisplayUnit(Parcel in) {
+        try {
+            this.unitID = in.readString();
+            this.type = (CTDisplayUnitType) in.readValue(CTDisplayUnitType.class.getClassLoader());
+            this.bgColor = in.readString();
+
+            if (in.readByte() == 0x01) {
+                contents = new ArrayList<>();
+                in.readList(contents, CleverTapDisplayUnitContent.class.getClassLoader());
+            } else {
+                contents = null;
+            }
+
+            this.customExtras = in.readHashMap(null);
+            this.jsonObject = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
+            this.error = in.readString();
+        } catch (Exception e) {
+            error = "Error Creating Display Unit from parcel : " + e.getLocalizedMessage();
+            Logger.d(Constants.FEATURE_DISPLAY_UNIT, error);
+        }
     }
 
     /**
@@ -218,41 +245,6 @@ public class CleverTapDisplayUnit implements Parcelable {
             Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Error in getting Key Value Pairs " + e.getLocalizedMessage());
         }
         return null;
-    }
-
-    public static final Creator<CleverTapDisplayUnit> CREATOR = new Creator<CleverTapDisplayUnit>() {
-        @Override
-        public CleverTapDisplayUnit createFromParcel(Parcel in) {
-            return new CleverTapDisplayUnit(in);
-        }
-
-        @Override
-        public CleverTapDisplayUnit[] newArray(int size) {
-            return new CleverTapDisplayUnit[size];
-        }
-    };
-
-    @SuppressWarnings("unchecked")
-    private CleverTapDisplayUnit(Parcel in) {
-        try {
-            this.unitID = in.readString();
-            this.type = (CTDisplayUnitType) in.readValue(CTDisplayUnitType.class.getClassLoader());
-            this.bgColor = in.readString();
-
-            if (in.readByte() == 0x01) {
-                contents = new ArrayList<>();
-                in.readList(contents, CleverTapDisplayUnitContent.class.getClassLoader());
-            } else {
-                contents = null;
-            }
-
-            this.customExtras = in.readHashMap(null);
-            this.jsonObject = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
-            this.error = in.readString();
-        } catch (Exception e) {
-            error = "Error Creating Display Unit from parcel : " + e.getLocalizedMessage();
-            Logger.d(Constants.FEATURE_DISPLAY_UNIT, error);
-        }
     }
 
     @Override

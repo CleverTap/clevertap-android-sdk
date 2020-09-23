@@ -4,6 +4,7 @@ package com.clevertap.android.sdk;
 public class UTMDetail {
     private String source;
     private String medium;
+    private String campaign;
 
     @SuppressWarnings("unused")
     public String getCampaign() {
@@ -31,6 +32,4 @@ public class UTMDetail {
     public void setSource(String source) {
         this.source = source;
     }
-
-    private String campaign;
 }

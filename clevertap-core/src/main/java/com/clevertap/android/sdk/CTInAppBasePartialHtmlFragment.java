@@ -19,15 +19,15 @@ import androidx.annotation.Nullable;
 
 import java.net.URLDecoder;
 
-public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialFragment implements  View.OnTouchListener, View.OnLongClickListener{
+public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialFragment implements View.OnTouchListener, View.OnLongClickListener {
 
-    private CTInAppWebView webView;
     private final GestureDetector gd = new GestureDetector(new GestureListener());
+    private CTInAppWebView webView;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        return displayHTMLView(inflater,container);
+        return displayHTMLView(inflater, container);
     }
 
     @Override
@@ -37,9 +37,10 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
     }
 
     abstract View getView(LayoutInflater inflater, ViewGroup container);
+
     abstract ViewGroup getLayout(View view);
 
-    private View displayHTMLView(LayoutInflater inflater, ViewGroup container){
+    private View displayHTMLView(LayoutInflater inflater, ViewGroup container) {
         View inAppView;
         ViewGroup layout;
         try {
@@ -51,47 +52,14 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
             webView.setOnTouchListener(CTInAppBasePartialHtmlFragment.this);
             webView.setOnLongClickListener(CTInAppBasePartialHtmlFragment.this);
 
-            if(layout != null) {
+            if (layout != null) {
                 layout.addView(webView);
             }
-        }catch (Throwable t){
-            config.getLogger().verbose(config.getAccountId(),"Fragment view not created",t);
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(), "Fragment view not created", t);
             return null;
         }
         return inAppView;
-    }
-
-    private class InAppWebViewClient extends WebViewClient {
-        InAppWebViewClient() {
-            super();
-        }
-
-        @Override
-        public boolean shouldOverrideUrlLoading(WebView view, String url) {
-            final Bundle formData;
-            try {
-                formData = UriHelper.getAllKeyValuePairs(url, false);
-
-                if (formData != null && formData.containsKey(Constants.KEY_C2A)) {
-                    final String c2a = formData.getString(Constants.KEY_C2A);
-                    if (c2a != null) {
-                        final String[] parts = c2a.split("__dl__");
-                        if (parts.length == 2) {
-                            // Decode it here as wzrk_c2a is not decoded by UriHelper
-                            formData.putString("wzrk_c2a", URLDecoder.decode(parts[0], "UTF-8"));
-                            url = parts[1];
-                        }
-                    }
-                }
-
-                didClick(formData, null);
-                Logger.d("Executing call to action for in-app: " + url);
-                fireUrlThroughIntent(url,formData);
-            } catch (Throwable t) {
-                Logger.v("Error parsing the in-app notification action!", t);
-            }
-            return true;
-        }
     }
 
     private void reDrawInApp() {
@@ -129,6 +97,39 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
     public void onConfigurationChanged(Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         reDrawInApp();
+    }
+
+    private class InAppWebViewClient extends WebViewClient {
+        InAppWebViewClient() {
+            super();
+        }
+
+        @Override
+        public boolean shouldOverrideUrlLoading(WebView view, String url) {
+            final Bundle formData;
+            try {
+                formData = UriHelper.getAllKeyValuePairs(url, false);
+
+                if (formData != null && formData.containsKey(Constants.KEY_C2A)) {
+                    final String c2a = formData.getString(Constants.KEY_C2A);
+                    if (c2a != null) {
+                        final String[] parts = c2a.split("__dl__");
+                        if (parts.length == 2) {
+                            // Decode it here as wzrk_c2a is not decoded by UriHelper
+                            formData.putString("wzrk_c2a", URLDecoder.decode(parts[0], "UTF-8"));
+                            url = parts[1];
+                        }
+                    }
+                }
+
+                didClick(formData, null);
+                Logger.d("Executing call to action for in-app: " + url);
+                fireUrlThroughIntent(url, formData);
+            } catch (Throwable t) {
+                Logger.v("Error parsing the in-app notification action!", t);
+            }
+            return true;
+        }
     }
 
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {

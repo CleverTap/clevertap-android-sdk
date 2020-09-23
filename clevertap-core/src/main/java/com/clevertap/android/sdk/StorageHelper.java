@@ -103,6 +103,7 @@ public final class StorageHelper {
 
     /**
      * Use this method, when you are sure that you are on background thread
+     *
      * @param editor
      */
     @WorkerThread

@@ -1,16 +1,16 @@
 /**
  * Copyright (c) 2013 Xcellent Creations, Inc.
  * Copyright 2014 Google, Inc. All rights reserved.
- *
+ * <p>
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
  * associated documentation files (the "Software"), to deal in the Software without restriction,
  * including without limitation the rights to use, copy, modify, merge, publish, distribute,
  * sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- *
+ * <p>
  * The above copyright notice and this permission notice shall be included in all copies or
  * substantial portions of the Software.
- *
+ * <p>
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT
  * NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
  * NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
@@ -35,8 +35,6 @@ import java.util.Arrays;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 class GifDecoder {
-    private static final String TAG = GifDecoder.class.getSimpleName();
-
     /**
      * File read status: No errors.
      */
@@ -53,11 +51,12 @@ class GifDecoder {
      * Unable to fully decode the current frame.
      */
     static final int STATUS_PARTIAL_DECODE = 3;
+    static final int LOOP_FOREVER = -1;
+    private static final String TAG = GifDecoder.class.getSimpleName();
     /**
      * max decoder pixel stack size.
      */
     private static final int MAX_STACK_SIZE = 4096;
-
     /**
      * GIF Disposal Method meaning take no action.
      */
@@ -74,30 +73,21 @@ class GifDecoder {
      * GIF Disposal Method meaning clear canvas to frame before last.
      */
     private static final int DISPOSAL_PREVIOUS = 3;
-
     private static final int NULL_CODE = -1;
-
     private static final int INITIAL_FRAME_POINTER = -1;
-
-    static final int LOOP_FOREVER = -1;
-
     private static final int BYTES_PER_INTEGER = 4;
-
-    // Global File Header values and parsing flags.
-    // Active color table.
-    private int[] act;
-    // Private color table that can be modified if needed.
-    private final int[] pct = new int[256];
-
-    // Raw GIF data from input source.
-    private ByteBuffer rawData;
-
-    // Raw data read working array.
-    private byte[] block;
-
     // Temporary buffer for block reading. Reads 16k chunks from the native buffer for processing,
     // to greatly reduce JNI overhead.
     private static final int WORK_BUFFER_SIZE = 16384;
+    // Private color table that can be modified if needed.
+    private final int[] pct = new int[256];
+    // Global File Header values and parsing flags.
+    // Active color table.
+    private int[] act;
+    // Raw GIF data from input source.
+    private ByteBuffer rawData;
+    // Raw data read working array.
+    private byte[] block;
     @Nullable
     private byte[] workBuffer;
     private int workBufferSize = 0;
@@ -124,52 +114,6 @@ class GifDecoder {
     private int downsampledWidth;
     private boolean isFirstFrameTransparent;
 
-    /**
-     * An interface that can be used to provide reused {@link android.graphics.Bitmap}s to avoid GCs
-     * from constantly allocating {@link android.graphics.Bitmap}s for every frame.
-     */
-    interface BitmapProvider {
-        /**
-         * Returns an {@link Bitmap} with exactly the given dimensions and config.
-         *
-         * @param width  The width in pixels of the desired {@link android.graphics.Bitmap}.
-         * @param height The height in pixels of the desired {@link android.graphics.Bitmap}.
-         * @param config The {@link android.graphics.Bitmap.Config} of the desired {@link
-         *               android.graphics.Bitmap}.
-         */
-        @NonNull
-        Bitmap obtain(int width, int height, Bitmap.Config config);
-
-        /**
-         * Releases the given Bitmap back to the pool.
-         */
-        void release(Bitmap bitmap);
-
-        /**
-         * Returns a byte array used for decoding and generating the frame bitmap.
-         *
-         * @param size the size of the byte array to obtain
-         */
-        byte[] obtainByteArray(int size);
-
-        /**
-         * Releases the given byte array back to the pool.
-         */
-        void release(byte[] bytes);
-
-        /**
-         * Returns an int array used for decoding/generating the frame bitmaps.
-         * @param size
-         */
-        int[] obtainIntArray(int size);
-
-        /**
-         * Release the given array back to the pool.
-         * @param array
-         */
-        void release(int[] array);
-    }
-
     GifDecoder(BitmapProvider provider, GifHeader gifHeader, ByteBuffer rawData) {
         this(provider, gifHeader, rawData, 1 /*sampleSize*/);
     }
@@ -187,6 +131,13 @@ class GifDecoder {
 
     GifDecoder() {
         this(new SimpleBitmapProvider());
+    }
+
+    @TargetApi(12)
+    private static void setAlpha(Bitmap bitmap) {
+        if (Build.VERSION.SDK_INT >= 12) {
+            bitmap.setHasAlpha(true);
+        }
     }
 
     int getWidth() {
@@ -222,11 +173,11 @@ class GifDecoder {
             return false;
         }
 
-        if(framePointer == getFrameCount() - 1) {
+        if (framePointer == getFrameCount() - 1) {
             loopIndex++;
         }
 
-        if(header.loopCount != LOOP_FOREVER && loopIndex > header.loopCount) {
+        if (header.loopCount != LOOP_FOREVER && loopIndex > header.loopCount) {
             return false;
         }
 
@@ -283,7 +234,7 @@ class GifDecoder {
      * @return boolean true if the move was successful
      */
     boolean setFrameIndex(int frame) {
-        if(frame < INITIAL_FRAME_POINTER || frame >= getFrameCount()) {
+        if (frame < INITIAL_FRAME_POINTER || frame >= getFrameCount()) {
             return false;
         }
         framePointer = frame;
@@ -301,14 +252,18 @@ class GifDecoder {
     /**
      * Resets the loop index to the first loop.
      */
-    void resetLoopIndex() { loopIndex = 0; }
+    void resetLoopIndex() {
+        loopIndex = 0;
+    }
 
     /**
      * Gets the "Netscape" iteration count, if any. A count of 0 means repeat indefinitely.
      *
      * @return iteration count if one was specified, else 1.
      */
-    int getLoopCount() { return header.loopCount; }
+    int getLoopCount() {
+        return header.loopCount;
+    }
 
     /**
      * Gets the number of loops that have been shown.
@@ -335,14 +290,14 @@ class GifDecoder {
     synchronized Bitmap getNextFrame() {
         if (header.frameCount <= 0 || framePointer < 0) {
             //if (Log.isLoggable(TAG, Log.DEBUG)) {
-                Logger.d(TAG, "unable to decode frame, frameCount=" + header.frameCount + " framePointer="
-                        + framePointer);
+            Logger.d(TAG, "unable to decode frame, frameCount=" + header.frameCount + " framePointer="
+                    + framePointer);
             //}
             status = STATUS_FORMAT_ERROR;
         }
         if (status == STATUS_FORMAT_ERROR || status == STATUS_OPEN_ERROR) {
             //if (Log.isLoggable(TAG, Log.DEBUG)) {
-                Logger.d(TAG, "Unable to decode frame, status=" + status);
+            Logger.d(TAG, "Unable to decode frame, status=" + status);
             //}
             return null;
         }
@@ -359,7 +314,7 @@ class GifDecoder {
         act = currentFrame.lct != null ? currentFrame.lct : header.gct;
         if (act == null) {
             //if (Log.isLoggable(TAG, Log.DEBUG)) {
-                Logger.d(TAG, "No Valid Color Table for frame #" + framePointer);
+            Logger.d(TAG, "No Valid Color Table for frame #" + framePointer);
             //}
             // No color table defined.
             status = STATUS_FORMAT_ERROR;
@@ -905,10 +860,51 @@ class GifDecoder {
         return result;
     }
 
-    @TargetApi(12)
-    private static void setAlpha(Bitmap bitmap) {
-        if (Build.VERSION.SDK_INT >= 12) {
-            bitmap.setHasAlpha(true);
-        }
+    /**
+     * An interface that can be used to provide reused {@link android.graphics.Bitmap}s to avoid GCs
+     * from constantly allocating {@link android.graphics.Bitmap}s for every frame.
+     */
+    interface BitmapProvider {
+        /**
+         * Returns an {@link Bitmap} with exactly the given dimensions and config.
+         *
+         * @param width  The width in pixels of the desired {@link android.graphics.Bitmap}.
+         * @param height The height in pixels of the desired {@link android.graphics.Bitmap}.
+         * @param config The {@link android.graphics.Bitmap.Config} of the desired {@link
+         *               android.graphics.Bitmap}.
+         */
+        @NonNull
+        Bitmap obtain(int width, int height, Bitmap.Config config);
+
+        /**
+         * Releases the given Bitmap back to the pool.
+         */
+        void release(Bitmap bitmap);
+
+        /**
+         * Returns a byte array used for decoding and generating the frame bitmap.
+         *
+         * @param size the size of the byte array to obtain
+         */
+        byte[] obtainByteArray(int size);
+
+        /**
+         * Releases the given byte array back to the pool.
+         */
+        void release(byte[] bytes);
+
+        /**
+         * Returns an int array used for decoding/generating the frame bitmaps.
+         *
+         * @param size
+         */
+        int[] obtainIntArray(int size);
+
+        /**
+         * Release the given array back to the pool.
+         *
+         * @param array
+         */
+        void release(int[] array);
     }
 }

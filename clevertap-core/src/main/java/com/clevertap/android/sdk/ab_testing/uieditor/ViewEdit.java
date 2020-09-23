@@ -20,56 +20,6 @@ import java.util.WeakHashMap;
 
 class ViewEdit {
 
-    static class PathElement {
-        final int prefix;
-        final String viewClassName;
-        public final int index;
-        final int viewId;
-        final String contentDescription;
-        final String tag;
-
-        static final int ZERO_LENGTH_PREFIX = 0;
-        static final int SHORTEST_PREFIX = 1;
-
-        PathElement(int usePrefix, String className, int idx, int id, String cDesc, String vTag) {
-            prefix = usePrefix;
-            viewClassName = className;
-            index = idx;
-            viewId = id;
-            contentDescription = cDesc;
-            tag = vTag;
-        }
-
-        @NonNull
-        @Override
-        public String toString() {
-            try {
-                final JSONObject s = new JSONObject();
-                if (prefix == SHORTEST_PREFIX) {
-                    s.put("prefix", "shortest");
-                }
-                if (null != viewClassName) {
-                    s.put("view_class", viewClassName);
-                }
-                if (index > -1) {
-                    s.put("index", index);
-                }
-                if (viewId > -1) {
-                    s.put("id", viewId);
-                }
-                if (null != contentDescription) {
-                    s.put("contentDescription", contentDescription);
-                }
-                if (null != tag) {
-                    s.put("tag", tag);
-                }
-                return s.toString();
-            } catch (final JSONException e) {
-                throw new RuntimeException("Can't serialize PathElement to String", e);
-            }
-        }
-    }
-
     private final List<PathElement> path;
     private final Pathfinder pathFinder;
     private final ViewCaller mutator;
@@ -77,7 +27,6 @@ class ViewEdit {
     private final WeakHashMap<View, Object> originalValues;
     private final Object[] originalValueHolder;
     private Context context;
-
     ViewEdit(List<PathElement> path, ViewCaller mutator, ViewCaller accessor, Context context) {
         this.path = path;
         pathFinder = new Pathfinder();
@@ -118,8 +67,8 @@ class ViewEdit {
                 final Object targetValue = args[0];
                 Object currentValue = accessor.invokeMethod(targetView);
 
-                if(accessor.getMethodName().equals("getTextSize")){
-                    currentValue = (float)currentValue / context.getResources().getDisplayMetrics().scaledDensity;
+                if (accessor.getMethodName().equals("getTextSize")) {
+                    currentValue = (float) currentValue / context.getResources().getDisplayMetrics().scaledDensity;
                 }
 
                 if (targetValue == currentValue) {
@@ -155,8 +104,58 @@ class ViewEdit {
         }
         mutator.invokeMethod(targetView);
     }
+
     protected String name() {
         return "Property Mutator";
+    }
+
+    static class PathElement {
+        static final int ZERO_LENGTH_PREFIX = 0;
+        static final int SHORTEST_PREFIX = 1;
+        public final int index;
+        final int prefix;
+        final String viewClassName;
+        final int viewId;
+        final String contentDescription;
+        final String tag;
+
+        PathElement(int usePrefix, String className, int idx, int id, String cDesc, String vTag) {
+            prefix = usePrefix;
+            viewClassName = className;
+            index = idx;
+            viewId = id;
+            contentDescription = cDesc;
+            tag = vTag;
+        }
+
+        @NonNull
+        @Override
+        public String toString() {
+            try {
+                final JSONObject s = new JSONObject();
+                if (prefix == SHORTEST_PREFIX) {
+                    s.put("prefix", "shortest");
+                }
+                if (null != viewClassName) {
+                    s.put("view_class", viewClassName);
+                }
+                if (index > -1) {
+                    s.put("index", index);
+                }
+                if (viewId > -1) {
+                    s.put("id", viewId);
+                }
+                if (null != contentDescription) {
+                    s.put("contentDescription", contentDescription);
+                }
+                if (null != tag) {
+                    s.put("tag", tag);
+                }
+                return s.toString();
+            } catch (final JSONException e) {
+                throw new RuntimeException("Can't serialize PathElement to String", e);
+            }
+        }
     }
 
     private class Pathfinder {
@@ -270,19 +269,14 @@ class ViewEdit {
             while (true) {
                 //noinspection ConstantConditions
                 String klassCanonicalName = klass.getCanonicalName();
-                if (klassCanonicalName != null && klassCanonicalName.equals(className)) {
-                    return true;
-                }else{
-                    return false;
-                }
+                return klassCanonicalName != null && klassCanonicalName.equals(className);
             }
         }
 
         private class IntStack {
+            private static final int MAX_SIZE = 256;
             private final int[] stack;
             private int stackSize;
-
-            private static final int MAX_SIZE = 256;
 
             IntStack() {
                 stack = new int[MAX_SIZE];

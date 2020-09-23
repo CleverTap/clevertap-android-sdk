@@ -27,18 +27,17 @@ import java.util.List;
  */
 public class CTInboxActivity extends FragmentActivity implements CTInboxListViewFragment.InboxListener {
 
+    static int orientation;
     CTInboxTabAdapter inboxTabAdapter;
     TabLayout tabLayout;
     ViewPager viewPager;
     CTInboxStyleConfig styleConfig;
-    static int orientation;
+    private CleverTapInstanceConfig config;
+    private WeakReference<InboxActivityListener> listenerWeakReference;
 
     private String getFragmentTag() {
         return config.getAccountId() + ":CT_INBOX_LIST_VIEW_FRAGMENT";
     }
-
-    private CleverTapInstanceConfig config;
-    private WeakReference<InboxActivityListener> listenerWeakReference;
 
     InboxActivityListener getListener() {
         InboxActivityListener listener = null;

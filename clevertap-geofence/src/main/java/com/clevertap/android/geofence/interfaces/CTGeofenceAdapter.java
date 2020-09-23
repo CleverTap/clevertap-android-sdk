@@ -13,28 +13,28 @@ import java.util.List;
  */
 public interface CTGeofenceAdapter {
 
-   /**
-    * Registers list of geofences to OS for monitoring
-    *
-    * @param fenceList list of {@link CTGeofence}
-    * @param onSuccessListener callback on successful registration
-    */
-   void addAllGeofence(List<CTGeofence> fenceList, OnSuccessListener onSuccessListener);
+    /**
+     * Registers list of geofences to OS for monitoring
+     *
+     * @param fenceList         list of {@link CTGeofence}
+     * @param onSuccessListener callback on successful registration
+     */
+    void addAllGeofence(List<CTGeofence> fenceList, OnSuccessListener onSuccessListener);
 
-   /**
-    * Unregisters list of geofences from OS to stop monitoring
-    *
-    * @param fenceIdList list of {@link CTGeofence} Ids
-    * @param onSuccessListener callback on successful un-registration
-    */
-   void removeAllGeofence(List<String> fenceIdList, OnSuccessListener onSuccessListener);
+    /**
+     * Unregisters list of geofences from OS to stop monitoring
+     *
+     * @param fenceIdList       list of {@link CTGeofence} Ids
+     * @param onSuccessListener callback on successful un-registration
+     */
+    void removeAllGeofence(List<String> fenceIdList, OnSuccessListener onSuccessListener);
 
 
-   /**
-    * Unregisters all geofences from OS associated with the given {@link PendingIntent} to stop monitoring
-    *
-    * @param pendingIntent instance of {@link PendingIntent}
-    */
-   void stopGeofenceMonitoring(PendingIntent pendingIntent);
+    /**
+     * Unregisters all geofences from OS associated with the given {@link PendingIntent} to stop monitoring
+     *
+     * @param pendingIntent instance of {@link PendingIntent}
+     */
+    void stopGeofenceMonitoring(PendingIntent pendingIntent);
 
 }

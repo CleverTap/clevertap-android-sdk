@@ -29,7 +29,7 @@ public class CTNotificationIntentService extends IntentService {
             Logger.v("CTNotificationIntentService handling " + TYPE_BUTTON_CLICK);
             handleActionButtonClick(extras);
         } else {
-            Logger.v("CTNotificationIntentService: unhandled intent "+intent.getAction());
+            Logger.v("CTNotificationIntentService: unhandled intent " + intent.getAction());
         }
     }
 
@@ -43,14 +43,14 @@ public class CTNotificationIntentService extends IntentService {
             Intent launchIntent;
             if (dl != null) {
                 launchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(dl));
-                Utils.setPackageNameFromResolveInfoList(context,launchIntent);
+                Utils.setPackageNameFromResolveInfoList(context, launchIntent);
             } else {
                 launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
             }
 
             if (launchIntent == null) {
                 Logger.v("CTNotificationService: create launch intent.");
-               return;
+                return;
             }
 
             launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -69,7 +69,7 @@ public class CTNotificationIntentService extends IntentService {
             sendBroadcast(new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS)); // close the notification drawer
             startActivity(launchIntent);
         } catch (Throwable t) {
-            Logger.v("CTNotificationService: unable to process action button click:  "+ t.getLocalizedMessage());
+            Logger.v("CTNotificationService: unable to process action button click:  " + t.getLocalizedMessage());
         }
     }
 }

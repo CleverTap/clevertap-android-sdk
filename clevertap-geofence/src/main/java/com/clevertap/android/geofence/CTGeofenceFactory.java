@@ -20,7 +20,7 @@ class CTGeofenceFactory {
      * @param context application {@link Context}
      * @return an instance of {@link CTGeofenceAdapter}
      * @throws IllegalStateException if play-services-location dependency is missing or Play service APK
-     * error is reported by GoogleApi.
+     *                               error is reported by GoogleApi.
      */
     static CTGeofenceAdapter createGeofenceAdapter(@NonNull Context context) {
 

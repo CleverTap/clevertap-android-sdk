@@ -16,11 +16,23 @@ import java.util.Iterator;
 
 class CTInAppNotification implements Parcelable {
 
+    @SuppressWarnings("unused")
+    public static final Parcelable.Creator<CTInAppNotification> CREATOR = new Parcelable.Creator<CTInAppNotification>() {
+        @Override
+        public CTInAppNotification createFromParcel(Parcel in) {
+            return new CTInAppNotification(in);
+        }
+
+        @Override
+        public CTInAppNotification[] newArray(int size) {
+            return new CTInAppNotification[size];
+        }
+    };
+    CTInAppNotificationListener listener;
     private String id;
     private String campaignId;
     private String type;
     private CTInAppType inAppType;
-
     private String html;
     private boolean excludeFromCaps;
     private boolean showClose;
@@ -33,25 +45,19 @@ class CTInAppNotification implements Parcelable {
     private int heightPercentage;
     private int width;
     private int widthPercentage;
-
     private String title;
     private String titleColor;
     private String message;
     private String messageColor;
     private String backgroundColor;
-
     private boolean hideCloseButton;
-
     private ArrayList<CTInAppNotificationButton> buttons = new ArrayList<>();
     private ArrayList<CTInAppNotificationMedia> mediaList = new ArrayList<>();
     private int buttonCount;
-
     private JSONObject jsonDescription;
     private String error;
     private JSONObject customExtras;
     private JSONObject actionExtras;
-    CTInAppNotificationListener listener;
-
     private boolean isTablet;
     private boolean videoSupported;
     private String customInAppUrl;
@@ -62,35 +68,115 @@ class CTInAppNotification implements Parcelable {
     private String _landscapeImageCacheKey;
     private long timeToLive;
 
-    CTInAppNotification(){}
-
-    interface CTInAppNotificationListener{
-        void notificationReady(CTInAppNotification inAppNotification);
+    CTInAppNotification() {
     }
 
-    CTInAppNotification initWithJSON(JSONObject jsonObject, boolean videoSupported){
+    private CTInAppNotification(Parcel in) {
+        try {
+            id = in.readString();
+            campaignId = in.readString();
+            inAppType = (CTInAppType) in.readValue(CTInAppType.class.getClassLoader());
+            html = in.readString();
+            excludeFromCaps = in.readByte() != 0x00;
+            showClose = in.readByte() != 0x00;
+            darkenScreen = in.readByte() != 0x00;
+            maxPerSession = in.readInt();
+            totalLifetimeCount = in.readInt();
+            totalDailyCount = in.readInt();
+            position = (char) in.readValue(char.class.getClassLoader());
+            height = in.readInt();
+            heightPercentage = in.readInt();
+            width = in.readInt();
+            widthPercentage = in.readInt();
+            jsonDescription = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
+            error = in.readString();
+            customExtras = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
+            actionExtras = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
+            type = in.readString();
+            title = in.readString();
+            titleColor = in.readString();
+            backgroundColor = in.readString();
+            message = in.readString();
+            messageColor = in.readString();
+            try {
+                buttons = in.createTypedArrayList(CTInAppNotificationButton.CREATOR);
+            } catch (Throwable t) {
+                // no-op
+            }
+            try {
+                mediaList = in.createTypedArrayList(CTInAppNotificationMedia.CREATOR);
+            } catch (Throwable t) {
+                // no-op
+            }
+            hideCloseButton = in.readByte() != 0x00;
+            buttonCount = in.readInt();
+            isTablet = in.readByte() != 0x00;
+            customInAppUrl = in.readString();
+            jsEnabled = in.readByte() != 0x00;
+            isPortrait = in.readByte() != 0x00;
+            isLandscape = in.readByte() != 0x00;
+            landscapeImageUrl = in.readString();
+            _landscapeImageCacheKey = in.readString();
+            timeToLive = in.readLong();
+
+        } catch (JSONException e) {
+            // no-op
+        }
+    }
+
+    private static Bundle getBundleFromJsonObject(JSONObject notif) {
+        Bundle b = new Bundle();
+        Iterator iterator = notif.keys();
+        while (iterator.hasNext()) {
+            String key = (String) iterator.next();
+            try {
+                Object value = notif.get(key);
+                if (value instanceof String)
+                    b.putString(key, (String) value);
+                else if (value instanceof Character)
+                    b.putChar(key, (Character) value);
+                else if (value instanceof Integer)
+                    b.putInt(key, (Integer) value);
+                else if (value instanceof Float)
+                    b.putFloat(key, (Float) value);
+                else if (value instanceof Double)
+                    b.putDouble(key, (Double) value);
+                else if (value instanceof Long)
+                    b.putLong(key, (Long) value);
+                else if (value instanceof Boolean)
+                    b.putBoolean(key, (Boolean) value);
+                else if (value instanceof JSONObject)
+                    b.putBundle(key, getBundleFromJsonObject((JSONObject) value));
+            } catch (JSONException e) {
+                Logger.v("Key had unknown object. Discarding");
+            }
+        }
+        return b;
+    }
+
+    CTInAppNotification initWithJSON(JSONObject jsonObject, boolean videoSupported) {
         this.videoSupported = videoSupported;
         this.jsonDescription = jsonObject;
         try {
 
             this.type = jsonObject.has(Constants.KEY_TYPE) ? jsonObject.getString(Constants.KEY_TYPE) : null;
 
-            if(this.type ==null || this.type.equals(Constants.KEY_CUSTOM_HTML)){
+            if (this.type == null || this.type.equals(Constants.KEY_CUSTOM_HTML)) {
                 legacyConfigureWithJson(jsonObject);
-            }else{
+            } else {
                 configureWithJson(jsonObject);
             }
 
         } catch (JSONException e) {
-            this.error = "Invalid JSON : "+e.getLocalizedMessage();
+            this.error = "Invalid JSON : " + e.getLocalizedMessage();
         }
         return this;
 
     }
 
-    private void legacyConfigureWithJson(JSONObject jsonObject){
+    private void legacyConfigureWithJson(JSONObject jsonObject) {
         Bundle b = getBundleFromJsonObject(jsonObject);
-        if(!validateNotifBundle(b)){
+        if (!validateNotifBundle(b)) {
             this.error = "Invalid JSON";
             return;
         }
@@ -101,7 +187,7 @@ class CTInAppNotification implements Parcelable {
             this.totalLifetimeCount = jsonObject.has(Constants.KEY_TLC) ? jsonObject.getInt(Constants.KEY_TLC) : -1;
             this.totalDailyCount = jsonObject.has(Constants.KEY_TDC) ? jsonObject.getInt(Constants.KEY_TDC) : -1;
             this.jsEnabled = jsonObject.has(Constants.INAPP_JS_ENABLED) && jsonObject.getBoolean(Constants.INAPP_JS_ENABLED);
-            this.timeToLive = jsonObject.has(Constants.WZRK_TIME_TO_LIVE) ? jsonObject.getLong(Constants.WZRK_TIME_TO_LIVE) : (System.currentTimeMillis() + 2 * Constants.ONE_DAY_IN_MILLIS)/1000;
+            this.timeToLive = jsonObject.has(Constants.WZRK_TIME_TO_LIVE) ? jsonObject.getLong(Constants.WZRK_TIME_TO_LIVE) : (System.currentTimeMillis() + 2 * Constants.ONE_DAY_IN_MILLIS) / 1000;
 
             JSONObject data = jsonObject.has(Constants.INAPP_DATA_TAG) ? jsonObject.getJSONObject(Constants.INAPP_DATA_TAG) : null;
             if (data != null) {
@@ -138,12 +224,12 @@ class CTInAppNotification implements Parcelable {
                         this.inAppType = CTInAppType.CTInAppTypeHalfInterstitialHTML;
                 }
             }
-        } catch (JSONException e){
+        } catch (JSONException e) {
             this.error = "Invalid JSON";
         }
     }
 
-    private void configureWithJson(JSONObject jsonObject){
+    private void configureWithJson(JSONObject jsonObject) {
         try {
             this.id = jsonObject.has(Constants.INAPP_ID_IN_PAYLOAD) ? jsonObject.getString(Constants.INAPP_ID_IN_PAYLOAD) : "";
             this.campaignId = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject.getString(Constants.NOTIFICATION_ID_TAG) : "";
@@ -158,33 +244,33 @@ class CTInAppNotification implements Parcelable {
             this.isLandscape = jsonObject.has(Constants.KEY_LANDSCAPE) && jsonObject.getBoolean(Constants.KEY_LANDSCAPE);
             this.timeToLive = jsonObject.has(Constants.WZRK_TIME_TO_LIVE) ? jsonObject.getLong(Constants.WZRK_TIME_TO_LIVE) : System.currentTimeMillis() + 2 * Constants.ONE_DAY_IN_MILLIS;
             JSONObject titleObject = jsonObject.has(Constants.KEY_TITLE) ? jsonObject.getJSONObject(Constants.KEY_TITLE) : null;
-            if(titleObject != null) {
+            if (titleObject != null) {
                 this.title = titleObject.has(Constants.KEY_TEXT) ? titleObject.getString(Constants.KEY_TEXT) : "";
                 this.titleColor = titleObject.has(Constants.KEY_COLOR) ? titleObject.getString(Constants.KEY_COLOR) : Constants.BLACK;
             }
             JSONObject msgObject = jsonObject.has(Constants.KEY_MESSAGE) ? jsonObject.getJSONObject(Constants.KEY_MESSAGE) : null;
-            if(msgObject != null) {
+            if (msgObject != null) {
                 this.message = msgObject.has(Constants.KEY_TEXT) ? msgObject.getString(Constants.KEY_TEXT) : "";
                 this.messageColor = msgObject.has(Constants.KEY_COLOR) ? msgObject.getString(Constants.KEY_COLOR) : Constants.BLACK;
             }
             this.hideCloseButton = jsonObject.has(Constants.KEY_HIDE_CLOSE) && jsonObject.getBoolean(Constants.KEY_HIDE_CLOSE);
             JSONObject media = jsonObject.has(Constants.KEY_MEDIA) ? jsonObject.getJSONObject(Constants.KEY_MEDIA) : null;
-            if(media!=null){
+            if (media != null) {
                 CTInAppNotificationMedia portraitMedia = new CTInAppNotificationMedia().initWithJSON(media, Configuration.ORIENTATION_PORTRAIT);
-                if(portraitMedia!=null) {
+                if (portraitMedia != null) {
                     mediaList.add(portraitMedia);
                 }
             }
 
             JSONObject media_landscape = jsonObject.has(Constants.KEY_MEDIA_LANDSCAPE) ? jsonObject.getJSONObject(Constants.KEY_MEDIA_LANDSCAPE) : null;
-            if(media_landscape!=null){
-                CTInAppNotificationMedia landscapeMedia = new CTInAppNotificationMedia().initWithJSON(media_landscape,Configuration.ORIENTATION_LANDSCAPE);
-                if(landscapeMedia!=null) {
+            if (media_landscape != null) {
+                CTInAppNotificationMedia landscapeMedia = new CTInAppNotificationMedia().initWithJSON(media_landscape, Configuration.ORIENTATION_LANDSCAPE);
+                if (landscapeMedia != null) {
                     mediaList.add(landscapeMedia);
                 }
             }
             JSONArray buttonArray = jsonObject.has(Constants.KEY_BUTTONS) ? jsonObject.getJSONArray(Constants.KEY_BUTTONS) : null;
-            if(buttonArray  != null) {
+            if (buttonArray != null) {
                 for (int i = 0; i < buttonArray.length(); i++) {
                     CTInAppNotificationButton inAppNotificationButton = new CTInAppNotificationButton().initWithJSON(buttonArray.getJSONObject(i));
                     if (inAppNotificationButton != null && inAppNotificationButton.getError() == null) {
@@ -193,11 +279,11 @@ class CTInAppNotification implements Parcelable {
                     }
                 }
             }
-            switch(this.inAppType){
+            switch (this.inAppType) {
                 case CTInAppTypeFooter:
                 case CTInAppTypeHeader:
-                    for(CTInAppNotificationMedia inAppMedia : this.mediaList){
-                        if(inAppMedia.isGIF() || inAppMedia.isAudio() || inAppMedia.isVideo()){
+                    for (CTInAppNotificationMedia inAppMedia : this.mediaList) {
+                        if (inAppMedia.isGIF() || inAppMedia.isAudio() || inAppMedia.isVideo()) {
                             inAppMedia.setMediaUrl(null);
                             Logger.d("Unable to download to media. Wrong media type for template");
                         }
@@ -205,8 +291,8 @@ class CTInAppNotification implements Parcelable {
                     break;
                 case CTInAppTypeCover:
                 case CTInAppTypeHalfInterstitial:
-                    for(CTInAppNotificationMedia inAppMedia : this.mediaList){
-                        if(inAppMedia.isGIF() || inAppMedia.isAudio() || inAppMedia.isVideo()){
+                    for (CTInAppNotificationMedia inAppMedia : this.mediaList) {
+                        if (inAppMedia.isGIF() || inAppMedia.isAudio() || inAppMedia.isVideo()) {
                             inAppMedia.setMediaUrl(null);
                             Logger.d("Unable to download to media. Wrong media type for template");
                         }
@@ -215,33 +301,33 @@ class CTInAppNotification implements Parcelable {
                 case CTInAppTypeCoverImageOnly:
                 case CTInAppTypeHalfInterstitialImageOnly:
                 case CTInAppTypeInterstitialImageOnly:
-                    if(!this.mediaList.isEmpty()) {
+                    if (!this.mediaList.isEmpty()) {
                         for (CTInAppNotificationMedia inAppMedia : this.mediaList) {
                             if (inAppMedia.isGIF() || inAppMedia.isAudio() || inAppMedia.isVideo() || !inAppMedia.isImage()) {
                                 this.error = "Wrong media type for template";
                             }
                         }
-                    }else{
+                    } else {
                         this.error = "No media type for template";
                     }
                     break;
             }
-        }catch (JSONException e){
-            this.error = "Invalid JSON"+e.getLocalizedMessage();
+        } catch (JSONException e) {
+            this.error = "Invalid JSON" + e.getLocalizedMessage();
         }
     }
 
     void prepareForDisplay() {
 
-        for(CTInAppNotificationMedia media : this.mediaList){
-            if(media.isGIF()){
+        for (CTInAppNotificationMedia media : this.mediaList) {
+            if (media.isGIF()) {
                 GifCache.init();
                 if (this.getGifByteArray(media) != null) {
                     listener.notificationReady(this);
                     return;
                 }
 
-                if(media.getMediaUrl() != null) {
+                if (media.getMediaUrl() != null) {
                     Logger.v("CTInAppNotification: downloading GIF :" + media.getMediaUrl());
                     byte[] gifByteArray = Utils.getByteArrayFromImageURL(media.getMediaUrl());
                     if (gifByteArray != null) {
@@ -251,15 +337,14 @@ class CTInAppNotification implements Parcelable {
                         }
                     }
                 }
-            }
-            else if(media.isImage()){
+            } else if (media.isImage()) {
                 ImageCache.init();
                 if (this.getImage(media) != null) {
                     listener.notificationReady(this);
                     return;
                 }
 
-                if(media.getMediaUrl() !=null) {
+                if (media.getMediaUrl() != null) {
                     Logger.v("CTInAppNotification: downloading Image :" + media.getMediaUrl());
                     Bitmap imageBitmap = Utils.getBitmapFromURL(media.getMediaUrl());
                     if (imageBitmap != null) {
@@ -267,12 +352,12 @@ class CTInAppNotification implements Parcelable {
                         if (!ImageCache.addBitmap(media.getCacheKey(), imageBitmap)) {
                             this.error = "Error processing image";
                         }
-                    }else {
+                    } else {
                         Logger.d("Image Bitmap is null");
                         this.error = "Error processing image as bitmap was NULL";
                     }
                 }
-            }else if(media.isVideo() || media.isAudio()){
+            } else if (media.isVideo() || media.isAudio()) {
                 if (!this.videoSupported) {
                     this.error = "InApp Video/Audio is not supported";
                 }
@@ -340,36 +425,6 @@ class CTInAppNotification implements Parcelable {
     private boolean isKeyValid(Bundle b, String key, Class<?> type) {
         //noinspection ConstantConditions
         return b.containsKey(key) && b.get(key).getClass().equals(type);
-    }
-
-    private static Bundle getBundleFromJsonObject(JSONObject notif) {
-        Bundle b = new Bundle();
-        Iterator iterator = notif.keys();
-        while (iterator.hasNext()) {
-            String key = (String) iterator.next();
-            try {
-                Object value = notif.get(key);
-                if (value instanceof String)
-                    b.putString(key, (String) value);
-                else if (value instanceof Character)
-                    b.putChar(key, (Character) value);
-                else if (value instanceof Integer)
-                    b.putInt(key, (Integer) value);
-                else if (value instanceof Float)
-                    b.putFloat(key, (Float) value);
-                else if (value instanceof Double)
-                    b.putDouble(key, (Double) value);
-                else if (value instanceof Long)
-                    b.putLong(key, (Long) value);
-                else if (value instanceof Boolean)
-                    b.putBoolean(key, (Boolean) value);
-                else if (value instanceof JSONObject)
-                    b.putBundle(key, getBundleFromJsonObject((JSONObject) value));
-            } catch (JSONException e) {
-                Logger.v("Key had unknown object. Discarding");
-            }
-        }
-        return b;
     }
 
     String getId() {
@@ -502,10 +557,10 @@ class CTInAppNotification implements Parcelable {
         return ImageCache.getBitmap(inAppMedia.getCacheKey());
     }
 
-    CTInAppNotificationMedia getInAppMediaForOrientation(int orientation){
+    CTInAppNotificationMedia getInAppMediaForOrientation(int orientation) {
         CTInAppNotificationMedia returningMedia = null;
-        for(CTInAppNotificationMedia inAppNotificationMedia : this.mediaList){
-            if(orientation == inAppNotificationMedia.getOrientation()){
+        for (CTInAppNotificationMedia inAppNotificationMedia : this.mediaList) {
+            if (orientation == inAppNotificationMedia.getOrientation()) {
                 returningMedia = inAppNotificationMedia;
                 break;
             }
@@ -513,7 +568,7 @@ class CTInAppNotification implements Parcelable {
         return returningMedia;
     }
 
-    byte[] getGifByteArray(CTInAppNotificationMedia inAppMedia){
+    byte[] getGifByteArray(CTInAppNotificationMedia inAppMedia) {
         return GifCache.getByteArray(inAppMedia.getCacheKey());
     }
 
@@ -521,15 +576,15 @@ class CTInAppNotification implements Parcelable {
         removeImageOrGif();
     }
 
-    private void removeImageOrGif(){
-        for (CTInAppNotificationMedia inAppMedia : this.mediaList){
-            if (inAppMedia.getMediaUrl() != null){
+    private void removeImageOrGif() {
+        for (CTInAppNotificationMedia inAppMedia : this.mediaList) {
+            if (inAppMedia.getMediaUrl() != null) {
                 if (!inAppMedia.getContentType().equals("image/gif")) {
                     ImageCache.removeBitmap(inAppMedia.getCacheKey(), false);
-                    Logger.v("Deleted image - "+inAppMedia.getCacheKey());
+                    Logger.v("Deleted image - " + inAppMedia.getCacheKey());
                 } else {
                     GifCache.removeByteArray(inAppMedia.getCacheKey());
-                    Logger.v("Deleted GIF - "+inAppMedia.getCacheKey());
+                    Logger.v("Deleted GIF - " + inAppMedia.getCacheKey());
                 }
             }
         }
@@ -550,60 +605,6 @@ class CTInAppNotification implements Parcelable {
 
     int getButtonCount() {
         return buttonCount;
-    }
-
-
-    private CTInAppNotification(Parcel in) {
-        try {
-            id = in.readString();
-            campaignId = in.readString();
-            inAppType = (CTInAppType) in.readValue(CTInAppType.class.getClassLoader());
-            html = in.readString();
-            excludeFromCaps = in.readByte() != 0x00;
-            showClose = in.readByte() != 0x00;
-            darkenScreen = in.readByte() != 0x00;
-            maxPerSession = in.readInt();
-            totalLifetimeCount = in.readInt();
-            totalDailyCount = in.readInt();
-            position = (char) in.readValue(char.class.getClassLoader());
-            height = in.readInt();
-            heightPercentage = in.readInt();
-            width = in.readInt();
-            widthPercentage = in.readInt();
-            jsonDescription = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
-            error = in.readString();
-            customExtras = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
-            actionExtras = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
-            type = in.readString();
-            title = in.readString();
-            titleColor = in.readString();
-            backgroundColor = in.readString();
-            message = in.readString();
-            messageColor = in.readString();
-            try {
-                buttons = in.createTypedArrayList(CTInAppNotificationButton.CREATOR);
-            } catch (Throwable t) {
-                // no-op
-            }
-            try {
-                mediaList = in.createTypedArrayList(CTInAppNotificationMedia.CREATOR);
-            } catch (Throwable t) {
-                // no-op
-            }
-            hideCloseButton = in.readByte() != 0x00;
-            buttonCount = in.readInt();
-            isTablet = in.readByte() != 0x00;
-            customInAppUrl = in.readString();
-            jsEnabled = in.readByte() != 0x00;
-            isPortrait = in.readByte() != 0x00;
-            isLandscape = in.readByte() != 0x00;
-            landscapeImageUrl = in.readString();
-            _landscapeImageCacheKey = in.readString();
-            timeToLive = in.readLong();
-
-        }catch (JSONException e){
-            // no-op
-        }
     }
 
     @Override
@@ -667,30 +668,21 @@ class CTInAppNotification implements Parcelable {
         dest.writeLong(timeToLive);
     }
 
-    @SuppressWarnings("unused")
-    public static final Parcelable.Creator<CTInAppNotification> CREATOR = new Parcelable.Creator<CTInAppNotification>() {
-        @Override
-        public CTInAppNotification createFromParcel(Parcel in) {
-            return new CTInAppNotification(in);
-        }
-
-        @Override
-        public CTInAppNotification[] newArray(int size) {
-            return new CTInAppNotification[size];
-        }
-    };
+    interface CTInAppNotificationListener {
+        void notificationReady(CTInAppNotification inAppNotification);
+    }
 
     // intended to only hold an gif byte array reference for the life of the parent CTInAppNotification, in order to facilitate parceling
     private static class GifCache {
         private static final int MIN_CACHE_SIZE = 1024 * 5; // 5mb minimum (in KB)
-        private final static int maxMemory = (int) (Runtime.getRuntime().maxMemory())/1024;
+        private final static int maxMemory = (int) (Runtime.getRuntime().maxMemory()) / 1024;
         private final static int cacheSize = Math.max((maxMemory / 32), MIN_CACHE_SIZE);
 
         private static LruCache<String, byte[]> mMemoryCache;
 
-        static void init(){
+        static void init() {
             synchronized (GifCache.class) {
-                if(mMemoryCache == null) {
+                if (mMemoryCache == null) {
                     Logger.v("CTInAppNotification.GifCache: init with max device memory: " + maxMemory + "KB and allocated cache size: " + cacheSize + "KB");
                     try {
                         mMemoryCache = new LruCache<String, byte[]>(cacheSize) {
@@ -699,12 +691,12 @@ class CTInAppNotification implements Parcelable {
                                 // The cache size will be measured in kilobytes rather than
                                 // number of items.
                                 int size = getByteArraySizeInKB(byteArray);
-                                Logger.v( "CTInAppNotification.GifCache: have gif of size: "+size + "KB for key: " + key);
+                                Logger.v("CTInAppNotification.GifCache: have gif of size: " + size + "KB for key: " + key);
                                 return size;
                             }
                         };
                     } catch (Throwable t) {
-                        Logger.v( "CTInAppNotification.GifCache: unable to initialize cache: ", t.getCause());
+                        Logger.v("CTInAppNotification.GifCache: unable to initialize cache: ", t.getCause());
                     }
                 }
             }
@@ -729,7 +721,7 @@ class CTInAppNotification implements Parcelable {
         private static void cleanup() {
             synchronized (GifCache.class) {
                 if (isEmpty()) {
-                    Logger.v( "CTInAppNotification.GifCache: cache is empty, removing it");
+                    Logger.v("CTInAppNotification.GifCache: cache is empty, removing it");
                     mMemoryCache = null;
                 }
             }
@@ -737,19 +729,19 @@ class CTInAppNotification implements Parcelable {
 
         static boolean addByteArray(String key, byte[] byteArray) {
 
-            if(mMemoryCache == null) return false;
+            if (mMemoryCache == null) return false;
 
             if (getByteArray(key) == null) {
                 synchronized (GifCache.class) {
                     int arraySize = getByteArraySizeInKB(byteArray);
                     int available = getAvailableMemory();
-                    Logger.v( "CTInAppNotification.GifCache: gif size: "+ arraySize +"KB. Available mem: "+available+"KB.");
+                    Logger.v("CTInAppNotification.GifCache: gif size: " + arraySize + "KB. Available mem: " + available + "KB.");
                     if (arraySize > getAvailableMemory()) {
-                        Logger.v( "CTInAppNotification.GifCache: insufficient memory to add gif: " + key);
+                        Logger.v("CTInAppNotification.GifCache: insufficient memory to add gif: " + key);
                         return false;
                     }
                     mMemoryCache.put(key, byteArray);
-                    Logger.v( "CTInAppNotification.GifCache: added gif for key: " + key);
+                    Logger.v("CTInAppNotification.GifCache: added gif for key: " + key);
                 }
             }
             return true;
@@ -765,7 +757,7 @@ class CTInAppNotification implements Parcelable {
             synchronized (GifCache.class) {
                 if (mMemoryCache == null) return;
                 mMemoryCache.remove(key);
-                Logger.v( "CTInAppNotification.GifCache: removed gif for key: " + key);
+                Logger.v("CTInAppNotification.GifCache: removed gif for key: " + key);
                 cleanup();
             }
         }

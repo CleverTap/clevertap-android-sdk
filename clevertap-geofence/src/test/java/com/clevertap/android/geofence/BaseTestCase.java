@@ -18,15 +18,6 @@ public abstract class BaseTestCase {
 
     protected Application application;
 
-    @Before
-    public void setUp() throws Exception {
-        application = TestApplication.getApplication();
-    }
-
-    public Application getApplication() {
-        return TestApplication.getApplication();
-    }
-
     public static void assertBundlesEquals(Bundle expected, Bundle actual) {
         assertBundlesEquals(null, expected, actual);
     }
@@ -76,6 +67,15 @@ public abstract class BaseTestCase {
         }
 
         return true;
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        application = TestApplication.getApplication();
+    }
+
+    public Application getApplication() {
+        return TestApplication.getApplication();
     }
 
 }

@@ -14,6 +14,7 @@ class ViewProperty {
         this.accessor = accessor;
         this.mutator = mutatorName;
     }
+
     ViewCaller createMutator(Object[] methodArgs) throws NoSuchMethodException {
         return mutator == null ? null : new ViewCaller(this.target, mutator, methodArgs, Void.TYPE);
     }

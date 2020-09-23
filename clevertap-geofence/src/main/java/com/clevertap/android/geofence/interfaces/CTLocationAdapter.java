@@ -20,6 +20,7 @@ public interface CTLocationAdapter {
 
     /**
      * Fetches Last Known Location from OS and delivers it to caller through given {@link CTLocationCallback}
+     *
      * @param callback to get last location
      */
     void getLastLocation(CTLocationCallback callback);

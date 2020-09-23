@@ -20,6 +20,7 @@ enum CTInAppType {
 
 
     private final String inAppType;
+
     CTInAppType(String type) {
         this.inAppType = type;
     }
@@ -27,59 +28,60 @@ enum CTInAppType {
 
     @SuppressWarnings({"unused"})
     static CTInAppType fromString(String type) {
-        switch(type){
-            case "html" : {
+        switch (type) {
+            case "html": {
                 return CTInAppTypeHTML;
             }
-            case "coverHtml" : {
+            case "coverHtml": {
                 return CTInAppTypeCoverHTML;
             }
-            case "interstitialHtml" : {
+            case "interstitialHtml": {
                 return CTInAppTypeInterstitialHTML;
             }
-            case "headerHtml" : {
+            case "headerHtml": {
                 return CTInAppTypeHeaderHTML;
             }
-            case "footerHtml" : {
+            case "footerHtml": {
                 return CTInAppTypeFooterHTML;
             }
-            case "halfInterstitialHtml" : {
+            case "halfInterstitialHtml": {
                 return CTInAppTypeHalfInterstitialHTML;
             }
-            case "half-interstitial" : {
+            case "half-interstitial": {
                 return CTInAppTypeHalfInterstitial;
             }
-            case "interstitial" : {
+            case "interstitial": {
                 return CTInAppTypeInterstitial;
             }
-            case "cover" : {
+            case "cover": {
                 return CTInAppTypeCover;
             }
-            case "header-template" : {
+            case "header-template": {
                 return CTInAppTypeHeader;
             }
-            case "footer-template" : {
+            case "footer-template": {
                 return CTInAppTypeFooter;
             }
-            case "alert-template" : {
+            case "alert-template": {
                 return CTInAppTypeAlert;
             }
-            case "cover-image" : {
+            case "cover-image": {
                 return CTInAppTypeCoverImageOnly;
             }
-            case "interstitial-image" : {
+            case "interstitial-image": {
                 return CTInAppTypeInterstitialImageOnly;
             }
-            case "half-interstitial-image" : {
+            case "half-interstitial-image": {
                 return CTInAppTypeHalfInterstitialImageOnly;
             }
-            default: return null;
+            default:
+                return null;
         }
     }
 
     @Override
     public String toString() {
-            return inAppType;
+        return inAppType;
     }
 
 }

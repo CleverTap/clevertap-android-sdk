@@ -43,7 +43,7 @@ class GoogleGeofenceAdapter implements CTGeofenceAdapter {
      * <br><br>
      * <b>Must be called from background thread</b>
      *
-     * @param fenceList list of {@link CTGeofence}
+     * @param fenceList         list of {@link CTGeofence}
      * @param onSuccessListener callback for successful registration to OS
      */
     @SuppressWarnings("unchecked")
@@ -84,7 +84,7 @@ class GoogleGeofenceAdapter implements CTGeofenceAdapter {
      * <br><br>
      * <b>Must be called from background thread</b>
      *
-     * @param fenceIdList list of {@link CTGeofence} Ids to unregister
+     * @param fenceIdList       list of {@link CTGeofence} Ids to unregister
      * @param onSuccessListener callback for successful removal of Geofences from OS
      */
     @SuppressWarnings("unchecked")

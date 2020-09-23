@@ -20,9 +20,9 @@ class LocationUpdateTask implements CTGeofenceTask {
 
     private final Context context;
     @Nullable
-    private CTGeofenceSettings ctGeofenceSettings;
-    @Nullable
     private final CTLocationAdapter ctLocationAdapter;
+    @Nullable
+    private CTGeofenceSettings ctGeofenceSettings;
     @Nullable
     private OnCompleteListener onCompleteListener;
 
@@ -85,8 +85,7 @@ class LocationUpdateTask implements CTGeofenceTask {
      * determine if location update request is required.
      *
      * @param locationPendingIntent instance of {@link PendingIntent} of type
-     * {@link PendingIntentFactory#PENDING_INTENT_GEOFENCE} or {@link PendingIntentFactory#PENDING_INTENT_LOCATION}
-     *
+     *                              {@link PendingIntentFactory#PENDING_INTENT_GEOFENCE} or {@link PendingIntentFactory#PENDING_INTENT_LOCATION}
      * @return true if location update request is required else false
      */
     private boolean isRequestLocation(PendingIntent locationPendingIntent) {

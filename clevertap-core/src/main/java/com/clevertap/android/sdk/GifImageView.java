@@ -12,18 +12,9 @@ import androidx.appcompat.widget.AppCompatImageView;
 class GifImageView extends AppCompatImageView implements Runnable {
 
     private static final String TAG = "GifDecoderView";
+    private final Handler handler = new Handler(Looper.getMainLooper());
     private GifDecoder gifDecoder;
     private Bitmap tmpBitmap;
-    private final Handler handler = new Handler(Looper.getMainLooper());
-    private boolean animating;
-    private boolean renderFrame;
-    private boolean shouldClear;
-    private Thread animationThread;
-    private OnFrameAvailable frameCallback = null;
-    private long framesDisplayDuration = -1L;
-    private OnAnimationStop animationStopCallback = null;
-    private OnAnimationStart animationStartCallback = null;
-
     private final Runnable updateResults = new Runnable() {
         @Override
         public void run() {
@@ -33,7 +24,10 @@ class GifImageView extends AppCompatImageView implements Runnable {
             }
         }
     };
-
+    private boolean animating;
+    private boolean renderFrame;
+    private boolean shouldClear;
+    private Thread animationThread;
     private final Runnable cleanupRunnable = new Runnable() {
         @Override
         public void run() {
@@ -43,6 +37,10 @@ class GifImageView extends AppCompatImageView implements Runnable {
             shouldClear = false;
         }
     };
+    private OnFrameAvailable frameCallback = null;
+    private long framesDisplayDuration = -1L;
+    private OnAnimationStop animationStopCallback = null;
+    private OnAnimationStart animationStartCallback = null;
 
     public GifImageView(final Context context, final AttributeSet attrs) {
         super(context, attrs);
@@ -78,7 +76,7 @@ class GifImageView extends AppCompatImageView implements Runnable {
      * #startAnimation()}
      *
      * @param framesDisplayDuration Duration in milliseconds. Default value = -1, this property will
-     * be ignored and default delay from gif file will be used.
+     *                              be ignored and default delay from gif file will be used.
      */
     public void setFramesDisplayDuration(long framesDisplayDuration) {
         this.framesDisplayDuration = framesDisplayDuration;
@@ -207,10 +205,6 @@ class GifImageView extends AppCompatImageView implements Runnable {
         this.frameCallback = frameProcessor;
     }
 
-    public interface OnFrameAvailable {
-        Bitmap onFrameAvailable(Bitmap bitmap);
-    }
-
     public OnAnimationStop getOnAnimationStop() {
         return animationStopCallback;
     }
@@ -221,14 +215,6 @@ class GifImageView extends AppCompatImageView implements Runnable {
 
     public void setOnAnimationStart(OnAnimationStart animationStart) {
         this.animationStartCallback = animationStart;
-    }
-
-    public interface OnAnimationStop {
-        void onAnimationStop();
-    }
-
-    public interface OnAnimationStart {
-        void onAnimationStart();
     }
 
     @Override
@@ -242,6 +228,18 @@ class GifImageView extends AppCompatImageView implements Runnable {
             animationThread = new Thread(this);
             animationThread.start();
         }
+    }
+
+    public interface OnFrameAvailable {
+        Bitmap onFrameAvailable(Bitmap bitmap);
+    }
+
+    public interface OnAnimationStop {
+        void onAnimationStop();
+    }
+
+    public interface OnAnimationStart {
+        void onAnimationStart();
     }
 
 }

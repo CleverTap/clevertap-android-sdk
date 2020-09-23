@@ -18,8 +18,9 @@ import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity implements CTInboxListener {
 
-    private Button event, chargedEvent, eventWithProps, profileEvent, inbox,web;
+    private Button event, chargedEvent, eventWithProps, profileEvent, inbox, web;
     private CleverTapAPI cleverTapDefaultInstance, cleverTapInstanceTwo;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,10 +48,10 @@ public class MainActivity extends AppCompatActivity implements CTInboxListener {
         //With CleverTap Android SDK v3.2.0 you can create additional instances to send data to multiple CleverTap accounts
         //Create config object for an additional instance
         //While using this app, replace the below Account Id and token with your Account Id and token
-        CleverTapInstanceConfig config =  CleverTapInstanceConfig.createInstance(this,"YOUR_ACCOUNT_ID","YOUR_ACCOUNT_TOKEN");
+        CleverTapInstanceConfig config = CleverTapInstanceConfig.createInstance(this, "YOUR_ACCOUNT_ID", "YOUR_ACCOUNT_TOKEN");
 
         //Use the config object to create a custom instance
-        cleverTapInstanceTwo = CleverTapAPI.instanceWithConfig(this,config);
+        cleverTapInstanceTwo = CleverTapAPI.instanceWithConfig(this, config);
 
         //Record an event
         event.setOnClickListener(new View.OnClickListener() {
@@ -141,7 +142,7 @@ public class MainActivity extends AppCompatActivity implements CTInboxListener {
         web.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivity(new Intent(MainActivity.this,WebViewActivity.class));
+                startActivity(new Intent(MainActivity.this, WebViewActivity.class));
             }
         });
     }
@@ -174,6 +175,6 @@ public class MainActivity extends AppCompatActivity implements CTInboxListener {
 
     @Override
     public void inboxMessagesDidUpdate() {
-        inbox.setText("Inbox - Unread - "+ cleverTapDefaultInstance.getInboxMessageUnreadCount() + " Total - " + cleverTapDefaultInstance.getInboxMessageCount());
+        inbox.setText("Inbox - Unread - " + cleverTapDefaultInstance.getInboxMessageUnreadCount() + " Total - " + cleverTapDefaultInstance.getInboxMessageCount());
     }
 }

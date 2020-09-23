@@ -22,12 +22,12 @@ import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.
 
 public class CTFeatureFlagsController {
 
-    private String guid;
     private final CleverTapInstanceConfig config;
-    private HashMap<String, Boolean> store;
-    private boolean isInitialized = false;
     private final WeakReference<FeatureFlagListener> listenerWeakReference;
     private final Context mContext;
+    private String guid;
+    private HashMap<String, Boolean> store;
+    private boolean isInitialized = false;
 
     public CTFeatureFlagsController(Context context, String guid, CleverTapInstanceConfig config, FeatureFlagListener listener) {
         this.guid = guid;

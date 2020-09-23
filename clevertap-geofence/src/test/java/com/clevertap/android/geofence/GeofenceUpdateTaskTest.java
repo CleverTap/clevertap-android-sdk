@@ -47,11 +47,11 @@ public class GeofenceUpdateTaskTest extends BaseTestCase {
 
     @Rule
     public PowerMockRule rule = new PowerMockRule();
-    private Logger logger;
     @Mock
     public CTGeofenceAPI ctGeofenceAPI;
     @Mock
     public CTGeofenceAdapter ctGeofenceAdapter;
+    private Logger logger;
 
     @Before
     public void setUp() throws Exception {

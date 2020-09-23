@@ -17,7 +17,7 @@ import java.util.List;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class CTInboxTabAdapter extends FragmentPagerAdapter {
 
-    private final Fragment[] fragmentList ;
+    private final Fragment[] fragmentList;
     private final List<String> fragmentTitleList = new ArrayList<>();
 
     public CTInboxTabAdapter(FragmentManager fm, int size) {
@@ -41,7 +41,7 @@ public class CTInboxTabAdapter extends FragmentPagerAdapter {
         return fragmentTitleList.get(position);
     }
 
-    void addFragment(Fragment fragment, String title, int position){
+    void addFragment(Fragment fragment, String title, int position) {
         fragmentList[position] = fragment;
         fragmentTitleList.add(title);
     }

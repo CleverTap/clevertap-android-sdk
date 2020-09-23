@@ -57,7 +57,7 @@ public class LimitExceededException extends InvalidDataException {
      * calling InvalidDataException with closecode TOOBIG
      */
     public LimitExceededException(int limit) {
-        super( CloseFrame.TOOBIG);
+        super(CloseFrame.TOOBIG);
         this.limit = limit;
     }
 
@@ -67,7 +67,7 @@ public class LimitExceededException extends InvalidDataException {
      * calling InvalidDataException with closecode TOOBIG
      */
     public LimitExceededException(String s, int limit) {
-        super( CloseFrame.TOOBIG, s);
+        super(CloseFrame.TOOBIG, s);
         this.limit = limit;
     }
 
@@ -84,6 +84,7 @@ public class LimitExceededException extends InvalidDataException {
 
     /**
      * Get the limit which was hit so this exception was caused
+     *
      * @return the limit as int
      */
     public int getLimit() {

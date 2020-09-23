@@ -29,8 +29,6 @@ import edu.emory.mathcs.backport.java.util.Arrays;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.powermock.api.mockito.PowerMockito.verifyStatic;
 import static org.powermock.api.mockito.PowerMockito.when;
@@ -45,13 +43,13 @@ public class PushLocationEventTaskTest extends BaseTestCase {
 
     @Rule
     public PowerMockRule rule = new PowerMockRule();
-    private Logger logger;
     @Mock
     public CTGeofenceAPI ctGeofenceAPI;
     @Mock
     public CleverTapAPI cleverTapAPI;
     @Mock
     public CTGeofenceTask.OnCompleteListener onCompleteListener;
+    private Logger logger;
     private Location location;
     private LocationResult locationResult;
 
@@ -85,7 +83,7 @@ public class PushLocationEventTaskTest extends BaseTestCase {
         task.setOnCompleteListener(onCompleteListener);
         task.execute();
 
-        verifyStatic(Utils.class,times(0));
+        verifyStatic(Utils.class, times(0));
         Utils.notifyLocationUpdates(any(Context.class), any(Location.class));
 
         Mockito.verify(onCompleteListener).onComplete();
@@ -149,13 +147,13 @@ public class PushLocationEventTaskTest extends BaseTestCase {
     }
 
     @Test
-    public void testSendOnCompleteEventWhenListenerNotNull(){
+    public void testSendOnCompleteEventWhenListenerNotNull() {
         // when listener not null
         PushLocationEventTask task = new PushLocationEventTask(application, locationResult);
 
         task.setOnCompleteListener(onCompleteListener);
         try {
-            WhiteboxImpl.invokeMethod(task,"sendOnCompleteEvent");
+            WhiteboxImpl.invokeMethod(task, "sendOnCompleteEvent");
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -164,17 +162,17 @@ public class PushLocationEventTaskTest extends BaseTestCase {
     }
 
     @Test
-    public void testSendOnCompleteEventWhenListenerIsNull(){
+    public void testSendOnCompleteEventWhenListenerIsNull() {
         // when listener is null
         PushLocationEventTask task = new PushLocationEventTask(application, locationResult);
 
         task.setOnCompleteListener(null);
         try {
-            WhiteboxImpl.invokeMethod(task,"sendOnCompleteEvent");
+            WhiteboxImpl.invokeMethod(task, "sendOnCompleteEvent");
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Mockito.verify(onCompleteListener,times(0)).onComplete();
+        Mockito.verify(onCompleteListener, times(0)).onComplete();
 
     }
 

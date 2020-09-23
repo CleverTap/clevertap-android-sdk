@@ -118,7 +118,7 @@ public class PendingIntentFactoryTest extends BaseTestCase {
         PendingIntent actual1 = PendingIntentFactory.getPendingIntent(application,
                 PendingIntentFactory.PENDING_INTENT_GEOFENCE, PendingIntent.FLAG_NO_CREATE);
 
-        assertSame(actual,actual1);
+        assertSame(actual, actual1);
     }
 
     @Test
@@ -131,7 +131,7 @@ public class PendingIntentFactoryTest extends BaseTestCase {
         PendingIntent actual1 = PendingIntentFactory.getPendingIntent(application,
                 PendingIntentFactory.PENDING_INTENT_GEOFENCE, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        assertSame(actual,actual1);
+        assertSame(actual, actual1);
     }
 
     @Test
@@ -146,7 +146,7 @@ public class PendingIntentFactoryTest extends BaseTestCase {
         PendingIntent actual1 = PendingIntentFactory.getPendingIntent(application,
                 PendingIntentFactory.PENDING_INTENT_GEOFENCE, PendingIntent.FLAG_NO_CREATE);
 
-        assertNotSame(actual,actual1);
+        assertNotSame(actual, actual1);
         assertNull(actual1);
     }
 
@@ -162,7 +162,7 @@ public class PendingIntentFactoryTest extends BaseTestCase {
         PendingIntent actual1 = PendingIntentFactory.getPendingIntent(application,
                 PendingIntentFactory.PENDING_INTENT_GEOFENCE, PendingIntent.FLAG_UPDATE_CURRENT);
 
-        assertNotSame(actual,actual1);
+        assertNotSame(actual, actual1);
     }
 
 

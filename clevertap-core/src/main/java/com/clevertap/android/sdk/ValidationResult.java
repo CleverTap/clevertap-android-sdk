@@ -13,6 +13,10 @@ final class ValidationResult {
         this.errorDesc = errorDesc;
     }
 
+    ValidationResult() {
+        this.errorCode = 0;
+    }
+
     String getErrorDesc() {
         return errorDesc;
     }
@@ -25,16 +29,12 @@ final class ValidationResult {
         return object;
     }
 
-    int getErrorCode() {
-        return errorCode;
-    }
-
-    ValidationResult() {
-        this.errorCode = 0;
-    }
-
     void setObject(Object object) {
         this.object = object;
+    }
+
+    int getErrorCode() {
+        return errorCode;
     }
 
     void setErrorCode(int errorCode) {
