@@ -8,27 +8,30 @@ import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.pushnotification.CTPushProvider;
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
-import com.huawei.agconnect.config.AGConnectServicesConfig;
-import com.huawei.hms.aaid.HmsInstanceId;
-import com.huawei.hms.api.HuaweiApiAvailability;
 
+import static com.clevertap.android.hms.HmsConstants.LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.ANDROID_PLATFORM;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class HmsPushProvider implements CTPushProvider {
-    private static final String LOG_TAG = HmsPushProvider.class.getSimpleName();
-    private static final String HCM_SCOPE = "HCM";
-    private static final String APP_ID_KEY = "client/app_id";
     private CTPushProviderListener ctPushListener;
+
+    private IHmsSdkHandler hmsSdkHandler;
 
     @Override
     public void setCTPushListener(CTPushProviderListener ctPushListener) {
         this.ctPushListener = ctPushListener;
+        setHmsSdkHandler(new HmsSdkHandler(ctPushListener));
     }
 
     @Override
     public int getPlatform() {
         return ANDROID_PLATFORM;
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public void setHmsSdkHandler(IHmsSdkHandler hmsSdkHandler) {
+        this.hmsSdkHandler = hmsSdkHandler;
     }
 
     @NonNull
@@ -40,13 +43,10 @@ public class HmsPushProvider implements CTPushProvider {
     @Override
     public void requestToken() {
         String token = null;
-        try {
-            String appId = getAppId();
-            if (!TextUtils.isEmpty(appId)) {
-                token = HmsInstanceId.getInstance(ctPushListener.context()).getToken(appId, HCM_SCOPE);
-            }
-        } catch (Throwable t) {
-            ctPushListener.log(LOG_TAG, "Error requesting HMS token", t);
+        if (hmsSdkHandler != null) {
+            token = hmsSdkHandler.onNewToken();
+        } else {
+            ctPushListener.log(LOG_TAG, "requestToken failed since hmsSdkHandler is null");
         }
         if (ctPushListener != null) {
             ctPushListener.onNewToken(token, getPushType());
@@ -55,32 +55,29 @@ public class HmsPushProvider implements CTPushProvider {
 
     @Override
     public boolean isAvailable() {
-        return !TextUtils.isEmpty(getAppId());
-    }
-
-    private String getAppId() {
-        String appId = null;
-        try {
-            appId = AGConnectServicesConfig.fromContext(ctPushListener.context()).getString(APP_ID_KEY);
-        } catch (Exception e) {
-            ctPushListener.log(LOG_TAG, "HMS availability check failed.");
+        boolean isAvailable = false;
+        if (hmsSdkHandler != null) {
+            isAvailable = !TextUtils.isEmpty(hmsSdkHandler.appId());
+        } else {
+            ctPushListener.log(LOG_TAG, "isNotAvailable since hmsSdkHandler is null");
         }
-        return appId;
+        return isAvailable;
     }
 
     @Override
     public boolean isSupported() {
-        try {
-            return HuaweiApiAvailability.getInstance().isHuaweiMobileNoticeAvailable(ctPushListener.context()) == 0;
-        } catch (Exception e) {
-            ctPushListener.log(LOG_TAG, "HMS is supported check failed.");
-            return false;
+        boolean isSupported = false;
+        if (hmsSdkHandler != null) {
+            isSupported = hmsSdkHandler.isSupported();
+        } else {
+            ctPushListener.log(LOG_TAG, "Not Supported since hmsSdkHandler is null");
         }
+        return isSupported;
     }
 
     @Override
     public int minSDKSupportVersionCode() {
-        return 30800;
+        return HmsConstants.MIN_CT_ANDROID_SDK_VERSION;
     }
 
 }

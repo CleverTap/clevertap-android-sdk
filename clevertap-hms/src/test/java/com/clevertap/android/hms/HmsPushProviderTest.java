@@ -1,4 +1,4 @@
-package com.clevertap.android.xps;
+package com.clevertap.android.hms;
 
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
@@ -15,41 +15,46 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @RunWith(RobolectricTestRunner.class)
-@Config(sdk = 28, application = TestApplication.class)
-public class XiaomiPushProviderTest extends BaseTestCase {
+@Config(sdk = 28,
+        application = TestApplication.class
+)
+public class HmsPushProviderTest extends BaseTestCase {
 
     private CTPushProviderListener ctPushProviderListener;
-    private XiaomiPushProvider xiaomiPushProvider;
-    private TestMiSdkHandler sdkHandler;
+    private HmsPushProvider pushProvider;
+    private TestHmsSdkHandler sdkHandler;
 
     @Before
     public void setUp() throws Exception {
         super.setUp();
-        xiaomiPushProvider = new XiaomiPushProvider();
+        pushProvider = new HmsPushProvider();
         ctPushProviderListener = mock(CTPushProviderListener.class);
-        sdkHandler = new TestMiSdkHandler();
+        sdkHandler = new TestHmsSdkHandler();
         when(ctPushProviderListener.context()).thenReturn(application);
         when(ctPushProviderListener.config()).thenReturn(cleverTapInstanceConfig);
-        xiaomiPushProvider.setCTPushListener(ctPushProviderListener);
-        xiaomiPushProvider.setMiSdkHandler(sdkHandler);
+        pushProvider.setCTPushListener(ctPushProviderListener);
+        pushProvider.setHmsSdkHandler(sdkHandler);
     }
 
     @Test
     public void testRequestToken() {
-        xiaomiPushProvider.requestToken();
-        verify(ctPushProviderListener).onNewToken(XpsTestConstants.MI_TOKEN, PushConstants.PushType.XPS);
+        pushProvider.requestToken();
+        verify(ctPushProviderListener).onNewToken(HmsTestConstants.HMS_TOKEN, PushConstants.PushType.HPS);
     }
 
     @Test
     public void testIsAvailable() {
         sdkHandler.setAvailable(false);
-        Assert.assertFalse(xiaomiPushProvider.isAvailable());
+        Assert.assertFalse(pushProvider.isAvailable());
         sdkHandler.setAvailable(true);
-        Assert.assertTrue(xiaomiPushProvider.isAvailable());
+        Assert.assertTrue(pushProvider.isAvailable());
     }
 
     @Test
     public void testIsSupported() {
-        Assert.assertTrue(xiaomiPushProvider.isSupported());
+        sdkHandler.setSupported(true);
+        Assert.assertTrue(pushProvider.isSupported());
+        sdkHandler.setSupported(false);
+        Assert.assertFalse(pushProvider.isSupported());
     }
 }

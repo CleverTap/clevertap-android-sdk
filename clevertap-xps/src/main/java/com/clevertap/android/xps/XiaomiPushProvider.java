@@ -1,31 +1,30 @@
 package com.clevertap.android.xps;
 
-import android.app.ActivityManager;
-import android.content.Context;
-import android.os.Process;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 
-import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.pushnotification.CTPushProvider;
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
-import com.xiaomi.mipush.sdk.MiPushClient;
 
-import java.util.List;
+import static com.clevertap.android.xps.XpsConstants.LOG_TAG;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class XiaomiPushProvider implements CTPushProvider {
-    private static final String LOG_TAG = XiaomiPushProvider.class.getSimpleName();
     private CTPushProviderListener ctPushListener;
+    private IMiSdkHandler miSdkHandler;
 
     @Override
     public void setCTPushListener(CTPushProviderListener ctPushListener) {
         this.ctPushListener = ctPushListener;
-        if (shouldInit())
-            register();
+        setMiSdkHandler(new XiaomiSdkHandler(ctPushListener));
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public void setMiSdkHandler(IMiSdkHandler provider) {
+        this.miSdkHandler = provider;
     }
 
     @Override
@@ -42,39 +41,25 @@ public class XiaomiPushProvider implements CTPushProvider {
     @Override
     public void requestToken() {
         String token = null;
-        try {
-            token = MiPushClient.getRegId(ctPushListener.context());
-            ctPushListener.log(LOG_TAG, "Xiaomi Token Success- " + token);
-        } catch (Throwable t) {
-            ctPushListener.log(LOG_TAG, "Xiaomi Token Failed");
+        if (miSdkHandler != null) {
+            token = miSdkHandler.onNewToken();
+        } else {
+            ctPushListener.log(LOG_TAG, "requestToken failed since miSdkHandler is null");
         }
         if (ctPushListener != null) {
             ctPushListener.onNewToken(token, getPushType());
         }
     }
 
-    private void register() {
-        String appKey = getAppKey();
-        String appId = getAppId();
-        try {
-            MiPushClient.registerPush(ctPushListener.context(), appId, appKey);
-            ctPushListener.log(LOG_TAG, "Xiaomi Registeration success for appId-" + appId + " and appKey-" + appKey);
-        } catch (Throwable t) {
-            ctPushListener.log(LOG_TAG, "getRegistrationToken : Registration failed for appId-" + appId + " appKey-" + appKey);
-        }
-    }
-
     @Override
     public boolean isAvailable() {
-        return !TextUtils.isEmpty(getAppId()) && !TextUtils.isEmpty(getAppKey());
-    }
-
-    private String getAppId() {
-        return ManifestInfo.getInstance(ctPushListener.context()).getXiaomiAppID();
-    }
-
-    private String getAppKey() {
-        return ManifestInfo.getInstance(ctPushListener.context()).getXiaomiAppKey();
+        boolean isAvailable = false;
+        if (miSdkHandler != null) {
+            isAvailable = !TextUtils.isEmpty(miSdkHandler.appId()) && !TextUtils.isEmpty(miSdkHandler.appKey());
+        } else {
+            ctPushListener.log(LOG_TAG, "Xiaomi Pushprovider is not available as miSdkHandler is null");
+        }
+        return isAvailable;
     }
 
     @Override
@@ -84,24 +69,7 @@ public class XiaomiPushProvider implements CTPushProvider {
 
     @Override
     public int minSDKSupportVersionCode() {
-        return 30800;
+        return XpsConstants.MIN_CT_ANDROID_SDK_VERSION;
     }
 
-    private boolean shouldInit() {
-
-        ActivityManager am = ((ActivityManager) ctPushListener.context().getSystemService(Context.ACTIVITY_SERVICE));
-
-        List<ActivityManager.RunningAppProcessInfo> processInfos = am.getRunningAppProcesses();
-
-        String mainProcessName = ctPushListener.context().getPackageName();
-
-        int myPid = Process.myPid();
-
-        for (ActivityManager.RunningAppProcessInfo info : processInfos) {
-            if (info.pid == myPid && mainProcessName.equals(info.processName)) {
-                return true;
-            }
-        }
-        return false;
-    }
 }
