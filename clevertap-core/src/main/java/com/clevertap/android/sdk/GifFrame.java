@@ -19,33 +19,41 @@
 package com.clevertap.android.sdk;
 
 class GifFrame {
-    int ix, iy, iw, ih;
-    /**
-     * Control Flag.
-     */
-    boolean interlace;
-    /**
-     * Control Flag.
-     */
-    boolean transparency;
-    /**
-     * Disposal Method.
-     */
-    int dispose;
-    /**
-     * Transparency Index.
-     */
-    int transIndex;
-    /**
-     * Delay, in ms, to next frame.
-     */
-    int delay;
+
     /**
      * Index in the raw buffer where we need to start reading to decode.
      */
     int bufferFrameStart;
+
+    /**
+     * Delay, in ms, to next frame.
+     */
+    int delay;
+
+    /**
+     * Disposal Method.
+     */
+    int dispose;
+
+    /**
+     * Control Flag.
+     */
+    boolean interlace;
+
+    int ix, iy, iw, ih;
+
     /**
      * Local Color Table.
      */
     int[] lct;
+
+    /**
+     * Transparency Index.
+     */
+    int transIndex;
+
+    /**
+     * Control Flag.
+     */
+    boolean transparency;
 }

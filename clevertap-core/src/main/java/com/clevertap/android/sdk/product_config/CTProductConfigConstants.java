@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.product_config;
 import java.util.concurrent.TimeUnit;
 
 public interface CTProductConfigConstants {
+
     String TAG_PRODUCT_CONFIG = "[Product Config]";
     String DIR_PRODUCT_CONFIG = "Product_Config";
     String FILE_NAME_ACTIVATED = "activated.json";
@@ -14,7 +15,8 @@ public interface CTProductConfigConstants {
     int DEFAULT_NO_OF_CALLS = 5;
     int DEFAULT_WINDOW_LENGTH_MINS = 60;
 
-    long DEFAULT_MIN_FETCH_INTERVAL_SECONDS = TimeUnit.MINUTES.toSeconds(DEFAULT_WINDOW_LENGTH_MINS / DEFAULT_NO_OF_CALLS);
+    long DEFAULT_MIN_FETCH_INTERVAL_SECONDS = TimeUnit.MINUTES
+            .toSeconds(DEFAULT_WINDOW_LENGTH_MINS / DEFAULT_NO_OF_CALLS);
 
     //static values
     String DEFAULT_VALUE_FOR_STRING = "";

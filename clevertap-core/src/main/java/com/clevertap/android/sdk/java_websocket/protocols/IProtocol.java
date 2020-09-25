@@ -42,6 +42,15 @@ public interface IProtocol {
     boolean acceptProvidedProtocol(String inputProtocolHeader);
 
     /**
+     * To prevent protocols to be used more than once the Websocket implementation should call this method in order to
+     * create a new usable version of a given protocol instance.
+     *
+     * @return a copy of the protocol
+     * @since 1.3.7
+     */
+    IProtocol copyInstance();
+
+    /**
      * Return the specific Sec-WebSocket-protocol header offer for this protocol if the endpoint.
      * If the extension returns an empty string (""), the offer will not be included in the handshake.
      *
@@ -51,15 +60,8 @@ public interface IProtocol {
     String getProvidedProtocol();
 
     /**
-     * To prevent protocols to be used more than once the Websocket implementation should call this method in order to create a new usable version of a given protocol instance.
-     *
-     * @return a copy of the protocol
-     * @since 1.3.7
-     */
-    IProtocol copyInstance();
-
-    /**
-     * Return a string which should contain the protocol name as well as additional information about the current configurations for this protocol (DEBUG purposes)
+     * Return a string which should contain the protocol name as well as additional information about the current
+     * configurations for this protocol (DEBUG purposes)
      *
      * @return a string containing the protocol name as well as additional information
      * @since 1.3.7

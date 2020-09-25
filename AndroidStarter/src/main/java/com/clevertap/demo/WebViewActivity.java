@@ -5,13 +5,12 @@ import android.app.Activity;
 import android.os.Build;
 import android.os.Bundle;
 import android.webkit.WebView;
-
 import androidx.annotation.RequiresApi;
-
 import com.clevertap.android.sdk.CTWebInterface;
 import com.clevertap.android.sdk.CleverTapAPI;
 
 public class WebViewActivity extends Activity {
+
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN)
     @SuppressLint({"SetJavaScriptEnabled", "AddJavascriptInterface"})
     @Override

@@ -5,29 +5,50 @@ import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.AttributeSet;
-
 import androidx.appcompat.widget.AppCompatImageView;
 
 @SuppressWarnings({"unused"})
 class GifImageView extends AppCompatImageView implements Runnable {
 
+    public interface OnFrameAvailable {
+
+        Bitmap onFrameAvailable(Bitmap bitmap);
+    }
+
+    public interface OnAnimationStop {
+
+        void onAnimationStop();
+    }
+
+    public interface OnAnimationStart {
+
+        void onAnimationStart();
+    }
+
     private static final String TAG = "GifDecoderView";
-    private final Handler handler = new Handler(Looper.getMainLooper());
-    private GifDecoder gifDecoder;
-    private Bitmap tmpBitmap;
-    private final Runnable updateResults = new Runnable() {
-        @Override
-        public void run() {
-            if (tmpBitmap != null && !tmpBitmap.isRecycled()) {
-                setImageBitmap(tmpBitmap);
-                setScaleType(ScaleType.FIT_CENTER);
-            }
-        }
-    };
+
     private boolean animating;
-    private boolean renderFrame;
-    private boolean shouldClear;
+
+    private OnAnimationStart animationStartCallback = null;
+
+    private OnAnimationStop animationStopCallback = null;
+
     private Thread animationThread;
+
+    private OnFrameAvailable frameCallback = null;
+
+    private long framesDisplayDuration = -1L;
+
+    private GifDecoder gifDecoder;
+
+    private final Handler handler = new Handler(Looper.getMainLooper());
+
+    private boolean renderFrame;
+
+    private boolean shouldClear;
+
+    private Bitmap tmpBitmap;
+
     private final Runnable cleanupRunnable = new Runnable() {
         @Override
         public void run() {
@@ -37,10 +58,16 @@ class GifImageView extends AppCompatImageView implements Runnable {
             shouldClear = false;
         }
     };
-    private OnFrameAvailable frameCallback = null;
-    private long framesDisplayDuration = -1L;
-    private OnAnimationStop animationStopCallback = null;
-    private OnAnimationStart animationStartCallback = null;
+
+    private final Runnable updateResults = new Runnable() {
+        @Override
+        public void run() {
+            if (tmpBitmap != null && !tmpBitmap.isRecycled()) {
+                setImageBitmap(tmpBitmap);
+                setScaleType(ScaleType.FIT_CENTER);
+            }
+        }
+    };
 
     public GifImageView(final Context context, final AttributeSet attrs) {
         super(context, attrs);
@@ -50,21 +77,21 @@ class GifImageView extends AppCompatImageView implements Runnable {
         super(context);
     }
 
-    public void setBytes(final byte[] bytes) {
-        gifDecoder = new GifDecoder();
-        try {
-            gifDecoder.read(bytes);
-        } catch (final Exception e) {
-            gifDecoder = null;
-            //Log.e(TAG, e.getMessage(), e);
-            return;
-        }
+    public void clear() {
+        animating = false;
+        renderFrame = false;
+        shouldClear = true;
+        stopAnimation();
+        handler.post(cleanupRunnable);
+    }
 
-        if (animating) {
-            startAnimationThread();
-        } else {
-            gotoFrame(0);
-        }
+    /**
+     * Gets the number of frames read from file.
+     *
+     * @return frame count.
+     */
+    public int getFrameCount() {
+        return gifDecoder.getFrameCount();
     }
 
     public long getFramesDisplayDuration() {
@@ -82,64 +109,47 @@ class GifImageView extends AppCompatImageView implements Runnable {
         this.framesDisplayDuration = framesDisplayDuration;
     }
 
-    public void startAnimation() {
-        animating = true;
-        startAnimationThread();
-    }
-
-    public boolean isAnimating() {
-        return animating;
-    }
-
-    public void stopAnimation() {
-        animating = false;
-
-        if (animationThread != null) {
-            animationThread.interrupt();
-            animationThread = null;
-        }
-    }
-
-    public void gotoFrame(int frame) {
-        if (gifDecoder.getCurrentFrameIndex() == frame) return;
-        if (gifDecoder.setFrameIndex(frame - 1) && !animating) {
-            renderFrame = true;
-            startAnimationThread();
-        }
-    }
-
-    public void resetAnimation() {
-        gifDecoder.resetLoopIndex();
-        gotoFrame(0);
-    }
-
-    public void clear() {
-        animating = false;
-        renderFrame = false;
-        shouldClear = true;
-        stopAnimation();
-        handler.post(cleanupRunnable);
-    }
-
-    private boolean canStart() {
-        return (animating || renderFrame) && gifDecoder != null && animationThread == null;
+    public int getGifHeight() {
+        return gifDecoder.getHeight();
     }
 
     public int getGifWidth() {
         return gifDecoder.getWidth();
     }
 
-    /**
-     * Gets the number of frames read from file.
-     *
-     * @return frame count.
-     */
-    public int getFrameCount() {
-        return gifDecoder.getFrameCount();
+    public OnAnimationStop getOnAnimationStop() {
+        return animationStopCallback;
     }
 
-    public int getGifHeight() {
-        return gifDecoder.getHeight();
+    public void setOnAnimationStop(OnAnimationStop animationStop) {
+        this.animationStopCallback = animationStop;
+    }
+
+    public OnFrameAvailable getOnFrameAvailable() {
+        return frameCallback;
+    }
+
+    public void setOnFrameAvailable(OnFrameAvailable frameProcessor) {
+        this.frameCallback = frameProcessor;
+    }
+
+    public void gotoFrame(int frame) {
+        if (gifDecoder.getCurrentFrameIndex() == frame) {
+            return;
+        }
+        if (gifDecoder.setFrameIndex(frame - 1) && !animating) {
+            renderFrame = true;
+            startAnimationThread();
+        }
+    }
+
+    public boolean isAnimating() {
+        return animating;
+    }
+
+    public void resetAnimation() {
+        gifDecoder.resetLoopIndex();
+        gotoFrame(0);
     }
 
     @Override
@@ -197,24 +207,39 @@ class GifImageView extends AppCompatImageView implements Runnable {
         }
     }
 
-    public OnFrameAvailable getOnFrameAvailable() {
-        return frameCallback;
-    }
+    public void setBytes(final byte[] bytes) {
+        gifDecoder = new GifDecoder();
+        try {
+            gifDecoder.read(bytes);
+        } catch (final Exception e) {
+            gifDecoder = null;
+            //Log.e(TAG, e.getMessage(), e);
+            return;
+        }
 
-    public void setOnFrameAvailable(OnFrameAvailable frameProcessor) {
-        this.frameCallback = frameProcessor;
-    }
-
-    public OnAnimationStop getOnAnimationStop() {
-        return animationStopCallback;
-    }
-
-    public void setOnAnimationStop(OnAnimationStop animationStop) {
-        this.animationStopCallback = animationStop;
+        if (animating) {
+            startAnimationThread();
+        } else {
+            gotoFrame(0);
+        }
     }
 
     public void setOnAnimationStart(OnAnimationStart animationStart) {
         this.animationStartCallback = animationStart;
+    }
+
+    public void startAnimation() {
+        animating = true;
+        startAnimationThread();
+    }
+
+    public void stopAnimation() {
+        animating = false;
+
+        if (animationThread != null) {
+            animationThread.interrupt();
+            animationThread = null;
+        }
     }
 
     @Override
@@ -223,23 +248,15 @@ class GifImageView extends AppCompatImageView implements Runnable {
         clear();
     }
 
+    private boolean canStart() {
+        return (animating || renderFrame) && gifDecoder != null && animationThread == null;
+    }
+
     private void startAnimationThread() {
         if (canStart()) {
             animationThread = new Thread(this);
             animationThread.start();
         }
-    }
-
-    public interface OnFrameAvailable {
-        Bitmap onFrameAvailable(Bitmap bitmap);
-    }
-
-    public interface OnAnimationStop {
-        void onAnimationStop();
-    }
-
-    public interface OnAnimationStart {
-        void onAnimationStart();
     }
 
 }

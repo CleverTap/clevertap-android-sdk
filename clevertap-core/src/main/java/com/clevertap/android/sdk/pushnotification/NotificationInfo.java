@@ -1,9 +1,7 @@
 package com.clevertap.android.sdk.pushnotification;
 
 import android.os.Bundle;
-
 import androidx.annotation.RestrictTo;
-
 import com.clevertap.android.sdk.CleverTapAPI;
 
 /**
@@ -13,6 +11,7 @@ import com.clevertap.android.sdk.CleverTapAPI;
  */
 @SuppressWarnings("WeakerAccess")
 public final class NotificationInfo {
+
     /**
      * Whether or not this notification was sent via CleverTap.
      */

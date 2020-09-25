@@ -1,7 +1,12 @@
 package com.clevertap.android.geofence;
 
-import android.app.PendingIntent;
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+import static org.powermock.api.mockito.PowerMockito.verifyStatic;
+import static org.powermock.api.mockito.PowerMockito.when;
 
+import android.app.PendingIntent;
 import com.clevertap.android.geofence.fakes.GeofenceJSON;
 import com.clevertap.android.geofence.interfaces.CTGeofenceAdapter;
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
@@ -14,16 +19,14 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
-
-import org.hamcrest.CoreMatchers;
-import org.hamcrest.MatcherAssert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentMatchers;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
+import org.hamcrest.*;
+import org.junit.*;
+import org.junit.runner.*;
+import org.mockito.*;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -31,18 +34,6 @@ import org.powermock.modules.junit4.rule.PowerMockRule;
 import org.powermock.reflect.internal.WhiteboxImpl;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.ExecutionException;
-
-import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.powermock.api.mockito.PowerMockito.verifyStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 28,
@@ -53,24 +44,33 @@ import static org.powermock.api.mockito.PowerMockito.when;
         , LocationServices.class, Tasks.class})
 public class GoogleGeofenceAdapterTest extends BaseTestCase {
 
-    @Rule
-    public PowerMockRule rule = new PowerMockRule();
-    @Mock
-    public CTGeofenceAPI ctGeofenceAPI;
-    @Mock
-    public CTGeofenceTask.OnCompleteListener onCompleteListener;
-    @Mock
-    public CTGeofenceAdapter ctLocationAdapter;
-    @Mock
-    public GeofencingClient geofencingClient;
     @Mock
     public CleverTapAPI cleverTapAPI;
+
+    @Mock
+    public CTGeofenceAPI ctGeofenceAPI;
+
+    @Mock
+    public CTGeofenceAdapter ctLocationAdapter;
+
+    @Mock
+    public GeofencingClient geofencingClient;
+
+    @Mock
+    public CTGeofenceTask.OnCompleteListener onCompleteListener;
+
     @Mock
     public OnSuccessListener onSuccessListener;
-    @Mock
-    public Task<Void> task;
+
     @Mock
     public PendingIntent pendingIntent;
+
+    @Rule
+    public PowerMockRule rule = new PowerMockRule();
+
+    @Mock
+    public Task<Void> task;
+
     private Logger logger;
 
     @Before
@@ -135,6 +135,24 @@ public class GoogleGeofenceAdapterTest extends BaseTestCase {
             e.printStackTrace();
         }
 
+    }
+
+    @Test
+    public void testGetGeofencingRequest() {
+        GoogleGeofenceAdapter geofenceAdapter = new GoogleGeofenceAdapter(application);
+        List<CTGeofence> ctGeofences = CTGeofence.from(GeofenceJSON.getGeofence());
+
+        try {
+            List<Geofence> googleGeofences = WhiteboxImpl.invokeMethod(geofenceAdapter,
+                    "getGoogleGeofences", ctGeofences);
+            GeofencingRequest geofencingRequest = WhiteboxImpl.invokeMethod(geofenceAdapter,
+                    "getGeofencingRequest", googleGeofences);
+
+            assertEquals(GeofencingRequest.INITIAL_TRIGGER_ENTER, geofencingRequest.getInitialTrigger());
+            MatcherAssert.assertThat(geofencingRequest.getGeofences(), CoreMatchers.is(googleGeofences));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     @Test
@@ -207,24 +225,6 @@ public class GoogleGeofenceAdapterTest extends BaseTestCase {
         } catch (ExecutionException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-    }
-
-    @Test
-    public void testGetGeofencingRequest() {
-        GoogleGeofenceAdapter geofenceAdapter = new GoogleGeofenceAdapter(application);
-        List<CTGeofence> ctGeofences = CTGeofence.from(GeofenceJSON.getGeofence());
-
-        try {
-            List<Geofence> googleGeofences = WhiteboxImpl.invokeMethod(geofenceAdapter,
-                    "getGoogleGeofences", ctGeofences);
-            GeofencingRequest geofencingRequest = WhiteboxImpl.invokeMethod(geofenceAdapter,
-                    "getGeofencingRequest", googleGeofences);
-
-            assertEquals(GeofencingRequest.INITIAL_TRIGGER_ENTER, geofencingRequest.getInitialTrigger());
-            MatcherAssert.assertThat(geofencingRequest.getGeofences(), CoreMatchers.is(googleGeofences));
-        } catch (Exception e) {
             e.printStackTrace();
         }
     }

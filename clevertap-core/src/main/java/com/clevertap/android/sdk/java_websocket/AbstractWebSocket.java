@@ -26,7 +26,6 @@
 package com.clevertap.android.sdk.java_websocket;
 
 import com.clevertap.android.sdk.java_websocket.framing.CloseFrame;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Timer;
@@ -39,39 +38,45 @@ import java.util.TimerTask;
 public abstract class AbstractWebSocket extends WebSocketAdapter {
 
     /**
-     * Attribute to sync on
-     */
-    private final Object syncConnectionLost = new Object();
-    /**
-     * Attribute which allows you to deactivate the Nagle's algorithm
+     * Attribute for the lost connection check interval
      *
-     * @since 1.3.3
+     * @since 1.3.4
      */
-    private boolean tcpNoDelay;
-    /**
-     * Attribute which allows you to enable/disable the SO_REUSEADDR socket option.
-     *
-     * @since 1.3.5
-     */
-    private boolean reuseAddr;
+    private int connectionLostTimeout = 60;
+
     /**
      * Attribute for a timer allowing to check for lost connections
      *
      * @since 1.3.4
      */
     private Timer connectionLostTimer;
+
     /**
      * Attribute for a timertask allowing to check for lost connections
      *
      * @since 1.3.4
      */
     private TimerTask connectionLostTimerTask;
+
     /**
-     * Attribute for the lost connection check interval
+     * Attribute which allows you to enable/disable the SO_REUSEADDR socket option.
      *
-     * @since 1.3.4
+     * @since 1.3.5
      */
-    private int connectionLostTimeout = 60;
+    private boolean reuseAddr;
+
+    /**
+     * Attribute to sync on
+     */
+    private final Object syncConnectionLost = new Object();
+
+    /**
+     * Attribute which allows you to deactivate the Nagle's algorithm
+     *
+     * @since 1.3.3
+     */
+    private boolean tcpNoDelay;
+
     /**
      * Attribute to keep track if the WebSocket Server/Client is running/connected
      *
@@ -126,6 +131,73 @@ public abstract class AbstractWebSocket extends WebSocketAdapter {
     }
 
     /**
+     * Tests Tests if SO_REUSEADDR is enabled.
+     *
+     * @return a boolean indicating whether or not SO_REUSEADDR is enabled.
+     * @since 1.3.5
+     */
+    public boolean isReuseAddr() {
+        return reuseAddr;
+    }
+
+    /**
+     * Setter for soReuseAddr
+     * <p>
+     * Enable/disable SO_REUSEADDR for the socket
+     *
+     * @param reuseAddr whether to enable or disable SO_REUSEADDR
+     * @since 1.3.5
+     */
+    public void setReuseAddr(boolean reuseAddr) {
+        this.reuseAddr = reuseAddr;
+    }
+
+    /**
+     * Tests if TCP_NODELAY is enabled.
+     *
+     * @return a boolean indicating whether or not TCP_NODELAY is enabled for new connections.
+     * @since 1.3.3
+     */
+    public boolean isTcpNoDelay() {
+        return tcpNoDelay;
+    }
+
+    /**
+     * Setter for tcpNoDelay
+     * <p>
+     * Enable/disable TCP_NODELAY (disable/enable Nagle's algorithm) for new connections
+     *
+     * @param tcpNoDelay true to enable TCP_NODELAY, false to disable.
+     * @since 1.3.3
+     */
+    public void setTcpNoDelay(boolean tcpNoDelay) {
+        this.tcpNoDelay = tcpNoDelay;
+    }
+
+    /**
+     * Getter to get all the currently available connections
+     *
+     * @return the currently available connections
+     * @since 1.3.4
+     */
+    protected abstract Collection<WebSocket> getConnections();
+
+    /**
+     * Start the connection lost timer
+     *
+     * @since 1.3.4
+     */
+    protected void startConnectionLostTimer() {
+        synchronized (syncConnectionLost) {
+            if (this.connectionLostTimeout <= 0) {
+                return;
+            }
+            this.websocketRunning = true;
+            restartConnectionLostTimer();
+        }
+    }
+
+    /**
      * Stop the connection lost timer
      *
      * @since 1.3.4
@@ -140,17 +212,41 @@ public abstract class AbstractWebSocket extends WebSocketAdapter {
     }
 
     /**
-     * Start the connection lost timer
+     * Cancel any running timer for the connection lost detection
      *
      * @since 1.3.4
      */
-    protected void startConnectionLostTimer() {
-        synchronized (syncConnectionLost) {
-            if (this.connectionLostTimeout <= 0) {
-                return;
+    private void cancelConnectionLostTimer() {
+        if (connectionLostTimer != null) {
+            connectionLostTimer.cancel();
+            connectionLostTimer = null;
+        }
+        if (connectionLostTimerTask != null) {
+            connectionLostTimerTask.cancel();
+            connectionLostTimerTask = null;
+        }
+    }
+
+    /**
+     * Send a ping to the endpoint or close the connection since the other endpoint did not respond with a ping
+     *
+     * @param webSocket the websocket instance
+     * @param current   the current time in milliseconds
+     */
+    private void executeConnectionLostDetection(WebSocket webSocket, long current) {
+        if (!(webSocket instanceof WebSocketImpl)) {
+            return;
+        }
+        WebSocketImpl webSocketImpl = (WebSocketImpl) webSocket;
+        if (webSocketImpl.getLastPong() < current) {
+            webSocketImpl.closeConnection(CloseFrame.ABNORMAL_CLOSE,
+                    "The connection was closed because the other endpoint did not respond with a pong in time. For more information check: https://github.com/TooTallNate/Java-WebSocket/wiki/Lost-connection-detection");
+        } else {
+            if (webSocketImpl.isOpen()) {
+                webSocketImpl.sendPing();
+            } else {
+                // no-op
             }
-            this.websocketRunning = true;
-            restartConnectionLostTimer();
         }
     }
 
@@ -184,98 +280,9 @@ public abstract class AbstractWebSocket extends WebSocketAdapter {
                 connections.clear();
             }
         };
-        connectionLostTimer.scheduleAtFixedRate(connectionLostTimerTask, 1000L * connectionLostTimeout, 1000L * connectionLostTimeout);
+        connectionLostTimer.scheduleAtFixedRate(connectionLostTimerTask, 1000L * connectionLostTimeout,
+                1000L * connectionLostTimeout);
 
-    }
-
-    /**
-     * Send a ping to the endpoint or close the connection since the other endpoint did not respond with a ping
-     *
-     * @param webSocket the websocket instance
-     * @param current   the current time in milliseconds
-     */
-    private void executeConnectionLostDetection(WebSocket webSocket, long current) {
-        if (!(webSocket instanceof WebSocketImpl)) {
-            return;
-        }
-        WebSocketImpl webSocketImpl = (WebSocketImpl) webSocket;
-        if (webSocketImpl.getLastPong() < current) {
-            webSocketImpl.closeConnection(CloseFrame.ABNORMAL_CLOSE, "The connection was closed because the other endpoint did not respond with a pong in time. For more information check: https://github.com/TooTallNate/Java-WebSocket/wiki/Lost-connection-detection");
-        } else {
-            if (webSocketImpl.isOpen()) {
-                webSocketImpl.sendPing();
-            } else {
-                // no-op
-            }
-        }
-    }
-
-    /**
-     * Getter to get all the currently available connections
-     *
-     * @return the currently available connections
-     * @since 1.3.4
-     */
-    protected abstract Collection<WebSocket> getConnections();
-
-    /**
-     * Cancel any running timer for the connection lost detection
-     *
-     * @since 1.3.4
-     */
-    private void cancelConnectionLostTimer() {
-        if (connectionLostTimer != null) {
-            connectionLostTimer.cancel();
-            connectionLostTimer = null;
-        }
-        if (connectionLostTimerTask != null) {
-            connectionLostTimerTask.cancel();
-            connectionLostTimerTask = null;
-        }
-    }
-
-    /**
-     * Tests if TCP_NODELAY is enabled.
-     *
-     * @return a boolean indicating whether or not TCP_NODELAY is enabled for new connections.
-     * @since 1.3.3
-     */
-    public boolean isTcpNoDelay() {
-        return tcpNoDelay;
-    }
-
-    /**
-     * Setter for tcpNoDelay
-     * <p>
-     * Enable/disable TCP_NODELAY (disable/enable Nagle's algorithm) for new connections
-     *
-     * @param tcpNoDelay true to enable TCP_NODELAY, false to disable.
-     * @since 1.3.3
-     */
-    public void setTcpNoDelay(boolean tcpNoDelay) {
-        this.tcpNoDelay = tcpNoDelay;
-    }
-
-    /**
-     * Tests Tests if SO_REUSEADDR is enabled.
-     *
-     * @return a boolean indicating whether or not SO_REUSEADDR is enabled.
-     * @since 1.3.5
-     */
-    public boolean isReuseAddr() {
-        return reuseAddr;
-    }
-
-    /**
-     * Setter for soReuseAddr
-     * <p>
-     * Enable/disable SO_REUSEADDR for the socket
-     *
-     * @param reuseAddr whether to enable or disable SO_REUSEADDR
-     * @since 1.3.5
-     */
-    public void setReuseAddr(boolean reuseAddr) {
-        this.reuseAddr = reuseAddr;
     }
 
 }

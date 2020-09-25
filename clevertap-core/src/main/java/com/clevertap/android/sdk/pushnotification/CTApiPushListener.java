@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.pushnotification;
 
 import androidx.annotation.RestrictTo;
-
 import com.clevertap.android.sdk.BaseCTApiListener;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)

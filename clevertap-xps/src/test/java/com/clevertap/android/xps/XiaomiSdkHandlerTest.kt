@@ -4,16 +4,16 @@ import com.clevertap.android.sdk.ManifestInfo
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
 import com.xiaomi.mipush.sdk.MiPushClient
-import org.junit.Assert
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.Mockito
+import org.junit.*
+import org.junit.runner.*
+import org.mockito.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28], application = TestApplication::class)
 class XiaomiSdkHandlerTest : BaseTestCase() {
+
     private var handler: XiaomiSdkHandler? = null
     private var manifestInfo: ManifestInfo? = null
 

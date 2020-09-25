@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
@@ -26,7 +25,8 @@ public class CTPushNotificationReceiver extends BroadcastReceiver {
             }
 
             if (extras.containsKey(Constants.DEEP_LINK_KEY)) {
-                launchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(intent.getStringExtra(Constants.DEEP_LINK_KEY)));
+                launchIntent = new Intent(Intent.ACTION_VIEW,
+                        Uri.parse(intent.getStringExtra(Constants.DEEP_LINK_KEY)));
                 Utils.setPackageNameFromResolveInfoList(context, launchIntent);
             } else {
                 launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
@@ -37,7 +37,8 @@ public class CTPushNotificationReceiver extends BroadcastReceiver {
 
             CleverTapAPI.handleNotificationClicked(context, extras);
 
-            launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            launchIntent.setFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
             launchIntent.putExtras(extras);
 

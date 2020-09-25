@@ -9,14 +9,11 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager.widget.ViewPager;
-
 import com.google.android.material.tabs.TabLayout;
-
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,41 +24,36 @@ import java.util.List;
  */
 public class CTInboxActivity extends FragmentActivity implements CTInboxListViewFragment.InboxListener {
 
+    interface InboxActivityListener {
+
+        void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data,
+                HashMap<String, String> keyValue);
+
+        void messageDidShow(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data);
+    }
+
     static int orientation;
+
     CTInboxTabAdapter inboxTabAdapter;
-    TabLayout tabLayout;
-    ViewPager viewPager;
+
     CTInboxStyleConfig styleConfig;
+
+    TabLayout tabLayout;
+
+    ViewPager viewPager;
+
     private CleverTapInstanceConfig config;
+
     private WeakReference<InboxActivityListener> listenerWeakReference;
-
-    private String getFragmentTag() {
-        return config.getAccountId() + ":CT_INBOX_LIST_VIEW_FRAGMENT";
-    }
-
-    InboxActivityListener getListener() {
-        InboxActivityListener listener = null;
-        try {
-            listener = listenerWeakReference.get();
-        } catch (Throwable t) {
-            // no-op
-        }
-        if (listener == null) {
-            config.getLogger().verbose(config.getAccountId(), "InboxActivityListener is null for notification inbox ");
-        }
-        return listener;
-    }
-
-    void setListener(InboxActivityListener listener) {
-        listenerWeakReference = new WeakReference<>(listener);
-    }
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         CleverTapAPI cleverTapAPI;
         try {
             Bundle extras = getIntent().getExtras();
-            if (extras == null) throw new IllegalArgumentException();
+            if (extras == null) {
+                throw new IllegalArgumentException();
+            }
             styleConfig = extras.getParcelable("styleConfig");
             Bundle configBundle = extras.getBundle("configBundle");
             if (configBundle != null) {
@@ -136,7 +128,8 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
             tabLayout.setTabMode(TabLayout.MODE_FIXED);
             tabLayout.setSelectedTabIndicatorColor(Color.parseColor(styleConfig.getSelectedTabIndicatorColor()));
-            tabLayout.setTabTextColors(Color.parseColor(styleConfig.getUnselectedTabColor()), Color.parseColor(styleConfig.getSelectedTabColor()));
+            tabLayout.setTabTextColors(Color.parseColor(styleConfig.getUnselectedTabColor()),
+                    Color.parseColor(styleConfig.getSelectedTabColor()));
             tabLayout.setBackgroundColor(Color.parseColor(styleConfig.getTabBackgroundColor()));
 
             Bundle _allBundle = (Bundle) bundle.clone();
@@ -162,8 +155,14 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
             tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
                 @Override
+                public void onTabReselected(TabLayout.Tab tab) {
+                    //no-op
+                }
+
+                @Override
                 public void onTabSelected(TabLayout.Tab tab) {
-                    CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter.getItem(tab.getPosition());
+                    CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter
+                            .getItem(tab.getPosition());
                     if (fragment != null && fragment.getMediaRecyclerView() != null) {
                         fragment.getMediaRecyclerView().onRestartPlayer();
                     }
@@ -171,42 +170,14 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
                 @Override
                 public void onTabUnselected(TabLayout.Tab tab) {
-                    CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter.getItem(tab.getPosition());
+                    CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter
+                            .getItem(tab.getPosition());
                     if (fragment != null && fragment.getMediaRecyclerView() != null) {
                         fragment.getMediaRecyclerView().onPausePlayer();
                     }
                 }
-
-                @Override
-                public void onTabReselected(TabLayout.Tab tab) {
-                    //no-op
-                }
             });
             tabLayout.setupWithViewPager(viewPager);
-        }
-    }
-
-    @Override
-    public void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data) {
-        didShow(data, inboxMessage);
-    }
-
-    @Override
-    public void messageDidClick(Context baseContext, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue) {
-        didClick(data, inboxMessage, keyValue);
-    }
-
-    void didClick(Bundle data, CTInboxMessage inboxMessage, HashMap<String, String> keyValue) {
-        InboxActivityListener listener = getListener();
-        if (listener != null) {
-            listener.messageDidClick(this, inboxMessage, data, keyValue);
-        }
-    }
-
-    void didShow(Bundle data, CTInboxMessage inboxMessage) {
-        InboxActivityListener listener = getListener();
-        if (listener != null) {
-            listener.messageDidShow(this, inboxMessage, data);
         }
     }
 
@@ -224,9 +195,50 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         super.onDestroy();
     }
 
-    interface InboxActivityListener {
-        void messageDidShow(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data);
+    @Override
+    public void messageDidClick(Context baseContext, CTInboxMessage inboxMessage, Bundle data,
+            HashMap<String, String> keyValue) {
+        didClick(data, inboxMessage, keyValue);
+    }
 
-        void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue);
+    @Override
+    public void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data) {
+        didShow(data, inboxMessage);
+    }
+
+    void didClick(Bundle data, CTInboxMessage inboxMessage, HashMap<String, String> keyValue) {
+        InboxActivityListener listener = getListener();
+        if (listener != null) {
+            listener.messageDidClick(this, inboxMessage, data, keyValue);
+        }
+    }
+
+    void didShow(Bundle data, CTInboxMessage inboxMessage) {
+        InboxActivityListener listener = getListener();
+        if (listener != null) {
+            listener.messageDidShow(this, inboxMessage, data);
+        }
+    }
+
+    InboxActivityListener getListener() {
+        InboxActivityListener listener = null;
+        try {
+            listener = listenerWeakReference.get();
+        } catch (Throwable t) {
+            // no-op
+        }
+        if (listener == null) {
+            config.getLogger()
+                    .verbose(config.getAccountId(), "InboxActivityListener is null for notification inbox ");
+        }
+        return listener;
+    }
+
+    void setListener(InboxActivityListener listener) {
+        listenerWeakReference = new WeakReference<>(listener);
+    }
+
+    private String getFragmentTag() {
+        return config.getAccountId() + ":CT_INBOX_LIST_VIEW_FRAGMENT";
     }
 }

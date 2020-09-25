@@ -7,17 +7,16 @@ import com.xiaomi.mipush.sdk.ErrorCode
 import com.xiaomi.mipush.sdk.MiPushClient
 import com.xiaomi.mipush.sdk.MiPushCommandMessage
 import com.xiaomi.mipush.sdk.MiPushMessage
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.Mockito
+import org.junit.*
+import org.junit.runner.*
+import org.mockito.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28], application = TestApplication::class)
 class XiaomiMessageHandlerTest : BaseTestCase() {
+
     private lateinit var handler: XiaomiMessageHandler
 
     @Before
@@ -101,5 +100,4 @@ class XiaomiMessageHandlerTest : BaseTestCase() {
         val result = handler.onReceiveRegisterResult(application, message)
         Assert.assertEquals(result, XpsConstants.FAILED_WITH_EXCEPTION)
     }
-
 }

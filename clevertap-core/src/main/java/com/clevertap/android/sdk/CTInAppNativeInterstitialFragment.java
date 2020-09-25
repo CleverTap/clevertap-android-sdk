@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk;
 
+import static com.google.android.exoplayer2.ui.PlayerView.SHOW_BUFFERING_WHEN_PLAYING;
+
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.content.res.Configuration;
@@ -23,11 +25,9 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
-
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
@@ -42,32 +42,39 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.upstream.TransferListener;
 import com.google.android.exoplayer2.util.Util;
-
 import java.util.ArrayList;
-
-import static com.google.android.exoplayer2.ui.PlayerView.SHOW_BUFFERING_WHEN_PLAYING;
 
 public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFragment {
 
     private static long mediaPosition = 0;
-    private GifImageView gifImageView;
-    private PlayerView playerView;
-    private SimpleExoPlayer player;
-    private Dialog fullScreenDialog;
-    private ImageView fullScreenIcon;
+
     private boolean exoPlayerFullscreen = false;
-    private RelativeLayout relativeLayout;
-    private ViewGroup.LayoutParams videoFramelayoutParams, playerViewLayoutParams, imageViewLayoutParams;
-    private FrameLayout videoFrameLayout;
+
+    private Dialog fullScreenDialog;
+
+    private ImageView fullScreenIcon;
+
+    private GifImageView gifImageView;
+
     @SuppressWarnings({"unused"})
     private int layoutHeight = 0;
+
     private int layoutWidth = 0;
+
+    private SimpleExoPlayer player;
+
+    private PlayerView playerView;
+
+    private RelativeLayout relativeLayout;
+
+    private FrameLayout videoFrameLayout;
+
+    private ViewGroup.LayoutParams videoFramelayoutParams, playerViewLayoutParams, imageViewLayoutParams;
 
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-
 
         ArrayList<Button> inAppButtons = new ArrayList<>();
 
@@ -86,92 +93,101 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
 
         switch (currentOrientation) {
             case Configuration.ORIENTATION_PORTRAIT:
-                relativeLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                    @Override
-                    public void onGlobalLayout() {
-                        final RelativeLayout relativeLayout1 = fl.findViewById(R.id.interstitial_relative_layout);
-                        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1.getLayoutParams();
-                        if (inAppNotification.isTablet() && isTablet()) {
-                            int aspectHeight = (int) (relativeLayout1.getMeasuredWidth() * 1.78f);
-                            int requiredHeight = fl.getMeasuredHeight() - getScaledPixels(80);
+                relativeLayout.getViewTreeObserver()
+                        .addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                            @Override
+                            public void onGlobalLayout() {
+                                final RelativeLayout relativeLayout1 = fl
+                                        .findViewById(R.id.interstitial_relative_layout);
+                                FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1
+                                        .getLayoutParams();
+                                if (inAppNotification.isTablet() && isTablet()) {
+                                    int aspectHeight = (int) (relativeLayout1.getMeasuredWidth() * 1.78f);
+                                    int requiredHeight = fl.getMeasuredHeight() - getScaledPixels(80);
 
-                            if (aspectHeight > requiredHeight) {
-                                layoutParams.height = requiredHeight;
-                                layoutParams.width = (int) (requiredHeight / 1.78f);
-                            } else {
-                                layoutParams.height = aspectHeight;
-                            }
+                                    if (aspectHeight > requiredHeight) {
+                                        layoutParams.height = requiredHeight;
+                                        layoutParams.width = (int) (requiredHeight / 1.78f);
+                                    } else {
+                                        layoutParams.height = aspectHeight;
+                                    }
 
-                            relativeLayout1.setLayoutParams(layoutParams);
-                            new Handler().post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    int margin = closeImageView.getMeasuredWidth() / 2;
-                                    closeImageView.setX(relativeLayout.getRight() - margin);
-                                    closeImageView.setY(relativeLayout.getTop() - margin);
-                                }
-                            });
-                        } else {
-                            if (isTablet()) {
-                                int aspectHeight = (int) ((relativeLayout1.getMeasuredWidth() - getScaledPixels(200)) * 1.78f);
-                                int requiredHeight = fl.getMeasuredHeight() - getScaledPixels(280);
-
-                                if (aspectHeight > requiredHeight) {
-                                    layoutParams.height = requiredHeight;
-                                    layoutParams.width = (int) (requiredHeight / 1.78f);
+                                    relativeLayout1.setLayoutParams(layoutParams);
+                                    new Handler().post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            int margin = closeImageView.getMeasuredWidth() / 2;
+                                            closeImageView.setX(relativeLayout.getRight() - margin);
+                                            closeImageView.setY(relativeLayout.getTop() - margin);
+                                        }
+                                    });
                                 } else {
-                                    layoutParams.height = aspectHeight;
-                                    layoutParams.width = relativeLayout1.getMeasuredWidth() - getScaledPixels(200);
+                                    if (isTablet()) {
+                                        int aspectHeight = (int) (
+                                                (relativeLayout1.getMeasuredWidth() - getScaledPixels(200)) * 1.78f);
+                                        int requiredHeight = fl.getMeasuredHeight() - getScaledPixels(280);
+
+                                        if (aspectHeight > requiredHeight) {
+                                            layoutParams.height = requiredHeight;
+                                            layoutParams.width = (int) (requiredHeight / 1.78f);
+                                        } else {
+                                            layoutParams.height = aspectHeight;
+                                            layoutParams.width = relativeLayout1.getMeasuredWidth() - getScaledPixels(
+                                                    200);
+                                        }
+
+                                        layoutParams.setMargins(getScaledPixels(140), getScaledPixels(140),
+                                                getScaledPixels(140), getScaledPixels(140));
+                                        layoutHeight = layoutParams.height;
+
+                                        relativeLayout1.setLayoutParams(layoutParams);
+
+                                        new Handler().post(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                int margin = closeImageView.getMeasuredWidth() / 2;
+                                                closeImageView.setX(relativeLayout.getRight() - margin);
+                                                closeImageView.setY(relativeLayout.getTop() - margin);
+                                            }
+                                        });
+                                    } else {
+                                        layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth()
+                                                * 1.78f);
+                                        Logger.d("Layout height = " + layoutHeight);
+                                        Logger.d("Layout width = " + relativeLayout1.getMeasuredWidth());
+                                        relativeLayout1.setLayoutParams(layoutParams);
+                                        new Handler().post(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                int margin = closeImageView.getMeasuredWidth() / 2;
+                                                closeImageView.setX(relativeLayout1.getRight() - margin);
+                                                closeImageView.setY(relativeLayout1.getTop() - margin);
+                                            }
+                                        });
+                                    }
                                 }
-
-                                layoutParams.setMargins(getScaledPixels(140), getScaledPixels(140), getScaledPixels(140), getScaledPixels(140));
-                                layoutHeight = layoutParams.height;
-
-                                relativeLayout1.setLayoutParams(layoutParams);
-
-                                new Handler().post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        int margin = closeImageView.getMeasuredWidth() / 2;
-                                        closeImageView.setX(relativeLayout.getRight() - margin);
-                                        closeImageView.setY(relativeLayout.getTop() - margin);
-                                    }
-                                });
-                            } else {
-                                layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 1.78f);
-                                Logger.d("Layout height = " + layoutHeight);
-                                Logger.d("Layout width = " + relativeLayout1.getMeasuredWidth());
-                                relativeLayout1.setLayoutParams(layoutParams);
-                                new Handler().post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        int margin = closeImageView.getMeasuredWidth() / 2;
-                                        closeImageView.setX(relativeLayout1.getRight() - margin);
-                                        closeImageView.setY(relativeLayout1.getTop() - margin);
-                                    }
-                                });
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                                    relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                                } else {
+                                    relativeLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                                }
                             }
-                        }
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                            relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                        } else {
-                            relativeLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                        }
-                    }
-                });
+                        });
                 if (!inAppNotification.getMediaList().isEmpty()) {
                     if (inAppNotification.getMediaList().get(0).isImage()) {
                         Bitmap image = inAppNotification.getImage(inAppNotification.getMediaList().get(0));
                         if (image != null) {
                             ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
                             imageView.setVisibility(View.VISIBLE);
-                            imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getMediaList().get(0)));
+                            imageView.setImageBitmap(
+                                    inAppNotification.getImage(inAppNotification.getMediaList().get(0)));
                         }
                     } else if (inAppNotification.getMediaList().get(0).isGIF()) {
                         if (inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)) != null) {
                             gifImageView = relativeLayout.findViewById(R.id.gifImage);
                             gifImageView.setVisibility(View.VISIBLE);
-                            gifImageView.setBytes(inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)));
+                            gifImageView.setBytes(
+                                    inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)));
                             gifImageView.startAnimation();
                         }
                     } else if (inAppNotification.getMediaList().get(0).isVideo()) {
@@ -186,93 +202,102 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                 }
                 break;
             case Configuration.ORIENTATION_LANDSCAPE:
-                relativeLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                    @Override
-                    public void onGlobalLayout() {
-                        final RelativeLayout relativeLayout1 = fl.findViewById(R.id.interstitial_relative_layout);
-                        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1.getLayoutParams();
-                        if (!inAppNotification.isTablet() || !isTablet()) {
-                            if (isTablet()) {
-                                int aspectWidth = (int) ((relativeLayout1.getMeasuredHeight() - getScaledPixels(120)) * 1.78f);
-                                int requiredWidth = fl.getMeasuredWidth() - getScaledPixels(280);
+                relativeLayout.getViewTreeObserver()
+                        .addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                            @Override
+                            public void onGlobalLayout() {
+                                final RelativeLayout relativeLayout1 = fl
+                                        .findViewById(R.id.interstitial_relative_layout);
+                                FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1
+                                        .getLayoutParams();
+                                if (!inAppNotification.isTablet() || !isTablet()) {
+                                    if (isTablet()) {
+                                        int aspectWidth = (int) (
+                                                (relativeLayout1.getMeasuredHeight() - getScaledPixels(120)) * 1.78f);
+                                        int requiredWidth = fl.getMeasuredWidth() - getScaledPixels(280);
 
-                                if (aspectWidth > requiredWidth) {
-                                    layoutParams.width = requiredWidth;
-                                    layoutParams.height = (int) (requiredWidth / 1.78f);
+                                        if (aspectWidth > requiredWidth) {
+                                            layoutParams.width = requiredWidth;
+                                            layoutParams.height = (int) (requiredWidth / 1.78f);
+                                        } else {
+                                            layoutParams.width = aspectWidth;
+                                            layoutParams.height = relativeLayout1.getMeasuredHeight()
+                                                    - getScaledPixels(120);
+                                        }
+
+                                        layoutParams.setMargins(getScaledPixels(140), getScaledPixels(100),
+                                                getScaledPixels(140), getScaledPixels(100));
+                                        layoutParams.gravity = Gravity.CENTER;
+                                        relativeLayout1.setLayoutParams(layoutParams);
+
+                                        new Handler().post(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                int margin = closeImageView.getMeasuredWidth() / 2;
+                                                closeImageView.setX(relativeLayout.getRight() - margin);
+                                                closeImageView.setY(relativeLayout.getTop() - margin);
+                                            }
+                                        });
+                                    } else {
+                                        layoutWidth = layoutParams.width = (int) (relativeLayout1.getMeasuredHeight()
+                                                * 1.78f);
+                                        layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
+                                        relativeLayout1.setLayoutParams(layoutParams);
+                                        new Handler().post(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                int margin = closeImageView.getMeasuredWidth() / 2;
+                                                closeImageView.setX(relativeLayout1.getRight() - margin);
+                                                closeImageView.setY(relativeLayout1.getTop() - margin);
+                                            }
+                                        });
+                                    }
                                 } else {
-                                    layoutParams.width = aspectWidth;
-                                    layoutParams.height = relativeLayout1.getMeasuredHeight() - getScaledPixels(120);
+
+                                    int aspectWidth = (int) (relativeLayout1.getMeasuredHeight() * 1.78f);
+                                    int requiredWidth = fl.getMeasuredWidth() - getScaledPixels(80);
+
+                                    if (aspectWidth > requiredWidth) {
+                                        layoutParams.width = requiredWidth;
+                                        layoutParams.height = (int) (requiredWidth / 1.78f);
+                                    } else {
+                                        layoutParams.width = aspectWidth;
+                                    }
+
+                                    layoutParams.gravity = Gravity.CENTER;
+                                    relativeLayout1.setLayoutParams(layoutParams);
+                                    new Handler().post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            int margin = closeImageView.getMeasuredWidth() / 2;
+                                            closeImageView.setX(relativeLayout.getRight() - margin);
+                                            closeImageView.setY(relativeLayout.getTop() - margin);
+                                        }
+                                    });
                                 }
 
-                                layoutParams.setMargins(getScaledPixels(140), getScaledPixels(100), getScaledPixels(140), getScaledPixels(100));
-                                layoutParams.gravity = Gravity.CENTER;
-                                relativeLayout1.setLayoutParams(layoutParams);
-
-                                new Handler().post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        int margin = closeImageView.getMeasuredWidth() / 2;
-                                        closeImageView.setX(relativeLayout.getRight() - margin);
-                                        closeImageView.setY(relativeLayout.getTop() - margin);
-                                    }
-                                });
-                            } else {
-                                layoutWidth = layoutParams.width = (int) (relativeLayout1.getMeasuredHeight() * 1.78f);
-                                layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
-                                relativeLayout1.setLayoutParams(layoutParams);
-                                new Handler().post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        int margin = closeImageView.getMeasuredWidth() / 2;
-                                        closeImageView.setX(relativeLayout1.getRight() - margin);
-                                        closeImageView.setY(relativeLayout1.getTop() - margin);
-                                    }
-                                });
-                            }
-                        } else {
-
-                            int aspectWidth = (int) (relativeLayout1.getMeasuredHeight() * 1.78f);
-                            int requiredWidth = fl.getMeasuredWidth() - getScaledPixels(80);
-
-                            if (aspectWidth > requiredWidth) {
-                                layoutParams.width = requiredWidth;
-                                layoutParams.height = (int) (requiredWidth / 1.78f);
-                            } else {
-                                layoutParams.width = aspectWidth;
-                            }
-
-                            layoutParams.gravity = Gravity.CENTER;
-                            relativeLayout1.setLayoutParams(layoutParams);
-                            new Handler().post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    int margin = closeImageView.getMeasuredWidth() / 2;
-                                    closeImageView.setX(relativeLayout.getRight() - margin);
-                                    closeImageView.setY(relativeLayout.getTop() - margin);
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                                    relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                                } else {
+                                    relativeLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
                                 }
-                            });
-                        }
-
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                            relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                        } else {
-                            relativeLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                        }
-                    }
-                });
+                            }
+                        });
                 if (!inAppNotification.getMediaList().isEmpty()) {
                     if (inAppNotification.getMediaList().get(0).isImage()) {
                         Bitmap image = inAppNotification.getImage(inAppNotification.getMediaList().get(0));
                         if (image != null) {
                             ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
                             imageView.setVisibility(View.VISIBLE);
-                            imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getMediaList().get(0)));
+                            imageView.setImageBitmap(
+                                    inAppNotification.getImage(inAppNotification.getMediaList().get(0)));
                         }
                     } else if (inAppNotification.getMediaList().get(0).isGIF()) {
                         if (inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)) != null) {
                             gifImageView = relativeLayout.findViewById(R.id.gifImage);
                             gifImageView.setVisibility(View.VISIBLE);
-                            gifImageView.setBytes(inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)));
+                            gifImageView.setBytes(
+                                    inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)));
                             gifImageView.startAnimation();
                         }
                     } else if (inAppNotification.getMediaList().get(0).isVideo()) {
@@ -312,7 +337,9 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
             setupInAppButton(secondaryButton, buttons.get(0), 0);
         } else if (!buttons.isEmpty()) {
             for (int i = 0; i < buttons.size(); i++) {
-                if (i >= 2) continue; // only show 2 buttons
+                if (i >= 2) {
+                    continue; // only show 2 buttons
+                }
                 CTInAppNotificationButton inAppNotificationButton = buttons.get(i);
                 Button button = inAppButtons.get(i);
                 setupInAppButton(button, inAppNotificationButton, i);
@@ -325,8 +352,9 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
             @Override
             public void onClick(View v) {
                 didDismiss(null);
-                if (gifImageView != null)
+                if (gifImageView != null) {
                     gifImageView.clear();
+                }
                 getActivity().finish();
             }
         });
@@ -340,87 +368,6 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         return inAppView;
     }
 
-    private void playMedia() {
-        playerView.requestFocus();
-        playerView.setVisibility(View.VISIBLE);
-        playerView.setPlayer(player);
-        player.setPlayWhenReady(true);
-    }
-
-    private void prepareMedia() {
-        videoFrameLayout = relativeLayout.findViewById(R.id.video_frame);
-        videoFrameLayout.setVisibility(View.VISIBLE);
-
-        playerView = new PlayerView(getActivity().getBaseContext());
-        fullScreenIcon = new ImageView(getActivity().getBaseContext());
-        fullScreenIcon.setImageDrawable(getActivity().getBaseContext().getResources().getDrawable(R.drawable.ct_ic_fullscreen_expand));
-        fullScreenIcon.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!exoPlayerFullscreen) {
-                    openFullscreenDialog();
-                } else {
-                    closeFullscreenDialog();
-                }
-            }
-        });
-        if (inAppNotification.isTablet() && isTablet()) {
-
-            int playerWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 408, getResources().getDisplayMetrics());
-            int playerHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 229, getResources().getDisplayMetrics());
-
-            playerView.setLayoutParams(new FrameLayout.LayoutParams(playerWidth, playerHeight));
-            int iconWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
-            int iconHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
-            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(iconWidth, iconHeight);
-            layoutParams.gravity = Gravity.END;
-            int iconTop = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics());
-            int iconRight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics());
-            layoutParams.setMargins(0, iconTop, iconRight, 0);
-            fullScreenIcon.setLayoutParams(layoutParams);
-        } else {
-            int width = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 240, getResources().getDisplayMetrics());
-            int height = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 134, getResources().getDisplayMetrics());
-
-            playerView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
-            int iconWidth = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics());
-            int iconHeight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics());
-            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(iconWidth, iconHeight);
-            layoutParams.gravity = Gravity.END;
-            int iconTop = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics());
-            int iconRight = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics());
-            layoutParams.setMargins(0, iconTop, iconRight, 0);
-            fullScreenIcon.setLayoutParams(layoutParams);
-        }
-        playerView.setShowBuffering(SHOW_BUFFERING_WHEN_PLAYING);
-        playerView.setUseArtwork(true);
-        playerView.setControllerAutoShow(false);
-        videoFrameLayout.addView(playerView);
-        videoFrameLayout.addView(fullScreenIcon);
-        Drawable artwork = getActivity().getBaseContext().getResources().getDrawable(R.drawable.ct_audio);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            playerView.setDefaultArtwork(artwork);
-        } else {
-            playerView.setDefaultArtwork(artwork);
-        }
-
-        // 1. Create a default TrackSelector
-        BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter.Builder(getActivity().getBaseContext()).build();
-        TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory();
-        TrackSelector trackSelector = new DefaultTrackSelector(getActivity().getBaseContext(), videoTrackSelectionFactory);
-        // 2. Create the player
-        player = new SimpleExoPlayer.Builder(getActivity().getBaseContext()).setTrackSelector(trackSelector).build();
-        // 3. Produces DataSource instances through which media data is loaded.
-        DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(getActivity().getBaseContext(),
-                Util.getUserAgent(getActivity().getBaseContext(), getActivity().getApplication().getPackageName()), (TransferListener) bandwidthMeter);
-        HlsMediaSource hlsMediaSource;
-        hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(inAppNotification.getMediaList().get(0).getMediaUrl()));
-        // 4. Prepare the player with the source.
-        player.prepare(hlsMediaSource);
-        player.setRepeatMode(Player.REPEAT_MODE_ONE);
-        player.seekTo(mediaPosition);
-    }
-
     @Override
     public void onStart() {
         super.onStart();
@@ -431,16 +378,15 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     }
 
     @Override
-    public void onStop() {
-        super.onStop();
-        if (gifImageView != null) {
-            gifImageView.clear();
+    public void onResume() {
+        super.onResume();
+        if (!inAppNotification.getMediaList().isEmpty()) {
+            if (player == null && (inAppNotification.getMediaList().get(0).isVideo() || inAppNotification
+                    .getMediaList().get(0).isAudio())) {
+                prepareMedia();
+                playMedia();
+            }
         }
-        if (player != null) {
-            player.stop();
-            player.release();
-        }
-
     }
 
     @Override
@@ -461,14 +407,16 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
-        if (!inAppNotification.getMediaList().isEmpty()) {
-            if (player == null && (inAppNotification.getMediaList().get(0).isVideo() || inAppNotification.getMediaList().get(0).isAudio())) {
-                prepareMedia();
-                playMedia();
-            }
+    public void onStop() {
+        super.onStop();
+        if (gifImageView != null) {
+            gifImageView.clear();
         }
+        if (player != null) {
+            player.stop();
+            player.release();
+        }
+
     }
 
     @Override
@@ -489,11 +437,30 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         }
     }
 
+    private void closeFullscreenDialog() {
+        ((ViewGroup) playerView.getParent()).removeView(playerView);
+        playerView.setLayoutParams(playerViewLayoutParams);
+        ((FrameLayout) videoFrameLayout.findViewById(R.id.video_frame)).addView(playerView);
+        fullScreenIcon.setLayoutParams(imageViewLayoutParams);
+        ((FrameLayout) videoFrameLayout.findViewById(R.id.video_frame)).addView(fullScreenIcon);
+        videoFrameLayout.setLayoutParams(videoFramelayoutParams);
+        ((RelativeLayout) relativeLayout.findViewById(R.id.interstitial_relative_layout)).addView(videoFrameLayout);
+        exoPlayerFullscreen = false;
+        fullScreenDialog.dismiss();
+        fullScreenIcon.setImageDrawable(
+                ContextCompat.getDrawable(getActivity().getApplicationContext(), R.drawable.ct_ic_fullscreen_expand));
+    }
+
+    private void disableFullScreenButton() {
+        fullScreenIcon.setVisibility(View.GONE);
+    }
+
     private void initFullScreenDialog() {
         fullScreenDialog = new Dialog(getActivity(), android.R.style.Theme_Black_NoTitleBar_Fullscreen) {
             public void onBackPressed() {
-                if (exoPlayerFullscreen)
+                if (exoPlayerFullscreen) {
                     closeFullscreenDialog();
+                }
                 super.onBackPressed();
             }
         };
@@ -506,25 +473,106 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         ((ViewGroup) playerView.getParent()).removeView(playerView);
         ((ViewGroup) fullScreenIcon.getParent()).removeView(fullScreenIcon);
         ((ViewGroup) videoFrameLayout.getParent()).removeView(videoFrameLayout);
-        fullScreenDialog.addContentView(playerView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        fullScreenDialog.addContentView(playerView,
+                new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         exoPlayerFullscreen = true;
         fullScreenDialog.show();
     }
 
-    private void closeFullscreenDialog() {
-        ((ViewGroup) playerView.getParent()).removeView(playerView);
-        playerView.setLayoutParams(playerViewLayoutParams);
-        ((FrameLayout) videoFrameLayout.findViewById(R.id.video_frame)).addView(playerView);
-        fullScreenIcon.setLayoutParams(imageViewLayoutParams);
-        ((FrameLayout) videoFrameLayout.findViewById(R.id.video_frame)).addView(fullScreenIcon);
-        videoFrameLayout.setLayoutParams(videoFramelayoutParams);
-        ((RelativeLayout) relativeLayout.findViewById(R.id.interstitial_relative_layout)).addView(videoFrameLayout);
-        exoPlayerFullscreen = false;
-        fullScreenDialog.dismiss();
-        fullScreenIcon.setImageDrawable(ContextCompat.getDrawable(getActivity().getApplicationContext(), R.drawable.ct_ic_fullscreen_expand));
+    private void playMedia() {
+        playerView.requestFocus();
+        playerView.setVisibility(View.VISIBLE);
+        playerView.setPlayer(player);
+        player.setPlayWhenReady(true);
     }
 
-    private void disableFullScreenButton() {
-        fullScreenIcon.setVisibility(View.GONE);
+    private void prepareMedia() {
+        videoFrameLayout = relativeLayout.findViewById(R.id.video_frame);
+        videoFrameLayout.setVisibility(View.VISIBLE);
+
+        playerView = new PlayerView(getActivity().getBaseContext());
+        fullScreenIcon = new ImageView(getActivity().getBaseContext());
+        fullScreenIcon.setImageDrawable(
+                getActivity().getBaseContext().getResources().getDrawable(R.drawable.ct_ic_fullscreen_expand));
+        fullScreenIcon.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (!exoPlayerFullscreen) {
+                    openFullscreenDialog();
+                } else {
+                    closeFullscreenDialog();
+                }
+            }
+        });
+        if (inAppNotification.isTablet() && isTablet()) {
+
+            int playerWidth = (int) TypedValue
+                    .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 408, getResources().getDisplayMetrics());
+            int playerHeight = (int) TypedValue
+                    .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 229, getResources().getDisplayMetrics());
+
+            playerView.setLayoutParams(new FrameLayout.LayoutParams(playerWidth, playerHeight));
+            int iconWidth = (int) TypedValue
+                    .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
+            int iconHeight = (int) TypedValue
+                    .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 30, getResources().getDisplayMetrics());
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(iconWidth, iconHeight);
+            layoutParams.gravity = Gravity.END;
+            int iconTop = (int) TypedValue
+                    .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics());
+            int iconRight = (int) TypedValue
+                    .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics());
+            layoutParams.setMargins(0, iconTop, iconRight, 0);
+            fullScreenIcon.setLayoutParams(layoutParams);
+        } else {
+            int width = (int) TypedValue
+                    .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 240, getResources().getDisplayMetrics());
+            int height = (int) TypedValue
+                    .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 134, getResources().getDisplayMetrics());
+
+            playerView.setLayoutParams(new FrameLayout.LayoutParams(width, height));
+            int iconWidth = (int) TypedValue
+                    .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics());
+            int iconHeight = (int) TypedValue
+                    .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 20, getResources().getDisplayMetrics());
+            FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(iconWidth, iconHeight);
+            layoutParams.gravity = Gravity.END;
+            int iconTop = (int) TypedValue
+                    .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 4, getResources().getDisplayMetrics());
+            int iconRight = (int) TypedValue
+                    .applyDimension(TypedValue.COMPLEX_UNIT_DIP, 2, getResources().getDisplayMetrics());
+            layoutParams.setMargins(0, iconTop, iconRight, 0);
+            fullScreenIcon.setLayoutParams(layoutParams);
+        }
+        playerView.setShowBuffering(SHOW_BUFFERING_WHEN_PLAYING);
+        playerView.setUseArtwork(true);
+        playerView.setControllerAutoShow(false);
+        videoFrameLayout.addView(playerView);
+        videoFrameLayout.addView(fullScreenIcon);
+        Drawable artwork = getActivity().getBaseContext().getResources().getDrawable(R.drawable.ct_audio);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            playerView.setDefaultArtwork(artwork);
+        } else {
+            playerView.setDefaultArtwork(artwork);
+        }
+
+        // 1. Create a default TrackSelector
+        BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter.Builder(getActivity().getBaseContext()).build();
+        TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory();
+        TrackSelector trackSelector = new DefaultTrackSelector(getActivity().getBaseContext(),
+                videoTrackSelectionFactory);
+        // 2. Create the player
+        player = new SimpleExoPlayer.Builder(getActivity().getBaseContext()).setTrackSelector(trackSelector).build();
+        // 3. Produces DataSource instances through which media data is loaded.
+        DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(getActivity().getBaseContext(),
+                Util.getUserAgent(getActivity().getBaseContext(), getActivity().getApplication().getPackageName()),
+                (TransferListener) bandwidthMeter);
+        HlsMediaSource hlsMediaSource;
+        hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory)
+                .createMediaSource(Uri.parse(inAppNotification.getMediaList().get(0).getMediaUrl()));
+        // 4. Prepare the player with the source.
+        player.prepare(hlsMediaSource);
+        player.setRepeatMode(Player.REPEAT_MODE_ONE);
+        player.seekTo(mediaPosition);
     }
 }

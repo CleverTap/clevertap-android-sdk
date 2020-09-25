@@ -1,16 +1,14 @@
 package com.clevertap.android.geofence;
 
+import static android.app.PendingIntent.FLAG_NO_CREATE;
+
 import android.app.PendingIntent;
 import android.content.Context;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
-
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
 import com.clevertap.android.geofence.interfaces.CTLocationAdapter;
-
-import static android.app.PendingIntent.FLAG_NO_CREATE;
 
 /**
  * A task of type {@link CTGeofenceTask} responsible for requesting or removing background
@@ -19,10 +17,13 @@ import static android.app.PendingIntent.FLAG_NO_CREATE;
 class LocationUpdateTask implements CTGeofenceTask {
 
     private final Context context;
-    @Nullable
-    private final CTLocationAdapter ctLocationAdapter;
+
     @Nullable
     private CTGeofenceSettings ctGeofenceSettings;
+
+    @Nullable
+    private final CTLocationAdapter ctLocationAdapter;
+
     @Nullable
     private OnCompleteListener onCompleteListener;
 
@@ -41,8 +42,9 @@ class LocationUpdateTask implements CTGeofenceTask {
     @Override
     public void execute() {
 
-        if (ctLocationAdapter == null)
+        if (ctLocationAdapter == null) {
             return;
+        }
 
         if (ctGeofenceSettings == null) {
             ctGeofenceSettings = CTGeofenceAPI.getInstance(context).initDefaultConfig();
@@ -54,7 +56,6 @@ class LocationUpdateTask implements CTGeofenceTask {
         // FLAG_NO_CREATE will tell us if pending intent already exists and is active
         PendingIntent locationPendingIntent = PendingIntentFactory.getPendingIntent(context,
                 PendingIntentFactory.PENDING_INTENT_LOCATION, FLAG_NO_CREATE);
-
 
         // if background location disabled and if location update request is already registered then remove it
         if (!this.ctGeofenceSettings.isBackgroundLocationUpdatesEnabled() && locationPendingIntent != null) {
@@ -80,12 +81,18 @@ class LocationUpdateTask implements CTGeofenceTask {
                 "Finished executing LocationUpdateTask");
     }
 
+    @Override
+    public void setOnCompleteListener(@NonNull OnCompleteListener onCompleteListener) {
+        this.onCompleteListener = onCompleteListener;
+    }
+
     /**
      * Helper method for comparing old {@link CTGeofenceSettings} stored in file with current one to
      * determine if location update request is required.
      *
      * @param locationPendingIntent instance of {@link PendingIntent} of type
-     *                              {@link PendingIntentFactory#PENDING_INTENT_GEOFENCE} or {@link PendingIntentFactory#PENDING_INTENT_LOCATION}
+     *                              {@link PendingIntentFactory#PENDING_INTENT_GEOFENCE} or {@link
+     *                              PendingIntentFactory#PENDING_INTENT_LOCATION}
      * @return true if location update request is required else false
      */
     private boolean isRequestLocation(PendingIntent locationPendingIntent) {
@@ -102,7 +109,6 @@ class LocationUpdateTask implements CTGeofenceTask {
         long currentInterval = ctGeofenceSettings.getInterval();
         long currentFastestInterval = ctGeofenceSettings.getFastestInterval();
         float currentDisplacement = ctGeofenceSettings.getSmallestDisplacement();
-
 
         // read settings from file
         CTGeofenceSettings lastGeofenceSettings = Utils.readSettingsFromFile(context);
@@ -127,11 +133,6 @@ class LocationUpdateTask implements CTGeofenceTask {
         return ctGeofenceSettings.isBackgroundLocationUpdatesEnabled() &&
                 (locationPendingIntent == null || isCurrentLocationFetchModeChanged
                         || isLastLocationFetchModeChanged || currentFetchMode != lastFetchMode);
-    }
-
-    @Override
-    public void setOnCompleteListener(@NonNull OnCompleteListener onCompleteListener) {
-        this.onCompleteListener = onCompleteListener;
     }
 
 

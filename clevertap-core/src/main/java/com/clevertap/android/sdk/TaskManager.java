@@ -9,17 +9,35 @@ import java.util.concurrent.Executors;
  */
 public class TaskManager {
 
+    /**
+     * Interface for the callbacks
+     */
+    public interface TaskListener<Params, Result> {
+
+        /**
+         * does task in the background thread
+         */
+        Result doInBackground(Params params);
+
+        /**
+         * Gives callback on the main thread
+         */
+        void onPostExecute(Result result);
+    }
+
     private static TaskManager sInstance;
+
     private final ExecutorService service;
+
+    public static synchronized TaskManager getInstance() {
+        if (sInstance == null) {
+            sInstance = new TaskManager();
+        }
+        return sInstance;
+    }
 
     private TaskManager() {
         this.service = Executors.newFixedThreadPool(10);
-    }
-
-    public static synchronized TaskManager getInstance() {
-        if (sInstance == null)
-            sInstance = new TaskManager();
-        return sInstance;
     }
 
     /**
@@ -59,23 +77,5 @@ public class TaskManager {
                 }
             }
         });
-    }
-
-    /**
-     * Interface for the callbacks
-     *
-     * @param <Params>
-     * @param <Result>
-     */
-    public interface TaskListener<Params, Result> {
-        /**
-         * does task in the background thread
-         */
-        Result doInBackground(Params params);
-
-        /**
-         * Gives callback on the main thread
-         */
-        void onPostExecute(Result result);
     }
 }

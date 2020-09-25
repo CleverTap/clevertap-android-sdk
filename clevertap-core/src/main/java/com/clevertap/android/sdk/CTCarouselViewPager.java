@@ -3,7 +3,6 @@ package com.clevertap.android.sdk;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
-
 import androidx.viewpager.widget.ViewPager;
 
 /**
@@ -37,7 +36,9 @@ public class CTCarouselViewPager extends ViewPager {
             View child = getChildAt(i);
             child.measure(widthMeasureSpec, MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED));
             int h = child.getMeasuredHeight();
-            if (h > height) height = h;
+            if (h > height) {
+                height = h;
+            }
         }
 
         if (height != 0) {

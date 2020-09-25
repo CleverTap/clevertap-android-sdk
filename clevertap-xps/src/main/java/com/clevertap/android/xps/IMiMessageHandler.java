@@ -1,9 +1,7 @@
 package com.clevertap.android.xps;
 
 import android.content.Context;
-
 import androidx.annotation.RestrictTo;
-
 import com.xiaomi.mipush.sdk.MiPushCommandMessage;
 import com.xiaomi.mipush.sdk.MiPushMessage;
 

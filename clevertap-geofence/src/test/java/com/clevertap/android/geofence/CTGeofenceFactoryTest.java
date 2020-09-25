@@ -1,25 +1,20 @@
 package com.clevertap.android.geofence;
 
 
+import static org.powermock.api.mockito.PowerMockito.when;
+
 import com.clevertap.android.geofence.interfaces.CTGeofenceAdapter;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.junit.*;
+import org.junit.runner.*;
+import org.mockito.*;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-
-import static org.powermock.api.mockito.PowerMockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 28,
@@ -29,10 +24,11 @@ import static org.powermock.api.mockito.PowerMockito.when;
 @PrepareForTest({Utils.class, GoogleApiAvailability.class})
 public class CTGeofenceFactoryTest extends BaseTestCase {
 
-    @Rule
-    public PowerMockRule rule = new PowerMockRule();
     @Mock
     public GoogleApiAvailability googleApiAvailability;
+
+    @Rule
+    public PowerMockRule rule = new PowerMockRule();
 
     @Before
     public void setUp() throws Exception {
@@ -59,7 +55,8 @@ public class CTGeofenceFactoryTest extends BaseTestCase {
 
         // when play service apk not available
         when(Utils.isFusedLocationApiDependencyAvailable()).thenReturn(true);
-        when(googleApiAvailability.isGooglePlayServicesAvailable(application)).thenReturn(ConnectionResult.SERVICE_MISSING);
+        when(googleApiAvailability.isGooglePlayServicesAvailable(application))
+                .thenReturn(ConnectionResult.SERVICE_MISSING);
 
         CTGeofenceFactory.createGeofenceAdapter(application);
     }
@@ -69,7 +66,8 @@ public class CTGeofenceFactoryTest extends BaseTestCase {
 
         // when play service apk is disabled
         when(Utils.isFusedLocationApiDependencyAvailable()).thenReturn(true);
-        when(googleApiAvailability.isGooglePlayServicesAvailable(application)).thenReturn(ConnectionResult.SERVICE_DISABLED);
+        when(googleApiAvailability.isGooglePlayServicesAvailable(application))
+                .thenReturn(ConnectionResult.SERVICE_DISABLED);
 
         CTGeofenceFactory.createGeofenceAdapter(application);
     }

@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk;
 
 public interface CTInboxListener {
+
     /**
      * Receives a callback when inbox controller is initialized
      */

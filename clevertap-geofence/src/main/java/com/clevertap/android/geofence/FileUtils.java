@@ -2,50 +2,54 @@ package com.clevertap.android.geofence;
 
 import android.content.Context;
 import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
-
-import org.json.JSONObject;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import org.json.JSONObject;
 
 @SuppressWarnings("WeakerAccess")
 public class FileUtils {
 
     @WorkerThread
-    static boolean writeJsonToFile(Context context, String dirName, String fileName, @Nullable JSONObject jsonObject) {
-        boolean isWriteSuccessful = false;
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    static void deleteDirectory(Context context, String dirName) {
+        if (TextUtils.isEmpty(dirName) || context == null) {
+            return;
+        }
         try {
-            if (jsonObject == null || TextUtils.isEmpty(dirName) || TextUtils.isEmpty(fileName))
-                return false;
             File file = new File(context.getFilesDir(), dirName);
-            if (!file.exists()) {
-                if (!file.mkdir())
-                    return false;
+            if (file.exists() && file.isDirectory()) {
+                String[] children = file.list();
+                if (children != null) {
+                    for (String child : children) {
+                        String isDeleted = new File(file, child).delete() ? "successfully deleted"
+                                : "failed to delete";
+                        CTGeofenceAPI.getLogger().verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                                child + " :" + isDeleted);
+                    }
+                }
             }
-
-            File file1 = new File(file, fileName);
-            FileWriter writer = new FileWriter(file1, false);
-            writer.append(jsonObject.toString());
-            writer.flush();
-            writer.close();
-
-            isWriteSuccessful = true;
-            CTGeofenceAPI.getLogger().verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG, fileName
-                    + ": writeFileOnInternalStorage: successful");
         } catch (Exception e) {
             e.printStackTrace();
-            CTGeofenceAPI.getLogger().verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG, "writeFileOnInternalStorage: failed" + e.getLocalizedMessage());
+            CTGeofenceAPI.getLogger().verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                    "deleteFileOnInternalStorage: failed" + dirName + " Error:" + e.getLocalizedMessage());
         }
+    }
 
-        return isWriteSuccessful;
+    @SuppressWarnings("UnusedParameters")
+    static String getCachedDirName(Context context) {
+        return CTGeofenceConstants.CACHED_DIR_NAME /*+ "_" + CTGeofenceAPI.getInstance(context).getAccountId()
+                + "_" + CTGeofenceAPI.getInstance(context).getGuid()*/;
+    }
+
+    static String getCachedFullPath(Context context, String fileName) {
+        return getCachedDirName(context) + "/" + fileName;
     }
 
     @WorkerThread
@@ -80,41 +84,42 @@ public class FileUtils {
             inputStream.close();
             content = stringBuilder.toString();
         } catch (Exception e) {
-            CTGeofenceAPI.getLogger().verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG, "[Exception While Reading: " + e.getLocalizedMessage());
+            CTGeofenceAPI.getLogger()
+                    .verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG, "[Exception While Reading: " + e.getLocalizedMessage());
         }
         return content;
     }
 
     @WorkerThread
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    static void deleteDirectory(Context context, String dirName) {
-        if (TextUtils.isEmpty(dirName) || context == null)
-            return;
+    static boolean writeJsonToFile(Context context, String dirName, String fileName,
+            @Nullable JSONObject jsonObject) {
+        boolean isWriteSuccessful = false;
         try {
+            if (jsonObject == null || TextUtils.isEmpty(dirName) || TextUtils.isEmpty(fileName)) {
+                return false;
+            }
             File file = new File(context.getFilesDir(), dirName);
-            if (file.exists() && file.isDirectory()) {
-                String[] children = file.list();
-                if (children != null) {
-                    for (String child : children) {
-                        String isDeleted = new File(file, child).delete() ? "successfully deleted" : "failed to delete";
-                        CTGeofenceAPI.getLogger().verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                                child + " :" + isDeleted);
-                    }
+            if (!file.exists()) {
+                if (!file.mkdir()) {
+                    return false;
                 }
             }
+
+            File file1 = new File(file, fileName);
+            FileWriter writer = new FileWriter(file1, false);
+            writer.append(jsonObject.toString());
+            writer.flush();
+            writer.close();
+
+            isWriteSuccessful = true;
+            CTGeofenceAPI.getLogger().verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG, fileName
+                    + ": writeFileOnInternalStorage: successful");
         } catch (Exception e) {
             e.printStackTrace();
-            CTGeofenceAPI.getLogger().verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG, "deleteFileOnInternalStorage: failed" + dirName + " Error:" + e.getLocalizedMessage());
+            CTGeofenceAPI.getLogger().verbose(CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                    "writeFileOnInternalStorage: failed" + e.getLocalizedMessage());
         }
-    }
 
-    @SuppressWarnings("UnusedParameters")
-    static String getCachedDirName(Context context) {
-        return CTGeofenceConstants.CACHED_DIR_NAME /*+ "_" + CTGeofenceAPI.getInstance(context).getAccountId()
-                + "_" + CTGeofenceAPI.getInstance(context).getGuid()*/;
-    }
-
-    static String getCachedFullPath(Context context, String fileName) {
-        return getCachedDirName(context) + "/" + fileName;
+        return isWriteSuccessful;
     }
 }

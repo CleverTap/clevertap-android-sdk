@@ -2,10 +2,8 @@ package com.clevertap.android.sdk;
 
 import android.os.Handler;
 import android.os.Looper;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
-
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -17,16 +15,22 @@ import java.util.concurrent.Executors;
  */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class CTExecutors {
+
+    private static class MainThreadExecutor implements Executor {
+
+        private final Handler mainThreadHandler = new Handler(Looper.getMainLooper());
+
+        @Override
+        public void execute(@NonNull Runnable command) {
+            mainThreadHandler.post(command);
+        }
+    }
+
     private static CTExecutors sInstance;
 
     private final Executor diskIO;
 
     private final Executor mainThread;
-
-    private CTExecutors(Executor diskIO, Executor mainThread) {
-        this.diskIO = diskIO;
-        this.mainThread = mainThread;
-    }
 
     public static synchronized CTExecutors getInstance() {
         if (sInstance == null) {
@@ -36,20 +40,16 @@ public class CTExecutors {
         return sInstance;
     }
 
+    private CTExecutors(Executor diskIO, Executor mainThread) {
+        this.diskIO = diskIO;
+        this.mainThread = mainThread;
+    }
+
     public Executor diskIO() {
         return diskIO;
     }
 
     public Executor mainThread() {
         return mainThread;
-    }
-
-    private static class MainThreadExecutor implements Executor {
-        private final Handler mainThreadHandler = new Handler(Looper.getMainLooper());
-
-        @Override
-        public void execute(@NonNull Runnable command) {
-            mainThreadHandler.post(command);
-        }
     }
 }

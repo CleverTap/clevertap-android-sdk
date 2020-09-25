@@ -1,13 +1,13 @@
 package com.clevertap.android.geofence;
 
+import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
+
 import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.content.Context;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
-
 import com.clevertap.android.geofence.interfaces.CTGeofenceAdapter;
 import com.clevertap.android.geofence.model.CTGeofence;
 import com.google.android.gms.location.Geofence;
@@ -17,11 +17,8 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
-
 import java.util.ArrayList;
 import java.util.List;
-
-import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
 
 /**
  * Communicates with {@link GeofencingClient} to
@@ -30,7 +27,9 @@ import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
 class GoogleGeofenceAdapter implements CTGeofenceAdapter {
 
     private static final long GEOFENCE_EXPIRATION_IN_MILLISECONDS = Geofence.NEVER_EXPIRE;
+
     private final Context context;
+
     private final GeofencingClient geofencingClient;
 
     GoogleGeofenceAdapter(@NonNull Context context) {
@@ -49,7 +48,8 @@ class GoogleGeofenceAdapter implements CTGeofenceAdapter {
     @SuppressWarnings("unchecked")
     @WorkerThread
     @Override
-    public void addAllGeofence(@Nullable List<CTGeofence> fenceList, @NonNull final OnSuccessListener onSuccessListener) {
+    public void addAllGeofence(@Nullable List<CTGeofence> fenceList,
+            @NonNull final OnSuccessListener onSuccessListener) {
 
         if (fenceList == null || fenceList.isEmpty()) {
             return;
@@ -64,7 +64,8 @@ class GoogleGeofenceAdapter implements CTGeofenceAdapter {
                     PendingIntentFactory.PENDING_INTENT_GEOFENCE, FLAG_UPDATE_CURRENT);
 
             @SuppressLint("MissingPermission")
-            Task<Void> addGeofenceTask = geofencingClient.addGeofences(getGeofencingRequest(googleFenceList), geofencePendingIntent);
+            Task<Void> addGeofenceTask = geofencingClient
+                    .addGeofences(getGeofencingRequest(googleFenceList), geofencePendingIntent);
             // blocking task
             aVoid = Tasks.await(addGeofenceTask);
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "Geofence registered successfully");
@@ -90,7 +91,8 @@ class GoogleGeofenceAdapter implements CTGeofenceAdapter {
     @SuppressWarnings("unchecked")
     @WorkerThread
     @Override
-    public void removeAllGeofence(@Nullable List<String> fenceIdList, @NonNull final OnSuccessListener onSuccessListener) {
+    public void removeAllGeofence(@Nullable List<String> fenceIdList,
+            @NonNull final OnSuccessListener onSuccessListener) {
 
         if (fenceIdList == null || fenceIdList.isEmpty()) {
             return;

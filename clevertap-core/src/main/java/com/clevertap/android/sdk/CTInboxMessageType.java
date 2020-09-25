@@ -15,6 +15,12 @@ enum CTInboxMessageType {
         this.inboxMessageType = type;
     }
 
+    @NonNull
+    @Override
+    public String toString() {
+        return inboxMessageType;
+    }
+
     static CTInboxMessageType fromString(String type) {
         switch (type) {
             case "simple":
@@ -32,11 +38,5 @@ enum CTInboxMessageType {
             default:
                 return null;
         }
-    }
-
-    @NonNull
-    @Override
-    public String toString() {
-        return inboxMessageType;
     }
 }

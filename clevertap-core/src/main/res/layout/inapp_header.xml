@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/header_frame_layout"
+<FrameLayout android:id="@+id/header_frame_layout"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="170dp">
 
@@ -19,8 +19,8 @@
                 android:id="@+id/header_icon"
                 android:layout_width="78dp"
                 android:layout_height="78dp"
-                android:layout_marginStart="20dp"
                 android:layout_marginLeft="20dp"
+                android:layout_marginStart="20dp"
                 android:layout_marginTop="20dp"
                 android:scaleType="fitCenter" />
 
@@ -34,8 +34,8 @@
                     android:id="@+id/header_title"
                     android:layout_width="200dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
                     android:layout_marginLeft="20dp"
+                    android:layout_marginStart="20dp"
                     android:layout_marginTop="20dp"
                     android:textSize="16sp"
                     android:textStyle="bold" />
@@ -44,8 +44,8 @@
                     android:id="@+id/header_message"
                     android:layout_width="200dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="20dp"
                     android:layout_marginLeft="20dp"
+                    android:layout_marginStart="20dp"
                     android:layout_marginTop="4dp"
                     android:maxLines="3"
                     android:textSize="14sp" />

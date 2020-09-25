@@ -33,11 +33,11 @@ import java.util.Iterator;
 public interface Handshakedata {
 
     /**
-     * Iterator for the http fields
+     * Get the content of the handshake
      *
-     * @return the http fields
+     * @return the content as byte-array
      */
-    Iterator<String> iterateHttpFields();
+    byte[] getContent();
 
     /**
      * Gets the value of the field
@@ -56,9 +56,9 @@ public interface Handshakedata {
     boolean hasFieldValue(String name);
 
     /**
-     * Get the content of the handshake
+     * Iterator for the http fields
      *
-     * @return the content as byte-array
+     * @return the http fields
      */
-    byte[] getContent();
+    Iterator<String> iterateHttpFields();
 }

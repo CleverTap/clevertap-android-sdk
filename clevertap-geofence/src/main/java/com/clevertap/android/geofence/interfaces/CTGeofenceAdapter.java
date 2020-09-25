@@ -1,14 +1,13 @@
 package com.clevertap.android.geofence.interfaces;
 
 import android.app.PendingIntent;
-
 import com.clevertap.android.geofence.model.CTGeofence;
 import com.google.android.gms.tasks.OnSuccessListener;
-
 import java.util.List;
 
 /**
- * Interface that defines API-type(Google APIs/Android platform APIs) class that can be used to add and remove geofences
+ * Interface that defines API-type(Google APIs/Android platform APIs) class that can be used to add and remove
+ * geofences
  * to and from OS respectively
  */
 public interface CTGeofenceAdapter {

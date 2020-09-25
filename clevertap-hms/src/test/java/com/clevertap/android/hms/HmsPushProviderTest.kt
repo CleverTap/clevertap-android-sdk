@@ -4,17 +4,16 @@ import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
 import com.clevertap.android.sdk.pushnotification.PushConstants
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.Mockito
+import org.junit.*
+import org.junit.runner.*
+import org.mockito.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28], application = TestApplication::class)
 class HmsPushProviderTest : BaseTestCase() {
+
     private lateinit var ctPushProviderListener: CTPushProviderListener
     private var pushProvider: HmsPushProvider? = null
     private var sdkHandler: TestHmsSdkHandler? = null

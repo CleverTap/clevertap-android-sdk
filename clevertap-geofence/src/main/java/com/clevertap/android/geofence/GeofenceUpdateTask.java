@@ -1,20 +1,16 @@
 package com.clevertap.android.geofence;
 
 import android.content.Context;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
-
 import com.clevertap.android.geofence.interfaces.CTGeofenceAdapter;
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
 import com.clevertap.android.geofence.model.CTGeofence;
 import com.google.android.gms.tasks.OnSuccessListener;
-
+import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.util.List;
 
 /**
  * A task of type {@link CTGeofenceTask} responsible for Adding/Replacing(remove followed by add)
@@ -23,9 +19,12 @@ import java.util.List;
 class GeofenceUpdateTask implements CTGeofenceTask {
 
     private final Context context;
+
     @Nullable
     private final CTGeofenceAdapter ctGeofenceAdapter;
+
     private final JSONObject fenceList;
+
     @Nullable
     private OnCompleteListener onCompleteListener;
 
@@ -42,8 +41,9 @@ class GeofenceUpdateTask implements CTGeofenceTask {
     @Override
     public void execute() {
 
-        if (ctGeofenceAdapter == null)
+        if (ctGeofenceAdapter == null) {
             return;
+        }
 
         CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
                 "Executing GeofenceUpdateTask...");
@@ -88,6 +88,11 @@ class GeofenceUpdateTask implements CTGeofenceTask {
 
         CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
                 "Finished executing GeofenceUpdateTask");
+    }
+
+    @Override
+    public void setOnCompleteListener(@NonNull OnCompleteListener onCompleteListener) {
+        this.onCompleteListener = onCompleteListener;
     }
 
     /**
@@ -173,10 +178,5 @@ class GeofenceUpdateTask implements CTGeofenceTask {
                 }
             }
         });
-    }
-
-    @Override
-    public void setOnCompleteListener(@NonNull OnCompleteListener onCompleteListener) {
-        this.onCompleteListener = onCompleteListener;
     }
 }

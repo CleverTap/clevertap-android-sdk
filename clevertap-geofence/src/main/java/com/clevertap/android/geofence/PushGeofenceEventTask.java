@@ -3,23 +3,19 @@ package com.clevertap.android.geofence;
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
-
 import com.clevertap.android.geofence.interfaces.CTGeofenceEventsListener;
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofenceStatusCodes;
 import com.google.android.gms.location.GeofencingEvent;
-
-import org.json.JSONArray;
-import org.json.JSONObject;
-
 import java.util.List;
 import java.util.concurrent.Future;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 /**
  * A task of type {@link CTGeofenceTask} responsible for processing and sending {@code GeoCluster Entered}
@@ -28,8 +24,10 @@ import java.util.concurrent.Future;
 class PushGeofenceEventTask implements CTGeofenceTask {
 
     private final Context context;
+
     @NonNull
     private final Intent intent;
+
     @Nullable
     private OnCompleteListener onCompleteListener;
 
@@ -40,7 +38,8 @@ class PushGeofenceEventTask implements CTGeofenceTask {
 
     /**
      * Creates {@link com.clevertap.android.sdk.CleverTapAPI} instance if it's null, mostly in killed state.
-     * On Enter or Exit transition triggered {@link GeofencingEvent} will be sent to {@link #pushGeofenceEvents(List, Location, int)}
+     * On Enter or Exit transition triggered {@link GeofencingEvent} will be sent to {@link #pushGeofenceEvents(List,
+     * Location, int)}
      * for further processing, if it has no error in it.<br>
      * Caller will be notified of completion of the task through {@link OnCompleteListener}
      */
@@ -56,7 +55,6 @@ class PushGeofenceEventTask implements CTGeofenceTask {
             sendOnCompleteEvent();
             return;
         }
-
 
         GeofencingEvent geofencingEvent = GeofencingEvent.fromIntent(intent);
 
@@ -80,7 +78,6 @@ class PushGeofenceEventTask implements CTGeofenceTask {
         // Test that the reported transition was of interest.
         if (geofenceTransition == Geofence.GEOFENCE_TRANSITION_ENTER ||
                 geofenceTransition == Geofence.GEOFENCE_TRANSITION_EXIT) {
-
 
             // Get the geofences that were triggered. A single event can trigger multiple geofences.
 
@@ -106,13 +103,9 @@ class PushGeofenceEventTask implements CTGeofenceTask {
 
     }
 
-    /**
-     * Notifies listeners when task execution completes
-     */
-    private void sendOnCompleteEvent() {
-        if (onCompleteListener != null) {
-            onCompleteListener.onComplete();
-        }
+    @Override
+    public void setOnCompleteListener(@NonNull OnCompleteListener onCompleteListener) {
+        this.onCompleteListener = onCompleteListener;
     }
 
     /**
@@ -126,8 +119,9 @@ class PushGeofenceEventTask implements CTGeofenceTask {
      * @param geofenceTransition  int value of geofence transition event
      */
     @WorkerThread
-    private void pushGeofenceEvents(@Nullable List<Geofence> triggeringGeofences, @Nullable Location triggeringLocation,
-                                    int geofenceTransition) {
+    private void pushGeofenceEvents(@Nullable List<Geofence> triggeringGeofences,
+            @Nullable Location triggeringLocation,
+            int geofenceTransition) {
 
         if (triggeringGeofences == null) {
             CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
@@ -262,8 +256,12 @@ class PushGeofenceEventTask implements CTGeofenceTask {
         }
     }
 
-    @Override
-    public void setOnCompleteListener(@NonNull OnCompleteListener onCompleteListener) {
-        this.onCompleteListener = onCompleteListener;
+    /**
+     * Notifies listeners when task execution completes
+     */
+    private void sendOnCompleteEvent() {
+        if (onCompleteListener != null) {
+            onCompleteListener.onComplete();
+        }
     }
 }

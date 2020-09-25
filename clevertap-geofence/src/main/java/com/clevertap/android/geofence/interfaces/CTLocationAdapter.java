@@ -9,9 +9,11 @@ import android.app.PendingIntent;
 public interface CTLocationAdapter {
 
     /**
-     * Registers background location updates to OS
+     * Fetches Last Known Location from OS and delivers it to caller through given {@link CTLocationCallback}
+     *
+     * @param callback to get last location
      */
-    void requestLocationUpdates();
+    void getLastLocation(CTLocationCallback callback);
 
     /**
      * Unregisters background location updates associated with the given {@link PendingIntent} from OS
@@ -19,10 +21,8 @@ public interface CTLocationAdapter {
     void removeLocationUpdates(PendingIntent pendingIntent);
 
     /**
-     * Fetches Last Known Location from OS and delivers it to caller through given {@link CTLocationCallback}
-     *
-     * @param callback to get last location
+     * Registers background location updates to OS
      */
-    void getLastLocation(CTLocationCallback callback);
+    void requestLocationUpdates();
 
 }

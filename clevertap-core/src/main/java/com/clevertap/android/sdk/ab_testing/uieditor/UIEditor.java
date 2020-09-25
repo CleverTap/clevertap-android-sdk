@@ -11,17 +11,11 @@ import android.os.Handler;
 import android.os.Looper;
 import android.view.View;
 import android.view.ViewTreeObserver;
-
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.ImageCache;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.ab_testing.models.CTABVariant;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.OutputStream;
 import java.lang.ref.WeakReference;
 import java.util.ArrayDeque;
@@ -33,20 +27,146 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 public class UIEditor {
 
+    private static class UIChange {
+
+        final List<String> imageUrls;
+
+        final ViewEdit viewEdit;
+
+        private UIChange(ViewEdit viewEdit, List<String> urls) {
+            this.viewEdit = viewEdit;
+            imageUrls = urls;
+        }
+    }
+
+    private static class UIChangeBinding implements ViewTreeObserver.OnGlobalLayoutListener, Runnable {
+
+        private boolean alive;
+
+        private volatile boolean dying;
+
+        private final Handler handler;
+
+        private final ViewEdit viewEdit;
+
+        private final WeakReference<View> viewRoot;
+
+        UIChangeBinding(View viewRoot, ViewEdit edit, Handler uiThreadHandler) {
+            viewEdit = edit;
+            this.viewRoot = new WeakReference<>(viewRoot);
+            handler = uiThreadHandler;
+            alive = true;
+            dying = false;
+
+            final ViewTreeObserver observer = viewRoot.getViewTreeObserver();
+            if (observer.isAlive()) {
+                observer.addOnGlobalLayoutListener(this);
+            }
+            run();
+        }
+
+        @Override
+        public void onGlobalLayout() {
+            run();
+        }
+
+        @Override
+        public void run() {
+            if (!alive) {
+                return;
+            }
+            final View viewRoot = this.viewRoot.get();
+            if (null == viewRoot || dying) {
+                cleanUp();
+                return;
+            }
+            viewEdit.run(viewRoot);
+            handler.removeCallbacks(this);
+            handler.postDelayed(this, 1000);
+        }
+
+        private void cleanUp() {
+            if (alive) {
+                final View viewRoot = this.viewRoot.get();
+                if (viewRoot != null) {
+                    final ViewTreeObserver observer = viewRoot.getViewTreeObserver();
+                    if (observer.isAlive()) {
+                        observer.removeGlobalOnLayoutListener(this);
+                    }
+                }
+                viewEdit.cleanup();
+            }
+            alive = false;
+        }
+
+        private void kill() {
+            dying = true;
+            handler.post(this);
+        }
+    }
+
+    class ActivitySet {
+
+        private Set<Activity> activitySet;
+
+        ActivitySet() {
+            activitySet = new HashSet<>();
+        }
+
+        void add(Activity activity) {
+            checkThreadState();
+            activitySet.add(activity);
+        }
+
+        Set<Activity> getAll() {
+            checkThreadState();
+            return Collections.unmodifiableSet(activitySet);
+        }
+
+        boolean isEmpty() {
+            checkThreadState();
+            return activitySet.isEmpty();
+        }
+
+        void remove(Activity activity) {
+            checkThreadState();
+            activitySet.remove(activity);
+        }
+
+        private void checkThreadState() throws RuntimeException {
+            if (Thread.currentThread() != Looper.getMainLooper().getThread()) {
+                throw new RuntimeException("Can't access ActivitySet when not on the UI thread");
+            }
+        }
+    }
+
     private static final Class<?>[] EMPTY_PARAMS = new Class[0];
+
     private static final List<ViewEdit.PathElement> NEVER_MATCH_PATH = Collections.emptyList();
-    private final Handler uiThreadHandler;
-    private final Map<String, List<ViewEdit>> newEdits;
-    private final Deque<UIChangeBinding> currentEdits;//Need a LIFO structure to reverse changes
-    private final ArrayList<String> editorSessionImageUrls;
-    private CleverTapInstanceConfig config;
-    private ResourceIds resourceIds;
-    private SnapshotBuilder.ViewSnapshotConfig snapshotConfig;
+
     private ActivitySet activitySet;
+
+    private CleverTapInstanceConfig config;
+
     private Context context;
+
+    private final Deque<UIChangeBinding> currentEdits;//Need a LIFO structure to reverse changes
+
+    private final ArrayList<String> editorSessionImageUrls;
+
+    private final Map<String, List<ViewEdit>> newEdits;
+
+    private ResourceIds resourceIds;
+
+    private SnapshotBuilder.ViewSnapshotConfig snapshotConfig;
+
+    private final Handler uiThreadHandler;
 
     public UIEditor(Context context, CleverTapInstanceConfig config) {
         String resourcePackageName = config.getPackageName();
@@ -63,52 +183,9 @@ public class UIEditor {
         this.context = context;
     }
 
-    private Logger getConfigLogger() {
-        return config.getLogger();
-    }
-
-    private String getAccountId() {
-        return config.getAccountId();
-    }
-
     public void addActivity(Activity activity) {
         activitySet.add(activity);
         handleNewEditsOnUiThread();
-    }
-
-    public void removeActivity(Activity activity) {
-        activitySet.remove(activity);
-    }
-
-    public boolean loadSnapshotConfig(JSONObject data) {
-        if (snapshotConfig == null) {
-            List<ViewProperty> properties = loadViewProperties(data);
-            if (properties != null) {
-                snapshotConfig = new SnapshotBuilder.ViewSnapshotConfig(properties, resourceIds);
-            }
-        }
-        return snapshotConfig != null;
-    }
-
-    public void writeSnapshot(final OutputStream out) {
-        if (snapshotConfig == null) {
-            getConfigLogger().debug("UIEditor: Unable to write snapshot, snapshot config not set");
-            return;
-        }
-        try {
-            SnapshotBuilder.writeSnapshot(snapshotConfig, activitySet, out, config);
-        } catch (Throwable t) {
-            getConfigLogger().debug("UIEditor: error writing snapshot", t);
-        }
-    }
-
-    public void stopVariants() {
-        clearEdits();
-        for (final String assetUrl : editorSessionImageUrls) {
-            ImageCache.removeBitmap(assetUrl, true);
-        }
-        editorSessionImageUrls.clear();
-        snapshotConfig = null;
     }
 
     public void applyVariants(Set<CTABVariant> variants, boolean isEditorSession) {
@@ -118,7 +195,8 @@ public class UIEditor {
                 final UIChange change = generateUIChange(action.getChange());
                 if (change != null) {
                     if (isEditorSession) {
-                        editorSessionImageUrls.addAll(change.imageUrls); // Add all images to a list to be cleared when dashboard disconnects.
+                        editorSessionImageUrls
+                                .addAll(change.imageUrls); // Add all images to a list to be cleared when dashboard disconnects.
                     }
                     variant.addImageUrls(change.imageUrls);
 
@@ -147,71 +225,38 @@ public class UIEditor {
         handleNewEditsOnUiThread();
     }
 
-    private List<ViewProperty> loadViewProperties(JSONObject data) {
-        final List<ViewProperty> properties = new ArrayList<>();
+    public boolean loadSnapshotConfig(JSONObject data) {
+        if (snapshotConfig == null) {
+            List<ViewProperty> properties = loadViewProperties(data);
+            if (properties != null) {
+                snapshotConfig = new SnapshotBuilder.ViewSnapshotConfig(properties, resourceIds);
+            }
+        }
+        return snapshotConfig != null;
+    }
+
+    public void removeActivity(Activity activity) {
+        activitySet.remove(activity);
+    }
+
+    public void stopVariants() {
+        clearEdits();
+        for (final String assetUrl : editorSessionImageUrls) {
+            ImageCache.removeBitmap(assetUrl, true);
+        }
+        editorSessionImageUrls.clear();
+        snapshotConfig = null;
+    }
+
+    public void writeSnapshot(final OutputStream out) {
+        if (snapshotConfig == null) {
+            getConfigLogger().debug("UIEditor: Unable to write snapshot, snapshot config not set");
+            return;
+        }
         try {
-            final JSONObject config = data.getJSONObject("config");
-            final JSONArray classes = config.getJSONArray("classes");
-            for (int i = 0; i < classes.length(); i++) {
-                final JSONObject classDesc = classes.getJSONObject(i);
-                final String targetName = classDesc.getString("name");
-                final Class<?> targetClass = Class.forName(targetName);
-                final JSONArray props = classDesc.getJSONArray("properties");
-                for (int j = 0; j < props.length(); j++) {
-                    final JSONObject prop = props.getJSONObject(j);
-                    final ViewProperty desc = generateViewProperty(targetClass, prop);
-                    properties.add(desc);
-                }
-            }
-        } catch (JSONException e) {
-            getConfigLogger().verbose("UIEditor: Error loading view properties json: " + data.toString());
-            return null;
-        } catch (final ClassNotFoundException e) {
-            getConfigLogger().verbose("UIEditor: Error loading view properties", e);
-            return null;
-        }
-        return properties;
-    }
-
-    private void clearEdits() {
-        synchronized (currentEdits) {
-            while (!currentEdits.isEmpty()) {
-                currentEdits.removeLast().kill();//removeLast() picks up the last change added to the Deque
-            }
-        }
-    }
-
-    private void handleNewEditsOnUiThread() {
-        if (Thread.currentThread() == uiThreadHandler.getLooper().getThread()) {
-            handleNewEdits();
-        } else {
-            uiThreadHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    handleNewEdits();
-                }
-            });
-        }
-    }
-
-    // Ony call on UI Thread
-    private void handleNewEdits() {
-        for (final Activity activity : activitySet.getAll()) {
-            final String activityName = activity.getClass().getCanonicalName();
-            final View rootView = activity.getWindow().getDecorView().getRootView();
-
-            final List<ViewEdit> specific;
-            final List<ViewEdit> wildcard;
-            synchronized (newEdits) {
-                specific = newEdits.get(activityName);
-                wildcard = newEdits.get(null);
-            }
-            if (specific != null) {
-                applyEdits(rootView, specific);
-            }
-            if (wildcard != null) {
-                applyEdits(rootView, wildcard);
-            }
+            SnapshotBuilder.writeSnapshot(snapshotConfig, activitySet, out, config);
+        } catch (Throwable t) {
+            getConfigLogger().debug("UIEditor: error writing snapshot", t);
         }
     }
 
@@ -225,6 +270,114 @@ public class UIEditor {
                 currentEdits.add(binding);
             }
         }
+    }
+
+    private Object castArgumentObject(Object jsonArgument, String type, List<String> imageUrls) {
+        try {
+            if (type == null) {
+                return null;
+            }
+            switch (type) {
+                case "java.lang.CharSequence":
+                case "boolean":
+                case "java.lang.Boolean":
+                    return jsonArgument;
+                case "int":
+                case "java.lang.Integer":
+                    return ((Number) jsonArgument).intValue();
+                case "float":
+                case "java.lang.Float":
+                    return ((Number) jsonArgument).floatValue();
+                case "android.graphics.drawable.Drawable":
+                case "android.graphics.drawable.BitmapDrawable":
+                    return readBitmapDrawable((JSONObject) jsonArgument, imageUrls);
+                case "android.graphics.drawable.ColorDrawable":
+                    int colorValue = ((Number) jsonArgument).intValue();
+                    return new ColorDrawable(colorValue);
+                default:
+                    getConfigLogger().verbose(getAccountId(), "UIEditor: Unhandled argument object type: " + type);
+                    return null;
+            }
+        } catch (final ClassCastException e) {
+            getConfigLogger().verbose(getAccountId(),
+                    "UIEditor: Error casting class while converting argument - " + e.getLocalizedMessage());
+            return null;
+        }
+    }
+
+    private Integer checkIds(int explicitId, String idName, ResourceIds idNameToId) {
+        final int idFromName;
+        if (idName != null) {
+            if (idNameToId.knownIdName(idName)) {
+                idFromName = idNameToId.idFromName(idName);
+            } else {
+                getConfigLogger().debug(getAccountId(),
+                        "UIEditor: Path element contains an id name not known to the system. No views will be matched.\n"
+                                +
+                                "Make sure that you're not stripping your packages R class out with proguard.\n" +
+                                "id name was \"" + idName + "\""
+                );
+                return null;
+            }
+        } else {
+            idFromName = -1;
+        }
+
+        if (idFromName != -1 && explicitId != -1 && idFromName != explicitId) {
+            getConfigLogger().debug(getAccountId(),
+                    "UIEditor: Path contains both a named and an explicit id which don't match, can't match.");
+            return null;
+        }
+
+        if (-1 != idFromName) {
+            return idFromName;
+        }
+
+        return explicitId;
+    }
+
+    private void clearEdits() {
+        synchronized (currentEdits) {
+            while (!currentEdits.isEmpty()) {
+                currentEdits.removeLast().kill();//removeLast() picks up the last change added to the Deque
+            }
+        }
+    }
+
+    private List<ViewEdit.PathElement> generatePath(JSONArray pathDesc, ResourceIds idNameToId) throws JSONException {
+        final List<ViewEdit.PathElement> path = new ArrayList<>();
+        for (int i = 0; i < pathDesc.length(); i++) {
+            final JSONObject targetView = pathDesc.getJSONObject(i);
+            final String prefixCode = Utils.optionalStringKey(targetView, "prefix");
+            final String targetViewClass = Utils.optionalStringKey(targetView, "view_class");
+            final int targetIndex = targetView.optInt("index", -1);
+            final String targetDescription = Utils.optionalStringKey(targetView, "contentDescription");
+            final int targetExplicitId = targetView.optInt("id", -1);
+            final String targetIdName = Utils.optionalStringKey(targetView, "ct_id_name");
+            final String targetTag = Utils.optionalStringKey(targetView, "tag");
+
+            final int prefix;
+            if (prefixCode == null) {
+                prefix = ViewEdit.PathElement.ZERO_LENGTH_PREFIX;
+            } else if (prefixCode.equals("shortest")) {
+                prefix = ViewEdit.PathElement.SHORTEST_PREFIX;
+            } else {
+                getConfigLogger().verbose(getAccountId(),
+                        "UIEditor: Unrecognized prefix type \"" + prefixCode + "\". No views will be matched");
+                return NEVER_MATCH_PATH;
+            }
+            final int targetId;
+            final Integer targetIdOrNull = checkIds(targetExplicitId, targetIdName, idNameToId);
+            if (targetIdOrNull == null) {
+                return NEVER_MATCH_PATH;
+            } else {
+                targetId = targetIdOrNull;
+            }
+            path.add(new ViewEdit.PathElement(prefix, targetViewClass, targetIndex, targetId, targetDescription,
+                    targetTag));
+        }
+
+        return path;
     }
 
     private UIChange generateUIChange(JSONObject data) {
@@ -248,7 +401,8 @@ public class UIEditor {
                 try {
                     targetClass = Class.forName(targetClassName);
                 } catch (final ClassNotFoundException e) {
-                    getConfigLogger().verbose(getAccountId(), "UIEditor: Class not found while generating UI change - " + e.getLocalizedMessage());
+                    getConfigLogger().verbose(getAccountId(),
+                            "UIEditor: Class not found while generating UI change - " + e.getLocalizedMessage());
                     return null;
                 }
                 final ViewProperty prop = generateViewProperty(targetClass, data.getJSONObject("property"));
@@ -275,10 +429,12 @@ public class UIEditor {
                 return null;
             }
         } catch (final NoSuchMethodException e) {
-            getConfigLogger().verbose(getAccountId(), "UIEditor: No such method found while generating UI change - " + e.getLocalizedMessage());
+            getConfigLogger().verbose(getAccountId(),
+                    "UIEditor: No such method found while generating UI change - " + e.getLocalizedMessage());
             return null;
         } catch (final JSONException e) {
-            getConfigLogger().verbose(getAccountId(), "UIEditor: Unable to parse JSON while generating UI change - " + e.getLocalizedMessage());
+            getConfigLogger().verbose(getAccountId(),
+                    "UIEditor: Unable to parse JSON while generating UI change - " + e.getLocalizedMessage());
             return null;
         }
         return new UIChange(viewEdit, imageUrls);
@@ -317,99 +473,82 @@ public class UIEditor {
         }
     }
 
-    private List<ViewEdit.PathElement> generatePath(JSONArray pathDesc, ResourceIds idNameToId) throws JSONException {
-        final List<ViewEdit.PathElement> path = new ArrayList<>();
-        for (int i = 0; i < pathDesc.length(); i++) {
-            final JSONObject targetView = pathDesc.getJSONObject(i);
-            final String prefixCode = Utils.optionalStringKey(targetView, "prefix");
-            final String targetViewClass = Utils.optionalStringKey(targetView, "view_class");
-            final int targetIndex = targetView.optInt("index", -1);
-            final String targetDescription = Utils.optionalStringKey(targetView, "contentDescription");
-            final int targetExplicitId = targetView.optInt("id", -1);
-            final String targetIdName = Utils.optionalStringKey(targetView, "ct_id_name");
-            final String targetTag = Utils.optionalStringKey(targetView, "tag");
-
-            final int prefix;
-            if (prefixCode == null) {
-                prefix = ViewEdit.PathElement.ZERO_LENGTH_PREFIX;
-            } else if (prefixCode.equals("shortest")) {
-                prefix = ViewEdit.PathElement.SHORTEST_PREFIX;
-            } else {
-                getConfigLogger().verbose(getAccountId(), "UIEditor: Unrecognized prefix type \"" + prefixCode + "\". No views will be matched");
-                return NEVER_MATCH_PATH;
-            }
-            final int targetId;
-            final Integer targetIdOrNull = checkIds(targetExplicitId, targetIdName, idNameToId);
-            if (targetIdOrNull == null) {
-                return NEVER_MATCH_PATH;
-            } else {
-                targetId = targetIdOrNull;
-            }
-            path.add(new ViewEdit.PathElement(prefix, targetViewClass, targetIndex, targetId, targetDescription, targetTag));
-        }
-
-        return path;
+    private String getAccountId() {
+        return config.getAccountId();
     }
 
-    private Integer checkIds(int explicitId, String idName, ResourceIds idNameToId) {
-        final int idFromName;
-        if (idName != null) {
-            if (idNameToId.knownIdName(idName)) {
-                idFromName = idNameToId.idFromName(idName);
-            } else {
-                getConfigLogger().debug(getAccountId(),
-                        "UIEditor: Path element contains an id name not known to the system. No views will be matched.\n" +
-                                "Make sure that you're not stripping your packages R class out with proguard.\n" +
-                                "id name was \"" + idName + "\""
-                );
-                return null;
+    private Logger getConfigLogger() {
+        return config.getLogger();
+    }
+
+    private Bitmap getOrFetchBitmap(String key) {
+        initImageCache();
+        return ImageCache.getOrFetchBitmap(key);
+    }
+
+    // Ony call on UI Thread
+    private void handleNewEdits() {
+        for (final Activity activity : activitySet.getAll()) {
+            final String activityName = activity.getClass().getCanonicalName();
+            final View rootView = activity.getWindow().getDecorView().getRootView();
+
+            final List<ViewEdit> specific;
+            final List<ViewEdit> wildcard;
+            synchronized (newEdits) {
+                specific = newEdits.get(activityName);
+                wildcard = newEdits.get(null);
             }
+            if (specific != null) {
+                applyEdits(rootView, specific);
+            }
+            if (wildcard != null) {
+                applyEdits(rootView, wildcard);
+            }
+        }
+    }
+
+    private void handleNewEditsOnUiThread() {
+        if (Thread.currentThread() == uiThreadHandler.getLooper().getThread()) {
+            handleNewEdits();
         } else {
-            idFromName = -1;
+            uiThreadHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    handleNewEdits();
+                }
+            });
         }
-
-        if (idFromName != -1 && explicitId != -1 && idFromName != explicitId) {
-            getConfigLogger().debug(getAccountId(), "UIEditor: Path contains both a named and an explicit id which don't match, can't match.");
-            return null;
-        }
-
-        if (-1 != idFromName) {
-            return idFromName;
-        }
-
-        return explicitId;
     }
 
-    private Object castArgumentObject(Object jsonArgument, String type, List<String> imageUrls) {
+    // only call off main thread as initWithPersistence touches the file system
+    private void initImageCache() {
+        ImageCache.initWithPersistence(context);
+    }
+
+    private List<ViewProperty> loadViewProperties(JSONObject data) {
+        final List<ViewProperty> properties = new ArrayList<>();
         try {
-            if (type == null) {
-                return null;
+            final JSONObject config = data.getJSONObject("config");
+            final JSONArray classes = config.getJSONArray("classes");
+            for (int i = 0; i < classes.length(); i++) {
+                final JSONObject classDesc = classes.getJSONObject(i);
+                final String targetName = classDesc.getString("name");
+                final Class<?> targetClass = Class.forName(targetName);
+                final JSONArray props = classDesc.getJSONArray("properties");
+                for (int j = 0; j < props.length(); j++) {
+                    final JSONObject prop = props.getJSONObject(j);
+                    final ViewProperty desc = generateViewProperty(targetClass, prop);
+                    properties.add(desc);
+                }
             }
-            switch (type) {
-                case "java.lang.CharSequence":
-                case "boolean":
-                case "java.lang.Boolean":
-                    return jsonArgument;
-                case "int":
-                case "java.lang.Integer":
-                    return ((Number) jsonArgument).intValue();
-                case "float":
-                case "java.lang.Float":
-                    return ((Number) jsonArgument).floatValue();
-                case "android.graphics.drawable.Drawable":
-                case "android.graphics.drawable.BitmapDrawable":
-                    return readBitmapDrawable((JSONObject) jsonArgument, imageUrls);
-                case "android.graphics.drawable.ColorDrawable":
-                    int colorValue = ((Number) jsonArgument).intValue();
-                    return new ColorDrawable(colorValue);
-                default:
-                    getConfigLogger().verbose(getAccountId(), "UIEditor: Unhandled argument object type: " + type);
-                    return null;
-            }
-        } catch (final ClassCastException e) {
-            getConfigLogger().verbose(getAccountId(), "UIEditor: Error casting class while converting argument - " + e.getLocalizedMessage());
+        } catch (JSONException e) {
+            getConfigLogger().verbose("UIEditor: Error loading view properties json: " + data.toString());
+            return null;
+        } catch (final ClassNotFoundException e) {
+            getConfigLogger().verbose("UIEditor: Error loading view properties", e);
             return null;
         }
+        return properties;
     }
 
     private Drawable readBitmapDrawable(JSONObject description, List<String> imageUrls) {
@@ -443,123 +582,9 @@ public class UIEditor {
 
             return ret;
         } catch (JSONException e) {
-            getConfigLogger().verbose(getAccountId(), "UIEditor: Unable to parse JSON while reading Bitmap from payload - " + e.getLocalizedMessage());
+            getConfigLogger().verbose(getAccountId(),
+                    "UIEditor: Unable to parse JSON while reading Bitmap from payload - " + e.getLocalizedMessage());
             return null;
-        }
-    }
-
-    // only call off main thread as initWithPersistence touches the file system
-    private void initImageCache() {
-        ImageCache.initWithPersistence(context);
-    }
-
-    private Bitmap getOrFetchBitmap(String key) {
-        initImageCache();
-        return ImageCache.getOrFetchBitmap(key);
-    }
-
-    private static class UIChange {
-        final ViewEdit viewEdit;
-        final List<String> imageUrls;
-
-        private UIChange(ViewEdit viewEdit, List<String> urls) {
-            this.viewEdit = viewEdit;
-            imageUrls = urls;
-        }
-    }
-
-    private static class UIChangeBinding implements ViewTreeObserver.OnGlobalLayoutListener, Runnable {
-        private final WeakReference<View> viewRoot;
-        private final ViewEdit viewEdit;
-        private final Handler handler;
-        private volatile boolean dying;
-        private boolean alive;
-
-        UIChangeBinding(View viewRoot, ViewEdit edit, Handler uiThreadHandler) {
-            viewEdit = edit;
-            this.viewRoot = new WeakReference<>(viewRoot);
-            handler = uiThreadHandler;
-            alive = true;
-            dying = false;
-
-            final ViewTreeObserver observer = viewRoot.getViewTreeObserver();
-            if (observer.isAlive()) {
-                observer.addOnGlobalLayoutListener(this);
-            }
-            run();
-        }
-
-        @Override
-        public void onGlobalLayout() {
-            run();
-        }
-
-        @Override
-        public void run() {
-            if (!alive) {
-                return;
-            }
-            final View viewRoot = this.viewRoot.get();
-            if (null == viewRoot || dying) {
-                cleanUp();
-                return;
-            }
-            viewEdit.run(viewRoot);
-            handler.removeCallbacks(this);
-            handler.postDelayed(this, 1000);
-        }
-
-        private void kill() {
-            dying = true;
-            handler.post(this);
-        }
-
-        private void cleanUp() {
-            if (alive) {
-                final View viewRoot = this.viewRoot.get();
-                if (viewRoot != null) {
-                    final ViewTreeObserver observer = viewRoot.getViewTreeObserver();
-                    if (observer.isAlive()) {
-                        observer.removeGlobalOnLayoutListener(this);
-                    }
-                }
-                viewEdit.cleanup();
-            }
-            alive = false;
-        }
-    }
-
-    class ActivitySet {
-        private Set<Activity> activitySet;
-
-        ActivitySet() {
-            activitySet = new HashSet<>();
-        }
-
-        void add(Activity activity) {
-            checkThreadState();
-            activitySet.add(activity);
-        }
-
-        void remove(Activity activity) {
-            checkThreadState();
-            activitySet.remove(activity);
-        }
-
-        Set<Activity> getAll() {
-            checkThreadState();
-            return Collections.unmodifiableSet(activitySet);
-        }
-
-        boolean isEmpty() {
-            checkThreadState();
-            return activitySet.isEmpty();
-        }
-
-        private void checkThreadState() throws RuntimeException {
-            if (Thread.currentThread() != Looper.getMainLooper().getThread()) {
-                throw new RuntimeException("Can't access ActivitySet when not on the UI thread");
-            }
         }
     }
 

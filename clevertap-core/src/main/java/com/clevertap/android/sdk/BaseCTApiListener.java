@@ -4,7 +4,7 @@ import android.content.Context;
 
 public interface BaseCTApiListener {
 
-    Context context();
-
     CleverTapInstanceConfig config();
+
+    Context context();
 }

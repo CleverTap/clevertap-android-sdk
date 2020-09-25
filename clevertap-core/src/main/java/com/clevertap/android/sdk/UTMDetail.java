@@ -2,9 +2,12 @@ package com.clevertap.android.sdk;
 
 @SuppressWarnings("WeakerAccess")
 public class UTMDetail {
-    private String source;
-    private String medium;
+
     private String campaign;
+
+    private String medium;
+
+    private String source;
 
     @SuppressWarnings("unused")
     public String getCampaign() {

@@ -2,101 +2,13 @@ package com.clevertap.android.sdk;
 
 import android.location.Location;
 import android.os.Bundle;
-
+import java.util.Iterator;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.Iterator;
-
 class CTJsonConverter {
 
-
-    static String toJsonString(Object value) {
-        String val = null;
-
-        try {
-            val = value.toString();
-        } catch (Exception e) {
-            // no-op
-        }
-
-        return val;
-    }
-
-    static JSONObject toJsonObject(String json, Logger logger, String accountId) {
-        JSONObject cache = null;
-        if (json != null) {
-            try {
-                cache = new JSONObject(json);
-            } catch (Throwable t) {
-                // no-op
-                logger.verbose(accountId, "Error reading guid cache: " + t.toString());
-            }
-        }
-
-        return (cache != null) ? cache : new JSONObject();
-    }
-
-    static JSONObject getWzrkFields(CTInAppNotification root) throws JSONException {
-        final JSONObject fields = new JSONObject();
-        JSONObject jsonObject = root.getJsonDescription();
-        Iterator<String> iterator = jsonObject.keys();
-
-        while (iterator.hasNext()) {
-            String keyName = iterator.next();
-            if (keyName.startsWith(Constants.WZRK_PREFIX))
-                fields.put(keyName, jsonObject.get(keyName));
-        }
-
-        return fields;
-    }
-
-    static JSONObject getWzrkFields(Bundle root) throws JSONException {
-        final JSONObject fields = new JSONObject();
-        for (String s : root.keySet()) {
-            final Object o = root.get(s);
-            if (o instanceof Bundle) {
-                final JSONObject wzrkFields = getWzrkFields((Bundle) o);
-                final Iterator<String> keys = wzrkFields.keys();
-                while (keys.hasNext()) {
-                    final String k = keys.next();
-                    fields.put(k, wzrkFields.get(k));
-                }
-            } else if (s.startsWith(Constants.WZRK_PREFIX)) {
-                fields.put(s, root.get(s));
-            }
-        }
-
-        return fields;
-    }
-
-    static JSONObject getWzrkFields(CTInboxMessage root) {
-        return root.getWzrkParams();
-    }
-
-    //Validation
-    static JSONObject getErrorObject(ValidationResult vr) {
-        JSONObject error = new JSONObject();
-        try {
-            error.put("c", vr.getErrorCode());
-            error.put("d", vr.getErrorDesc());
-        } catch (JSONException e) {
-            // Won't reach here
-        }
-        return error;
-    }
-
-
-    static JSONArray getRenderedTargetList(DBAdapter dbAdapter) {
-        String[] pushIds = dbAdapter.fetchPushNotificationIds();
-        JSONArray renderedTargets = new JSONArray();
-        for (String pushId : pushIds) {
-            Logger.v("RTL IDs -" + pushId);
-            renderedTargets.put(pushId);
-        }
-        return renderedTargets;
-    }
 
     static JSONObject from(DeviceInfo deviceInfo, Location locationFromUser, boolean enableNetworkInfoReporting
             , boolean deviceIsMultiUser) throws JSONException {
@@ -135,8 +47,9 @@ class CTJsonConverter {
             }
 
             String cc = deviceInfo.getCountryCode();
-            if (cc != null && !cc.equals(""))
+            if (cc != null && !cc.equals("")) {
                 evtData.put("cc", cc);
+            }
 
             if (enableNetworkInfoReporting) {
                 final Boolean isWifi = deviceInfo.isWifiConnected();
@@ -165,6 +78,92 @@ class CTJsonConverter {
         }
 
         return evtData;
+    }
+
+    //Validation
+    static JSONObject getErrorObject(ValidationResult vr) {
+        JSONObject error = new JSONObject();
+        try {
+            error.put("c", vr.getErrorCode());
+            error.put("d", vr.getErrorDesc());
+        } catch (JSONException e) {
+            // Won't reach here
+        }
+        return error;
+    }
+
+    static JSONArray getRenderedTargetList(DBAdapter dbAdapter) {
+        String[] pushIds = dbAdapter.fetchPushNotificationIds();
+        JSONArray renderedTargets = new JSONArray();
+        for (String pushId : pushIds) {
+            Logger.v("RTL IDs -" + pushId);
+            renderedTargets.put(pushId);
+        }
+        return renderedTargets;
+    }
+
+    static JSONObject getWzrkFields(CTInAppNotification root) throws JSONException {
+        final JSONObject fields = new JSONObject();
+        JSONObject jsonObject = root.getJsonDescription();
+        Iterator<String> iterator = jsonObject.keys();
+
+        while (iterator.hasNext()) {
+            String keyName = iterator.next();
+            if (keyName.startsWith(Constants.WZRK_PREFIX)) {
+                fields.put(keyName, jsonObject.get(keyName));
+            }
+        }
+
+        return fields;
+    }
+
+    static JSONObject getWzrkFields(Bundle root) throws JSONException {
+        final JSONObject fields = new JSONObject();
+        for (String s : root.keySet()) {
+            final Object o = root.get(s);
+            if (o instanceof Bundle) {
+                final JSONObject wzrkFields = getWzrkFields((Bundle) o);
+                final Iterator<String> keys = wzrkFields.keys();
+                while (keys.hasNext()) {
+                    final String k = keys.next();
+                    fields.put(k, wzrkFields.get(k));
+                }
+            } else if (s.startsWith(Constants.WZRK_PREFIX)) {
+                fields.put(s, root.get(s));
+            }
+        }
+
+        return fields;
+    }
+
+    static JSONObject getWzrkFields(CTInboxMessage root) {
+        return root.getWzrkParams();
+    }
+
+    static JSONObject toJsonObject(String json, Logger logger, String accountId) {
+        JSONObject cache = null;
+        if (json != null) {
+            try {
+                cache = new JSONObject(json);
+            } catch (Throwable t) {
+                // no-op
+                logger.verbose(accountId, "Error reading guid cache: " + t.toString());
+            }
+        }
+
+        return (cache != null) ? cache : new JSONObject();
+    }
+
+    static String toJsonString(Object value) {
+        String val = null;
+
+        try {
+            val = value.toString();
+        } catch (Exception e) {
+            // no-op
+        }
+
+        return val;
     }
 
 }

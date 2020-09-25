@@ -1,21 +1,24 @@
 package com.clevertap.android.sdk.ab_testing.uieditor;
 
 import android.view.View;
-
 import com.clevertap.android.sdk.Logger;
-
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 class ViewCaller {
 
-    private final Class<?> targetClass;
-    private final Method targetMethod;
-    private final String methodName;
     private final Object[] methodArgs;
+
+    private final String methodName;
+
     private final Class<?> methodResultType;
 
-    ViewCaller(Class<?> targetClass, String methodName, Object[] methodArgs, Class<?> resultType) throws NoSuchMethodException {
+    private final Class<?> targetClass;
+
+    private final Method targetMethod;
+
+    ViewCaller(Class<?> targetClass, String methodName, Object[] methodArgs, Class<?> resultType)
+            throws NoSuchMethodException {
         this.methodName = methodName;
         this.methodArgs = methodArgs;
         this.methodResultType = resultType;
@@ -26,25 +29,42 @@ class ViewCaller {
         this.targetClass = targetMethod.getDeclaringClass();
     }
 
-    private static Class<?> assignableArgType(Class<?> type) {
-        if (type == Byte.class) {
-            type = byte.class;
-        } else if (type == Short.class) {
-            type = short.class;
-        } else if (type == Integer.class) {
-            type = int.class;
-        } else if (type == Long.class) {
-            type = long.class;
-        } else if (type == Float.class) {
-            type = float.class;
-        } else if (type == Double.class) {
-            type = double.class;
-        } else if (type == Boolean.class) {
-            type = boolean.class;
-        } else if (type == Character.class) {
-            type = char.class;
+    boolean argsAreApplicable(Object[] proposedArgs) {
+        final Class<?>[] paramTypes = targetMethod.getParameterTypes();
+        if (proposedArgs.length != paramTypes.length) {
+            return false;
         }
-        return type;
+
+        for (int i = 0; i < proposedArgs.length; i++) {
+            final Class<?> paramType = assignableArgType(paramTypes[i]);
+            if (proposedArgs[i] == null) {
+                if (paramType == byte.class ||
+                        paramType == short.class ||
+                        paramType == int.class ||
+                        paramType == long.class ||
+                        paramType == float.class ||
+                        paramType == double.class ||
+                        paramType == boolean.class ||
+                        paramType == char.class) {
+                    return false;
+                }
+            } else {
+                final Class<?> argumentType = assignableArgType(proposedArgs[i].getClass());
+                if (argumentType.getCanonicalName() != null
+                        && (argumentType.getCanonicalName().equals("android.content.res.ColorStateList") ||
+                        argumentType.getCanonicalName().equals("android.graphics.drawable.ColorDrawable") ||
+                        argumentType.getCanonicalName().equals("android.graphics.drawable.RippleDrawable"))) {
+                    //no-op to skip
+                } else if (!paramType.isAssignableFrom(argumentType)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    Object[] getArgs() {
+        return methodArgs;
     }
 
     String getMethodName() {
@@ -107,41 +127,24 @@ class ViewCaller {
         return null;
     }
 
-    Object[] getArgs() {
-        return methodArgs;
-    }
-
-    boolean argsAreApplicable(Object[] proposedArgs) {
-        final Class<?>[] paramTypes = targetMethod.getParameterTypes();
-        if (proposedArgs.length != paramTypes.length) {
-            return false;
+    private static Class<?> assignableArgType(Class<?> type) {
+        if (type == Byte.class) {
+            type = byte.class;
+        } else if (type == Short.class) {
+            type = short.class;
+        } else if (type == Integer.class) {
+            type = int.class;
+        } else if (type == Long.class) {
+            type = long.class;
+        } else if (type == Float.class) {
+            type = float.class;
+        } else if (type == Double.class) {
+            type = double.class;
+        } else if (type == Boolean.class) {
+            type = boolean.class;
+        } else if (type == Character.class) {
+            type = char.class;
         }
-
-        for (int i = 0; i < proposedArgs.length; i++) {
-            final Class<?> paramType = assignableArgType(paramTypes[i]);
-            if (proposedArgs[i] == null) {
-                if (paramType == byte.class ||
-                        paramType == short.class ||
-                        paramType == int.class ||
-                        paramType == long.class ||
-                        paramType == float.class ||
-                        paramType == double.class ||
-                        paramType == boolean.class ||
-                        paramType == char.class) {
-                    return false;
-                }
-            } else {
-                final Class<?> argumentType = assignableArgType(proposedArgs[i].getClass());
-                if (argumentType.getCanonicalName() != null
-                        && (argumentType.getCanonicalName().equals("android.content.res.ColorStateList") ||
-                        argumentType.getCanonicalName().equals("android.graphics.drawable.ColorDrawable") ||
-                        argumentType.getCanonicalName().equals("android.graphics.drawable.RippleDrawable"))) {
-                    //no-op to skip
-                } else if (!paramType.isAssignableFrom(argumentType)) {
-                    return false;
-                }
-            }
-        }
-        return true;
+        return type;
     }
 }

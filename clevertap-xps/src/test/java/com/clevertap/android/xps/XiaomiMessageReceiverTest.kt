@@ -5,17 +5,17 @@ import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
 import com.xiaomi.mipush.sdk.MiPushCommandMessage
 import com.xiaomi.mipush.sdk.MiPushMessage
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.ArgumentMatchers.any
-import org.mockito.Mockito
+import org.junit.*
+import org.junit.runner.*
+import org.mockito.*
+import org.mockito.ArgumentMatchers.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28], application = TestApplication::class)
 class XiaomiMessageReceiverTest : BaseTestCase() {
+
     private lateinit var receiver: XiaomiMessageReceiver
     private lateinit var handler: XiaomiMessageHandler
 
@@ -36,7 +36,8 @@ class XiaomiMessageReceiverTest : BaseTestCase() {
     @Test
     fun testOnReceiveRegisterResult() {
         receiver.onReceiveRegisterResult(application, MiPushCommandMessage())
-        Mockito.verify(handler).onReceiveRegisterResult(any(Context::class.java), any(MiPushCommandMessage::class.java))
+        Mockito.verify(handler)
+            .onReceiveRegisterResult(any(Context::class.java), any(MiPushCommandMessage::class.java))
     }
 
     @Test

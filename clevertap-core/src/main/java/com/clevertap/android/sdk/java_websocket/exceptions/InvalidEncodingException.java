@@ -20,8 +20,9 @@ public class InvalidEncodingException extends RuntimeException {
      * @param encodingException the cause for this exception
      */
     public InvalidEncodingException(UnsupportedEncodingException encodingException) {
-        if (encodingException == null)
+        if (encodingException == null) {
             throw new IllegalArgumentException();
+        }
         this.encodingException = encodingException;
     }
 

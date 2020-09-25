@@ -8,9 +8,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.View;
-
 import androidx.annotation.Nullable;
-
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Set;
@@ -18,41 +16,37 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public abstract class CTInAppBaseFragment extends Fragment {
 
-    CTInAppNotification inAppNotification;
-    CleverTapInstanceConfig config;
+    class CTInAppNativeButtonClickListener implements View.OnClickListener {
+
+        @Override
+        public void onClick(View view) {
+            handleButtonClickAtIndex((int) view.getTag());
+        }
+    }
+
+    interface InAppListener {
+
+        void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData,
+                HashMap<String, String> keyValueMap);
+
+        void inAppNotificationDidDismiss(Context context, CTInAppNotification inAppNotification, Bundle formData);
+
+        void inAppNotificationDidShow(CTInAppNotification inAppNotification, Bundle formData);
+    }
+
     CloseImageView closeImageView = null;
+
+    CleverTapInstanceConfig config;
+
     int currentOrientation;
-    Activity parent;
+
+    CTInAppNotification inAppNotification;
+
     AtomicBoolean isCleanedUp = new AtomicBoolean();
+
+    Activity parent;
+
     private WeakReference<CTInAppBaseFragment.InAppListener> listenerWeakReference;
-
-    void didClick(Bundle data, HashMap<String, String> keyValueMap) {
-        InAppListener listener = getListener();
-        if (listener != null) {
-            listener.inAppNotificationDidClick(inAppNotification, data, keyValueMap);
-        }
-    }
-
-    InAppListener getListener() {
-        InAppListener listener = null;
-        try {
-            listener = listenerWeakReference.get();
-        } catch (Throwable t) {
-            // no-op
-        }
-        if (listener == null) {
-            config.getLogger().verbose(config.getAccountId(), "InAppListener is null for notification: " + inAppNotification.getJsonDescription());
-        }
-        return listener;
-    }
-
-    void setListener(InAppListener listener) {
-        listenerWeakReference = new WeakReference<>(listener);
-    }
-
-    abstract void cleanup();
-
-    abstract void generateListener();
 
     @Override
     public void onAttach(Activity activity) {
@@ -71,33 +65,12 @@ public abstract class CTInAppBaseFragment extends Fragment {
         didShow(null);
     }
 
-    void handleButtonClickAtIndex(int index) {
-        try {
-            CTInAppNotificationButton button = inAppNotification.getButtons().get(index);
-            Bundle data = new Bundle();
+    abstract void cleanup();
 
-            data.putString(Constants.NOTIFICATION_ID_TAG, inAppNotification.getCampaignId());
-            data.putString(Constants.KEY_C2A, button.getText());
-
-            didClick(data, button.getKeyValues());
-
-            String actionUrl = button.getActionUrl();
-            if (actionUrl != null) {
-                fireUrlThroughIntent(actionUrl, data);
-                return;
-            }
-            didDismiss(data);
-        } catch (Throwable t) {
-            config.getLogger().debug("Error handling notification button click: " + t.getCause());
-            didDismiss(null);
-        }
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    void didShow(Bundle data) {
+    void didClick(Bundle data, HashMap<String, String> keyValueMap) {
         InAppListener listener = getListener();
         if (listener != null) {
-            listener.inAppNotificationDidShow(inAppNotification, data);
+            listener.inAppNotificationDidClick(inAppNotification, data, keyValueMap);
         }
     }
 
@@ -106,6 +79,14 @@ public abstract class CTInAppBaseFragment extends Fragment {
         InAppListener listener = getListener();
         if (listener != null && getActivity() != null && getActivity().getBaseContext() != null) {
             listener.inAppNotificationDidDismiss(getActivity().getBaseContext(), inAppNotification, data);
+        }
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    void didShow(Bundle data) {
+        InAppListener listener = getListener();
+        if (listener != null) {
+            listener.inAppNotificationDidShow(inAppNotification, data);
         }
     }
 
@@ -131,23 +112,50 @@ public abstract class CTInAppBaseFragment extends Fragment {
         didDismiss(formData);
     }
 
+    abstract void generateListener();
+
+    InAppListener getListener() {
+        InAppListener listener = null;
+        try {
+            listener = listenerWeakReference.get();
+        } catch (Throwable t) {
+            // no-op
+        }
+        if (listener == null) {
+            config.getLogger().verbose(config.getAccountId(),
+                    "InAppListener is null for notification: " + inAppNotification.getJsonDescription());
+        }
+        return listener;
+    }
+
+    void setListener(InAppListener listener) {
+        listenerWeakReference = new WeakReference<>(listener);
+    }
+
     int getScaledPixels(int raw) {
         return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,
                 raw, getResources().getDisplayMetrics());
     }
 
-    interface InAppListener {
-        void inAppNotificationDidShow(CTInAppNotification inAppNotification, Bundle formData);
+    void handleButtonClickAtIndex(int index) {
+        try {
+            CTInAppNotificationButton button = inAppNotification.getButtons().get(index);
+            Bundle data = new Bundle();
 
-        void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData, HashMap<String, String> keyValueMap);
+            data.putString(Constants.NOTIFICATION_ID_TAG, inAppNotification.getCampaignId());
+            data.putString(Constants.KEY_C2A, button.getText());
 
-        void inAppNotificationDidDismiss(Context context, CTInAppNotification inAppNotification, Bundle formData);
-    }
+            didClick(data, button.getKeyValues());
 
-    class CTInAppNativeButtonClickListener implements View.OnClickListener {
-        @Override
-        public void onClick(View view) {
-            handleButtonClickAtIndex((int) view.getTag());
+            String actionUrl = button.getActionUrl();
+            if (actionUrl != null) {
+                fireUrlThroughIntent(actionUrl, data);
+                return;
+            }
+            didDismiss(data);
+        } catch (Throwable t) {
+            config.getLogger().debug("Error handling notification button click: " + t.getCause());
+            didDismiss(null);
         }
     }
 

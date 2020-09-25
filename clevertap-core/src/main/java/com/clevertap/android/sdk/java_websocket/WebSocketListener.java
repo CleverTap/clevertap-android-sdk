@@ -33,7 +33,6 @@ import com.clevertap.android.sdk.java_websocket.handshake.ClientHandshake;
 import com.clevertap.android.sdk.java_websocket.handshake.Handshakedata;
 import com.clevertap.android.sdk.java_websocket.handshake.ServerHandshake;
 import com.clevertap.android.sdk.java_websocket.handshake.ServerHandshakeBuilder;
-
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 
@@ -45,17 +44,59 @@ import java.nio.ByteBuffer;
 public interface WebSocketListener {
 
     /**
-     * Called on the server side when the socket connection is first established, and the WebSocket
-     * handshake has been received. This method allows to deny connections based on the received handshake.<br>
-     * By default this method only requires protocol compliance.
-     *
-     * @param conn    The WebSocket related to this event
-     * @param draft   The protocol draft the client uses to connect
-     * @param request The opening http message send by the client. Can be used to access additional fields like cookies.
-     * @return Returns an incomplete handshake containing all optional fields
-     * @throws InvalidDataException Throwing this exception will cause this handshake to be rejected
+     * @param conn The <tt>WebSocket</tt> instance this event is occuring on.
+     * @return Returns the address of the endpoint this socket is bound to.
+     * @see WebSocket#getLocalSocketAddress()
      */
-    ServerHandshakeBuilder onWebsocketHandshakeReceivedAsServer(WebSocket conn, Draft draft, ClientHandshake request) throws InvalidDataException;
+    InetSocketAddress getLocalSocketAddress(WebSocket conn);
+
+    /**
+     * @param conn The <tt>WebSocket</tt> instance this event is occuring on.
+     * @return Returns the address of the endpoint this socket is connected to, or{@code null} if it is unconnected.
+     * @see WebSocket#getRemoteSocketAddress()
+     */
+    InetSocketAddress getRemoteSocketAddress(WebSocket conn);
+
+    /**
+     * Called after <tt>WebSocket#close</tt> is explicity called, or when the
+     * other end of the WebSocket connection is closed.
+     *
+     * @param ws     The <tt>WebSocket</tt> instance this event is occuring on.
+     * @param code   The codes can be looked up here: {@link CloseFrame}
+     * @param reason Additional information string
+     * @param remote Returns whether or not the closing of the connection was initiated by the remote host.
+     */
+    void onWebsocketClose(WebSocket ws, int code, String reason, boolean remote);
+
+    /**
+     * send when this peer sends a close handshake
+     *
+     * @param ws     The <tt>WebSocket</tt> instance this event is occuring on.
+     * @param code   The codes can be looked up here: {@link CloseFrame}
+     * @param reason Additional information string
+     */
+    void onWebsocketCloseInitiated(WebSocket ws, int code, String reason);
+
+    /**
+     * Called as soon as no further frames are accepted
+     *
+     * @param ws     The <tt>WebSocket</tt> instance this event is occuring on.
+     * @param code   The codes can be looked up here: {@link CloseFrame}
+     * @param reason Additional information string
+     * @param remote Returns whether or not the closing of the connection was initiated by the remote host.
+     */
+    void onWebsocketClosing(WebSocket ws, int code, String reason, boolean remote);
+
+    /**
+     * Called if an exception worth noting occurred.
+     * If an error causes the connection to fail onClose will be called additionally afterwards.
+     *
+     * @param conn The <tt>WebSocket</tt> instance this event is occuring on.
+     * @param ex   The exception that occurred. <br>
+     *             Might be null if the exception is not related to any specific connection. For example if the server
+     *             port could not be bound.
+     */
+    void onWebsocketError(WebSocket conn, Exception ex);
 
     /**
      * Called on the client side when the socket connection is first established, and the WebSocketImpl
@@ -64,9 +105,26 @@ public interface WebSocketListener {
      * @param conn     The WebSocket related to this event
      * @param request  The handshake initially send out to the server by this websocket.
      * @param response The handshake the server sent in response to the request.
-     * @throws InvalidDataException Allows the client to reject the connection with the server in respect of its handshake response.
+     * @throws InvalidDataException Allows the client to reject the connection with the server in respect of its
+     *                              handshake response.
      */
-    void onWebsocketHandshakeReceivedAsClient(WebSocket conn, ClientHandshake request, ServerHandshake response) throws InvalidDataException;
+    void onWebsocketHandshakeReceivedAsClient(WebSocket conn, ClientHandshake request, ServerHandshake response)
+            throws InvalidDataException;
+
+    /**
+     * Called on the server side when the socket connection is first established, and the WebSocket
+     * handshake has been received. This method allows to deny connections based on the received handshake.<br>
+     * By default this method only requires protocol compliance.
+     *
+     * @param conn    The WebSocket related to this event
+     * @param draft   The protocol draft the client uses to connect
+     * @param request The opening http message send by the client. Can be used to access additional fields like
+     *                cookies.
+     * @return Returns an incomplete handshake containing all optional fields
+     * @throws InvalidDataException Throwing this exception will cause this handshake to be rejected
+     */
+    ServerHandshakeBuilder onWebsocketHandshakeReceivedAsServer(WebSocket conn, Draft draft, ClientHandshake request)
+            throws InvalidDataException;
 
     /**
      * Called on the client side when the socket connection is first established, and the WebSocketImpl
@@ -107,46 +165,6 @@ public interface WebSocketListener {
     void onWebsocketOpen(WebSocket conn, Handshakedata d);
 
     /**
-     * Called after <tt>WebSocket#close</tt> is explicity called, or when the
-     * other end of the WebSocket connection is closed.
-     *
-     * @param ws     The <tt>WebSocket</tt> instance this event is occuring on.
-     * @param code   The codes can be looked up here: {@link CloseFrame}
-     * @param reason Additional information string
-     * @param remote Returns whether or not the closing of the connection was initiated by the remote host.
-     */
-    void onWebsocketClose(WebSocket ws, int code, String reason, boolean remote);
-
-    /**
-     * Called as soon as no further frames are accepted
-     *
-     * @param ws     The <tt>WebSocket</tt> instance this event is occuring on.
-     * @param code   The codes can be looked up here: {@link CloseFrame}
-     * @param reason Additional information string
-     * @param remote Returns whether or not the closing of the connection was initiated by the remote host.
-     */
-    void onWebsocketClosing(WebSocket ws, int code, String reason, boolean remote);
-
-    /**
-     * send when this peer sends a close handshake
-     *
-     * @param ws     The <tt>WebSocket</tt> instance this event is occuring on.
-     * @param code   The codes can be looked up here: {@link CloseFrame}
-     * @param reason Additional information string
-     */
-    void onWebsocketCloseInitiated(WebSocket ws, int code, String reason);
-
-    /**
-     * Called if an exception worth noting occurred.
-     * If an error causes the connection to fail onClose will be called additionally afterwards.
-     *
-     * @param conn The <tt>WebSocket</tt> instance this event is occuring on.
-     * @param ex   The exception that occurred. <br>
-     *             Might be null if the exception is not related to any specific connection. For example if the server port could not be bound.
-     */
-    void onWebsocketError(WebSocket conn, Exception ex);
-
-    /**
      * Called a ping frame has been received.
      * This method must send a corresponding pong by itself.
      *
@@ -169,18 +187,4 @@ public interface WebSocketListener {
      * @param conn The <tt>WebSocket</tt> instance this event is occuring on.
      */
     void onWriteDemand(WebSocket conn);
-
-    /**
-     * @param conn The <tt>WebSocket</tt> instance this event is occuring on.
-     * @return Returns the address of the endpoint this socket is bound to.
-     * @see WebSocket#getLocalSocketAddress()
-     */
-    InetSocketAddress getLocalSocketAddress(WebSocket conn);
-
-    /**
-     * @param conn The <tt>WebSocket</tt> instance this event is occuring on.
-     * @return Returns the address of the endpoint this socket is connected to, or{@code null} if it is unconnected.
-     * @see WebSocket#getRemoteSocketAddress()
-     */
-    InetSocketAddress getRemoteSocketAddress(WebSocket conn);
 }

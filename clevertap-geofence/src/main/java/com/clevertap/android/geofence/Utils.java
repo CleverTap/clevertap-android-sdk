@@ -5,41 +5,32 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 import androidx.core.content.ContextCompat;
-
 import com.clevertap.android.geofence.interfaces.CTLocationUpdatesListener;
 import com.clevertap.android.sdk.CleverTapAPI;
-
+import java.util.ArrayList;
+import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.List;
-
 class Utils {
 
     private static Boolean isPlayServicesDependencyAvailable;
+
     private static Boolean isFusedLocationDependencyAvailable;
+
     private static Boolean isConcurrentFuturesDependencyAvailable;
 
-    /**
-     * Checks if Application has provided permission
-     *
-     * @param context    application {@link Context}
-     * @param permission for example, {@link Manifest.permission#ACCESS_FINE_LOCATION}
-     * @return
-     */
-    static boolean hasPermission(final Context context, String permission) {
-        try {
-            return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permission);
-        } catch (Throwable t) {
-            return false;
-        }
+    static String emptyIfNull(String str) {
+        return str == null ? "" : str;
+    }
+
+    static int getGeofenceSDKVersion() {
+        return BuildConfig.VERSION_CODE;
     }
 
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
@@ -56,46 +47,54 @@ class Utils {
     }
 
     /**
-     * Checks if Google Play services dependency is available.
+     * Checks if Application has provided permission
      *
-     * @return <code>true</code> if available, otherwise <code>false</code>.
+     * @param context    application {@link Context}
+     * @param permission for example, {@link Manifest.permission#ACCESS_FINE_LOCATION}
      */
-    private static boolean isPlayServicesDependencyAvailable() {
-
-        if (isPlayServicesDependencyAvailable == null) {//use reflection only once
-            // Play Services
-            try {
-                Class.forName("com.google.android.gms.common.GooglePlayServicesUtil");
-                isPlayServicesDependencyAvailable = true;
-            } catch (ClassNotFoundException e) {
-                isPlayServicesDependencyAvailable = false;
-            }
+    static boolean hasPermission(final Context context, String permission) {
+        try {
+            return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permission);
+        } catch (Throwable t) {
+            return false;
         }
-
-        return isPlayServicesDependencyAvailable;
     }
 
     /**
-     * Checks if Google Play services dependency is available for Fused Location.
+     * Creates {@link com.clevertap.android.sdk.CleverTapAPI} instance if it's null and initializes
+     * Geofence SDK, mostly in killed state.
+     * <br>
+     * <b>Must be called from background thread</b>
      *
-     * @return <code>true</code> if available, otherwise <code>false</code>.
+     * @param context application {@link Context}
+     * @return true if geofence sdk initialized successfully, false otherwise
      */
-    static boolean isFusedLocationApiDependencyAvailable() {
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
+    @WorkerThread
+    static boolean initCTGeofenceApiIfRequired(@NonNull Context context) {
 
-        if (isFusedLocationDependencyAvailable == null) {//use reflection only once
-            if (!isPlayServicesDependencyAvailable()) {
-                isFusedLocationDependencyAvailable = false;
-            } else {
-                try {
-                    Class.forName("com.google.android.gms.location.FusedLocationProviderClient");
-                    isFusedLocationDependencyAvailable = true;
-                } catch (ClassNotFoundException e) {
-                    isFusedLocationDependencyAvailable = false;
-                }
+        CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(context);
+
+        if (ctGeofenceAPI.getCleverTapApi() == null) {
+            CTGeofenceSettings ctGeofenceSettings = Utils.readSettingsFromFile(context);
+            if (ctGeofenceSettings == null) {
+                CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                        "Could not initialize CT instance! Dropping this call");
+                return false;
             }
+
+            CleverTapAPI cleverTapAPI = CleverTapAPI.getGlobalInstance(context, ctGeofenceSettings.getId());
+
+            if (cleverTapAPI == null) {
+                CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                        "Critical issue :: After calling  CleverTapAPI.getGlobalInstance also init is failed! Dropping this call");
+                return false;
+            }
+
+            ctGeofenceAPI.init(ctGeofenceSettings, cleverTapAPI);
         }
 
-        return isFusedLocationDependencyAvailable;
+        return true;
     }
 
     /**
@@ -119,8 +118,27 @@ class Utils {
         return isConcurrentFuturesDependencyAvailable;
     }
 
-    static String emptyIfNull(String str) {
-        return str == null ? "" : str;
+    /**
+     * Checks if Google Play services dependency is available for Fused Location.
+     *
+     * @return <code>true</code> if available, otherwise <code>false</code>.
+     */
+    static boolean isFusedLocationApiDependencyAvailable() {
+
+        if (isFusedLocationDependencyAvailable == null) {//use reflection only once
+            if (!isPlayServicesDependencyAvailable()) {
+                isFusedLocationDependencyAvailable = false;
+            } else {
+                try {
+                    Class.forName("com.google.android.gms.location.FusedLocationProviderClient");
+                    isFusedLocationDependencyAvailable = true;
+                } catch (ClassNotFoundException e) {
+                    isFusedLocationDependencyAvailable = false;
+                }
+            }
+        }
+
+        return isFusedLocationDependencyAvailable;
     }
 
     /**
@@ -148,6 +166,26 @@ class Utils {
     }
 
     /**
+     * Notifies Listener for location update on main thread through {@link CTLocationUpdatesListener}
+     *
+     * @param context  application {@link Context}
+     * @param location instance of {@link Location}
+     */
+    static void notifyLocationUpdates(@NonNull Context context, @Nullable final Location location) {
+        final CTLocationUpdatesListener ctLocationUpdatesListener = CTGeofenceAPI.getInstance(context)
+                .getCtLocationUpdatesListener();
+
+        if (ctLocationUpdatesListener != null) {
+            com.clevertap.android.sdk.Utils.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    ctLocationUpdatesListener.onLocationUpdates(location);
+                }
+            });
+        }
+    }
+
+    /**
      * Reads {@link CTGeofenceSettings} from file.
      * <br>
      * <b>Must be called from background thread</b>
@@ -171,7 +209,8 @@ class Utils {
                 JSONObject jsonObject = new JSONObject(settingsString);
 
                 ctGeofenceSettings = new CTGeofenceSettings.Builder()
-                        .enableBackgroundLocationUpdates(jsonObject.getBoolean(CTGeofenceConstants.KEY_LAST_BG_LOCATION_UPDATES))
+                        .enableBackgroundLocationUpdates(
+                                jsonObject.getBoolean(CTGeofenceConstants.KEY_LAST_BG_LOCATION_UPDATES))
                         .setLocationAccuracy((byte) jsonObject.getInt(CTGeofenceConstants.KEY_LAST_ACCURACY))
                         .setLocationFetchMode((byte) jsonObject.getInt(CTGeofenceConstants.KEY_LAST_FETCH_MODE))
                         .setLogLevel(jsonObject.getInt(CTGeofenceConstants.KEY_LAST_LOG_LEVEL))
@@ -179,7 +218,8 @@ class Utils {
                         .setId(jsonObject.getString(CTGeofenceConstants.KEY_ID))
                         .setInterval(jsonObject.getLong(CTGeofenceConstants.KEY_LAST_INTERVAL))
                         .setFastestInterval(jsonObject.getLong(CTGeofenceConstants.KEY_LAST_FASTEST_INTERVAL))
-                        .setSmallestDisplacement((float) jsonObject.getDouble(CTGeofenceConstants.KEY_LAST_DISPLACEMENT))
+                        .setSmallestDisplacement(
+                                (float) jsonObject.getDouble(CTGeofenceConstants.KEY_LAST_DISPLACEMENT))
                         .build();
 
                 CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
@@ -195,6 +235,36 @@ class Utils {
         }
 
         return ctGeofenceSettings;
+
+    }
+
+    /**
+     * Creates sub array from provided {@link JSONArray}
+     *
+     * @param arr       {@link JSONArray}
+     * @param fromIndex fromIndex
+     * @param toIndex   toIndex
+     * @return sub array exclusive of toIndex
+     * @throws IllegalStateException if fromIndex > toIndex
+     */
+    @NonNull
+    static JSONArray subArray(@NonNull JSONArray arr, int fromIndex, int toIndex) {
+
+        if (fromIndex > toIndex) {
+            throw new IllegalArgumentException("fromIndex(" + fromIndex + ") > toIndex(" + toIndex + ")");
+        }
+
+        JSONArray jsonArray = new JSONArray();
+
+        try {
+            for (int i = fromIndex; i < toIndex; i++) {
+                jsonArray.put(arr.getJSONObject(i));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        return jsonArray;
 
     }
 
@@ -247,92 +317,22 @@ class Utils {
     }
 
     /**
-     * Creates {@link com.clevertap.android.sdk.CleverTapAPI} instance if it's null and initializes
-     * Geofence SDK, mostly in killed state.
-     * <br>
-     * <b>Must be called from background thread</b>
+     * Checks if Google Play services dependency is available.
      *
-     * @param context application {@link Context}
-     * @return true if geofence sdk initialized successfully, false otherwise
+     * @return <code>true</code> if available, otherwise <code>false</code>.
      */
-    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    @WorkerThread
-    static boolean initCTGeofenceApiIfRequired(@NonNull Context context) {
+    private static boolean isPlayServicesDependencyAvailable() {
 
-        CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(context);
-
-        if (ctGeofenceAPI.getCleverTapApi() == null) {
-            CTGeofenceSettings ctGeofenceSettings = Utils.readSettingsFromFile(context);
-            if (ctGeofenceSettings == null) {
-                CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                        "Could not initialize CT instance! Dropping this call");
-                return false;
+        if (isPlayServicesDependencyAvailable == null) {//use reflection only once
+            // Play Services
+            try {
+                Class.forName("com.google.android.gms.common.GooglePlayServicesUtil");
+                isPlayServicesDependencyAvailable = true;
+            } catch (ClassNotFoundException e) {
+                isPlayServicesDependencyAvailable = false;
             }
-
-            CleverTapAPI cleverTapAPI = CleverTapAPI.getGlobalInstance(context, ctGeofenceSettings.getId());
-
-            if (cleverTapAPI == null) {
-                CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
-                        "Critical issue :: After calling  CleverTapAPI.getGlobalInstance also init is failed! Dropping this call");
-                return false;
-            }
-
-            ctGeofenceAPI.init(ctGeofenceSettings, cleverTapAPI);
         }
 
-        return true;
-    }
-
-    /**
-     * Creates sub array from provided {@link JSONArray}
-     *
-     * @param arr       {@link JSONArray}
-     * @param fromIndex fromIndex
-     * @param toIndex   toIndex
-     * @return sub array exclusive of toIndex
-     * @throws IllegalStateException if fromIndex > toIndex
-     */
-    @NonNull
-    static JSONArray subArray(@NonNull JSONArray arr, int fromIndex, int toIndex) {
-
-        if (fromIndex > toIndex)
-            throw new IllegalArgumentException("fromIndex(" + fromIndex + ") > toIndex(" + toIndex + ")");
-
-        JSONArray jsonArray = new JSONArray();
-
-        try {
-            for (int i = fromIndex; i < toIndex; i++) {
-                jsonArray.put(arr.getJSONObject(i));
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-
-        return jsonArray;
-
-    }
-
-    static int getGeofenceSDKVersion() {
-        return BuildConfig.VERSION_CODE;
-    }
-
-    /**
-     * Notifies Listener for location update on main thread through {@link CTLocationUpdatesListener}
-     *
-     * @param context  application {@link Context}
-     * @param location instance of {@link Location}
-     */
-    static void notifyLocationUpdates(@NonNull Context context, @Nullable final Location location) {
-        final CTLocationUpdatesListener ctLocationUpdatesListener = CTGeofenceAPI.getInstance(context)
-                .getCtLocationUpdatesListener();
-
-        if (ctLocationUpdatesListener != null) {
-            com.clevertap.android.sdk.Utils.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    ctLocationUpdatesListener.onLocationUpdates(location);
-                }
-            });
-        }
+        return isPlayServicesDependencyAvailable;
     }
 }

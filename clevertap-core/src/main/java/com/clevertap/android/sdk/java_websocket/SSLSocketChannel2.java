@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLEngineResult;
 import javax.net.ssl.SSLEngineResult.HandshakeStatus;
@@ -57,51 +56,60 @@ public class SSLSocketChannel2 implements ByteChannel, WrappedByteChannel {
      **/
     protected static ByteBuffer emptybuffer = ByteBuffer.allocate(0);
 
+    /**
+     * Should be used to count the buffer allocations.
+     * But because of #190 where HandshakeStatus.FINISHED is not properly returned by nio wrap/unwrap this variable is
+     * used to check whether {@link #createBuffers(SSLSession)} needs to be called.
+     **/
+    protected int bufferallocations = 0;
+
     protected ExecutorService exec;
 
-    protected List<Future<?>> tasks;
-
-    /**
-     * raw payload incomming
-     */
-    protected ByteBuffer inData;
-    /**
-     * encrypted data outgoing
-     */
-    protected ByteBuffer outCrypt;
     /**
      * encrypted data incoming
      */
     protected ByteBuffer inCrypt;
 
     /**
-     * the underlying channel
+     * raw payload incomming
      */
-    protected SocketChannel socketChannel;
+    protected ByteBuffer inData;
+
+    /**
+     * encrypted data outgoing
+     */
+    protected ByteBuffer outCrypt;
+
+    protected SSLEngineResult readEngineResult;
+
     /**
      * used to set interestOP SelectionKey.OP_WRITE for the underlying channel
      */
     protected SelectionKey selectionKey;
 
+    /**
+     * the underlying channel
+     */
+    protected SocketChannel socketChannel;
+
     protected SSLEngine sslEngine;
-    protected SSLEngineResult readEngineResult;
+
+    protected List<Future<?>> tasks;
+
     protected SSLEngineResult writeEngineResult;
 
-    /**
-     * Should be used to count the buffer allocations.
-     * But because of #190 where HandshakeStatus.FINISHED is not properly returned by nio wrap/unwrap this variable is used to check whether {@link #createBuffers(SSLSession)} needs to be called.
-     **/
-    protected int bufferallocations = 0;
-
-    public SSLSocketChannel2(SocketChannel channel, SSLEngine sslEngine, ExecutorService exec, SelectionKey key) throws IOException {
-        if (channel == null || sslEngine == null || exec == null)
+    public SSLSocketChannel2(SocketChannel channel, SSLEngine sslEngine, ExecutorService exec, SelectionKey key)
+            throws IOException {
+        if (channel == null || sslEngine == null || exec == null) {
             throw new IllegalArgumentException("parameter must not be null");
+        }
 
         this.socketChannel = channel;
         this.sslEngine = sslEngine;
         this.exec = exec;
 
-        readEngineResult = writeEngineResult = new SSLEngineResult(Status.BUFFER_UNDERFLOW, sslEngine.getHandshakeStatus(), 0, 0); // init to prevent NPEs
+        readEngineResult = writeEngineResult = new SSLEngineResult(Status.BUFFER_UNDERFLOW,
+                sslEngine.getHandshakeStatus(), 0, 0); // init to prevent NPEs
 
         tasks = new ArrayList<Future<?>>(3);
         if (key != null) {
@@ -112,6 +120,194 @@ public class SSLSocketChannel2 implements ByteChannel, WrappedByteChannel {
         // kick off handshake
         socketChannel.write(wrap(emptybuffer));// initializes res
         processHandshake();
+    }
+
+    public void close() throws IOException {
+        sslEngine.closeOutbound();
+        sslEngine.getSession().invalidate();
+        if (socketChannel.isOpen()) {
+            socketChannel.write(wrap(emptybuffer));// FIXME what if not all bytes can be written
+        }
+        socketChannel.close();
+    }
+
+    public SelectableChannel configureBlocking(boolean b) throws IOException {
+        return socketChannel.configureBlocking(b);
+    }
+
+    public boolean connect(SocketAddress remote) throws IOException {
+        return socketChannel.connect(remote);
+    }
+
+    public boolean finishConnect() throws IOException {
+        return socketChannel.finishConnect();
+    }
+
+    @Override
+    public boolean isBlocking() {
+        return socketChannel.isBlocking();
+    }
+
+    public boolean isConnected() {
+        return socketChannel.isConnected();
+    }
+
+    public boolean isInboundDone() {
+        return sslEngine.isInboundDone();
+    }
+
+    @Override
+    public boolean isNeedRead() {
+        return inData.hasRemaining() || (inCrypt.hasRemaining()
+                && readEngineResult.getStatus() != Status.BUFFER_UNDERFLOW
+                && readEngineResult.getStatus() != Status.CLOSED);
+    }
+
+    @Override
+    public boolean isNeedWrite() {
+        return outCrypt.hasRemaining()
+                || !isHandShakeComplete(); // FIXME this condition can cause high cpu load during handshaking when network is slow
+    }
+
+    @Override
+    public boolean isOpen() {
+        return socketChannel.isOpen();
+    }
+
+    /**
+     * Blocks when in blocking mode until at least one byte has been decoded.<br>
+     * When not in blocking mode 0 may be returned.
+     *
+     * @return the number of bytes read.
+     **/
+    public int read(ByteBuffer dst) throws IOException {
+        while (true) {
+            if (!dst.hasRemaining()) {
+                return 0;
+            }
+            if (!isHandShakeComplete()) {
+                if (isBlocking()) {
+                    while (!isHandShakeComplete()) {
+                        processHandshake();
+                    }
+                } else {
+                    processHandshake();
+                    if (!isHandShakeComplete()) {
+                        return 0;
+                    }
+                }
+            }
+            // assert ( bufferallocations > 1 ); //see #190
+            //if( bufferallocations <= 1 ) {
+            //	createBuffers( sslEngine.getSession() );
+            //}
+            /* 1. When "dst" is smaller than "inData" readRemaining will fill "dst" with data decoded in a previous read call.
+             * 2. When "inCrypt" contains more data than "inData" has remaining space, unwrap has to be called on more time(readRemaining)
+             */
+            int purged = readRemaining(dst);
+            if (purged != 0) {
+                return purged;
+            }
+
+            /* We only continue when we really need more data from the network.
+             * Thats the case if inData is empty or inCrypt holds to less data than necessary for decryption
+             */
+            assert (inData.position() == 0);
+            inData.clear();
+
+            if (!inCrypt.hasRemaining()) {
+                inCrypt.clear();
+            } else {
+                inCrypt.compact();
+            }
+
+            if (isBlocking() || readEngineResult.getStatus() == Status.BUFFER_UNDERFLOW) {
+                if (socketChannel.read(inCrypt) == -1) {
+                    return -1;
+                }
+            }
+            inCrypt.flip();
+            unwrap();
+
+            int transfered = transfereTo(inData, dst);
+            if (transfered == 0 && isBlocking()) {
+                continue;
+            }
+            return transfered;
+        }
+    }
+
+    @Override
+    public int readMore(ByteBuffer dst) throws SSLException {
+        return readRemaining(dst);
+    }
+
+    public Socket socket() {
+        return socketChannel.socket();
+    }
+
+    public int write(ByteBuffer src) throws IOException {
+        if (!isHandShakeComplete()) {
+            processHandshake();
+            return 0;
+        }
+        // assert ( bufferallocations > 1 ); //see #190
+        //if( bufferallocations <= 1 ) {
+        //	createBuffers( sslEngine.getSession() );
+        //}
+        int num = socketChannel.write(wrap(src));
+        if (writeEngineResult.getStatus() == SSLEngineResult.Status.CLOSED) {
+            throw new EOFException("Connection is closed");
+        }
+        return num;
+
+    }
+
+    @Override
+    public void writeMore() throws IOException {
+        write(outCrypt);
+    }
+
+    protected void consumeDelegatedTasks() {
+        Runnable task;
+        while ((task = sslEngine.getDelegatedTask()) != null) {
+            tasks.add(exec.submit(task));
+            // task.run();
+        }
+    }
+
+    protected void createBuffers(SSLSession session) {
+        int netBufferMax = session.getPacketBufferSize();
+        int appBufferMax = Math.max(session.getApplicationBufferSize(), netBufferMax);
+
+        if (inData == null) {
+            inData = ByteBuffer.allocate(appBufferMax);
+            outCrypt = ByteBuffer.allocate(netBufferMax);
+            inCrypt = ByteBuffer.allocate(netBufferMax);
+        } else {
+            if (inData.capacity() != appBufferMax) {
+                inData = ByteBuffer.allocate(appBufferMax);
+            }
+            if (outCrypt.capacity() != netBufferMax) {
+                outCrypt = ByteBuffer.allocate(netBufferMax);
+            }
+            if (inCrypt.capacity() != netBufferMax) {
+                inCrypt = ByteBuffer.allocate(netBufferMax);
+            }
+        }
+        if (inData.remaining() != 0) {
+            // no-op
+        }
+        inData.rewind();
+        inData.flip();
+        if (inCrypt.remaining() != 0) {
+            // no-op
+        }
+        inCrypt.rewind();
+        inCrypt.flip();
+        outCrypt.rewind();
+        outCrypt.flip();
+        bufferallocations++;
     }
 
     private void consumeFutureUninterruptible(Future<?> f) {
@@ -129,13 +325,20 @@ public class SSLSocketChannel2 implements ByteChannel, WrappedByteChannel {
         }
     }
 
+    private boolean isHandShakeComplete() {
+        HandshakeStatus status = sslEngine.getHandshakeStatus();
+        return status == SSLEngineResult.HandshakeStatus.FINISHED
+                || status == SSLEngineResult.HandshakeStatus.NOT_HANDSHAKING;
+    }
+
     /**
      * This method will do whatever necessary to process the sslengine handshake.
      * Thats why it's called both from the {@link #read(ByteBuffer)} and {@link #write(ByteBuffer)}
      **/
     private synchronized void processHandshake() throws IOException {
-        if (sslEngine.getHandshakeStatus() == HandshakeStatus.NOT_HANDSHAKING)
+        if (sslEngine.getHandshakeStatus() == HandshakeStatus.NOT_HANDSHAKING) {
             return; // since this may be called either from a reading or a writing thread and because this method is synchronized it is necessary to double check if we are still handshaking.
+        }
         if (!tasks.isEmpty()) {
             Iterator<Future<?>> it = tasks.iterator();
             while (it.hasNext()) {
@@ -143,8 +346,9 @@ public class SSLSocketChannel2 implements ByteChannel, WrappedByteChannel {
                 if (f.isDone()) {
                     it.remove();
                 } else {
-                    if (isBlocking())
+                    if (isBlocking()) {
                         consumeFutureUninterruptible(f);
+                    }
                     return;
                 }
             }
@@ -174,152 +378,11 @@ public class SSLSocketChannel2 implements ByteChannel, WrappedByteChannel {
                 return;
             }
         }
-        assert (sslEngine.getHandshakeStatus() != HandshakeStatus.NOT_HANDSHAKING);// this function could only leave NOT_HANDSHAKING after createBuffers was called unless #190 occurs which means that nio wrap/unwrap never return HandshakeStatus.FINISHED
+        assert (sslEngine.getHandshakeStatus()
+                != HandshakeStatus.NOT_HANDSHAKING);// this function could only leave NOT_HANDSHAKING after createBuffers was called unless #190 occurs which means that nio wrap/unwrap never return HandshakeStatus.FINISHED
 
-        bufferallocations = 1; // look at variable declaration why this line exists and #190. Without this line buffers would not be be recreated when #190 AND a rehandshake occur.
-    }
-
-    private synchronized ByteBuffer wrap(ByteBuffer b) throws SSLException {
-        outCrypt.compact();
-        writeEngineResult = sslEngine.wrap(b, outCrypt);
-        outCrypt.flip();
-        return outCrypt;
-    }
-
-    /**
-     * performs the unwrap operation by unwrapping from {@link #inCrypt} to {@link #inData}
-     **/
-    private synchronized ByteBuffer unwrap() throws SSLException {
-        int rem;
-        //There are some ssl test suites, which get around the selector.select() call, which cause an infinite unwrap and 100% cpu usage (see #459 and #458)
-        if (readEngineResult.getStatus() == SSLEngineResult.Status.CLOSED && sslEngine.getHandshakeStatus() == HandshakeStatus.NOT_HANDSHAKING) {
-            try {
-                close();
-            } catch (IOException e) {
-                //Not really interesting
-            }
-        }
-        do {
-            rem = inData.remaining();
-            readEngineResult = sslEngine.unwrap(inCrypt, inData);
-        } while (readEngineResult.getStatus() == SSLEngineResult.Status.OK && (rem != inData.remaining() || sslEngine.getHandshakeStatus() == HandshakeStatus.NEED_UNWRAP));
-        inData.flip();
-        return inData;
-    }
-
-    protected void consumeDelegatedTasks() {
-        Runnable task;
-        while ((task = sslEngine.getDelegatedTask()) != null) {
-            tasks.add(exec.submit(task));
-            // task.run();
-        }
-    }
-
-    protected void createBuffers(SSLSession session) {
-        int netBufferMax = session.getPacketBufferSize();
-        int appBufferMax = Math.max(session.getApplicationBufferSize(), netBufferMax);
-
-        if (inData == null) {
-            inData = ByteBuffer.allocate(appBufferMax);
-            outCrypt = ByteBuffer.allocate(netBufferMax);
-            inCrypt = ByteBuffer.allocate(netBufferMax);
-        } else {
-            if (inData.capacity() != appBufferMax)
-                inData = ByteBuffer.allocate(appBufferMax);
-            if (outCrypt.capacity() != netBufferMax)
-                outCrypt = ByteBuffer.allocate(netBufferMax);
-            if (inCrypt.capacity() != netBufferMax)
-                inCrypt = ByteBuffer.allocate(netBufferMax);
-        }
-        if (inData.remaining() != 0) {
-            // no-op
-        }
-        inData.rewind();
-        inData.flip();
-        if (inCrypt.remaining() != 0) {
-            // no-op
-        }
-        inCrypt.rewind();
-        inCrypt.flip();
-        outCrypt.rewind();
-        outCrypt.flip();
-        bufferallocations++;
-    }
-
-    public int write(ByteBuffer src) throws IOException {
-        if (!isHandShakeComplete()) {
-            processHandshake();
-            return 0;
-        }
-        // assert ( bufferallocations > 1 ); //see #190
-        //if( bufferallocations <= 1 ) {
-        //	createBuffers( sslEngine.getSession() );
-        //}
-        int num = socketChannel.write(wrap(src));
-        if (writeEngineResult.getStatus() == SSLEngineResult.Status.CLOSED) {
-            throw new EOFException("Connection is closed");
-        }
-        return num;
-
-    }
-
-    /**
-     * Blocks when in blocking mode until at least one byte has been decoded.<br>
-     * When not in blocking mode 0 may be returned.
-     *
-     * @return the number of bytes read.
-     **/
-    public int read(ByteBuffer dst) throws IOException {
-        while (true) {
-            if (!dst.hasRemaining())
-                return 0;
-            if (!isHandShakeComplete()) {
-                if (isBlocking()) {
-                    while (!isHandShakeComplete()) {
-                        processHandshake();
-                    }
-                } else {
-                    processHandshake();
-                    if (!isHandShakeComplete()) {
-                        return 0;
-                    }
-                }
-            }
-            // assert ( bufferallocations > 1 ); //see #190
-            //if( bufferallocations <= 1 ) {
-            //	createBuffers( sslEngine.getSession() );
-            //}
-            /* 1. When "dst" is smaller than "inData" readRemaining will fill "dst" with data decoded in a previous read call.
-             * 2. When "inCrypt" contains more data than "inData" has remaining space, unwrap has to be called on more time(readRemaining)
-             */
-            int purged = readRemaining(dst);
-            if (purged != 0)
-                return purged;
-
-            /* We only continue when we really need more data from the network.
-             * Thats the case if inData is empty or inCrypt holds to less data than necessary for decryption
-             */
-            assert (inData.position() == 0);
-            inData.clear();
-
-            if (!inCrypt.hasRemaining())
-                inCrypt.clear();
-            else
-                inCrypt.compact();
-
-            if (isBlocking() || readEngineResult.getStatus() == Status.BUFFER_UNDERFLOW)
-                if (socketChannel.read(inCrypt) == -1) {
-                    return -1;
-                }
-            inCrypt.flip();
-            unwrap();
-
-            int transfered = transfereTo(inData, dst);
-            if (transfered == 0 && isBlocking()) {
-                continue;
-            }
-            return transfered;
-        }
+        bufferallocations
+                = 1; // look at variable declaration why this line exists and #190. Without this line buffers would not be be recreated when #190 AND a rehandshake occur.
     }
 
     /**
@@ -329,8 +392,9 @@ public class SSLSocketChannel2 implements ByteChannel, WrappedByteChannel {
         if (inData.hasRemaining()) {
             return transfereTo(inData, dst);
         }
-        if (!inData.hasRemaining())
+        if (!inData.hasRemaining()) {
             inData.clear();
+        }
         // test if some bytes left from last read (e.g. BUFFER_UNDERFLOW)
         if (inCrypt.hasRemaining()) {
             unwrap();
@@ -338,72 +402,11 @@ public class SSLSocketChannel2 implements ByteChannel, WrappedByteChannel {
             if (readEngineResult.getStatus() == SSLEngineResult.Status.CLOSED) {
                 return -1;
             }
-            if (amount > 0)
+            if (amount > 0) {
                 return amount;
+            }
         }
         return 0;
-    }
-
-    public boolean isConnected() {
-        return socketChannel.isConnected();
-    }
-
-    public void close() throws IOException {
-        sslEngine.closeOutbound();
-        sslEngine.getSession().invalidate();
-        if (socketChannel.isOpen())
-            socketChannel.write(wrap(emptybuffer));// FIXME what if not all bytes can be written
-        socketChannel.close();
-    }
-
-    private boolean isHandShakeComplete() {
-        HandshakeStatus status = sslEngine.getHandshakeStatus();
-        return status == SSLEngineResult.HandshakeStatus.FINISHED || status == SSLEngineResult.HandshakeStatus.NOT_HANDSHAKING;
-    }
-
-    public SelectableChannel configureBlocking(boolean b) throws IOException {
-        return socketChannel.configureBlocking(b);
-    }
-
-    public boolean connect(SocketAddress remote) throws IOException {
-        return socketChannel.connect(remote);
-    }
-
-    public boolean finishConnect() throws IOException {
-        return socketChannel.finishConnect();
-    }
-
-    public Socket socket() {
-        return socketChannel.socket();
-    }
-
-    public boolean isInboundDone() {
-        return sslEngine.isInboundDone();
-    }
-
-    @Override
-    public boolean isOpen() {
-        return socketChannel.isOpen();
-    }
-
-    @Override
-    public boolean isNeedWrite() {
-        return outCrypt.hasRemaining() || !isHandShakeComplete(); // FIXME this condition can cause high cpu load during handshaking when network is slow
-    }
-
-    @Override
-    public void writeMore() throws IOException {
-        write(outCrypt);
-    }
-
-    @Override
-    public boolean isNeedRead() {
-        return inData.hasRemaining() || (inCrypt.hasRemaining() && readEngineResult.getStatus() != Status.BUFFER_UNDERFLOW && readEngineResult.getStatus() != Status.CLOSED);
-    }
-
-    @Override
-    public int readMore(ByteBuffer dst) throws SSLException {
-        return readRemaining(dst);
     }
 
     private int transfereTo(ByteBuffer from, ByteBuffer to) {
@@ -423,9 +426,34 @@ public class SSLSocketChannel2 implements ByteChannel, WrappedByteChannel {
 
     }
 
-    @Override
-    public boolean isBlocking() {
-        return socketChannel.isBlocking();
+    /**
+     * performs the unwrap operation by unwrapping from {@link #inCrypt} to {@link #inData}
+     **/
+    private synchronized ByteBuffer unwrap() throws SSLException {
+        int rem;
+        //There are some ssl test suites, which get around the selector.select() call, which cause an infinite unwrap and 100% cpu usage (see #459 and #458)
+        if (readEngineResult.getStatus() == SSLEngineResult.Status.CLOSED
+                && sslEngine.getHandshakeStatus() == HandshakeStatus.NOT_HANDSHAKING) {
+            try {
+                close();
+            } catch (IOException e) {
+                //Not really interesting
+            }
+        }
+        do {
+            rem = inData.remaining();
+            readEngineResult = sslEngine.unwrap(inCrypt, inData);
+        } while (readEngineResult.getStatus() == SSLEngineResult.Status.OK && (rem != inData.remaining()
+                || sslEngine.getHandshakeStatus() == HandshakeStatus.NEED_UNWRAP));
+        inData.flip();
+        return inData;
+    }
+
+    private synchronized ByteBuffer wrap(ByteBuffer b) throws SSLException {
+        outCrypt.compact();
+        writeEngineResult = sslEngine.wrap(b, outCrypt);
+        outCrypt.flip();
+        return outCrypt;
     }
 
 }

@@ -26,10 +26,10 @@
 package com.clevertap.android.sdk.java_websocket;
 
 import com.clevertap.android.sdk.java_websocket.drafts.Draft;
-
 import java.util.List;
 
 public interface WebSocketFactory {
+
     /**
      * Create a new Websocket with the provided listener, drafts and socket
      *

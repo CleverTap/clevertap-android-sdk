@@ -26,7 +26,6 @@
 package com.clevertap.android.sdk.java_websocket;
 
 import com.clevertap.android.sdk.java_websocket.util.ByteBufferUtils;
-
 import java.io.IOException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
@@ -34,7 +33,6 @@ import java.nio.channels.ByteChannel;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.concurrent.ExecutorService;
-
 import javax.net.ssl.SSLEngine;
 import javax.net.ssl.SSLEngineResult;
 import javax.net.ssl.SSLEngineResult.HandshakeStatus;
@@ -52,7 +50,8 @@ import javax.net.ssl.SSLSession;
  * <p>
  * {@link SSLSocketChannel} implements the handshake protocol, required to establish a connection between two peers,
  * which is common for both client and server and provides the abstract {@link SSLSocketChannel#read(ByteBuffer)} and
- * {@link SSLSocketChannel#write(ByteBuffer)} (String)} methods, that need to be implemented by the specific SSL/TLS peer
+ * {@link SSLSocketChannel#write(ByteBuffer)} (String)} methods, that need to be implemented by the specific SSL/TLS
+ * peer
  * that is going to extend this class.
  *
  * @author <a href="mailto:alex.a.karnezis@gmail.com">Alex Karnezis</a>
@@ -64,15 +63,14 @@ import javax.net.ssl.SSLSession;
 public class SSLSocketChannel implements WrappedByteChannel, ByteChannel {
 
     /**
-     * The underlaying socket channel
-     */
-    private final SocketChannel socketChannel;
-
-    /**
      * The engine which will be used for un-/wrapping of buffers
      */
     private final SSLEngine engine;
 
+    /**
+     * Will be used to execute tasks that may emerge during handshake in parallel with the server's main thread.
+     */
+    private ExecutorService executor;
 
     /**
      * Will contain this peer's application data in plaintext, that will be later encrypted
@@ -84,37 +82,46 @@ public class SSLSocketChannel implements WrappedByteChannel, ByteChannel {
     private ByteBuffer myAppData;
 
     /**
-     * Will contain this peer's encrypted data, that will be generated after {@link SSLEngine#wrap(ByteBuffer, ByteBuffer)}
-     * is applied on {@link SSLSocketChannel#myAppData}. It should be initialized using {@link SSLSession#getPacketBufferSize()},
+     * Will contain this peer's encrypted data, that will be generated after {@link SSLEngine#wrap(ByteBuffer,
+     * ByteBuffer)}
+     * is applied on {@link SSLSocketChannel#myAppData}. It should be initialized using {@link
+     * SSLSession#getPacketBufferSize()},
      * which returns the size up to which, SSL/TLS packets will be generated from the engine under a session.
-     * All SSLEngine network buffers should be sized at least this large to avoid insufficient space problems when performing wrap and unwrap calls.
+     * All SSLEngine network buffers should be sized at least this large to avoid insufficient space problems when
+     * performing wrap and unwrap calls.
      */
     private ByteBuffer myNetData;
 
     /**
-     * Will contain the other peer's (decrypted) application data. It must be large enough to hold the application data
+     * Will contain the other peer's (decrypted) application data. It must be large enough to hold the application
+     * data
      * from any peer. Can be initialized with {@link SSLSession#getApplicationBufferSize()} for an estimation
      * of the other peer's application data and should be enlarged if this size is not enough.
      */
     private ByteBuffer peerAppData;
 
     /**
-     * Will contain the other peer's encrypted data. The SSL/TLS protocols specify that implementations should produce packets containing at most 16 KB of plaintext,
-     * so a buffer sized to this value should normally cause no capacity problems. However, some implementations violate the specification and generate large records up to 32 KB.
-     * If the {@link SSLEngine#unwrap(ByteBuffer, ByteBuffer)} detects large inbound packets, the buffer sizes returned by SSLSession will be updated dynamically, so the this peer
+     * Will contain the other peer's encrypted data. The SSL/TLS protocols specify that implementations should produce
+     * packets containing at most 16 KB of plaintext,
+     * so a buffer sized to this value should normally cause no capacity problems. However, some implementations
+     * violate the specification and generate large records up to 32 KB.
+     * If the {@link SSLEngine#unwrap(ByteBuffer, ByteBuffer)} detects large inbound packets, the buffer sizes
+     * returned by SSLSession will be updated dynamically, so the this peer
      * should check for overflow conditions and enlarge the buffer using the session's (updated) buffer size.
      */
     private ByteBuffer peerNetData;
 
     /**
-     * Will be used to execute tasks that may emerge during handshake in parallel with the server's main thread.
+     * The underlaying socket channel
      */
-    private ExecutorService executor;
+    private final SocketChannel socketChannel;
 
 
-    public SSLSocketChannel(SocketChannel inputSocketChannel, SSLEngine inputEngine, ExecutorService inputExecutor, SelectionKey key) throws IOException {
-        if (inputSocketChannel == null || inputEngine == null || executor == inputExecutor)
+    public SSLSocketChannel(SocketChannel inputSocketChannel, SSLEngine inputEngine, ExecutorService inputExecutor,
+            SelectionKey key) throws IOException {
+        if (inputSocketChannel == null || inputEngine == null || executor == inputExecutor) {
             throw new IllegalArgumentException("parameter must not be null");
+        }
 
         this.socketChannel = inputSocketChannel;
         this.engine = inputEngine;
@@ -133,6 +140,31 @@ public class SSLSocketChannel implements WrappedByteChannel, ByteChannel {
                 // no-op
             }
         }
+    }
+
+    @Override
+    public void close() throws IOException {
+        closeConnection();
+    }
+
+    @Override
+    public boolean isBlocking() {
+        return socketChannel.isBlocking();
+    }
+
+    @Override
+    public boolean isNeedRead() {
+        return peerNetData.hasRemaining() || peerAppData.hasRemaining();
+    }
+
+    @Override
+    public boolean isNeedWrite() {
+        return false;
+    }
+
+    @Override
+    public boolean isOpen() {
+        return socketChannel.isOpen();
     }
 
     @Override
@@ -186,6 +218,11 @@ public class SSLSocketChannel implements WrappedByteChannel, ByteChannel {
     }
 
     @Override
+    public int readMore(ByteBuffer dst) throws IOException {
+        return read(dst);
+    }
+
+    @Override
     public synchronized int write(ByteBuffer output) throws IOException {
         int num = 0;
         while (output.hasRemaining()) {
@@ -204,7 +241,8 @@ public class SSLSocketChannel implements WrappedByteChannel, ByteChannel {
                     myNetData = enlargePacketBuffer(myNetData);
                     break;
                 case BUFFER_UNDERFLOW:
-                    throw new SSLException("Buffer underflow occured after a wrap. I don't think we should ever get here.");
+                    throw new SSLException(
+                            "Buffer underflow occured after a wrap. I don't think we should ever get here.");
                 case CLOSED:
                     closeConnection();
                     return 0;
@@ -215,9 +253,35 @@ public class SSLSocketChannel implements WrappedByteChannel, ByteChannel {
         return num;
     }
 
+    @Override
+    public void writeMore() throws IOException {
+        //Nothing to do since we write out all the data in a while loop
+    }
+
+    /**
+     * This method should be called when this peer wants to explicitly close the connection
+     * or when a close message has arrived from the other peer, in order to provide an orderly shutdown.
+     * <p/>
+     * It first calls {@link SSLEngine#closeOutbound()} which prepares this peer to send its own close message and
+     * sets {@link SSLEngine} to the <code>NEED_WRAP</code> state. Then, it delegates the exchange of close messages
+     * to the handshake method and finally, it closes socket channel.
+     *
+     * @throws IOException if an I/O error occurs to the socket channel.
+     */
+    private void closeConnection() throws IOException {
+        engine.closeOutbound();
+        try {
+            doHandshake();
+        } catch (IOException e) {
+            //Just ignore this exception since we are closing the connection already
+        }
+        socketChannel.close();
+    }
+
     /**
      * Implements the handshake protocol between two peers, required for the establishment of the SSL/TLS connection.
-     * During the handshake, encryption configuration information - such as the list of available cipher suites - will be exchanged
+     * During the handshake, encryption configuration information - such as the list of available cipher suites - will
+     * be exchanged
      * and if the handshake is successful will lead to an established SSL/TLS session.
      * <p>
      * <p/>
@@ -261,8 +325,9 @@ public class SSLSocketChannel implements WrappedByteChannel, ByteChannel {
             switch (handshakeStatus) {
                 case FINISHED:
                     handshakeComplete = !this.peerNetData.hasRemaining();
-                    if (handshakeComplete)
+                    if (handshakeComplete) {
                         return true;
+                    }
                     socketChannel.write(this.peerNetData);
                     break;
                 case NEED_UNWRAP:
@@ -337,7 +402,8 @@ public class SSLSocketChannel implements WrappedByteChannel, ByteChannel {
                             myNetData = enlargePacketBuffer(myNetData);
                             break;
                         case BUFFER_UNDERFLOW:
-                            throw new SSLException("Buffer underflow occured after a wrap. I don't think we should ever get here.");
+                            throw new SSLException(
+                                    "Buffer underflow occured after a wrap. I don't think we should ever get here.");
                         case CLOSED:
                             try {
                                 myNetData.flip();
@@ -374,16 +440,6 @@ public class SSLSocketChannel implements WrappedByteChannel, ByteChannel {
     }
 
     /**
-     * Enlarging a packet buffer (peerNetData or myNetData)
-     *
-     * @param buffer the buffer to enlarge
-     * @return the enlarged buffer
-     */
-    private ByteBuffer enlargePacketBuffer(ByteBuffer buffer) {
-        return enlargeBuffer(buffer, engine.getSession().getPacketBufferSize());
-    }
-
-    /**
      * Enlarging a packet buffer (peerAppData or myAppData)
      *
      * @param buffer the buffer to enlarge
@@ -412,9 +468,22 @@ public class SSLSocketChannel implements WrappedByteChannel, ByteChannel {
     }
 
     /**
-     * Handles {@link SSLEngineResult.Status#BUFFER_UNDERFLOW}. Will check if the buffer is already filled, and if there is no space problem
-     * will return the same buffer, so the client tries to read again. If the buffer is already filled will try to enlarge the buffer either to
-     * session's proposed size or to a larger capacity. A buffer underflow can happen only after an unwrap, so the buffer will always be a
+     * Enlarging a packet buffer (peerNetData or myNetData)
+     *
+     * @param buffer the buffer to enlarge
+     * @return the enlarged buffer
+     */
+    private ByteBuffer enlargePacketBuffer(ByteBuffer buffer) {
+        return enlargeBuffer(buffer, engine.getSession().getPacketBufferSize());
+    }
+
+    /**
+     * Handles {@link SSLEngineResult.Status#BUFFER_UNDERFLOW}. Will check if the buffer is already filled, and if
+     * there is no space problem
+     * will return the same buffer, so the client tries to read again. If the buffer is already filled will try to
+     * enlarge the buffer either to
+     * session's proposed size or to a larger capacity. A buffer underflow can happen only after an unwrap, so the
+     * buffer will always be a
      * peerNetData buffer.
      *
      * @param buffer - will always be peerNetData buffer.
@@ -432,26 +501,6 @@ public class SSLSocketChannel implements WrappedByteChannel, ByteChannel {
     }
 
     /**
-     * This method should be called when this peer wants to explicitly close the connection
-     * or when a close message has arrived from the other peer, in order to provide an orderly shutdown.
-     * <p/>
-     * It first calls {@link SSLEngine#closeOutbound()} which prepares this peer to send its own close message and
-     * sets {@link SSLEngine} to the <code>NEED_WRAP</code> state. Then, it delegates the exchange of close messages
-     * to the handshake method and finally, it closes socket channel.
-     *
-     * @throws IOException if an I/O error occurs to the socket channel.
-     */
-    private void closeConnection() throws IOException {
-        engine.closeOutbound();
-        try {
-            doHandshake();
-        } catch (IOException e) {
-            //Just ignore this exception since we are closing the connection already
-        }
-        socketChannel.close();
-    }
-
-    /**
      * In addition to orderly shutdowns, an unorderly shutdown may occur, when the transport link (socket channel)
      * is severed before close messages are exchanged. This may happen by getting an -1 or {@link IOException}
      * when trying to read from the socket channel, or an {@link IOException} when trying to write to it.
@@ -465,42 +514,6 @@ public class SSLSocketChannel implements WrappedByteChannel, ByteChannel {
         } catch (Exception e) {
             // no-op
         }
-        closeConnection();
-    }
-
-    @Override
-    public boolean isNeedWrite() {
-        return false;
-    }
-
-    @Override
-    public void writeMore() throws IOException {
-        //Nothing to do since we write out all the data in a while loop
-    }
-
-    @Override
-    public boolean isNeedRead() {
-        return peerNetData.hasRemaining() || peerAppData.hasRemaining();
-    }
-
-    @Override
-    public int readMore(ByteBuffer dst) throws IOException {
-        return read(dst);
-    }
-
-    @Override
-    public boolean isBlocking() {
-        return socketChannel.isBlocking();
-    }
-
-
-    @Override
-    public boolean isOpen() {
-        return socketChannel.isOpen();
-    }
-
-    @Override
-    public void close() throws IOException {
         closeConnection();
     }
 }

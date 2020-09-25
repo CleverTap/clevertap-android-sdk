@@ -1,17 +1,15 @@
 package com.clevertap.android.geofence;
 
+import static com.clevertap.android.geofence.CTGeofenceAPI.GEOFENCE_LOG_TAG;
+
 import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-
 import androidx.annotation.MainThread;
-
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-
-import static com.clevertap.android.geofence.CTGeofenceAPI.GEOFENCE_LOG_TAG;
 
 /**
  * A {@link BroadcastReceiver} which will reset geofence monitoring and location updates on device boot

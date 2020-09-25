@@ -25,6 +25,10 @@ enum CTInAppType {
         this.inAppType = type;
     }
 
+    @Override
+    public String toString() {
+        return inAppType;
+    }
 
     @SuppressWarnings({"unused"})
     static CTInAppType fromString(String type) {
@@ -77,11 +81,6 @@ enum CTInAppType {
             default:
                 return null;
         }
-    }
-
-    @Override
-    public String toString() {
-        return inAppType;
     }
 
 }

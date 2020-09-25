@@ -10,6 +10,7 @@ import android.os.Bundle;
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
 public final class ActivityLifecycleCallback {
+
     static boolean registered = false;
 
     /**
@@ -44,7 +45,12 @@ public final class ActivityLifecycleCallback {
                     }
 
                     @Override
-                    public void onActivityStarted(Activity activity) {
+                    public void onActivityDestroyed(Activity activity) {
+                    }
+
+                    @Override
+                    public void onActivityPaused(Activity activity) {
+                        CleverTapAPI.onActivityPaused();
                     }
 
                     @Override
@@ -57,20 +63,15 @@ public final class ActivityLifecycleCallback {
                     }
 
                     @Override
-                    public void onActivityPaused(Activity activity) {
-                        CleverTapAPI.onActivityPaused();
-                    }
-
-                    @Override
-                    public void onActivityStopped(Activity activity) {
-                    }
-
-                    @Override
                     public void onActivitySaveInstanceState(Activity activity, Bundle bundle) {
                     }
 
                     @Override
-                    public void onActivityDestroyed(Activity activity) {
+                    public void onActivityStarted(Activity activity) {
+                    }
+
+                    @Override
+                    public void onActivityStopped(Activity activity) {
                     }
                 }
 

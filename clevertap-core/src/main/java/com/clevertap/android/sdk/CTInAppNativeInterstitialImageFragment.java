@@ -15,15 +15,16 @@ import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
-
 import androidx.annotation.Nullable;
 
 public class CTInAppNativeInterstitialImageFragment extends CTInAppBaseFullFragment {
 
-    private RelativeLayout relativeLayout;
     @SuppressWarnings({"unused"})
     private int layoutHeight = 0;
+
     private int layoutWidth = 0;
+
+    private RelativeLayout relativeLayout;
 
     @Nullable
     @Override
@@ -46,159 +47,175 @@ public class CTInAppNativeInterstitialImageFragment extends CTInAppBaseFullFragm
 
         switch (currentOrientation) {
             case Configuration.ORIENTATION_PORTRAIT:
-                relativeLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                    @Override
-                    public void onGlobalLayout() {
-                        final RelativeLayout relativeLayout1 = fl.findViewById(R.id.interstitial_image_relative_layout);
-                        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1.getLayoutParams();
-                        if (inAppNotification.isTablet() && isTablet()) {
-                            int aspectHeight = (int) (relativeLayout1.getMeasuredWidth() * 1.78f);
-                            int requiredHeight = fl.getMeasuredHeight() - getScaledPixels(80);
+                relativeLayout.getViewTreeObserver()
+                        .addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                            @Override
+                            public void onGlobalLayout() {
+                                final RelativeLayout relativeLayout1 = fl
+                                        .findViewById(R.id.interstitial_image_relative_layout);
+                                FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1
+                                        .getLayoutParams();
+                                if (inAppNotification.isTablet() && isTablet()) {
+                                    int aspectHeight = (int) (relativeLayout1.getMeasuredWidth() * 1.78f);
+                                    int requiredHeight = fl.getMeasuredHeight() - getScaledPixels(80);
 
-                            if (aspectHeight > requiredHeight) {
-                                layoutParams.height = requiredHeight;
-                                layoutParams.width = (int) (requiredHeight / 1.78f);
-                            } else {
-                                layoutParams.height = aspectHeight;
-                            }
+                                    if (aspectHeight > requiredHeight) {
+                                        layoutParams.height = requiredHeight;
+                                        layoutParams.width = (int) (requiredHeight / 1.78f);
+                                    } else {
+                                        layoutParams.height = aspectHeight;
+                                    }
 
-                            relativeLayout1.setLayoutParams(layoutParams);
-                            new Handler().post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    int margin = closeImageView.getMeasuredWidth() / 2;
-                                    closeImageView.setX(relativeLayout.getRight() - margin);
-                                    closeImageView.setY(relativeLayout.getTop() - margin);
-                                }
-                            });
-                        } else {
-                            if (isTablet()) {
-
-                                int aspectHeight = (int) ((relativeLayout1.getMeasuredWidth() - getScaledPixels(200)) * 1.78f);
-                                int requiredHeight = fl.getMeasuredHeight() - getScaledPixels(280);
-
-                                if (aspectHeight > requiredHeight) {
-                                    layoutParams.height = requiredHeight;
-                                    layoutParams.width = (int) (requiredHeight / 1.78f);
+                                    relativeLayout1.setLayoutParams(layoutParams);
+                                    new Handler().post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            int margin = closeImageView.getMeasuredWidth() / 2;
+                                            closeImageView.setX(relativeLayout.getRight() - margin);
+                                            closeImageView.setY(relativeLayout.getTop() - margin);
+                                        }
+                                    });
                                 } else {
-                                    layoutParams.height = aspectHeight;
-                                    layoutParams.width = relativeLayout1.getMeasuredWidth() - getScaledPixels(200);
+                                    if (isTablet()) {
+
+                                        int aspectHeight = (int) (
+                                                (relativeLayout1.getMeasuredWidth() - getScaledPixels(200)) * 1.78f);
+                                        int requiredHeight = fl.getMeasuredHeight() - getScaledPixels(280);
+
+                                        if (aspectHeight > requiredHeight) {
+                                            layoutParams.height = requiredHeight;
+                                            layoutParams.width = (int) (requiredHeight / 1.78f);
+                                        } else {
+                                            layoutParams.height = aspectHeight;
+                                            layoutParams.width = relativeLayout1.getMeasuredWidth() - getScaledPixels(
+                                                    200);
+                                        }
+
+                                        layoutParams.setMargins(getScaledPixels(140), getScaledPixels(140),
+                                                getScaledPixels(140), getScaledPixels(140));
+                                        layoutHeight = layoutParams.height;
+                                        relativeLayout1.setLayoutParams(layoutParams);
+                                        new Handler().post(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                int margin = closeImageView.getMeasuredWidth() / 2;
+                                                closeImageView.setX(relativeLayout.getRight() - margin);
+                                                closeImageView.setY(relativeLayout.getTop() - margin);
+                                            }
+                                        });
+
+                                    } else {
+                                        layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth()
+                                                * 1.78f);
+                                        relativeLayout1.setLayoutParams(layoutParams);
+                                        new Handler().post(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                int margin = closeImageView.getMeasuredWidth() / 2;
+                                                closeImageView.setX(relativeLayout1.getRight() - margin);
+                                                closeImageView.setY(relativeLayout1.getTop() - margin);
+                                            }
+                                        });
+                                    }
                                 }
-
-                                layoutParams.setMargins(getScaledPixels(140), getScaledPixels(140), getScaledPixels(140), getScaledPixels(140));
-                                layoutHeight = layoutParams.height;
-                                relativeLayout1.setLayoutParams(layoutParams);
-                                new Handler().post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        int margin = closeImageView.getMeasuredWidth() / 2;
-                                        closeImageView.setX(relativeLayout.getRight() - margin);
-                                        closeImageView.setY(relativeLayout.getTop() - margin);
-                                    }
-                                });
-
-                            } else {
-                                layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth() * 1.78f);
-                                relativeLayout1.setLayoutParams(layoutParams);
-                                new Handler().post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        int margin = closeImageView.getMeasuredWidth() / 2;
-                                        closeImageView.setX(relativeLayout1.getRight() - margin);
-                                        closeImageView.setY(relativeLayout1.getTop() - margin);
-                                    }
-                                });
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                                    relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                                } else {
+                                    relativeLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                                }
                             }
-                        }
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                            relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                        } else {
-                            relativeLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                        }
-                    }
-                });
+                        });
                 break;
             case Configuration.ORIENTATION_LANDSCAPE:
-                relativeLayout.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                    @Override
-                    public void onGlobalLayout() {
-                        final RelativeLayout relativeLayout1 = fl.findViewById(R.id.interstitial_image_relative_layout);
-                        FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1.getLayoutParams();
-                        if (!inAppNotification.isTablet() || !isTablet()) {
-                            if (isTablet()) {
+                relativeLayout.getViewTreeObserver()
+                        .addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                            @Override
+                            public void onGlobalLayout() {
+                                final RelativeLayout relativeLayout1 = fl
+                                        .findViewById(R.id.interstitial_image_relative_layout);
+                                FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1
+                                        .getLayoutParams();
+                                if (!inAppNotification.isTablet() || !isTablet()) {
+                                    if (isTablet()) {
 
-                                int aspectWidth = (int) ((relativeLayout1.getMeasuredHeight() - getScaledPixels(200)) * 1.78f);
-                                int requiredWidth = fl.getMeasuredWidth() - getScaledPixels(280);
+                                        int aspectWidth = (int) (
+                                                (relativeLayout1.getMeasuredHeight() - getScaledPixels(200)) * 1.78f);
+                                        int requiredWidth = fl.getMeasuredWidth() - getScaledPixels(280);
 
-                                if (aspectWidth > requiredWidth) {
-                                    layoutParams.width = requiredWidth;
-                                    layoutParams.height = (int) (requiredWidth / 1.78f);
+                                        if (aspectWidth > requiredWidth) {
+                                            layoutParams.width = requiredWidth;
+                                            layoutParams.height = (int) (requiredWidth / 1.78f);
+                                        } else {
+                                            layoutParams.width = aspectWidth;
+                                            layoutParams.height = relativeLayout1.getMeasuredHeight()
+                                                    - getScaledPixels(200);
+                                        }
+
+                                        layoutParams.setMargins(getScaledPixels(140), getScaledPixels(140),
+                                                getScaledPixels(140), getScaledPixels(140));
+                                        layoutParams.gravity = Gravity.CENTER;
+                                        relativeLayout1.setLayoutParams(layoutParams);
+
+                                        new Handler().post(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                int margin = closeImageView.getMeasuredWidth() / 2;
+                                                closeImageView.setX(relativeLayout.getRight() - margin);
+                                                closeImageView.setY(relativeLayout.getTop() - margin);
+                                            }
+                                        });
+                                    } else {
+                                        layoutWidth = layoutParams.width = (int) (relativeLayout1.getMeasuredHeight()
+                                                * 1.78f);
+                                        layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
+                                        relativeLayout1.setLayoutParams(layoutParams);
+                                        new Handler().post(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                int margin = closeImageView.getMeasuredWidth() / 2;
+                                                closeImageView.setX(relativeLayout1.getRight() - margin);
+                                                closeImageView.setY(relativeLayout1.getTop() - margin);
+                                            }
+                                        });
+                                    }
                                 } else {
-                                    layoutParams.width = aspectWidth;
-                                    layoutParams.height = relativeLayout1.getMeasuredHeight() - getScaledPixels(200);
-                                }
 
-                                layoutParams.setMargins(getScaledPixels(140), getScaledPixels(140), getScaledPixels(140), getScaledPixels(140));
-                                layoutParams.gravity = Gravity.CENTER;
-                                relativeLayout1.setLayoutParams(layoutParams);
+                                    int aspectWidth = (int) (relativeLayout1.getMeasuredHeight() * 1.78f);
+                                    int requiredWidth = fl.getMeasuredWidth() - getScaledPixels(80);
 
-                                new Handler().post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        int margin = closeImageView.getMeasuredWidth() / 2;
-                                        closeImageView.setX(relativeLayout.getRight() - margin);
-                                        closeImageView.setY(relativeLayout.getTop() - margin);
+                                    if (aspectWidth > requiredWidth) {
+                                        layoutParams.width = requiredWidth;
+                                        layoutParams.height = (int) (requiredWidth / 1.78f);
+                                    } else {
+                                        layoutParams.width = aspectWidth;
                                     }
-                                });
-                            } else {
-                                layoutWidth = layoutParams.width = (int) (relativeLayout1.getMeasuredHeight() * 1.78f);
-                                layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
-                                relativeLayout1.setLayoutParams(layoutParams);
-                                new Handler().post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        int margin = closeImageView.getMeasuredWidth() / 2;
-                                        closeImageView.setX(relativeLayout1.getRight() - margin);
-                                        closeImageView.setY(relativeLayout1.getTop() - margin);
-                                    }
-                                });
-                            }
-                        } else {
 
-                            int aspectWidth = (int) (relativeLayout1.getMeasuredHeight() * 1.78f);
-                            int requiredWidth = fl.getMeasuredWidth() - getScaledPixels(80);
-
-                            if (aspectWidth > requiredWidth) {
-                                layoutParams.width = requiredWidth;
-                                layoutParams.height = (int) (requiredWidth / 1.78f);
-                            } else {
-                                layoutParams.width = aspectWidth;
-                            }
-
-                            layoutParams.gravity = Gravity.CENTER;
-                            relativeLayout1.setLayoutParams(layoutParams);
-                            new Handler().post(new Runnable() {
-                                @Override
-                                public void run() {
-                                    int margin = closeImageView.getMeasuredWidth() / 2;
-                                    closeImageView.setX(relativeLayout.getRight() - margin);
-                                    closeImageView.setY(relativeLayout.getTop() - margin);
+                                    layoutParams.gravity = Gravity.CENTER;
+                                    relativeLayout1.setLayoutParams(layoutParams);
+                                    new Handler().post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            int margin = closeImageView.getMeasuredWidth() / 2;
+                                            closeImageView.setX(relativeLayout.getRight() - margin);
+                                            closeImageView.setY(relativeLayout.getTop() - margin);
+                                        }
+                                    });
                                 }
-                            });
-                        }
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                            relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                        } else {
-                            relativeLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                        }
-                    }
-                });
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                                    relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                                } else {
+                                    relativeLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
+                                }
+                            }
+                        });
                 break;
         }
 
         if (inAppNotification.getInAppMediaForOrientation(currentOrientation) != null) {
-            if (inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)) != null) {
-                imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
+            if (inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation))
+                    != null) {
+                imageView.setImageBitmap(inAppNotification
+                        .getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
                 imageView.setTag(0);
                 imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
             }

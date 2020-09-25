@@ -4,21 +4,18 @@ import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
-
 import com.clevertap.android.sdk.pushnotification.PushConstants;
-
+import java.util.ArrayList;
 import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.util.ArrayList;
 
 public class CleverTapInstanceConfig implements Parcelable {
 
     @SuppressWarnings("unused")
-    public static final Parcelable.Creator<CleverTapInstanceConfig> CREATOR = new Parcelable.Creator<CleverTapInstanceConfig>() {
+    public static final Parcelable.Creator<CleverTapInstanceConfig> CREATOR
+            = new Parcelable.Creator<CleverTapInstanceConfig>() {
         @Override
         public CleverTapInstanceConfig createFromParcel(Parcel in) {
             return new CleverTapInstanceConfig(in);
@@ -29,29 +26,72 @@ public class CleverTapInstanceConfig implements Parcelable {
             return new CleverTapInstanceConfig[size];
         }
     };
+
+    private String accountId;
+
+    private String accountRegion;
+
+    private String accountToken;
+
     @NonNull
     private final ArrayList<String> allowedPushTypes = PushConstants.PushType.getAll();
-    private String accountId;
-    private String accountToken;
-    private String accountRegion;
+
     private boolean analyticsOnly;
-    private boolean isDefaultInstance;
-    private boolean useGoogleAdId;
-    private boolean disableAppLaunchedEvent;
-    private boolean personalization;
-    private int debugLevel;
-    private Logger logger;
-    private boolean createdPostAppLaunch;
-    private boolean sslPinning;
+
     private boolean backgroundSync;
-    private boolean enableCustomCleverTapId;
-    private String fcmSenderId;
-    private boolean enableUIEditor;
-    private boolean enableABTesting;
-    private String packageName;
+
     private boolean beta;
 
-    private CleverTapInstanceConfig(Context context, String accountId, String accountToken, String accountRegion, boolean isDefault) {
+    private boolean createdPostAppLaunch;
+
+    private int debugLevel;
+
+    private boolean disableAppLaunchedEvent;
+
+    private boolean enableABTesting;
+
+    private boolean enableCustomCleverTapId;
+
+    private boolean enableUIEditor;
+
+    private String fcmSenderId;
+
+    private boolean isDefaultInstance;
+
+    private Logger logger;
+
+    private String packageName;
+
+    private boolean personalization;
+
+    private boolean sslPinning;
+
+    private boolean useGoogleAdId;
+
+    @SuppressWarnings("unused")
+    public static CleverTapInstanceConfig createInstance(Context context, @NonNull String accountId,
+            @NonNull String accountToken) {
+        //noinspection ConstantConditions
+        if (accountId == null || accountToken == null) {
+            Logger.i("CleverTap accountId and accountToken cannot be null");
+            return null;
+        }
+        return new CleverTapInstanceConfig(context, accountId, accountToken, null, false);
+    }
+
+    @SuppressWarnings({"unused"})
+    public static CleverTapInstanceConfig createInstance(Context context, @NonNull String accountId,
+            @NonNull String accountToken, String accountRegion) {
+        //noinspection ConstantConditions
+        if (accountId == null || accountToken == null) {
+            Logger.i("CleverTap accountId and accountToken cannot be null");
+            return null;
+        }
+        return new CleverTapInstanceConfig(context, accountId, accountToken, accountRegion, false);
+    }
+
+    private CleverTapInstanceConfig(Context context, String accountId, String accountToken, String accountRegion,
+            boolean isDefault) {
         this.accountId = accountId;
         this.accountToken = accountToken;
         this.accountRegion = accountRegion;
@@ -101,42 +141,58 @@ public class CleverTapInstanceConfig implements Parcelable {
     private CleverTapInstanceConfig(String jsonString) throws Throwable {
         try {
             JSONObject configJsonObject = new JSONObject(jsonString);
-            if (configJsonObject.has(Constants.KEY_ACCOUNT_ID))
+            if (configJsonObject.has(Constants.KEY_ACCOUNT_ID)) {
                 this.accountId = configJsonObject.getString(Constants.KEY_ACCOUNT_ID);
-            if (configJsonObject.has(Constants.KEY_ACCOUNT_TOKEN))
+            }
+            if (configJsonObject.has(Constants.KEY_ACCOUNT_TOKEN)) {
                 this.accountToken = configJsonObject.getString(Constants.KEY_ACCOUNT_TOKEN);
-            if (configJsonObject.has(Constants.KEY_ACCOUNT_REGION))
+            }
+            if (configJsonObject.has(Constants.KEY_ACCOUNT_REGION)) {
                 this.accountRegion = configJsonObject.getString(Constants.KEY_ACCOUNT_REGION);
-            if (configJsonObject.has(Constants.KEY_ANALYTICS_ONLY))
+            }
+            if (configJsonObject.has(Constants.KEY_ANALYTICS_ONLY)) {
                 this.analyticsOnly = configJsonObject.getBoolean(Constants.KEY_ANALYTICS_ONLY);
-            if (configJsonObject.has(Constants.KEY_DEFAULT_INSTANCE))
+            }
+            if (configJsonObject.has(Constants.KEY_DEFAULT_INSTANCE)) {
                 this.isDefaultInstance = configJsonObject.getBoolean(Constants.KEY_DEFAULT_INSTANCE);
-            if (configJsonObject.has(Constants.KEY_USE_GOOGLE_AD_ID))
+            }
+            if (configJsonObject.has(Constants.KEY_USE_GOOGLE_AD_ID)) {
                 this.useGoogleAdId = configJsonObject.getBoolean(Constants.KEY_USE_GOOGLE_AD_ID);
-            if (configJsonObject.has(Constants.KEY_DISABLE_APP_LAUNCHED))
+            }
+            if (configJsonObject.has(Constants.KEY_DISABLE_APP_LAUNCHED)) {
                 this.disableAppLaunchedEvent = configJsonObject.getBoolean(Constants.KEY_DISABLE_APP_LAUNCHED);
-            if (configJsonObject.has(Constants.KEY_PERSONALIZATION))
+            }
+            if (configJsonObject.has(Constants.KEY_PERSONALIZATION)) {
                 this.personalization = configJsonObject.getBoolean(Constants.KEY_PERSONALIZATION);
+            }
             if (configJsonObject.has(Constants.KEY_DEBUG_LEVEL)) {
                 this.debugLevel = configJsonObject.getInt(Constants.KEY_DEBUG_LEVEL);
             }
             this.logger = new Logger(this.debugLevel);
-            if (configJsonObject.has(Constants.KEY_ENABLE_ABTEST))
+            if (configJsonObject.has(Constants.KEY_ENABLE_ABTEST)) {
                 this.enableABTesting = configJsonObject.getBoolean(Constants.KEY_ENABLE_ABTEST);
-            if (configJsonObject.has(Constants.KEY_ENABLE_UIEDITOR))
+            }
+            if (configJsonObject.has(Constants.KEY_ENABLE_UIEDITOR)) {
                 this.enableUIEditor = configJsonObject.getBoolean(Constants.KEY_ENABLE_UIEDITOR);
-            if (configJsonObject.has(Constants.KEY_PACKAGE_NAME))
+            }
+            if (configJsonObject.has(Constants.KEY_PACKAGE_NAME)) {
                 this.packageName = configJsonObject.getString(Constants.KEY_PACKAGE_NAME);
-            if (configJsonObject.has(Constants.KEY_CREATED_POST_APP_LAUNCH))
+            }
+            if (configJsonObject.has(Constants.KEY_CREATED_POST_APP_LAUNCH)) {
                 this.createdPostAppLaunch = configJsonObject.getBoolean(Constants.KEY_CREATED_POST_APP_LAUNCH);
-            if (configJsonObject.has(Constants.KEY_SSL_PINNING))
+            }
+            if (configJsonObject.has(Constants.KEY_SSL_PINNING)) {
                 this.sslPinning = configJsonObject.getBoolean(Constants.KEY_SSL_PINNING);
-            if (configJsonObject.has(Constants.KEY_BACKGROUND_SYNC))
+            }
+            if (configJsonObject.has(Constants.KEY_BACKGROUND_SYNC)) {
                 this.backgroundSync = configJsonObject.getBoolean(Constants.KEY_BACKGROUND_SYNC);
-            if (configJsonObject.has(Constants.KEY_ENABLE_CUSTOM_CT_ID))
+            }
+            if (configJsonObject.has(Constants.KEY_ENABLE_CUSTOM_CT_ID)) {
                 this.enableCustomCleverTapId = configJsonObject.getBoolean(Constants.KEY_ENABLE_CUSTOM_CT_ID);
-            if (configJsonObject.has(Constants.KEY_FCM_SENDER_ID))
+            }
+            if (configJsonObject.has(Constants.KEY_FCM_SENDER_ID)) {
                 this.fcmSenderId = configJsonObject.getString(Constants.KEY_FCM_SENDER_ID);
+            }
             if (configJsonObject.has(Constants.KEY_BETA)) {
                 this.beta = configJsonObject.getBoolean(Constants.KEY_BETA);
             }
@@ -181,40 +237,28 @@ public class CleverTapInstanceConfig implements Parcelable {
         in.readList(allowedPushTypes, String.class.getClassLoader());
     }
 
-    @SuppressWarnings("unused")
-    public static CleverTapInstanceConfig createInstance(Context context, @NonNull String accountId, @NonNull String accountToken) {
-        //noinspection ConstantConditions
-        if (accountId == null || accountToken == null) {
-            Logger.i("CleverTap accountId and accountToken cannot be null");
-            return null;
-        }
-        return new CleverTapInstanceConfig(context, accountId, accountToken, null, false);
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @SuppressWarnings({"unused", "WeakerAccess"})
+    public void enablePersonalization(boolean enablePersonalization) {
+        this.personalization = enablePersonalization;
+    }
+
+    public String getAccountId() {
+        return accountId;
     }
 
     @SuppressWarnings({"unused"})
-    public static CleverTapInstanceConfig createInstance(Context context, @NonNull String accountId, @NonNull String accountToken, String accountRegion) {
-        //noinspection ConstantConditions
-        if (accountId == null || accountToken == null) {
-            Logger.i("CleverTap accountId and accountToken cannot be null");
-            return null;
-        }
-        return new CleverTapInstanceConfig(context, accountId, accountToken, accountRegion, false);
+    public String getAccountRegion() {
+        return accountRegion;
     }
 
-    // for internal use only!
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    protected static CleverTapInstanceConfig createInstance(@NonNull String jsonString) {
-        try {
-            return new CleverTapInstanceConfig(jsonString);
-        } catch (Throwable t) {
-            return null;
-        }
-    }
-
-    // convenience to construct the internal only default config
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    protected static CleverTapInstanceConfig createDefaultInstance(Context context, @NonNull String accountId, @NonNull String accountToken, String accountRegion) {
-        return new CleverTapInstanceConfig(context, accountId, accountToken, accountRegion, true);
+    @SuppressWarnings({"unused"})
+    public String getAccountToken() {
+        return accountToken;
     }
 
     @NonNull
@@ -229,73 +273,6 @@ public class CleverTapInstanceConfig implements Parcelable {
                 this.allowedPushTypes.add(allowedTransport.name());
             }
         }
-    }
-
-    public String getAccountId() {
-        return accountId;
-    }
-
-    @SuppressWarnings({"unused"})
-    public String getAccountToken() {
-        return accountToken;
-    }
-
-    @SuppressWarnings({"unused"})
-    public String getAccountRegion() {
-        return accountRegion;
-    }
-
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    public boolean isAnalyticsOnly() {
-        return analyticsOnly;
-    }
-
-    @SuppressWarnings({"unused"})
-    public void setAnalyticsOnly(boolean analyticsOnly) {
-        this.analyticsOnly = analyticsOnly;
-    }
-
-    boolean isDefaultInstance() {
-        return isDefaultInstance;
-    }
-
-    boolean isCreatedPostAppLaunch() {
-        return createdPostAppLaunch;
-    }
-
-    void setCreatedPostAppLaunch() {
-        this.createdPostAppLaunch = true;
-    }
-
-    boolean isUseGoogleAdId() {
-        return useGoogleAdId;
-    }
-
-    @SuppressWarnings({"unused"})
-    public void useGoogleAdId(boolean value) {
-        this.useGoogleAdId = value;
-    }
-
-    boolean isDisableAppLaunchedEvent() {
-        return disableAppLaunchedEvent;
-    }
-
-    @SuppressWarnings({"unused"})
-    public void setDisableAppLaunchedEvent(boolean disableAppLaunchedEvent) {
-        this.disableAppLaunchedEvent = disableAppLaunchedEvent;
-    }
-
-    boolean isSslPinningEnabled() {
-        return sslPinning;
-    }
-
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    public void enablePersonalization(boolean enablePersonalization) {
-        this.personalization = enablePersonalization;
-    }
-
-    boolean isPersonalizationEnabled() {
-        return personalization;
     }
 
     @SuppressWarnings({"unused", "WeakerAccess"})
@@ -313,6 +290,11 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.debugLevel = debugLevel;
     }
 
+    @SuppressWarnings({"unused", "WeakerAccess"})
+    public String getFcmSenderId() {
+        return fcmSenderId;
+    }
+
     public Logger getLogger() {
         if (logger == null) {
             logger = new Logger(this.debugLevel);
@@ -320,27 +302,27 @@ public class CleverTapInstanceConfig implements Parcelable {
         return logger;
     }
 
-    boolean isBackgroundSync() {
-        return backgroundSync;
+    public String getPackageName() {
+        return packageName;
     }
 
-    @SuppressWarnings({"unused"})
-    public void setBackgroundSync(boolean backgroundSync) {
-        this.backgroundSync = backgroundSync;
+    @SuppressWarnings({"BooleanMethodIsAlwaysInverted", "WeakerAccess"})
+    public boolean isABTestingEnabled() {
+        return enableABTesting;
     }
 
     @SuppressWarnings({"unused", "WeakerAccess"})
-    public String getFcmSenderId() {
-        return fcmSenderId;
-    }
-
-    boolean getEnableCustomCleverTapId() {
-        return enableCustomCleverTapId;
+    public boolean isAnalyticsOnly() {
+        return analyticsOnly;
     }
 
     @SuppressWarnings({"unused"})
-    public void setEnableCustomCleverTapId(boolean enableCustomCleverTapId) {
-        this.enableCustomCleverTapId = enableCustomCleverTapId;
+    public void setAnalyticsOnly(boolean analyticsOnly) {
+        this.analyticsOnly = analyticsOnly;
+    }
+
+    public boolean isBeta() {
+        return beta;
     }
 
     @SuppressWarnings({"unused"})
@@ -348,15 +330,12 @@ public class CleverTapInstanceConfig implements Parcelable {
         return enableUIEditor;
     }
 
-    @SuppressWarnings({"unused"})
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
-    public void setEnableUIEditor(boolean enableUIEditor) {
-        this.enableUIEditor = enableUIEditor;
+    public void log(@NonNull String tag, @NonNull String message) {
+        logger.verbose(getDefaultSuffix(tag), message);
     }
 
-    @SuppressWarnings({"BooleanMethodIsAlwaysInverted", "WeakerAccess"})
-    public boolean isABTestingEnabled() {
-        return enableABTesting;
+    public void log(@NonNull String tag, @NonNull String message, Throwable throwable) {
+        logger.verbose(getDefaultSuffix(tag), message, throwable);
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -365,17 +344,15 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.enableABTesting = enableABTesting;
     }
 
-    public String getPackageName() {
-        return packageName;
+    @SuppressWarnings({"unused"})
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public void setEnableUIEditor(boolean enableUIEditor) {
+        this.enableUIEditor = enableUIEditor;
     }
 
-    public boolean isBeta() {
-        return beta;
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
+    @SuppressWarnings({"unused"})
+    public void useGoogleAdId(boolean value) {
+        this.useGoogleAdId = value;
     }
 
     @Override
@@ -399,6 +376,57 @@ public class CleverTapInstanceConfig implements Parcelable {
         dest.writeString(packageName);
         dest.writeByte((byte) (beta ? 0x01 : 0x00));
         dest.writeList(allowedPushTypes);
+    }
+
+    boolean getEnableCustomCleverTapId() {
+        return enableCustomCleverTapId;
+    }
+
+    @SuppressWarnings({"unused"})
+    public void setEnableCustomCleverTapId(boolean enableCustomCleverTapId) {
+        this.enableCustomCleverTapId = enableCustomCleverTapId;
+    }
+
+    boolean isBackgroundSync() {
+        return backgroundSync;
+    }
+
+    @SuppressWarnings({"unused"})
+    public void setBackgroundSync(boolean backgroundSync) {
+        this.backgroundSync = backgroundSync;
+    }
+
+    boolean isCreatedPostAppLaunch() {
+        return createdPostAppLaunch;
+    }
+
+    boolean isDefaultInstance() {
+        return isDefaultInstance;
+    }
+
+    boolean isDisableAppLaunchedEvent() {
+        return disableAppLaunchedEvent;
+    }
+
+    @SuppressWarnings({"unused"})
+    public void setDisableAppLaunchedEvent(boolean disableAppLaunchedEvent) {
+        this.disableAppLaunchedEvent = disableAppLaunchedEvent;
+    }
+
+    boolean isPersonalizationEnabled() {
+        return personalization;
+    }
+
+    boolean isSslPinningEnabled() {
+        return sslPinning;
+    }
+
+    boolean isUseGoogleAdId() {
+        return useGoogleAdId;
+    }
+
+    void setCreatedPostAppLaunch() {
+        this.createdPostAppLaunch = true;
     }
 
     String toJSONString() {
@@ -430,6 +458,10 @@ public class CleverTapInstanceConfig implements Parcelable {
         }
     }
 
+    private String getDefaultSuffix(@NonNull String tag) {
+        return "[" + ((!TextUtils.isEmpty(tag) ? ": " + tag : "") + ":" + accountId + "]");
+    }
+
     private JSONArray jsonArrayOfAllowedPushTypes() {
         JSONArray jsonArray = new JSONArray();
         for (String allowedPushType : allowedPushTypes) {
@@ -438,16 +470,21 @@ public class CleverTapInstanceConfig implements Parcelable {
         return jsonArray;
     }
 
-    public void log(@NonNull String tag, @NonNull String message) {
-        logger.verbose(getDefaultSuffix(tag), message);
+    // convenience to construct the internal only default config
+    @SuppressWarnings({"unused", "WeakerAccess"})
+    protected static CleverTapInstanceConfig createDefaultInstance(Context context, @NonNull String accountId,
+            @NonNull String accountToken, String accountRegion) {
+        return new CleverTapInstanceConfig(context, accountId, accountToken, accountRegion, true);
     }
 
-    public void log(@NonNull String tag, @NonNull String message, Throwable throwable) {
-        logger.verbose(getDefaultSuffix(tag), message, throwable);
-    }
-
-    private String getDefaultSuffix(@NonNull String tag) {
-        return "[" + ((!TextUtils.isEmpty(tag) ? ": " + tag : "") + ":" + accountId + "]");
+    // for internal use only!
+    @SuppressWarnings({"unused", "WeakerAccess"})
+    protected static CleverTapInstanceConfig createInstance(@NonNull String jsonString) {
+        try {
+            return new CleverTapInstanceConfig(jsonString);
+        } catch (Throwable t) {
+            return null;
+        }
     }
 
 }

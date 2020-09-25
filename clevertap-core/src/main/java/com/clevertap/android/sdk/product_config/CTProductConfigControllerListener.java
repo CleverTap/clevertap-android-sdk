@@ -5,5 +5,6 @@ package com.clevertap.android.sdk.product_config;
  * Developers should not use this.
  */
 public interface CTProductConfigControllerListener extends CTProductConfigListener {
+
     void fetchProductConfig();
 }

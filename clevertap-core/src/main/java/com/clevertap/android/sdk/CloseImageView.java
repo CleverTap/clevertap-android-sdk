@@ -8,13 +8,13 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.util.AttributeSet;
 import android.util.TypedValue;
-
 import androidx.appcompat.widget.AppCompatImageView;
 
 /**
  * Represents the close button.
  */
 final class CloseImageView extends AppCompatImageView {
+
     private final int canvasSize = getScaledPixels(Constants.INAPP_CLOSE_IV_WIDTH);
 
     @SuppressLint("ResourceType")
@@ -33,12 +33,6 @@ final class CloseImageView extends AppCompatImageView {
     public CloseImageView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         setId(199272);
-    }
-
-    @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-        // The image view is fixed in dip on all devices
-        setMeasuredDimension(canvasSize, canvasSize);
     }
 
     @SuppressLint("DrawAllocation")
@@ -62,6 +56,12 @@ final class CloseImageView extends AppCompatImageView {
             Logger.v("Error displaying the inapp notif close button image:", t);
 
         }
+    }
+
+    @Override
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
+        // The image view is fixed in dip on all devices
+        setMeasuredDimension(canvasSize, canvasSize);
     }
 
     @SuppressWarnings("SameParameterValue")

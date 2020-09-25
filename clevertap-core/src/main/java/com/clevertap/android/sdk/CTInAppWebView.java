@@ -12,10 +12,14 @@ import android.webkit.WebView;
 class CTInAppWebView extends WebView {
 
     final Point dim = new Point();
-    private int width;
+
     private int height;
-    private int widthPercentage;
+
     private int heightPercentage;
+
+    private int width;
+
+    private int widthPercentage;
 
     @SuppressLint("ResourceType")
     public CTInAppWebView(Context context, int width, int height, int widthPercentage, int heightPercentage) {
@@ -32,6 +36,11 @@ class CTInAppWebView extends WebView {
         setBackgroundColor(0x00000000);
         //noinspection ResourceType
         setId(188293);
+    }
+
+    @Override
+    public boolean performClick() {
+        return super.performClick();
     }
 
     @Override
@@ -56,10 +65,5 @@ class CTInAppWebView extends WebView {
             DisplayMetrics metrics = getResources().getDisplayMetrics();
             dim.y = (int) (metrics.heightPixels * heightPercentage / 100f);
         }
-    }
-
-    @Override
-    public boolean performClick() {
-        return super.performClick();
     }
 }

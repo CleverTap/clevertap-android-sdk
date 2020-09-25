@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk;
 
 import android.graphics.Bitmap;
-
 import androidx.annotation.NonNull;
 
 public class SimpleBitmapProvider implements GifDecoder.BitmapProvider {
@@ -13,13 +12,13 @@ public class SimpleBitmapProvider implements GifDecoder.BitmapProvider {
     }
 
     @Override
-    public void release(Bitmap bitmap) {
-        bitmap.recycle();
+    public byte[] obtainByteArray(int size) {
+        return new byte[size];
     }
 
     @Override
-    public byte[] obtainByteArray(int size) {
-        return new byte[size];
+    public int[] obtainIntArray(int size) {
+        return new int[size];
     }
 
     @Override
@@ -28,8 +27,8 @@ public class SimpleBitmapProvider implements GifDecoder.BitmapProvider {
     }
 
     @Override
-    public int[] obtainIntArray(int size) {
-        return new int[size];
+    public void release(Bitmap bitmap) {
+        bitmap.recycle();
     }
 
     @Override

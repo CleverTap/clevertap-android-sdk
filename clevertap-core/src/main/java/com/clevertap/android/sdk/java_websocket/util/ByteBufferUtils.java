@@ -33,9 +33,12 @@ import java.nio.ByteBuffer;
 public class ByteBufferUtils {
 
     /**
-     * Private constructor for static class
+     * Get a ByteBuffer with zero capacity
+     *
+     * @return empty ByteBuffer
      */
-    private ByteBufferUtils() {
+    public static ByteBuffer getEmptyByteBuffer() {
+        return ByteBuffer.allocate(0);
     }
 
     /**
@@ -63,11 +66,8 @@ public class ByteBufferUtils {
     }
 
     /**
-     * Get a ByteBuffer with zero capacity
-     *
-     * @return empty ByteBuffer
+     * Private constructor for static class
      */
-    public static ByteBuffer getEmptyByteBuffer() {
-        return ByteBuffer.allocate(0);
+    private ByteBufferUtils() {
     }
 }

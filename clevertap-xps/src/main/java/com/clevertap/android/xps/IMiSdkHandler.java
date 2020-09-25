@@ -5,11 +5,11 @@ import androidx.annotation.RestrictTo;
 @RestrictTo(value = RestrictTo.Scope.LIBRARY)
 public interface IMiSdkHandler {
 
-    String onNewToken();
+    String appId();
 
     String appKey();
 
-    String appId();
-
     boolean isAvailable();
+
+    String onNewToken();
 }

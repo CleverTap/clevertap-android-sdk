@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk;
 
 import androidx.annotation.Nullable;
-
 import java.util.Map;
 
 /**

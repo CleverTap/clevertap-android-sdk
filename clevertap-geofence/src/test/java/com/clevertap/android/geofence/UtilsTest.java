@@ -1,27 +1,32 @@
 package com.clevertap.android.geofence;
 
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.beans.SamePropertyValuesAs.*;
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.powermock.api.mockito.PowerMockito.mockStatic;
+import static org.powermock.api.mockito.PowerMockito.verifyStatic;
+import static org.powermock.api.mockito.PowerMockito.when;
+
 import android.Manifest;
 import android.content.Context;
 import android.location.Location;
 import android.os.Build;
-
 import com.clevertap.android.geofence.fakes.CTGeofenceSettingsFake;
 import com.clevertap.android.geofence.fakes.GeofenceJSON;
 import com.clevertap.android.geofence.interfaces.CTLocationUpdatesListener;
 import com.clevertap.android.sdk.CleverTapAPI;
-
-import org.hamcrest.CoreMatchers;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import org.hamcrest.*;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.function.ThrowingRunnable;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mockito;
+import org.junit.*;
+import org.junit.function.*;
+import org.junit.runner.*;
+import org.mockito.*;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -34,22 +39,6 @@ import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowApplication;
 import org.skyscreamer.jsonassert.JSONAssert;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.beans.SamePropertyValuesAs.samePropertyValuesAs;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.powermock.api.mockito.PowerMockito.mockStatic;
-import static org.powermock.api.mockito.PowerMockito.verifyStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
-
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 28,
         application = TestApplication.class
@@ -57,14 +46,17 @@ import static org.powermock.api.mockito.PowerMockito.when;
 @PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*", "androidx.*", "org.json.*"})
 @PrepareForTest({FileUtils.class, CTGeofenceAPI.class, CleverTapAPI.class, com.clevertap.android.sdk.Utils.class})
 public class UtilsTest extends BaseTestCase {
+
     @Rule
     public PowerMockRule rule = new PowerMockRule();
+
+    private CTGeofenceAPI ctGeofenceAPI;
+
+    private Logger logger;
 
     /* @Mock
      private static Logger logger;*/
     private ShadowApplication shadowApplication;
-    private Logger logger;
-    private CTGeofenceAPI ctGeofenceAPI;
 
     @Before
     public void setUp() throws Exception {
@@ -81,27 +73,14 @@ public class UtilsTest extends BaseTestCase {
     }
 
     @Test
-    public void testHasPermission() {
-        //mockStatic(ContextCompat.class);
+    public void testEmptyIfNull() {
+        //when string is null
+        String actualWhenStringIsNull = Utils.emptyIfNull(null);
+        assertEquals("", actualWhenStringIsNull);
 
-        ShadowApplication shadowApplication = Shadows.shadowOf(application);
-
-        // when permission is null
-
-        boolean actual = Utils.hasPermission(application, null);
-        assertFalse("hasPermission must return false when permission is null", actual);
-
-        // when permission not null and checkSelfPermission returns permission granted
-
-        shadowApplication.grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION);
-        boolean actualWhenPermissionGranted = Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION);
-        assertTrue("hasPermission must return true when permission is granted", actualWhenPermissionGranted);
-
-        // when permission not null and checkSelfPermission returns permission denied
-
-        shadowApplication.denyPermissions(Manifest.permission.ACCESS_FINE_LOCATION);
-        boolean actualWhenPermissionDenied = Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION);
-        assertFalse("hasPermission must return false when permission is denied", actualWhenPermissionDenied);
+        //when string is non null
+        String actualWhenStringIsNonNull = Utils.emptyIfNull("1");
+        assertEquals("1", actualWhenStringIsNonNull);
     }
 
     @Test
@@ -124,77 +103,29 @@ public class UtilsTest extends BaseTestCase {
     }
 
     @Test
-    public void testEmptyIfNull() {
-        //when string is null
-        String actualWhenStringIsNull = Utils.emptyIfNull(null);
-        assertEquals("", actualWhenStringIsNull);
+    public void testHasPermission() {
+        //mockStatic(ContextCompat.class);
 
-        //when string is non null
-        String actualWhenStringIsNonNull = Utils.emptyIfNull("1");
-        assertEquals("1", actualWhenStringIsNonNull);
-    }
+        ShadowApplication shadowApplication = Shadows.shadowOf(application);
 
-    @Test
-    public void testJsonToGeoFenceList() {
+        // when permission is null
 
-        List<String> actualList = Utils.jsonToGeoFenceList(GeofenceJSON.getGeofence());
-        List<String> expectedList = Arrays.asList("310001", "310002");
+        boolean actual = Utils.hasPermission(application, null);
+        assertFalse("hasPermission must return false when permission is null", actual);
 
-        assertThat(actualList, CoreMatchers.is(expectedList));
+        // when permission not null and checkSelfPermission returns permission granted
 
-        List<String> actualListWhenJsonArrayIsEmpty = Utils.jsonToGeoFenceList(GeofenceJSON.getEmptyGeofence());
-        List<String> expectedListWhenJsonArrayIsEmpty = new ArrayList<>();
+        shadowApplication.grantPermissions(Manifest.permission.ACCESS_FINE_LOCATION);
+        boolean actualWhenPermissionGranted = Utils
+                .hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION);
+        assertTrue("hasPermission must return true when permission is granted", actualWhenPermissionGranted);
 
-        assertThat(actualListWhenJsonArrayIsEmpty, CoreMatchers.is(expectedListWhenJsonArrayIsEmpty));
+        // when permission not null and checkSelfPermission returns permission denied
 
-        JSONObject emptyJson = GeofenceJSON.getEmptyJson();
-        List<String> actualListWhenJsonIsEmpty = Utils.jsonToGeoFenceList(emptyJson);
-        List<String> expectedListWhenJsonIsEmpty = new ArrayList<>();
-
-        assertThat(actualListWhenJsonIsEmpty, CoreMatchers.is(expectedListWhenJsonIsEmpty));
-    }
-
-    @Test
-    public void testReadSettingsFromFile() {
-        mockStatic(FileUtils.class);
-
-
-        when(FileUtils.getCachedFullPath(any(Context.class),
-                anyString())).thenReturn("");
-
-        // when settings in file is not blank
-        when(FileUtils.readFromFile(any(Context.class),
-                anyString())).thenReturn(CTGeofenceSettingsFake.getSettingsJsonString());
-
-        CTGeofenceSettings settingsActualWhenNotEmpty = Utils.readSettingsFromFile(application);
-        CTGeofenceSettings settingsExpectedWhenNotEmpty =
-                CTGeofenceSettingsFake.getSettings(CTGeofenceSettingsFake.getSettingsJsonObject());
-
-        assertThat(settingsActualWhenNotEmpty, samePropertyValuesAs(settingsExpectedWhenNotEmpty));
-
-        // when settings in file is blank
-        when(FileUtils.readFromFile(any(Context.class),
-                anyString())).thenReturn("");
-
-        CTGeofenceSettings settingsActualWhenEmpty = Utils.readSettingsFromFile(application);
-        assertNull(settingsActualWhenEmpty);
-    }
-
-    @Test
-    public void testWriteSettingsToFile() {
-        mockStatic(FileUtils.class);
-
-
-        WhiteboxImpl.setInternalState(ctGeofenceAPI, "accountId", "4RW-Z6Z-485Z");
-        when(FileUtils.getCachedDirName(application)).thenReturn("");
-
-        Utils.writeSettingsToFile(application,
-                CTGeofenceSettingsFake.getSettings(CTGeofenceSettingsFake.getSettingsJsonObject()));
-
-        verifyStatic(FileUtils.class);
-        FileUtils.writeJsonToFile(application, FileUtils.getCachedDirName(application),
-                CTGeofenceConstants.SETTINGS_FILE_NAME, CTGeofenceSettingsFake.getSettingsJsonObject());
-
+        shadowApplication.denyPermissions(Manifest.permission.ACCESS_FINE_LOCATION);
+        boolean actualWhenPermissionDenied = Utils
+                .hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION);
+        assertFalse("hasPermission must return false when permission is denied", actualWhenPermissionDenied);
     }
 
     @Test
@@ -240,6 +171,70 @@ public class UtilsTest extends BaseTestCase {
     }
 
     @Test
+    public void testJsonToGeoFenceList() {
+
+        List<String> actualList = Utils.jsonToGeoFenceList(GeofenceJSON.getGeofence());
+        List<String> expectedList = Arrays.asList("310001", "310002");
+
+        assertThat(actualList, CoreMatchers.is(expectedList));
+
+        List<String> actualListWhenJsonArrayIsEmpty = Utils.jsonToGeoFenceList(GeofenceJSON.getEmptyGeofence());
+        List<String> expectedListWhenJsonArrayIsEmpty = new ArrayList<>();
+
+        assertThat(actualListWhenJsonArrayIsEmpty, CoreMatchers.is(expectedListWhenJsonArrayIsEmpty));
+
+        JSONObject emptyJson = GeofenceJSON.getEmptyJson();
+        List<String> actualListWhenJsonIsEmpty = Utils.jsonToGeoFenceList(emptyJson);
+        List<String> expectedListWhenJsonIsEmpty = new ArrayList<>();
+
+        assertThat(actualListWhenJsonIsEmpty, CoreMatchers.is(expectedListWhenJsonIsEmpty));
+    }
+
+    @Test
+    public void testNotifyLocationUpdates() {
+        mockStatic(com.clevertap.android.sdk.Utils.class);
+
+        CTLocationUpdatesListener locationUpdatesListener = Mockito.mock(CTLocationUpdatesListener.class);
+
+        Mockito.when(ctGeofenceAPI.getCtLocationUpdatesListener()).thenReturn(locationUpdatesListener);
+
+        Utils.notifyLocationUpdates(application, Mockito.mock(Location.class));
+
+        ArgumentCaptor<Runnable> runnableArgumentCaptor = ArgumentCaptor.forClass(Runnable.class);
+
+        verifyStatic(com.clevertap.android.sdk.Utils.class);
+        com.clevertap.android.sdk.Utils.runOnUiThread(runnableArgumentCaptor.capture());
+
+        runnableArgumentCaptor.getValue().run();
+        Mockito.verify(locationUpdatesListener).onLocationUpdates(any(Location.class));
+    }
+
+    @Test
+    public void testReadSettingsFromFile() {
+        mockStatic(FileUtils.class);
+
+        when(FileUtils.getCachedFullPath(any(Context.class),
+                anyString())).thenReturn("");
+
+        // when settings in file is not blank
+        when(FileUtils.readFromFile(any(Context.class),
+                anyString())).thenReturn(CTGeofenceSettingsFake.getSettingsJsonString());
+
+        CTGeofenceSettings settingsActualWhenNotEmpty = Utils.readSettingsFromFile(application);
+        CTGeofenceSettings settingsExpectedWhenNotEmpty =
+                CTGeofenceSettingsFake.getSettings(CTGeofenceSettingsFake.getSettingsJsonObject());
+
+        assertThat(settingsActualWhenNotEmpty, samePropertyValuesAs(settingsExpectedWhenNotEmpty));
+
+        // when settings in file is blank
+        when(FileUtils.readFromFile(any(Context.class),
+                anyString())).thenReturn("");
+
+        CTGeofenceSettings settingsActualWhenEmpty = Utils.readSettingsFromFile(application);
+        assertNull(settingsActualWhenEmpty);
+    }
+
+    @Test
     public void testSubArray() {
         final JSONArray geofenceArray = GeofenceJSON.getGeofenceArray();
 
@@ -282,22 +277,19 @@ public class UtilsTest extends BaseTestCase {
     }
 
     @Test
-    public void testNotifyLocationUpdates() {
-        mockStatic(com.clevertap.android.sdk.Utils.class);
+    public void testWriteSettingsToFile() {
+        mockStatic(FileUtils.class);
 
-        CTLocationUpdatesListener locationUpdatesListener = Mockito.mock(CTLocationUpdatesListener.class);
+        WhiteboxImpl.setInternalState(ctGeofenceAPI, "accountId", "4RW-Z6Z-485Z");
+        when(FileUtils.getCachedDirName(application)).thenReturn("");
 
-        Mockito.when(ctGeofenceAPI.getCtLocationUpdatesListener()).thenReturn(locationUpdatesListener);
+        Utils.writeSettingsToFile(application,
+                CTGeofenceSettingsFake.getSettings(CTGeofenceSettingsFake.getSettingsJsonObject()));
 
-        Utils.notifyLocationUpdates(application, Mockito.mock(Location.class));
+        verifyStatic(FileUtils.class);
+        FileUtils.writeJsonToFile(application, FileUtils.getCachedDirName(application),
+                CTGeofenceConstants.SETTINGS_FILE_NAME, CTGeofenceSettingsFake.getSettingsJsonObject());
 
-        ArgumentCaptor<Runnable> runnableArgumentCaptor = ArgumentCaptor.forClass(Runnable.class);
-
-        verifyStatic(com.clevertap.android.sdk.Utils.class);
-        com.clevertap.android.sdk.Utils.runOnUiThread(runnableArgumentCaptor.capture());
-
-        runnableArgumentCaptor.getValue().run();
-        Mockito.verify(locationUpdatesListener).onLocationUpdates(any(Location.class));
     }
 
 }

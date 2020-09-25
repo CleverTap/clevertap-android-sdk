@@ -14,92 +14,14 @@ import android.view.animation.AnimationSet;
 import android.view.animation.TranslateAnimation;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
-
 import androidx.annotation.Nullable;
-
 import java.net.URLDecoder;
 
-public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialFragment implements View.OnTouchListener, View.OnLongClickListener {
-
-    private final GestureDetector gd = new GestureDetector(new GestureListener());
-    private CTInAppWebView webView;
-
-    @Nullable
-    @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
-        return displayHTMLView(inflater, container);
-    }
-
-    @Override
-    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        reDrawInApp();
-    }
-
-    abstract View getView(LayoutInflater inflater, ViewGroup container);
-
-    abstract ViewGroup getLayout(View view);
-
-    private View displayHTMLView(LayoutInflater inflater, ViewGroup container) {
-        View inAppView;
-        ViewGroup layout;
-        try {
-            inAppView = getView(inflater, container);
-            layout = getLayout(inAppView);
-            webView = new CTInAppWebView(getActivity().getBaseContext(), inAppNotification.getWidth(), inAppNotification.getHeight(), inAppNotification.getWidthPercentage(), inAppNotification.getHeightPercentage());
-            InAppWebViewClient webViewClient = new InAppWebViewClient();
-            webView.setWebViewClient(webViewClient);
-            webView.setOnTouchListener(CTInAppBasePartialHtmlFragment.this);
-            webView.setOnLongClickListener(CTInAppBasePartialHtmlFragment.this);
-
-            if (layout != null) {
-                layout.addView(webView);
-            }
-        } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Fragment view not created", t);
-            return null;
-        }
-        return inAppView;
-    }
-
-    private void reDrawInApp() {
-        webView.updateDimension();
-
-        int mHeight = webView.dim.y;
-        int mWidth = webView.dim.x;
-
-        float d = getResources().getDisplayMetrics().density;
-        mHeight /= d;
-        mWidth /= d;
-
-        String html = inAppNotification.getHtml();
-
-        String style = "<style>body{width:" + mWidth + "px; height: " + mHeight + "px; margin: 0; padding:0;}</style>";
-        html = html.replaceFirst("<head>", "<head>" + style);
-        Logger.v("Density appears to be " + d);
-
-        webView.setInitialScale((int) (d * 100));
-        webView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
-    }
-
-    @Override
-    public boolean onLongClick(View v) {
-        return true;
-    }
-
-    @SuppressLint("ClickableViewAccessibility")
-    @Override
-    public boolean onTouch(View v, MotionEvent event) {
-        return gd.onTouchEvent(event) || (event.getAction() == MotionEvent.ACTION_MOVE);
-    }
-
-    @Override
-    public void onConfigurationChanged(Configuration newConfig) {
-        super.onConfigurationChanged(newConfig);
-        reDrawInApp();
-    }
+public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialFragment
+        implements View.OnTouchListener, View.OnLongClickListener {
 
     private class InAppWebViewClient extends WebViewClient {
+
         InAppWebViewClient() {
             super();
         }
@@ -135,6 +57,7 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
 
         private final int SWIPE_MIN_DISTANCE = 120;
+
         private final int SWIPE_THRESHOLD_VELOCITY = 200;
 
         @Override
@@ -153,20 +76,17 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
         private boolean remove(MotionEvent e1, MotionEvent e2, boolean ltr) {
             AnimationSet animSet = new AnimationSet(true);
             TranslateAnimation anim;
-            if (ltr)
+            if (ltr) {
                 anim = new TranslateAnimation(0, getScaledPixels(50), 0, 0);
-            else
+            } else {
                 anim = new TranslateAnimation(0, -getScaledPixels(50), 0, 0);
+            }
             animSet.addAnimation(anim);
             animSet.addAnimation(new AlphaAnimation(1, 0));
             animSet.setDuration(300);
             animSet.setFillAfter(true);
             animSet.setFillEnabled(true);
             animSet.setAnimationListener(new Animation.AnimationListener() {
-                @Override
-                public void onAnimationStart(Animation animation) {
-                }
-
                 @Override
                 public void onAnimationEnd(Animation animation) {
                     didDismiss(null);
@@ -175,9 +95,95 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
                 @Override
                 public void onAnimationRepeat(Animation animation) {
                 }
+
+                @Override
+                public void onAnimationStart(Animation animation) {
+                }
             });
             webView.startAnimation(animSet);
             return true;
         }
+    }
+
+    private final GestureDetector gd = new GestureDetector(new GestureListener());
+
+    private CTInAppWebView webView;
+
+    @Nullable
+    @Override
+    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+        return displayHTMLView(inflater, container);
+    }
+
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        reDrawInApp();
+    }
+
+    @Override
+    public void onConfigurationChanged(Configuration newConfig) {
+        super.onConfigurationChanged(newConfig);
+        reDrawInApp();
+    }
+
+    @Override
+    public boolean onLongClick(View v) {
+        return true;
+    }
+
+    @SuppressLint("ClickableViewAccessibility")
+    @Override
+    public boolean onTouch(View v, MotionEvent event) {
+        return gd.onTouchEvent(event) || (event.getAction() == MotionEvent.ACTION_MOVE);
+    }
+
+    abstract ViewGroup getLayout(View view);
+
+    abstract View getView(LayoutInflater inflater, ViewGroup container);
+
+    private View displayHTMLView(LayoutInflater inflater, ViewGroup container) {
+        View inAppView;
+        ViewGroup layout;
+        try {
+            inAppView = getView(inflater, container);
+            layout = getLayout(inAppView);
+            webView = new CTInAppWebView(getActivity().getBaseContext(), inAppNotification.getWidth(),
+                    inAppNotification.getHeight(), inAppNotification.getWidthPercentage(),
+                    inAppNotification.getHeightPercentage());
+            InAppWebViewClient webViewClient = new InAppWebViewClient();
+            webView.setWebViewClient(webViewClient);
+            webView.setOnTouchListener(CTInAppBasePartialHtmlFragment.this);
+            webView.setOnLongClickListener(CTInAppBasePartialHtmlFragment.this);
+
+            if (layout != null) {
+                layout.addView(webView);
+            }
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(), "Fragment view not created", t);
+            return null;
+        }
+        return inAppView;
+    }
+
+    private void reDrawInApp() {
+        webView.updateDimension();
+
+        int mHeight = webView.dim.y;
+        int mWidth = webView.dim.x;
+
+        float d = getResources().getDisplayMetrics().density;
+        mHeight /= d;
+        mWidth /= d;
+
+        String html = inAppNotification.getHtml();
+
+        String style = "<style>body{width:" + mWidth + "px; height: " + mHeight
+                + "px; margin: 0; padding:0;}</style>";
+        html = html.replaceFirst("<head>", "<head>" + style);
+        Logger.v("Density appears to be " + d);
+
+        webView.setInitialScale((int) (d * 100));
+        webView.loadDataWithBaseURL(null, html, "text/html", "utf-8", null);
     }
 }

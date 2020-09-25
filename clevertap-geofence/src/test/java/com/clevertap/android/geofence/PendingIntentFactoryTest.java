@@ -1,27 +1,19 @@
 package com.clevertap.android.geofence;
 
+import static org.junit.Assert.*;
+
 import android.app.PendingIntent;
 import android.content.ComponentName;
-
 import com.clevertap.android.sdk.CleverTapAPI;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.MockitoAnnotations;
+import org.junit.*;
+import org.junit.runner.*;
+import org.mockito.*;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowPendingIntent;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
-import static org.junit.Assert.assertNull;
-import static org.junit.Assert.assertSame;
-import static org.junit.Assert.assertTrue;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 28,
@@ -41,11 +33,52 @@ public class PendingIntentFactoryTest extends BaseTestCase {
     }
 
     @Test
-    public void testGetPendingIntentWhenContextIsNull() {
-        PendingIntent actual = PendingIntentFactory.getPendingIntent(null,
-                PendingIntentFactory.PENDING_INTENT_LOCATION, PendingIntent.FLAG_NO_CREATE);
+    public void testGetPendingIntentForFlagNoCreate() {
+        // when pendingIntent flag is no create
+
+        PendingIntent actual = PendingIntentFactory.getPendingIntent(application,
+                PendingIntentFactory.PENDING_INTENT_GEOFENCE, PendingIntent.FLAG_NO_CREATE);
 
         assertNull(actual);
+    }
+
+    @Test
+    public void testGetPendingIntentForFlagUpdateCurrent() {
+        // when pendingIntent flag is no create
+
+        PendingIntent actual = PendingIntentFactory.getPendingIntent(application,
+                PendingIntentFactory.PENDING_INTENT_GEOFENCE, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        assertNotNull(actual);
+    }
+
+    @Test
+    public void testGetPendingIntentForGeofence() {
+        // when pendingIntent type is geofence
+
+        PendingIntent actual = PendingIntentFactory.getPendingIntent(application,
+                PendingIntentFactory.PENDING_INTENT_GEOFENCE, PendingIntent.FLAG_UPDATE_CURRENT);
+
+        ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(actual);
+
+        assertTrue(shadowPendingIntent.isBroadcastIntent());
+        assertEquals(1001001, shadowPendingIntent.getRequestCode());
+        assertEquals(PendingIntent.FLAG_UPDATE_CURRENT, shadowPendingIntent.getFlags());
+
+        ComponentName actualComponentName = new ComponentName(application, CTGeofenceReceiver.class);
+
+        assertEquals(CTGeofenceConstants.ACTION_GEOFENCE_RECEIVER,
+                shadowPendingIntent.getSavedIntent().getAction());
+        assertEquals(actualComponentName, shadowPendingIntent.getSavedIntent().getComponent());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testGetPendingIntentForInvalidType() {
+        // when pendingIntent type is invalid
+
+        PendingIntentFactory.getPendingIntent(application,
+                9, PendingIntent.FLAG_UPDATE_CURRENT);
+
     }
 
     @Test
@@ -69,43 +102,11 @@ public class PendingIntentFactoryTest extends BaseTestCase {
     }
 
     @Test
-    public void testGetPendingIntentForGeofence() {
-        // when pendingIntent type is geofence
-
-        PendingIntent actual = PendingIntentFactory.getPendingIntent(application,
-                PendingIntentFactory.PENDING_INTENT_GEOFENCE, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        ShadowPendingIntent shadowPendingIntent = Shadows.shadowOf(actual);
-
-        assertTrue(shadowPendingIntent.isBroadcastIntent());
-        assertEquals(1001001, shadowPendingIntent.getRequestCode());
-        assertEquals(PendingIntent.FLAG_UPDATE_CURRENT, shadowPendingIntent.getFlags());
-
-        ComponentName actualComponentName = new ComponentName(application, CTGeofenceReceiver.class);
-
-        assertEquals(CTGeofenceConstants.ACTION_GEOFENCE_RECEIVER,
-                shadowPendingIntent.getSavedIntent().getAction());
-        assertEquals(actualComponentName, shadowPendingIntent.getSavedIntent().getComponent());
-    }
-
-    @Test
-    public void testGetPendingIntentForFlagNoCreate() {
-        // when pendingIntent flag is no create
-
-        PendingIntent actual = PendingIntentFactory.getPendingIntent(application,
-                PendingIntentFactory.PENDING_INTENT_GEOFENCE, PendingIntent.FLAG_NO_CREATE);
+    public void testGetPendingIntentWhenContextIsNull() {
+        PendingIntent actual = PendingIntentFactory.getPendingIntent(null,
+                PendingIntentFactory.PENDING_INTENT_LOCATION, PendingIntent.FLAG_NO_CREATE);
 
         assertNull(actual);
-    }
-
-    @Test
-    public void testGetPendingIntentForFlagUpdateCurrent() {
-        // when pendingIntent flag is no create
-
-        PendingIntent actual = PendingIntentFactory.getPendingIntent(application,
-                PendingIntentFactory.PENDING_INTENT_GEOFENCE, PendingIntent.FLAG_UPDATE_CURRENT);
-
-        assertNotNull(actual);
     }
 
     @Test
@@ -163,15 +164,5 @@ public class PendingIntentFactoryTest extends BaseTestCase {
                 PendingIntentFactory.PENDING_INTENT_GEOFENCE, PendingIntent.FLAG_UPDATE_CURRENT);
 
         assertNotSame(actual, actual1);
-    }
-
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testGetPendingIntentForInvalidType() {
-        // when pendingIntent type is invalid
-
-        PendingIntentFactory.getPendingIntent(application,
-                9, PendingIntent.FLAG_UPDATE_CURRENT);
-
     }
 }

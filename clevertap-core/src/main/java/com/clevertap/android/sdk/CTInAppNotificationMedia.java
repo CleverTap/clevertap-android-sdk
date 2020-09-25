@@ -2,11 +2,9 @@ package com.clevertap.android.sdk;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-
+import java.util.UUID;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.util.UUID;
 
 public class CTInAppNotificationMedia implements Parcelable {
 
@@ -21,10 +19,14 @@ public class CTInAppNotificationMedia implements Parcelable {
             return new CTInAppNotificationMedia[size];
         }
     };
+
     int orientation;
-    private String mediaUrl;
-    private String contentType;
+
     private String cacheKey;
+
+    private String contentType;
+
+    private String mediaUrl;
 
     CTInAppNotificationMedia() {
     }
@@ -36,10 +38,45 @@ public class CTInAppNotificationMedia implements Parcelable {
         orientation = in.readInt();
     }
 
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    public int getOrientation() {
+        return orientation;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(mediaUrl);
+        dest.writeString(contentType);
+        dest.writeString(cacheKey);
+        dest.writeInt(orientation);
+    }
+
+    String getCacheKey() {
+        return cacheKey;
+    }
+
+    String getContentType() {
+        return contentType;
+    }
+
+    String getMediaUrl() {
+        return mediaUrl;
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    void setMediaUrl(String mediaUrl) {
+        this.mediaUrl = mediaUrl;
+    }
+
     CTInAppNotificationMedia initWithJSON(JSONObject mediaObject, int orientation) {
         this.orientation = orientation;
         try {
-            this.contentType = mediaObject.has(Constants.KEY_CONTENT_TYPE) ? mediaObject.getString(Constants.KEY_CONTENT_TYPE) : "";
+            this.contentType = mediaObject.has(Constants.KEY_CONTENT_TYPE) ? mediaObject
+                    .getString(Constants.KEY_CONTENT_TYPE) : "";
             String mediaUrl = mediaObject.has(Constants.KEY_URL) ? mediaObject.getString(Constants.KEY_URL) : "";
             if (!mediaUrl.isEmpty()) {
                 if (this.contentType.startsWith("image")) {
@@ -63,30 +100,9 @@ public class CTInAppNotificationMedia implements Parcelable {
         }
     }
 
-    String getMediaUrl() {
-        return mediaUrl;
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    void setMediaUrl(String mediaUrl) {
-        this.mediaUrl = mediaUrl;
-    }
-
-    String getContentType() {
-        return contentType;
-    }
-
-    String getCacheKey() {
-        return cacheKey;
-    }
-
-    public int getOrientation() {
-        return orientation;
-    }
-
-    boolean isImage() {
+    boolean isAudio() {
         String contentType = this.getContentType();
-        return contentType != null && this.mediaUrl != null && contentType.startsWith("image") && !contentType.equals("image/gif");
+        return contentType != null && this.mediaUrl != null && contentType.startsWith("audio");
     }
 
     boolean isGIF() {
@@ -94,26 +110,14 @@ public class CTInAppNotificationMedia implements Parcelable {
         return contentType != null && this.mediaUrl != null && contentType.equals("image/gif");
     }
 
+    boolean isImage() {
+        String contentType = this.getContentType();
+        return contentType != null && this.mediaUrl != null && contentType.startsWith("image") && !contentType
+                .equals("image/gif");
+    }
+
     boolean isVideo() {
         String contentType = this.getContentType();
         return contentType != null && this.mediaUrl != null && contentType.startsWith("video");
-    }
-
-    boolean isAudio() {
-        String contentType = this.getContentType();
-        return contentType != null && this.mediaUrl != null && contentType.startsWith("audio");
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(mediaUrl);
-        dest.writeString(contentType);
-        dest.writeString(cacheKey);
-        dest.writeInt(orientation);
     }
 }

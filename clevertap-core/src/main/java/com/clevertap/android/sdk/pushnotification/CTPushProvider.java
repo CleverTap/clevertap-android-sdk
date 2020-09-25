@@ -24,11 +24,6 @@ public interface CTPushProvider {
     PushConstants.PushType getPushType();
 
     /**
-     * Requests the push registration token.
-     */
-    void requestToken();
-
-    /**
      * If the underlying push provider is currently available.
      *
      * @return {@code true} if the push provider is currently available, otherwise {@code false}.
@@ -48,5 +43,10 @@ public interface CTPushProvider {
      * @return int - the minimum SDK Version Code
      */
     int minSDKSupportVersionCode();
+
+    /**
+     * Requests the push registration token.
+     */
+    void requestToken();
 
 }

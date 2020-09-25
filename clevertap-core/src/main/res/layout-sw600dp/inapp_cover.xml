@@ -1,5 +1,5 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/inapp_cover_frame_layout"
+<FrameLayout android:id="@+id/inapp_cover_frame_layout"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen">
@@ -14,8 +14,8 @@
             android:id="@+id/backgroundImage"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_alignParentStart="true"
             android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
             android:scaleType="centerCrop" />
 
@@ -46,11 +46,11 @@
             android:id="@+id/cover_linear_layout"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/cover_message"
             android:layout_alignParentBottom="true"
+            android:layout_below="@+id/cover_message"
             android:layout_centerHorizontal="true"
-            android:layout_marginTop="60dp"
             android:layout_marginBottom="54dp"
+            android:layout_marginTop="60dp"
             android:gravity="bottom"
             android:orientation="vertical"
             android:visibility="visible">
@@ -76,8 +76,8 @@
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_gravity="top|end"
-        android:layout_marginTop="12dp"
         android:layout_marginEnd="12dp"
         android:layout_marginRight="12dp"
+        android:layout_marginTop="12dp"
         android:adjustViewBounds="true" />
 </FrameLayout>

@@ -1,23 +1,19 @@
 package com.clevertap.android.shared.test;
 
+import static com.clevertap.android.shared.test.Constant.ACC_ID;
+import static com.clevertap.android.shared.test.Constant.ACC_TOKEN;
+import static org.mockito.Mockito.*;
+
 import android.os.Build;
 import android.os.Bundle;
-
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-
 import com.clevertap.android.sdk.BaseCTApiListener;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
+import org.junit.*;
+import org.junit.runner.*;
+import org.mockito.*;
 import org.robolectric.annotation.Config;
-
-import static com.clevertap.android.shared.test.Constant.ACC_ID;
-import static com.clevertap.android.shared.test.Constant.ACC_TOKEN;
-import static org.mockito.Mockito.when;
 
 @Config(manifest = Config.NONE, sdk = {Build.VERSION_CODES.P},
         application = TestApplication.class
@@ -25,20 +21,13 @@ import static org.mockito.Mockito.when;
 @RunWith(AndroidJUnit4.class)
 public abstract class BaseTestCase {
 
-    protected CleverTapAPI cleverTapAPI;
     protected TestApplication application;
-    protected CleverTapInstanceConfig cleverTapInstanceConfig;
+
     protected BaseCTApiListener baseCTApiListener;
 
-    public static void assertBundlesEquals(Bundle expected, Bundle actual) {
-        assertBundlesEquals(null, expected, actual);
-    }
+    protected CleverTapAPI cleverTapAPI;
 
-    public static void assertBundlesEquals(String message, Bundle expected, Bundle actual) {
-        if (!areEqual(expected, actual)) {
-            Assert.fail(message + " <" + expected.toString() + "> is not equal to <" + actual.toString() + ">");
-        }
-    }
+    protected CleverTapInstanceConfig cleverTapInstanceConfig;
 
     public static boolean areEqual(Bundle expected, Bundle actual) {
         if (expected == null) {
@@ -81,6 +70,20 @@ public abstract class BaseTestCase {
         return true;
     }
 
+    public static void assertBundlesEquals(String message, Bundle expected, Bundle actual) {
+        if (!areEqual(expected, actual)) {
+            Assert.fail(message + " <" + expected.toString() + "> is not equal to <" + actual.toString() + ">");
+        }
+    }
+
+    public static void assertBundlesEquals(Bundle expected, Bundle actual) {
+        assertBundlesEquals(null, expected, actual);
+    }
+
+    public TestApplication getApplication() {
+        return TestApplication.getApplication();
+    }
+
     @Before
     public void setUp() {
         application = TestApplication.getApplication();
@@ -91,10 +94,6 @@ public abstract class BaseTestCase {
         baseCTApiListener = Mockito.mock(BaseCTApiListener.class);
         when(baseCTApiListener.context()).thenReturn(application);
         when(baseCTApiListener.config()).thenReturn(cleverTapInstanceConfig);
-    }
-
-    public TestApplication getApplication() {
-        return TestApplication.getApplication();
     }
 
 }

@@ -1,23 +1,26 @@
 package com.clevertap.android.sdk.product_config;
 
+import static com.clevertap.android.sdk.Constants.LOG_TAG_PRODUCT_CONFIG;
+
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.XmlResourceParser;
 import android.util.Log;
-
+import java.io.IOException;
+import java.util.HashMap;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.IOException;
-import java.util.HashMap;
-
-import static com.clevertap.android.sdk.Constants.LOG_TAG_PRODUCT_CONFIG;
-
 public class DefaultXmlParser {
+
     private static final String XML_TAG_ENTRY = "entry";
+
     private static final String XML_TAG_KEY = "key";
+
     private static final String XML_TAG_VALUE = "value";
+
     private static final int XML_TAG_TYPE_KEY = 0;
+
     private static final int XML_TAG_TYPE_VALUE = 1;
 
     public DefaultXmlParser() {
@@ -29,7 +32,8 @@ public class DefaultXmlParser {
         try {
             Resources resources = context.getResources();
             if (resources == null) {
-                Log.e("ProductConfig", "Could not find the resources of the current context while trying to set defaults from an XML.");
+                Log.e("ProductConfig",
+                        "Could not find the resources of the current context while trying to set defaults from an XML.");
                 return defaultsMap;
             }
 
@@ -38,7 +42,8 @@ public class DefaultXmlParser {
             String key = null;
             String value = null;
 
-            for (int eventType = xmlParser.getEventType(); eventType != XmlPullParser.END_DOCUMENT; eventType = xmlParser.next()) {
+            for (int eventType = xmlParser.getEventType(); eventType != XmlPullParser.END_DOCUMENT;
+                    eventType = xmlParser.next()) {
                 if (eventType == XmlPullParser.START_TAG) {
                     curTag = xmlParser.getName();
                 } else if (eventType != XmlPullParser.END_TAG) {
@@ -60,7 +65,8 @@ public class DefaultXmlParser {
                                 value = xmlParser.getText();
                                 break;
                             default:
-                                Log.w(LOG_TAG_PRODUCT_CONFIG, "Encountered an unexpected tag while parsing the defaults XML.");
+                                Log.w(LOG_TAG_PRODUCT_CONFIG,
+                                        "Encountered an unexpected tag while parsing the defaults XML.");
                         }
                     }
                 } else {
@@ -68,7 +74,8 @@ public class DefaultXmlParser {
                         if (key != null && value != null) {
                             defaultsMap.put(key, value);
                         } else {
-                            Log.w(LOG_TAG_PRODUCT_CONFIG, "An entry in the defaults XML has an invalid key and/or value tag.");
+                            Log.w(LOG_TAG_PRODUCT_CONFIG,
+                                    "An entry in the defaults XML has an invalid key and/or value tag.");
                         }
 
                         key = null;

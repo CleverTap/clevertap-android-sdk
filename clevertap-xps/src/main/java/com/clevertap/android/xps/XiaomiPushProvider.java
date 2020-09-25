@@ -1,19 +1,19 @@
 package com.clevertap.android.xps;
 
 import android.annotation.SuppressLint;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
-
 import com.clevertap.android.sdk.pushnotification.CTPushProvider;
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class XiaomiPushProvider implements CTPushProvider {
+
     private @NonNull
     final CTPushProviderListener ctPushListener;
+
     private @NonNull
     IMiSdkHandler miSdkHandler;
 
@@ -21,12 +21,6 @@ public class XiaomiPushProvider implements CTPushProvider {
     public XiaomiPushProvider(@NonNull CTPushProviderListener ctPushListener) {
         this.ctPushListener = ctPushListener;
         this.miSdkHandler = new XiaomiSdkHandler(ctPushListener);
-    }
-
-    @VisibleForTesting
-    @RestrictTo(value = RestrictTo.Scope.LIBRARY)
-    public void setMiSdkHandler(@NonNull IMiSdkHandler sdkHandler) {
-        this.miSdkHandler = sdkHandler;
     }
 
     @Override
@@ -38,12 +32,6 @@ public class XiaomiPushProvider implements CTPushProvider {
     @Override
     public PushConstants.PushType getPushType() {
         return PushConstants.PushType.XPS;
-    }
-
-    @Override
-    public void requestToken() {
-        String token = miSdkHandler.onNewToken();
-        ctPushListener.onNewToken(token, getPushType());
     }
 
     @Override
@@ -59,6 +47,18 @@ public class XiaomiPushProvider implements CTPushProvider {
     @Override
     public int minSDKSupportVersionCode() {
         return XpsConstants.MIN_CT_ANDROID_SDK_VERSION;
+    }
+
+    @Override
+    public void requestToken() {
+        String token = miSdkHandler.onNewToken();
+        ctPushListener.onNewToken(token, getPushType());
+    }
+
+    @VisibleForTesting
+    @RestrictTo(value = RestrictTo.Scope.LIBRARY)
+    public void setMiSdkHandler(@NonNull IMiSdkHandler sdkHandler) {
+        this.miSdkHandler = sdkHandler;
     }
 
 }

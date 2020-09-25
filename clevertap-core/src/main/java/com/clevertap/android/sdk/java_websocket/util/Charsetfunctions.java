@@ -27,7 +27,6 @@ package com.clevertap.android.sdk.java_websocket.util;
 
 import com.clevertap.android.sdk.java_websocket.exceptions.InvalidDataException;
 import com.clevertap.android.sdk.java_websocket.framing.CloseFrame;
-
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
@@ -37,6 +36,7 @@ import java.nio.charset.StandardCharsets;
 public class Charsetfunctions {
 
     private static final CodingErrorAction codingErrorAction = CodingErrorAction.REPORT;
+
     /**
      * Implementation of the "Flexible and Economical UTF-8 Decoder" algorithm
      * by Björn Höhrmann (http://bjoern.hoehrmann.de/utf-8/decoder/dfa/)
@@ -58,24 +58,46 @@ public class Charsetfunctions {
             1, 3, 1, 1, 1, 1, 1, 3, 1, 3, 1, 1, 1, 1, 1, 1, 1, 3, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1  // s7..s8
     };
 
-    /**
-     * Private constructor for real static class
-     */
-    private Charsetfunctions() {
-    }
-
-    /*
-     * @return UTF-8 encoding in bytes
-     */
-    public static byte[] utf8Bytes(String s) {
-        return s.getBytes(StandardCharsets.UTF_8);
-    }
-
     /*
      * @return ASCII encoding in bytes
      */
     public static byte[] asciiBytes(String s) {
         return s.getBytes(StandardCharsets.US_ASCII);
+    }
+
+    /**
+     * Check if the provided BytebBuffer contains a valid utf8 encoded string.
+     * <p>
+     * Using the algorithm "Flexible and Economical UTF-8 Decoder" by Björn Höhrmann
+     * (http://bjoern.hoehrmann.de/utf-8/decoder/dfa/)
+     *
+     * @param data the ByteBuffer
+     * @param off  offset (for performance reasons)
+     * @return does the ByteBuffer contain a valid utf8 encoded string
+     */
+    public static boolean isValidUTF8(ByteBuffer data, int off) {
+        int len = data.remaining();
+        if (len < off) {
+            return false;
+        }
+        int state = 0;
+        for (int i = off; i < len; ++i) {
+            state = utf8d[256 + (state << 4) + utf8d[(0xff & data.get(i))]];
+            if (state == 1) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /**
+     * Calling isValidUTF8 with offset 0
+     *
+     * @param data the ByteBuffer
+     * @return does the ByteBuffer contain a valid utf8 encoded string
+     */
+    public static boolean isValidUTF8(ByteBuffer data) {
+        return isValidUTF8(data, 0);
     }
 
     public static String stringAscii(byte[] bytes) {
@@ -105,38 +127,17 @@ public class Charsetfunctions {
         return s;
     }
 
-    /**
-     * Check if the provided BytebBuffer contains a valid utf8 encoded string.
-     * <p>
-     * Using the algorithm "Flexible and Economical UTF-8 Decoder" by Björn Höhrmann (http://bjoern.hoehrmann.de/utf-8/decoder/dfa/)
-     *
-     * @param data the ByteBuffer
-     * @param off  offset (for performance reasons)
-     * @return does the ByteBuffer contain a valid utf8 encoded string
+    /*
+     * @return UTF-8 encoding in bytes
      */
-    public static boolean isValidUTF8(ByteBuffer data, int off) {
-        int len = data.remaining();
-        if (len < off) {
-            return false;
-        }
-        int state = 0;
-        for (int i = off; i < len; ++i) {
-            state = utf8d[256 + (state << 4) + utf8d[(0xff & data.get(i))]];
-            if (state == 1) {
-                return false;
-            }
-        }
-        return true;
+    public static byte[] utf8Bytes(String s) {
+        return s.getBytes(StandardCharsets.UTF_8);
     }
 
     /**
-     * Calling isValidUTF8 with offset 0
-     *
-     * @param data the ByteBuffer
-     * @return does the ByteBuffer contain a valid utf8 encoded string
+     * Private constructor for real static class
      */
-    public static boolean isValidUTF8(ByteBuffer data) {
-        return isValidUTF8(data, 0);
+    private Charsetfunctions() {
     }
 
 }

@@ -1,12 +1,10 @@
 package com.clevertap.android.sdk;
 
 import android.webkit.JavascriptInterface;
-
+import java.lang.ref.WeakReference;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-import java.lang.ref.WeakReference;
 
 /**
  * This class helps WebViews to interact with CleverTapAPI via pre-defined methods
@@ -20,6 +18,53 @@ public class CTWebInterface {
         this.weakReference = new WeakReference<>(instance);
     }
 
+    /**
+     * Method to be called from WebView Javascript to add profile properties in CleverTap
+     *
+     * @param key   String value of profile property key
+     * @param value String value of profile property value
+     */
+    @JavascriptInterface
+    @SuppressWarnings("unused")
+    public void addMultiValueForKey(String key, String value) {
+        CleverTapAPI cleverTapAPI = weakReference.get();
+        if (cleverTapAPI == null) {
+            Logger.d("CleverTap Instance is null.");
+        } else {
+            cleverTapAPI.addMultiValueForKey(key, value);
+        }
+    }
+
+    /**
+     * Method to be called from WebView Javascript to add profile properties in CleverTap
+     *
+     * @param key    String value of profile property key
+     * @param values Stringified JSON Array of profile property values
+     */
+    @JavascriptInterface
+    @SuppressWarnings("unused")
+    public void addMultiValuesForKey(String key, String values) {
+        CleverTapAPI cleverTapAPI = weakReference.get();
+        if (cleverTapAPI == null) {
+            Logger.d("CleverTap Instance is null.");
+        } else {
+            if (key == null) {
+                Logger.v("Key passed to CTWebInterface is null");
+                return;
+            }
+            if (values != null) {
+                try {
+                    JSONArray valuesArray = new JSONArray(values);
+                    cleverTapAPI.addMultiValuesForKey(key, Utils.convertJSONArrayToArrayList(valuesArray));
+                } catch (JSONException e) {
+                    Logger.v("Unable to parse values from WebView " + e.getLocalizedMessage());
+                }
+            } else {
+                Logger.v("values passed to CTWebInterface is null");
+            }
+        }
+
+    }
 
     /**
      * Method to be called from WebView Javascript to raise event in CleverTap
@@ -88,54 +133,6 @@ public class CTWebInterface {
                 Logger.v("profile passed to CTWebInterface is null");
             }
         }
-    }
-
-    /**
-     * Method to be called from WebView Javascript to add profile properties in CleverTap
-     *
-     * @param key   String value of profile property key
-     * @param value String value of profile property value
-     */
-    @JavascriptInterface
-    @SuppressWarnings("unused")
-    public void addMultiValueForKey(String key, String value) {
-        CleverTapAPI cleverTapAPI = weakReference.get();
-        if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.");
-        } else {
-            cleverTapAPI.addMultiValueForKey(key, value);
-        }
-    }
-
-    /**
-     * Method to be called from WebView Javascript to add profile properties in CleverTap
-     *
-     * @param key    String value of profile property key
-     * @param values Stringified JSON Array of profile property values
-     */
-    @JavascriptInterface
-    @SuppressWarnings("unused")
-    public void addMultiValuesForKey(String key, String values) {
-        CleverTapAPI cleverTapAPI = weakReference.get();
-        if (cleverTapAPI == null) {
-            Logger.d("CleverTap Instance is null.");
-        } else {
-            if (key == null) {
-                Logger.v("Key passed to CTWebInterface is null");
-                return;
-            }
-            if (values != null) {
-                try {
-                    JSONArray valuesArray = new JSONArray(values);
-                    cleverTapAPI.addMultiValuesForKey(key, Utils.convertJSONArrayToArrayList(valuesArray));
-                } catch (JSONException e) {
-                    Logger.v("Unable to parse values from WebView " + e.getLocalizedMessage());
-                }
-            } else {
-                Logger.v("values passed to CTWebInterface is null");
-            }
-        }
-
     }
 
     /**

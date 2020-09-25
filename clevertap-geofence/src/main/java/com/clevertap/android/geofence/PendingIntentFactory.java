@@ -3,7 +3,6 @@ package com.clevertap.android.geofence;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-
 import androidx.annotation.Nullable;
 
 /**
@@ -16,6 +15,7 @@ class PendingIntentFactory {
      * Type constant to create Location Update PendingIntent
      */
     static final int PENDING_INTENT_LOCATION = 1;
+
     /**
      * Type constant to create Geofence Update PendingIntent
      */
@@ -27,13 +27,13 @@ class PendingIntentFactory {
      * @param context           Application {@link Context}
      * @param pendingIntentType {@link #PENDING_INTENT_LOCATION} or {@link #PENDING_INTENT_GEOFENCE}
      * @param flags             {@link PendingIntent#FLAG_NO_CREATE} or {@link PendingIntent#FLAG_UPDATE_CURRENT}
-     * @return
      */
     @Nullable
     static PendingIntent getPendingIntent(@Nullable Context context, int pendingIntentType, int flags) {
 
-        if (context == null)
+        if (context == null) {
             return null;
+        }
 
         int broadcastSenderRequestCode;
         Intent intent;

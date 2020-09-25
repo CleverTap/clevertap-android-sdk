@@ -1,12 +1,11 @@
 package com.clevertap.android.sdk.product_config
 
 import com.clevertap.android.shared.test.BaseTestCase
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
-import org.mockito.Mockito
+import org.junit.*
+import org.mockito.*
 
 class ProductConfigTest : BaseTestCase() {
+
     @Before
     @Throws(Exception::class)
     override fun setUp() {
@@ -15,7 +14,8 @@ class ProductConfigTest : BaseTestCase() {
 
     @Test
     fun testFetch() {
-        Mockito.`when`(cleverTapAPI.productConfig()).thenReturn(CTProductConfigController(application, "12121", cleverTapInstanceConfig, cleverTapAPI))
+        Mockito.`when`(cleverTapAPI.productConfig())
+            .thenReturn(CTProductConfigController(application, "12121", cleverTapInstanceConfig, cleverTapAPI))
         cleverTapAPI.productConfig().fetch()
         Mockito.verify(cleverTapAPI).fetchProductConfig()
     }
@@ -43,7 +43,7 @@ class ProductConfigTest : BaseTestCase() {
         Mockito.`when`(cleverTapAPI.productConfig()).thenReturn(ctProductConfigController)
         Mockito.`when`(ctProductConfigController.getDouble("testDouble")).thenReturn(122.21)
         Assert.assertNotEquals(12.0, cleverTapAPI.productConfig().getDouble("testDouble"))
-        Assert.assertEquals(122.21, cleverTapAPI.productConfig().getDouble("testDouble"))
+        Assert.assertEquals(122.21, cleverTapAPI.productConfig().getDouble("testDouble"), 0.0)
     }
 
     @Test

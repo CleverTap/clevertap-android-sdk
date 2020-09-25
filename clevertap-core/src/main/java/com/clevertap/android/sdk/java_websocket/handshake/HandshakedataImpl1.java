@@ -52,8 +52,13 @@ public class HandshakedataImpl1 implements HandshakeBuilder {
     }
 
     @Override
-    public Iterator<String> iterateHttpFields() {
-        return Collections.unmodifiableSet(map.keySet()).iterator();// Safety first
+    public byte[] getContent() {
+        return content;
+    }
+
+    @Override
+    public void setContent(byte[] content) {
+        this.content = content;
     }
 
     @Override
@@ -66,22 +71,17 @@ public class HandshakedataImpl1 implements HandshakeBuilder {
     }
 
     @Override
-    public byte[] getContent() {
-        return content;
+    public boolean hasFieldValue(String name) {
+        return map.containsKey(name);
     }
 
     @Override
-    public void setContent(byte[] content) {
-        this.content = content;
+    public Iterator<String> iterateHttpFields() {
+        return Collections.unmodifiableSet(map.keySet()).iterator();// Safety first
     }
 
     @Override
     public void put(String name, String value) {
         map.put(name, value);
-    }
-
-    @Override
-    public boolean hasFieldValue(String name) {
-        return map.containsKey(name);
     }
 }

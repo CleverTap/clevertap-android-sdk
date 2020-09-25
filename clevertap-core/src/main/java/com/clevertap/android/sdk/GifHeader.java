@@ -24,38 +24,43 @@ import java.util.List;
 @SuppressWarnings({"unused"})
 class GifHeader {
 
-    int[] gct = null;
-    int status = GifDecoder.STATUS_OK;
-    int frameCount = 0;
+    int bgColor;
+
+    // Background color index.
+    int bgIndex;
 
     GifFrame currentFrame;
+
+    int frameCount = 0;
+
     List<GifFrame> frames = new ArrayList<>();
-    // Logical screen size.
-    // Full image width.
-    int width;
-    // Full image height.
-    int height;
+
+    int[] gct = null;
 
     // 1 : global color table flag.
     boolean gctFlag;
+
     // 2-4 : color resolution.
     // 5 : gct sort flag.
     // 6-8 : gct size.
     int gctSize;
-    // Background color index.
-    int bgIndex;
+
+    // Full image height.
+    int height;
+
+    int loopCount = 0;
+
     // Pixel aspect ratio.
     int pixelAspect;
 
-    int bgColor;
-    int loopCount = 0;
+    int status = GifDecoder.STATUS_OK;
+
+    // Logical screen size.
+    // Full image width.
+    int width;
 
     public int getHeight() {
         return height;
-    }
-
-    public int getWidth() {
-        return width;
     }
 
     public int getNumFrames() {
@@ -67,5 +72,9 @@ class GifHeader {
      */
     public int getStatus() {
         return status;
+    }
+
+    public int getWidth() {
+        return width;
     }
 }

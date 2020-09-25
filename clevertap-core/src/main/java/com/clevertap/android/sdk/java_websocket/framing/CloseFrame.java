@@ -30,7 +30,6 @@ import com.clevertap.android.sdk.java_websocket.exceptions.InvalidDataException;
 import com.clevertap.android.sdk.java_websocket.exceptions.InvalidFrameException;
 import com.clevertap.android.sdk.java_websocket.util.ByteBufferUtils;
 import com.clevertap.android.sdk.java_websocket.util.Charsetfunctions;
-
 import java.nio.ByteBuffer;
 
 /**
@@ -43,16 +42,19 @@ public class CloseFrame extends ControlFrame {
      * connection was established for has been fulfilled.
      */
     public static final int NORMAL = 1000;
+
     /**
      * 1001 indicates that an endpoint is "going away", such as a server
      * going down, or a browser having navigated away from a page.
      */
     public static final int GOING_AWAY = 1001;
+
     /**
      * 1002 indicates that an endpoint is terminating the connection due
      * to a protocol error.
      */
     public static final int PROTOCOL_ERROR = 1002;
+
     /**
      * 1003 indicates that an endpoint is terminating the connection
      * because it has received a type of data it cannot accept (e.g. an
@@ -61,6 +63,7 @@ public class CloseFrame extends ControlFrame {
      */
     public static final int REFUSE = 1003;
     /*1004: Reserved. The specific meaning might be defined in the future.*/
+
     /**
      * 1005 is a reserved value and MUST NOT be set as a status code in a
      * Close control frame by an endpoint. It is designated for use in
@@ -68,6 +71,7 @@ public class CloseFrame extends ControlFrame {
      * code was actually present.
      */
     public static final int NOCODE = 1005;
+
     /**
      * 1006 is a reserved value and MUST NOT be set as a status code in a
      * Close control frame by an endpoint. It is designated for use in
@@ -76,6 +80,7 @@ public class CloseFrame extends ControlFrame {
      * receiving a Close control frame.
      */
     public static final int ABNORMAL_CLOSE = 1006;
+
     /**
      * 1007 indicates that an endpoint is terminating the connection
      * because it has received data within a message that was not
@@ -83,6 +88,7 @@ public class CloseFrame extends ControlFrame {
      * data within a text message).
      */
     public static final int NO_UTF8 = 1007;
+
     /**
      * 1008 indicates that an endpoint is terminating the connection
      * because it has received a message that violates its policy. This
@@ -91,12 +97,14 @@ public class CloseFrame extends ControlFrame {
      * is a need to hide specific details about the policy.
      */
     public static final int POLICY_VALIDATION = 1008;
+
     /**
      * 1009 indicates that an endpoint is terminating the connection
      * because it has received a message which is too big for it to
      * process.
      */
     public static final int TOOBIG = 1009;
+
     /**
      * 1010 indicates that an endpoint (client) is terminating the
      * connection because it has expected the server to negotiate one or
@@ -107,12 +115,14 @@ public class CloseFrame extends ControlFrame {
      * can fail the WebSocket handshake instead.
      */
     public static final int EXTENSION = 1010;
+
     /**
      * 1011 indicates that a server is terminating the connection because
      * it encountered an unexpected condition that prevented it from
      * fulfilling the request.
      **/
     public static final int UNEXPECTED_CONDITION = 1011;
+
     /**
      * 1012 indicates that the service is restarted.
      * A client may reconnect, and if it choses to do, should reconnect using a randomized delay of 5 - 30s.
@@ -121,6 +131,7 @@ public class CloseFrame extends ControlFrame {
      * @since 1.3.8
      **/
     public static final int SERVICE_RESTART = 1012;
+
     /**
      * 1013 indicates that the service is experiencing overload.
      * A client should only connect to a different IP (when there are multiple for the target)
@@ -130,6 +141,7 @@ public class CloseFrame extends ControlFrame {
      * @since 1.3.8
      **/
     public static final int TRY_AGAIN_LATER = 1013;
+
     /**
      * 1014 indicates that the server was acting as a gateway or proxy and received an
      * invalid response from the upstream server. This is similar to 502 HTTP Status Code
@@ -138,6 +150,7 @@ public class CloseFrame extends ControlFrame {
      * @since 1.3.8
      **/
     public static final int BAD_GATEWAY = 1014;
+
     /**
      * 1015 is a reserved value and MUST NOT be set as a status code in a
      * Close control frame by an endpoint. It is designated for use in
@@ -184,32 +197,24 @@ public class CloseFrame extends ControlFrame {
         setCode(CloseFrame.NORMAL);
     }
 
-    /**
-     * Set the close code for this close frame
-     *
-     * @param code the close code
-     */
-    public void setCode(int code) {
-        this.code = code;
-        // CloseFrame.TLS_ERROR is not allowed to be transfered over the wire
-        if (code == CloseFrame.TLS_ERROR) {
-            this.code = CloseFrame.NOCODE;
-            this.reason = "";
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
         }
-        updatePayload();
-    }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        if (!super.equals(o)) {
+            return false;
+        }
 
-    /**
-     * Set the close reason for this close frame
-     *
-     * @param reason the reason code
-     */
-    public void setReason(String reason) {
-        if (reason == null) {
-            reason = "";
+        CloseFrame that = (CloseFrame) o;
+
+        if (code != that.code) {
+            return false;
         }
-        this.reason = reason;
-        updatePayload();
+        return reason != null ? reason.equals(that.reason) : that.reason == null;
     }
 
     /**
@@ -231,8 +236,19 @@ public class CloseFrame extends ControlFrame {
     }
 
     @Override
-    public String toString() {
-        return super.toString() + "code: " + code;
+    public ByteBuffer getPayloadData() {
+        if (code == NOCODE) {
+            return ByteBufferUtils.getEmptyByteBuffer();
+        }
+        return super.getPayloadData();
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + code;
+        result = 31 * result + (reason != null ? reason.hashCode() : 0);
+        return result;
     }
 
     @Override
@@ -248,9 +264,25 @@ public class CloseFrame extends ControlFrame {
         if ((code > CloseFrame.TLS_ERROR && code < 3000)) {
             throw new InvalidDataException(PROTOCOL_ERROR, "Trying to send an illegal close code!");
         }
-        if (code == CloseFrame.ABNORMAL_CLOSE || code == CloseFrame.TLS_ERROR || code == CloseFrame.NOCODE || code > 4999 || code < 1000 || code == 1004) {
+        if (code == CloseFrame.ABNORMAL_CLOSE || code == CloseFrame.TLS_ERROR || code == CloseFrame.NOCODE
+                || code > 4999 || code < 1000 || code == 1004) {
             throw new InvalidFrameException("closecode must not be sent over the wire: " + code);
         }
+    }
+
+    /**
+     * Set the close code for this close frame
+     *
+     * @param code the close code
+     */
+    public void setCode(int code) {
+        this.code = code;
+        // CloseFrame.TLS_ERROR is not allowed to be transfered over the wire
+        if (code == CloseFrame.TLS_ERROR) {
+            this.code = CloseFrame.NOCODE;
+            this.reason = "";
+        }
+        updatePayload();
     }
 
     @Override
@@ -282,21 +314,21 @@ public class CloseFrame extends ControlFrame {
     }
 
     /**
-     * Validate the payload to valid utf8
+     * Set the close reason for this close frame
      *
-     * @param mark    the current mark
-     * @param payload the current payload
-     * @throws InvalidDataException the current payload is not a valid utf8
+     * @param reason the reason code
      */
-    private void validateUtf8(ByteBuffer payload, int mark) throws InvalidDataException {
-        try {
-            payload.position(payload.position() + 2);
-            reason = Charsetfunctions.stringUtf8(payload);
-        } catch (IllegalArgumentException e) {
-            throw new InvalidDataException(CloseFrame.NO_UTF8);
-        } finally {
-            payload.position(mark);
+    public void setReason(String reason) {
+        if (reason == null) {
+            reason = "";
         }
+        this.reason = reason;
+        updatePayload();
+    }
+
+    @Override
+    public String toString() {
+        return super.toString() + "code: " + code;
     }
 
     /**
@@ -314,30 +346,21 @@ public class CloseFrame extends ControlFrame {
         super.setPayload(pay);
     }
 
-    @Override
-    public ByteBuffer getPayloadData() {
-        if (code == NOCODE)
-            return ByteBufferUtils.getEmptyByteBuffer();
-        return super.getPayloadData();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-
-        CloseFrame that = (CloseFrame) o;
-
-        if (code != that.code) return false;
-        return reason != null ? reason.equals(that.reason) : that.reason == null;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = super.hashCode();
-        result = 31 * result + code;
-        result = 31 * result + (reason != null ? reason.hashCode() : 0);
-        return result;
+    /**
+     * Validate the payload to valid utf8
+     *
+     * @param mark    the current mark
+     * @param payload the current payload
+     * @throws InvalidDataException the current payload is not a valid utf8
+     */
+    private void validateUtf8(ByteBuffer payload, int mark) throws InvalidDataException {
+        try {
+            payload.position(payload.position() + 2);
+            reason = Charsetfunctions.stringUtf8(payload);
+        } catch (IllegalArgumentException e) {
+            throw new InvalidDataException(CloseFrame.NO_UTF8);
+        } finally {
+            payload.position(mark);
+        }
     }
 }

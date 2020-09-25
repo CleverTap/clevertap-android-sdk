@@ -1,34 +1,42 @@
 package com.clevertap.android.sdk;
 
 import android.text.TextUtils;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Message Data Access Object class interfacing with Database
  */
 class CTMessageDAO {
-    private String id;
-    private JSONObject jsonData;
-    private boolean read;
-    private long date;
-    private long expires;
-    private String userId;
-    private List<String> tags = new ArrayList<>();
+
     private String campaignId;
+
+    private long date;
+
+    private long expires;
+
+    private String id;
+
+    private JSONObject jsonData;
+
+    private boolean read;
+
+    private List<String> tags = new ArrayList<>();
+
+    private String userId;
+
     private JSONObject wzrkParams;
 
     CTMessageDAO() {
     }
 
-    private CTMessageDAO(String id, JSONObject jsonData, boolean read, long date, long expires, String userId, List<String> tags, String campaignId, JSONObject wzrkParams) {
+    private CTMessageDAO(String id, JSONObject jsonData, boolean read, long date, long expires, String userId,
+            List<String> tags, String campaignId, JSONObject wzrkParams) {
         this.id = id;
         this.jsonData = jsonData;
         this.read = read;
@@ -40,72 +48,17 @@ class CTMessageDAO {
         this.wzrkParams = wzrkParams;
     }
 
-    static CTMessageDAO initWithJSON(JSONObject inboxMessage, String userId) {
-        try {
-            String id = inboxMessage.has("_id") ? inboxMessage.getString("_id") : null;
-            long date = inboxMessage.has("date") ? inboxMessage.getInt("date") : System.currentTimeMillis() / 1000;
-            long expires = inboxMessage.has("wzrk_ttl") ? inboxMessage.getInt("wzrk_ttl") : (System.currentTimeMillis() + 24 * 60 * Constants.ONE_MIN_IN_MILLIS) / 1000;
-            JSONObject cellObject = inboxMessage.has("msg") ? inboxMessage.getJSONObject("msg") : null;
-            List<String> tagsList = new ArrayList<>();
-            if (cellObject != null) {//Part of "msg" object
-                JSONArray tagsArray = cellObject.has("tags") ? cellObject.getJSONArray("tags") : null;
-                if (tagsArray != null) {
-                    for (int i = 0; i < tagsArray.length(); i++) {
-                        tagsList.add(tagsArray.getString(i));
-                    }
-                }
-            }
-            String campaignId = inboxMessage.has("wzrk_id") ? inboxMessage.getString("wzrk_id") : "0_0";
-            if (campaignId.equalsIgnoreCase("0_0")) {
-                inboxMessage.put("wzrk_id", campaignId);//For test inbox Notification Viewed
-            }
-            JSONObject wzrkParams = getWzrkFields(inboxMessage);
-            return (id == null) ? null : new CTMessageDAO(id, cellObject, false, date, expires, userId, tagsList, campaignId, wzrkParams);
-        } catch (JSONException e) {
-            Logger.d("Unable to parse Notification inbox message to CTMessageDao - " + e.getLocalizedMessage());
-            return null;
-        }
+    boolean containsVideoOrAudio() {
+        CTInboxMessageContent content = new CTInboxMessage(this.toJSON()).getInboxMessageContents().get(0);
+        return (content.mediaIsVideo() || content.mediaIsAudio());
     }
 
-    private static JSONObject getWzrkFields(JSONObject root) throws JSONException {
-        final JSONObject fields = new JSONObject();
-        Iterator<String> iterator = root.keys();
-
-        while (iterator.hasNext()) {
-            String keyName = iterator.next();
-            if (keyName.startsWith(Constants.WZRK_PREFIX))
-                fields.put(keyName, root.get(keyName));
-        }
-
-        return fields;
+    String getCampaignId() {
+        return campaignId;
     }
 
-    String getId() {
-        return id;
-    }
-
-    void setId(String id) {
-        this.id = id;
-    }
-
-    JSONObject getJsonData() {
-        return jsonData;
-    }
-
-    void setJsonData(JSONObject jsonData) {
-        this.jsonData = jsonData;
-    }
-
-    int isRead() {
-        if (read) {
-            return 1;
-        } else {
-            return 0;
-        }
-    }
-
-    void setRead(int read) {
-        this.read = read == 1;
+    void setCampaignId(String campaignId) {
+        this.campaignId = campaignId;
     }
 
     long getDate() {
@@ -124,12 +77,20 @@ class CTMessageDAO {
         this.expires = expires;
     }
 
-    String getUserId() {
-        return userId;
+    String getId() {
+        return id;
     }
 
-    void setUserId(String userId) {
-        this.userId = userId;
+    void setId(String id) {
+        this.id = id;
+    }
+
+    JSONObject getJsonData() {
+        return jsonData;
+    }
+
+    void setJsonData(JSONObject jsonData) {
+        this.jsonData = jsonData;
     }
 
     String getTags() {
@@ -142,12 +103,12 @@ class CTMessageDAO {
 
     }
 
-    String getCampaignId() {
-        return campaignId;
+    String getUserId() {
+        return userId;
     }
 
-    void setCampaignId(String campaignId) {
-        this.campaignId = campaignId;
+    void setUserId(String userId) {
+        this.userId = userId;
     }
 
     JSONObject getWzrkParams() {
@@ -156,6 +117,18 @@ class CTMessageDAO {
 
     void setWzrkParams(JSONObject wzrk_params) {
         this.wzrkParams = wzrk_params;
+    }
+
+    int isRead() {
+        if (read) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    void setRead(int read) {
+        this.read = read == 1;
     }
 
     JSONObject toJSON() {
@@ -180,8 +153,47 @@ class CTMessageDAO {
         }
     }
 
-    boolean containsVideoOrAudio() {
-        CTInboxMessageContent content = new CTInboxMessage(this.toJSON()).getInboxMessageContents().get(0);
-        return (content.mediaIsVideo() || content.mediaIsAudio());
+    static CTMessageDAO initWithJSON(JSONObject inboxMessage, String userId) {
+        try {
+            String id = inboxMessage.has("_id") ? inboxMessage.getString("_id") : null;
+            long date = inboxMessage.has("date") ? inboxMessage.getInt("date") : System.currentTimeMillis() / 1000;
+            long expires = inboxMessage.has("wzrk_ttl") ? inboxMessage.getInt("wzrk_ttl")
+                    : (System.currentTimeMillis() + 24 * 60 * Constants.ONE_MIN_IN_MILLIS) / 1000;
+            JSONObject cellObject = inboxMessage.has("msg") ? inboxMessage.getJSONObject("msg") : null;
+            List<String> tagsList = new ArrayList<>();
+            if (cellObject != null) {//Part of "msg" object
+                JSONArray tagsArray = cellObject.has("tags") ? cellObject.getJSONArray("tags") : null;
+                if (tagsArray != null) {
+                    for (int i = 0; i < tagsArray.length(); i++) {
+                        tagsList.add(tagsArray.getString(i));
+                    }
+                }
+            }
+            String campaignId = inboxMessage.has("wzrk_id") ? inboxMessage.getString("wzrk_id") : "0_0";
+            if (campaignId.equalsIgnoreCase("0_0")) {
+                inboxMessage.put("wzrk_id", campaignId);//For test inbox Notification Viewed
+            }
+            JSONObject wzrkParams = getWzrkFields(inboxMessage);
+            return (id == null) ? null
+                    : new CTMessageDAO(id, cellObject, false, date, expires, userId, tagsList, campaignId,
+                            wzrkParams);
+        } catch (JSONException e) {
+            Logger.d("Unable to parse Notification inbox message to CTMessageDao - " + e.getLocalizedMessage());
+            return null;
+        }
+    }
+
+    private static JSONObject getWzrkFields(JSONObject root) throws JSONException {
+        final JSONObject fields = new JSONObject();
+        Iterator<String> iterator = root.keys();
+
+        while (iterator.hasNext()) {
+            String keyName = iterator.next();
+            if (keyName.startsWith(Constants.WZRK_PREFIX)) {
+                fields.put(keyName, root.get(keyName));
+            }
+        }
+
+        return fields;
     }
 }

@@ -4,22 +4,20 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.clevertap.android.sdk.CTInboxListener;
 import com.clevertap.android.sdk.CTInboxStyleConfig;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
-
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 
 public class MainActivity extends AppCompatActivity implements CTInboxListener {
 
-    private Button event, chargedEvent, eventWithProps, profileEvent, inbox, web;
     private CleverTapAPI cleverTapDefaultInstance, cleverTapInstanceTwo;
+
+    private Button event, chargedEvent, eventWithProps, profileEvent, inbox, web;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,7 +46,8 @@ public class MainActivity extends AppCompatActivity implements CTInboxListener {
         //With CleverTap Android SDK v3.2.0 you can create additional instances to send data to multiple CleverTap accounts
         //Create config object for an additional instance
         //While using this app, replace the below Account Id and token with your Account Id and token
-        CleverTapInstanceConfig config = CleverTapInstanceConfig.createInstance(this, "YOUR_ACCOUNT_ID", "YOUR_ACCOUNT_TOKEN");
+        CleverTapInstanceConfig config = CleverTapInstanceConfig
+                .createInstance(this, "YOUR_ACCOUNT_ID", "YOUR_ACCOUNT_TOKEN");
 
         //Use the config object to create a custom instance
         cleverTapInstanceTwo = CleverTapAPI.instanceWithConfig(this, config);
@@ -128,7 +127,8 @@ public class MainActivity extends AppCompatActivity implements CTInboxListener {
                 profileUpdate.put("Employed", "Y");           // Can be either Y or N
                 profileUpdate.put("Education", "Graduate");   // Can be either Graduate, College or School
                 profileUpdate.put("Married", "Y");            // Can be either Y or N
-                profileUpdate.put("DOB", new Date());         // Date of Birth. Set the Date object to the appropriate value first
+                profileUpdate.put("DOB",
+                        new Date());         // Date of Birth. Set the Date object to the appropriate value first
                 profileUpdate.put("Age", 28);                 // Not required if DOB is set
                 profileUpdate.put("MSG-email", false);        // Disable email notifications
                 profileUpdate.put("MSG-push", true);          // Enable push notifications
@@ -175,6 +175,7 @@ public class MainActivity extends AppCompatActivity implements CTInboxListener {
 
     @Override
     public void inboxMessagesDidUpdate() {
-        inbox.setText("Inbox - Unread - " + cleverTapDefaultInstance.getInboxMessageUnreadCount() + " Total - " + cleverTapDefaultInstance.getInboxMessageCount());
+        inbox.setText("Inbox - Unread - " + cleverTapDefaultInstance.getInboxMessageUnreadCount() + " Total - "
+                + cleverTapDefaultInstance.getInboxMessageCount());
     }
 }

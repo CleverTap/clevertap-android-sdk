@@ -20,10 +20,9 @@ public abstract class CTInAppBasePartialFragment extends CTInAppBaseFragment {
     }
 
     @Override
-    void generateListener() {
-        if (config != null) {
-            setListener(CleverTapAPI.instanceWithConfig(getActivity().getBaseContext(), config));
-        }
+    public void onDestroy() {
+        super.onDestroy();
+        didDismiss(null);
     }
 
     @Override
@@ -41,8 +40,9 @@ public abstract class CTInAppBasePartialFragment extends CTInAppBaseFragment {
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
-        didDismiss(null);
+    void generateListener() {
+        if (config != null) {
+            setListener(CleverTapAPI.instanceWithConfig(getActivity().getBaseContext(), config));
+        }
     }
 }

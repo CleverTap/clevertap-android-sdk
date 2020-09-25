@@ -15,10 +15,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-
 import java.util.ArrayList;
 
 public class CTInAppNativeHeaderFragment extends CTInAppBasePartialNativeFragment {
@@ -56,7 +54,6 @@ public class CTInAppNativeHeaderFragment extends CTInAppBasePartialNativeFragmen
             imageView.setVisibility(View.GONE);
         }
 
-
         TextView textView1 = linearLayout2.findViewById(R.id.header_title);
         textView1.setText(inAppNotification.getTitle());
         textView1.setTextColor(Color.parseColor(inAppNotification.getTitleColor()));
@@ -68,7 +65,9 @@ public class CTInAppNativeHeaderFragment extends CTInAppBasePartialNativeFragmen
         ArrayList<CTInAppNotificationButton> buttons = inAppNotification.getButtons();
         if (buttons != null && !buttons.isEmpty()) {
             for (int i = 0; i < buttons.size(); i++) {
-                if (i >= 2) continue; // only show 2 buttons
+                if (i >= 2) {
+                    continue; // only show 2 buttons
+                }
                 CTInAppNotificationButton inAppNotificationButton = buttons.get(i);
                 Button button = inAppButtons.get(i);
                 setupInAppButton(button, inAppNotificationButton, inAppNotification, i);

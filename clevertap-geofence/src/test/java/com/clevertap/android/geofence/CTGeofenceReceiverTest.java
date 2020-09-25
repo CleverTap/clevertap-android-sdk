@@ -1,31 +1,23 @@
 package com.clevertap.android.geofence;
 
+import static org.awaitility.Awaitility.await;
+import static org.mockito.Mockito.*;
+import static org.powermock.api.mockito.PowerMockito.when;
+
 import android.content.BroadcastReceiver;
 import android.content.Intent;
-
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
-import org.mockito.invocation.InvocationOnMock;
-import org.mockito.stubbing.Answer;
+import java.util.concurrent.Callable;
+import org.junit.*;
+import org.junit.runner.*;
+import org.mockito.*;
+import org.mockito.invocation.*;
+import org.mockito.stubbing.*;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-
-import java.util.concurrent.Callable;
-
-import static org.awaitility.Awaitility.await;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.powermock.api.mockito.PowerMockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 28,
@@ -35,14 +27,18 @@ import static org.powermock.api.mockito.PowerMockito.when;
 @PrepareForTest({CTGeofenceAPI.class, CTGeofenceTaskManager.class})
 public class CTGeofenceReceiverTest extends BaseTestCase {
 
-    @Rule
-    public PowerMockRule rule = new PowerMockRule();
     @Mock
     public CTGeofenceAPI ctGeofenceAPI;
+
     @Mock
     public BroadcastReceiver.PendingResult pendingResult;
+
+    @Rule
+    public PowerMockRule rule = new PowerMockRule();
+
     @Mock
     public CTGeofenceTaskManager taskManager;
+
     private Logger logger;
 
     @Before
@@ -59,6 +55,16 @@ public class CTGeofenceReceiverTest extends BaseTestCase {
 
         PowerMockito.when(CTGeofenceTaskManager.getInstance()).thenReturn(taskManager);
 
+    }
+
+    @Test
+    public void testOnReceiveWhenIntentIsNull() {
+        CTGeofenceReceiver receiver = new CTGeofenceReceiver();
+        CTGeofenceReceiver spy = Mockito.spy(receiver);
+
+        spy.onReceive(application, null);
+
+        verify(spy, never()).goAsync();
     }
 
     @Test
@@ -88,16 +94,6 @@ public class CTGeofenceReceiverTest extends BaseTestCase {
         });
 
         verify(pendingResult).finish();
-    }
-
-    @Test
-    public void testOnReceiveWhenIntentIsNull() {
-        CTGeofenceReceiver receiver = new CTGeofenceReceiver();
-        CTGeofenceReceiver spy = Mockito.spy(receiver);
-
-        spy.onReceive(application, null);
-
-        verify(spy, never()).goAsync();
     }
 
 }

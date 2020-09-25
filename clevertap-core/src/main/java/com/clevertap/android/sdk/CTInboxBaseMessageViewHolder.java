@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk;
 
+import static com.google.android.exoplayer2.ui.PlayerView.SHOW_BUFFERING_NEVER;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.res.Configuration;
@@ -16,10 +18,8 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.ui.PlayerView;
@@ -27,134 +27,39 @@ import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
 import com.google.android.exoplayer2.util.Util;
-
 import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import static com.google.android.exoplayer2.ui.PlayerView.SHOW_BUFFERING_NEVER;
-
 class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
+
+    Context context;
+
+    LinearLayout ctaLinearLayout, bodyRelativeLayout;
+
+    FrameLayout frameLayout;
+
+    ImageView mediaImage, squareImage;
+
+    RelativeLayout mediaLayout;
+
+    FrameLayout progressBarFrameLayout;
+
     @SuppressWarnings({"unused"})
     RelativeLayout relativeLayout, clickLayout;
-    LinearLayout ctaLinearLayout, bodyRelativeLayout;
-    FrameLayout frameLayout;
-    Context context;
-    ImageView mediaImage, squareImage;
-    FrameLayout progressBarFrameLayout;
-    RelativeLayout mediaLayout;
-    private ImageView muteIcon;
-    private WeakReference<CTInboxListViewFragment> parentWeakReference;
+
+    private CTInboxMessageContent firstContentItem;
 
     private CTInboxMessage message;
-    private CTInboxMessageContent firstContentItem;
+
+    private ImageView muteIcon;
+
+    private WeakReference<CTInboxListViewFragment> parentWeakReference;
+
     private boolean requiresMediaPlayer;
 
     CTInboxBaseMessageViewHolder(@NonNull View itemView) {
         super(itemView);
-    }
-
-    CTInboxListViewFragment getParent() {
-        return parentWeakReference.get();
-    }
-
-    void configureWithMessage(final CTInboxMessage inboxMessage, final CTInboxListViewFragment parent, final int position) {
-        context = parent.getContext();
-        parentWeakReference = new WeakReference<>(parent);
-        message = inboxMessage;
-        firstContentItem = message.getInboxMessageContents().get(0);
-        requiresMediaPlayer = firstContentItem.mediaIsAudio() || firstContentItem.mediaIsVideo();
-    }
-
-    /**
-     * Logic for timestamp
-     *
-     * @param time Epoch date of creation
-     * @return String timestamp
-     */
-    String calculateDisplayTimestamp(long time) {
-        long now = System.currentTimeMillis() / 1000;
-        long diff = now - time;
-        if (diff < 60) {
-            return "Just Now";
-        } else if (diff > 60 && diff < 59 * 60) {
-            return (diff / (60)) + " mins ago";
-        } else if (diff > 59 * 60 && diff < 23 * 59 * 60) {
-            return diff / (60 * 60) > 1 ? diff / (60 * 60) + " hours ago" : diff / (60 * 60) + " hour ago";
-        } else if (diff > 24 * 60 * 60 && diff < 48 * 60 * 60) {
-            return "Yesterday";
-        } else {
-            @SuppressLint("SimpleDateFormat")
-            SimpleDateFormat sdf = new SimpleDateFormat("dd MMM");
-            return sdf.format(new Date(time * 1000L));
-        }
-    }
-
-    void hideTwoButtons(Button mainButton, Button secondaryButton, Button tertiaryButton) {
-        secondaryButton.setVisibility(View.GONE);
-        tertiaryButton.setVisibility(View.GONE);
-        LinearLayout.LayoutParams mainLayoutParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 6);
-        mainButton.setLayoutParams(mainLayoutParams);
-        LinearLayout.LayoutParams secondaryLayoutParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 0);
-        secondaryButton.setLayoutParams(secondaryLayoutParams);
-        LinearLayout.LayoutParams tertiaryLayoutParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 0);
-        tertiaryButton.setLayoutParams(tertiaryLayoutParams);
-    }
-
-    void hideOneButton(Button mainButton, Button secondaryButton, Button tertiaryButton) {
-        tertiaryButton.setVisibility(View.GONE);
-        LinearLayout.LayoutParams mainLayoutParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 3);
-        mainButton.setLayoutParams(mainLayoutParams);
-        LinearLayout.LayoutParams secondaryLayoutParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 3);
-        secondaryButton.setLayoutParams(secondaryLayoutParams);
-        LinearLayout.LayoutParams tertiaryLayoutParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 0);
-        tertiaryButton.setLayoutParams(tertiaryLayoutParams);
-    }
-
-    private FrameLayout getLayoutForMediaPlayer() {
-        return frameLayout;
-    }
-
-    int getImageBackgroundColor() {
-        return Color.TRANSPARENT;
-    }
-
-    boolean needsMediaPlayer() {
-        return requiresMediaPlayer;
-    }
-
-    boolean shouldAutoPlay() {
-        return firstContentItem.mediaIsVideo();
-    }
-
-    void playerReady() {
-        FrameLayout frameLayout = getLayoutForMediaPlayer();
-        frameLayout.setVisibility(View.VISIBLE);
-        if (muteIcon != null) {
-            muteIcon.setVisibility(View.VISIBLE);
-        }
-        if (progressBarFrameLayout != null) {
-            progressBarFrameLayout.setVisibility(View.GONE);
-        }
-    }
-
-    void playerRemoved() {
-        if (progressBarFrameLayout != null) {
-            progressBarFrameLayout.setVisibility(View.GONE);
-        }
-        if (muteIcon != null) {
-            muteIcon.setVisibility(View.GONE);
-        }
-        FrameLayout frameLayout = getLayoutForMediaPlayer();
-        if (frameLayout != null) {
-            frameLayout.removeAllViews();
-        }
-    }
-
-    void playerBuffering() {
-        if (progressBarFrameLayout != null) {
-            progressBarFrameLayout.setVisibility(View.VISIBLE);
-        }
     }
 
     boolean addMediaPlayer(PlayerView videoSurfaceView) {
@@ -238,7 +143,8 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
                 Util.getUserAgent(context, context.getPackageName()), defaultBandwidthMeter);
         String uriString = firstContentItem.getMedia();
         if (uriString != null) {
-            HlsMediaSource hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(Uri.parse(uriString));
+            HlsMediaSource hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory)
+                    .createMediaSource(Uri.parse(uriString));
             // Prepare the player with the source.
             player.prepare(hlsMediaSource);
             if (firstContentItem.mediaIsAudio()) {
@@ -251,5 +157,115 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
             }
         }
         return true;
+    }
+
+    /**
+     * Logic for timestamp
+     *
+     * @param time Epoch date of creation
+     * @return String timestamp
+     */
+    String calculateDisplayTimestamp(long time) {
+        long now = System.currentTimeMillis() / 1000;
+        long diff = now - time;
+        if (diff < 60) {
+            return "Just Now";
+        } else if (diff > 60 && diff < 59 * 60) {
+            return (diff / (60)) + " mins ago";
+        } else if (diff > 59 * 60 && diff < 23 * 59 * 60) {
+            return diff / (60 * 60) > 1 ? diff / (60 * 60) + " hours ago" : diff / (60 * 60) + " hour ago";
+        } else if (diff > 24 * 60 * 60 && diff < 48 * 60 * 60) {
+            return "Yesterday";
+        } else {
+            @SuppressLint("SimpleDateFormat")
+            SimpleDateFormat sdf = new SimpleDateFormat("dd MMM");
+            return sdf.format(new Date(time * 1000L));
+        }
+    }
+
+    void configureWithMessage(final CTInboxMessage inboxMessage, final CTInboxListViewFragment parent,
+            final int position) {
+        context = parent.getContext();
+        parentWeakReference = new WeakReference<>(parent);
+        message = inboxMessage;
+        firstContentItem = message.getInboxMessageContents().get(0);
+        requiresMediaPlayer = firstContentItem.mediaIsAudio() || firstContentItem.mediaIsVideo();
+    }
+
+    int getImageBackgroundColor() {
+        return Color.TRANSPARENT;
+    }
+
+    CTInboxListViewFragment getParent() {
+        return parentWeakReference.get();
+    }
+
+    void hideOneButton(Button mainButton, Button secondaryButton, Button tertiaryButton) {
+        tertiaryButton.setVisibility(View.GONE);
+        LinearLayout.LayoutParams mainLayoutParams = new LinearLayout.LayoutParams(0,
+                ViewGroup.LayoutParams.MATCH_PARENT, 3);
+        mainButton.setLayoutParams(mainLayoutParams);
+        LinearLayout.LayoutParams secondaryLayoutParams = new LinearLayout.LayoutParams(0,
+                ViewGroup.LayoutParams.MATCH_PARENT, 3);
+        secondaryButton.setLayoutParams(secondaryLayoutParams);
+        LinearLayout.LayoutParams tertiaryLayoutParams = new LinearLayout.LayoutParams(0,
+                ViewGroup.LayoutParams.MATCH_PARENT, 0);
+        tertiaryButton.setLayoutParams(tertiaryLayoutParams);
+    }
+
+    void hideTwoButtons(Button mainButton, Button secondaryButton, Button tertiaryButton) {
+        secondaryButton.setVisibility(View.GONE);
+        tertiaryButton.setVisibility(View.GONE);
+        LinearLayout.LayoutParams mainLayoutParams = new LinearLayout.LayoutParams(0,
+                ViewGroup.LayoutParams.MATCH_PARENT, 6);
+        mainButton.setLayoutParams(mainLayoutParams);
+        LinearLayout.LayoutParams secondaryLayoutParams = new LinearLayout.LayoutParams(0,
+                ViewGroup.LayoutParams.MATCH_PARENT, 0);
+        secondaryButton.setLayoutParams(secondaryLayoutParams);
+        LinearLayout.LayoutParams tertiaryLayoutParams = new LinearLayout.LayoutParams(0,
+                ViewGroup.LayoutParams.MATCH_PARENT, 0);
+        tertiaryButton.setLayoutParams(tertiaryLayoutParams);
+    }
+
+    boolean needsMediaPlayer() {
+        return requiresMediaPlayer;
+    }
+
+    void playerBuffering() {
+        if (progressBarFrameLayout != null) {
+            progressBarFrameLayout.setVisibility(View.VISIBLE);
+        }
+    }
+
+    void playerReady() {
+        FrameLayout frameLayout = getLayoutForMediaPlayer();
+        frameLayout.setVisibility(View.VISIBLE);
+        if (muteIcon != null) {
+            muteIcon.setVisibility(View.VISIBLE);
+        }
+        if (progressBarFrameLayout != null) {
+            progressBarFrameLayout.setVisibility(View.GONE);
+        }
+    }
+
+    void playerRemoved() {
+        if (progressBarFrameLayout != null) {
+            progressBarFrameLayout.setVisibility(View.GONE);
+        }
+        if (muteIcon != null) {
+            muteIcon.setVisibility(View.GONE);
+        }
+        FrameLayout frameLayout = getLayoutForMediaPlayer();
+        if (frameLayout != null) {
+            frameLayout.removeAllViews();
+        }
+    }
+
+    boolean shouldAutoPlay() {
+        return firstContentItem.mediaIsVideo();
+    }
+
+    private FrameLayout getLayoutForMediaPlayer() {
+        return frameLayout;
     }
 }

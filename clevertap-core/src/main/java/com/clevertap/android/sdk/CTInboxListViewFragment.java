@@ -13,76 +13,47 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
-
-import org.json.JSONObject;
-
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import org.json.JSONObject;
 
 public class CTInboxListViewFragment extends Fragment {
 
-    ArrayList<CTInboxMessage> inboxMessages = new ArrayList<>();
+    interface InboxListener {
+
+        void messageDidClick(Context baseContext, CTInboxMessage inboxMessage, Bundle data,
+                HashMap<String, String> keyValue);
+
+        void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data);
+    }
+
     CleverTapInstanceConfig config;
+
     boolean haveVideoPlayerSupport = CleverTapAPI.haveVideoPlayerSupport;
-    CTInboxStyleConfig styleConfig;
+
+    ArrayList<CTInboxMessage> inboxMessages = new ArrayList<>();
+
     LinearLayout linearLayout;
+
     MediaPlayerRecyclerView mediaRecyclerView;
+
     RecyclerView recyclerView;
-    private WeakReference<CTInboxListViewFragment.InboxListener> listenerWeakReference;
+
+    CTInboxStyleConfig styleConfig;
+
     private boolean firstTime = true;
+
+    private WeakReference<CTInboxListViewFragment.InboxListener> listenerWeakReference;
+
     private int tabPosition;
-
-    void didClick(Bundle data, int position, HashMap<String, String> keyValuePayload) {
-        CTInboxListViewFragment.InboxListener listener = getListener();
-        if (listener != null) {
-            //noinspection ConstantConditions
-            listener.messageDidClick(getActivity().getBaseContext(), inboxMessages.get(position), data, keyValuePayload);
-        }
-    }
-
-    private boolean shouldAutoPlayOnFirstLaunch() {
-        return tabPosition <= 0;
-    }
-
-    CTInboxListViewFragment.InboxListener getListener() {
-        CTInboxListViewFragment.InboxListener listener = null;
-        try {
-            listener = listenerWeakReference.get();
-        } catch (Throwable t) {
-            // no-op
-        }
-        if (listener == null) {
-            Logger.v("InboxListener is null for messages");
-        }
-        return listener;
-    }
-
-    void setListener(CTInboxListViewFragment.InboxListener listener) {
-        listenerWeakReference = new WeakReference<>(listener);
-    }
-
-    private ArrayList<CTInboxMessage> filterMessages(ArrayList<CTInboxMessage> messages, String filter) {
-        ArrayList<CTInboxMessage> filteredMessages = new ArrayList<>();
-        for (CTInboxMessage inboxMessage : messages) {
-            if (inboxMessage.getTags() != null && inboxMessage.getTags().size() > 0) {
-                for (String stringTag : inboxMessage.getTags()) {
-                    if (stringTag.equalsIgnoreCase(filter)) {
-                        filteredMessages.add(inboxMessage);
-                    }
-                }
-            }
-        }
-        return filteredMessages;
-    }
 
     @Override
     public void onAttach(Context context) {
@@ -106,7 +77,8 @@ public class CTInboxListViewFragment extends Fragment {
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+            @Nullable Bundle savedInstanceState) {
         View allView = inflater.inflate(R.layout.inbox_list_view, container, false);
         linearLayout = allView.findViewById(R.id.list_view_linear_layout);
         linearLayout.setBackgroundColor(Color.parseColor(styleConfig.getInboxBackgroundColor()));
@@ -159,130 +131,6 @@ public class CTInboxListViewFragment extends Fragment {
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        if (mediaRecyclerView != null) {
-            mediaRecyclerView.onPausePlayer();
-        }
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (mediaRecyclerView != null) {
-            mediaRecyclerView.onRestartPlayer();
-        }
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (mediaRecyclerView != null) {
-            mediaRecyclerView.release();
-        }
-    }
-
-    void handleClick(int position, String buttonText, JSONObject jsonObject, HashMap<String, String> keyValuePayload) {
-        try {
-            Bundle data = new Bundle();
-            JSONObject wzrkParams = inboxMessages.get(position).getWzrkParams();
-            Iterator<String> iterator = wzrkParams.keys();
-            while (iterator.hasNext()) {
-                String keyName = iterator.next();
-                if (keyName.startsWith(Constants.WZRK_PREFIX))
-                    data.putString(keyName, wzrkParams.getString(keyName));
-            }
-
-            if (buttonText != null && !buttonText.isEmpty()) {
-                data.putString("wzrk_c2a", buttonText);
-            }
-            didClick(data, position, keyValuePayload);
-            boolean isKVButton = keyValuePayload != null && !keyValuePayload.isEmpty();
-            if (jsonObject != null) {
-                if (isKVButton || inboxMessages.get(position).getInboxMessageContents().get(0).getLinktype(jsonObject).equalsIgnoreCase(Constants.COPY_TYPE)) {
-                    //noinspection UnnecessaryReturnStatement
-                    return;
-                } else {
-                    String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(0).getLinkUrl(jsonObject);
-                    if (actionUrl != null) {
-                        fireUrlThroughIntent(actionUrl);
-                    }
-                }
-            } else {
-                String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(0).getActionUrl();
-                if (actionUrl != null) {
-                    fireUrlThroughIntent(actionUrl);
-                }
-            }
-        } catch (Throwable t) {
-            Logger.d("Error handling notification button click: " + t.getCause());
-        }
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    void didShow(Bundle data, int position) {
-        CTInboxListViewFragment.InboxListener listener = getListener();
-        if (listener != null) {
-            //noinspection ConstantConditions
-            listener.messageDidShow(getActivity().getBaseContext(), inboxMessages.get(position), data);
-        }
-    }
-
-    void handleViewPagerClick(int position, int viewPagerPosition) {
-        try {
-            Bundle data = new Bundle();
-            JSONObject wzrkParams = inboxMessages.get(position).getWzrkParams();
-            Iterator<String> iterator = wzrkParams.keys();
-            while (iterator.hasNext()) {
-                String keyName = iterator.next();
-                if (keyName.startsWith(Constants.WZRK_PREFIX))
-                    data.putString(keyName, wzrkParams.getString(keyName));
-            }
-            didClick(data, position, null);
-            String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(viewPagerPosition).getActionUrl();
-            fireUrlThroughIntent(actionUrl);
-        } catch (Throwable t) {
-            Logger.d("Error handling notification button click: " + t.getCause());
-        }
-    }
-
-    void fireUrlThroughIntent(String url) {
-        try {
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url.replace("\n", "").replace("\r", "")));
-            if (getActivity() != null) {
-                Utils.setPackageNameFromResolveInfoList(getActivity(), intent);
-            }
-            startActivity(intent);
-        } catch (Throwable t) {
-            // Ignore
-        }
-    }
-
-    MediaPlayerRecyclerView getMediaRecyclerView() {
-        return this.mediaRecyclerView;
-    }
-
-    void setMediaRecyclerView(MediaPlayerRecyclerView mediaRecyclerView) {
-        this.mediaRecyclerView = mediaRecyclerView;
-    }
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        if (mediaRecyclerView != null) {
-            if (mediaRecyclerView.getLayoutManager() != null) {
-                outState.putParcelable("recyclerLayoutState", mediaRecyclerView.getLayoutManager().onSaveInstanceState());
-            }
-        }
-
-        if (recyclerView != null) {
-            if (recyclerView.getLayoutManager() != null) {
-                outState.putParcelable("recyclerLayoutState", recyclerView.getLayoutManager().onSaveInstanceState());
-            }
-        }
-    }
-
-    @Override
     public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
         super.onViewStateRestored(savedInstanceState);
         if (savedInstanceState != null) {
@@ -301,9 +149,178 @@ public class CTInboxListViewFragment extends Fragment {
         }
     }
 
-    interface InboxListener {
-        void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data);
+    @Override
+    public void onResume() {
+        super.onResume();
+        if (mediaRecyclerView != null) {
+            mediaRecyclerView.onRestartPlayer();
+        }
+    }
 
-        void messageDidClick(Context baseContext, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue);
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (mediaRecyclerView != null) {
+            mediaRecyclerView.onPausePlayer();
+        }
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        if (mediaRecyclerView != null) {
+            if (mediaRecyclerView.getLayoutManager() != null) {
+                outState.putParcelable("recyclerLayoutState",
+                        mediaRecyclerView.getLayoutManager().onSaveInstanceState());
+            }
+        }
+
+        if (recyclerView != null) {
+            if (recyclerView.getLayoutManager() != null) {
+                outState.putParcelable("recyclerLayoutState", recyclerView.getLayoutManager().onSaveInstanceState());
+            }
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (mediaRecyclerView != null) {
+            mediaRecyclerView.release();
+        }
+    }
+
+    void didClick(Bundle data, int position, HashMap<String, String> keyValuePayload) {
+        CTInboxListViewFragment.InboxListener listener = getListener();
+        if (listener != null) {
+            //noinspection ConstantConditions
+            listener.messageDidClick(getActivity().getBaseContext(), inboxMessages.get(position), data,
+                    keyValuePayload);
+        }
+    }
+
+    @SuppressWarnings("SameParameterValue")
+    void didShow(Bundle data, int position) {
+        CTInboxListViewFragment.InboxListener listener = getListener();
+        if (listener != null) {
+            //noinspection ConstantConditions
+            listener.messageDidShow(getActivity().getBaseContext(), inboxMessages.get(position), data);
+        }
+    }
+
+    void fireUrlThroughIntent(String url) {
+        try {
+            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url.replace("\n", "").replace("\r", "")));
+            if (getActivity() != null) {
+                Utils.setPackageNameFromResolveInfoList(getActivity(), intent);
+            }
+            startActivity(intent);
+        } catch (Throwable t) {
+            // Ignore
+        }
+    }
+
+    CTInboxListViewFragment.InboxListener getListener() {
+        CTInboxListViewFragment.InboxListener listener = null;
+        try {
+            listener = listenerWeakReference.get();
+        } catch (Throwable t) {
+            // no-op
+        }
+        if (listener == null) {
+            Logger.v("InboxListener is null for messages");
+        }
+        return listener;
+    }
+
+    void setListener(CTInboxListViewFragment.InboxListener listener) {
+        listenerWeakReference = new WeakReference<>(listener);
+    }
+
+    MediaPlayerRecyclerView getMediaRecyclerView() {
+        return this.mediaRecyclerView;
+    }
+
+    void setMediaRecyclerView(MediaPlayerRecyclerView mediaRecyclerView) {
+        this.mediaRecyclerView = mediaRecyclerView;
+    }
+
+    void handleClick(int position, String buttonText, JSONObject jsonObject,
+            HashMap<String, String> keyValuePayload) {
+        try {
+            Bundle data = new Bundle();
+            JSONObject wzrkParams = inboxMessages.get(position).getWzrkParams();
+            Iterator<String> iterator = wzrkParams.keys();
+            while (iterator.hasNext()) {
+                String keyName = iterator.next();
+                if (keyName.startsWith(Constants.WZRK_PREFIX)) {
+                    data.putString(keyName, wzrkParams.getString(keyName));
+                }
+            }
+
+            if (buttonText != null && !buttonText.isEmpty()) {
+                data.putString("wzrk_c2a", buttonText);
+            }
+            didClick(data, position, keyValuePayload);
+            boolean isKVButton = keyValuePayload != null && !keyValuePayload.isEmpty();
+            if (jsonObject != null) {
+                if (isKVButton || inboxMessages.get(position).getInboxMessageContents().get(0).getLinktype(jsonObject)
+                        .equalsIgnoreCase(Constants.COPY_TYPE)) {
+                    //noinspection UnnecessaryReturnStatement
+                    return;
+                } else {
+                    String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(0)
+                            .getLinkUrl(jsonObject);
+                    if (actionUrl != null) {
+                        fireUrlThroughIntent(actionUrl);
+                    }
+                }
+            } else {
+                String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(0).getActionUrl();
+                if (actionUrl != null) {
+                    fireUrlThroughIntent(actionUrl);
+                }
+            }
+        } catch (Throwable t) {
+            Logger.d("Error handling notification button click: " + t.getCause());
+        }
+    }
+
+    void handleViewPagerClick(int position, int viewPagerPosition) {
+        try {
+            Bundle data = new Bundle();
+            JSONObject wzrkParams = inboxMessages.get(position).getWzrkParams();
+            Iterator<String> iterator = wzrkParams.keys();
+            while (iterator.hasNext()) {
+                String keyName = iterator.next();
+                if (keyName.startsWith(Constants.WZRK_PREFIX)) {
+                    data.putString(keyName, wzrkParams.getString(keyName));
+                }
+            }
+            didClick(data, position, null);
+            String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(viewPagerPosition)
+                    .getActionUrl();
+            fireUrlThroughIntent(actionUrl);
+        } catch (Throwable t) {
+            Logger.d("Error handling notification button click: " + t.getCause());
+        }
+    }
+
+    private ArrayList<CTInboxMessage> filterMessages(ArrayList<CTInboxMessage> messages, String filter) {
+        ArrayList<CTInboxMessage> filteredMessages = new ArrayList<>();
+        for (CTInboxMessage inboxMessage : messages) {
+            if (inboxMessage.getTags() != null && inboxMessage.getTags().size() > 0) {
+                for (String stringTag : inboxMessage.getTags()) {
+                    if (stringTag.equalsIgnoreCase(filter)) {
+                        filteredMessages.add(inboxMessage);
+                    }
+                }
+            }
+        }
+        return filteredMessages;
+    }
+
+    private boolean shouldAutoPlayOnFirstLaunch() {
+        return tabPosition <= 0;
     }
 }

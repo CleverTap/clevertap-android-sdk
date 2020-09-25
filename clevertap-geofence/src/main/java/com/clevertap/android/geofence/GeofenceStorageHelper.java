@@ -5,24 +5,13 @@ import android.content.SharedPreferences;
 
 public final class GeofenceStorageHelper {
 
-    static void putDouble(Context context, String key, double value) {
-        SharedPreferences prefs = getPreferences(context);
-        SharedPreferences.Editor editor = prefs.edit().putLong(key, Double.doubleToRawLongBits(value));
-        persist(editor);
-    }
-
     static double getDouble(Context context, String key, double defaultValue) {
         SharedPreferences prefs = getPreferences(context);
-        if (!prefs.contains(key))
+        if (!prefs.contains(key)) {
             return defaultValue;
+        }
 
         return Double.longBitsToDouble(prefs.getLong(key, 0));
-    }
-
-    static void putLong(Context context, String key, long value) {
-        SharedPreferences prefs = getPreferences(context);
-        SharedPreferences.Editor editor = prefs.edit().putLong(key, value);
-        persist(editor);
     }
 
     static long getLong(Context context, String key, long defaultValue) {
@@ -46,7 +35,20 @@ public final class GeofenceStorageHelper {
         try {
             editor.commit();
         } catch (Throwable t) {
-            CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "CRITICAL: Failed to persist shared preferences!");
+            CTGeofenceAPI.getLogger()
+                    .debug(CTGeofenceAPI.GEOFENCE_LOG_TAG, "CRITICAL: Failed to persist shared preferences!");
         }
+    }
+
+    static void putDouble(Context context, String key, double value) {
+        SharedPreferences prefs = getPreferences(context);
+        SharedPreferences.Editor editor = prefs.edit().putLong(key, Double.doubleToRawLongBits(value));
+        persist(editor);
+    }
+
+    static void putLong(Context context, String key, long value) {
+        SharedPreferences prefs = getPreferences(context);
+        SharedPreferences.Editor editor = prefs.edit().putLong(key, value);
+        persist(editor);
     }
 }

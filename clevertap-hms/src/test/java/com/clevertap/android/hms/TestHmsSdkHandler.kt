@@ -1,6 +1,7 @@
 package com.clevertap.android.hms
 
 class TestHmsSdkHandler : IHmsSdkHandler {
+
     private var isAvailable = false
     private var isSupported = false
     fun setAvailable(available: Boolean) {

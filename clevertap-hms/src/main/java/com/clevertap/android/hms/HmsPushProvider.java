@@ -1,21 +1,20 @@
 package com.clevertap.android.hms;
 
+import static com.clevertap.android.hms.HmsConstants.LOG_TAG;
+import static com.clevertap.android.sdk.pushnotification.PushConstants.ANDROID_PLATFORM;
+
 import android.annotation.SuppressLint;
 import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.VisibleForTesting;
-
 import com.clevertap.android.sdk.pushnotification.CTPushProvider;
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
 
-import static com.clevertap.android.hms.HmsConstants.LOG_TAG;
-import static com.clevertap.android.sdk.pushnotification.PushConstants.ANDROID_PLATFORM;
-
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class HmsPushProvider implements CTPushProvider {
+
     private CTPushProviderListener ctPushListener;
 
     private IHmsSdkHandler hmsSdkHandler;
@@ -31,29 +30,10 @@ public class HmsPushProvider implements CTPushProvider {
         return ANDROID_PLATFORM;
     }
 
-    @VisibleForTesting
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
-    public void setHmsSdkHandler(IHmsSdkHandler hmsSdkHandler) {
-        this.hmsSdkHandler = hmsSdkHandler;
-    }
-
     @NonNull
     @Override
     public PushConstants.PushType getPushType() {
         return PushConstants.PushType.HPS;
-    }
-
-    @Override
-    public void requestToken() {
-        String token = null;
-        if (hmsSdkHandler != null) {
-            token = hmsSdkHandler.onNewToken();
-        } else {
-            ctPushListener.config().log(LOG_TAG, "requestToken failed since hmsSdkHandler is null");
-        }
-        if (ctPushListener != null) {
-            ctPushListener.onNewToken(token, getPushType());
-        }
     }
 
     @Override
@@ -81,6 +61,25 @@ public class HmsPushProvider implements CTPushProvider {
     @Override
     public int minSDKSupportVersionCode() {
         return HmsConstants.MIN_CT_ANDROID_SDK_VERSION;
+    }
+
+    @Override
+    public void requestToken() {
+        String token = null;
+        if (hmsSdkHandler != null) {
+            token = hmsSdkHandler.onNewToken();
+        } else {
+            ctPushListener.config().log(LOG_TAG, "requestToken failed since hmsSdkHandler is null");
+        }
+        if (ctPushListener != null) {
+            ctPushListener.onNewToken(token, getPushType());
+        }
+    }
+
+    @VisibleForTesting
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public void setHmsSdkHandler(IHmsSdkHandler hmsSdkHandler) {
+        this.hmsSdkHandler = hmsSdkHandler;
     }
 
 }

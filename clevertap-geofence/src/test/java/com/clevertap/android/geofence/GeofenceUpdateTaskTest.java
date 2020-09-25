@@ -1,20 +1,25 @@
 package com.clevertap.android.geofence;
 
-import android.content.Context;
+import static org.hamcrest.CoreMatchers.*;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+import static org.powermock.api.mockito.PowerMockito.verifyStatic;
+import static org.powermock.api.mockito.PowerMockito.when;
 
+import android.content.Context;
 import com.clevertap.android.geofence.fakes.GeofenceJSON;
 import com.clevertap.android.geofence.interfaces.CTGeofenceAdapter;
 import com.clevertap.android.geofence.model.CTGeofence;
 import com.google.android.gms.tasks.OnSuccessListener;
-
+import edu.emory.mathcs.backport.java.util.Arrays;
+import java.util.List;
 import org.json.JSONObject;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.junit.*;
+import org.junit.runner.*;
+import org.mockito.*;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -24,19 +29,6 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.skyscreamer.jsonassert.JSONAssert;
 
-import java.util.List;
-
-import edu.emory.mathcs.backport.java.util.Arrays;
-
-import static org.hamcrest.CoreMatchers.is;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.verify;
-import static org.powermock.api.mockito.PowerMockito.verifyStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
-
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 28,
         application = TestApplication.class
@@ -45,29 +37,16 @@ import static org.powermock.api.mockito.PowerMockito.when;
 @PrepareForTest({CTGeofenceAPI.class, FileUtils.class})
 public class GeofenceUpdateTaskTest extends BaseTestCase {
 
-    @Rule
-    public PowerMockRule rule = new PowerMockRule();
     @Mock
     public CTGeofenceAPI ctGeofenceAPI;
+
     @Mock
     public CTGeofenceAdapter ctGeofenceAdapter;
+
+    @Rule
+    public PowerMockRule rule = new PowerMockRule();
+
     private Logger logger;
-
-    @Before
-    public void setUp() throws Exception {
-
-        MockitoAnnotations.initMocks(this);
-        PowerMockito.mockStatic(CTGeofenceAPI.class, FileUtils.class);
-
-        super.setUp();
-
-        when(CTGeofenceAPI.getInstance(application)).thenReturn(ctGeofenceAPI);
-        logger = new Logger(Logger.DEBUG);
-        when(CTGeofenceAPI.getLogger()).thenReturn(logger);
-
-        WhiteboxImpl.setInternalState(ctGeofenceAPI, "ctGeofenceAdapter", ctGeofenceAdapter);
-
-    }
 
     @Test
     public void executeTestTC1() throws Exception {
@@ -190,7 +169,8 @@ public class GeofenceUpdateTaskTest extends BaseTestCase {
 
         ArgumentCaptor<List<String>> argumentCaptorOldGeofence = ArgumentCaptor.forClass(List.class);
 
-        verify(ctGeofenceAdapter).removeAllGeofence(argumentCaptorOldGeofence.capture(), any(OnSuccessListener.class));
+        verify(ctGeofenceAdapter)
+                .removeAllGeofence(argumentCaptorOldGeofence.capture(), any(OnSuccessListener.class));
         assertThat(argumentCaptorOldGeofence.getValue(), is(Arrays.asList(new String[]{"310001"})));
 
     }
@@ -226,6 +206,22 @@ public class GeofenceUpdateTaskTest extends BaseTestCase {
 
         verify(ctGeofenceAdapter).addAllGeofence(argumentCaptor.capture(), any(OnSuccessListener.class));
         assertEquals(argumentCaptor.getValue().size(), 2);
+    }
+
+    @Before
+    public void setUp() throws Exception {
+
+        MockitoAnnotations.initMocks(this);
+        PowerMockito.mockStatic(CTGeofenceAPI.class, FileUtils.class);
+
+        super.setUp();
+
+        when(CTGeofenceAPI.getInstance(application)).thenReturn(ctGeofenceAPI);
+        logger = new Logger(Logger.DEBUG);
+        when(CTGeofenceAPI.getLogger()).thenReturn(logger);
+
+        WhiteboxImpl.setInternalState(ctGeofenceAPI, "ctGeofenceAdapter", ctGeofenceAdapter);
+
     }
 
 }

@@ -1,37 +1,58 @@
 package com.clevertap.android.sdk.ab_testing.models;
 
 import androidx.annotation.NonNull;
-
 import com.clevertap.android.sdk.ImageCache;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
-
+import java.util.ArrayList;
+import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class CTABVariant {
 
-    private final Object actionsLock = new Object();
-    private String id;
-    private String variantId;
-    private String experimentId;
-    private int version;
+    final public class CTVariantAction {
+
+        private String activityName;
+
+        private JSONObject change;
+
+        private String name;
+
+        CTVariantAction(String name, String activityName, JSONObject change) {
+            this.name = name;
+            this.activityName = activityName;
+            this.change = change;
+        }
+
+        public String getActivityName() {
+            return activityName;
+        }
+
+        public JSONObject getChange() {
+            return change;
+        }
+
+        public String getName() {
+            return name;
+        }
+    }
+
     private ArrayList<CTVariantAction> actions = new ArrayList<>();
-    private JSONArray vars;
+
+    private final Object actionsLock = new Object();
+
+    private String experimentId;
+
+    private String id;
+
     private ArrayList<String> imageUrls;
 
-    private CTABVariant(String experimentId, String variantId, int version, JSONArray actions, JSONArray vars) {
-        this.experimentId = experimentId;
-        this.variantId = variantId;
-        this.id = variantId + ":" + experimentId;
-        this.version = version;
-        imageUrls = new ArrayList<>();
-        addActions(actions);
-        this.vars = vars == null ? new JSONArray() : vars;
-    }
+    private String variantId;
+
+    private JSONArray vars;
+
+    private int version;
 
     public static CTABVariant initWithJSON(JSONObject json) {
         try {
@@ -49,38 +70,14 @@ public class CTABVariant {
         }
     }
 
-    public String getId() {
-        return id;
-    }
-
-    @SuppressWarnings("unused")
-    String getVariantId() {
-        return variantId;
-    }
-
-    @SuppressWarnings("unused")
-    String getExperimentId() {
-        return experimentId;
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o instanceof CTABVariant) {
-            CTABVariant other = (CTABVariant) o;
-            return this.getId().equals(other.getId()) && this.getVersion() == other.getVersion();
-        }
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return this.getId().hashCode();
-    }
-
-    @NonNull
-    @Override
-    public String toString() {
-        return "< id: " + getId() + ", version: " + getVersion() + ", actions count: " + actions.size() + ", vars count: " + getVars().length() + " >";
+    private CTABVariant(String experimentId, String variantId, int version, JSONArray actions, JSONArray vars) {
+        this.experimentId = experimentId;
+        this.variantId = variantId;
+        this.id = variantId + ":" + experimentId;
+        this.version = version;
+        imageUrls = new ArrayList<>();
+        addActions(actions);
+        this.vars = vars == null ? new JSONArray() : vars;
     }
 
     public void addActions(JSONArray actions) {
@@ -118,6 +115,57 @@ public class CTABVariant {
         }
     }
 
+    public void addImageUrls(List<String> urls) {
+        if (urls == null) {
+            return;
+        }
+        this.imageUrls.addAll(urls);
+    }
+
+    public void cleanup() {
+        for (String url : imageUrls) {
+            ImageCache.removeBitmap(url, true);
+        }
+    }
+
+    public void clearActions() {
+        synchronized (actionsLock) {
+            actions.clear();
+        }
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (o instanceof CTABVariant) {
+            CTABVariant other = (CTABVariant) o;
+            return this.getId().equals(other.getId()) && this.getVersion() == other.getVersion();
+        }
+        return false;
+    }
+
+    public ArrayList<CTVariantAction> getActions() {
+        synchronized (actionsLock) {
+            return this.actions;
+        }
+    }
+
+    public String getId() {
+        return id;
+    }
+
+    public JSONArray getVars() {
+        return vars;
+    }
+
+    public int getVersion() {
+        return version;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.getId().hashCode();
+    }
+
     public void removeActionsByName(JSONArray names) {
         if (names == null || names.length() <= 0) {
             return;
@@ -141,58 +189,20 @@ public class CTABVariant {
         }
     }
 
-    public void clearActions() {
-        synchronized (actionsLock) {
-            actions.clear();
-        }
+    @NonNull
+    @Override
+    public String toString() {
+        return "< id: " + getId() + ", version: " + getVersion() + ", actions count: " + actions.size()
+                + ", vars count: " + getVars().length() + " >";
     }
 
-    public ArrayList<CTVariantAction> getActions() {
-        synchronized (actionsLock) {
-            return this.actions;
-        }
+    @SuppressWarnings("unused")
+    String getExperimentId() {
+        return experimentId;
     }
 
-    public JSONArray getVars() {
-        return vars;
-    }
-
-    public int getVersion() {
-        return version;
-    }
-
-    public void addImageUrls(List<String> urls) {
-        if (urls == null) return;
-        this.imageUrls.addAll(urls);
-    }
-
-    public void cleanup() {
-        for (String url : imageUrls) {
-            ImageCache.removeBitmap(url, true);
-        }
-    }
-
-    final public class CTVariantAction {
-        private String name;
-        private String activityName;
-        private JSONObject change;
-
-        CTVariantAction(String name, String activityName, JSONObject change) {
-            this.name = name;
-            this.activityName = activityName;
-            this.change = change;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public String getActivityName() {
-            return activityName;
-        }
-
-        public JSONObject getChange() {
-            return change;
-        }
+    @SuppressWarnings("unused")
+    String getVariantId() {
+        return variantId;
     }
 }

@@ -66,10 +66,10 @@
                     android:id="@+id/content_relative_layout"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_alignParentStart="true"
                     android:layout_alignParentLeft="true"
-                    android:layout_marginStart="0dp"
+                    android:layout_alignParentStart="true"
                     android:layout_marginLeft="0dp"
+                    android:layout_marginStart="0dp"
                     android:orientation="horizontal">
 
                     <ImageView
@@ -77,23 +77,23 @@
                         android:layout_width="68dp"
                         android:layout_height="68dp"
                         android:layout_gravity="center"
-                        android:layout_marginStart="8dp"
-                        android:layout_marginLeft="8dp"
-                        android:layout_marginTop="8dp"
-                        android:layout_marginEnd="8dp"
-                        android:layout_marginRight="8dp"
                         android:layout_marginBottom="8dp"
+                        android:layout_marginEnd="8dp"
+                        android:layout_marginLeft="8dp"
+                        android:layout_marginRight="8dp"
+                        android:layout_marginStart="8dp"
+                        android:layout_marginTop="8dp"
                         android:scaleType="fitCenter" />
 
                     <TextView
                         android:id="@+id/messageTitle"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="10dp"
-                        android:layout_marginLeft="10dp"
-                        android:layout_marginTop="10dp"
                         android:layout_marginEnd="20dp"
+                        android:layout_marginLeft="10dp"
                         android:layout_marginRight="20dp"
+                        android:layout_marginStart="10dp"
+                        android:layout_marginTop="10dp"
                         android:maxLines="2"
                         android:textColor="@android:color/black"
                         android:textStyle="bold" />
@@ -105,11 +105,11 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_below="@id/content_relative_layout"
-                    android:layout_marginStart="10dp"
-                    android:layout_marginLeft="10dp"
-                    android:layout_marginTop="5dp"
                     android:layout_marginEnd="20dp"
+                    android:layout_marginLeft="10dp"
                     android:layout_marginRight="20dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginTop="5dp"
                     android:maxLines="3"
                     android:textColor="@android:color/darker_gray" />
             </RelativeLayout>

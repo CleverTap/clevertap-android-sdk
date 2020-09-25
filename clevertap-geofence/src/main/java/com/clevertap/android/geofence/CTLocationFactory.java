@@ -1,9 +1,7 @@
 package com.clevertap.android.geofence;
 
 import android.content.Context;
-
 import androidx.annotation.NonNull;
-
 import com.clevertap.android.geofence.interfaces.CTLocationAdapter;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;

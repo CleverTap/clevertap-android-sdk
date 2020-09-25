@@ -2,10 +2,8 @@ package com.clevertap.android.sdk.displayunits;
 
 import android.text.TextUtils;
 import android.util.Log;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
 import com.clevertap.android.sdk.Constants;
 
 /**
@@ -21,10 +19,6 @@ public enum CTDisplayUnitType {
     CUSTOM_KEY_VALUE("custom-key-value");
 
     private final String type;
-
-    CTDisplayUnitType(String type) {
-        this.type = type;
-    }
 
     /**
      * Returns the display type instance using the string value
@@ -53,6 +47,10 @@ public enum CTDisplayUnitType {
         }
         Log.d(Constants.FEATURE_DISPLAY_UNIT, "Unsupported Display Unit Type");
         return null;
+    }
+
+    CTDisplayUnitType(String type) {
+        this.type = type;
     }
 
     @NonNull

@@ -1,21 +1,19 @@
 package com.clevertap.android.sdk.ab_testing;
 
-import org.json.JSONArray;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.json.JSONArray;
 
 final class CTVarCache {
 
     private final Map<String, CTVar> vars = new ConcurrentHashMap<>();
 
-    void registerVar(String name, CTVar.CTVarType type, Object value) {
+    @SuppressWarnings({"WeakerAccess"})
+    void clearVar(String name) {
         CTVar var = getVar(name);
-        if (var == null) {
-            vars.put(name, new CTVar(name, type, value));
-        } else if (value != null) { // only overwrite if we have a new value, to explicitly clear the value use clearVar
-            var.update(type, value);
+        if (var != null) {
+            var.clearValue();
         }
     }
 
@@ -23,11 +21,13 @@ final class CTVarCache {
         return vars.get(name);
     }
 
-    @SuppressWarnings({"WeakerAccess"})
-    void clearVar(String name) {
+    void registerVar(String name, CTVar.CTVarType type, Object value) {
         CTVar var = getVar(name);
-        if (var != null) {
-            var.clearValue();
+        if (var == null) {
+            vars.put(name, new CTVar(name, type, value));
+        } else if (value
+                != null) { // only overwrite if we have a new value, to explicitly clear the value use clearVar
+            var.update(type, value);
         }
     }
 

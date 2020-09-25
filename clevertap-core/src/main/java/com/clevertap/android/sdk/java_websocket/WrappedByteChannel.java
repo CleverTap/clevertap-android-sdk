@@ -30,19 +30,13 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
 
 public interface WrappedByteChannel extends ByteChannel {
-    /**
-     * returns whether writeMore should be called write additional data.
-     *
-     * @return is a additional write needed
-     */
-    boolean isNeedWrite();
 
     /**
-     * Gets called when {@link #isNeedWrite()} ()} requires a additional rite
+     * This function returns the blocking state of the channel
      *
-     * @throws IOException may be thrown due to an error while writing
+     * @return is the channel blocking
      */
-    void writeMore() throws IOException;
+    boolean isBlocking();
 
     /**
      * returns whether readMore should be called to fetch data which has been decoded but not yet been returned.
@@ -54,8 +48,17 @@ public interface WrappedByteChannel extends ByteChannel {
     boolean isNeedRead();
 
     /**
-     * This function does not read data from the underlying channel at all. It is just a way to fetch data which has already be received or decoded but was but was not yet returned to the user.
-     * This could be the case when the decoded data did not fit into the buffer the user passed to {@link #read(ByteBuffer)}.
+     * returns whether writeMore should be called write additional data.
+     *
+     * @return is a additional write needed
+     */
+    boolean isNeedWrite();
+
+    /**
+     * This function does not read data from the underlying channel at all. It is just a way to fetch data which has
+     * already be received or decoded but was but was not yet returned to the user.
+     * This could be the case when the decoded data did not fit into the buffer the user passed to {@link
+     * #read(ByteBuffer)}.
      *
      * @param dst the destiny of the read
      * @return the amount of remaining data
@@ -64,9 +67,9 @@ public interface WrappedByteChannel extends ByteChannel {
     int readMore(ByteBuffer dst) throws IOException;
 
     /**
-     * This function returns the blocking state of the channel
+     * Gets called when {@link #isNeedWrite()} ()} requires a additional rite
      *
-     * @return is the channel blocking
+     * @throws IOException may be thrown due to an error while writing
      */
-    boolean isBlocking();
+    void writeMore() throws IOException;
 }

@@ -5,26 +5,29 @@ import android.content.ClipboardManager;
 import android.content.Context;
 import android.view.View;
 import android.widget.Toast;
-
 import androidx.viewpager.widget.ViewPager;
-
-import org.json.JSONObject;
-
 import java.util.HashMap;
+import org.json.JSONObject;
 
 /**
  * Custom OnClickListener to handle both "onMessage" and "onLink" clicks
  */
 class CTInboxButtonClickListener implements View.OnClickListener {
 
-    private int position;
-    private CTInboxMessage inboxMessage;
-    private String buttonText;
-    private CTInboxListViewFragment fragment;
-    private ViewPager viewPager;
     private JSONObject buttonObject;
 
-    CTInboxButtonClickListener(int position, CTInboxMessage inboxMessage, String buttonText, JSONObject jsonObject, CTInboxListViewFragment fragment) {
+    private String buttonText;
+
+    private CTInboxListViewFragment fragment;
+
+    private CTInboxMessage inboxMessage;
+
+    private int position;
+
+    private ViewPager viewPager;
+
+    CTInboxButtonClickListener(int position, CTInboxMessage inboxMessage, String buttonText, JSONObject jsonObject,
+            CTInboxListViewFragment fragment) {
         this.position = position;
         this.inboxMessage = inboxMessage;
         this.buttonText = buttonText;
@@ -32,7 +35,8 @@ class CTInboxButtonClickListener implements View.OnClickListener {
         this.buttonObject = jsonObject;
     }
 
-    CTInboxButtonClickListener(int position, CTInboxMessage inboxMessage, String buttonText, CTInboxListViewFragment fragment, ViewPager viewPager) {
+    CTInboxButtonClickListener(int position, CTInboxMessage inboxMessage, String buttonText,
+            CTInboxListViewFragment fragment, ViewPager viewPager) {
         this.position = position;
         this.inboxMessage = inboxMessage;
         this.buttonText = buttonText;
@@ -50,7 +54,8 @@ class CTInboxButtonClickListener implements View.OnClickListener {
         } else {//Handles button clicks
             if (buttonText != null && buttonObject != null) {
                 if (fragment != null) {
-                    if (inboxMessage.getInboxMessageContents().get(0).getLinktype(buttonObject).equalsIgnoreCase(Constants.COPY_TYPE)) {//Copy to clipboard feature
+                    if (inboxMessage.getInboxMessageContents().get(0).getLinktype(buttonObject)
+                            .equalsIgnoreCase(Constants.COPY_TYPE)) {//Copy to clipboard feature
                         if (fragment.getActivity() != null) {
                             copyToClipboard(fragment.getActivity());
                         }
@@ -66,6 +71,16 @@ class CTInboxButtonClickListener implements View.OnClickListener {
         }
     }
 
+    private void copyToClipboard(Context context) {
+        ClipboardManager clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+        ClipData clipData = ClipData.newPlainText(buttonText,
+                inboxMessage.getInboxMessageContents().get(0).getLinkCopyText(buttonObject));
+        if (clipboardManager != null) {
+            clipboardManager.setPrimaryClip(clipData);
+            Toast.makeText(context, "Text Copied to Clipboard", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     /**
      * Returns Custom Key Value pairs if present in the payload
      *
@@ -76,19 +91,11 @@ class CTInboxButtonClickListener implements View.OnClickListener {
         if (inboxMessage != null
                 && inboxMessage.getInboxMessageContents() != null
                 && inboxMessage.getInboxMessageContents().get(0) != null
-                && Constants.KEY_KV.equalsIgnoreCase(inboxMessage.getInboxMessageContents().get(0).getLinktype(buttonObject))) {
+                && Constants.KEY_KV
+                .equalsIgnoreCase(inboxMessage.getInboxMessageContents().get(0).getLinktype(buttonObject))) {
 
             return inboxMessage.getInboxMessageContents().get(0).getLinkKeyValue(buttonObject);
         }
         return null;
-    }
-
-    private void copyToClipboard(Context context) {
-        ClipboardManager clipboardManager = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-        ClipData clipData = ClipData.newPlainText(buttonText, inboxMessage.getInboxMessageContents().get(0).getLinkCopyText(buttonObject));
-        if (clipboardManager != null) {
-            clipboardManager.setPrimaryClip(clipData);
-            Toast.makeText(context, "Text Copied to Clipboard", Toast.LENGTH_SHORT).show();
-        }
     }
 }

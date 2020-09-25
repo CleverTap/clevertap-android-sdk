@@ -15,10 +15,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
-
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-
 import java.util.ArrayList;
 
 public class CTInAppNativeFooterFragment extends CTInAppBasePartialNativeFragment {
@@ -33,7 +31,8 @@ public class CTInAppNativeFooterFragment extends CTInAppBasePartialNativeFragmen
 
         FrameLayout fl = inAppView.findViewById(R.id.footer_frame_layout);
         @SuppressWarnings({"unused"})
-        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.MATCH_PARENT);
+        FrameLayout.LayoutParams layoutParams = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT);
 
         RelativeLayout relativeLayout = fl.findViewById(R.id.footer_relative_layout);
         relativeLayout.setBackgroundColor(Color.parseColor(inAppNotification.getBackgroundColor()));
@@ -69,7 +68,9 @@ public class CTInAppNativeFooterFragment extends CTInAppBasePartialNativeFragmen
         ArrayList<CTInAppNotificationButton> buttons = inAppNotification.getButtons();
         if (buttons != null && !buttons.isEmpty()) {
             for (int i = 0; i < buttons.size(); i++) {
-                if (i >= 2) continue; // only show 2 buttons
+                if (i >= 2) {
+                    continue; // only show 2 buttons
+                }
                 CTInAppNotificationButton inAppNotificationButton = buttons.get(i);
                 Button button = inAppButtons.get(i);
                 setupInAppButton(button, inAppNotificationButton, inAppNotification, i);

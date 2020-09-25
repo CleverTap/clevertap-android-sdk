@@ -2,12 +2,9 @@ package com.clevertap.android.geofence;
 
 import android.app.Application;
 import android.os.Bundle;
-
 import androidx.test.ext.junit.runners.AndroidJUnit4;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.runner.RunWith;
+import org.junit.*;
+import org.junit.runner.*;
 import org.robolectric.annotation.Config;
 
 @Config(sdk = 28,
@@ -17,16 +14,6 @@ import org.robolectric.annotation.Config;
 public abstract class BaseTestCase {
 
     protected Application application;
-
-    public static void assertBundlesEquals(Bundle expected, Bundle actual) {
-        assertBundlesEquals(null, expected, actual);
-    }
-
-    public static void assertBundlesEquals(String message, Bundle expected, Bundle actual) {
-        if (!areEqual(expected, actual)) {
-            Assert.fail(message + " <" + expected.toString() + "> is not equal to <" + actual.toString() + ">");
-        }
-    }
 
     public static boolean areEqual(Bundle expected, Bundle actual) {
         if (expected == null) {
@@ -69,13 +56,23 @@ public abstract class BaseTestCase {
         return true;
     }
 
-    @Before
-    public void setUp() throws Exception {
-        application = TestApplication.getApplication();
+    public static void assertBundlesEquals(String message, Bundle expected, Bundle actual) {
+        if (!areEqual(expected, actual)) {
+            Assert.fail(message + " <" + expected.toString() + "> is not equal to <" + actual.toString() + ">");
+        }
+    }
+
+    public static void assertBundlesEquals(Bundle expected, Bundle actual) {
+        assertBundlesEquals(null, expected, actual);
     }
 
     public Application getApplication() {
         return TestApplication.getApplication();
+    }
+
+    @Before
+    public void setUp() throws Exception {
+        application = TestApplication.getApplication();
     }
 
 }

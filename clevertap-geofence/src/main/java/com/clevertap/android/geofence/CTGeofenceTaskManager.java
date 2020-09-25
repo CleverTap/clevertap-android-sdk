@@ -1,14 +1,12 @@
 package com.clevertap.android.geofence;
 
+import static com.clevertap.android.geofence.CTGeofenceAPI.GEOFENCE_LOG_TAG;
+
 import androidx.annotation.Nullable;
-
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
-
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-
-import static com.clevertap.android.geofence.CTGeofenceAPI.GEOFENCE_LOG_TAG;
 
 /**
  * Provides methods to post tasks/Runnable to a single threaded queue for processing tasks
@@ -17,22 +15,13 @@ import static com.clevertap.android.geofence.CTGeofenceAPI.GEOFENCE_LOG_TAG;
 class CTGeofenceTaskManager {
 
     private static CTGeofenceTaskManager taskManager;
-    private ExecutorService es;
+
     private long EXECUTOR_THREAD_ID = 0;
+
+    private ExecutorService es;
 
     private CTGeofenceTaskManager() {
         es = Executors.newFixedThreadPool(1);
-    }
-
-    static CTGeofenceTaskManager getInstance() {
-        if (taskManager == null) {
-            synchronized (CTGeofenceTaskManager.class) {
-                if (taskManager == null) {
-                    taskManager = new CTGeofenceTaskManager();
-                }
-            }
-        }
-        return taskManager;
     }
 
     /**
@@ -62,13 +51,15 @@ class CTGeofenceTaskManager {
                         try {
                             runnable.run();
                         } catch (Throwable t) {
-                            CTGeofenceAPI.getLogger().verbose(GEOFENCE_LOG_TAG, "Executor service: Failed to complete the scheduled task: " + name, t);
+                            CTGeofenceAPI.getLogger().verbose(GEOFENCE_LOG_TAG,
+                                    "Executor service: Failed to complete the scheduled task: " + name, t);
                         }
                     }
                 });
             }
         } catch (Throwable t) {
-            CTGeofenceAPI.getLogger().verbose(GEOFENCE_LOG_TAG, "Failed to submit task: " + name + " to the executor service", t);
+            CTGeofenceAPI.getLogger()
+                    .verbose(GEOFENCE_LOG_TAG, "Failed to submit task: " + name + " to the executor service", t);
         }
         return future;
     }
@@ -100,13 +91,15 @@ class CTGeofenceTaskManager {
                         try {
                             task.execute();
                         } catch (Throwable t) {
-                            CTGeofenceAPI.getLogger().verbose(GEOFENCE_LOG_TAG, "Executor service: Failed to complete the scheduled task: " + name, t);
+                            CTGeofenceAPI.getLogger().verbose(GEOFENCE_LOG_TAG,
+                                    "Executor service: Failed to complete the scheduled task: " + name, t);
                         }
                     }
                 });
             }
         } catch (Throwable t) {
-            CTGeofenceAPI.getLogger().verbose(GEOFENCE_LOG_TAG, "Failed to submit task: " + name + " to the executor service", t);
+            CTGeofenceAPI.getLogger()
+                    .verbose(GEOFENCE_LOG_TAG, "Failed to submit task: " + name + " to the executor service", t);
         }
 
         return future;
@@ -114,5 +107,16 @@ class CTGeofenceTaskManager {
 
     void setExecutorService(ExecutorService es) {
         this.es = es;
+    }
+
+    static CTGeofenceTaskManager getInstance() {
+        if (taskManager == null) {
+            synchronized (CTGeofenceTaskManager.class) {
+                if (taskManager == null) {
+                    taskManager = new CTGeofenceTaskManager();
+                }
+            }
+        }
+        return taskManager;
     }
 }

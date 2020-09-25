@@ -15,7 +15,18 @@ import android.widget.Button;
 
 public abstract class CTInAppBaseFullNativeFragment extends CTInAppBaseFullFragment {
 
-    void setupInAppButton(Button inAppButton, final CTInAppNotificationButton inAppNotificationButton, final int buttonIndex) {
+    int getDPI() {
+        WindowManager wm = (WindowManager) getActivity().getBaseContext().getSystemService(Context.WINDOW_SERVICE);
+        if (wm == null) {
+            return 0;
+        }
+        DisplayMetrics dm = new DisplayMetrics();
+        wm.getDefaultDisplay().getMetrics(dm);
+        return dm.densityDpi;
+    }
+
+    void setupInAppButton(Button inAppButton, final CTInAppNotificationButton inAppNotificationButton,
+            final int buttonIndex) {
         if (inAppNotificationButton != null) {
             inAppButton.setVisibility(View.VISIBLE);
             inAppButton.setTag(buttonIndex);
@@ -49,14 +60,16 @@ public abstract class CTInAppBaseFullNativeFragment extends CTInAppBaseFullFragm
                         Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
                         Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
                         Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2}, null,
-                        new float[]{Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                        new float[]{
                                 Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
                                 Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
                                 Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
                                 Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
                                 Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
                                 Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
-                                Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2}));
+                                Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
+                                Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI())
+                                        * 2}));
             }
 
             if (!inAppNotificationButton.getBorderColor().isEmpty()) {
@@ -84,16 +97,6 @@ public abstract class CTInAppBaseFullNativeFragment extends CTInAppBaseFullFragm
         } else {
             inAppButton.setVisibility(View.GONE);
         }
-    }
-
-    int getDPI() {
-        WindowManager wm = (WindowManager) getActivity().getBaseContext().getSystemService(Context.WINDOW_SERVICE);
-        if (wm == null) {
-            return 0;
-        }
-        DisplayMetrics dm = new DisplayMetrics();
-        wm.getDefaultDisplay().getMetrics(dm);
-        return dm.densityDpi;
     }
 
 

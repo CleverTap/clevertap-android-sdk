@@ -9,10 +9,10 @@ import android.view.ViewGroup;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
-
 import androidx.annotation.Nullable;
 
 public class CTInAppNativeCoverImageFragment extends CTInAppBaseFullFragment {
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
@@ -25,8 +25,10 @@ public class CTInAppNativeCoverImageFragment extends CTInAppBaseFullFragment {
         ImageView imageView = relativeLayout.findViewById(R.id.cover_image);
 
         if (inAppNotification.getInAppMediaForOrientation(currentOrientation) != null) {
-            if (inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)) != null) {
-                imageView.setImageBitmap(inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
+            if (inAppNotification.getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation))
+                    != null) {
+                imageView.setImageBitmap(inAppNotification
+                        .getImage(inAppNotification.getInAppMediaForOrientation(currentOrientation)));
                 imageView.setTag(0);
                 imageView.setOnClickListener(new CTInAppNativeButtonClickListener());
             }

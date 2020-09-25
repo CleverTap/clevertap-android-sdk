@@ -1,28 +1,31 @@
 package com.clevertap.android.geofence;
 
 import android.util.Log;
-
 import androidx.annotation.IntDef;
-
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 public final class Logger {
 
+    @IntDef({OFF, INFO, DEBUG, VERBOSE})
+    @Retention(RetentionPolicy.SOURCE)
+    public @interface LogLevel {
+
+    }
+
     public static final int OFF = -1;
+
     public static final int INFO = 0;
+
     public static final int DEBUG = 2;
+
     public static final int VERBOSE = 3;
+
     private @LogLevel
     int debugLevel;
 
     Logger(@LogLevel int level) {
         setDebugLevel(level);
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    public void setDebugLevel(@LogLevel int level) {
-        this.debugLevel = level;
     }
 
     /**
@@ -59,6 +62,39 @@ public final class Logger {
     }
 
     /**
+     * Logs to Info if the debug level is greater than or equal to 1.
+     */
+
+    public void info(String message) {
+        if (debugLevel >= INFO) {
+            Log.i(CTGeofenceAPI.GEOFENCE_LOG_TAG, message);
+        }
+    }
+
+    public void info(String suffix, String message) {
+        if (debugLevel >= INFO) {
+            Log.i(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message);
+        }
+    }
+
+    public void info(String suffix, String message, Throwable t) {
+        if (debugLevel >= INFO) {
+            Log.i(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message, t);
+        }
+    }
+
+    public void info(String message, Throwable t) {
+        if (debugLevel >= INFO) {
+            Log.i(CTGeofenceAPI.GEOFENCE_LOG_TAG, message, t);
+        }
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    public void setDebugLevel(@LogLevel int level) {
+        this.debugLevel = level;
+    }
+
+    /**
      * Logs to Verbose if the debug level is greater than 2.
      */
 
@@ -91,39 +127,6 @@ public final class Logger {
         if (debugLevel > DEBUG) {
             Log.v(CTGeofenceAPI.GEOFENCE_LOG_TAG, message, t);
         }
-    }
-
-    /**
-     * Logs to Info if the debug level is greater than or equal to 1.
-     */
-
-    public void info(String message) {
-        if (debugLevel >= INFO) {
-            Log.i(CTGeofenceAPI.GEOFENCE_LOG_TAG, message);
-        }
-    }
-
-    public void info(String suffix, String message) {
-        if (debugLevel >= INFO) {
-            Log.i(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message);
-        }
-    }
-
-    public void info(String suffix, String message, Throwable t) {
-        if (debugLevel >= INFO) {
-            Log.i(CTGeofenceAPI.GEOFENCE_LOG_TAG + ":" + suffix, message, t);
-        }
-    }
-
-    public void info(String message, Throwable t) {
-        if (debugLevel >= INFO) {
-            Log.i(CTGeofenceAPI.GEOFENCE_LOG_TAG, message, t);
-        }
-    }
-
-    @IntDef({OFF, INFO, DEBUG, VERBOSE})
-    @Retention(RetentionPolicy.SOURCE)
-    public @interface LogLevel {
     }
 
 }

@@ -6,13 +6,13 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 
 public class CTNotificationIntentService extends IntentService {
 
     public final static String MAIN_ACTION = "com.clevertap.PUSH_EVENT";
+
     public final static String TYPE_BUTTON_CLICK = "com.clevertap.ACTION_BUTTON_CLICK";
 
     public CTNotificationIntentService() {
@@ -22,7 +22,9 @@ public class CTNotificationIntentService extends IntentService {
     @Override
     protected void onHandleIntent(Intent intent) {
         Bundle extras = intent.getExtras();
-        if (extras == null) return;
+        if (extras == null) {
+            return;
+        }
 
         String type = extras.getString("ct_type");
         if (TYPE_BUTTON_CLICK.equals(type)) {
@@ -53,7 +55,8 @@ public class CTNotificationIntentService extends IntentService {
                 return;
             }
 
-            launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            launchIntent.setFlags(
+                    Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
             launchIntent.putExtras(extras);
             launchIntent.removeExtra("dl");

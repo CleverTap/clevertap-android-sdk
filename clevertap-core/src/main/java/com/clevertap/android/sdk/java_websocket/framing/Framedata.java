@@ -26,13 +26,44 @@
 package com.clevertap.android.sdk.java_websocket.framing;
 
 import com.clevertap.android.sdk.java_websocket.enums.Opcode;
-
 import java.nio.ByteBuffer;
 
 /**
  * The interface for the frame
  */
 public interface Framedata {
+
+    /**
+     * Appends an additional frame to the current frame
+     * <p>
+     * This methods does not override the opcode, but does override the fin
+     *
+     * @param nextframe the additional frame
+     */
+    @SuppressWarnings("unused")
+    void append(Framedata nextframe);
+
+    /**
+     * Defines the interpretation of the "Payload data".
+     *
+     * @return the interpretation as a Opcode
+     */
+    Opcode getOpcode();
+
+    /**
+     * The "Payload data" which was sent in this frame
+     *
+     * @return the "Payload data" as ByteBuffer
+     */
+    ByteBuffer getPayloadData();
+
+    /**
+     * Defines whether the "Payload data" is masked.
+     *
+     * @return true, "Payload data" is masked
+     */
+    @SuppressWarnings("unused")
+    boolean getTransfereMasked();
 
     /**
      * Indicates that this is the final fragment in a message.  The first fragment MAY also be the final fragment.
@@ -61,36 +92,4 @@ public interface Framedata {
      * @return true, if this frame has the rsv3 bit set
      */
     boolean isRSV3();
-
-    /**
-     * Defines whether the "Payload data" is masked.
-     *
-     * @return true, "Payload data" is masked
-     */
-    @SuppressWarnings("unused")
-    boolean getTransfereMasked();
-
-    /**
-     * Defines the interpretation of the "Payload data".
-     *
-     * @return the interpretation as a Opcode
-     */
-    Opcode getOpcode();
-
-    /**
-     * The "Payload data" which was sent in this frame
-     *
-     * @return the "Payload data" as ByteBuffer
-     */
-    ByteBuffer getPayloadData();
-
-    /**
-     * Appends an additional frame to the current frame
-     * <p>
-     * This methods does not override the opcode, but does override the fin
-     *
-     * @param nextframe the additional frame
-     */
-    @SuppressWarnings("unused")
-    void append(Framedata nextframe);
 }

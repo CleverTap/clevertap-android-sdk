@@ -35,6 +35,7 @@ import java.util.regex.Pattern;
 public class Protocol implements IProtocol {
 
     private static final Pattern patternSpace = Pattern.compile(" ");
+
     private static final Pattern patternComma = Pattern.compile(",");
 
     /**
@@ -67,24 +68,18 @@ public class Protocol implements IProtocol {
     }
 
     @Override
-    public String getProvidedProtocol() {
-        return this.providedProtocol;
-    }
-
-    @Override
     public IProtocol copyInstance() {
         return new Protocol(getProvidedProtocol());
     }
 
     @Override
-    public String toString() {
-        return getProvidedProtocol();
-    }
-
-    @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
 
         Protocol protocol = (Protocol) o;
 
@@ -92,7 +87,17 @@ public class Protocol implements IProtocol {
     }
 
     @Override
+    public String getProvidedProtocol() {
+        return this.providedProtocol;
+    }
+
+    @Override
     public int hashCode() {
         return providedProtocol.hashCode();
+    }
+
+    @Override
+    public String toString() {
+        return getProvidedProtocol();
     }
 }

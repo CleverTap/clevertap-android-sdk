@@ -1,19 +1,15 @@
 package com.clevertap.android.geofence;
 
+import static org.awaitility.Awaitility.await;
+
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
-
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.MockitoAnnotations;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
-
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
-
-import static org.awaitility.Awaitility.await;
+import org.junit.*;
+import org.junit.runner.*;
+import org.mockito.*;
+import org.robolectric.RobolectricTestRunner;
+import org.robolectric.annotation.Config;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 28,
@@ -60,6 +56,38 @@ public class CTGeofenceTaskManagerTest extends BaseTestCase {
     }
 
     @Test
+    public void testPostAsyncSafelyRunnableFlatCall() {
+
+        // when called multiple times from same thread
+
+        final boolean[] isFinish = {false, false};
+        final Future<?>[] flatFuture = {null, null};
+        flatFuture[0] = CTGeofenceTaskManager.getInstance().postAsyncSafely("", new Runnable() {
+            @Override
+            public void run() {
+                isFinish[0] = true;
+            }
+        });
+
+        flatFuture[1] = CTGeofenceTaskManager.getInstance().postAsyncSafely("nested", new Runnable() {
+            @Override
+            public void run() {
+                isFinish[1] = true;
+            }
+        });
+
+        await().until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                return isFinish[0] && isFinish[1];
+            }
+        });
+
+        Assert.assertNotNull(flatFuture[0]);
+        Assert.assertNotNull(flatFuture[1]);
+    }
+
+    @Test
     public void testPostAsyncSafelyRunnableNestedCall() {
 
         // when called multiple times from same thread
@@ -92,39 +120,6 @@ public class CTGeofenceTaskManagerTest extends BaseTestCase {
     }
 
     @Test
-    public void testPostAsyncSafelyRunnableFlatCall() {
-
-        // when called multiple times from same thread
-
-        final boolean[] isFinish = {false, false};
-        final Future<?>[] flatFuture = {null, null};
-        flatFuture[0] = CTGeofenceTaskManager.getInstance().postAsyncSafely("", new Runnable() {
-            @Override
-            public void run() {
-                isFinish[0] = true;
-            }
-        });
-
-        flatFuture[1] = CTGeofenceTaskManager.getInstance().postAsyncSafely("nested", new Runnable() {
-            @Override
-            public void run() {
-                isFinish[1] = true;
-            }
-        });
-
-        await().until(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return isFinish[0] && isFinish[1];
-            }
-        });
-
-        Assert.assertNotNull(flatFuture[0]);
-        Assert.assertNotNull(flatFuture[1]);
-    }
-
-
-    @Test
     public void testPostAsyncSafelyTask() {
 
         final boolean[] isFinish = {false};
@@ -148,48 +143,6 @@ public class CTGeofenceTaskManagerTest extends BaseTestCase {
         });
 
         Assert.assertNotNull(future);
-    }
-
-    @Test
-    public void testPostAsyncSafelyTaskNestedCall() {
-
-        // when called multiple times from same thread
-
-        final boolean[] isFinish = {false};
-        final Future<?>[] nestedFuture = {null};
-        Future<?> future = CTGeofenceTaskManager.getInstance().postAsyncSafely("", new CTGeofenceTask() {
-            @Override
-            public void execute() {
-
-                nestedFuture[0] = CTGeofenceTaskManager.getInstance().postAsyncSafely("nested", new CTGeofenceTask() {
-                    @Override
-                    public void execute() {
-                        isFinish[0] = true;
-                    }
-
-                    @Override
-                    public void setOnCompleteListener(OnCompleteListener onCompleteListener) {
-                        // no-op
-                    }
-                });
-
-            }
-
-            @Override
-            public void setOnCompleteListener(OnCompleteListener onCompleteListener) {
-                // no-op
-            }
-        });
-
-        await().until(new Callable<Boolean>() {
-            @Override
-            public Boolean call() throws Exception {
-                return isFinish[0];
-            }
-        });
-
-        Assert.assertNotNull(future);
-        Assert.assertNull(nestedFuture[0]);
     }
 
     @Test
@@ -235,6 +188,47 @@ public class CTGeofenceTaskManagerTest extends BaseTestCase {
         Assert.assertNotNull(flatFuture[1]);
     }
 
+    @Test
+    public void testPostAsyncSafelyTaskNestedCall() {
+
+        // when called multiple times from same thread
+
+        final boolean[] isFinish = {false};
+        final Future<?>[] nestedFuture = {null};
+        Future<?> future = CTGeofenceTaskManager.getInstance().postAsyncSafely("", new CTGeofenceTask() {
+            @Override
+            public void execute() {
+
+                nestedFuture[0] = CTGeofenceTaskManager.getInstance().postAsyncSafely("nested", new CTGeofenceTask() {
+                    @Override
+                    public void execute() {
+                        isFinish[0] = true;
+                    }
+
+                    @Override
+                    public void setOnCompleteListener(OnCompleteListener onCompleteListener) {
+                        // no-op
+                    }
+                });
+
+            }
+
+            @Override
+            public void setOnCompleteListener(OnCompleteListener onCompleteListener) {
+                // no-op
+            }
+        });
+
+        await().until(new Callable<Boolean>() {
+            @Override
+            public Boolean call() throws Exception {
+                return isFinish[0];
+            }
+        });
+
+        Assert.assertNotNull(future);
+        Assert.assertNull(nestedFuture[0]);
+    }
 
     @Test
     public void testPostAsyncSafelyTaskRunnableNestedCall() {

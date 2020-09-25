@@ -4,9 +4,12 @@ package com.clevertap.android.sdk;
  * Represents a validation result, with an error code.
  */
 final class ValidationResult {
-    private Object object;
+
     private int errorCode;
+
     private String errorDesc;
+
+    private Object object;
 
     ValidationResult(int errorCode, String errorDesc) {
         this.errorCode = errorCode;
@@ -15,6 +18,14 @@ final class ValidationResult {
 
     ValidationResult() {
         this.errorCode = 0;
+    }
+
+    int getErrorCode() {
+        return errorCode;
+    }
+
+    void setErrorCode(int errorCode) {
+        this.errorCode = errorCode;
     }
 
     String getErrorDesc() {
@@ -31,13 +42,5 @@ final class ValidationResult {
 
     void setObject(Object object) {
         this.object = object;
-    }
-
-    int getErrorCode() {
-        return errorCode;
-    }
-
-    void setErrorCode(int errorCode) {
-        this.errorCode = errorCode;
     }
 }

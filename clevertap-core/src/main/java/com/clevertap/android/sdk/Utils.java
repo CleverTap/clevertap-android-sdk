@@ -17,13 +17,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.telephony.TelephonyManager;
-
 import androidx.annotation.RestrictTo;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -33,17 +27,81 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-
 import javax.net.ssl.HttpsURLConnection;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class Utils {
+
     private static final String TAG = "Utils";
 
-    static long getMemoryConsumption() {
-        long free = Runtime.getRuntime().freeMemory();
-        long total = Runtime.getRuntime().totalMemory();
-        return total - free;
+    public static boolean isActivityDead(Activity activity) {
+        if (activity == null) {
+            return true;
+        }
+        boolean isActivityDead = activity.isFinishing();
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+            isActivityDead = isActivityDead || activity.isDestroyed();
+        }
+        return isActivityDead;
+    }
+
+    public static String optionalStringKey(JSONObject o, String k)
+            throws JSONException {
+        if (o.has(k) && !o.isNull(k)) {
+            return o.getString(k);
+        }
+
+        return null;
+    }
+
+    /**
+     * Handy method to post any runnable to run on the main thread.
+     *
+     * @param runnable - task to be run
+     */
+    public static void runOnUiThread(Runnable runnable) {
+        if (runnable != null) {
+            //run if already on the UI thread
+            if (Looper.myLooper() == Looper.getMainLooper()) {
+                runnable.run();
+            } else {
+                //post on UI thread if called from Non-UI thread.
+                Handler mainHandler = new Handler(Looper.getMainLooper());
+                mainHandler.post(runnable);
+            }
+        }
+    }
+
+    public static void setPackageNameFromResolveInfoList(Context context, Intent launchIntent) {
+        List<ResolveInfo> resolveInfoList = context.getPackageManager().queryIntentActivities(launchIntent, 0);
+        if (resolveInfoList != null) {
+            String appPackageName = context.getPackageName();
+            for (ResolveInfo resolveInfo : resolveInfoList) {
+                if (appPackageName.equals(resolveInfo.activityInfo.packageName)) {
+                    launchIntent.setPackage(appPackageName);
+                    break;
+                }
+            }
+        }
+    }
+
+    /**
+     * @param content String which contains bundle information
+     * @return Bundle to be passed to createNotification(Context context, Bundle extras)
+     */
+    public static Bundle stringToBundle(String content) throws JSONException {
+        JSONObject jsonObject = new JSONObject(content);
+        Bundle bundle = new Bundle();
+        Iterator iter = jsonObject.keys();
+        while (iter.hasNext()) {
+            String key = (String) iter.next();
+            String value = jsonObject.getString(key);
+            bundle.putString(key, value);
+        }
+        return bundle;
     }
 
     static HashMap<String, Object> convertBundleObjectToHashMap(Bundle b) {
@@ -57,6 +115,20 @@ public final class Utils {
             }
         }
         return map;
+    }
+
+    static ArrayList<String> convertJSONArrayToArrayList(JSONArray array) {
+        ArrayList<String> listdata = new ArrayList<>();
+        if (array != null) {
+            for (int i = 0; i < array.length(); i++) {
+                try {
+                    listdata.add(array.getString(i));
+                } catch (JSONException e) {
+                    Logger.v("Could not convert JSONArray to ArrayList - " + e.getMessage());
+                }
+            }
+        }
+        return listdata;
     }
 
     static HashMap<String, Object> convertJSONObjectToHashMap(JSONObject b) {
@@ -78,76 +150,6 @@ public final class Utils {
         }
 
         return map;
-    }
-
-    static String getCurrentNetworkType(final Context context) {
-        try {
-            // First attempt to check for WiFi connectivity
-            ConnectivityManager connManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            if (connManager == null) {
-                return "Unavailable";
-            }
-            @SuppressLint("MissingPermission") NetworkInfo mWifi = connManager.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-
-            if (mWifi.isConnected()) {
-                return "WiFi";
-            }
-
-            // Fall back to network type
-            TelephonyManager teleMan = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-            if (teleMan == null) {
-                return "Unavailable";
-            }
-            int networkType = teleMan.getNetworkType();
-            switch (networkType) {
-                case TelephonyManager.NETWORK_TYPE_CDMA:
-                    return "CDMA";
-                case TelephonyManager.NETWORK_TYPE_EDGE:
-                    return "EDGE";
-                case TelephonyManager.NETWORK_TYPE_GPRS:
-                    return "GPRS";
-                case TelephonyManager.NETWORK_TYPE_HSDPA:
-                case TelephonyManager.NETWORK_TYPE_HSPA:
-                case TelephonyManager.NETWORK_TYPE_HSPAP:
-                case TelephonyManager.NETWORK_TYPE_HSUPA:
-                case TelephonyManager.NETWORK_TYPE_UMTS:
-                    return "3G";
-                case TelephonyManager.NETWORK_TYPE_LTE:
-                    return "LTE";
-                default:
-                    return "Unknown";
-            }
-        } catch (Throwable t) {
-            return "Unavailable";
-        }
-    }
-
-    static Bitmap getNotificationBitmap(String icoPath, boolean fallbackToAppIcon, final Context context)
-            throws NullPointerException {
-        // If the icon path is not specified
-        if (icoPath == null || icoPath.equals("")) {
-            return fallbackToAppIcon ? getAppIcon(context) : null;
-        }
-        // Simply stream the bitmap
-        if (!icoPath.startsWith("http")) {
-            icoPath = Constants.ICON_BASE_URL + "/" + icoPath;
-        }
-        Bitmap ic = getBitmapFromURL(icoPath);
-        return (ic != null) ? ic : ((fallbackToAppIcon) ? getAppIcon(context) : null);
-    }
-
-    private static Bitmap getAppIcon(final Context context) throws NullPointerException {
-        // Try to get the app logo first
-        try {
-            Drawable logo = context.getPackageManager().getApplicationLogo(context.getApplicationInfo());
-            if (logo == null)
-                throw new Exception("Logo is null");
-            return drawableToBitmap(logo);
-        } catch (Exception e) {
-            // Try to get the app icon now
-            // No error handling here - handle upstream
-            return drawableToBitmap(context.getPackageManager().getApplicationIcon(context.getApplicationInfo()));
-        }
     }
 
     static Bitmap drawableToBitmap(Drawable drawable)
@@ -225,6 +227,70 @@ public final class Utils {
         }
     }
 
+    static String getCurrentNetworkType(final Context context) {
+        try {
+            // First attempt to check for WiFi connectivity
+            ConnectivityManager connManager = (ConnectivityManager) context
+                    .getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (connManager == null) {
+                return "Unavailable";
+            }
+            @SuppressLint("MissingPermission") NetworkInfo mWifi = connManager
+                    .getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
+            if (mWifi.isConnected()) {
+                return "WiFi";
+            }
+
+            // Fall back to network type
+            TelephonyManager teleMan = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+            if (teleMan == null) {
+                return "Unavailable";
+            }
+            int networkType = teleMan.getNetworkType();
+            switch (networkType) {
+                case TelephonyManager.NETWORK_TYPE_CDMA:
+                    return "CDMA";
+                case TelephonyManager.NETWORK_TYPE_EDGE:
+                    return "EDGE";
+                case TelephonyManager.NETWORK_TYPE_GPRS:
+                    return "GPRS";
+                case TelephonyManager.NETWORK_TYPE_HSDPA:
+                case TelephonyManager.NETWORK_TYPE_HSPA:
+                case TelephonyManager.NETWORK_TYPE_HSPAP:
+                case TelephonyManager.NETWORK_TYPE_HSUPA:
+                case TelephonyManager.NETWORK_TYPE_UMTS:
+                    return "3G";
+                case TelephonyManager.NETWORK_TYPE_LTE:
+                    return "LTE";
+                default:
+                    return "Unknown";
+            }
+        } catch (Throwable t) {
+            return "Unavailable";
+        }
+    }
+
+    static long getMemoryConsumption() {
+        long free = Runtime.getRuntime().freeMemory();
+        long total = Runtime.getRuntime().totalMemory();
+        return total - free;
+    }
+
+    static Bitmap getNotificationBitmap(String icoPath, boolean fallbackToAppIcon, final Context context)
+            throws NullPointerException {
+        // If the icon path is not specified
+        if (icoPath == null || icoPath.equals("")) {
+            return fallbackToAppIcon ? getAppIcon(context) : null;
+        }
+        // Simply stream the bitmap
+        if (!icoPath.startsWith("http")) {
+            icoPath = Constants.ICON_BASE_URL + "/" + icoPath;
+        }
+        Bitmap ic = getBitmapFromURL(icoPath);
+        return (ic != null) ? ic : ((fallbackToAppIcon) ? getAppIcon(context) : null);
+    }
+
     static int getThumbnailImage(Context context, String image) {
         if (context != null) {
             return context.getResources().getIdentifier(image, "drawable", context.getPackageName());
@@ -233,36 +299,15 @@ public final class Utils {
         }
     }
 
-    public static String optionalStringKey(JSONObject o, String k)
-            throws JSONException {
-        if (o.has(k) && !o.isNull(k)) {
-            return o.getString(k);
-        }
-
-        return null;
-    }
-
-    static ArrayList<String> convertJSONArrayToArrayList(JSONArray array) {
-        ArrayList<String> listdata = new ArrayList<>();
-        if (array != null) {
-            for (int i = 0; i < array.length(); i++) {
-                try {
-                    listdata.add(array.getString(i));
-                } catch (JSONException e) {
-                    Logger.v("Could not convert JSONArray to ArrayList - " + e.getMessage());
-                }
-            }
-        }
-        return listdata;
-    }
-
     static boolean validateCTID(String cleverTapID) {
         if (cleverTapID == null) {
-            Logger.i("CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is NULL.");
+            Logger.i(
+                    "CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is NULL.");
             return false;
         }
         if (cleverTapID.isEmpty()) {
-            Logger.i("CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is empty.");
+            Logger.i(
+                    "CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is empty.");
             return false;
         }
         if (cleverTapID.length() > 64) {
@@ -276,62 +321,19 @@ public final class Utils {
         return true;
     }
 
-    /**
-     * Handy method to post any runnable to run on the main thread.
-     *
-     * @param runnable - task to be run
-     */
-    public static void runOnUiThread(Runnable runnable) {
-        if (runnable != null) {
-            //run if already on the UI thread
-            if (Looper.myLooper() == Looper.getMainLooper()) {
-                runnable.run();
-            } else {
-                //post on UI thread if called from Non-UI thread.
-                Handler mainHandler = new Handler(Looper.getMainLooper());
-                mainHandler.post(runnable);
+    private static Bitmap getAppIcon(final Context context) throws NullPointerException {
+        // Try to get the app logo first
+        try {
+            Drawable logo = context.getPackageManager().getApplicationLogo(context.getApplicationInfo());
+            if (logo == null) {
+                throw new Exception("Logo is null");
             }
+            return drawableToBitmap(logo);
+        } catch (Exception e) {
+            // Try to get the app icon now
+            // No error handling here - handle upstream
+            return drawableToBitmap(context.getPackageManager().getApplicationIcon(context.getApplicationInfo()));
         }
-    }
-
-    /**
-     * @param content String which contains bundle information
-     * @return Bundle to be passed to createNotification(Context context, Bundle extras)
-     * @throws JSONException
-     */
-    public static Bundle stringToBundle(String content) throws JSONException {
-        JSONObject jsonObject = new JSONObject(content);
-        Bundle bundle = new Bundle();
-        Iterator iter = jsonObject.keys();
-        while (iter.hasNext()) {
-            String key = (String) iter.next();
-            String value = jsonObject.getString(key);
-            bundle.putString(key, value);
-        }
-        return bundle;
-    }
-
-    public static void setPackageNameFromResolveInfoList(Context context, Intent launchIntent) {
-        List<ResolveInfo> resolveInfoList = context.getPackageManager().queryIntentActivities(launchIntent, 0);
-        if (resolveInfoList != null) {
-            String appPackageName = context.getPackageName();
-            for (ResolveInfo resolveInfo : resolveInfoList) {
-                if (appPackageName.equals(resolveInfo.activityInfo.packageName)) {
-                    launchIntent.setPackage(appPackageName);
-                    break;
-                }
-            }
-        }
-    }
-
-    public static boolean isActivityDead(Activity activity) {
-        if (activity == null)
-            return true;
-        boolean isActivityDead = activity.isFinishing();
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
-            isActivityDead = isActivityDead || activity.isDestroyed();
-        }
-        return isActivityDead;
     }
 
 }

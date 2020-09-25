@@ -1,5 +1,5 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/inapp_half_interstitial_frame_layout"
+<FrameLayout android:id="@+id/inapp_half_interstitial_frame_layout"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:layout_gravity="center"
@@ -16,8 +16,8 @@
             android:id="@+id/backgroundImage"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_alignParentStart="true"
             android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
             android:layout_alignParentTop="true"
             android:scaleType="centerCrop" />
 
@@ -46,12 +46,12 @@
             android:id="@+id/half_interstitial_linear_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_below="@+id/half_interstitial_message"
             android:layout_alignParentBottom="true"
+            android:layout_below="@+id/half_interstitial_message"
             android:layout_centerHorizontal="true"
+            android:layout_marginBottom="30dp"
             android:layout_marginLeft="30dp"
             android:layout_marginRight="30dp"
-            android:layout_marginBottom="30dp"
             android:gravity="bottom"
             android:orientation="vertical"
             android:visibility="visible">

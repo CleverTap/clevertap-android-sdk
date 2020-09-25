@@ -1,15 +1,12 @@
 package com.clevertap.android.geofence;
 
 import android.content.Context;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
-
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
 import com.clevertap.android.geofence.interfaces.CTLocationUpdatesListener;
 import com.google.android.gms.location.LocationResult;
-
 import java.util.concurrent.Future;
 
 /**
@@ -19,8 +16,10 @@ import java.util.concurrent.Future;
 class PushLocationEventTask implements CTGeofenceTask {
 
     private final Context context;
+
     @NonNull
     private final LocationResult locationResult;
+
     @Nullable
     private OnCompleteListener onCompleteListener;
 
@@ -83,6 +82,11 @@ class PushLocationEventTask implements CTGeofenceTask {
 
     }
 
+    @Override
+    public void setOnCompleteListener(@NonNull OnCompleteListener onCompleteListener) {
+        this.onCompleteListener = onCompleteListener;
+    }
+
     /**
      * Notifies listeners when task execution completes
      */
@@ -90,10 +94,5 @@ class PushLocationEventTask implements CTGeofenceTask {
         if (onCompleteListener != null) {
             onCompleteListener.onComplete();
         }
-    }
-
-    @Override
-    public void setOnCompleteListener(@NonNull OnCompleteListener onCompleteListener) {
-        this.onCompleteListener = onCompleteListener;
     }
 }

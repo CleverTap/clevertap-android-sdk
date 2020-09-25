@@ -1,26 +1,27 @@
 package com.clevertap.android.geofence;
 
 
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+import static org.powermock.api.mockito.PowerMockito.verifyStatic;
+import static org.powermock.api.mockito.PowerMockito.when;
+
 import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
-
 import com.clevertap.android.geofence.fakes.GeofenceEventFake;
 import com.clevertap.android.geofence.fakes.GeofenceJSON;
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.google.android.gms.location.Geofence;
 import com.google.android.gms.location.GeofencingEvent;
-
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.Future;
 import org.json.JSONObject;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.junit.*;
+import org.junit.runner.*;
+import org.mockito.*;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -29,19 +30,6 @@ import org.powermock.reflect.internal.WhiteboxImpl;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
 import org.skyscreamer.jsonassert.JSONAssert;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Future;
-
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.powermock.api.mockito.PowerMockito.verifyStatic;
-import static org.powermock.api.mockito.PowerMockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 28,
@@ -53,19 +41,26 @@ import static org.powermock.api.mockito.PowerMockito.when;
 public class PushGeofenceEventTaskTest extends BaseTestCase {
 
 
-    @Rule
-    public PowerMockRule rule = new PowerMockRule();
-    @Mock
-    public CTGeofenceAPI ctGeofenceAPI;
     @Mock
     public CleverTapAPI cleverTapAPI;
+
+    @Mock
+    public CTGeofenceAPI ctGeofenceAPI;
+
     @Mock
     public CTGeofenceTask.OnCompleteListener onCompleteListener;
-    private Logger logger;
-    private Location location;
-    private Intent intent;
+
+    @Rule
+    public PowerMockRule rule = new PowerMockRule();
+
     @Mock
     private GeofencingEvent geofencingEvent;
+
+    private Intent intent;
+
+    private Location location;
+
+    private Logger logger;
 
     @Before
     public void setUp() throws Exception {
@@ -108,23 +103,6 @@ public class PushGeofenceEventTaskTest extends BaseTestCase {
     }
 
     @Test
-    public void testExecuteWhenGeofenceHasError() {
-        // When geofence has error
-
-        when(Utils.initCTGeofenceApiIfRequired(application)).thenReturn(true);
-        PushGeofenceEventTask task = new PushGeofenceEventTask(application, intent);
-        Mockito.when(geofencingEvent.hasError()).thenReturn(true);
-
-        task.setOnCompleteListener(onCompleteListener);
-        task.execute();
-
-        verify(cleverTapAPI).pushGeoFenceError(anyInt(), anyString());
-        verify(onCompleteListener).onComplete();
-        verify(geofencingEvent, times(0)).getGeofenceTransition();
-
-    }
-
-    @Test
     public void testExecuteWhenGeofenceEventNotValid() {
         // When geofence does not have error and geofence event is not valid
 
@@ -140,6 +118,23 @@ public class PushGeofenceEventTaskTest extends BaseTestCase {
 
         verify(cleverTapAPI).pushGeoFenceError(anyInt(), anyString());
         verify(onCompleteListener).onComplete();
+
+    }
+
+    @Test
+    public void testExecuteWhenGeofenceHasError() {
+        // When geofence has error
+
+        when(Utils.initCTGeofenceApiIfRequired(application)).thenReturn(true);
+        PushGeofenceEventTask task = new PushGeofenceEventTask(application, intent);
+        Mockito.when(geofencingEvent.hasError()).thenReturn(true);
+
+        task.setOnCompleteListener(onCompleteListener);
+        task.execute();
+
+        verify(cleverTapAPI).pushGeoFenceError(anyInt(), anyString());
+        verify(onCompleteListener).onComplete();
+        verify(geofencingEvent, times(0)).getGeofenceTransition();
 
     }
 
@@ -191,26 +186,6 @@ public class PushGeofenceEventTaskTest extends BaseTestCase {
     }
 
     @Test
-    public void testPushGeofenceEventsWhenTriggeredGeofenceIsNull() {
-        // When triggered geofence is null
-
-        PushGeofenceEventTask task = new PushGeofenceEventTask(application, intent);
-
-        try {
-            WhiteboxImpl.invokeMethod(task, "pushGeofenceEvents", (Object) null,
-                    null, 1);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        verify(cleverTapAPI).pushGeoFenceError(anyInt(), anyString());
-
-        verifyStatic(FileUtils.class, times(0));
-        FileUtils.readFromFile(any(Context.class), anyString());
-
-    }
-
-    @Test
     public void testPushGeofenceEventsWhenEnter() {
         // When old geofence in file is not empty and triggered geofence found in file
 
@@ -248,113 +223,6 @@ public class PushGeofenceEventTaskTest extends BaseTestCase {
 
 
     }
-
-    @Test
-    public void testPushGeofenceEventsWhenOldGeofenceIsEmpty() {
-        // When old geofence in file is empty
-
-        PushGeofenceEventTask task = new PushGeofenceEventTask(application, intent);
-
-        when(FileUtils.getCachedFullPath(any(Context.class), anyString())).thenReturn("");
-        when(FileUtils.readFromFile(any(Context.class),
-                anyString())).thenReturn("");
-
-        List<Geofence> triggeredGeofenceList = GeofenceEventFake.getSingleMatchingTriggeredGeofenceList();
-        Location triggeredLocation = GeofenceEventFake.getTriggeredLocation();
-
-        try {
-
-            WhiteboxImpl.invokeMethod(task, "pushGeofenceEvents",
-                    triggeredGeofenceList,
-                    triggeredLocation, Geofence.GEOFENCE_TRANSITION_ENTER);
-
-            verify(cleverTapAPI, never()).pushGeofenceEnteredEvent(any(JSONObject.class));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    @Test
-    public void testPushGeofenceEventsWhenOldGeofenceJsonInvalid() {
-        // When old geofence json content in file is invalid
-
-        PushGeofenceEventTask task = new PushGeofenceEventTask(application, intent);
-
-        when(FileUtils.getCachedFullPath(any(Context.class), anyString())).thenReturn("");
-        when(FileUtils.readFromFile(any(Context.class),
-                anyString())).thenReturn(GeofenceJSON.getEmptyJson().toString());
-
-        List<Geofence> triggeredGeofenceList = GeofenceEventFake.getSingleMatchingTriggeredGeofenceList();
-        Location triggeredLocation = GeofenceEventFake.getTriggeredLocation();
-
-        try {
-
-            WhiteboxImpl.invokeMethod(task, "pushGeofenceEvents",
-                    triggeredGeofenceList,
-                    triggeredLocation, Geofence.GEOFENCE_TRANSITION_ENTER);
-
-            verify(cleverTapAPI, never()).pushGeofenceEnteredEvent(any(JSONObject.class));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    @Test
-    public void testPushGeofenceEventsWhenOldGeofenceJsonArrayIsEmpty() {
-        // When old geofence json array in file is empty
-
-        PushGeofenceEventTask task = new PushGeofenceEventTask(application, intent);
-
-        when(FileUtils.getCachedFullPath(any(Context.class), anyString())).thenReturn("");
-        when(FileUtils.readFromFile(any(Context.class),
-                anyString())).thenReturn(GeofenceJSON.getEmptyGeofence().toString());
-
-        List<Geofence> triggeredGeofenceList = GeofenceEventFake.getSingleMatchingTriggeredGeofenceList();
-        Location triggeredLocation = GeofenceEventFake.getTriggeredLocation();
-
-        try {
-
-            WhiteboxImpl.invokeMethod(task, "pushGeofenceEvents",
-                    triggeredGeofenceList,
-                    triggeredLocation, Geofence.GEOFENCE_TRANSITION_ENTER);
-
-            verify(cleverTapAPI, never()).pushGeofenceEnteredEvent(any(JSONObject.class));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    @Test
-    public void testPushGeofenceEventsWhenTriggeredGeofenceIsNotFound() {
-        // When triggered geofence not found in file
-
-        PushGeofenceEventTask task = new PushGeofenceEventTask(application, intent);
-
-        when(FileUtils.getCachedFullPath(any(Context.class), anyString())).thenReturn("");
-        when(FileUtils.readFromFile(any(Context.class),
-                anyString())).thenReturn(GeofenceJSON.getGeofenceString());
-
-        List<Geofence> triggeredGeofenceList = GeofenceEventFake.getNonMatchingTriggeredGeofenceList();
-        Location triggeredLocation = GeofenceEventFake.getTriggeredLocation();
-
-        try {
-
-            WhiteboxImpl.invokeMethod(task, "pushGeofenceEvents",
-                    triggeredGeofenceList,
-                    triggeredLocation, Geofence.GEOFENCE_TRANSITION_ENTER);
-
-            verify(cleverTapAPI, never()).pushGeofenceEnteredEvent(any(JSONObject.class));
-            verify(cleverTapAPI).pushGeoFenceError(anyInt(), anyString());
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-    }
-
 
     @Test
     public void testPushGeofenceEventsWhenExit() {
@@ -442,17 +310,128 @@ public class PushGeofenceEventTaskTest extends BaseTestCase {
     }
 
     @Test
-    public void testSendOnCompleteEventWhenListenerNotNull() {
-        // when listener not null
+    public void testPushGeofenceEventsWhenOldGeofenceIsEmpty() {
+        // When old geofence in file is empty
+
         PushGeofenceEventTask task = new PushGeofenceEventTask(application, intent);
 
-        task.setOnCompleteListener(onCompleteListener);
+        when(FileUtils.getCachedFullPath(any(Context.class), anyString())).thenReturn("");
+        when(FileUtils.readFromFile(any(Context.class),
+                anyString())).thenReturn("");
+
+        List<Geofence> triggeredGeofenceList = GeofenceEventFake.getSingleMatchingTriggeredGeofenceList();
+        Location triggeredLocation = GeofenceEventFake.getTriggeredLocation();
+
         try {
-            WhiteboxImpl.invokeMethod(task, "sendOnCompleteEvent");
+
+            WhiteboxImpl.invokeMethod(task, "pushGeofenceEvents",
+                    triggeredGeofenceList,
+                    triggeredLocation, Geofence.GEOFENCE_TRANSITION_ENTER);
+
+            verify(cleverTapAPI, never()).pushGeofenceEnteredEvent(any(JSONObject.class));
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Mockito.verify(onCompleteListener).onComplete();
+
+    }
+
+    @Test
+    public void testPushGeofenceEventsWhenOldGeofenceJsonArrayIsEmpty() {
+        // When old geofence json array in file is empty
+
+        PushGeofenceEventTask task = new PushGeofenceEventTask(application, intent);
+
+        when(FileUtils.getCachedFullPath(any(Context.class), anyString())).thenReturn("");
+        when(FileUtils.readFromFile(any(Context.class),
+                anyString())).thenReturn(GeofenceJSON.getEmptyGeofence().toString());
+
+        List<Geofence> triggeredGeofenceList = GeofenceEventFake.getSingleMatchingTriggeredGeofenceList();
+        Location triggeredLocation = GeofenceEventFake.getTriggeredLocation();
+
+        try {
+
+            WhiteboxImpl.invokeMethod(task, "pushGeofenceEvents",
+                    triggeredGeofenceList,
+                    triggeredLocation, Geofence.GEOFENCE_TRANSITION_ENTER);
+
+            verify(cleverTapAPI, never()).pushGeofenceEnteredEvent(any(JSONObject.class));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    @Test
+    public void testPushGeofenceEventsWhenOldGeofenceJsonInvalid() {
+        // When old geofence json content in file is invalid
+
+        PushGeofenceEventTask task = new PushGeofenceEventTask(application, intent);
+
+        when(FileUtils.getCachedFullPath(any(Context.class), anyString())).thenReturn("");
+        when(FileUtils.readFromFile(any(Context.class),
+                anyString())).thenReturn(GeofenceJSON.getEmptyJson().toString());
+
+        List<Geofence> triggeredGeofenceList = GeofenceEventFake.getSingleMatchingTriggeredGeofenceList();
+        Location triggeredLocation = GeofenceEventFake.getTriggeredLocation();
+
+        try {
+
+            WhiteboxImpl.invokeMethod(task, "pushGeofenceEvents",
+                    triggeredGeofenceList,
+                    triggeredLocation, Geofence.GEOFENCE_TRANSITION_ENTER);
+
+            verify(cleverTapAPI, never()).pushGeofenceEnteredEvent(any(JSONObject.class));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    @Test
+    public void testPushGeofenceEventsWhenTriggeredGeofenceIsNotFound() {
+        // When triggered geofence not found in file
+
+        PushGeofenceEventTask task = new PushGeofenceEventTask(application, intent);
+
+        when(FileUtils.getCachedFullPath(any(Context.class), anyString())).thenReturn("");
+        when(FileUtils.readFromFile(any(Context.class),
+                anyString())).thenReturn(GeofenceJSON.getGeofenceString());
+
+        List<Geofence> triggeredGeofenceList = GeofenceEventFake.getNonMatchingTriggeredGeofenceList();
+        Location triggeredLocation = GeofenceEventFake.getTriggeredLocation();
+
+        try {
+
+            WhiteboxImpl.invokeMethod(task, "pushGeofenceEvents",
+                    triggeredGeofenceList,
+                    triggeredLocation, Geofence.GEOFENCE_TRANSITION_ENTER);
+
+            verify(cleverTapAPI, never()).pushGeofenceEnteredEvent(any(JSONObject.class));
+            verify(cleverTapAPI).pushGeoFenceError(anyInt(), anyString());
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    @Test
+    public void testPushGeofenceEventsWhenTriggeredGeofenceIsNull() {
+        // When triggered geofence is null
+
+        PushGeofenceEventTask task = new PushGeofenceEventTask(application, intent);
+
+        try {
+            WhiteboxImpl.invokeMethod(task, "pushGeofenceEvents", (Object) null,
+                    null, 1);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        verify(cleverTapAPI).pushGeoFenceError(anyInt(), anyString());
+
+        verifyStatic(FileUtils.class, times(0));
+        FileUtils.readFromFile(any(Context.class), anyString());
 
     }
 
@@ -468,6 +447,21 @@ public class PushGeofenceEventTaskTest extends BaseTestCase {
             e.printStackTrace();
         }
         Mockito.verify(onCompleteListener, times(0)).onComplete();
+
+    }
+
+    @Test
+    public void testSendOnCompleteEventWhenListenerNotNull() {
+        // when listener not null
+        PushGeofenceEventTask task = new PushGeofenceEventTask(application, intent);
+
+        task.setOnCompleteListener(onCompleteListener);
+        try {
+            WhiteboxImpl.invokeMethod(task, "sendOnCompleteEvent");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        Mockito.verify(onCompleteListener).onComplete();
 
     }
 }

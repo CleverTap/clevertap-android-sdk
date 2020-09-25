@@ -1,20 +1,5 @@
 package com.clevertap.android.xps;
 
-import android.content.Context;
-import android.os.Bundle;
-import android.text.TextUtils;
-import android.util.Log;
-
-import com.clevertap.android.sdk.CleverTapAPI;
-import com.clevertap.android.sdk.Utils;
-import com.clevertap.android.sdk.pushnotification.PushConstants;
-import com.xiaomi.mipush.sdk.ErrorCode;
-import com.xiaomi.mipush.sdk.MiPushClient;
-import com.xiaomi.mipush.sdk.MiPushCommandMessage;
-import com.xiaomi.mipush.sdk.MiPushMessage;
-
-import java.util.List;
-
 import static com.clevertap.android.xps.XpsConstants.FAILED_WITH_EXCEPTION;
 import static com.clevertap.android.xps.XpsConstants.INVALID_TOKEN;
 import static com.clevertap.android.xps.XpsConstants.LOG_TAG;
@@ -22,7 +7,21 @@ import static com.clevertap.android.xps.XpsConstants.OTHER_COMMAND;
 import static com.clevertap.android.xps.XpsConstants.TOKEN_FAILURE;
 import static com.clevertap.android.xps.XpsConstants.TOKEN_SUCCESS;
 
+import android.content.Context;
+import android.os.Bundle;
+import android.text.TextUtils;
+import android.util.Log;
+import com.clevertap.android.sdk.CleverTapAPI;
+import com.clevertap.android.sdk.Utils;
+import com.clevertap.android.sdk.pushnotification.PushConstants;
+import com.xiaomi.mipush.sdk.ErrorCode;
+import com.xiaomi.mipush.sdk.MiPushClient;
+import com.xiaomi.mipush.sdk.MiPushCommandMessage;
+import com.xiaomi.mipush.sdk.MiPushMessage;
+import java.util.List;
+
 public class XiaomiMessageHandler implements IMiMessageHandler {
+
     @Override
     public boolean createNotification(Context context, MiPushMessage message) {
         boolean isSuccess = false;

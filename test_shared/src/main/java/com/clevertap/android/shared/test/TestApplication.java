@@ -1,7 +1,6 @@
 package com.clevertap.android.shared.test;
 
 import androidx.test.core.app.ApplicationProvider;
-
 import com.clevertap.android.sdk.ActivityLifecycleCallback;
 import com.clevertap.android.sdk.Application;
 import com.clevertap.android.sdk.CleverTapAPI;

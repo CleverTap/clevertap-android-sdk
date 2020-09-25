@@ -2,7 +2,9 @@ package com.clevertap.android.sdk;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class EventDetail {
+
     private int count, firstTime, lastTime;
+
     private String name;
 
     public EventDetail(int count, int firstTime, int lastTime, String name) {

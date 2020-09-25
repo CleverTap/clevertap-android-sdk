@@ -1,10 +1,20 @@
 package com.clevertap.android.geofence;
 
+import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
+import static com.clevertap.android.geofence.CTGeofenceConstants.DEFAULT_LATITUDE;
+import static com.clevertap.android.geofence.CTGeofenceConstants.DEFAULT_LONGITUDE;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+import static org.powermock.api.mockito.PowerMockito.when;
+
 import android.Manifest;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.location.Location;
-
 import com.clevertap.android.geofence.fakes.GeofenceJSON;
 import com.clevertap.android.geofence.interfaces.CTGeofenceAdapter;
 import com.clevertap.android.geofence.interfaces.CTGeofenceEventsListener;
@@ -12,18 +22,13 @@ import com.clevertap.android.geofence.interfaces.CTLocationAdapter;
 import com.clevertap.android.geofence.interfaces.CTLocationUpdatesListener;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.GeofenceCallback;
-
+import java.lang.reflect.Field;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.json.JSONObject;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.ArgumentCaptor;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.junit.*;
+import org.junit.runner.*;
+import org.mockito.*;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
@@ -32,26 +37,6 @@ import org.robolectric.RobolectricTestRunner;
 import org.robolectric.Shadows;
 import org.robolectric.annotation.Config;
 import org.robolectric.shadows.ShadowApplication;
-
-import java.lang.reflect.Field;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-
-import static android.app.PendingIntent.FLAG_UPDATE_CURRENT;
-import static com.clevertap.android.geofence.CTGeofenceConstants.DEFAULT_LATITUDE;
-import static com.clevertap.android.geofence.CTGeofenceConstants.DEFAULT_LONGITUDE;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.samePropertyValuesAs;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertSame;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.powermock.api.mockito.PowerMockito.when;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 28,
@@ -62,18 +47,32 @@ import static org.powermock.api.mockito.PowerMockito.when;
         , Executors.class, FileUtils.class})
 public class CTGeofenceAPITest extends BaseTestCase {
 
-    @Rule
-    public PowerMockRule rule = new PowerMockRule();
     @Mock
     public CleverTapAPI cleverTapAPI;
-    @Mock
-    public CTLocationAdapter locationAdapter;
-    @Mock
-    public CTGeofenceAdapter geofenceAdapter;
+
     @Mock
     public ExecutorService executorService;
-    private Logger logger;
+
+    @Mock
+    public CTGeofenceAdapter geofenceAdapter;
+
+    @Mock
+    public CTLocationAdapter locationAdapter;
+
+    @Rule
+    public PowerMockRule rule = new PowerMockRule();
+
     private Location location;
+
+    private Logger logger;
+
+    @After
+    public void cleanup() throws NoSuchFieldException, IllegalAccessException {
+        CTGeofenceAPI instance = CTGeofenceAPI.getInstance(application);
+        Field field = CTGeofenceAPI.class.getDeclaredField("ctGeofenceAPI");
+        field.setAccessible(true);
+        field.set(instance, null);
+    }
 
     @Before
     public void setUp() throws Exception {
@@ -91,6 +90,32 @@ public class CTGeofenceAPITest extends BaseTestCase {
     }
 
     @Test
+    public void testDeactivate() {
+
+        CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(application);
+        CTGeofenceTaskManager.getInstance().setExecutorService(executorService);
+        ctGeofenceAPI.deactivate();
+
+        ArgumentCaptor<Runnable> argumentCaptor = ArgumentCaptor.forClass(Runnable.class);
+        verify(executorService).submit(argumentCaptor.capture());
+
+        PendingIntent geofenceMonitoring = PendingIntentFactory.getPendingIntent(application,
+                PendingIntentFactory.PENDING_INTENT_GEOFENCE, FLAG_UPDATE_CURRENT);
+        PendingIntent locationUpdates = PendingIntentFactory.getPendingIntent(application,
+                PendingIntentFactory.PENDING_INTENT_LOCATION, FLAG_UPDATE_CURRENT);
+
+        argumentCaptor.getValue().run();
+
+        verify(geofenceAdapter).stopGeofenceMonitoring(geofenceMonitoring);
+        verify(locationAdapter).removeLocationUpdates(locationUpdates);
+
+        PowerMockito.verifyStatic(FileUtils.class);
+        FileUtils.deleteDirectory(any(Context.class), FileUtils.getCachedDirName(application));
+
+        assertFalse(ctGeofenceAPI.isActivated());
+    }
+
+    @Test
     public void testGetInstance() {
         CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(application);
         Assert.assertNotNull(ctGeofenceAPI);
@@ -98,6 +123,118 @@ public class CTGeofenceAPITest extends BaseTestCase {
         CTGeofenceAPI ctGeofenceAPI1 = CTGeofenceAPI.getInstance(application);
 
         Assert.assertSame(ctGeofenceAPI, ctGeofenceAPI1);
+    }
+
+    @Test
+    public void testGetLogger() {
+        assertNotNull(CTGeofenceAPI.getLogger());
+    }
+
+    @Test
+    public void testHandleGeoFencesTC1() {
+
+        // when location access permission is not granted
+
+        when(Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)).thenReturn(false);
+
+        CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(application);
+        CTGeofenceTaskManager.getInstance().setExecutorService(executorService);
+        ctGeofenceAPI.handleGeoFences(GeofenceJSON.getGeofence());
+
+        verify(executorService, never()).submit(any(Runnable.class));
+    }
+
+    @Test
+    public void testHandleGeoFencesTC2() {
+
+        // when background location permission is not granted
+
+        when(Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)).thenReturn(true);
+        when(Utils.hasBackgroundLocationPermission(application)).thenReturn(false);
+
+        CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(application);
+        CTGeofenceTaskManager.getInstance().setExecutorService(executorService);
+        ctGeofenceAPI.handleGeoFences(GeofenceJSON.getGeofence());
+
+        verify(executorService, never()).submit(any(Runnable.class));
+    }
+
+    @Test
+    public void testHandleGeoFencesTC3() {
+
+        // when geofence list is null
+
+        when(Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)).thenReturn(true);
+        when(Utils.hasBackgroundLocationPermission(application)).thenReturn(true);
+
+        CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(application);
+        CTGeofenceTaskManager.getInstance().setExecutorService(executorService);
+        ctGeofenceAPI.handleGeoFences(null);
+
+        verify(executorService, never()).submit(any(Runnable.class));
+    }
+
+    @Test
+    public void testHandleGeoFencesTC4() {
+
+        // when location access permission and background location permission is granted
+
+        when(Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)).thenReturn(true);
+        when(Utils.hasBackgroundLocationPermission(application)).thenReturn(true);
+
+        CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(application);
+        CTGeofenceTaskManager.getInstance().setExecutorService(executorService);
+        ctGeofenceAPI.handleGeoFences(GeofenceJSON.getGeofence());
+
+        verify(executorService).submit(any(Runnable.class));
+    }
+
+    @Test
+    public void testInitBackgroundLocationUpdatesTC1() {
+
+        // when location access permission is denied
+
+        when(Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)).thenReturn(false);
+
+        CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(application);
+        CTGeofenceTaskManager.getInstance().setExecutorService(executorService);
+        ctGeofenceAPI.initBackgroundLocationUpdates();
+
+        verify(executorService, never()).submit(any(Runnable.class));
+    }
+
+    @Test(expected = IllegalStateException.class)
+    public void testInitBackgroundLocationUpdatesTC2() {
+
+        // when geofence init is not called
+
+        when(Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)).thenReturn(true);
+
+        CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(application);
+        CTGeofenceTaskManager.getInstance().setExecutorService(executorService);
+        ctGeofenceAPI.initBackgroundLocationUpdates();
+
+        verify(executorService, never()).submit(any(Runnable.class));
+    }
+
+    @Test
+    public void testInitBackgroundLocationUpdatesTC3() {
+
+        // when geofence sdk initialized and location access permission is granted
+
+        when(Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)).thenReturn(true);
+
+        CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(application);
+        CTGeofenceTaskManager.getInstance().setExecutorService(executorService);
+        ctGeofenceAPI.init(null, cleverTapAPI);
+
+        verify(executorService).submit(any(Runnable.class));
+    }
+
+    @Test
+    public void testInitDefaultConfig() {
+        CTGeofenceSettings actual = CTGeofenceAPI.getInstance(application).initDefaultConfig();
+        assertThat(actual, samePropertyValuesAs(new CTGeofenceSettings.Builder().build()));
     }
 
     @Test
@@ -164,7 +301,6 @@ public class CTGeofenceAPITest extends BaseTestCase {
     @Test
     public void testProcessTriggeredLocationTC1() {
         // when delta t and delta d both is satisfied
-
 
         GeofenceStorageHelper.putDouble(application, CTGeofenceConstants.KEY_LATITUDE, DEFAULT_LATITUDE);
         GeofenceStorageHelper.putDouble(application, CTGeofenceConstants.KEY_LONGITUDE, DEFAULT_LONGITUDE);
@@ -290,12 +426,6 @@ public class CTGeofenceAPITest extends BaseTestCase {
     }
 
     @Test
-    public void testInitDefaultConfig() {
-        CTGeofenceSettings actual = CTGeofenceAPI.getInstance(application).initDefaultConfig();
-        assertThat(actual, samePropertyValuesAs(new CTGeofenceSettings.Builder().build()));
-    }
-
-    @Test
     public void testSetCtGeofenceEventsListener() {
         CTGeofenceEventsListener listener = new CTGeofenceEventsListener() {
             @Override
@@ -326,138 +456,6 @@ public class CTGeofenceAPITest extends BaseTestCase {
         CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(application);
         ctGeofenceAPI.setCtLocationUpdatesListener(listener);
         assertSame(listener, ctGeofenceAPI.getCtLocationUpdatesListener());
-    }
-
-    @Test
-    public void testGetLogger() {
-        assertNotNull(CTGeofenceAPI.getLogger());
-    }
-
-    @Test
-    public void testDeactivate() {
-
-        CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(application);
-        CTGeofenceTaskManager.getInstance().setExecutorService(executorService);
-        ctGeofenceAPI.deactivate();
-
-        ArgumentCaptor<Runnable> argumentCaptor = ArgumentCaptor.forClass(Runnable.class);
-        verify(executorService).submit(argumentCaptor.capture());
-
-        PendingIntent geofenceMonitoring = PendingIntentFactory.getPendingIntent(application,
-                PendingIntentFactory.PENDING_INTENT_GEOFENCE, FLAG_UPDATE_CURRENT);
-        PendingIntent locationUpdates = PendingIntentFactory.getPendingIntent(application,
-                PendingIntentFactory.PENDING_INTENT_LOCATION, FLAG_UPDATE_CURRENT);
-
-        argumentCaptor.getValue().run();
-
-        verify(geofenceAdapter).stopGeofenceMonitoring(geofenceMonitoring);
-        verify(locationAdapter).removeLocationUpdates(locationUpdates);
-
-        PowerMockito.verifyStatic(FileUtils.class);
-        FileUtils.deleteDirectory(any(Context.class), FileUtils.getCachedDirName(application));
-
-        assertFalse(ctGeofenceAPI.isActivated());
-    }
-
-    @Test
-    public void testHandleGeoFencesTC1() {
-
-        // when location access permission is not granted
-
-        when(Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)).thenReturn(false);
-
-        CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(application);
-        CTGeofenceTaskManager.getInstance().setExecutorService(executorService);
-        ctGeofenceAPI.handleGeoFences(GeofenceJSON.getGeofence());
-
-        verify(executorService, never()).submit(any(Runnable.class));
-    }
-
-    @Test
-    public void testHandleGeoFencesTC2() {
-
-        // when background location permission is not granted
-
-        when(Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)).thenReturn(true);
-        when(Utils.hasBackgroundLocationPermission(application)).thenReturn(false);
-
-        CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(application);
-        CTGeofenceTaskManager.getInstance().setExecutorService(executorService);
-        ctGeofenceAPI.handleGeoFences(GeofenceJSON.getGeofence());
-
-        verify(executorService, never()).submit(any(Runnable.class));
-    }
-
-    @Test
-    public void testHandleGeoFencesTC3() {
-
-        // when geofence list is null
-
-        when(Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)).thenReturn(true);
-        when(Utils.hasBackgroundLocationPermission(application)).thenReturn(true);
-
-        CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(application);
-        CTGeofenceTaskManager.getInstance().setExecutorService(executorService);
-        ctGeofenceAPI.handleGeoFences(null);
-
-        verify(executorService, never()).submit(any(Runnable.class));
-    }
-
-    @Test
-    public void testHandleGeoFencesTC4() {
-
-        // when location access permission and background location permission is granted
-
-        when(Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)).thenReturn(true);
-        when(Utils.hasBackgroundLocationPermission(application)).thenReturn(true);
-
-        CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(application);
-        CTGeofenceTaskManager.getInstance().setExecutorService(executorService);
-        ctGeofenceAPI.handleGeoFences(GeofenceJSON.getGeofence());
-
-        verify(executorService).submit(any(Runnable.class));
-    }
-
-    @Test
-    public void testInitBackgroundLocationUpdatesTC1() {
-
-        // when location access permission is denied
-
-        when(Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)).thenReturn(false);
-
-        CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(application);
-        CTGeofenceTaskManager.getInstance().setExecutorService(executorService);
-        ctGeofenceAPI.initBackgroundLocationUpdates();
-
-        verify(executorService, never()).submit(any(Runnable.class));
-    }
-
-    @Test(expected = IllegalStateException.class)
-    public void testInitBackgroundLocationUpdatesTC2() {
-
-        // when geofence init is not called
-
-        when(Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)).thenReturn(true);
-
-        CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(application);
-        CTGeofenceTaskManager.getInstance().setExecutorService(executorService);
-        ctGeofenceAPI.initBackgroundLocationUpdates();
-
-        verify(executorService, never()).submit(any(Runnable.class));
-    }
-
-    @Test
-    public void testInitBackgroundLocationUpdatesTC3() {
-
-        // when geofence sdk initialized and location access permission is granted
-
-        when(Utils.hasPermission(application, Manifest.permission.ACCESS_FINE_LOCATION)).thenReturn(true);
-
-        CTGeofenceAPI ctGeofenceAPI = CTGeofenceAPI.getInstance(application);
-        CTGeofenceTaskManager.getInstance().setExecutorService(executorService);
-        ctGeofenceAPI.init(null, cleverTapAPI);
-
-        verify(executorService).submit(any(Runnable.class));
     }
 
     @Test
@@ -502,15 +500,6 @@ public class CTGeofenceAPITest extends BaseTestCase {
         ctGeofenceAPI.triggerLocation();
 
         verify(executorService, times(2)).submit(any(Runnable.class));
-    }
-
-
-    @After
-    public void cleanup() throws NoSuchFieldException, IllegalAccessException {
-        CTGeofenceAPI instance = CTGeofenceAPI.getInstance(application);
-        Field field = CTGeofenceAPI.class.getDeclaredField("ctGeofenceAPI");
-        field.setAccessible(true);
-        field.set(instance, null);
     }
 
 }

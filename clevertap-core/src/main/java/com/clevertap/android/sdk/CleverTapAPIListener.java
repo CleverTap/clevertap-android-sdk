@@ -16,4 +16,5 @@ public interface CleverTapAPIListener extends
         CTProductConfigControllerListener,
         CTProductConfigListener,
         CTApiPushListener {
+
 }

@@ -2,7 +2,6 @@ package com.clevertap.android.sdk;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -14,7 +13,8 @@ import java.util.Arrays;
 public class CTInboxStyleConfig implements Parcelable {
 
     @SuppressWarnings("unused")
-    public static final Parcelable.Creator<CTInboxStyleConfig> CREATOR = new Parcelable.Creator<CTInboxStyleConfig>() {
+    public static final Parcelable.Creator<CTInboxStyleConfig> CREATOR
+            = new Parcelable.Creator<CTInboxStyleConfig>() {
         @Override
         public CTInboxStyleConfig createFromParcel(Parcel in) {
             return new CTInboxStyleConfig(in);
@@ -25,19 +25,32 @@ public class CTInboxStyleConfig implements Parcelable {
             return new CTInboxStyleConfig[size];
         }
     };
+
     private final static int MAX_TABS = 2;
-    private String navBarColor;
-    private String navBarTitle;
-    private String navBarTitleColor;
-    private String inboxBackgroundColor;
+
     private String backButtonColor;
-    private String selectedTabColor;
-    private String unselectedTabColor;
-    private String selectedTabIndicatorColor;
-    private String tabBackgroundColor;
+
+    private String inboxBackgroundColor;
+
+    private String navBarColor;
+
+    private String navBarTitle;
+
+    private String navBarTitleColor;
+
     private String noMessageViewText;
+
     private String noMessageViewTextColor;
+
+    private String selectedTabColor;
+
+    private String selectedTabIndicatorColor;
+
+    private String tabBackgroundColor;
+
     private String[] tabs;
+
+    private String unselectedTabColor;
 
     public CTInboxStyleConfig() {
         this.navBarColor = "#FFFFFF";
@@ -89,20 +102,30 @@ public class CTInboxStyleConfig implements Parcelable {
         return 0;
     }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(navBarColor);
-        dest.writeString(navBarTitle);
-        dest.writeString(navBarTitleColor);
-        dest.writeString(inboxBackgroundColor);
-        dest.writeStringArray(tabs);
-        dest.writeString(backButtonColor);
-        dest.writeString(selectedTabColor);
-        dest.writeString(unselectedTabColor);
-        dest.writeString(selectedTabIndicatorColor);
-        dest.writeString(tabBackgroundColor);
-        dest.writeString(noMessageViewText);
-        dest.writeString(noMessageViewTextColor);
+    public String getBackButtonColor() {
+        return backButtonColor;
+    }
+
+    /**
+     * Sets the color of the back button on the top navigation toolbar
+     *
+     * @param backButtonColor String - hexcode of the color
+     */
+    public void setBackButtonColor(String backButtonColor) {
+        this.backButtonColor = backButtonColor;
+    }
+
+    public String getInboxBackgroundColor() {
+        return inboxBackgroundColor;
+    }
+
+    /**
+     * Sets the background color for the entire inbox
+     *
+     * @param inboxBackgroundColor - String - hexcode of the color
+     */
+    public void setInboxBackgroundColor(String inboxBackgroundColor) {
+        this.inboxBackgroundColor = inboxBackgroundColor;
     }
 
     public String getNavBarColor() {
@@ -144,56 +167,30 @@ public class CTInboxStyleConfig implements Parcelable {
         this.navBarTitleColor = navBarTitleColor;
     }
 
-    public String getInboxBackgroundColor() {
-        return inboxBackgroundColor;
+    public String getNoMessageViewText() {
+        return noMessageViewText;
     }
 
     /**
-     * Sets the background color for the entire inbox
+     * Sets the text for when there are no messages in the App Inbox
      *
-     * @param inboxBackgroundColor - String - hexcode of the color
+     * @param noMessageViewText String
      */
-    public void setInboxBackgroundColor(String inboxBackgroundColor) {
-        this.inboxBackgroundColor = inboxBackgroundColor;
+    public void setNoMessageViewText(String noMessageViewText) {
+        this.noMessageViewText = noMessageViewText;
     }
 
-    public ArrayList<String> getTabs() {
-        return this.tabs == null ? new ArrayList<String>() : new ArrayList<>(Arrays.asList(this.tabs));
+    public String getNoMessageViewTextColor() {
+        return noMessageViewTextColor;
     }
 
     /**
-     * Sets the name of the optional two tabs.
-     * The contents of the tabs are filtered based on the name of the tab.
+     * Sets the color of the text for when there are no messages in the App Inbox
      *
-     * @param tabs ArrayList of Strings
+     * @param noMessageViewTextColor String - hexcode of the color
      */
-    public void setTabs(ArrayList<String> tabs) {
-        if (tabs == null || tabs.size() <= 0) return;
-
-        ArrayList<String> toAdd;
-        if (tabs.size() > MAX_TABS) {
-            toAdd = new ArrayList<>(tabs.subList(0, MAX_TABS));
-        } else {
-            toAdd = tabs;
-        }
-        this.tabs = toAdd.toArray(new String[0]);
-    }
-
-    boolean isUsingTabs() {
-        return (tabs != null && tabs.length > 0);
-    }
-
-    public String getBackButtonColor() {
-        return backButtonColor;
-    }
-
-    /**
-     * Sets the color of the back button on the top navigation toolbar
-     *
-     * @param backButtonColor String - hexcode of the color
-     */
-    public void setBackButtonColor(String backButtonColor) {
-        this.backButtonColor = backButtonColor;
+    public void setNoMessageViewTextColor(String noMessageViewTextColor) {
+        this.noMessageViewTextColor = noMessageViewTextColor;
     }
 
     public String getSelectedTabColor() {
@@ -207,19 +204,6 @@ public class CTInboxStyleConfig implements Parcelable {
      */
     public void setSelectedTabColor(String selectedTabColor) {
         this.selectedTabColor = selectedTabColor;
-    }
-
-    public String getUnselectedTabColor() {
-        return unselectedTabColor;
-    }
-
-    /**
-     * Sets the color of the unselected tab
-     *
-     * @param unselectedTabColor String - hexcode of the color
-     */
-    public void setUnselectedTabColor(String unselectedTabColor) {
-        this.unselectedTabColor = unselectedTabColor;
     }
 
     public String getSelectedTabIndicatorColor() {
@@ -248,29 +232,60 @@ public class CTInboxStyleConfig implements Parcelable {
         this.tabBackgroundColor = tabBackgroundColor;
     }
 
-    public String getNoMessageViewText() {
-        return noMessageViewText;
+    public ArrayList<String> getTabs() {
+        return this.tabs == null ? new ArrayList<String>() : new ArrayList<>(Arrays.asList(this.tabs));
     }
 
     /**
-     * Sets the text for when there are no messages in the App Inbox
+     * Sets the name of the optional two tabs.
+     * The contents of the tabs are filtered based on the name of the tab.
      *
-     * @param noMessageViewText String
+     * @param tabs ArrayList of Strings
      */
-    public void setNoMessageViewText(String noMessageViewText) {
-        this.noMessageViewText = noMessageViewText;
+    public void setTabs(ArrayList<String> tabs) {
+        if (tabs == null || tabs.size() <= 0) {
+            return;
+        }
+
+        ArrayList<String> toAdd;
+        if (tabs.size() > MAX_TABS) {
+            toAdd = new ArrayList<>(tabs.subList(0, MAX_TABS));
+        } else {
+            toAdd = tabs;
+        }
+        this.tabs = toAdd.toArray(new String[0]);
     }
 
-    public String getNoMessageViewTextColor() {
-        return noMessageViewTextColor;
+    public String getUnselectedTabColor() {
+        return unselectedTabColor;
     }
 
     /**
-     * Sets the color of the text for when there are no messages in the App Inbox
+     * Sets the color of the unselected tab
      *
-     * @param noMessageViewTextColor String - hexcode of the color
+     * @param unselectedTabColor String - hexcode of the color
      */
-    public void setNoMessageViewTextColor(String noMessageViewTextColor) {
-        this.noMessageViewTextColor = noMessageViewTextColor;
+    public void setUnselectedTabColor(String unselectedTabColor) {
+        this.unselectedTabColor = unselectedTabColor;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(navBarColor);
+        dest.writeString(navBarTitle);
+        dest.writeString(navBarTitleColor);
+        dest.writeString(inboxBackgroundColor);
+        dest.writeStringArray(tabs);
+        dest.writeString(backButtonColor);
+        dest.writeString(selectedTabColor);
+        dest.writeString(unselectedTabColor);
+        dest.writeString(selectedTabIndicatorColor);
+        dest.writeString(tabBackgroundColor);
+        dest.writeString(noMessageViewText);
+        dest.writeString(noMessageViewTextColor);
+    }
+
+    boolean isUsingTabs() {
+        return (tabs != null && tabs.length > 0);
     }
 }

@@ -1,11 +1,12 @@
 package com.clevertap.android.sdk.pushnotification.fcm;
 
+import static com.clevertap.android.sdk.pushnotification.PushConstants.ANDROID_PLATFORM;
+import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM;
+
 import android.annotation.SuppressLint;
 import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
-
 import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.PackageUtils;
 import com.clevertap.android.sdk.pushnotification.CTPushProvider;
@@ -17,13 +18,12 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 
-import static com.clevertap.android.sdk.pushnotification.PushConstants.ANDROID_PLATFORM;
-import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM;
-
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 @SuppressLint(value = "unused")
 public class FcmPushProvider implements CTPushProvider {
+
     private static String LOG_TAG = FcmPushProvider.class.getSimpleName();
+
     private CTPushProviderListener listener;
 
     @SuppressLint(value = "unused")
@@ -40,6 +40,46 @@ public class FcmPushProvider implements CTPushProvider {
     @Override
     public PushConstants.PushType getPushType() {
         return FCM;
+    }
+
+    /**
+     * App supports FCM
+     *
+     * @return boolean true if FCM services are available
+     */
+    @Override
+    public boolean isAvailable() {
+        try {
+            if (!PackageUtils.isGooglePlayServicesAvailable(listener.context())) {
+                listener.config().log(LOG_TAG, "Google Play services is currently unavailable.");
+                return false;
+            }
+
+            String senderId = getSenderId();
+            if (senderId == null) {
+                listener.config().log(LOG_TAG, "The FCM sender ID is not set. Unable to register for FCM.");
+                return false;
+            }
+        } catch (Exception e) {
+            listener.config().log(LOG_TAG, "Unable to register with FCM.", e);
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Device supports FCM
+     *
+     * @return - true if FCM is supported in the platform
+     */
+    @Override
+    public boolean isSupported() {
+        return PackageUtils.isGooglePlayStoreAvailable(listener.context());
+    }
+
+    @Override
+    public int minSDKSupportVersionCode() {
+        return 0;// supporting FCM from base version
     }
 
     @Override
@@ -74,29 +114,8 @@ public class FcmPushProvider implements CTPushProvider {
         }
     }
 
-    /**
-     * App supports FCM
-     *
-     * @return boolean true if FCM services are available
-     */
-    @Override
-    public boolean isAvailable() {
-        try {
-            if (!PackageUtils.isGooglePlayServicesAvailable(listener.context())) {
-                listener.config().log(LOG_TAG, "Google Play services is currently unavailable.");
-                return false;
-            }
-
-            String senderId = getSenderId();
-            if (senderId == null) {
-                listener.config().log(LOG_TAG, "The FCM sender ID is not set. Unable to register for FCM.");
-                return false;
-            }
-        } catch (Exception e) {
-            listener.config().log(LOG_TAG, "Unable to register with FCM.", e);
-            return false;
-        }
-        return true;
+    private String getFCMSenderID() {
+        return ManifestInfo.getInstance(listener.context().getApplicationContext()).getFCMSenderId();
     }
 
     private String getSenderId() {
@@ -106,24 +125,5 @@ public class FcmPushProvider implements CTPushProvider {
         }
         FirebaseApp app = FirebaseApp.getInstance();
         return app.getOptions().getGcmSenderId();
-    }
-
-    /**
-     * Device supports FCM
-     *
-     * @return - true if FCM is supported in the platform
-     */
-    @Override
-    public boolean isSupported() {
-        return PackageUtils.isGooglePlayStoreAvailable(listener.context());
-    }
-
-    @Override
-    public int minSDKSupportVersionCode() {
-        return 0;// supporting FCM from base version
-    }
-
-    private String getFCMSenderID() {
-        return ManifestInfo.getInstance(listener.context().getApplicationContext()).getFCMSenderId();
     }
 }

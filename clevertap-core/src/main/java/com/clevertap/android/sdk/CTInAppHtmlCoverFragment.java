@@ -3,6 +3,7 @@ package com.clevertap.android.sdk;
 import android.widget.RelativeLayout;
 
 public class CTInAppHtmlCoverFragment extends CTInAppBaseFullHtmlFragment {
+
     @Override
     protected RelativeLayout.LayoutParams getLayoutParamsForCloseButton() {
         RelativeLayout.LayoutParams closeIvLp = new RelativeLayout

@@ -1,23 +1,21 @@
 package com.clevertap.android.geofence;
 
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.MockitoAnnotations;
+import static com.clevertap.android.geofence.CTGeofenceSettings.ACCURACY_HIGH;
+import static com.clevertap.android.geofence.CTGeofenceSettings.ACCURACY_MEDIUM;
+import static com.clevertap.android.geofence.CTGeofenceSettings.DEFAULT_GEO_MONITOR_COUNT;
+import static com.clevertap.android.geofence.CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC;
+import static com.clevertap.android.geofence.CTGeofenceSettings.FETCH_LAST_LOCATION_PERIODIC;
+import static org.junit.Assert.*;
+
+import org.junit.*;
+import org.junit.runner.*;
+import org.mockito.*;
 import org.powermock.api.mockito.PowerMockito;
 import org.powermock.core.classloader.annotations.PowerMockIgnore;
 import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.powermock.modules.junit4.rule.PowerMockRule;
 import org.robolectric.RobolectricTestRunner;
 import org.robolectric.annotation.Config;
-
-import static com.clevertap.android.geofence.CTGeofenceSettings.ACCURACY_HIGH;
-import static com.clevertap.android.geofence.CTGeofenceSettings.ACCURACY_MEDIUM;
-import static com.clevertap.android.geofence.CTGeofenceSettings.DEFAULT_GEO_MONITOR_COUNT;
-import static com.clevertap.android.geofence.CTGeofenceSettings.FETCH_CURRENT_LOCATION_PERIODIC;
-import static com.clevertap.android.geofence.CTGeofenceSettings.FETCH_LAST_LOCATION_PERIODIC;
-import static org.junit.Assert.assertEquals;
 
 @RunWith(RobolectricTestRunner.class)
 @Config(sdk = 28,
@@ -38,22 +36,6 @@ public class CTGeofenceSettingsTest extends BaseTestCase {
     }
 
     @Test
-    public void testDefaultSettings() {
-
-        CTGeofenceSettings defaultSettings = new CTGeofenceSettings.Builder().build();
-
-        assertEquals(true, defaultSettings.isBackgroundLocationUpdatesEnabled());
-        assertEquals(ACCURACY_HIGH, defaultSettings.getLocationAccuracy());
-        assertEquals(FETCH_LAST_LOCATION_PERIODIC, defaultSettings.getLocationFetchMode());
-        assertEquals(Logger.DEBUG, defaultSettings.getLogLevel());
-        assertEquals(DEFAULT_GEO_MONITOR_COUNT, defaultSettings.getGeofenceMonitoringCount());
-        assertEquals(null, defaultSettings.getId());
-        assertEquals(GoogleLocationAdapter.INTERVAL_IN_MILLIS, defaultSettings.getInterval());
-        assertEquals(GoogleLocationAdapter.INTERVAL_FASTEST_IN_MILLIS, defaultSettings.getFastestInterval());
-        assertEquals(GoogleLocationAdapter.SMALLEST_DISPLACEMENT_IN_METERS, defaultSettings.getSmallestDisplacement(), 0);
-    }
-
-    @Test
     public void testCustomSettings() {
 
         // when interval, fastestInterval and displacement are valid
@@ -67,7 +49,6 @@ public class CTGeofenceSettingsTest extends BaseTestCase {
                 .setFastestInterval(1900000)
                 .setSmallestDisplacement(780)
                 .build();
-
 
         assertEquals(false, customSettings.isBackgroundLocationUpdatesEnabled());
         assertEquals(ACCURACY_MEDIUM, customSettings.getLocationAccuracy());
@@ -87,10 +68,26 @@ public class CTGeofenceSettingsTest extends BaseTestCase {
                 .setSmallestDisplacement(100)
                 .build();
 
-
         assertEquals(1800000, inValidSettings.getInterval());
         assertEquals(1800000, inValidSettings.getFastestInterval());
         assertEquals(200, inValidSettings.getSmallestDisplacement(), 0);
+    }
+
+    @Test
+    public void testDefaultSettings() {
+
+        CTGeofenceSettings defaultSettings = new CTGeofenceSettings.Builder().build();
+
+        assertEquals(true, defaultSettings.isBackgroundLocationUpdatesEnabled());
+        assertEquals(ACCURACY_HIGH, defaultSettings.getLocationAccuracy());
+        assertEquals(FETCH_LAST_LOCATION_PERIODIC, defaultSettings.getLocationFetchMode());
+        assertEquals(Logger.DEBUG, defaultSettings.getLogLevel());
+        assertEquals(DEFAULT_GEO_MONITOR_COUNT, defaultSettings.getGeofenceMonitoringCount());
+        assertEquals(null, defaultSettings.getId());
+        assertEquals(GoogleLocationAdapter.INTERVAL_IN_MILLIS, defaultSettings.getInterval());
+        assertEquals(GoogleLocationAdapter.INTERVAL_FASTEST_IN_MILLIS, defaultSettings.getFastestInterval());
+        assertEquals(GoogleLocationAdapter.SMALLEST_DISPLACEMENT_IN_METERS, defaultSettings.getSmallestDisplacement(),
+                0);
     }
 
 }

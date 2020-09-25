@@ -1,13 +1,11 @@
 package com.clevertap.android.sdk;
 
 import android.view.ViewGroup;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -18,6 +16,7 @@ import java.util.List;
 public class CTInboxTabAdapter extends FragmentPagerAdapter {
 
     private final Fragment[] fragmentList;
+
     private final List<String> fragmentTitleList = new ArrayList<>();
 
     public CTInboxTabAdapter(FragmentManager fm, int size) {
@@ -26,13 +25,13 @@ public class CTInboxTabAdapter extends FragmentPagerAdapter {
     }
 
     @Override
-    public Fragment getItem(int position) {
-        return fragmentList[position];
+    public int getCount() {
+        return fragmentList.length;
     }
 
     @Override
-    public int getCount() {
-        return fragmentList.length;
+    public Fragment getItem(int position) {
+        return fragmentList[position];
     }
 
     @Nullable
@@ -41,16 +40,16 @@ public class CTInboxTabAdapter extends FragmentPagerAdapter {
         return fragmentTitleList.get(position);
     }
 
-    void addFragment(Fragment fragment, String title, int position) {
-        fragmentList[position] = fragment;
-        fragmentTitleList.add(title);
-    }
-
     @NonNull
     @Override
     public Object instantiateItem(@NonNull ViewGroup container, int position) {
         Object ret = super.instantiateItem(container, position);
         fragmentList[position] = (Fragment) ret;
         return ret;
+    }
+
+    void addFragment(Fragment fragment, String title, int position) {
+        fragmentList[position] = fragment;
+        fragmentTitleList.add(title);
     }
 }

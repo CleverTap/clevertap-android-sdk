@@ -1,37 +1,46 @@
 package com.clevertap.android.sdk;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * Provides methods to validate various entities.
  */
 final class Validator {
+
+    enum ValidationContext {
+        Profile(), Event()
+    }
+
+    @SuppressWarnings("unused")
+    private enum RestrictedMultiValueFields {
+        Name(), Email(), Education(),
+        Married(), DOB(), Gender(),
+        Phone(), Age(), FBID(), GPID(), Birthday()
+    }
+
     static final String ADD_VALUES_OPERATION = "multiValuePropertyAddValues";
+
     static final String REMOVE_VALUES_OPERATION = "multiValuePropertyRemoveValues";
+
     private static final String[] eventNameCharsNotAllowed = {".", ":", "$", "'", "\"", "\\"};
+
     private static final String[] objectKeyCharsNotAllowed = {".", ":", "$", "'", "\"", "\\"};
+
     private static final String[] objectValueCharsNotAllowed = {"'", "\"", "\\"};
+
     private static final String[] restrictedNames = {"Stayed", "Notification Clicked",
             "Notification Viewed", "UTM Visited", "Notification Sent", "App Launched", "wzrk_d",
             "App Uninstalled", "Notification Bounced", Constants.GEOFENCE_ENTERED_EVENT_NAME,
             Constants.GEOFENCE_EXITED_EVENT_NAME};
+
     private ArrayList<String> discardedEvents;
-
-    private ArrayList<String> getDiscardedEvents() {
-        return discardedEvents;
-    }
-
-    public void setDiscardedEvents(ArrayList<String> discardedEvents) {
-        this.discardedEvents = discardedEvents;
-    }
 
     /**
      * Cleans the event name to the following guidelines:
@@ -49,42 +58,19 @@ final class Validator {
         ValidationResult vr = new ValidationResult();
 
         name = name.trim();
-        for (String x : eventNameCharsNotAllowed)
+        for (String x : eventNameCharsNotAllowed) {
             name = name.replace(x, "");
+        }
 
         if (name.length() > Constants.MAX_VALUE_LENGTH) {
             name = name.substring(0, Constants.MAX_VALUE_LENGTH - 1);
-            ValidationResult error = ValidationResultFactory.create(510, Constants.VALUE_CHARS_LIMIT_EXCEEDED, name.trim(), Constants.MAX_VALUE_LENGTH + "");
+            ValidationResult error = ValidationResultFactory
+                    .create(510, Constants.VALUE_CHARS_LIMIT_EXCEEDED, name.trim(), Constants.MAX_VALUE_LENGTH + "");
             vr.setErrorDesc(error.getErrorDesc());
             vr.setErrorCode(error.getErrorCode());
         }
 
         vr.setObject(name.trim());
-        return vr;
-    }
-
-    /**
-     * Cleans the object key.
-     *
-     * @param name Name of the object key
-     * @return The {@link ValidationResult} object containing the object,
-     * and the error code(if any)
-     */
-    ValidationResult cleanObjectKey(String name) {
-        ValidationResult vr = new ValidationResult();
-        name = name.trim();
-        for (String x : objectKeyCharsNotAllowed)
-            name = name.replace(x, "");
-
-        if (name.length() > Constants.MAX_KEY_LENGTH) {
-            name = name.substring(0, Constants.MAX_KEY_LENGTH - 1);
-            ValidationResult error = ValidationResultFactory.create(520, Constants.VALUE_CHARS_LIMIT_EXCEEDED, name.trim(), Constants.MAX_KEY_LENGTH + "");
-            vr.setErrorDesc(error.getErrorDesc());
-            vr.setErrorCode(error.getErrorCode());
-        }
-
-        vr.setObject(name.trim());
-
         return vr;
     }
 
@@ -109,7 +95,8 @@ final class Validator {
             RestrictedMultiValueFields rf = RestrictedMultiValueFields.valueOf(name);
             //noinspection ConstantConditions
             if (rf != null) {
-                ValidationResult error = ValidationResultFactory.create(523, Constants.RESTRICTED_MULTI_VALUE_KEY, name);
+                ValidationResult error = ValidationResultFactory
+                        .create(523, Constants.RESTRICTED_MULTI_VALUE_KEY, name);
                 vr.setErrorDesc(error.getErrorDesc());
                 vr.setErrorCode(error.getErrorCode());
                 vr.setObject(null);
@@ -146,7 +133,9 @@ final class Validator {
         try {
             if (value.length() > Constants.MAX_MULTI_VALUE_LENGTH) {
                 value = value.substring(0, Constants.MAX_MULTI_VALUE_LENGTH - 1);
-                ValidationResult error = ValidationResultFactory.create(521, Constants.VALUE_CHARS_LIMIT_EXCEEDED, value, Constants.MAX_MULTI_VALUE_LENGTH + "");
+                ValidationResult error = ValidationResultFactory
+                        .create(521, Constants.VALUE_CHARS_LIMIT_EXCEEDED, value,
+                                Constants.MAX_MULTI_VALUE_LENGTH + "");
                 vr.setErrorDesc(error.getErrorDesc());
                 vr.setErrorCode(error.getErrorCode());
             }
@@ -162,23 +151,30 @@ final class Validator {
     }
 
     /**
-     * Merges a multi-value property JSONArray.
-     * <p/>
-     * trims to max length currently 100 items, on a FIFO basis
-     * <p/>
-     * please clean the key and newValues values before calling this
+     * Cleans the object key.
      *
-     * @param currentValues current JSONArray property value
-     * @param newValues     JSONArray of new values
-     * @param action        String the action to take relative to the new values ($add, $remove)
-     * @param key           String the property key
-     * @return The {@link ValidationResult} object containing the merged value,
+     * @param name Name of the object key
+     * @return The {@link ValidationResult} object containing the object,
      * and the error code(if any)
      */
-    ValidationResult mergeMultiValuePropertyForKey(JSONArray currentValues, JSONArray newValues, String action, String key) {
+    ValidationResult cleanObjectKey(String name) {
         ValidationResult vr = new ValidationResult();
-        boolean remove = REMOVE_VALUES_OPERATION.equals(action);
-        return _mergeListInternalForKey(key, currentValues, newValues, remove, vr);
+        name = name.trim();
+        for (String x : objectKeyCharsNotAllowed) {
+            name = name.replace(x, "");
+        }
+
+        if (name.length() > Constants.MAX_KEY_LENGTH) {
+            name = name.substring(0, Constants.MAX_KEY_LENGTH - 1);
+            ValidationResult error = ValidationResultFactory
+                    .create(520, Constants.VALUE_CHARS_LIMIT_EXCEEDED, name.trim(), Constants.MAX_KEY_LENGTH + "");
+            vr.setErrorDesc(error.getErrorDesc());
+            vr.setErrorCode(error.getErrorCode());
+        }
+
+        vr.setObject(name.trim());
+
+        return vr;
     }
 
     /**
@@ -204,10 +200,11 @@ final class Validator {
             return vr;
         } else if (o instanceof String || o instanceof Character) {
             String value;
-            if (o instanceof Character)
+            if (o instanceof Character) {
                 value = String.valueOf(o);
-            else
+            } else {
                 value = (String) o;
+            }
             value = value.trim();
 
             for (String x : objectValueCharsNotAllowed) {
@@ -217,7 +214,9 @@ final class Validator {
             try {
                 if (value.length() > Constants.MAX_VALUE_LENGTH) {
                     value = value.substring(0, Constants.MAX_VALUE_LENGTH - 1);
-                    ValidationResult error = ValidationResultFactory.create(521, Constants.VALUE_CHARS_LIMIT_EXCEEDED, value.trim(), Constants.MAX_VALUE_LENGTH + "");
+                    ValidationResult error = ValidationResultFactory
+                            .create(521, Constants.VALUE_CHARS_LIMIT_EXCEEDED, value.trim(),
+                                    Constants.MAX_VALUE_LENGTH + "");
                     vr.setErrorDesc(error.getErrorDesc());
                     vr.setErrorCode(error.getErrorCode());
                 }
@@ -231,14 +230,18 @@ final class Validator {
             String date = "$D_" + ((Date) o).getTime() / 1000;
             vr.setObject(date);
             return vr;
-        } else if ((o instanceof String[] || o instanceof ArrayList) && validationContext.equals(ValidationContext.Profile)) {
+        } else if ((o instanceof String[] || o instanceof ArrayList) && validationContext
+                .equals(ValidationContext.Profile)) {
             ArrayList<String> valuesList = null;
             if (o instanceof ArrayList)
-                //noinspection unchecked
+            //noinspection unchecked
+            {
                 valuesList = (ArrayList<String>) o;
+            }
             String[] values = null;
-            if (o instanceof String[])
+            if (o instanceof String[]) {
                 values = (String[]) o;
+            }
 
             ArrayList<String> allStrings = new ArrayList<>();
             if (values != null) {
@@ -272,7 +275,9 @@ final class Validator {
                 }
                 vr.setObject(jsonObject);
             } else {
-                ValidationResult error = ValidationResultFactory.create(521, Constants.INVALID_PROFILE_PROP_ARRAY_COUNT, values.length + "", Constants.MAX_MULTI_VALUE_ARRAY_LENGTH + "");
+                ValidationResult error = ValidationResultFactory
+                        .create(521, Constants.INVALID_PROFILE_PROP_ARRAY_COUNT, values.length + "",
+                                Constants.MAX_MULTI_VALUE_ARRAY_LENGTH + "");
                 vr.setErrorDesc(error.getErrorDesc());
                 vr.setErrorCode(error.getErrorCode());
             }
@@ -280,33 +285,6 @@ final class Validator {
         } else {
             throw new IllegalArgumentException("Not a String, Boolean, Long, Integer, Float, Double, or Date");
         }
-    }
-
-    /**
-     * Checks whether the specified event name is restricted. If it is,
-     * then create a pending error, and abort.
-     *
-     * @param name The event name
-     * @return Boolean indication whether the event name is restricted
-     */
-    ValidationResult isRestrictedEventName(String name) {
-        ValidationResult error = new ValidationResult();
-        if (name == null) {
-            ValidationResult vr = ValidationResultFactory.create(510, Constants.EVENT_NAME_NULL);
-            error.setErrorCode(vr.getErrorCode());
-            error.setErrorDesc(vr.getErrorDesc());
-            return error;
-        }
-        for (String x : restrictedNames)
-            if (name.equalsIgnoreCase(x)) {
-                // The event name is restricted
-                ValidationResult vr = ValidationResultFactory.create(513, Constants.RESTRICTED_EVENT_NAME, name);
-                error.setErrorCode(vr.getErrorCode());
-                error.setErrorDesc(vr.getErrorDesc());
-                Logger.v(vr.getErrorDesc());
-                return error;
-            }
-        return error;
     }
 
     /**
@@ -325,17 +303,68 @@ final class Validator {
             return error;
         }
         if (getDiscardedEvents() != null) {
-            for (String x : getDiscardedEvents())
+            for (String x : getDiscardedEvents()) {
                 if (name.equalsIgnoreCase(x)) {
                     // The event name is discarded
                     ValidationResult vr = ValidationResultFactory.create(513, Constants.DISCARDED_EVENT_NAME, name);
                     error.setErrorCode(vr.getErrorCode());
                     error.setErrorDesc(vr.getErrorDesc());
-                    Logger.d(name + " s a discarded event name as per CleverTap. Dropping event at SDK level. Check discarded events in CleverTap Dashboard settings.");
+                    Logger.d(name
+                            + " s a discarded event name as per CleverTap. Dropping event at SDK level. Check discarded events in CleverTap Dashboard settings.");
                     return error;
                 }
+            }
         }
         return error;
+    }
+
+    /**
+     * Checks whether the specified event name is restricted. If it is,
+     * then create a pending error, and abort.
+     *
+     * @param name The event name
+     * @return Boolean indication whether the event name is restricted
+     */
+    ValidationResult isRestrictedEventName(String name) {
+        ValidationResult error = new ValidationResult();
+        if (name == null) {
+            ValidationResult vr = ValidationResultFactory.create(510, Constants.EVENT_NAME_NULL);
+            error.setErrorCode(vr.getErrorCode());
+            error.setErrorDesc(vr.getErrorDesc());
+            return error;
+        }
+        for (String x : restrictedNames) {
+            if (name.equalsIgnoreCase(x)) {
+                // The event name is restricted
+                ValidationResult vr = ValidationResultFactory.create(513, Constants.RESTRICTED_EVENT_NAME, name);
+                error.setErrorCode(vr.getErrorCode());
+                error.setErrorDesc(vr.getErrorDesc());
+                Logger.v(vr.getErrorDesc());
+                return error;
+            }
+        }
+        return error;
+    }
+
+    /**
+     * Merges a multi-value property JSONArray.
+     * <p/>
+     * trims to max length currently 100 items, on a FIFO basis
+     * <p/>
+     * please clean the key and newValues values before calling this
+     *
+     * @param currentValues current JSONArray property value
+     * @param newValues     JSONArray of new values
+     * @param action        String the action to take relative to the new values ($add, $remove)
+     * @param key           String the property key
+     * @return The {@link ValidationResult} object containing the merged value,
+     * and the error code(if any)
+     */
+    ValidationResult mergeMultiValuePropertyForKey(JSONArray currentValues, JSONArray newValues, String action,
+            String key) {
+        ValidationResult vr = new ValidationResult();
+        boolean remove = REMOVE_VALUES_OPERATION.equals(action);
+        return _mergeListInternalForKey(key, currentValues, newValues, remove, vr);
     }
 
     /**
@@ -348,7 +377,7 @@ final class Validator {
      * @param vr     ValidationResult for error and merged list return
      */
     private ValidationResult _mergeListInternalForKey(String key, JSONArray left,
-                                                      JSONArray right, boolean remove, ValidationResult vr) {
+            JSONArray right, boolean remove, ValidationResult vr) {
 
         if (left == null) {
             vr.setObject(null);
@@ -370,8 +399,9 @@ final class Validator {
 
         BitSet dupSetForAdd = null;
 
-        if (!remove)
+        if (!remove) {
             dupSetForAdd = new BitSet(lsize + rsize);
+        }
 
         int lidx = 0;
 
@@ -414,7 +444,8 @@ final class Validator {
 
         // check to see if the list got trimmed in the merge
         if (ridx > 0 || lidx > 0) {
-            ValidationResult error = ValidationResultFactory.create(521, Constants.MULTI_VALUE_CHARS_LIMIT_EXCEEDED, key, maxValNum + "");
+            ValidationResult error = ValidationResultFactory
+                    .create(521, Constants.MULTI_VALUE_CHARS_LIMIT_EXCEEDED, key, maxValNum + "");
             vr.setErrorCode(error.getErrorCode());
             vr.setErrorDesc(error.getErrorDesc());
         }
@@ -422,6 +453,16 @@ final class Validator {
         vr.setObject(mergedList);
 
         return vr;
+    }
+
+    private ArrayList<String> getDiscardedEvents() {
+        return discardedEvents;
+    }
+
+    // multi-value list operations
+
+    public void setDiscardedEvents(ArrayList<String> discardedEvents) {
+        this.discardedEvents = discardedEvents;
     }
 
     private int scan(JSONArray list, Set<String> set, BitSet dupSetForAdd, int off) {
@@ -438,7 +479,9 @@ final class Validator {
                     String n = obj != null ? obj.toString() : null;
 
                     if (dupSetForAdd == null) { /* remove */
-                        if (n != null) set.add(n);
+                        if (n != null) {
+                            set.add(n);
+                        }
                     } else {
                         if (n == null || set.contains(n)) {
                             dupSetForAdd.set(i + off, true);
@@ -458,20 +501,5 @@ final class Validator {
         }
 
         return 0;
-    }
-
-
-    // multi-value list operations
-
-    @SuppressWarnings("unused")
-    private enum RestrictedMultiValueFields {
-        Name(), Email(), Education(),
-        Married(), DOB(), Gender(),
-        Phone(), Age(), FBID(), GPID(), Birthday()
-    }
-
-
-    enum ValidationContext {
-        Profile(), Event()
     }
 }

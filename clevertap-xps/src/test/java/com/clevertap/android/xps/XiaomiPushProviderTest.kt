@@ -6,12 +6,9 @@ import com.clevertap.android.sdk.pushnotification.PushConstants
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
 import com.xiaomi.mipush.sdk.MiPushClient
-import org.junit.After
-import org.junit.Assert
-import org.junit.Before
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.Mockito
+import org.junit.*
+import org.junit.runner.*
+import org.mockito.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import kotlin.test.assertFailsWith
@@ -19,6 +16,7 @@ import kotlin.test.assertFailsWith
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28], application = TestApplication::class)
 class XiaomiPushProviderTest : BaseTestCase() {
+
     private lateinit var ctPushProviderListener: CTPushProviderListener
     private var xiaomiPushProvider: XiaomiPushProvider? = null
     private var sdkHandler: XiaomiSdkHandler? = null
@@ -41,7 +39,6 @@ class XiaomiPushProviderTest : BaseTestCase() {
         //init push provider
         xiaomiPushProvider = XiaomiPushProvider(ctPushProviderListener)
         xiaomiPushProvider!!.setMiSdkHandler(sdkHandler!!)
-
     }
 
     @Test
@@ -51,7 +48,6 @@ class XiaomiPushProviderTest : BaseTestCase() {
             xiaomiPushProvider!!.requestToken()
             Mockito.verify(ctPushProviderListener).onNewToken(XpsTestConstants.MI_TOKEN, PushConstants.PushType.XPS)
         }
-
     }
 
     @Test
@@ -85,7 +81,10 @@ class XiaomiPushProviderTest : BaseTestCase() {
 
     @Test
     fun minSDKSupportVersionCode() {
-        Assert.assertEquals(xiaomiPushProvider!!.minSDKSupportVersionCode().toLong(), XpsConstants.MIN_CT_ANDROID_SDK_VERSION.toLong())
+        Assert.assertEquals(
+            xiaomiPushProvider!!.minSDKSupportVersionCode().toLong(),
+            XpsConstants.MIN_CT_ANDROID_SDK_VERSION.toLong()
+        )
     }
 
     @Test
