@@ -101,7 +101,7 @@ class XiaomiSdkHandlerTest : BaseTestCase() {
 
     @Test
     fun testShouldInit_Returns_True() {
-        Assert.assertTrue(handler!!.shouldInit(application.packageName))
+        Assert.assertTrue(handler!!.shouldInit(application!!.packageName))
     }
 
     @Test

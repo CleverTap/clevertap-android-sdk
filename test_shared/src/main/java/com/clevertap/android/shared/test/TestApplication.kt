@@ -1,21 +1,23 @@
-package com.clevertap.android.shared.test;
+package com.clevertap.android.shared.test
 
-import androidx.test.core.app.ApplicationProvider;
-import com.clevertap.android.sdk.ActivityLifecycleCallback;
-import com.clevertap.android.sdk.Application;
-import com.clevertap.android.sdk.CleverTapAPI;
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
+import com.clevertap.android.sdk.ActivityLifecycleCallback
+import com.clevertap.android.sdk.Application
+import com.clevertap.android.sdk.CleverTapAPI
 
-public class TestApplication extends Application {
+class TestApplication : Application() {
 
-    public static TestApplication getApplication() {
-        return (TestApplication) ApplicationProvider.getApplicationContext();
+    override fun onCreate() {
+        CleverTapAPI.setUIEditorConnectionEnabled(true)
+        CleverTapAPI.setDebugLevel(3)
+        ActivityLifecycleCallback.register(this)
+        super.onCreate()
     }
 
-    @Override
-    public void onCreate() {
-        CleverTapAPI.setUIEditorConnectionEnabled(true);
-        CleverTapAPI.setDebugLevel(3);
-        ActivityLifecycleCallback.register(this);
-        super.onCreate();
+    companion object {
+
+        val application: TestApplication
+            get() = ApplicationProvider.getApplicationContext<Context>() as TestApplication
     }
 }

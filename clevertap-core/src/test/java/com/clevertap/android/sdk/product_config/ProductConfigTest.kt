@@ -14,45 +14,45 @@ class ProductConfigTest : BaseTestCase() {
 
     @Test
     fun testFetch() {
-        Mockito.`when`(cleverTapAPI.productConfig())
+        Mockito.`when`(cleverTapAPI!!.productConfig())
             .thenReturn(CTProductConfigController(application, "12121", cleverTapInstanceConfig, cleverTapAPI))
-        cleverTapAPI.productConfig().fetch()
-        Mockito.verify(cleverTapAPI).fetchProductConfig()
+        cleverTapAPI!!.productConfig().fetch()
+        Mockito.verify(cleverTapAPI)!!.fetchProductConfig()
     }
 
     @Test
     fun testGetBoolean() {
         val ctProductConfigController = Mockito.mock(CTProductConfigController::class.java)
-        Mockito.`when`(cleverTapAPI.productConfig()).thenReturn(ctProductConfigController)
+        Mockito.`when`(cleverTapAPI!!.productConfig()).thenReturn(ctProductConfigController)
         Mockito.`when`(ctProductConfigController.getBoolean("testBool")).thenReturn(false)
-        Assert.assertFalse(cleverTapAPI.productConfig().getBoolean("testBool"))
+        Assert.assertFalse(cleverTapAPI!!.productConfig().getBoolean("testBool"))
     }
 
     @Test
     fun testGetLong() {
         val ctProductConfigController = Mockito.mock(CTProductConfigController::class.java)
-        Mockito.`when`(cleverTapAPI.productConfig()).thenReturn(ctProductConfigController)
+        Mockito.`when`(cleverTapAPI!!.productConfig()).thenReturn(ctProductConfigController)
         Mockito.`when`(ctProductConfigController.getLong("testLong")).thenReturn(122212121L)
-        Assert.assertNotEquals(12, cleverTapAPI.productConfig().getLong("testLong"))
-        Assert.assertEquals(122212121, cleverTapAPI.productConfig().getLong("testLong"))
+        Assert.assertNotEquals(12, cleverTapAPI!!.productConfig().getLong("testLong"))
+        Assert.assertEquals(122212121, cleverTapAPI!!.productConfig().getLong("testLong"))
     }
 
     @Test
     fun testGetDouble() {
         val ctProductConfigController = Mockito.mock(CTProductConfigController::class.java)
-        Mockito.`when`(cleverTapAPI.productConfig()).thenReturn(ctProductConfigController)
+        Mockito.`when`(cleverTapAPI!!.productConfig()).thenReturn(ctProductConfigController)
         Mockito.`when`(ctProductConfigController.getDouble("testDouble")).thenReturn(122.21)
-        Assert.assertNotEquals(12.0, cleverTapAPI.productConfig().getDouble("testDouble"))
-        Assert.assertEquals(122.21, cleverTapAPI.productConfig().getDouble("testDouble"), 0.0)
+        Assert.assertNotEquals(12.0, cleverTapAPI!!.productConfig().getDouble("testDouble"))
+        Assert.assertEquals(122.21, cleverTapAPI!!.productConfig().getDouble("testDouble"), 0.0)
     }
 
     @Test
     fun testGetString() {
         val ctProductConfigController = Mockito.mock(CTProductConfigController::class.java)
-        Mockito.`when`(cleverTapAPI.productConfig()).thenReturn(ctProductConfigController)
+        Mockito.`when`(cleverTapAPI!!.productConfig()).thenReturn(ctProductConfigController)
         Mockito.`when`(ctProductConfigController.getString("testString")).thenReturn("Testing String")
-        Assert.assertNotEquals("Wrong Value", cleverTapAPI.productConfig().getString("testString"))
-        Assert.assertEquals("Testing String", cleverTapAPI.productConfig().getString("testString"))
+        Assert.assertNotEquals("Wrong Value", cleverTapAPI!!.productConfig().getString("testString"))
+        Assert.assertEquals("Testing String", cleverTapAPI!!.productConfig().getString("testString"))
     }
 
     @Test

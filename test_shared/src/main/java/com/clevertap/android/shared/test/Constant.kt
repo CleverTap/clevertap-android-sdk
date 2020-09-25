@@ -1,7 +1,9 @@
-package com.clevertap.android.shared.test;
+package com.clevertap.android.shared.test
 
-public interface Constant {
+interface Constant {
+    companion object {
 
-    String ACC_ID = "R65-RR9-9R5Z";
-    String ACC_TOKEN = "c22-562";
+        const val ACC_ID = "R65-RR9-9R5Z"
+        const val ACC_TOKEN = "c22-562"
+    }
 }
