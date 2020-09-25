@@ -1,9 +1,0 @@
-<resources>
-    <string name="app_name">AndroidStarter</string>
-    <string name="developer_clevertap_com">developer.clevertap.com</string>
-    <string name="event_with_properties">Event With Properties</string>
-    <string name="charged_event">Charged Event</string>
-    <string name="profile_event">Profile Event</string>
-    <string name="inbox">Inbox</string>
-    <string name="webview">WebView</string>
-</resources>
