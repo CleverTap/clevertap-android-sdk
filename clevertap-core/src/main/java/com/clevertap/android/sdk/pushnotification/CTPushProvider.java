@@ -8,13 +8,6 @@ import androidx.annotation.NonNull;
 public interface CTPushProvider {
 
     /**
-     * Set this listener to communicate with core SDK.
-     *
-     * @param listener
-     */
-    void setCTPushListener(CTPushProviderListener listener);
-
-    /**
      * Returns the platform type. Value must be either {@link PushConstants#ANDROID_PLATFORM}.
      *
      * @return The platform type.

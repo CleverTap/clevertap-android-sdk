@@ -1,33 +1,28 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk
 
-import android.app.Activity;
-import android.os.Bundle;
+import android.app.Activity
+import android.os.Bundle
+import com.clevertap.android.shared.test.BaseTestCase
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.Mockito
+import org.robolectric.RobolectricTestRunner
 
-import com.clevertap.android.shared.test.BaseTestCase;
-
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.mockito.Mockito;
-import org.robolectric.RobolectricTestRunner;
-
-import static org.powermock.api.mockito.PowerMockito.mock;
-
-@RunWith(RobolectricTestRunner.class)
-public class CleverTapAPITest extends BaseTestCase {
-
+@RunWith(RobolectricTestRunner::class)
+class CleverTapAPITest : BaseTestCase() {
     @Before
-    public void setUp() throws Exception {
-        super.setUp();
+    @Throws(Exception::class)
+    override fun setUp() {
+        super.setUp()
     }
 
     @Test
-    public void testActivity() {
-        Activity activity = mock(Activity.class);
-        Bundle bundle = new Bundle();
+    fun testActivity() {
+        val activity = Mockito.mock(Activity::class.java)
+        val bundle = Bundle()
         //create
-        activity.onCreate(bundle, null);
-        Mockito.verify(cleverTapAPI).onActivityCreated(activity, null);
+        activity.onCreate(bundle, null)
+        CleverTapAPI.onActivityCreated(activity, null)
     }
-
 }

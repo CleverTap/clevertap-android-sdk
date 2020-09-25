@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
+import com.clevertap.android.sdk.BaseCTApiListener;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 
@@ -12,22 +13,22 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
-import org.powermock.core.classloader.annotations.PrepareForTest;
 import org.robolectric.annotation.Config;
 
 import static com.clevertap.android.shared.test.Constant.ACC_ID;
 import static com.clevertap.android.shared.test.Constant.ACC_TOKEN;
+import static org.mockito.Mockito.when;
 
 @Config(manifest = Config.NONE, sdk = {Build.VERSION_CODES.P},
         application = TestApplication.class
 )
 @RunWith(AndroidJUnit4.class)
-@PrepareForTest({CleverTapAPI.class, CleverTapInstanceConfig.class})
 public abstract class BaseTestCase {
 
     protected CleverTapAPI cleverTapAPI;
     protected TestApplication application;
     protected CleverTapInstanceConfig cleverTapInstanceConfig;
+    protected BaseCTApiListener baseCTApiListener;
 
     public static void assertBundlesEquals(Bundle expected, Bundle actual) {
         assertBundlesEquals(null, expected, actual);
@@ -81,10 +82,15 @@ public abstract class BaseTestCase {
     }
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         application = TestApplication.getApplication();
         cleverTapAPI = Mockito.mock(CleverTapAPI.class);
+
         cleverTapInstanceConfig = CleverTapInstanceConfig.createInstance(application, ACC_ID, ACC_TOKEN);
+
+        baseCTApiListener = Mockito.mock(BaseCTApiListener.class);
+        when(baseCTApiListener.context()).thenReturn(application);
+        when(baseCTApiListener.config()).thenReturn(cleverTapInstanceConfig);
     }
 
     public TestApplication getApplication() {

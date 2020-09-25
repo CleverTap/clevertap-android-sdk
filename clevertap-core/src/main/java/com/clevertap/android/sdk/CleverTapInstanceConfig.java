@@ -3,6 +3,7 @@ package com.clevertap.android.sdk;
 import android.content.Context;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
@@ -436,4 +437,17 @@ public class CleverTapInstanceConfig implements Parcelable {
         }
         return jsonArray;
     }
+
+    public void log(@NonNull String tag, @NonNull String message) {
+        logger.verbose(getDefaultSuffix(tag), message);
+    }
+
+    public void log(@NonNull String tag, @NonNull String message, Throwable throwable) {
+        logger.verbose(getDefaultSuffix(tag), message, throwable);
+    }
+
+    private String getDefaultSuffix(@NonNull String tag) {
+        return "[" + ((!TextUtils.isEmpty(tag) ? ": " + tag : "") + ":" + accountId + "]");
+    }
+
 }

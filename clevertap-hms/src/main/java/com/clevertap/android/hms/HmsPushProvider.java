@@ -1,9 +1,11 @@
 package com.clevertap.android.hms;
 
+import android.annotation.SuppressLint;
 import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
 
 import com.clevertap.android.sdk.pushnotification.CTPushProvider;
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
@@ -18,10 +20,10 @@ public class HmsPushProvider implements CTPushProvider {
 
     private IHmsSdkHandler hmsSdkHandler;
 
-    @Override
-    public void setCTPushListener(CTPushProviderListener ctPushListener) {
+    @SuppressLint(value = "unused")
+    public HmsPushProvider(@NonNull CTPushProviderListener ctPushListener) {
         this.ctPushListener = ctPushListener;
-        setHmsSdkHandler(new HmsSdkHandler(ctPushListener));
+        this.hmsSdkHandler = new HmsSdkHandler(ctPushListener);
     }
 
     @Override
@@ -29,6 +31,7 @@ public class HmsPushProvider implements CTPushProvider {
         return ANDROID_PLATFORM;
     }
 
+    @VisibleForTesting
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     public void setHmsSdkHandler(IHmsSdkHandler hmsSdkHandler) {
         this.hmsSdkHandler = hmsSdkHandler;
@@ -46,7 +49,7 @@ public class HmsPushProvider implements CTPushProvider {
         if (hmsSdkHandler != null) {
             token = hmsSdkHandler.onNewToken();
         } else {
-            ctPushListener.log(LOG_TAG, "requestToken failed since hmsSdkHandler is null");
+            ctPushListener.config().log(LOG_TAG, "requestToken failed since hmsSdkHandler is null");
         }
         if (ctPushListener != null) {
             ctPushListener.onNewToken(token, getPushType());
@@ -59,7 +62,7 @@ public class HmsPushProvider implements CTPushProvider {
         if (hmsSdkHandler != null) {
             isAvailable = !TextUtils.isEmpty(hmsSdkHandler.appId());
         } else {
-            ctPushListener.log(LOG_TAG, "isNotAvailable since hmsSdkHandler is null");
+            ctPushListener.config().log(LOG_TAG, "isNotAvailable since hmsSdkHandler is null");
         }
         return isAvailable;
     }
@@ -70,7 +73,7 @@ public class HmsPushProvider implements CTPushProvider {
         if (hmsSdkHandler != null) {
             isSupported = hmsSdkHandler.isSupported();
         } else {
-            ctPushListener.log(LOG_TAG, "Not Supported since hmsSdkHandler is null");
+            ctPushListener.config().log(LOG_TAG, "Not Supported since hmsSdkHandler is null");
         }
         return isSupported;
     }

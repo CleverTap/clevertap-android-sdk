@@ -1,60 +1,55 @@
-package com.clevertap.android.hms;
+package com.clevertap.android.hms
 
-import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
-import com.clevertap.android.sdk.pushnotification.PushConstants;
+import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
+import com.clevertap.android.sdk.pushnotification.PushConstants
+import com.clevertap.android.shared.test.BaseTestCase
+import com.clevertap.android.shared.test.TestApplication
+import org.junit.Assert
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.Mockito
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.Config
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
-import org.robolectric.annotation.Config;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
-
-@RunWith(RobolectricTestRunner.class)
-@Config(sdk = 28,
-        application = TestApplication.class
-)
-public class HmsPushProviderTest extends BaseTestCase {
-
-    private CTPushProviderListener ctPushProviderListener;
-    private HmsPushProvider pushProvider;
-    private TestHmsSdkHandler sdkHandler;
+@RunWith(RobolectricTestRunner::class)
+@Config(sdk = [28], application = TestApplication::class)
+class HmsPushProviderTest : BaseTestCase() {
+    private lateinit var ctPushProviderListener: CTPushProviderListener
+    private var pushProvider: HmsPushProvider? = null
+    private var sdkHandler: TestHmsSdkHandler? = null
 
     @Before
-    public void setUp() throws Exception {
-        super.setUp();
-        pushProvider = new HmsPushProvider();
-        ctPushProviderListener = mock(CTPushProviderListener.class);
-        sdkHandler = new TestHmsSdkHandler();
-        when(ctPushProviderListener.context()).thenReturn(application);
-        when(ctPushProviderListener.config()).thenReturn(cleverTapInstanceConfig);
-        pushProvider.setCTPushListener(ctPushProviderListener);
-        pushProvider.setHmsSdkHandler(sdkHandler);
+    @Throws(Exception::class)
+    override fun setUp() {
+        super.setUp()
+        ctPushProviderListener = Mockito.mock(CTPushProviderListener::class.java)
+        pushProvider = HmsPushProvider(ctPushProviderListener)
+        sdkHandler = TestHmsSdkHandler()
+        Mockito.`when`(ctPushProviderListener.context()).thenReturn(application)
+        Mockito.`when`(ctPushProviderListener.config()).thenReturn(cleverTapInstanceConfig)
+        pushProvider!!.setHmsSdkHandler(sdkHandler)
     }
 
     @Test
-    public void testRequestToken() {
-        pushProvider.requestToken();
-        verify(ctPushProviderListener).onNewToken(HmsTestConstants.HMS_TOKEN, PushConstants.PushType.HPS);
+    fun testRequestToken() {
+        pushProvider!!.requestToken()
+        Mockito.verify(ctPushProviderListener).onNewToken(HmsTestConstants.HMS_TOKEN, PushConstants.PushType.HPS)
     }
 
     @Test
-    public void testIsAvailable() {
-        sdkHandler.setAvailable(false);
-        Assert.assertFalse(pushProvider.isAvailable());
-        sdkHandler.setAvailable(true);
-        Assert.assertTrue(pushProvider.isAvailable());
+    fun testIsAvailable() {
+        sdkHandler!!.setAvailable(false)
+        Assert.assertFalse(pushProvider!!.isAvailable)
+        sdkHandler!!.setAvailable(true)
+        Assert.assertTrue(pushProvider!!.isAvailable)
     }
 
     @Test
-    public void testIsSupported() {
-        sdkHandler.setSupported(true);
-        Assert.assertTrue(pushProvider.isSupported());
-        sdkHandler.setSupported(false);
-        Assert.assertFalse(pushProvider.isSupported());
+    fun testIsSupported() {
+        sdkHandler!!.isSupported = true
+        Assert.assertTrue(pushProvider!!.isSupported)
+        sdkHandler!!.isSupported = false
+        Assert.assertFalse(pushProvider!!.isSupported)
     }
 }

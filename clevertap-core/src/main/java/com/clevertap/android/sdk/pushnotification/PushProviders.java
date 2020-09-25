@@ -10,6 +10,7 @@ import com.clevertap.android.sdk.CTExecutors;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.StorageHelper;
 
+import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -58,26 +59,26 @@ public class PushProviders implements CTPushProviderListener {
 
     private void findCTPushProviders(List<CTPushProvider> providers) {
         if (providers.isEmpty()) {
-            log("No push providers found!. Make sure to install at least one push provider");
+            config().log(PushConstants.LOG_TAG, "No push providers found!. Make sure to install at least one push provider");
             return;
         }
 
         for (CTPushProvider provider : providers) {
             if (!isValid(provider)) {
-                log("Invalid Provider: " + provider.getClass());
+                config().log(PushConstants.LOG_TAG, "Invalid Provider: " + provider.getClass());
                 continue;
             }
 
             if (!provider.isSupported()) {
-                log("Unsupported Provider: " + provider.getClass());
+                config().log(PushConstants.LOG_TAG, "Unsupported Provider: " + provider.getClass());
                 continue;
             }
 
             if (provider.isAvailable()) {
-                log("Available Provider: " + provider.getClass());
+                config().log(PushConstants.LOG_TAG, "Available Provider: " + provider.getClass());
                 availableCTPushProviders.add(provider);
             } else {
-                log("Unavailable Provider: " + provider.getClass());
+                config().log(PushConstants.LOG_TAG, "Unavailable Provider: " + provider.getClass());
             }
         }
     }
@@ -95,9 +96,9 @@ public class PushProviders implements CTPushProviderListener {
             try {
                 Class.forName(className);
                 allEnabledPushTypes.add(pushType);
-                log("SDK Class Available :" + className);
+                config().log(PushConstants.LOG_TAG, "SDK Class Available :" + className);
             } catch (Exception e) {
-                log("SDK class Not available " + className + " Exception:" + e.getClass().getName());
+                config().log(PushConstants.LOG_TAG, "SDK class Not available " + className + " Exception:" + e.getClass().getName());
             }
         }
     }
@@ -105,7 +106,7 @@ public class PushProviders implements CTPushProviderListener {
     private boolean isValid(CTPushProvider provider) {
 
         if (VERSION_CODE < provider.minSDKSupportVersionCode()) {
-            log("Provider: %s version %s does not match the SDK version %s. Make sure all Airship dependencies are the same version.");
+            config().log(PushConstants.LOG_TAG, "Provider: %s version %s does not match the SDK version %s. Make sure all Airship dependencies are the same version.");
             return false;
         }
         switch (provider.getPushType()) {
@@ -114,14 +115,14 @@ public class PushProviders implements CTPushProviderListener {
             case XPS:
             case BPS:
                 if (provider.getPlatform() != PushConstants.ANDROID_PLATFORM) {
-                    log("Invalid Provider: " + provider.getClass() +
+                    config().log(PushConstants.LOG_TAG, "Invalid Provider: " + provider.getClass() +
                             " delivery is only available for Android platforms." + provider.getPushType());
                     return false;
                 }
                 break;
             case ADM:
                 if (provider.getPlatform() != PushConstants.AMAZON_PLATFORM) {
-                    log("Invalid Provider: " +
+                    config().log(PushConstants.LOG_TAG, "Invalid Provider: " +
                             provider.getClass() +
                             " ADM delivery is only available for Amazon platforms." + provider.getPushType());
                     return false;
@@ -146,17 +147,17 @@ public class PushProviders implements CTPushProviderListener {
             CTPushProvider pushProvider = null;
             try {
                 Class<?> providerClass = Class.forName(className);
-                pushProvider = (CTPushProvider) providerClass.newInstance();
-                pushProvider.setCTPushListener(this);
-                log("Found provider:" + className);
+                Constructor<?> constructor = providerClass.getConstructor(CTPushProviderListener.class);
+                pushProvider = (CTPushProvider) constructor.newInstance(this);
+                config().log(PushConstants.LOG_TAG, "Found provider:" + className);
             } catch (InstantiationException e) {
-                log("Unable to create provider InstantiationException" + className);
+                config().log(PushConstants.LOG_TAG, "Unable to create provider InstantiationException" + className);
             } catch (IllegalAccessException e) {
-                log("Unable to create provider IllegalAccessException" + className);
+                config().log(PushConstants.LOG_TAG, "Unable to create provider IllegalAccessException" + className);
             } catch (ClassNotFoundException e) {
-                log("Unable to create provider ClassNotFoundException" + className);
+                config().log(PushConstants.LOG_TAG, "Unable to create provider ClassNotFoundException" + className);
             } catch (Exception e) {
-                log("Unable to create provider " + className + " Exception:" + e.getClass().getName());
+                config().log(PushConstants.LOG_TAG, "Unable to create provider " + className + " Exception:" + e.getClass().getName());
             }
 
             if (pushProvider == null) {
@@ -196,31 +197,10 @@ public class PushProviders implements CTPushProviderListener {
         return ctApiPushListener.config();
     }
 
-    private void log(String message) {
-        log("", message);
-    }
-
-    public void log(String message, Throwable throwable) {
-        ctApiPushListener.config().getLogger().verbose(getDefaultSuffix(""), message, throwable);
-    }
-
-    @Override
-    public void log(String tag, String message) {
-        ctApiPushListener.config().getLogger().verbose(getDefaultSuffix(tag), message);
-    }
-
-    @Override
-    public void log(String tag, String message, Throwable throwable) {
-        ctApiPushListener.config().getLogger().verbose(getDefaultSuffix(tag), message, throwable);
-    }
 
     @Override
     public void onNewToken(String token, PushConstants.PushType pushType) {
         ctApiPushListener.onNewToken(token, pushType);
-    }
-
-    private String getDefaultSuffix(String tag) {
-        return "[" + PushConstants.LOG_TAG + ":" + ctApiPushListener.config().getAccountId() + "]" + (!TextUtils.isEmpty(tag) ? ": " + tag : "");
     }
 
     public void cacheToken(final String token, final PushConstants.PushType pushType) {
@@ -234,19 +214,19 @@ public class PushProviders implements CTPushProviderListener {
                     @PushConstants.RegKeyType String key = pushType.getTokenPrefKey();
                     if (TextUtils.isEmpty(key)) return;
                     StorageHelper.putStringImmediate(context(), StorageHelper.storageKeyWithSuffix(config(), key), token);
-                    log(pushType + "Cached New Token successfully " + token);
+                    config().log(PushConstants.LOG_TAG, pushType + "Cached New Token successfully " + token);
                 }
             });
 
         } catch (Throwable t) {
-            log(pushType + "Unable to cache token " + token, t);
+            config().log(PushConstants.LOG_TAG, pushType + "Unable to cache token " + token, t);
         }
     }
 
     private boolean alreadyHaveToken(String newToken, PushConstants.PushType pushType) {
         boolean alreadyAvailable = !TextUtils.isEmpty(newToken) && pushType != null && newToken.equalsIgnoreCase(getCachedToken(pushType));
         if (pushType != null)
-            log(pushType + "Token Already available value: " + alreadyAvailable);
+            config().log(PushConstants.LOG_TAG, pushType + "Token Already available value: " + alreadyAvailable);
         return alreadyAvailable;
     }
 
@@ -255,12 +235,12 @@ public class PushProviders implements CTPushProviderListener {
             @PushConstants.RegKeyType String key = pushType.getTokenPrefKey();
             if (!TextUtils.isEmpty(key)) {
                 String cachedToken = StorageHelper.getStringFromPrefs(context(), config(), key, null);
-                log(pushType + "getting Cached Token - " + cachedToken);
+                config().log(PushConstants.LOG_TAG, pushType + "getting Cached Token - " + cachedToken);
                 return cachedToken;
             }
         }
         if (pushType != null) {
-            log(pushType + " Unable to find cached Token for type ");
+            config().log(PushConstants.LOG_TAG, pushType + " Unable to find cached Token for type ");
         }
         return null;
     }
@@ -300,7 +280,7 @@ public class PushProviders implements CTPushProviderListener {
             try {
                 ctApiPushListener.pushDeviceTokenEvent(getCachedToken(pushType), true, pushType);
             } catch (Throwable t) {
-                log("Token Refresh error " + pushType, t);
+                config().log(PushConstants.LOG_TAG, "Token Refresh error " + pushType, t);
             }
         }
     }
@@ -311,7 +291,7 @@ public class PushProviders implements CTPushProviderListener {
                 pushProvider.requestToken();
             } catch (Throwable t) {
                 //no-op
-                log("Token Refresh error " + pushProvider, t);
+                config().log(PushConstants.LOG_TAG, "Token Refresh error " + pushProvider, t);
             }
         }
     }

@@ -1,5 +1,8 @@
 package com.clevertap.android.xps;
 
+import androidx.annotation.RestrictTo;
+
+@RestrictTo(value = RestrictTo.Scope.LIBRARY)
 public interface IMiSdkHandler {
 
     String onNewToken();
@@ -8,4 +11,5 @@ public interface IMiSdkHandler {
 
     String appId();
 
+    boolean isAvailable();
 }

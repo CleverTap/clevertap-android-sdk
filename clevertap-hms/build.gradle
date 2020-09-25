@@ -3,6 +3,7 @@ apply plugin: 'com.huawei.agconnect'
 apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 apply plugin: 'jacoco'
+apply plugin: 'kotlin-android'
 
 jacoco {
     toolVersion = "$jacocoVersion"
@@ -202,4 +203,6 @@ dependencies {
 
     testImplementation project(':test_shared')
     testImplementation 'com.huawei.hms:push:5.0.0.300'
+    testImplementation "androidx.core:core-ktx:1.3.1"
+    testImplementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }

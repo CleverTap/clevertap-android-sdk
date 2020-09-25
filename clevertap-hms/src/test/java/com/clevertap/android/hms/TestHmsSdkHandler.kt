@@ -1,30 +1,25 @@
-package com.clevertap.android.hms;
+package com.clevertap.android.hms
 
-public class TestHmsSdkHandler implements IHmsSdkHandler {
-    private boolean isAvailable;
-    private boolean isSupported;
-
-    public void setAvailable(boolean available) {
-        isAvailable = available;
+class TestHmsSdkHandler : IHmsSdkHandler {
+    private var isAvailable = false
+    private var isSupported = false
+    fun setAvailable(available: Boolean) {
+        isAvailable = available
     }
 
-    @Override
-    public String onNewToken() {
-        return HmsTestConstants.HMS_TOKEN;
+    override fun onNewToken(): String {
+        return HmsTestConstants.HMS_TOKEN
     }
 
-    @Override
-    public String appId() {
-        return isAvailable ? HmsTestConstants.HMS_APP_ID : HmsTestConstants
-                .EMPTY_STRING;
+    override fun appId(): String {
+        return if (isAvailable) HmsTestConstants.HMS_APP_ID else HmsTestConstants.EMPTY_STRING
     }
 
-    @Override
-    public boolean isSupported() {
-        return isSupported;
+    override fun isSupported(): Boolean {
+        return isSupported
     }
 
-    public void setSupported(boolean supported) {
-        isSupported = supported;
+    fun setSupported(supported: Boolean) {
+        isSupported = supported
     }
 }

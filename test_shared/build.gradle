@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 
 android {
     compileSdkVersion 29
@@ -28,17 +29,14 @@ dependencies {
     api project(':clevertap-core')
     // Unit ing dependencies
     api 'junit:junit:4.13'
-    api 'org.mockito:mockito-core:2.28.2'
+    def mockito_version = '3.5.11'
+    api "org.mockito:mockito-core:${mockito_version}"
+    api "org.mockito:mockito-inline:${mockito_version}"
     api 'org.robolectric:robolectric:4.3.1'
     api 'org.opentest4j:opentest4j:1.2.0'
 
     api 'androidx.test:core:1.3.0'
     api "androidx.test.ext:junit:1.1.2"
-    api "androidx.appcompat:appcompat:1.2.0"
-
-    api 'org.powermock:powermock-core:2.0.7'
-    api 'org.powermock:powermock-api-mockito2:2.0.7'
-    api 'org.powermock:powermock-module-junit4:2.0.7'
 
     // AndroidJUnitRunner and JUnit Rules
     api 'androidx.test:runner:1.3.0'
@@ -46,10 +44,9 @@ dependencies {
 
     api 'androidx.test.espresso:espresso-core:3.3.0'
 
-    api 'org.powermock:powermock-core:2.0.7'
-    api 'org.powermock:powermock-module-junit4:2.0.7'
-    api 'org.powermock:powermock-module-junit4-rule:1.6.6'
-    api 'org.powermock:powermock-api-mockito2:2.0.7'
-    api 'org.powermock:powermock-classloading-xstream:1.6.6'
     api 'eu.codearte.catch-exception:catch-exception:2.0'
+    api "androidx.core:core-ktx:1.3.1"
+    api "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+
+    api 'org.jetbrains.kotlin:kotlin-test:1.1.51'
 }

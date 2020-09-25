@@ -27,7 +27,7 @@ public class HmsSdkHandler implements IHmsSdkHandler {
                 token = HmsInstanceId.getInstance(ctPushListener.context()).getToken(appId, HCM_SCOPE);
             }
         } catch (Throwable t) {
-            ctPushListener.log(HmsConstants.LOG_TAG, "Error requesting HMS token", t);
+            ctPushListener.config().log(HmsConstants.LOG_TAG, "Error requesting HMS token", t);
         }
         return token;
     }
@@ -38,7 +38,7 @@ public class HmsSdkHandler implements IHmsSdkHandler {
         try {
             appId = AGConnectServicesConfig.fromContext(ctPushListener.context()).getString(APP_ID_KEY);
         } catch (Exception e) {
-            ctPushListener.log(HmsConstants.LOG_TAG, "HMS availability check failed.");
+            ctPushListener.config().log(HmsConstants.LOG_TAG, "HMS availability check failed.");
         }
         return appId;
     }
@@ -48,7 +48,7 @@ public class HmsSdkHandler implements IHmsSdkHandler {
         try {
             return HuaweiApiAvailability.getInstance().isHuaweiMobileNoticeAvailable(ctPushListener.context()) == 0;
         } catch (Exception e) {
-            ctPushListener.log(HmsConstants.LOG_TAG, "HMS is supported check failed.");
+            ctPushListener.config().log(HmsConstants.LOG_TAG, "HMS is supported check failed.");
             return false;
         }
     }

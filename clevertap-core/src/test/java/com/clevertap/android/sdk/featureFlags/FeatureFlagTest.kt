@@ -1,39 +1,37 @@
-package com.clevertap.android.sdk.featureFlags;
+package com.clevertap.android.sdk.featureFlags
 
-import com.clevertap.android.shared.test.BaseTestCase;
+import com.clevertap.android.shared.test.BaseTestCase
+import org.junit.Assert
+import org.junit.Before
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.mockito.Mockito
+import org.robolectric.RobolectricTestRunner
 
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.robolectric.RobolectricTestRunner;
-
-import static org.mockito.Mockito.verify;
-import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.when;
-
-@RunWith(RobolectricTestRunner.class)
-public class FeatureFlagTest extends BaseTestCase {
-    private static final String TAG = "FeatureFlagTest";
-
+@RunWith(RobolectricTestRunner::class)
+class FeatureFlagTest : BaseTestCase() {
     @Before
-    public void setUp() throws Exception {
-        super.setUp();
+    @Throws(Exception::class)
+    override fun setUp() {
+        super.setUp()
     }
 
     @Test
-    public void testFetch() {
-        when(cleverTapAPI.featureFlag()).thenReturn(new CTFeatureFlagsController(application, "12121", cleverTapInstanceConfig, cleverTapAPI));
-        cleverTapAPI.featureFlag().fetchFeatureFlags();
-        verify(cleverTapAPI).fetchFeatureFlags();
+    fun testFetch() {
+        Mockito.`when`(cleverTapAPI.featureFlag()).thenReturn(CTFeatureFlagsController(application, "12121", cleverTapInstanceConfig, cleverTapAPI))
+        cleverTapAPI.featureFlag().fetchFeatureFlags()
+        Mockito.verify(cleverTapAPI).fetchFeatureFlags()
     }
 
     @Test
-    public void testGet() {
-        CTFeatureFlagsController ctFeatureFlagsController = mock(CTFeatureFlagsController.class);
-        when(cleverTapAPI.featureFlag()).thenReturn(ctFeatureFlagsController);
-        when(ctFeatureFlagsController.get("isFeatureA", true)).thenReturn(false);
-        Assert.assertFalse(cleverTapAPI.featureFlag().get("isFeatureA", true));
+    fun testGet() {
+        val ctFeatureFlagsController = Mockito.mock(CTFeatureFlagsController::class.java)
+        Mockito.`when`(cleverTapAPI.featureFlag()).thenReturn(ctFeatureFlagsController)
+        Mockito.`when`(ctFeatureFlagsController["isFeatureA", true]).thenReturn(false)
+        Assert.assertFalse(cleverTapAPI.featureFlag()["isFeatureA", true])
     }
 
+    companion object {
+        private const val TAG = "FeatureFlagTest"
+    }
 }
