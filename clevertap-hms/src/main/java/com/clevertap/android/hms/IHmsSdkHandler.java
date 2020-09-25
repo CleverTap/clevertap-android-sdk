@@ -8,4 +8,6 @@ public interface IHmsSdkHandler {
 
     String onNewToken();
 
+    boolean isAvailable();
+
 }

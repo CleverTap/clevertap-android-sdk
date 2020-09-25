@@ -7,13 +7,12 @@ import android.content.Context;
 import android.os.Process;
 import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
 import com.clevertap.android.sdk.BaseCTApiListener;
 import com.clevertap.android.sdk.ManifestInfo;
 import com.xiaomi.mipush.sdk.MiPushClient;
 import java.util.List;
 
-public class XiaomiSdkHandler implements IMiSdkHandler {
+class XiaomiSdkHandler implements IMiSdkHandler {
 
     private final BaseCTApiListener ctApiListener;
 
@@ -77,15 +76,11 @@ public class XiaomiSdkHandler implements IMiSdkHandler {
         }
     }
 
-    @VisibleForTesting
-    @RestrictTo(value = RestrictTo.Scope.LIBRARY)
-    public void setManifestInfo(ManifestInfo manifestInfo) {
+    void setManifestInfo(ManifestInfo manifestInfo) {
         this.manifestInfo = manifestInfo;
     }
 
-    @VisibleForTesting
-    @RestrictTo(value = RestrictTo.Scope.LIBRARY)
-    public boolean shouldInit(String mainProcessName) {
+    boolean shouldInit(String mainProcessName) {
 
         ActivityManager am = ((ActivityManager) ctApiListener.context().getSystemService(Context.ACTIVITY_SERVICE));
 

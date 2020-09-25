@@ -2,9 +2,14 @@ package com.clevertap.android.xps
 
 import com.clevertap.android.sdk.ManifestInfo
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
-import com.clevertap.android.sdk.pushnotification.PushConstants
+import com.clevertap.android.sdk.pushnotification.PushConstants.ANDROID_PLATFORM
+import com.clevertap.android.sdk.pushnotification.PushConstants.PushType.XPS
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
+import com.clevertap.android.xps.XpsConstants.MIN_CT_ANDROID_SDK_VERSION
+import com.clevertap.android.xps.XpsTestConstants.Companion.MI_APP_ID
+import com.clevertap.android.xps.XpsTestConstants.Companion.MI_APP_KEY
+import com.clevertap.android.xps.XpsTestConstants.Companion.MI_TOKEN
 import com.xiaomi.mipush.sdk.MiPushClient
 import org.junit.*
 import org.junit.runner.*
@@ -27,8 +32,8 @@ class XiaomiPushProviderTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         manifestInfo = Mockito.mock(ManifestInfo::class.java)
-        Mockito.`when`(manifestInfo!!.xiaomiAppKey).thenReturn(XpsTestConstants.MI_APP_KEY)
-        Mockito.`when`(manifestInfo!!.xiaomiAppID).thenReturn(XpsTestConstants.MI_APP_ID)
+        Mockito.`when`(manifestInfo!!.xiaomiAppKey).thenReturn(MI_APP_KEY)
+        Mockito.`when`(manifestInfo!!.xiaomiAppID).thenReturn(MI_APP_ID)
 
         //init provider listener
         ctPushProviderListener = Mockito.mock(CTPushProviderListener::class.java)
@@ -44,9 +49,9 @@ class XiaomiPushProviderTest : BaseTestCase() {
     @Test
     fun testRequestToken() {
         Mockito.mockStatic(MiPushClient::class.java).use {
-            Mockito.`when`(MiPushClient.getRegId(application)).thenReturn(XpsTestConstants.MI_TOKEN)
+            Mockito.`when`(MiPushClient.getRegId(application)).thenReturn(MI_TOKEN)
             xiaomiPushProvider!!.requestToken()
-            Mockito.verify(ctPushProviderListener).onNewToken(XpsTestConstants.MI_TOKEN, PushConstants.PushType.XPS)
+            Mockito.verify(ctPushProviderListener).onNewToken(MI_TOKEN, XPS)
         }
     }
 
@@ -59,8 +64,8 @@ class XiaomiPushProviderTest : BaseTestCase() {
 
     @Test
     fun testIsAvailable_ReturnsTrue() {
-        Mockito.`when`(manifestInfo!!.xiaomiAppID).thenReturn(XpsTestConstants.MI_APP_KEY)
-        Mockito.`when`(manifestInfo!!.xiaomiAppKey).thenReturn(XpsTestConstants.MI_APP_ID)
+        Mockito.`when`(manifestInfo!!.xiaomiAppID).thenReturn(MI_APP_KEY)
+        Mockito.`when`(manifestInfo!!.xiaomiAppKey).thenReturn(MI_APP_ID)
         Assert.assertTrue(xiaomiPushProvider!!.isAvailable)
     }
 
@@ -71,19 +76,19 @@ class XiaomiPushProviderTest : BaseTestCase() {
 
     @Test
     fun testGetPlatform() {
-        Assert.assertEquals(xiaomiPushProvider!!.platform.toLong(), PushConstants.ANDROID_PLATFORM.toLong())
+        Assert.assertEquals(xiaomiPushProvider!!.platform.toLong(), ANDROID_PLATFORM.toLong())
     }
 
     @Test
     fun testGetPushType() {
-        Assert.assertEquals(xiaomiPushProvider!!.pushType, PushConstants.PushType.XPS)
+        Assert.assertEquals(xiaomiPushProvider!!.pushType, XPS)
     }
 
     @Test
     fun minSDKSupportVersionCode() {
         Assert.assertEquals(
             xiaomiPushProvider!!.minSDKSupportVersionCode().toLong(),
-            XpsConstants.MIN_CT_ANDROID_SDK_VERSION.toLong()
+            MIN_CT_ANDROID_SDK_VERSION.toLong()
         )
     }
 

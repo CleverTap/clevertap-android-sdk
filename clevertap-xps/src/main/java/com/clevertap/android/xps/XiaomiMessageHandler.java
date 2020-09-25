@@ -20,7 +20,7 @@ import com.xiaomi.mipush.sdk.MiPushCommandMessage;
 import com.xiaomi.mipush.sdk.MiPushMessage;
 import java.util.List;
 
-public class XiaomiMessageHandler implements IMiMessageHandler {
+class XiaomiMessageHandler implements IMiMessageHandler {
 
     @Override
     public boolean createNotification(Context context, MiPushMessage message) {
@@ -34,6 +34,7 @@ public class XiaomiMessageHandler implements IMiMessageHandler {
                 isSuccess = true;
             } catch (Exception e) {
                 e.printStackTrace();
+                isSuccess = false;
                 Log.e(LOG_TAG, "Error Creating Notification");
             }
         } else {

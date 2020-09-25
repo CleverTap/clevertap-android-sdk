@@ -2,9 +2,15 @@ package com.clevertap.android.xps
 
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
+import com.clevertap.android.xps.XpsConstants.FAILED_WITH_EXCEPTION
+import com.clevertap.android.xps.XpsConstants.OTHER_COMMAND
+import com.clevertap.android.xps.XpsConstants.TOKEN_SUCCESS
+import com.clevertap.android.xps.XpsTestConstants.Companion.MI_TOKEN
 import com.google.gson.GsonBuilder
-import com.xiaomi.mipush.sdk.ErrorCode
-import com.xiaomi.mipush.sdk.MiPushClient
+import com.xiaomi.mipush.sdk.ErrorCode.ERROR_SERVICE_UNAVAILABLE
+import com.xiaomi.mipush.sdk.ErrorCode.SUCCESS
+import com.xiaomi.mipush.sdk.MiPushClient.COMMAND_REGISTER
+import com.xiaomi.mipush.sdk.MiPushClient.COMMAND_UNSET_ACCOUNT
 import com.xiaomi.mipush.sdk.MiPushCommandMessage
 import com.xiaomi.mipush.sdk.MiPushMessage
 import org.junit.*
@@ -56,26 +62,26 @@ class XiaomiMessageHandlerTest : BaseTestCase() {
     @Test
     fun testOnReceivePassThroughMessage_Other_Command() {
         val message = Mockito.mock(MiPushCommandMessage::class.java)
-        Mockito.`when`(message.command).thenReturn(MiPushClient.COMMAND_UNSET_ACCOUNT)
+        Mockito.`when`(message.command).thenReturn(COMMAND_UNSET_ACCOUNT)
         val result = handler.onReceiveRegisterResult(application, message)
-        Assert.assertEquals(result, XpsConstants.OTHER_COMMAND)
+        Assert.assertEquals(result, OTHER_COMMAND)
     }
 
     @Test
     fun testOnReceivePassThroughMessage_Token_Success() {
         val message = Mockito.mock(MiPushCommandMessage::class.java)
-        Mockito.`when`(message.command).thenReturn(MiPushClient.COMMAND_REGISTER)
-        Mockito.`when`(message.resultCode).thenReturn(ErrorCode.SUCCESS.toLong())
-        Mockito.`when`(message.commandArguments).thenReturn(listOf(XpsTestConstants.MI_TOKEN))
+        Mockito.`when`(message.command).thenReturn(COMMAND_REGISTER)
+        Mockito.`when`(message.resultCode).thenReturn(SUCCESS.toLong())
+        Mockito.`when`(message.commandArguments).thenReturn(listOf(MI_TOKEN))
         val result = handler.onReceiveRegisterResult(application, message)
-        Assert.assertEquals(result, XpsConstants.TOKEN_SUCCESS)
+        Assert.assertEquals(result, TOKEN_SUCCESS)
     }
 
     @Test
     fun testOnReceivePassThroughMessage_Invalid_Token() {
         val message = Mockito.mock(MiPushCommandMessage::class.java)
-        Mockito.`when`(message.command).thenReturn(MiPushClient.COMMAND_REGISTER)
-        Mockito.`when`(message.resultCode).thenReturn(ErrorCode.SUCCESS.toLong())
+        Mockito.`when`(message.command).thenReturn(COMMAND_REGISTER)
+        Mockito.`when`(message.resultCode).thenReturn(SUCCESS.toLong())
         Mockito.`when`(message.commandArguments).thenReturn(emptyList())
         val result = handler.onReceiveRegisterResult(application, message)
         Assert.assertEquals(result, XpsConstants.INVALID_TOKEN)
@@ -84,8 +90,8 @@ class XiaomiMessageHandlerTest : BaseTestCase() {
     @Test
     fun testOnReceivePassThroughMessage_Token_Failure() {
         val message = Mockito.mock(MiPushCommandMessage::class.java)
-        Mockito.`when`(message.command).thenReturn(MiPushClient.COMMAND_REGISTER)
-        Mockito.`when`(message.resultCode).thenReturn(ErrorCode.ERROR_SERVICE_UNAVAILABLE.toLong())
+        Mockito.`when`(message.command).thenReturn(COMMAND_REGISTER)
+        Mockito.`when`(message.resultCode).thenReturn(ERROR_SERVICE_UNAVAILABLE.toLong())
         Mockito.`when`(message.commandArguments).thenReturn(emptyList())
         val result = handler.onReceiveRegisterResult(application, message)
         Assert.assertEquals(result, XpsConstants.TOKEN_FAILURE)
@@ -94,10 +100,10 @@ class XiaomiMessageHandlerTest : BaseTestCase() {
     @Test
     fun testOnReceivePassThroughMessage_Failed_Exception() {
         val message = Mockito.mock(MiPushCommandMessage::class.java)
-        Mockito.`when`(message.command).thenReturn(MiPushClient.COMMAND_REGISTER)
-        Mockito.`when`(message.resultCode).thenReturn(ErrorCode.SUCCESS.toLong())
+        Mockito.`when`(message.command).thenReturn(COMMAND_REGISTER)
+        Mockito.`when`(message.resultCode).thenReturn(SUCCESS.toLong())
         Mockito.`when`(message.commandArguments).thenThrow(RuntimeException("Something went wrong"))
         val result = handler.onReceiveRegisterResult(application, message)
-        Assert.assertEquals(result, XpsConstants.FAILED_WITH_EXCEPTION)
+        Assert.assertEquals(result, FAILED_WITH_EXCEPTION)
     }
 }

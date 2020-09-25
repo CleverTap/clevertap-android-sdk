@@ -4,8 +4,6 @@ import static com.clevertap.android.xps.XpsConstants.LOG_TAG;
 
 import android.content.Context;
 import android.util.Log;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
 import com.xiaomi.mipush.sdk.MiPushCommandMessage;
 import com.xiaomi.mipush.sdk.MiPushMessage;
 import com.xiaomi.mipush.sdk.PushMessageReceiver;
@@ -33,9 +31,7 @@ public class XiaomiMessageReceiver extends PushMessageReceiver {
         handler.onReceiveRegisterResult(context, miPushCommandMessage);
     }
 
-    @VisibleForTesting
-    @RestrictTo(value = RestrictTo.Scope.LIBRARY)
-    public void setHandler(IMiMessageHandler handler) {
+    void setHandler(IMiMessageHandler handler) {
         this.handler = handler;
     }
 }

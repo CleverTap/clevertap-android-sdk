@@ -1,13 +1,12 @@
 package com.clevertap.android.hms;
 
-import static com.clevertap.android.hms.HmsConstants.LOG_TAG;
+import static com.clevertap.android.hms.HmsConstants.MIN_CT_ANDROID_SDK_VERSION;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.ANDROID_PLATFORM;
+import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.HPS;
 
 import android.annotation.SuppressLint;
-import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
 import com.clevertap.android.sdk.pushnotification.CTPushProvider;
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
@@ -15,9 +14,17 @@ import com.clevertap.android.sdk.pushnotification.PushConstants;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class HmsPushProvider implements CTPushProvider {
 
-    private CTPushProviderListener ctPushListener;
+    private final @NonNull
+    CTPushProviderListener ctPushListener;
 
-    private IHmsSdkHandler hmsSdkHandler;
+    private @NonNull
+    IHmsSdkHandler hmsSdkHandler;
+
+    @NonNull
+    @Override
+    public PushConstants.PushType getPushType() {
+        return HPS;
+    }
 
     @SuppressLint(value = "unused")
     public HmsPushProvider(@NonNull CTPushProviderListener ctPushListener) {
@@ -30,56 +37,27 @@ public class HmsPushProvider implements CTPushProvider {
         return ANDROID_PLATFORM;
     }
 
-    @NonNull
-    @Override
-    public PushConstants.PushType getPushType() {
-        return PushConstants.PushType.HPS;
-    }
-
     @Override
     public boolean isAvailable() {
-        boolean isAvailable = false;
-        if (hmsSdkHandler != null) {
-            isAvailable = !TextUtils.isEmpty(hmsSdkHandler.appId());
-        } else {
-            ctPushListener.config().log(LOG_TAG, "isNotAvailable since hmsSdkHandler is null");
-        }
-        return isAvailable;
+        return hmsSdkHandler.isAvailable();
     }
 
     @Override
     public boolean isSupported() {
-        boolean isSupported = false;
-        if (hmsSdkHandler != null) {
-            isSupported = hmsSdkHandler.isSupported();
-        } else {
-            ctPushListener.config().log(LOG_TAG, "Not Supported since hmsSdkHandler is null");
-        }
-        return isSupported;
+        return hmsSdkHandler.isSupported();
     }
 
     @Override
     public int minSDKSupportVersionCode() {
-        return HmsConstants.MIN_CT_ANDROID_SDK_VERSION;
+        return MIN_CT_ANDROID_SDK_VERSION;
     }
 
     @Override
     public void requestToken() {
-        String token = null;
-        if (hmsSdkHandler != null) {
-            token = hmsSdkHandler.onNewToken();
-        } else {
-            ctPushListener.config().log(LOG_TAG, "requestToken failed since hmsSdkHandler is null");
-        }
-        if (ctPushListener != null) {
-            ctPushListener.onNewToken(token, getPushType());
-        }
+        ctPushListener.onNewToken(hmsSdkHandler.onNewToken(), getPushType());
     }
 
-    @VisibleForTesting
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
-    public void setHmsSdkHandler(IHmsSdkHandler hmsSdkHandler) {
+    void setHmsSdkHandler(@NonNull final IHmsSdkHandler hmsSdkHandler) {
         this.hmsSdkHandler = hmsSdkHandler;
     }
-
 }

@@ -1,9 +1,13 @@
 package com.clevertap.android.xps;
 
+import static com.clevertap.android.sdk.pushnotification.PushConstants.ANDROID_PLATFORM;
+import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.XPS;
+import static com.clevertap.android.xps.XpsConstants.MIN_CT_ANDROID_SDK_VERSION;
+import static java.lang.Boolean.TRUE;
+
 import android.annotation.SuppressLint;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
 import com.clevertap.android.sdk.pushnotification.CTPushProvider;
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
@@ -25,13 +29,13 @@ public class XiaomiPushProvider implements CTPushProvider {
 
     @Override
     public int getPlatform() {
-        return PushConstants.ANDROID_PLATFORM;
+        return ANDROID_PLATFORM;
     }
 
     @NonNull
     @Override
     public PushConstants.PushType getPushType() {
-        return PushConstants.PushType.XPS;
+        return XPS;
     }
 
     @Override
@@ -41,23 +45,20 @@ public class XiaomiPushProvider implements CTPushProvider {
 
     @Override
     public boolean isSupported() {
-        return true;
+        return TRUE;
     }
 
     @Override
     public int minSDKSupportVersionCode() {
-        return XpsConstants.MIN_CT_ANDROID_SDK_VERSION;
+        return MIN_CT_ANDROID_SDK_VERSION;
     }
 
     @Override
     public void requestToken() {
-        String token = miSdkHandler.onNewToken();
-        ctPushListener.onNewToken(token, getPushType());
+        ctPushListener.onNewToken(miSdkHandler.onNewToken(), getPushType());
     }
 
-    @VisibleForTesting
-    @RestrictTo(value = RestrictTo.Scope.LIBRARY)
-    public void setMiSdkHandler(@NonNull IMiSdkHandler sdkHandler) {
+    void setMiSdkHandler(@NonNull IMiSdkHandler sdkHandler) {
         this.miSdkHandler = sdkHandler;
     }
 

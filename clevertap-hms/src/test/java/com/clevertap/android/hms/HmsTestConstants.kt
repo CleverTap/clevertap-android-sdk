@@ -5,6 +5,5 @@ internal interface HmsTestConstants {
 
         const val HMS_TOKEN = "abcdefghij"
         const val HMS_APP_ID = "xyzwr"
-        const val EMPTY_STRING = ""
     }
 }
