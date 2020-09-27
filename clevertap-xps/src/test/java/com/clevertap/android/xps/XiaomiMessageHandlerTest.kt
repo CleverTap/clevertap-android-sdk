@@ -23,13 +23,13 @@ import org.robolectric.annotation.Config
 @Config(sdk = [28], application = TestApplication::class)
 class XiaomiMessageHandlerTest : BaseTestCase() {
 
-    private lateinit var handler: XiaomiMessageHandler
+    private lateinit var handler: XiaomiMessageHandlerImpl
 
     @Before
     @Throws(Exception::class)
     override fun setUp() {
         super.setUp()
-        handler = XiaomiMessageHandler()
+        handler = XiaomiMessageHandlerImpl()
     }
 
     @Test

@@ -17,7 +17,7 @@ import org.robolectric.annotation.Config
 class HmsMessageServiceTest : BaseTestCase() {
 
     private lateinit var service: CTHmsMessageService
-    private lateinit var mockedMessageHandler: HmsMessageHandler
+    private lateinit var mockedMessageHandler: HmsMessageHandlerImpl
 
     @Before
     override fun setUp() {
@@ -26,7 +26,7 @@ class HmsMessageServiceTest : BaseTestCase() {
             CTHmsMessageService
             ::class.java
         )
-        mockedMessageHandler = mock(HmsMessageHandler::class.java)
+        mockedMessageHandler = mock(HmsMessageHandlerImpl::class.java)
         doReturn(application).`when`(service).applicationContext
     }
 

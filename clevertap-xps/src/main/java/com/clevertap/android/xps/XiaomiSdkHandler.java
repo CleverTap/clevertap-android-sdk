@@ -1,6 +1,7 @@
 package com.clevertap.android.xps;
 
-import static com.clevertap.android.xps.XpsConstants.LOG_TAG;
+import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
+import static com.clevertap.android.xps.XpsConstants.XIAOMI_LOG_TAG;
 
 import android.app.ActivityManager;
 import android.content.Context;
@@ -53,9 +54,9 @@ class XiaomiSdkHandler implements IMiSdkHandler {
         }
         try {
             token = MiPushClient.getRegId(ctApiListener.context());
-            ctApiListener.config().log(LOG_TAG, "Xiaomi Token Success- " + token);
+            ctApiListener.config().log(LOG_TAG, XIAOMI_LOG_TAG + "Xiaomi Token Success- " + token);
         } catch (Throwable t) {
-            ctApiListener.config().log(LOG_TAG, "Xiaomi Token Failed");
+            ctApiListener.config().log(LOG_TAG, XIAOMI_LOG_TAG + "Xiaomi Token Failed");
         }
 
         return token;
@@ -67,11 +68,13 @@ class XiaomiSdkHandler implements IMiSdkHandler {
             MiPushClient.registerPush(ctApiListener.context(), appId, appKey);
             isRegistered = true;
             ctApiListener.config()
-                    .log(LOG_TAG, "Xiaomi Registeration success for appId-" + appId + " and appKey-" + appKey);
+                    .log(LOG_TAG, XIAOMI_LOG_TAG + "Xiaomi Registeration success for appId-" + appId + " and appKey-"
+                            + appKey);
         } catch (Throwable throwable) {
             isRegistered = false;
             ctApiListener.config()
-                    .log(LOG_TAG, "Xiaomi Registration failed for appId-" + appId + " appKey-" + appKey);
+                    .log(LOG_TAG,
+                            XIAOMI_LOG_TAG + "Xiaomi Registration failed for appId-" + appId + " appKey-" + appKey);
             throw new RegistrationException("Registration failed for appId " + appId + " and appKey " + appKey);
         }
     }

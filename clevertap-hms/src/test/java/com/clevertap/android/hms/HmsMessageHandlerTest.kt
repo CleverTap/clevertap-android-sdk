@@ -20,13 +20,13 @@ import org.robolectric.annotation.Config
 @Config(sdk = [28], application = TestApplication::class)
 class HmsMessageHandlerTest : BaseTestCase() {
 
-    private lateinit var handler: HmsMessageHandler
+    private lateinit var handler: HmsMessageHandlerImpl
 
     @Before
     @Throws(Exception::class)
     override fun setUp() {
         super.setUp()
-        handler = HmsMessageHandler()
+        handler = HmsMessageHandlerImpl()
     }
 
     @Test
@@ -65,6 +65,7 @@ class HmsMessageHandlerTest : BaseTestCase() {
     fun testOnNewToken_Failure() {
         Mockito.mockStatic(CleverTapAPI::class.java).use {
             Mockito.`when`(CleverTapAPI.tokenRefresh(any(Context::class.java), eq(HMS_TOKEN), eq(HPS)))
+                .thenThrow(RuntimeException("Something Went Wrong"))
             Assert.assertFalse(handler.onNewToken(application, HMS_TOKEN))
         }
     }

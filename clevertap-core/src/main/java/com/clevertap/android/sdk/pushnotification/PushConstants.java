@@ -114,6 +114,9 @@ public interface PushConstants {
     }
 
     String LOG_TAG = "PushProvider";
+
+    String FCM_LOG_TAG = "FirebaseMessaging : ";
+
     @NonNull
     String FCM_DELIVERY_TYPE = "fcm";
     @NonNull

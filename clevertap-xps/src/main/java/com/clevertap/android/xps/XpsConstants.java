@@ -12,7 +12,7 @@ public interface XpsConstants {
 
     }
 
-    String LOG_TAG = XiaomiPushProvider.class.getSimpleName();
+    String XIAOMI_LOG_TAG = XiaomiPushProvider.class.getSimpleName();
     int MIN_CT_ANDROID_SDK_VERSION = 30800;
     int TOKEN_SUCCESS = 0;
     int TOKEN_FAILURE = 1;

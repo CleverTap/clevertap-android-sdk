@@ -188,5 +188,4 @@ public final class Logger {
         return CleverTapAPI.getDebugLevel();
     }
 
-
 }

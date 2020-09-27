@@ -17,13 +17,13 @@ import org.robolectric.annotation.Config
 class XiaomiMessageReceiverTest : BaseTestCase() {
 
     private lateinit var receiver: XiaomiMessageReceiver
-    private lateinit var handler: XiaomiMessageHandler
+    private lateinit var handler: XiaomiMessageHandlerImpl
 
     @Before
     override fun setUp() {
         super.setUp()
         receiver = XiaomiMessageReceiver()
-        handler = Mockito.mock(XiaomiMessageHandler::class.java)
+        handler = Mockito.mock(XiaomiMessageHandlerImpl::class.java)
         receiver.setHandler(handler)
     }
 
