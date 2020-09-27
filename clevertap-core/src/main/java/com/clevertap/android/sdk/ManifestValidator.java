@@ -20,7 +20,7 @@ final class ManifestValidator {
     private final static String ourApplicationClassName = "com.clevertap.android.sdk.Application";
 
     static void validate(final Context context, DeviceInfo deviceInfo, PushProviders pushProviders) {
-        if (!deviceInfo.testPermission(context, "android.permission.INTERNET")) {
+        if (!Utils.hasPermission(context, "android.permission.INTERNET")) {
             Logger.d("Missing Permission: android.permission.INTERNET");
         }
         checkSDKVersion(deviceInfo);

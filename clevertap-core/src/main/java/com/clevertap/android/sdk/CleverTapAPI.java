@@ -5063,7 +5063,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             builder.setPeriodic(pingFrequency * Constants.ONE_MIN_IN_MILLIS, 5 * Constants.ONE_MIN_IN_MILLIS);
             builder.setRequiresBatteryNotLow(true);
 
-            if (this.deviceInfo.testPermission(context, "android.permission.RECEIVE_BOOT_COMPLETED")) {
+            if (Utils.hasPermission(context, "android.permission.RECEIVE_BOOT_COMPLETED")) {
                 builder.setPersisted(true);
             }
 

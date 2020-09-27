@@ -14,7 +14,6 @@ import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.view.WindowManager;
 import androidx.core.app.NotificationManagerCompat;
-import androidx.core.content.ContextCompat;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.UUID;
@@ -170,50 +169,7 @@ class DeviceInfo {
 
         @SuppressLint("MissingPermission")
         private String getNetworkType() {
-            TelephonyManager mTelephonyManager = (TelephonyManager)
-                    context.getSystemService(Context.TELEPHONY_SERVICE);
-            if (mTelephonyManager == null) {
-                return null;
-            }
-
-            int networkType = TelephonyManager.NETWORK_TYPE_UNKNOWN;
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                if (testPermission(context, "android.permission.READ_PHONE_STATE")) {
-                    try {
-                        networkType = mTelephonyManager.getDataNetworkType();
-                    } catch (SecurityException se) {
-                        Logger.d("Security Exception caught while fetch network type" + se.getMessage());
-                    }
-                } else {
-                    Logger.d("READ_PHONE_STATE permission not asked by the app or not granted by the user");
-                }
-            } else {
-                networkType = mTelephonyManager.getNetworkType();
-            }
-
-            switch (networkType) {
-                case TelephonyManager.NETWORK_TYPE_GPRS:
-                case TelephonyManager.NETWORK_TYPE_EDGE:
-                case TelephonyManager.NETWORK_TYPE_CDMA:
-                case TelephonyManager.NETWORK_TYPE_1xRTT:
-                case TelephonyManager.NETWORK_TYPE_IDEN:
-                    return "2G";
-                case TelephonyManager.NETWORK_TYPE_UMTS:
-                case TelephonyManager.NETWORK_TYPE_EVDO_0:
-                case TelephonyManager.NETWORK_TYPE_EVDO_A:
-                case TelephonyManager.NETWORK_TYPE_HSDPA:
-                case TelephonyManager.NETWORK_TYPE_HSUPA:
-                case TelephonyManager.NETWORK_TYPE_HSPA:
-                case TelephonyManager.NETWORK_TYPE_EVDO_B:
-                case TelephonyManager.NETWORK_TYPE_EHRPD:
-                case TelephonyManager.NETWORK_TYPE_HSPAP:
-                    return "3G";
-                case TelephonyManager.NETWORK_TYPE_LTE:
-                    return "4G";
-                default:
-                    return null;
-            }
+            return Utils.getDeviceNetworkType(context);
         }
 
         private boolean getNotificationEnabledForUser() {
@@ -490,18 +446,6 @@ class DeviceInfo {
         return ret;
     }
 
-    /**
-     * Tests whether a particular permission is available or not.
-     *
-     * @param context    The Android {@link Context}
-     * @param permission The fully qualified Android permission name
-     */
-    @SuppressWarnings("SameParameterValue")
-    boolean testPermission(final Context context, String permission) {
-        this.context = context;
-        return hasPermission(context, permission);
-    }
-
     private String _getDeviceID() {
         synchronized (deviceIDLock) {
             if (this.config.isDefaultInstance()) {
@@ -675,14 +619,5 @@ class DeviceInfo {
     static int getAppIconAsIntId(final Context context) {
         ApplicationInfo ai = context.getApplicationInfo();
         return ai.icon;
-    }
-
-    @SuppressWarnings("WeakerAccess")
-    static boolean hasPermission(final Context context, String permission) {
-        try {
-            return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permission);
-        } catch (Throwable t) {
-            return false;
-        }
     }
 }

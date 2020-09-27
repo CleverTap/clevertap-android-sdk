@@ -4,6 +4,7 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -18,6 +19,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.telephony.TelephonyManager;
 import androidx.annotation.RestrictTo;
+import androidx.core.content.ContextCompat;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -227,6 +229,7 @@ public final class Utils {
         }
     }
 
+    @SuppressLint("MissingPermission")
     static String getCurrentNetworkType(final Context context) {
         try {
             // First attempt to check for WiFi connectivity
@@ -235,39 +238,62 @@ public final class Utils {
             if (connManager == null) {
                 return "Unavailable";
             }
-            @SuppressLint("MissingPermission") NetworkInfo mWifi = connManager
+            NetworkInfo mWifi = connManager
                     .getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
             if (mWifi.isConnected()) {
                 return "WiFi";
             }
 
-            // Fall back to network type
-            TelephonyManager teleMan = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-            if (teleMan == null) {
-                return "Unavailable";
-            }
-            int networkType = teleMan.getNetworkType();
-            switch (networkType) {
-                case TelephonyManager.NETWORK_TYPE_CDMA:
-                    return "CDMA";
-                case TelephonyManager.NETWORK_TYPE_EDGE:
-                    return "EDGE";
-                case TelephonyManager.NETWORK_TYPE_GPRS:
-                    return "GPRS";
-                case TelephonyManager.NETWORK_TYPE_HSDPA:
-                case TelephonyManager.NETWORK_TYPE_HSPA:
-                case TelephonyManager.NETWORK_TYPE_HSPAP:
-                case TelephonyManager.NETWORK_TYPE_HSUPA:
-                case TelephonyManager.NETWORK_TYPE_UMTS:
-                    return "3G";
-                case TelephonyManager.NETWORK_TYPE_LTE:
-                    return "LTE";
-                default:
-                    return "Unknown";
-            }
+            return getDeviceNetworkType(context);
+
         } catch (Throwable t) {
             return "Unavailable";
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    static String getDeviceNetworkType(final Context context) {
+        // Fall back to network type
+        TelephonyManager teleMan = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+        if (teleMan == null) {
+            return "Unavailable";
+        }
+
+        int networkType = TelephonyManager.NETWORK_TYPE_UNKNOWN;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            if (hasPermission(context, "android.permission.READ_PHONE_STATE")) {
+                try {
+                    networkType = teleMan.getDataNetworkType();
+                } catch (SecurityException se) {
+                    Logger.d("Security Exception caught while fetch network type" + se.getMessage());
+                }
+            } else {
+                Logger.d("READ_PHONE_STATE permission not asked by the app or not granted by the user");
+            }
+        } else {
+            networkType = teleMan.getNetworkType();
+        }
+
+        switch (networkType) {
+            case TelephonyManager.NETWORK_TYPE_CDMA:
+                return "CDMA";
+            case TelephonyManager.NETWORK_TYPE_EDGE:
+                return "EDGE";
+            case TelephonyManager.NETWORK_TYPE_GPRS:
+                return "GPRS";
+            case TelephonyManager.NETWORK_TYPE_HSDPA:
+            case TelephonyManager.NETWORK_TYPE_HSPA:
+            case TelephonyManager.NETWORK_TYPE_HSPAP:
+            case TelephonyManager.NETWORK_TYPE_HSUPA:
+            case TelephonyManager.NETWORK_TYPE_UMTS:
+                return "3G";
+            case TelephonyManager.NETWORK_TYPE_LTE:
+                return "LTE";
+            case TelephonyManager.NETWORK_TYPE_NR:
+                return "5G";
+            default:
+                return "Unknown";
         }
     }
 
@@ -296,6 +322,20 @@ public final class Utils {
             return context.getResources().getIdentifier(image, "drawable", context.getPackageName());
         } else {
             return -1;
+        }
+    }
+
+    /**
+     * Checks whether a particular permission is available or not.
+     *
+     * @param context    The Android {@link Context}
+     * @param permission The fully qualified Android permission name
+     */
+    static boolean hasPermission(final Context context, String permission) {
+        try {
+            return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permission);
+        } catch (Throwable t) {
+            return false;
         }
     }
 
