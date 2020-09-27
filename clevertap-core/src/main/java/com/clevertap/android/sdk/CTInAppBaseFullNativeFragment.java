@@ -38,38 +38,20 @@ public abstract class CTInAppBaseFullNativeFragment extends CTInAppBaseFullFragm
             ShapeDrawable shapeDrawable = null;
 
             if (!inAppNotificationButton.getBorderRadius().isEmpty()) {
+                float value = Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2;
                 shapeDrawable = new ShapeDrawable(new RoundRectShape(new float[]{
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2}, null,
+                        value, value, value, value,
+                        value, value, value, value
+                }, null,
                         new float[]{0, 0, 0, 0, 0, 0, 0, 0}));
                 shapeDrawable.getPaint().setColor(Color.parseColor(inAppNotificationButton.getBackgroundColor()));
                 shapeDrawable.getPaint().setStyle(Paint.Style.FILL);
                 shapeDrawable.getPaint().setAntiAlias(true);
                 borderDrawable = new ShapeDrawable(new RoundRectShape(new float[]{
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
-                        Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2}, null,
-                        new float[]{
-                                Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
-                                Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
-                                Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
-                                Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
-                                Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
-                                Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
-                                Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI()) * 2,
-                                Float.parseFloat(inAppNotificationButton.getBorderRadius()) * (480.0f / getDPI())
-                                        * 2}));
+                        value, value, value, value,
+                        value, value, value, value}, null,
+                        new float[]{value, value, value, value,
+                                value, value, value, value}));
             }
 
             if (!inAppNotificationButton.getBorderColor().isEmpty()) {

@@ -57,52 +57,16 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
                         .addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                             @Override
                             public void onGlobalLayout() {
-                                RelativeLayout relativeLayout1 = fl
-                                        .findViewById(R.id.half_interstitial_relative_layout);
-                                FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1
+                                FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout
                                         .getLayoutParams();
                                 if (inAppNotification.isTablet() && isTablet()) {
-                                    layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth()
-                                            * 1.3f);
-                                    relativeLayout1.setLayoutParams(layoutParams);
-                                    new Handler().post(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            int margin = closeImageView.getMeasuredWidth() / 2;
-                                            closeImageView.setX(relativeLayout.getRight() - margin);
-                                            closeImageView.setY(relativeLayout.getTop() - margin);
-                                        }
-                                    });
+                                    redrawHalfInterstitialInApp(relativeLayout, layoutParams, closeImageView);
                                 } else {
                                     if (isTablet()) {
-                                        layoutParams.setMargins(getScaledPixels(140), getScaledPixels(140),
-                                                getScaledPixels(140), getScaledPixels(140));
-                                        layoutParams.width = relativeLayout1.getMeasuredWidth() - getScaledPixels(
-                                                210);
-                                        layoutHeight = layoutParams.height = (int) (layoutParams.width * 1.3f);
-                                        relativeLayout1.setLayoutParams(layoutParams);
-
-                                        new Handler().post(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                int margin = closeImageView.getMeasuredWidth() / 2;
-                                                closeImageView.setX(relativeLayout.getRight() - margin);
-                                                closeImageView.setY(relativeLayout.getTop() - margin);
-                                            }
-                                        });
+                                        redrawHalfInterstitialMobileInAppOnTablet(relativeLayout, layoutParams,
+                                                closeImageView);
                                     } else {
-                                        layoutHeight = layoutParams.height = (int) (relativeLayout1.getMeasuredWidth()
-                                                * 1.3f);
-                                        relativeLayout1.setLayoutParams(layoutParams);
-
-                                        new Handler().post(new Runnable() {
-                                            @Override
-                                            public void run() {
-                                                int margin = closeImageView.getMeasuredWidth() / 2;
-                                                closeImageView.setX(relativeLayout.getRight() - margin);
-                                                closeImageView.setY(relativeLayout.getTop() - margin);
-                                            }
-                                        });
+                                        redrawHalfInterstitialInApp(relativeLayout, layoutParams, closeImageView);
                                     }
                                 }
                                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {

@@ -14,6 +14,7 @@ import android.view.animation.AnimationSet;
 import android.view.animation.TranslateAnimation;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import java.net.URLDecoder;
 
@@ -32,7 +33,7 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
             try {
                 formData = UriHelper.getAllKeyValuePairs(url, false);
 
-                if (formData != null && formData.containsKey(Constants.KEY_C2A)) {
+                if (formData.containsKey(Constants.KEY_C2A)) {
                     final String c2a = formData.getString(Constants.KEY_C2A);
                     if (c2a != null) {
                         final String[] parts = c2a.split("__dl__");
@@ -111,7 +112,7 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
         return displayHTMLView(inflater, container);
     }
 
@@ -122,7 +123,7 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
     }
 
     @Override
-    public void onConfigurationChanged(Configuration newConfig) {
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         reDrawInApp();
     }

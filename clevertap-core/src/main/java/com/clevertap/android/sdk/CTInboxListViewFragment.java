@@ -56,7 +56,7 @@ public class CTInboxListViewFragment extends Fragment {
     private int tabPosition;
 
     @Override
-    public void onAttach(Context context) {
+    public void onAttach(@NonNull Context context) {
         super.onAttach(context);
         Bundle bundle = getArguments();
         if (bundle != null) {

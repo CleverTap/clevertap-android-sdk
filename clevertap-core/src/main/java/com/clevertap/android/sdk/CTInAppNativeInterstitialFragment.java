@@ -117,33 +117,6 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                                 }
                             }
                         });
-                if (!inAppNotification.getMediaList().isEmpty()) {
-                    if (inAppNotification.getMediaList().get(0).isImage()) {
-                        Bitmap image = inAppNotification.getImage(inAppNotification.getMediaList().get(0));
-                        if (image != null) {
-                            ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
-                            imageView.setVisibility(View.VISIBLE);
-                            imageView.setImageBitmap(
-                                    inAppNotification.getImage(inAppNotification.getMediaList().get(0)));
-                        }
-                    } else if (inAppNotification.getMediaList().get(0).isGIF()) {
-                        if (inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)) != null) {
-                            gifImageView = relativeLayout.findViewById(R.id.gifImage);
-                            gifImageView.setVisibility(View.VISIBLE);
-                            gifImageView.setBytes(
-                                    inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)));
-                            gifImageView.startAnimation();
-                        }
-                    } else if (inAppNotification.getMediaList().get(0).isVideo()) {
-                        initFullScreenDialog();
-                        prepareMedia();
-                        playMedia();
-                    } else if (inAppNotification.getMediaList().get(0).isAudio()) {
-                        prepareMedia();
-                        playMedia();
-                        disableFullScreenButton();
-                    }
-                }
                 break;
             case Configuration.ORIENTATION_LANDSCAPE:
                 relativeLayout.getViewTreeObserver()
@@ -172,34 +145,35 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                                 }
                             }
                         });
-                if (!inAppNotification.getMediaList().isEmpty()) {
-                    if (inAppNotification.getMediaList().get(0).isImage()) {
-                        Bitmap image = inAppNotification.getImage(inAppNotification.getMediaList().get(0));
-                        if (image != null) {
-                            ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
-                            imageView.setVisibility(View.VISIBLE);
-                            imageView.setImageBitmap(
-                                    inAppNotification.getImage(inAppNotification.getMediaList().get(0)));
-                        }
-                    } else if (inAppNotification.getMediaList().get(0).isGIF()) {
-                        if (inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)) != null) {
-                            gifImageView = relativeLayout.findViewById(R.id.gifImage);
-                            gifImageView.setVisibility(View.VISIBLE);
-                            gifImageView.setBytes(
-                                    inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)));
-                            gifImageView.startAnimation();
-                        }
-                    } else if (inAppNotification.getMediaList().get(0).isVideo()) {
-                        initFullScreenDialog();
-                        prepareMedia();
-                        playMedia();
-                    } else if (inAppNotification.getMediaList().get(0).isAudio()) {
-                        prepareMedia();
-                        playMedia();
-                        disableFullScreenButton();
-                    }
-                }
                 break;
+        }
+
+        if (!inAppNotification.getMediaList().isEmpty()) {
+            if (inAppNotification.getMediaList().get(0).isImage()) {
+                Bitmap image = inAppNotification.getImage(inAppNotification.getMediaList().get(0));
+                if (image != null) {
+                    ImageView imageView = relativeLayout.findViewById(R.id.backgroundImage);
+                    imageView.setVisibility(View.VISIBLE);
+                    imageView.setImageBitmap(
+                            inAppNotification.getImage(inAppNotification.getMediaList().get(0)));
+                }
+            } else if (inAppNotification.getMediaList().get(0).isGIF()) {
+                if (inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)) != null) {
+                    gifImageView = relativeLayout.findViewById(R.id.gifImage);
+                    gifImageView.setVisibility(View.VISIBLE);
+                    gifImageView.setBytes(
+                            inAppNotification.getGifByteArray(inAppNotification.getMediaList().get(0)));
+                    gifImageView.startAnimation();
+                }
+            } else if (inAppNotification.getMediaList().get(0).isVideo()) {
+                initFullScreenDialog();
+                prepareMedia();
+                playMedia();
+            } else if (inAppNotification.getMediaList().get(0).isAudio()) {
+                prepareMedia();
+                playMedia();
+                disableFullScreenButton();
+            }
         }
 
         LinearLayout linearLayout = relativeLayout.findViewById(R.id.interstitial_linear_layout);

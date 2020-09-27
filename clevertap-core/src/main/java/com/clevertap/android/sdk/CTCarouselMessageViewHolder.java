@@ -4,13 +4,13 @@ import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
 import android.os.Handler;
-import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.viewpager.widget.ViewPager;
 
 /**
@@ -37,7 +37,8 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
             this.viewHolder = viewHolder;
             this.dots = dots;
             this.inboxMessage = inboxMessage;
-            this.dots[0].setImageDrawable(context.getResources().getDrawable(R.drawable.ct_selected_dot));
+            this.dots[0].setImageDrawable(
+                    ResourcesCompat.getDrawable(context.getResources(), R.drawable.ct_selected_dot, null));
         }
 
         @Override
@@ -52,9 +53,11 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
         @Override
         public void onPageSelected(int position) {
             for (ImageView dot : this.dots) {
-                dot.setImageDrawable(context.getResources().getDrawable(R.drawable.ct_unselected_dot));
+                dot.setImageDrawable(
+                        ResourcesCompat.getDrawable(context.getResources(), R.drawable.ct_unselected_dot, null));
             }
-            dots[position].setImageDrawable(context.getResources().getDrawable(R.drawable.ct_selected_dot));
+            dots[position].setImageDrawable(
+                    ResourcesCompat.getDrawable(context.getResources(), R.drawable.ct_selected_dot, null));
             viewHolder.title.setText(inboxMessage.getInboxMessageContents().get(position).getTitle());
             viewHolder.title.setTextColor(
                     Color.parseColor(inboxMessage.getInboxMessageContents().get(position).getTitleColor()));
@@ -121,20 +124,9 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
             this.sliderDots.removeAllViews();
         }
         ImageView[] dots = new ImageView[dotsCount];
-        for (int k = 0; k < dotsCount; k++) {
-            dots[k] = new ImageView(parent.getActivity());
-            dots[k].setVisibility(View.VISIBLE);
-            dots[k].setImageDrawable(appContext.getResources().getDrawable(R.drawable.ct_unselected_dot));
-            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
-                    LinearLayout.LayoutParams.WRAP_CONTENT);
-            params.setMargins(8, 6, 4, 6);
-            params.gravity = Gravity.CENTER;
-            if (this.sliderDots.getChildCount() < dotsCount) {
-                this.sliderDots.addView(dots[k], params);
-            }
-        }
+        setDots(dots, dotsCount, appContext, this.sliderDots);
         dots[0].setImageDrawable(
-                parent.getActivity().getApplicationContext().getResources().getDrawable(R.drawable.ct_selected_dot));
+                ResourcesCompat.getDrawable(appContext.getResources(), R.drawable.ct_selected_dot, null));
         CTCarouselMessageViewHolder.CarouselPageChangeListener carouselPageChangeListener
                 = new CTCarouselMessageViewHolder.CarouselPageChangeListener(
                 parent.getActivity().getApplicationContext(), this, dots, inboxMessage);

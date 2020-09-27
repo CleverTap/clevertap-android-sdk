@@ -19,6 +19,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import androidx.annotation.NonNull;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
@@ -258,6 +259,22 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         FrameLayout frameLayout = getLayoutForMediaPlayer();
         if (frameLayout != null) {
             frameLayout.removeAllViews();
+        }
+    }
+
+    void setDots(ImageView[] dots, int dotsCount, Context appContext, LinearLayout sliderDots) {
+        for (int k = 0; k < dotsCount; k++) {
+            dots[k] = new ImageView(appContext);
+            dots[k].setVisibility(View.VISIBLE);
+            dots[k].setImageDrawable(
+                    ResourcesCompat.getDrawable(appContext.getResources(), R.drawable.ct_unselected_dot, null));
+            LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT,
+                    LinearLayout.LayoutParams.WRAP_CONTENT);
+            params.setMargins(8, 6, 4, 6);
+            params.gravity = Gravity.CENTER;
+            if (sliderDots.getChildCount() < dotsCount) {
+                sliderDots.addView(dots[k], params);
+            }
         }
     }
 

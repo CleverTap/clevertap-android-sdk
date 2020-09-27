@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk;
 
-import android.app.FragmentManager;
-import android.app.FragmentTransaction;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentTransaction;
 
 
 public abstract class CTInAppBasePartialFragment extends CTInAppBaseFragment {
@@ -28,7 +28,7 @@ public abstract class CTInAppBasePartialFragment extends CTInAppBaseFragment {
     @Override
     void cleanup() {
         if (!Utils.isActivityDead(getActivity()) && !isCleanedUp.get()) {
-            final FragmentManager fragmentManager = parent.getFragmentManager();
+            final FragmentManager fragmentManager = getFragmentManager();
             FragmentTransaction transaction = fragmentManager.beginTransaction();
             try {
                 transaction.remove(this).commit();

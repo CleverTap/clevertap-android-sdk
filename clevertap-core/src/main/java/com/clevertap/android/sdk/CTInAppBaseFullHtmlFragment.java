@@ -2,6 +2,7 @@ package com.clevertap.android.sdk;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Build;
@@ -12,6 +13,8 @@ import android.view.ViewGroup;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.RelativeLayout;
+import android.widget.RelativeLayout.LayoutParams;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import java.net.URLDecoder;
 
@@ -29,7 +32,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
             try {
                 formData = UriHelper.getAllKeyValuePairs(url, false);
 
-                if (formData != null && formData.containsKey(Constants.KEY_C2A)) {
+                if (formData.containsKey(Constants.KEY_C2A)) {
                     final String c2a = formData.getString(Constants.KEY_C2A);
                     if (c2a != null) {
                         final String[] parts = c2a.split("__dl__");
@@ -54,8 +57,8 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
     protected CTInAppWebView webView;
 
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
+    public void onAttach(Context context) {
+        super.onAttach(context);
     }
 
     @Override
@@ -76,15 +79,15 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
     }
 
     @Override
-    public void onConfigurationChanged(Configuration newConfig) {
+    public void onConfigurationChanged(@NonNull Configuration newConfig) {
         super.onConfigurationChanged(newConfig);
         reDrawInApp();
     }
 
     protected RelativeLayout.LayoutParams getLayoutParamsForCloseButton() {
         RelativeLayout.LayoutParams closeIvLp = new RelativeLayout
-                .LayoutParams(RelativeLayout.LayoutParams.FILL_PARENT,
-                RelativeLayout.LayoutParams.FILL_PARENT);
+                .LayoutParams(LayoutParams.MATCH_PARENT,
+                LayoutParams.MATCH_PARENT);
         // Position it at the top right corner
         closeIvLp.addRule(RelativeLayout.ABOVE, webView.getId());
         closeIvLp.addRule(RelativeLayout.RIGHT_OF, webView.getId());

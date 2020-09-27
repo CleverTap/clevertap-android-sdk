@@ -8,6 +8,7 @@ import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.FrameLayout.LayoutParams;
 import android.widget.RelativeLayout;
+import androidx.fragment.app.FragmentActivity;
 
 public abstract class CTInAppBaseFullFragment extends CTInAppBaseFragment {
 
@@ -27,8 +28,8 @@ public abstract class CTInAppBaseFullFragment extends CTInAppBaseFragment {
 
     @Override
     void generateListener() {
-        if (parent instanceof InAppNotificationActivity) {
-            setListener((CTInAppBaseFragment.InAppListener) parent);
+        if ( (FragmentActivity) context instanceof InAppNotificationActivity) {
+            setListener((CTInAppBaseFragment.InAppListener) context);
         }
     }
 
@@ -36,7 +37,7 @@ public abstract class CTInAppBaseFullFragment extends CTInAppBaseFragment {
         if (Utils.isActivityDead(getActivity())) {
             return false;
         }
-        WindowManager wm = (WindowManager) parent.getBaseContext().getSystemService(Context.WINDOW_SERVICE);
+        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
         if (wm == null) {
             Logger.v("Screen size is null ");
             return false;
@@ -99,6 +100,24 @@ public abstract class CTInAppBaseFullFragment extends CTInAppBaseFragment {
 
         relativeLayout.setLayoutParams(layoutParams);
         addCloseImageView(relativeLayout, closeImageView);
+    }
+
+    void redrawHalfInterstitialInApp(
+            final RelativeLayout relativeLayout, LayoutParams layoutParams, CloseImageView closeImageView){
+        layoutParams.height = (int) (relativeLayout.getMeasuredWidth()
+                * 1.3f);
+        relativeLayout.setLayoutParams(layoutParams);
+        addCloseImageView(relativeLayout,closeImageView);
+    }
+
+    void redrawHalfInterstitialMobileInAppOnTablet(RelativeLayout relativeLayout, LayoutParams layoutParams, CloseImageView closeImageView){
+        layoutParams.setMargins(getScaledPixels(140), getScaledPixels(140),
+                getScaledPixels(140), getScaledPixels(140));
+        layoutParams.width = relativeLayout.getMeasuredWidth() - getScaledPixels(
+                210);
+        layoutParams.height = (int) (layoutParams.width * 1.3f);
+        relativeLayout.setLayoutParams(layoutParams);
+        addCloseImageView(relativeLayout,closeImageView);
     }
 
     void redrawLandscapeInterstitialInApp(final RelativeLayout relativeLayout, LayoutParams layoutParams,

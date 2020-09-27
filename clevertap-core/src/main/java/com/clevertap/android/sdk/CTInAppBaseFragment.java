@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk;
 
 import android.app.Activity;
-import android.app.Fragment;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -9,6 +8,7 @@ import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.View;
 import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Set;
@@ -44,14 +44,14 @@ public abstract class CTInAppBaseFragment extends Fragment {
 
     AtomicBoolean isCleanedUp = new AtomicBoolean();
 
-    Activity parent;
-
     private WeakReference<CTInAppBaseFragment.InAppListener> listenerWeakReference;
 
+    Context context;
+
     @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-        parent = activity;
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        this.context = context;
         Bundle bundle = getArguments();
         inAppNotification = bundle.getParcelable(Constants.INAPP_KEY);
         config = bundle.getParcelable(Constants.KEY_CONFIG);
