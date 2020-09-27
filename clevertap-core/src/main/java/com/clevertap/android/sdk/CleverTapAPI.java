@@ -10,8 +10,6 @@ import static com.clevertap.android.sdk.Utils.runOnUiThread;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.AlarmManager;
-import android.app.Fragment;
-import android.app.FragmentTransaction;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
@@ -49,6 +47,9 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.core.app.NotificationCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentTransaction;
 import com.android.installreferrer.api.InstallReferrerClient;
 import com.android.installreferrer.api.InstallReferrerStateListener;
 import com.android.installreferrer.api.ReferrerDetails;
@@ -98,6 +99,7 @@ import javax.net.ssl.SSLSocketFactory;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 
 /**
  * <h1>CleverTapAPI</h1>
@@ -4886,10 +4888,11 @@ public class CleverTapAPI implements CleverTapAPIListener {
         if (canShow) {
             if (currentlyDisplayingInApp != null && ((System.currentTimeMillis() / 1000) < currentlyDisplayingInApp
                     .getTimeToLive())) {
-                Fragment inAppFragment = activity.getFragmentManager()
+                Fragment inAppFragment = ((FragmentActivity) activity).getSupportFragmentManager()
                         .getFragment(new Bundle(), currentlyDisplayingInApp.getType());
                 if (getCurrentActivity() != null && inAppFragment != null) {
-                    FragmentTransaction fragmentTransaction = getCurrentActivity().getFragmentManager()
+                    FragmentTransaction fragmentTransaction = ((FragmentActivity) activity)
+                            .getSupportFragmentManager()
                             .beginTransaction();
                     Bundle bundle = new Bundle();
                     bundle.putParcelable("inApp", currentlyDisplayingInApp);
@@ -8697,7 +8700,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
             Logger.d("Displaying In-App: " + inAppNotification.getJsonDescription());
             try {
                 //noinspection ConstantConditions
-                FragmentTransaction fragmentTransaction = getCurrentActivity().getFragmentManager()
+                FragmentTransaction fragmentTransaction = ((FragmentActivity) getCurrentActivity())
+                        .getSupportFragmentManager()
                         .beginTransaction();
                 Bundle bundle = new Bundle();
                 bundle.putParcelable("inApp", inAppNotification);

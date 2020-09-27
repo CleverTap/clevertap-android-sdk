@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk;
 
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.drawable.ColorDrawable;

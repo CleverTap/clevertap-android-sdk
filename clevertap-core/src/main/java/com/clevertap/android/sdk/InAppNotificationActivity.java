@@ -90,7 +90,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                 bundle.putParcelable("inApp", inAppNotification);
                 bundle.putParcelable("config", config);
                 contentFragment.setArguments(bundle);
-                getFragmentManager().beginTransaction()
+                getSupportFragmentManager().beginTransaction()
                         .setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out)
                         .add(android.R.id.content, contentFragment, getFragmentTag())
                         .commit();
