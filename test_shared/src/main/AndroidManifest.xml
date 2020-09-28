@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest package="com.clevertap.android.shared.test"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <application android:name=".TestApplication">
+        <meta-data
+            android:name="CLEVERTAP_APP_PACKAGE"
+            android:value="com.clevertap.beardedrobot" />
+
+        <meta-data
+            android:name="CLEVERTAP_ACCOUNT_ID"
+            android:value="@string/ct_acc_id" />
+        <meta-data
+            android:name="CLEVERTAP_TOKEN"
+            android:value="@string/ct_acc_token" />
+        <meta-data
+            android:name="CLEVERTAP_USE_GOOGLE_AD_ID"
+            android:value="1" />
+    </application>
+
+</manifest>
+

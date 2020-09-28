@@ -1,0 +1,66 @@
+<html>
+<title>
+    my title
+</title>
+
+<body>
+<button onclick='invokeEvent()'>Push Event</button>
+<br /><br />
+<button onclick='invokeEventWithProps()'>Push Event Props</button>
+<br /><br />
+<button onclick='invokePushProfile()'>Push Profile</button>
+<br /><br />
+<button onclick='invokeAddProp()'>Add Property</button>
+<br /><br />
+<button onclick='invokeAddMultiProps()'>Add Multivalues</button>
+<br /><br />
+<button onclick='invokeRemoveProp()'>Remove Property</button>
+<br /><br />
+<button onclick='invokeRemoveMultiProps()'>Remove Multivalues</button>
+<br /><br />
+<button onclick='invokeRemoveForKey()'>Remove for key</button>
+<br /><br />
+<button onclick='invokeSetMultiValue()'>Set Multivalues</button>
+<br /><br />
+<script>
+        console.log('LOG')
+        function invokeEvent() {
+            CleverTap.pushEvent('WebView button clicked')
+        }
+        function invokeEventWithProps(){
+        var props = {foo: 'xyz', lang: 'French'};
+            CleverTap.pushEvent('WebView button clicked',JSON.stringify(props))
+        }
+        function invokePushProfile() {
+            var props = {foo: 'xyz', lang: 'French'};
+            CleverTap.pushProfile(JSON.stringify(props))
+        }
+        function invokeAddProp(){
+            CleverTap.addMultiValueForKey('bar', 'abcd');
+        }
+        function invokeAddMultiProps(){
+            var cars = ['Saab', 'Volvo', 'BMW', 'Kia'];
+            CleverTap.addMultiValuesForKey('foobar', JSON.stringify(cars));
+        }
+        function invokeRemoveProp(){
+            CleverTap.removeMultiValueForKey('foobar', 'Saab');
+        }
+        function invokeRemoveMultiProps(){
+            var cars = ["Volvo", "BMW"];
+            CleverTap.removeMultiValuesForKey('foobar', JSON.stringify(cars));
+        }
+        function invokeRemoveForKey(){
+            CleverTap.removeValueForKey('bar');
+        }
+        function invokeSetMultiValue(){
+            var values = ['xyz123','xyz1234']
+            CleverTap.setMultiValueForKey('foo', JSON.stringify(values));
+        }
+
+
+
+
+
+</script>
+</body>
+</html>

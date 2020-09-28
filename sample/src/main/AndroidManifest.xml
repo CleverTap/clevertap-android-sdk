@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest package="com.clevertap.demo"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Add Permissions needed for CleverTap -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <application
+        android:name=".MyApplication"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme">
+        <activity
+            android:name=".HomeScreenActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713" />
+
+        <!-- Add meta data for CleverTap Account Id and Account Token -->
+        <meta-data
+            android:name="CLEVERTAP_ACCOUNT_ID"
+            android:value="TEST-46W-WWR-R85Z" />
+        <meta-data
+            android:name="CLEVERTAP_TOKEN"
+            android:value="TEST-200-064" />
+
+        <!-- Xiaomi Push -->
+        <meta-data
+            android:name="CLEVERTAP_XIAOMI_APP_KEY"
+            android:value="@string/xiaomi_app_key" />
+
+        <meta-data
+            android:name="CLEVERTAP_XIAOMI_APP_ID"
+            android:value="@string/xiaomi_app_id" />
+
+        <!-- android:name="CLEVERTAP_REGION" -->
+        <!-- android:value="eu1"/> -->
+        <!-- IMPORTANT: To force use Google AD ID to uniquely identify  users, use the following meta tag. GDPR mandates that if you are using this tag, there is prominent disclousure to your end customer in their application. Read more about GDPR here - https://clevertap.com/blog/in-preparation-of-gdpr-compliance/ -->
+        <meta-data
+            android:name="CLEVERTAP_USE_GOOGLE_AD_ID"
+            android:value="1" />
+        <meta-data
+            android:name="CLEVERTAP_SSL_PINNING"
+            android:value="0" /> <!-- Add meta data for CleverTap Notification Icon -->
+        <meta-data
+            android:name="CLEVERTAP_NOTIFICATION_ICON"
+            android:value="ic_launcher_round" />
+        <meta-data
+            android:name="CLEVERTAP_BACKGROUND_SYNC"
+            android:value="1" /> <!-- Add meta and set to 1 to raise Notification Viewed for Push Notifications -->
+        <meta-data
+            android:name="CLEVERTAP_RAISE_NOTIFICATION_VIEWED"
+            android:value="1" /> <!-- Add meta and set to 1 start using custom CleverTap ID -->
+        <meta-data
+            android:name="CLEVERTAP_USE_CUSTOM_ID"
+            android:value="0" /> <!-- Add CleverTap Push Notification Services & Install Referrer Receivers -->
+        <service
+            android:name="com.clevertap.android.sdk.pushnotification.fcm.FcmMessageListenerService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+        <service
+            android:name="com.clevertap.android.sdk.pushnotification.CTNotificationIntentService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.clevertap.PUSH_EVENT" />
+            </intent-filter>
+        </service>
+
+        <activity
+            android:name=".WebViewActivity"
+            android:label="WebView" />
+    </application>
+
+</manifest>

@@ -1,0 +1,221 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.github.dcendents.android-maven'
+apply plugin: 'com.jfrog.bintray'
+apply plugin: 'jacoco'
+apply plugin: 'kotlin-android'
+
+jacoco {
+    toolVersion = "$jacocoVersion"
+}
+
+tasks.withType(Test) {
+    jacoco.includeNoLocationClasses = true
+}
+
+task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'createDebugCoverageReport']) {
+
+    reports {
+        xml.enabled = true
+        html.enabled = true
+    }
+
+    def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*', '**/*Test*.*', 'android/**/*.*']
+    def debugTree = fileTree(dir: "$project.buildDir/intermediates/javac/debug", excludes: fileFilter)
+    def mainSrc = "$project.projectDir/src/main/java"
+
+    sourceDirectories.from = files([mainSrc])
+    classDirectories.from = files([debugTree])
+    executionData.from = fileTree(dir: project.buildDir, includes: [
+            'jacoco/testDebugUnitTest.exec', 'outputs/code_coverage/debugAndroidTest/connected/**/*.ec'
+    ])
+}
+
+buildscript {
+    repositories {
+        google()
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:4.0.1'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
+        classpath 'com.google.gms:google-services:4.3.3'
+    }
+}
+
+repositories {
+    google()
+    jcenter()
+}
+
+ext {
+    bintrayRepo = 'Maven'
+    bintrayName = 'CleverTapAndroidSDK'
+    org = 'clevertap'
+
+    publishedGroupId = 'com.clevertap.android'
+    libraryName = 'CleverTapAndroidSDK'
+    artifact = 'clevertap-android-sdk'
+    libraryDescription = 'The CleverTap Android SDK'
+
+    siteUrl = 'https://github.com/CleverTap/clevertap-android-sdk'
+    gitUrl = 'https://github.com/CleverTap/clevertap-android-sdk.git'
+
+    libraryVersion = "$coreVersion"
+
+    developerId = 'clevertap'
+    developerName = 'CleverTap'
+    developerEmail = 'support@clevertap.com'
+
+    licenseName = 'The Apache Software License, Version 2.0'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = ["Apache-2.0"]
+}
+def (major,minor,patch) = libraryVersion.split("\\.")
+version = libraryVersion
+group = publishedGroupId
+
+android {
+    compileSdkVersion 29
+    buildToolsVersion '29.0.3'
+    defaultConfig {
+        minSdkVersion 16
+        targetSdkVersion 29
+        versionCode "${major}0${minor}0${patch}".toInteger()
+        versionName libraryVersion
+    }
+
+    buildTypes {
+        debug {
+            testCoverageEnabled true //To get coverage reports for instrumentation tests
+            buildConfigField "String", "SDK_VERSION_STRING",
+                    "\"!SDK-VERSION-STRING!:com.clevertap.android:clevertap-android-sdk:$major.$minor.$patch.0\""
+        }
+
+        release {
+            buildConfigField "String", "SDK_VERSION_STRING",
+                    "\"!SDK-VERSION-STRING!:com.clevertap.android:clevertap-android-sdk:$major.$minor.$patch.0\""
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+    //logic for variant based renaming of the aar files
+    libraryVariants.all { variant ->
+        variant.outputs.all {
+            if (variant.getName().toLowerCase().contains('release')) {
+                outputFileName = "${artifact}-${libraryVersion}.aar"
+            } else if (variant.getName().toLowerCase().contains('debug')) {
+                outputFileName = "${artifact}-${variant.name}-${libraryVersion}.aar"
+            }
+        }
+    }
+    testOptions {
+        animationsDisabled true
+        unitTests {
+            includeAndroidResources = true
+        }
+        unitTests.all {
+            jvmArgs '-noverify'
+        }
+    }
+}
+
+Properties properties = new Properties()
+if (project.rootProject.file('local.properties').exists()) {
+    properties.load(project.rootProject.file('local.properties').newDataInputStream())
+}
+
+bintray {
+    user = properties.getProperty("bintray.user")
+    key = properties.getProperty("bintray.apikey")
+
+    configurations = ['archives']
+    pkg {
+        repo = bintrayRepo
+        name = bintrayName
+        userOrg = org
+        desc = libraryDescription
+        websiteUrl = siteUrl
+        vcsUrl = gitUrl
+        licenses = allLicenses
+        publish = true
+        publicDownloadNumbers = true
+        version {
+            desc = libraryDescription
+        }
+    }
+}
+
+install {
+    repositories.mavenInstaller {
+        // This generates POM.xml with proper parameters
+        pom {
+            project {
+                packaging 'aar'
+                groupId publishedGroupId
+                artifactId artifact
+
+                // Add your description here
+                name libraryName
+                description libraryDescription
+                url siteUrl
+
+                // Set your license
+                licenses {
+                    license {
+                        name licenseName
+                        url licenseUrl
+                    }
+                }
+                developers {
+                    developer {
+                        id developerId
+                        name developerName
+                        email developerEmail
+                    }
+                }
+                scm {
+                    connection gitUrl
+                    developerConnection gitUrl
+                    url siteUrl
+
+                }
+            }
+        }
+    }
+}
+dependencies {
+    compileOnly 'com.google.firebase:firebase-messaging:20.2.4'
+    compileOnly 'com.google.android.exoplayer:exoplayer:2.11.5'
+    compileOnly 'com.google.android.exoplayer:exoplayer-hls:2.11.5'
+    compileOnly 'com.google.android.exoplayer:exoplayer-ui:2.11.5'
+    compileOnly 'com.github.bumptech.glide:glide:4.11.0'
+    //for notification
+    compileOnly 'androidx.core:core:1.3.0'
+    compileOnly 'androidx.viewpager:viewpager:1.0.0'
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+    implementation 'androidx.recyclerview:recyclerview:1.1.0'
+    compileOnly 'com.google.android.material:material:1.2.1'
+    compileOnly 'androidx.appcompat:appcompat:1.2.0'
+    compileOnly 'androidx.fragment:fragment:1.1.0'
+    implementation 'com.android.installreferrer:installreferrer:2.1'
+
+    // Unit testing dependencies
+    testImplementation project(':test_shared')
+    testImplementation "androidx.core:core-ktx:1.3.1"
+    testImplementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    testImplementation 'com.google.firebase:firebase-messaging:20.2.4'
+}
+
+task sourcesJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier = 'sources'
+}
+
+artifacts {
+    archives sourcesJar
+}

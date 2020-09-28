@@ -1,0 +1,112 @@
+<FrameLayout android:id="@+id/inapp_interstitial_frame_layout"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen">
+
+
+    <RelativeLayout
+        android:id="@+id/interstitial_relative_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:layout_margin="40dp">
+
+        <TextView
+            android:id="@+id/interstitial_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="22dp"
+            android:gravity="center"
+            android:maxLines="1"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/txt_size_inapp_title"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:id="@+id/backgroundImage"
+            android:layout_width="458dp"
+            android:layout_height="256dp"
+            android:layout_below="@+id/interstitial_title"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="22dp"
+            android:scaleType="centerCrop"
+            android:visibility="invisible" />
+
+        <com.clevertap.android.sdk.GifImageView
+            android:id="@+id/gifImage"
+            android:layout_width="458dp"
+            android:layout_height="256dp"
+            android:layout_below="@+id/interstitial_title"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="22dp"
+            android:scaleType="centerCrop"
+            android:visibility="gone" />
+
+        <FrameLayout
+            android:id="@+id/video_frame"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/interstitial_title"
+            android:layout_centerHorizontal="true"
+            android:visibility="gone"></FrameLayout>
+
+        <TextView
+            android:id="@+id/interstitial_message"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/backgroundImage"
+            android:layout_centerHorizontal="true"
+            android:layout_marginEnd="94dp"
+            android:layout_marginLeft="94dp"
+            android:layout_marginRight="94dp"
+            android:layout_marginStart="94dp"
+            android:layout_marginTop="22dp"
+            android:gravity="center"
+            android:maxLines="3"
+            android:textColor="@android:color/black"
+            android:textSize="@dimen/txt_size_inapp_message" />
+
+        <LinearLayout
+            android:id="@+id/interstitial_linear_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_below="@id/interstitial_message"
+            android:layout_centerHorizontal="true"
+            android:layout_marginBottom="20dp"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp"
+            android:layout_marginTop="20dp"
+            android:gravity="bottom"
+            android:orientation="horizontal"
+            android:visibility="visible">
+
+            <Button
+                android:id="@+id/interstitial_button1"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/inapp_button_height"
+                android:layout_weight="1"
+                android:textSize="@dimen/txt_size_inapp_button"
+                android:visibility="gone" />
+
+            <Button
+                android:id="@+id/interstitial_button2"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/inapp_button_height"
+                android:layout_marginLeft="25dp"
+                android:layout_marginStart="25dp"
+                android:layout_weight="1"
+                android:textSize="@dimen/txt_size_inapp_button"
+                android:visibility="gone" />
+        </LinearLayout>
+    </RelativeLayout>
+
+    <com.clevertap.android.sdk.CloseImageView
+        android:layout_width="40dp"
+        android:layout_height="40dp"
+        android:layout_gravity="top|end"
+        android:adjustViewBounds="true" />
+</FrameLayout>
