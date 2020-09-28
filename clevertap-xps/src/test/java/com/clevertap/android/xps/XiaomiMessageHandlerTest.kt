@@ -45,6 +45,7 @@ class XiaomiMessageHandlerTest : BaseTestCase() {
     }
 
     @Test
+    @Ignore
     fun testCreateNotification_Valid_Message() {
         val message = Mockito.mock(MiPushMessage::class.java)
         Mockito.`when`(message.content).thenReturn(getMockJsonString())

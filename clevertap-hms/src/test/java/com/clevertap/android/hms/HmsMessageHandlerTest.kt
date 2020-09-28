@@ -37,8 +37,7 @@ class HmsMessageHandlerTest : BaseTestCase() {
     }
 
     @Test
-    @Ignore
-    fun testCreateNotification_Invalid_Message() {
+    fun testCreateNotification_Invalid_Message_Fails_With_Exception() {
         val isSuccess = handler.createNotification(application, RemoteMessage(Bundle()))
         Assert.assertFalse(isSuccess)
     }
