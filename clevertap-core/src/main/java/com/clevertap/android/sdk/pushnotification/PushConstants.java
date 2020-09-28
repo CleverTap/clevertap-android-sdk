@@ -5,7 +5,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.StringDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.util.ArrayList;
 
 public interface PushConstants {
 
@@ -48,8 +47,6 @@ public interface PushConstants {
         BPS(BAIDU_DELIVERY_TYPE, BPS_PROPERTY_REG_ID, CT_BAIDU_PROVIDER_CLASS, BAIDU_SDK_CLASS),
         ADM(ADM_DELIVERY_TYPE, ADM_PROPERTY_REG_ID, CT_ADM_PROVIDER_CLASS, ADM_SDK_CLASS);
 
-        private static final ArrayList<String> ALL;
-
         private final String ctProviderClassName;
 
         private final String messagingSDKClassName;
@@ -57,21 +54,6 @@ public interface PushConstants {
         private final String tokenPrefKey;
 
         private final String type;
-
-        public static ArrayList<String> getAll() {
-            return ALL;
-        }
-
-        public static PushType[] getPushTypes(ArrayList<String> types) {
-            PushType[] pushTypes = new PushType[0];
-            if (types != null && !types.isEmpty()) {
-                pushTypes = new PushType[types.size()];
-                for (int i = 0; i < types.size(); i++) {
-                    pushTypes[i] = PushType.valueOf(types.get(i));
-                }
-            }
-            return pushTypes;
-        }
 
         PushType(@DeliveryType String type, @RegKeyType String prefKey, @CTPushProviderClass String className,
                 @PushMessagingClass String messagingSDKClassName) {
@@ -106,16 +88,13 @@ public interface PushConstants {
         }
 
         static {
-            ALL = new ArrayList<>();
-            for (PushType pushType : PushType.values()) {
-                ALL.add(pushType.name());
-            }
+
         }
     }
 
     String LOG_TAG = "PushProvider";
 
-    String FCM_LOG_TAG = "FirebaseMessaging : ";
+    String FCM_LOG_TAG = PushType.FCM.toString();
 
     @NonNull
     String FCM_DELIVERY_TYPE = "fcm";

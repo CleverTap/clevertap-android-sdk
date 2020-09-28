@@ -173,7 +173,7 @@ public interface Constants {
     String KEY_PACKAGE_NAME = "packageName";
     String KEY_ENABLE_UIEDITOR = "enableUIEditor";
     String KEY_ENABLE_ABTEST = "enableABTesting";
-    String KEY_ALLOWED_TRANSPORT = "allowedTransport";
+    String KEY_ALLOWED_PUSH_TYPES = "allowedPushTypes";
     String WZRK_PUSH_ID = "wzrk_pid";
     String NOTIF_MSG = "nm";
     String NOTIF_TITLE = "nt";

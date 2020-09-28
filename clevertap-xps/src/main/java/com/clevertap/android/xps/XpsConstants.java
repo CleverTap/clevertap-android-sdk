@@ -1,6 +1,7 @@
 package com.clevertap.android.xps;
 
 import androidx.annotation.IntDef;
+import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -12,7 +13,7 @@ public interface XpsConstants {
 
     }
 
-    String XIAOMI_LOG_TAG = XiaomiPushProvider.class.getSimpleName();
+    String XIAOMI_LOG_TAG = PushType.XPS.toString();
     int MIN_CT_ANDROID_SDK_VERSION = 30800;
     int TOKEN_SUCCESS = 0;
     int TOKEN_FAILURE = 1;

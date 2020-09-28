@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.pushnotification;
 
 import static com.clevertap.android.sdk.BuildConfig.VERSION_CODE;
+import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getPushTypes;
 
 import android.content.Context;
 import android.text.TextUtils;
@@ -226,7 +227,7 @@ public class PushProviders implements CTPushProviderListener {
     }
 
     private void findEnabledPushTypes() {
-        for (PushConstants.PushType pushType : config().getAllowedPushTypes()) {
+        for (PushConstants.PushType pushType : getPushTypes(config().getAllowedPushTypes())) {
             String className = pushType.getMessagingSDKClassName();
             try {
                 Class.forName(className);

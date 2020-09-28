@@ -46,10 +46,10 @@ class XiaomiMessageHandlerImpl implements IMiMessageHandler {
                 } else {
                     Logger.d(LOG_TAG, XIAOMI_LOG_TAG + "Can't create outside Clevertap Notification");
                 }
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 e.printStackTrace();
                 isSuccess = false;
-                Logger.d(LOG_TAG, XIAOMI_LOG_TAG + "Error Creating Notification");
+                Logger.d(LOG_TAG, XIAOMI_LOG_TAG + "Error Creating Notification", e);
             }
         } else {
             Logger.d(LOG_TAG, XIAOMI_LOG_TAG + "Received message entity is null!");
