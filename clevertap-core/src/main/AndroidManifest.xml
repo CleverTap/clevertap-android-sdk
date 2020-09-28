@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest package="com.clevertap.android.sdk"
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:versionCode="40000"
-    android:versionName="4.0.0">
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
     <application>
 
@@ -19,7 +17,7 @@
         <receiver
             android:name="com.clevertap.android.sdk.pushnotification.CTPushNotificationReceiver"
             android:enabled="true"
-            android:exported="false"></receiver>
+            android:exported="false" />
 
         <service
             android:name="com.clevertap.android.sdk.pushnotification.amp.CTBackgroundIntentService"
@@ -33,7 +31,7 @@
         <service
             android:name="com.clevertap.android.sdk.pushnotification.amp.CTBackgroundJobService"
             android:exported="false"
-            android:permission="android.permission.BIND_JOB_SERVICE"></service>
+            android:permission="android.permission.BIND_JOB_SERVICE" />
 
     </application>
 </manifest>

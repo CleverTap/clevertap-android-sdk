@@ -3,6 +3,7 @@
 buildscript {
     ext.kotlin_version = '1.3.72'
     ext.jacocoVersion = '0.8.4'
+    ext.coreVersion = "4.0.0"
     repositories {
         google()// Google's Maven repository
         jcenter()
@@ -33,4 +34,11 @@ allprojects {
 
 task clean(type: Delete) {
     delete rootProject.buildDir
+}
+
+task copyTemplates(type: Copy) {
+    outputs.upToDateWhen { false }
+    from 'templates/README.md'
+    into "."
+    expand('ctCoreVersion': "$coreVersion")
 }

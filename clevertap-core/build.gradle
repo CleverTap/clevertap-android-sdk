@@ -61,7 +61,7 @@ ext {
     siteUrl = 'https://github.com/CleverTap/clevertap-android-sdk'
     gitUrl = 'https://github.com/CleverTap/clevertap-android-sdk.git'
 
-    libraryVersion = '4.0.0'
+    libraryVersion = "$coreVersion"
 
     developerId = 'clevertap'
     developerName = 'CleverTap'
@@ -71,7 +71,7 @@ ext {
     licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
     allLicenses = ["Apache-2.0"]
 }
-
+def (major,minor,patch) = libraryVersion.split("\\.")
 version = libraryVersion
 group = publishedGroupId
 
@@ -81,18 +81,20 @@ android {
     defaultConfig {
         minSdkVersion 16
         targetSdkVersion 29
+        versionCode "${major}0${minor}0${patch}".toInteger()
+        versionName libraryVersion
     }
 
     buildTypes {
         debug {
             testCoverageEnabled true //To get coverage reports for instrumentation tests
             buildConfigField "String", "SDK_VERSION_STRING",
-                    '"!SDK-VERSION-STRING!:com.clevertap.android:clevertap-android-sdk:4.0.0.0"'
+                    "\"!SDK-VERSION-STRING!:com.clevertap.android:clevertap-android-sdk:$major.$minor.$patch.0\""
         }
 
         release {
             buildConfigField "String", "SDK_VERSION_STRING",
-                    '"!SDK-VERSION-STRING!:com.clevertap.android:clevertap-android-sdk:4.0.0.0"'
+                    "\"!SDK-VERSION-STRING!:com.clevertap.android:clevertap-android-sdk:$major.$minor.$patch.0\""
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
