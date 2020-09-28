@@ -274,7 +274,7 @@ class CTInAppNotification implements Parcelable {
         return 0;
     }
 
-    @SuppressWarnings({"unused"})
+    @SuppressWarnings("unused")
     public JSONObject getActionExtras() {
         return actionExtras;
     }
@@ -636,13 +636,6 @@ class CTInAppNotification implements Parcelable {
             switch (this.inAppType) {
                 case CTInAppTypeFooter:
                 case CTInAppTypeHeader:
-                    for (CTInAppNotificationMedia inAppMedia : this.mediaList) {
-                        if (inAppMedia.isGIF() || inAppMedia.isAudio() || inAppMedia.isVideo()) {
-                            inAppMedia.setMediaUrl(null);
-                            Logger.d("Unable to download to media. Wrong media type for template");
-                        }
-                    }
-                    break;
                 case CTInAppTypeCover:
                 case CTInAppTypeHalfInterstitial:
                     for (CTInAppNotificationMedia inAppMedia : this.mediaList) {
@@ -825,6 +818,7 @@ class CTInAppNotification implements Parcelable {
         }
     }
 
+    @SuppressWarnings("rawtypes")
     private static Bundle getBundleFromJsonObject(JSONObject notif) {
         Bundle b = new Bundle();
         Iterator iterator = notif.keys();

@@ -233,7 +233,6 @@ class InAppFCManager {
     private String getStringFromPrefs(String rawKey, String defaultValue) {
         if (this.config.isDefaultInstance()) {
             String _new = StorageHelper.getString(this.context, storageKeyWithSuffix(rawKey), defaultValue);
-            //noinspection ConstantConditions
             return _new != null ? _new : StorageHelper.getString(this.context, rawKey, defaultValue);
         } else {
             return StorageHelper.getString(this.context, storageKeyWithSuffix(rawKey), defaultValue);

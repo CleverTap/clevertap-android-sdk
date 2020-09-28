@@ -24,9 +24,11 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
@@ -55,11 +57,6 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
 
     private GifImageView gifImageView;
 
-    @SuppressWarnings({"unused"})
-    private int layoutHeight = 0;
-
-    private int layoutWidth = 0;
-
     private SimpleExoPlayer player;
 
     private PlayerView playerView;
@@ -73,7 +70,8 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+            Bundle savedInstanceState) {
 
         ArrayList<Button> inAppButtons = new ArrayList<>();
 
@@ -110,11 +108,8 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                                         redrawInterstitialInApp(relativeLayout1, layoutParams, closeImageView);
                                     }
                                 }
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                                    relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                                } else {
-                                    relativeLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                                }
+
+                                relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                             }
                         });
                 break;
@@ -138,11 +133,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                                     }
                                 }
 
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                                    relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                                } else {
-                                    relativeLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                                }
+                                relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                             }
                         });
                 break;
@@ -209,9 +200,10 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
             }
         }
 
-        fl.setBackgroundDrawable(new ColorDrawable(0xBB000000));
+        fl.setBackground(new ColorDrawable(0xBB000000));
 
         closeImageView.setOnClickListener(new View.OnClickListener() {
+            @SuppressWarnings("ConstantConditions")
             @Override
             public void onClick(View v) {
                 didDismiss(null);
@@ -283,7 +275,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     }
 
     @Override
-    public void onSaveInstanceState(Bundle outState) {
+    public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
     }
 
@@ -311,7 +303,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         exoPlayerFullscreen = false;
         fullScreenDialog.dismiss();
         fullScreenIcon.setImageDrawable(
-                ContextCompat.getDrawable(getActivity().getApplicationContext(), R.drawable.ct_ic_fullscreen_expand));
+                ContextCompat.getDrawable(this.context, R.drawable.ct_ic_fullscreen_expand));
     }
 
     private void disableFullScreenButton() {
@@ -319,7 +311,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     }
 
     private void initFullScreenDialog() {
-        fullScreenDialog = new Dialog(getActivity(), android.R.style.Theme_Black_NoTitleBar_Fullscreen) {
+        fullScreenDialog = new Dialog(this.context, android.R.style.Theme_Black_NoTitleBar_Fullscreen) {
             public void onBackPressed() {
                 if (exoPlayerFullscreen) {
                     closeFullscreenDialog();
@@ -353,10 +345,10 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         videoFrameLayout = relativeLayout.findViewById(R.id.video_frame);
         videoFrameLayout.setVisibility(View.VISIBLE);
 
-        playerView = new PlayerView(getActivity().getBaseContext());
-        fullScreenIcon = new ImageView(getActivity().getBaseContext());
+        playerView = new PlayerView(this.context);
+        fullScreenIcon = new ImageView(this.context);
         fullScreenIcon.setImageDrawable(
-                getActivity().getBaseContext().getResources().getDrawable(R.drawable.ct_ic_fullscreen_expand));
+                ResourcesCompat.getDrawable(this.context.getResources(), R.drawable.ct_ic_fullscreen_expand, null));
         fullScreenIcon.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -412,23 +404,19 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         playerView.setControllerAutoShow(false);
         videoFrameLayout.addView(playerView);
         videoFrameLayout.addView(fullScreenIcon);
-        Drawable artwork = getActivity().getBaseContext().getResources().getDrawable(R.drawable.ct_audio);
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            playerView.setDefaultArtwork(artwork);
-        } else {
-            playerView.setDefaultArtwork(artwork);
-        }
+        Drawable artwork = ResourcesCompat.getDrawable(this.context.getResources(), R.drawable.ct_audio, null);
+        playerView.setDefaultArtwork(artwork);
 
         // 1. Create a default TrackSelector
-        BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter.Builder(getActivity().getBaseContext()).build();
+        BandwidthMeter bandwidthMeter = new DefaultBandwidthMeter.Builder(this.context).build();
         TrackSelection.Factory videoTrackSelectionFactory = new AdaptiveTrackSelection.Factory();
-        TrackSelector trackSelector = new DefaultTrackSelector(getActivity().getBaseContext(),
+        TrackSelector trackSelector = new DefaultTrackSelector(this.context,
                 videoTrackSelectionFactory);
         // 2. Create the player
-        player = new SimpleExoPlayer.Builder(getActivity().getBaseContext()).setTrackSelector(trackSelector).build();
+        player = new SimpleExoPlayer.Builder(this.context).setTrackSelector(trackSelector).build();
         // 3. Produces DataSource instances through which media data is loaded.
-        DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(getActivity().getBaseContext(),
-                Util.getUserAgent(getActivity().getBaseContext(), getActivity().getApplication().getPackageName()),
+        DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this.context,
+                Util.getUserAgent(this.context, this.context.getApplicationContext().getPackageName()),
                 (TransferListener) bandwidthMeter);
         HlsMediaSource hlsMediaSource;
         hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory)

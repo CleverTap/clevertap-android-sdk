@@ -17,6 +17,7 @@ import org.json.JSONObject;
 
 class DBAdapter {
 
+    @SuppressWarnings("FieldCanBeLocal")
     private static class DatabaseHelper extends SQLiteOpenHelper {
 
         private final int DB_LIMIT = 20 * 1024 * 1024; //20mb

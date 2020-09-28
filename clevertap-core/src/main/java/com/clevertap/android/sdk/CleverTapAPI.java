@@ -8712,6 +8712,10 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 Logger.v(config.getAccountId(), "calling InAppFragment " + inAppNotification.getCampaignId());
                 fragmentTransaction.commit();
 
+            } catch (ClassCastException e) {
+                Logger.v(config.getAccountId(),
+                        "Fragment not able to render, please ensure your Activity is an instance of AppCompatActivity"
+                                + e.getMessage());
             } catch (Throwable t) {
                 Logger.v(config.getAccountId(), "Fragment not able to render", t);
             }

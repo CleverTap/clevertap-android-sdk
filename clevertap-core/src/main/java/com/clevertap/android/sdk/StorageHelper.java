@@ -5,6 +5,7 @@ import android.content.SharedPreferences;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.WorkerThread;
 
+@SuppressWarnings("unused")
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public final class StorageHelper {
 
@@ -26,7 +27,6 @@ public final class StorageHelper {
         if (config.isDefaultInstance()) {
             String _new = getString(context, storageKeyWithSuffix(config, rawKey), defaultValue);
 
-            //noinspection ConstantConditions
             return _new != null ? _new : getString(context, rawKey, defaultValue);
         } else {
             return getString(context, storageKeyWithSuffix(config, rawKey), defaultValue);
@@ -113,7 +113,6 @@ public final class StorageHelper {
         }
     }
 
-    @SuppressWarnings("unused")
     static long getLong(Context context, String key, long defaultValue) {
         return getPreferences(context).getLong(key, defaultValue);
     }
@@ -154,7 +153,6 @@ public final class StorageHelper {
         persist(editor);
     }
 
-    @SuppressWarnings("unused")
     static void putLong(Context context, String key, long value) {
         SharedPreferences prefs = getPreferences(context);
         SharedPreferences.Editor editor = prefs.edit().putLong(key, value);

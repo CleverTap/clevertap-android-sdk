@@ -38,6 +38,7 @@ public class CTInAppNativeCoverImageFragment extends CTInAppBaseFullFragment {
         CloseImageView closeImageView = fl.findViewById(199272);
 
         closeImageView.setOnClickListener(new View.OnClickListener() {
+            @SuppressWarnings("ConstantConditions")
             @Override
             public void onClick(View v) {
                 didDismiss(null);

@@ -10,13 +10,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import androidx.annotation.NonNull;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.Timeline;
 import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
@@ -26,6 +26,7 @@ import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.PlayerView;
 
+@SuppressWarnings("unused")
 public class MediaPlayerRecyclerView extends RecyclerView {
 
     SimpleExoPlayer player;
@@ -123,7 +124,6 @@ public class MediaPlayerRecyclerView extends RecyclerView {
         videoSurfaceView = null;
     }
 
-    @SuppressWarnings({"unused"})
     public void removePlayer() {
         if (videoSurfaceView != null) {
             removeVideoView();
@@ -179,7 +179,7 @@ public class MediaPlayerRecyclerView extends RecyclerView {
             videoSurfaceView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FIT);
         }
         videoSurfaceView.setUseArtwork(true);
-        Drawable artwork = context.getResources().getDrawable(R.drawable.ct_audio);
+        Drawable artwork = ResourcesCompat.getDrawable(context.getResources(), R.drawable.ct_audio, null);
         videoSurfaceView.setDefaultArtwork(artwork);
 
         TrackSelection.Factory videoTrackSelectionFactory =
@@ -250,13 +250,12 @@ public class MediaPlayerRecyclerView extends RecyclerView {
                             }
                         }
                         break;
-                    case Player.STATE_IDLE:
-                        break;
                     case Player.STATE_READY:
                         if (playingHolder != null) {
                             playingHolder.playerReady();
                         }
                         break;
+                    case Player.STATE_IDLE:
                     default:
                         break;
                 }
@@ -276,10 +275,6 @@ public class MediaPlayerRecyclerView extends RecyclerView {
 
             @Override
             public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
-            }
-
-            @Override
-            public void onTimelineChanged(Timeline timeline, Object manifest, int reason) {
             }
 
             @Override

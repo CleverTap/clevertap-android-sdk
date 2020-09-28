@@ -10,6 +10,7 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager.widget.ViewPager;
@@ -75,8 +76,10 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         toolbar.setTitle(styleConfig.getNavBarTitle());
         toolbar.setTitleTextColor(Color.parseColor(styleConfig.getNavBarTitleColor()));
         toolbar.setBackgroundColor(Color.parseColor(styleConfig.getNavBarColor()));
-        Drawable drawable = getResources().getDrawable(R.drawable.ct_ic_arrow_back_white_24dp);
-        drawable.setColorFilter(Color.parseColor(styleConfig.getBackButtonColor()), PorterDuff.Mode.SRC_IN);
+        Drawable drawable = ResourcesCompat.getDrawable(getResources(), R.drawable.ct_ic_arrow_back_white_24dp, null);
+        if (drawable != null) {
+            drawable.setColorFilter(Color.parseColor(styleConfig.getBackButtonColor()), PorterDuff.Mode.SRC_IN);
+        }
         toolbar.setNavigationIcon(drawable);
         toolbar.setNavigationOnClickListener(new View.OnClickListener() {
             @Override
@@ -163,7 +166,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
                 public void onTabSelected(TabLayout.Tab tab) {
                     CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter
                             .getItem(tab.getPosition());
-                    if (fragment != null && fragment.getMediaRecyclerView() != null) {
+                    if (fragment.getMediaRecyclerView() != null) {
                         fragment.getMediaRecyclerView().onRestartPlayer();
                     }
                 }
@@ -172,7 +175,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
                 public void onTabUnselected(TabLayout.Tab tab) {
                     CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter
                             .getItem(tab.getPosition());
-                    if (fragment != null && fragment.getMediaRecyclerView() != null) {
+                    if (fragment.getMediaRecyclerView() != null) {
                         fragment.getMediaRecyclerView().onPausePlayer();
                     }
                 }

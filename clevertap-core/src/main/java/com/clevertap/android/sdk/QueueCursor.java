@@ -2,6 +2,7 @@ package com.clevertap.android.sdk;
 
 import org.json.JSONArray;
 
+@SuppressWarnings("unused")
 final class QueueCursor {
 
     private JSONArray data; // the db objects
@@ -45,7 +46,6 @@ final class QueueCursor {
         return (lastId == null || data == null || data.length() <= 0);
     }
 
-    @SuppressWarnings("unused")
     private void resetForTableName(DBAdapter.Table tName) {
         tableName = tName;
         data = null;

@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk;
 
+import androidx.annotation.NonNull;
+
 enum CTInAppType {
 
     CTInAppTypeHTML("html"),
@@ -25,6 +27,7 @@ enum CTInAppType {
         this.inAppType = type;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return inAppType;

@@ -18,7 +18,6 @@ final class Validator {
         Profile(), Event()
     }
 
-    @SuppressWarnings("unused")
     private enum RestrictedMultiValueFields {
         Name(), Email(), Education(),
         Married(), DOB(), Gender(),
@@ -187,6 +186,7 @@ final class Validator {
      * @param o Object to be cleaned(only if it is a string)
      * @return The cleaned object
      */
+    @SuppressWarnings("unchecked")
     ValidationResult cleanObjectValue(Object o, ValidationContext validationContext)
             throws IllegalArgumentException {
         ValidationResult vr = new ValidationResult();
@@ -233,9 +233,7 @@ final class Validator {
         } else if ((o instanceof String[] || o instanceof ArrayList) && validationContext
                 .equals(ValidationContext.Profile)) {
             ArrayList<String> valuesList = null;
-            if (o instanceof ArrayList)
-            //noinspection unchecked
-            {
+            if (o instanceof ArrayList) {
                 valuesList = (ArrayList<String>) o;
             }
             String[] values = null;

@@ -42,6 +42,7 @@ final class ManifestValidator {
         }
     }
 
+    @SuppressWarnings("ConstantConditions")
     private static void checkReceiversServices(final Context context, PushProviders pushProviders) {
         try {
             validateReceiverInManifest((Application) context.getApplicationContext(),
@@ -87,7 +88,7 @@ final class ManifestValidator {
         Logger.i("SDK Version Code is " + deviceInfo.getSdkVersion());
     }
 
-    @SuppressWarnings("SameParameterValue")
+    @SuppressWarnings({"SameParameterValue", "rawtypes"})
     private static void validateActivityInManifest(Application application, Class activityClass)
             throws PackageManager.NameNotFoundException {
         PackageManager pm = application.getPackageManager();

@@ -37,8 +37,6 @@ import org.json.JSONObject;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class Utils {
 
-    private static final String TAG = "Utils";
-
     public static boolean isActivityDead(Activity activity) {
         if (activity == null) {
             return true;
@@ -77,6 +75,7 @@ public final class Utils {
         }
     }
 
+    @SuppressWarnings("ConstantConditions")
     public static void setPackageNameFromResolveInfoList(Context context, Intent launchIntent) {
         List<ResolveInfo> resolveInfoList = context.getPackageManager().queryIntentActivities(launchIntent, 0);
         if (resolveInfoList != null) {
@@ -94,6 +93,7 @@ public final class Utils {
      * @param content String which contains bundle information
      * @return Bundle to be passed to createNotification(Context context, Bundle extras)
      */
+    @SuppressWarnings("rawtypes")
     public static Bundle stringToBundle(String content) throws JSONException {
         JSONObject jsonObject = new JSONObject(content);
         Bundle bundle = new Bundle();
@@ -241,7 +241,7 @@ public final class Utils {
             NetworkInfo mWifi = connManager
                     .getNetworkInfo(ConnectivityManager.TYPE_WIFI);
 
-            if (mWifi.isConnected()) {
+            if (mWifi != null && mWifi.isConnected()) {
                 return "WiFi";
             }
 

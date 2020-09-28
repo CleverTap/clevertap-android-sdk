@@ -29,6 +29,7 @@ public class CTInboxTabAdapter extends FragmentPagerAdapter {
         return fragmentList.length;
     }
 
+    @NonNull
     @Override
     public Fragment getItem(int position) {
         return fragmentList[position];

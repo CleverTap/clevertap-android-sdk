@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.Gravity;
@@ -18,23 +17,18 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import java.util.ArrayList;
 
 public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNativeFragment {
 
-    @SuppressWarnings({"unused"})
-    private int layoutHeight = 0;
-
-    private int layoutWidth = 0;
-
     private RelativeLayout relativeLayout;
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+            Bundle savedInstanceState) {
 
         ArrayList<Button> inAppButtons = new ArrayList<>();
         View inAppView;
@@ -69,11 +63,9 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
                                         redrawHalfInterstitialInApp(relativeLayout, layoutParams, closeImageView);
                                     }
                                 }
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                                    relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                                } else {
-                                    relativeLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                                }
+
+                                relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+
                             }
                         });
                 break;
@@ -105,7 +97,7 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
                                             }
                                         });
                                     } else {
-                                        layoutWidth = layoutParams.width = (int) (relativeLayout1.getMeasuredHeight()
+                                        layoutParams.width = (int) (relativeLayout1.getMeasuredHeight()
                                                 * 1.3f);
                                         layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
                                         relativeLayout1.setLayoutParams(layoutParams);
@@ -132,11 +124,8 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
                                     });
                                 }
 
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                                    relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                                } else {
-                                    relativeLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                                }
+                                relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+
                             }
                         });
                 break;
@@ -185,9 +174,10 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
             }
         }
 
-        fl.setBackgroundDrawable(new ColorDrawable(0xBB000000));
+        fl.setBackground(new ColorDrawable(0xBB000000));
 
         closeImageView.setOnClickListener(new View.OnClickListener() {
+            @SuppressWarnings("ConstantConditions")
             @Override
             public void onClick(View v) {
                 didDismiss(null);

@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.view.Gravity;
@@ -15,20 +14,17 @@ import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 public class CTInAppNativeHalfInterstitialImageFragment extends CTInAppBaseFullFragment {
-
-    @SuppressWarnings({"unused"})
-    private int layoutHeight = 0;
-
-    private int layoutWidth = 0;
 
     private RelativeLayout relativeLayout;
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+            Bundle savedInstanceState) {
 
         View inAppView;
         if (inAppNotification.isTablet() && isTablet()) {
@@ -41,7 +37,7 @@ public class CTInAppNativeHalfInterstitialImageFragment extends CTInAppBaseFullF
 
         @SuppressLint("ResourceType") final CloseImageView closeImageView = fl.findViewById(199272);
 
-        fl.setBackgroundDrawable(new ColorDrawable(0xBB000000));
+        fl.setBackground(new ColorDrawable(0xBB000000));
         relativeLayout = fl.findViewById(R.id.half_interstitial_image_relative_layout);
         relativeLayout.setBackgroundColor(Color.parseColor(inAppNotification.getBackgroundColor()));
         ImageView imageView = relativeLayout.findViewById(R.id.half_interstitial_image);
@@ -63,11 +59,8 @@ public class CTInAppNativeHalfInterstitialImageFragment extends CTInAppBaseFullF
                                         redrawHalfInterstitialInApp(relativeLayout, layoutParams, closeImageView);
                                     }
                                 }
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                                    relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                                } else {
-                                    relativeLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                                }
+
+                                relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                             }
                         });
                 break;
@@ -97,7 +90,7 @@ public class CTInAppNativeHalfInterstitialImageFragment extends CTInAppBaseFullF
                                             }
                                         });
                                     } else {
-                                        layoutWidth = layoutParams.width = (int) (relativeLayout.getMeasuredHeight()
+                                        layoutParams.width = (int) (relativeLayout.getMeasuredHeight()
                                                 * 1.3f);
                                         layoutParams.gravity = Gravity.CENTER_HORIZONTAL;
                                         relativeLayout.setLayoutParams(layoutParams);
@@ -124,11 +117,7 @@ public class CTInAppNativeHalfInterstitialImageFragment extends CTInAppBaseFullF
                                     });
                                 }
 
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                                    relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                                } else {
-                                    relativeLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                                }
+                                relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                             }
                         });
                 break;
@@ -145,6 +134,7 @@ public class CTInAppNativeHalfInterstitialImageFragment extends CTInAppBaseFullF
         }
 
         closeImageView.setOnClickListener(new View.OnClickListener() {
+            @SuppressWarnings("ConstantConditions")
             @Override
             public void onClick(View v) {
                 didDismiss(null);

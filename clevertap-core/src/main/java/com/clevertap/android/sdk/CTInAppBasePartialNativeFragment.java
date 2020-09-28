@@ -71,7 +71,7 @@ public abstract class CTInAppBasePartialNativeFragment extends CTInAppBasePartia
         }
     }
 
-    final GestureDetector gd = new GestureDetector(new GestureListener());
+    final GestureDetector gd = new GestureDetector(this.context, new GestureListener());
 
     View inAppView;
 
@@ -95,9 +95,8 @@ public abstract class CTInAppBasePartialNativeFragment extends CTInAppBasePartia
         secondaryButton.setLayoutParams(secondaryLayoutParams);
     }
 
-    @SuppressWarnings({"unused"})
     void setupInAppButton(Button inAppButton, final CTInAppNotificationButton inAppNotificationButton,
-            final CTInAppNotification inAppNotification, final int buttonIndex) {
+            final int buttonIndex) {
         if (inAppNotificationButton != null) {
             inAppButton.setTag(buttonIndex);
             inAppButton.setVisibility(View.VISIBLE);

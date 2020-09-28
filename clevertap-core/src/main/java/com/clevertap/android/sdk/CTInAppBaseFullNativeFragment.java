@@ -7,7 +7,6 @@ import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RoundRectShape;
-import android.os.Build;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.WindowManager;
@@ -16,7 +15,7 @@ import android.widget.Button;
 public abstract class CTInAppBaseFullNativeFragment extends CTInAppBaseFullFragment {
 
     int getDPI() {
-        WindowManager wm = (WindowManager) getActivity().getBaseContext().getSystemService(Context.WINDOW_SERVICE);
+        WindowManager wm = (WindowManager) this.context.getSystemService(Context.WINDOW_SERVICE);
         if (wm == null) {
             return 0;
         }
@@ -70,11 +69,7 @@ public abstract class CTInAppBaseFullNativeFragment extends CTInAppBaseFullFragm
 
                 LayerDrawable layerDrawable = new LayerDrawable(drawables);
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                    inAppButton.setBackground(layerDrawable);
-                } else {
-                    inAppButton.setBackgroundDrawable(layerDrawable);
-                }
+                inAppButton.setBackground(layerDrawable);
             }
         } else {
             inAppButton.setVisibility(View.GONE);

@@ -29,12 +29,16 @@ public abstract class CTInAppBasePartialFragment extends CTInAppBaseFragment {
     void cleanup() {
         if (!Utils.isActivityDead(getActivity()) && !isCleanedUp.get()) {
             final FragmentManager fragmentManager = getFragmentManager();
-            FragmentTransaction transaction = fragmentManager.beginTransaction();
-            try {
-                transaction.remove(this).commit();
-            } catch (IllegalStateException e) {
-                fragmentManager.beginTransaction().remove(this).commitAllowingStateLoss();
+            FragmentTransaction transaction;
+            if (fragmentManager != null) {
+                transaction = fragmentManager.beginTransaction();
+                try {
+                    transaction.remove(this).commit();
+                } catch (IllegalStateException e) {
+                    fragmentManager.beginTransaction().remove(this).commitAllowingStateLoss();
+                }
             }
+
         }
         isCleanedUp.set(true);
     }
@@ -42,7 +46,7 @@ public abstract class CTInAppBasePartialFragment extends CTInAppBaseFragment {
     @Override
     void generateListener() {
         if (config != null) {
-            setListener(CleverTapAPI.instanceWithConfig(getActivity().getBaseContext(), config));
+            setListener(CleverTapAPI.instanceWithConfig(this.context, config));
         }
     }
 }

@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 
 
+@SuppressWarnings("rawtypes")
 class CTInboxMessageAdapter extends RecyclerView.Adapter {
 
     private static final int SIMPLE = 0;
@@ -55,7 +56,8 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
         _viewHolder.configureWithMessage(inboxMessage, fragment, i);
     }
 
-    @NonNull
+
+    @SuppressWarnings({"ConstantConditions", "NullableProblems"})
     @Override
     public CTInboxBaseMessageViewHolder onCreateViewHolder(@NonNull ViewGroup viewGroup, int viewType) {
         View view;

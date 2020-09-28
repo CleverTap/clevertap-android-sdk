@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
@@ -38,6 +37,8 @@ public abstract class CTInAppBaseFragment extends Fragment {
 
     CleverTapInstanceConfig config;
 
+    Context context;
+
     int currentOrientation;
 
     CTInAppNotification inAppNotification;
@@ -45,8 +46,6 @@ public abstract class CTInAppBaseFragment extends Fragment {
     AtomicBoolean isCleanedUp = new AtomicBoolean();
 
     private WeakReference<CTInAppBaseFragment.InAppListener> listenerWeakReference;
-
-    Context context;
 
     @Override
     public void onAttach(Context context) {

@@ -13,6 +13,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+@SuppressWarnings("unused")
 class LocalDataStore {
 
     private static long EXECUTOR_THREAD_ID = 0;
@@ -116,7 +117,6 @@ class LocalDataStore {
         removeProfileField(key, false, true);
     }
 
-    @SuppressWarnings("unused")
     void removeProfileFields(ArrayList<String> fields) {
         if (fields == null) {
             return;
@@ -179,6 +179,7 @@ class LocalDataStore {
         setProfileFields(fields, false);
     }
 
+    @SuppressWarnings("rawtypes")
     void syncWithUpstream(Context context, JSONObject response) {
         try {
             JSONObject eventUpdates = null;
@@ -388,7 +389,6 @@ class LocalDataStore {
         if (this.config.isDefaultInstance()) {
             String _new = StorageHelper
                     .getString(this.context, nameSpace, storageKeyWithSuffix(rawKey), defaultValue);
-            // noinspection ConstantConditions
             return _new != null ? _new : StorageHelper.getString(this.context, nameSpace, rawKey, defaultValue);
         } else {
             return StorageHelper.getString(this.context, nameSpace, storageKeyWithSuffix(rawKey), defaultValue);
@@ -455,6 +455,7 @@ class LocalDataStore {
         return this.config.isPersonalizationEnabled();
     }
 
+    @SuppressWarnings("ConstantConditions")
     @SuppressLint("CommitPrefEdits")
     private void persistEvent(Context context, JSONObject event) {
         try {
@@ -553,7 +554,6 @@ class LocalDataStore {
         return stringify(value1).equals(stringify(value2));
     }
 
-    @SuppressWarnings("unused")
     private void removeLocalProfileKeyExpiryTime(String key) {
         if (key == null) {
             return;
@@ -637,6 +637,7 @@ class LocalDataStore {
         }
     }
 
+    @SuppressWarnings("rawtypes")
     private void setProfileFields(JSONObject fields, Boolean fromUpstream) {
         if (fields == null) {
             return;
@@ -670,6 +671,7 @@ class LocalDataStore {
         return (value == null) ? "" : value.toString();
     }
 
+    @SuppressWarnings({"rawtypes", "ConstantConditions"})
     private JSONObject syncEventsFromUpstream(Context context, JSONObject events) {
         try {
             JSONObject eventUpdates = null;
@@ -752,6 +754,7 @@ class LocalDataStore {
         }
     }
 
+    @SuppressWarnings("rawtypes")
     private JSONObject syncProfile(JSONObject remoteProfile) {
 
         // Will hold the changes to be returned

@@ -5,6 +5,7 @@ import android.content.Context;
 import android.util.AttributeSet;
 import android.widget.ImageView;
 
+@SuppressWarnings("SuspiciousNameCombination")
 @SuppressLint("AppCompatCustomView")
 public class RectangleImageView extends ImageView {
 
@@ -26,7 +27,6 @@ public class RectangleImageView extends ImageView {
 
         float width = getMeasuredWidth() * 0.5625f;
         int finalWidth = Math.round(width);
-        //noinspection SuspiciousNameCombination
         setMeasuredDimension(getMeasuredWidth(), finalWidth);
     }
 }

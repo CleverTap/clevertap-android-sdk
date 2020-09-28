@@ -3,7 +3,6 @@ package com.clevertap.android.sdk;
 import android.annotation.SuppressLint;
 import android.content.res.Configuration;
 import android.graphics.Color;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,12 +14,10 @@ import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
 import java.util.ArrayList;
 
 public class CTInAppNativeCoverFragment extends CTInAppBaseFullNativeFragment {
 
-    @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
@@ -80,6 +77,7 @@ public class CTInAppNativeCoverFragment extends CTInAppBaseFullNativeFragment {
         CloseImageView closeImageView = fl.findViewById(199272);
 
         closeImageView.setOnClickListener(new View.OnClickListener() {
+            @SuppressWarnings("ConstantConditions")
             @Override
             public void onClick(View v) {
                 didDismiss(null);

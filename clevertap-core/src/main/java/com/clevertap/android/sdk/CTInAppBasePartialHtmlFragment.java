@@ -112,7 +112,8 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
 
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+            Bundle savedInstanceState) {
         return displayHTMLView(inflater, container);
     }
 
@@ -149,7 +150,7 @@ public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialF
         try {
             inAppView = getView(inflater, container);
             layout = getLayout(inAppView);
-            webView = new CTInAppWebView(getActivity().getBaseContext(), inAppNotification.getWidth(),
+            webView = new CTInAppWebView(this.context, inAppNotification.getWidth(),
                     inAppNotification.getHeight(), inAppNotification.getWidthPercentage(),
                     inAppNotification.getHeightPercentage());
             InAppWebViewClient webViewClient = new InAppWebViewClient();

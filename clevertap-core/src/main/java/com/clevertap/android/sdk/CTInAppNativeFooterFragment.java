@@ -73,7 +73,7 @@ public class CTInAppNativeFooterFragment extends CTInAppBasePartialNativeFragmen
                 }
                 CTInAppNotificationButton inAppNotificationButton = buttons.get(i);
                 Button button = inAppButtons.get(i);
-                setupInAppButton(button, inAppNotificationButton, inAppNotification, i);
+                setupInAppButton(button, inAppNotificationButton, i);
             }
         }
 

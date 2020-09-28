@@ -67,7 +67,8 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+            Bundle savedInstanceState) {
         return displayHTMLView(inflater, container);
     }
 
@@ -108,7 +109,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
             webViewLp.addRule(RelativeLayout.CENTER_IN_PARENT);
 
             initWebViewLayoutParams(webViewLp);
-            webView = new CTInAppWebView(getActivity().getBaseContext(), inAppNotification.getWidth(),
+            webView = new CTInAppWebView(this.context, inAppNotification.getWidth(),
                     inAppNotification.getHeight(), inAppNotification.getWidthPercentage(),
                     inAppNotification.getHeightPercentage());
             InAppWebViewClient webViewClient = new InAppWebViewClient();
@@ -127,15 +128,15 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
             }
 
             if (isDarkenEnabled()) {
-                rl.setBackgroundDrawable(new ColorDrawable(0xBB000000));
+                rl.setBackground(new ColorDrawable(0xBB000000));
             } else {
-                rl.setBackgroundDrawable(new ColorDrawable(0x00000000));
+                rl.setBackground(new ColorDrawable(0x00000000));
             }
 
             rl.addView(webView, webViewLp);
 
             if (isCloseButtonEnabled()) {
-                closeImageView = new CloseImageView(getActivity().getBaseContext());
+                closeImageView = new CloseImageView(this.context);
                 RelativeLayout.LayoutParams closeIvLp = getLayoutParamsForCloseButton();
 
                 closeImageView.setOnClickListener(new View.OnClickListener() {

@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
-import android.os.Build;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,20 +12,17 @@ import android.view.ViewTreeObserver;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 public class CTInAppNativeInterstitialImageFragment extends CTInAppBaseFullFragment {
-
-    @SuppressWarnings({"unused"})
-    private int layoutHeight = 0;
-
-    private int layoutWidth = 0;
 
     private RelativeLayout relativeLayout;
 
     @Nullable
     @Override
-    public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+            Bundle savedInstanceState) {
 
         View inAppView;
         if (inAppNotification.isTablet() && isTablet()) {
@@ -36,7 +32,7 @@ public class CTInAppNativeInterstitialImageFragment extends CTInAppBaseFullFragm
         }
 
         final FrameLayout fl = inAppView.findViewById(R.id.inapp_interstitial_image_frame_layout);
-        fl.setBackgroundDrawable(new ColorDrawable(0xBB000000));
+        fl.setBackground(new ColorDrawable(0xBB000000));
 
         @SuppressLint("ResourceType") final CloseImageView closeImageView = fl.findViewById(199272);
         relativeLayout = fl.findViewById(R.id.interstitial_image_relative_layout);
@@ -61,11 +57,7 @@ public class CTInAppNativeInterstitialImageFragment extends CTInAppBaseFullFragm
                                         redrawInterstitialInApp(relativeLayout, layoutParams, closeImageView);
                                     }
                                 }
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                                    relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                                } else {
-                                    relativeLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                                }
+                                relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                             }
                         });
                 break;
@@ -89,11 +81,7 @@ public class CTInAppNativeInterstitialImageFragment extends CTInAppBaseFullFragm
                                     }
                                 }
 
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
-                                    relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                                } else {
-                                    relativeLayout.getViewTreeObserver().removeGlobalOnLayoutListener(this);
-                                }
+                                relativeLayout.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                             }
                         });
                 break;
@@ -109,6 +97,7 @@ public class CTInAppNativeInterstitialImageFragment extends CTInAppBaseFullFragm
             }
         }
         closeImageView.setOnClickListener(new View.OnClickListener() {
+            @SuppressWarnings("ConstantConditions")
             @Override
             public void onClick(View v) {
                 didDismiss(null);
