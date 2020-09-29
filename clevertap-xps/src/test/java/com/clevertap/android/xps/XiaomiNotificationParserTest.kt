@@ -43,7 +43,7 @@ class XiaomiNotificationParserTest : BaseTestCase() {
     }
 
     @Test
-    fun testToBundle_Message_Outside_CleverTap_Return_Not_Null() {
+    fun testToBundle_Message_CleverTap_Message_Return_Not_Null() {
         `when`(message.content).thenReturn(getMockJsonStringClevertapNetwork())
         Assert.assertNotNull(parser.toBundle(message))
     }

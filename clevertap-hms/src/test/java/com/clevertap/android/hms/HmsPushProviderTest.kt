@@ -18,7 +18,7 @@ import org.robolectric.annotation.Config
 class HmsPushProviderTest : BaseTestCase() {
 
     private lateinit var ctPushProviderListener: CTPushProviderListener
-    private var pushProvider: HmsPushProvider? = null
+    private lateinit var pushProvider: HmsPushProvider
     private lateinit var sdkHandler: IHmsSdkHandler
 
     @Before
@@ -28,50 +28,45 @@ class HmsPushProviderTest : BaseTestCase() {
         ctPushProviderListener = mock(CTPushProviderListener::class.java)
         pushProvider = HmsPushProvider(ctPushProviderListener)
         sdkHandler = mock(IHmsSdkHandler::class.java)
-        pushProvider!!.setHmsSdkHandler(sdkHandler)
+        pushProvider.setHmsSdkHandler(sdkHandler)
         `when`(ctPushProviderListener.context()).thenReturn(application)
         `when`(ctPushProviderListener.config()).thenReturn(cleverTapInstanceConfig)
     }
 
     @Test
     fun testRequestToken() {
-        pushProvider!!.requestToken()
-        verify(sdkHandler, times(1))!!.onNewToken()
+        pushProvider.requestToken()
+        verify(sdkHandler, times(1)).onNewToken()
         verify(ctPushProviderListener, times(1)).onNewToken(or(isNull(), anyString()), eq(HPS))
     }
 
     @Test
     fun testIsAvailable() {
-        pushProvider!!.isAvailable
-        verify(sdkHandler, times(1))!!.isAvailable
+        pushProvider.isAvailable
+        verify(sdkHandler, times(1)).isAvailable
     }
 
     @Test
     fun testIsSupported() {
-        pushProvider!!.isSupported
-        verify(sdkHandler, times(1))!!.isSupported
+        pushProvider.isSupported
+        verify(sdkHandler, times(1)).isSupported
     }
 
     @Test
     fun testGetPlatform() {
-        Assert.assertEquals(pushProvider!!.platform.toLong(), ANDROID_PLATFORM.toLong())
+        Assert.assertEquals(pushProvider.platform.toLong(), ANDROID_PLATFORM.toLong())
     }
 
     @Test
     fun testGetPushType() {
-        Assert.assertEquals(pushProvider!!.pushType, HPS)
+        Assert.assertEquals(pushProvider.pushType, HPS)
     }
 
     @Test
     fun minSDKSupportVersionCode() {
         Assert.assertEquals(
-            pushProvider!!.minSDKSupportVersionCode().toLong(),
+            pushProvider.minSDKSupportVersionCode().toLong(),
             MIN_CT_ANDROID_SDK_VERSION.toLong()
         )
-    }
-
-    @After
-    fun tearDown() {
-        pushProvider = null
     }
 }

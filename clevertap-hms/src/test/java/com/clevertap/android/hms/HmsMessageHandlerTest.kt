@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import com.clevertap.android.hms.HmsTestConstants.Companion.HMS_TOKEN
 import com.clevertap.android.sdk.CleverTapAPI
+import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType.HPS
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
@@ -38,12 +39,12 @@ class HmsMessageHandlerTest : BaseTestCase() {
     @Test
     fun testCreateNotification_Invalid_Message_Throws_Exception() {
         val bundle = Bundle()
-        val isSuccess = handler.createNotification(application, RemoteMessage(bundle))
         `when`(parser.toBundle(any(RemoteMessage::class.java))).thenReturn(bundle)
         mockStatic(CleverTapAPI::class.java).use {
             `when`(CleverTapAPI.createNotification(application, bundle)).thenThrow(
                 RuntimeException("Something went wrong")
             )
+            val isSuccess = handler.createNotification(application, RemoteMessage(bundle))
             Assert.assertFalse(isSuccess)
         }
     }
@@ -51,6 +52,15 @@ class HmsMessageHandlerTest : BaseTestCase() {
     @Test
     fun testCreateNotification_Valid_Message() {
         `when`(parser.toBundle(any(RemoteMessage::class.java))).thenReturn(Bundle())
+        val isSuccess = handler.createNotification(application, RemoteMessage(Bundle()))
+        Assert.assertTrue(isSuccess)
+    }
+
+    @Test
+    fun testCreateNotification_Valid_Message_With_Account_ID() {
+        val bundle = Bundle()
+        bundle.putString(Constants.WZRK_ACCT_ID_KEY, "Some Value")
+        `when`(parser.toBundle(any(RemoteMessage::class.java))).thenReturn(bundle)
         val isSuccess = handler.createNotification(application, RemoteMessage(Bundle()))
         Assert.assertTrue(isSuccess)
     }

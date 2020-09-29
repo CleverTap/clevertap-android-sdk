@@ -2,6 +2,7 @@ package com.clevertap.android.xps
 
 import android.os.Bundle
 import com.clevertap.android.sdk.CleverTapAPI
+import com.clevertap.android.sdk.Constants
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
 import com.clevertap.android.xps.XpsConstants.FAILED_WITH_EXCEPTION
@@ -43,21 +44,29 @@ class XiaomiMessageHandlerTest : BaseTestCase() {
 
     @Test
     fun testCreateNotification_Invalid_Message_Throws_Exception() {
-        val isSuccess = handler.createNotification(application, MiPushMessage())
         val bundle = Bundle()
         `when`(parser.toBundle(any(MiPushMessage::class.java))).thenReturn(bundle)
         mockStatic(CleverTapAPI::class.java).use {
             `when`(CleverTapAPI.createNotification(application, bundle)).thenThrow(
                 RuntimeException("Something went wrong")
             )
+            val isSuccess = handler.createNotification(application, MiPushMessage())
             Assert.assertFalse(isSuccess)
         }
-        Assert.assertFalse(isSuccess)
     }
 
     @Test
     fun testCreateNotification_Valid_Message() {
         `when`(parser.toBundle(any(MiPushMessage::class.java))).thenReturn(Bundle())
+        val isSuccess = handler.createNotification(application, MiPushMessage())
+        Assert.assertTrue(isSuccess)
+    }
+
+    @Test
+    fun testCreateNotification_Valid_Message_With_Account_ID() {
+        val bundle = Bundle()
+        bundle.putString(Constants.WZRK_ACCT_ID_KEY, "Some Value")
+        `when`(parser.toBundle(any(MiPushMessage::class.java))).thenReturn(bundle)
         val isSuccess = handler.createNotification(application, MiPushMessage())
         Assert.assertTrue(isSuccess)
     }
