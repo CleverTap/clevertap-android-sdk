@@ -9,6 +9,7 @@ import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
+import com.google.firebase.iid.FirebaseInstanceId
 import org.junit.*
 import org.junit.runner.*
 import org.mockito.Mockito.*
@@ -35,7 +36,7 @@ class FcmSdkHandlerImplTest : BaseTestCase() {
     }
 
     @Test
-    fun isAvailable_Unavailable_Playservices_Returns_False() {
+    fun isAvailable_Unavailable_PlayServices_Returns_False() {
         mockStatic(PackageUtils::class.java).use {
             `when`(PackageUtils.isGooglePlayServicesAvailable(listener.context())).thenReturn(false)
             Assert.assertFalse(handler.isAvailable)
@@ -149,6 +150,15 @@ class FcmSdkHandlerImplTest : BaseTestCase() {
             `when`(app.options).thenReturn(options)
             `when`(options.gcmSenderId).thenReturn(null)
             Assert.assertNull(handler.senderId)
+        }
+    }
+
+    @Test
+    fun testRequestToken_Exception_Null_Token() {
+        mockStatic(FirebaseInstanceId::class.java).use {
+            `when`(FirebaseInstanceId.getInstance()).thenThrow(RuntimeException("Something Went wrong"))
+            handler.requestToken()
+            verify(listener, times(1)).onNewToken(null, FCM)
         }
     }
 }

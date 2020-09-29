@@ -18,6 +18,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.telephony.TelephonyManager;
+import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
 import androidx.core.content.ContextCompat;
 import java.io.ByteArrayOutputStream;
@@ -95,14 +96,19 @@ public final class Utils {
      */
     @SuppressWarnings("rawtypes")
     public static Bundle stringToBundle(String content) throws JSONException {
-        JSONObject jsonObject = new JSONObject(content);
+
         Bundle bundle = new Bundle();
-        Iterator iter = jsonObject.keys();
-        while (iter.hasNext()) {
-            String key = (String) iter.next();
-            String value = jsonObject.getString(key);
-            bundle.putString(key, value);
+
+        if (!TextUtils.isEmpty(content)) {
+            JSONObject jsonObject = new JSONObject(content);
+            Iterator iter = jsonObject.keys();
+            while (iter.hasNext()) {
+                String key = (String) iter.next();
+                String value = jsonObject.getString(key);
+                bundle.putString(key, value);
+            }
         }
+
         return bundle;
     }
 

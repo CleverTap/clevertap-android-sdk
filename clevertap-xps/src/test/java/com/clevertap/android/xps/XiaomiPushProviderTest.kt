@@ -23,91 +23,85 @@ import kotlin.test.assertFailsWith
 class XiaomiPushProviderTest : BaseTestCase() {
 
     private lateinit var ctPushProviderListener: CTPushProviderListener
-    private var xiaomiPushProvider: XiaomiPushProvider? = null
-    private var sdkHandler: XiaomiSdkHandler? = null
-    private var manifestInfo: ManifestInfo? = null
+    private lateinit var xiaomiPushProvider: XiaomiPushProvider
+    private lateinit var sdkHandler: XiaomiSdkHandler
+    private lateinit var manifestInfo: ManifestInfo
 
     @Before
     @Throws(Exception::class)
     override fun setUp() {
         super.setUp()
         manifestInfo = Mockito.mock(ManifestInfo::class.java)
-        Mockito.`when`(manifestInfo!!.xiaomiAppKey).thenReturn(MI_APP_KEY)
-        Mockito.`when`(manifestInfo!!.xiaomiAppID).thenReturn(MI_APP_ID)
+        Mockito.`when`(manifestInfo.xiaomiAppKey).thenReturn(MI_APP_KEY)
+        Mockito.`when`(manifestInfo.xiaomiAppID).thenReturn(MI_APP_ID)
 
         //init provider listener
         ctPushProviderListener = Mockito.mock(CTPushProviderListener::class.java)
         Mockito.`when`(ctPushProviderListener.context()).thenReturn(application)
         Mockito.`when`(ctPushProviderListener.config()).thenReturn(cleverTapInstanceConfig)
         sdkHandler = XiaomiSdkHandler(ctPushProviderListener)
-        sdkHandler!!.setManifestInfo(manifestInfo)
+        sdkHandler.setManifestInfo(manifestInfo)
         //init push provider
         xiaomiPushProvider = XiaomiPushProvider(ctPushProviderListener)
-        xiaomiPushProvider!!.setMiSdkHandler(sdkHandler!!)
+        xiaomiPushProvider.setMiSdkHandler(sdkHandler)
     }
 
     @Test
     fun testRequestToken() {
         Mockito.mockStatic(MiPushClient::class.java).use {
             Mockito.`when`(MiPushClient.getRegId(application)).thenReturn(MI_TOKEN)
-            xiaomiPushProvider!!.requestToken()
+            xiaomiPushProvider.requestToken()
             Mockito.verify(ctPushProviderListener).onNewToken(MI_TOKEN, XPS)
         }
     }
 
     @Test
     fun testIsAvailable_ReturnsFalse() {
-        Mockito.`when`(manifestInfo!!.xiaomiAppID).thenReturn(null)
-        Mockito.`when`(manifestInfo!!.xiaomiAppKey).thenReturn(null)
-        Assert.assertFalse(xiaomiPushProvider!!.isAvailable)
+        Mockito.`when`(manifestInfo.xiaomiAppID).thenReturn(null)
+        Mockito.`when`(manifestInfo.xiaomiAppKey).thenReturn(null)
+        Assert.assertFalse(xiaomiPushProvider.isAvailable)
     }
 
     @Test
     fun testIsAvailable_ReturnsTrue() {
-        Mockito.`when`(manifestInfo!!.xiaomiAppID).thenReturn(MI_APP_KEY)
-        Mockito.`when`(manifestInfo!!.xiaomiAppKey).thenReturn(MI_APP_ID)
-        Assert.assertTrue(xiaomiPushProvider!!.isAvailable)
+        Mockito.`when`(manifestInfo.xiaomiAppID).thenReturn(MI_APP_KEY)
+        Mockito.`when`(manifestInfo.xiaomiAppKey).thenReturn(MI_APP_ID)
+        Assert.assertTrue(xiaomiPushProvider.isAvailable)
     }
 
     @Test
     fun testIsSupported() {
-        Assert.assertTrue(xiaomiPushProvider!!.isSupported)
+        Assert.assertTrue(xiaomiPushProvider.isSupported)
     }
 
     @Test
     fun testGetPlatform() {
-        Assert.assertEquals(xiaomiPushProvider!!.platform.toLong(), ANDROID_PLATFORM.toLong())
+        Assert.assertEquals(xiaomiPushProvider.platform.toLong(), ANDROID_PLATFORM.toLong())
     }
 
     @Test
     fun testGetPushType() {
-        Assert.assertEquals(xiaomiPushProvider!!.pushType, XPS)
+        Assert.assertEquals(xiaomiPushProvider.pushType, XPS)
     }
 
     @Test
     fun minSDKSupportVersionCode() {
         Assert.assertEquals(
-            xiaomiPushProvider!!.minSDKSupportVersionCode().toLong(),
+            xiaomiPushProvider.minSDKSupportVersionCode().toLong(),
             MIN_CT_ANDROID_SDK_VERSION.toLong()
         )
     }
 
     @Test
     fun testRegister_ValidConfigs() {
-        sdkHandler!!.register(sdkHandler!!.appId(), sdkHandler!!.appKey())
-        Assert.assertTrue(sdkHandler!!.isRegistered)
+        sdkHandler.register(sdkHandler.appId(), sdkHandler.appKey())
+        Assert.assertTrue(sdkHandler.isRegistered)
     }
 
     @Test
     fun testRegister_InValidConfigs() {
         assertFailsWith<RegistrationException> {
-            sdkHandler!!.register(null, null)
+            sdkHandler.register(null, null)
         }
-    }
-
-    @After
-    fun tearDown() {
-        xiaomiPushProvider = null
-        sdkHandler = null
     }
 }

@@ -51,11 +51,6 @@ public class HmsHandlerTest extends BaseTestCase {
         huaweiApi = Mockito.mock(HuaweiApiAvailability.class);
     }
 
-    @After
-    public void tearDown() {
-
-    }
-
     @Test
     public void testAppId_Invalid() {
         Mockito.when(config.getString(APP_ID_KEY)).thenThrow(new RuntimeException("Something went wrong"));
