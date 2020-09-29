@@ -16,10 +16,10 @@ import org.robolectric.annotation.Config
 )
 abstract class BaseTestCase {
 
-    protected var application: TestApplication? = null
+    protected lateinit var application: TestApplication
     protected lateinit var baseCTApiListener: BaseCTApiListener
-    protected var cleverTapAPI: CleverTapAPI? = null
-    protected var cleverTapInstanceConfig: CleverTapInstanceConfig? = null
+    protected lateinit var cleverTapAPI: CleverTapAPI
+    protected lateinit var cleverTapInstanceConfig: CleverTapInstanceConfig
 
     @Before
     open fun setUp() {

@@ -12,10 +12,9 @@ import static com.clevertap.android.xps.XpsConstants.XIAOMI_LOG_TAG;
 import android.content.Context;
 import android.os.Bundle;
 import android.text.TextUtils;
+import androidx.annotation.NonNull;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.Utils;
-import com.clevertap.android.sdk.pushnotification.NotificationInfo;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
 import com.xiaomi.mipush.sdk.ErrorCode;
 import com.xiaomi.mipush.sdk.MiPushClient;
@@ -25,36 +24,40 @@ import java.util.List;
 
 class XiaomiMessageHandlerImpl implements IMiMessageHandler {
 
+    private @NonNull
+    IXiaomiNotificationParser mParser;
+
+    XiaomiMessageHandlerImpl(@NonNull final IXiaomiNotificationParser parser) {
+        mParser = parser;
+    }
+
     @Override
     public boolean createNotification(Context context, MiPushMessage message) {
         boolean isSuccess = false;
-        if (message != null) {
+        Bundle messageBundle = mParser.toBundle(message);
+        if (messageBundle != null) {
             try {
-                String ctData = message.getContent();
-                Bundle extras = Utils.stringToBundle(ctData);
-                NotificationInfo info = CleverTapAPI.getNotificationInfo(extras);
-                CleverTapAPI cleverTapAPI = CleverTapAPI
-                        .getGlobalInstance(context, getAccountIdFromNotificationBundle(extras));
-                if (info.fromCleverTap) {
-                    CleverTapAPI.createNotification(context, extras);
-                    if (cleverTapAPI != null) {
-                        cleverTapAPI.config().log(LOG_TAG, XIAOMI_LOG_TAG + "Creating Notification");
-                    } else {
-                        Logger.d(LOG_TAG, XIAOMI_LOG_TAG + "Creating Notification");
-                    }
-                    isSuccess = true;
-                } else {
-                    Logger.d(LOG_TAG, XIAOMI_LOG_TAG + "Can't create outside Clevertap Notification");
-                }
+                createNotificationWithBundleMessage(context, messageBundle);
+                isSuccess = true;
             } catch (Throwable e) {
                 e.printStackTrace();
                 isSuccess = false;
                 Logger.d(LOG_TAG, XIAOMI_LOG_TAG + "Error Creating Notification", e);
             }
-        } else {
-            Logger.d(LOG_TAG, XIAOMI_LOG_TAG + "Received message entity is null!");
         }
         return isSuccess;
+    }
+
+    void createNotificationWithBundleMessage(final Context context, final Bundle messageBundle) {
+
+        CleverTapAPI cleverTapAPI = CleverTapAPI
+                .getGlobalInstance(context, getAccountIdFromNotificationBundle(messageBundle));
+        CleverTapAPI.createNotification(context, messageBundle);
+        if (cleverTapAPI != null) {
+            cleverTapAPI.config().log(LOG_TAG, XIAOMI_LOG_TAG + "Creating Notification");
+        } else {
+            Logger.d(LOG_TAG, XIAOMI_LOG_TAG + "Creating Notification");
+        }
     }
 
     @Override
