@@ -3,7 +3,6 @@
 local.properties
 bin
 gen
-docs
 *.iml
 .idea
 build/
