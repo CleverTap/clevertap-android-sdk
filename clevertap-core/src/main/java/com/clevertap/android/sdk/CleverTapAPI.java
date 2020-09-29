@@ -64,6 +64,7 @@ import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationReceiver;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
+import com.clevertap.android.sdk.pushnotification.PushConstants;
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundIntentService;
@@ -8720,6 +8721,13 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 Logger.v(config.getAccountId(), "Fragment not able to render", t);
             }
         }
+    }
+
+    /**
+     * Returns the token for a particular push type
+     */
+    public String getPushToken(@NonNull PushConstants.PushType pushType) {
+        return pushProviders.getCachedToken(pushType);
     }
 
     static {

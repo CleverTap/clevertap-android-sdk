@@ -4,9 +4,6 @@ import android.content.Context
 import android.os.Bundle
 import com.clevertap.android.hms.HmsTestConstants.Companion.HMS_TOKEN
 import com.clevertap.android.sdk.CleverTapAPI
-import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.Utils
-import com.clevertap.android.sdk.pushnotification.NotificationInfo
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType.HPS
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
@@ -22,12 +19,14 @@ import org.robolectric.annotation.Config
 class HmsMessageHandlerTest : BaseTestCase() {
 
     private lateinit var handler: HmsMessageHandlerImpl
+    private lateinit var parser: IHmsNotificationParser
 
     @Before
     @Throws(Exception::class)
     override fun setUp() {
         super.setUp()
-        handler = HmsMessageHandlerImpl()
+        parser = mock(HmsNotificationParser::class.java)
+        handler = HmsMessageHandlerImpl(parser)
     }
 
     @Test
@@ -37,42 +36,23 @@ class HmsMessageHandlerTest : BaseTestCase() {
     }
 
     @Test
-    fun testCreateNotification_Invalid_Message_Fails_With_Exception() {
-        val isSuccess = handler.createNotification(application, RemoteMessage(Bundle()))
-        Assert.assertFalse(isSuccess)
-    }
-
-    @Test
-    @Ignore
-    fun testCreateNotification_Outside_CleverTap_Message() {
-        val bundle = getMockBundle()
-        val info = NotificationInfo(false, true)
-        mockStatic(CleverTapAPI::class.java).use {
-            `when`(CleverTapAPI.getNotificationInfo(any(Bundle::class.java))).thenReturn(info)
-            mockStatic(Utils::class.java).use {
-                `when`(Utils.stringToBundle(anyString())).thenReturn(bundle)
-                val isSuccess = handler.createNotification(application, RemoteMessage(bundle))
-                Assert.assertFalse(isSuccess)
-            }
-        }
-    }
-
-    @Test
-    @Ignore
-    fun testCreateNotification_Valid_Message() {
-        val bundle = mock(Bundle::class.java)
-        mockStatic(Utils::class.java).use {
-            `when`(Utils.stringToBundle(anyString())).thenReturn(bundle)
-            val isSuccess = handler.createNotification(application, RemoteMessage(Bundle()))
-            Assert.assertTrue(isSuccess)
-        }
-    }
-
-    private fun getMockBundle(): Bundle? {
+    fun testCreateNotification_Invalid_Message_Throws_Exception() {
         val bundle = Bundle()
-        bundle.putString(Constants.NOTIFICATION_TAG, "some value")
-        bundle.putString(Constants.WZRK_ACCT_ID_KEY, "some value")
-        return bundle
+        val isSuccess = handler.createNotification(application, RemoteMessage(bundle))
+        `when`(parser.toBundle(any(RemoteMessage::class.java))).thenReturn(bundle)
+        mockStatic(CleverTapAPI::class.java).use {
+            `when`(CleverTapAPI.createNotification(application, bundle)).thenThrow(
+                RuntimeException("Something went wrong")
+            )
+            Assert.assertFalse(isSuccess)
+        }
+    }
+
+    @Test
+    fun testCreateNotification_Valid_Message() {
+        `when`(parser.toBundle(any(RemoteMessage::class.java))).thenReturn(Bundle())
+        val isSuccess = handler.createNotification(application, RemoteMessage(Bundle()))
+        Assert.assertTrue(isSuccess)
     }
 
     @Test
