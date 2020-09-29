@@ -1,191 +1,30 @@
-apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
-apply plugin: 'com.github.dcendents.android-maven'
-apply plugin: 'com.jfrog.bintray'
-apply plugin: 'jacoco'
-
-jacoco {
-    toolVersion = "$jacocoVersion"
-}
-
-tasks.withType(Test) {
-    jacoco.includeNoLocationClasses = true
-}
-
-task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'createDebugCoverageReport']) {
-
-    reports {
-        xml.enabled = true
-        html.enabled = true
-    }
-
-    def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*', '**/*Test*.*', 'android/**/*.*']
-    def debugTree = fileTree(dir: "$project.buildDir/intermediates/javac/debug", excludes: fileFilter)
-    def mainSrc = "$project.projectDir/src/main/java"
-
-    sourceDirectories.from = files([mainSrc])
-    classDirectories.from = files([debugTree])
-    executionData.from = fileTree(dir: project.buildDir, includes: [
-            'jacoco/testDebugUnitTest.exec', 'outputs/code_coverage/debugAndroidTest/connected/**/*.ec'
-    ])
-}
 
 ext {
-    bintrayRepo = 'Maven'
-    bintrayName = 'XiaomiPushSDK'
-    org = 'clevertap'
-
-    publishedGroupId = 'com.clevertap.android'
     libraryName = 'XiaomiPushSDK'
     artifact = 'clevertap-xiaomi-sdk'
     libraryDescription = 'The CleverTap Android Xiaomi Push SDK'
 
-    siteUrl = 'https://github.com/CleverTap/clevertap-android-sdk/clevertap-xps'
-    gitUrl = 'https://github.com/CleverTap/clevertap-android-sdk.git'
-
-    libraryVersion = '1.0.0'
-
-    developerId = 'clevertap'
-    developerName = 'CleverTap'
-    developerEmail = 'support@clevertap.com'
+    libraryVersion = "$xpsVersion"
 
     licenseName = 'MIT License'
     licenseUrl = 'https://opensource.org/licenses/MIT'
     allLicenses = ["MIT"]
+
+    minSdkVersionVal = 16
 }
 
-android {
-    compileSdkVersion 29
-    buildToolsVersion "29.0.3"
-
-    defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 29
-        versionCode 10000
-        versionName "1.0.0"
-
-        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
-        consumerProguardFiles 'consumer-rules.pro'
-    }
-
-    buildTypes {
-        debug {
-            testCoverageEnabled true //To get coverage reports for instrumentation tests
-            buildConfigField "String", "SDK_VERSION_STRING",
-                    '"!SDK-VERSION-STRING!:com.clevertap.android:clevertap-xiaomi-sdk:1.0.0.0"'
-        }
-        release {
-            buildConfigField "String", "SDK_VERSION_STRING",
-                    '"!SDK-VERSION-STRING!:com.clevertap.android:clevertap-xiaomi-sdk:1.0.0.0"'
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
-    }
-
-    libraryVariants.all { variant ->
-        variant.outputs.all {
-            if (variant.getName().toLowerCase().contains('release')) {
-                outputFileName = "${artifact}-${libraryVersion}.aar"
-            } else if (variant.getName().toLowerCase().contains('debug')) {
-                outputFileName = "${artifact}-${variant.name}-${libraryVersion}.aar"
-            }
-        }
-    }
-
-    testOptions {
-        animationsDisabled true
-        unitTests {
-            includeAndroidResources = true
-            returnDefaultValues = true
-        }
-        unitTests.all {
-            jvmArgs '-noverify'
-        }
-    }
-}
-
-version = libraryVersion
-group = publishedGroupId
-
-install {
-    repositories.mavenInstaller {
-        pom.project {
-            packaging 'aar'
-            groupId publishedGroupId
-            artifactId artifact
-
-            name libraryName
-            description libraryDescription
-            url siteUrl
-
-            licenses {
-                license {
-                    name licenseName
-                    url licenseUrl
-                }
-            }
-            developers {
-                developer {
-                    id developerId
-                    name developerName
-                    email developerEmail
-                }
-            }
-            scm {
-                connection gitUrl
-                developerConnection gitUrl
-                url siteUrl
-            }
-        }
-    }
-}
-
-task sourcesJar(type: Jar) {
-    classifier = 'sources'
-    from android.sourceSets.main.java.srcDirs
-}
-
-artifacts {
-    archives sourcesJar
-}
-
-Properties properties = new Properties()
-if (project.rootProject.file('local.properties').exists()) {
-    properties.load(project.rootProject.file('local.properties').newDataInputStream())
-}
-
-bintray {
-    user = properties.getProperty("bintray.user")
-    key = properties.getProperty("bintray.apikey")
-
-    dryRun = false
-    configurations = ['archives']
-    pkg {
-        repo = bintrayRepo
-        name = bintrayName
-        userOrg = org
-        desc = libraryDescription
-        websiteUrl = siteUrl
-        vcsUrl = gitUrl
-        licenses = allLicenses
-        publish = true
-        publicDownloadNumbers = true
-        version {
-            desc = libraryDescription
-        }
-    }
-}
+apply from: "../gradle-scripts/commons.gradle"
 
 dependencies {
     implementation fileTree('libs')
 
     compileOnly project(':clevertap-core')
-    compileOnly('androidx.annotation:annotation:1.1.0')
+    compileOnly deps.androidXAnnotation
     testImplementation project(':test_shared')
     testImplementation fileTree('libs')
     testImplementation "androidx.core:core-ktx:1.3.1"
-    testImplementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+    testImplementation deps.kotlinStdlib
     testImplementation 'androidx.fragment:fragment:1.2.5'
-    testImplementation 'org.json:json:20200518'
-    testImplementation 'com.google.code.gson:gson:2.8.6'
+    testImplementation deps.json
+    testImplementation deps.gson
 }
