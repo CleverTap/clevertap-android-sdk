@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -268,7 +269,7 @@ public final class Utils {
 
         int networkType = TelephonyManager.NETWORK_TYPE_UNKNOWN;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            if (hasPermission(context, "android.permission.READ_PHONE_STATE")) {
+            if (hasPermission(context, Manifest.permission.READ_PHONE_STATE)) {
                 try {
                     networkType = teleMan.getDataNetworkType();
                 } catch (SecurityException se) {
