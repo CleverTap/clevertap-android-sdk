@@ -25,6 +25,7 @@
 
 package com.clevertap.android.sdk.java_websocket.util;
 
+import android.os.Build;
 import com.clevertap.android.sdk.java_websocket.exceptions.InvalidDataException;
 import com.clevertap.android.sdk.java_websocket.framing.CloseFrame;
 import java.nio.ByteBuffer;
@@ -62,7 +63,11 @@ public class Charsetfunctions {
      * @return ASCII encoding in bytes
      */
     public static byte[] asciiBytes(String s) {
-        return s.getBytes(StandardCharsets.US_ASCII);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            return s.getBytes(StandardCharsets.US_ASCII);
+        } else {
+            return s.getBytes(StandardCharsets.UTF_8);
+        }
     }
 
     /**
