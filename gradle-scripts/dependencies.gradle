@@ -29,5 +29,11 @@ ext.deps = [
         'junit' : "junit:junit:$junitVersion",
         'androidXTestCore' : "androidx.test:core:$androidxCoreVersion",
         'mockitoCore' : "org.mockito:mockito-core:$mockitoVersion",
-        'androidXJunitExt' : "androidx.test.ext:junit:$junitExtVersion"
+        'androidXJunitExt' : "androidx.test.ext:junit:$junitExtVersion",
+        'clevertapCore' : "com.clevertap.android:clevertap-android-sdk:$coreVersion",
+        'clevertapGeofence' : "com.clevertap.android:clevertap-geofence-sdk:$geofenceVersion",
+        'clevertapXPS' : "com.clevertap.android:clevertap-xiaomi-sdk:$xpsVersion",
+        'clevertapHMS' : "com.clevertap.android:clevertap-hms-sdk:$hmsVersion"
+
+
 ]

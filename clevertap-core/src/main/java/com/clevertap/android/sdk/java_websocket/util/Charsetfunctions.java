@@ -25,7 +25,8 @@
 
 package com.clevertap.android.sdk.java_websocket.util;
 
-import android.os.Build;
+import android.os.Build.VERSION_CODES;
+import androidx.annotation.RequiresApi;
 import com.clevertap.android.sdk.java_websocket.exceptions.InvalidDataException;
 import com.clevertap.android.sdk.java_websocket.framing.CloseFrame;
 import java.nio.ByteBuffer;
@@ -62,12 +63,9 @@ public class Charsetfunctions {
     /*
      * @return ASCII encoding in bytes
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     public static byte[] asciiBytes(String s) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            return s.getBytes(StandardCharsets.US_ASCII);
-        } else {
-            return s.getBytes(StandardCharsets.UTF_8);
-        }
+        return s.getBytes(StandardCharsets.US_ASCII);
     }
 
     /**
@@ -105,18 +103,22 @@ public class Charsetfunctions {
         return isValidUTF8(data, 0);
     }
 
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     public static String stringAscii(byte[] bytes) {
         return stringAscii(bytes, 0, bytes.length);
     }
 
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     public static String stringAscii(byte[] bytes, int offset, int length) {
         return new String(bytes, offset, length, StandardCharsets.US_ASCII);
     }
 
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     public static String stringUtf8(byte[] bytes) throws InvalidDataException {
         return stringUtf8(ByteBuffer.wrap(bytes));
     }
 
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     public static String stringUtf8(ByteBuffer bytes) throws InvalidDataException {
         CharsetDecoder decode = StandardCharsets.UTF_8.newDecoder();
         decode.onMalformedInput(codingErrorAction);
@@ -135,6 +137,7 @@ public class Charsetfunctions {
     /*
      * @return UTF-8 encoding in bytes
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     public static byte[] utf8Bytes(String s) {
         return s.getBytes(StandardCharsets.UTF_8);
     }
