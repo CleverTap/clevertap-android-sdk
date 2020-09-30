@@ -25,6 +25,8 @@
 
 package com.clevertap.android.sdk.java_websocket;
 
+import android.os.Build.VERSION_CODES;
+import androidx.annotation.RequiresApi;
 import com.clevertap.android.sdk.java_websocket.drafts.Draft;
 import com.clevertap.android.sdk.java_websocket.drafts.Draft_6455;
 import com.clevertap.android.sdk.java_websocket.enums.CloseHandshakeType;
@@ -342,6 +344,7 @@ public class WebSocketImpl implements WebSocket {
      *
      * @param socketBuffer the ByteBuffer to decode
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     public void decode(ByteBuffer socketBuffer) {
         assert (socketBuffer.hasRemaining());
 
@@ -548,6 +551,7 @@ public class WebSocketImpl implements WebSocket {
         sendFrame(pingFrame);
     }
 
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     public void startHandshake(ClientHandshakeBuilder handshakedata) throws InvalidHandshakeException {
         // Store the Handshake Request we are about to send
         this.handshakerequest = draft.postProcessHandshakeRequestAsClient(handshakedata);
@@ -600,6 +604,7 @@ public class WebSocketImpl implements WebSocket {
      *
      * @param exception the RuntimeException causing this problem
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     private void closeConnectionDueToInternalServerError(RuntimeException exception) {
         write(generateHttpResponseDueToError(500));
         flushAndClose(CloseFrame.NEVER_CONNECTED, exception.getMessage(), false);
@@ -610,6 +615,7 @@ public class WebSocketImpl implements WebSocket {
      *
      * @param exception the InvalidDataException causing this problem
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     private void closeConnectionDueToWrongHandshake(InvalidDataException exception) {
         write(generateHttpResponseDueToError(404));
         flushAndClose(exception.getCloseCode(), exception.getMessage(), false);
@@ -637,6 +643,7 @@ public class WebSocketImpl implements WebSocket {
      * Returns whether the handshake phase has is completed.
      * In case of a broken handshake this will be never the case.
      **/
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     private boolean decodeHandshake(ByteBuffer socketBufferNew) {
         ByteBuffer socketBuffer;
         if (tmpHandshakeBytes.capacity() == 0) {
@@ -775,6 +782,7 @@ public class WebSocketImpl implements WebSocket {
      * @param errorCode the http error code
      * @return the complete response as ByteBuffer
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     private ByteBuffer generateHttpResponseDueToError(int errorCode) {
         String errorCodeDescription;
         switch (errorCode) {

@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
 import android.os.Build;
+import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -14,6 +15,7 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Process;
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Logger;
@@ -47,6 +49,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+@RequiresApi(api = VERSION_CODES.KITKAT)
 public class CTABTestController {
 
     @SuppressWarnings("unused")

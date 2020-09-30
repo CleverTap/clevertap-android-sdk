@@ -25,6 +25,8 @@
 
 package com.clevertap.android.sdk.java_websocket.client;
 
+import android.os.Build.VERSION_CODES;
+import androidx.annotation.RequiresApi;
 import com.clevertap.android.sdk.java_websocket.AbstractWebSocket;
 import com.clevertap.android.sdk.java_websocket.WebSocket;
 import com.clevertap.android.sdk.java_websocket.WebSocketImpl;
@@ -608,6 +610,7 @@ public abstract class WebSocketClient extends AbstractWebSocket implements Runna
         return connectBlocking();
     }
 
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     public void run() {
         InputStream istream;
         try {
@@ -813,6 +816,7 @@ public abstract class WebSocketClient extends AbstractWebSocket implements Runna
      *
      * @throws InvalidHandshakeException a invalid handshake was created
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     private void sendHandshake() throws InvalidHandshakeException {
         String path;
         String part1 = uri.getRawPath();
