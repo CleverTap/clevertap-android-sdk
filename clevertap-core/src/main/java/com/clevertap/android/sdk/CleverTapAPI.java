@@ -340,7 +340,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private WeakReference<CTProductConfigListener> productConfigListener;
 
-    private CTPushAmpListener pushListener = null;
+    private CTPushAmpListener pushAmpListener = null;
 
     private CTPushNotificationListener pushNotificationListener = null;
 
@@ -1608,23 +1608,23 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
-     * Returns the CTPushListener object
+     * Returns the CTPushAmpListener object
      *
      * @return The {@link CTPushAmpListener} object
      */
     @SuppressWarnings("WeakerAccess")
-    public CTPushAmpListener getCTPushListener() {
-        return pushListener;
+    public CTPushAmpListener getCTPushAmpListener() {
+        return pushAmpListener;
     }
 
     /**
-     * This method is used to set the CTPushListener
+     * This method is used to set the CTPushAmpListener
      *
-     * @param pushListener - The{@link CTPushAmpListener} object
+     * @param pushAmpListener - The{@link CTPushAmpListener} object
      */
     @SuppressWarnings("unused")
-    public void setCTPushListener(CTPushAmpListener pushListener) {
-        this.pushListener = pushListener;
+    public void setCTPushAmpListener(CTPushAmpListener pushAmpListener) {
+        this.pushAmpListener = pushAmpListener;
     }
 
     /**
@@ -5883,8 +5883,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 if (!pushBundle.isEmpty() && !dbAdapter
                         .doesPushNotificationIdExist(pushObject.getString("wzrk_pid"))) {
                     getConfigLogger().verbose("Creating Push Notification locally");
-                    if (pushListener != null) {
-                        pushListener.onPushAmpPayloadReceived(pushBundle);
+                    if (pushAmpListener != null) {
+                        pushAmpListener.onPushAmpPayloadReceived(pushBundle);
                     } else {
                         createNotification(context, pushBundle);
                     }
