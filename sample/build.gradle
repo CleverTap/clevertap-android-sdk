@@ -53,8 +53,12 @@ dependencies {
     //CleverTap Android SDK, make sure the AAR file is in the libs folder
     implementation project(':clevertap-core')
     implementation project(':clevertap-geofence')
-    implementation project(':clevertap-xps') // Xiaomi Push
-    implementation project(':clevertap-hms') // Huawei Push
+    implementation project(':clevertap-xps')
+    // For Xiaomi Push use implementation 'com.clevertap.android:clevertap-xiaomi-sdk:1.0.0'
+    implementation project(':clevertap-hms')
+    // For Huawei Push use
+    //implementation 'com.clevertap.android:clevertap-hms-sdk:1.0.0'
+    //implementation 'com.huawei.hms:push:5.0.0.300'
 
     implementation 'com.google.android.gms:play-services-location:17.0.0'// Needed for geofence
     implementation 'androidx.work:work-runtime:2.3.4'// Needed for geofence
@@ -81,5 +85,6 @@ dependencies {
 }
 
 apply plugin: 'com.google.gms.google-services'
-apply plugin: 'com.huawei.agconnect'
+//For Huawei Push
+//apply plugin: 'com.huawei.agconnect'
 

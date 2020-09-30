@@ -2,7 +2,7 @@ apply plugin: 'com.huawei.agconnect'
 
 ext {
     libraryName = 'HuaweiPushSDK'
-    artifact = 'clevertap-huawei-sdk'
+    artifact = 'clevertap-hms-sdk'
     libraryDescription = 'The CleverTap Android Huawei Push SDK'
 
     libraryVersion = "$hmsVersion"
