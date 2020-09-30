@@ -30,6 +30,7 @@ import com.clevertap.android.sdk.java_websocket.exceptions.InvalidDataException;
 import com.clevertap.android.sdk.java_websocket.framing.CloseFrame;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
@@ -66,7 +67,7 @@ public class Charsetfunctions {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
             return s.getBytes(StandardCharsets.US_ASCII);
         } else {
-            return s.getBytes(StandardCharsets.UTF_8);
+            return s.getBytes(Charset.forName("UTF-8"));
         }
     }
 
