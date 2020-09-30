@@ -4174,7 +4174,12 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private void _notifyInboxMessagesDidUpdate() {
         if (this.inboxListener != null) {
-            this.inboxListener.inboxMessagesDidUpdate();
+            Utils.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    CleverTapAPI.this.inboxListener.inboxMessagesDidUpdate();
+                }
+            });
         }
     }
 
@@ -7913,7 +7918,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         // Take all the properties from the notif and add it to the intent
         launchIntent.putExtras(extras);
         launchIntent.removeExtra(Constants.WZRK_ACTIONS);
-        launchIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         pIntent = PendingIntent.getBroadcast(context, (int) System.currentTimeMillis(),
                 launchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
