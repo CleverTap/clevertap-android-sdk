@@ -74,7 +74,7 @@ public class FcmSdkHandlerImpl implements IFcmSdkHandler {
 
                             // Get new Instance ID token
                             String token = task.getResult() != null ? task.getResult().getToken() : null;
-                            listener.config().log(LOG_TAG, FCM_LOG_TAG + "FCM token for Sender Id - " + token);
+                            listener.config().log(LOG_TAG, FCM_LOG_TAG + "FCM token - " + token);
                             listener.onNewToken(token, getPushType());
                         }
                     });
