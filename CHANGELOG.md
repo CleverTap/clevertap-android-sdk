@@ -1,5 +1,10 @@
 ## CHANGE LOG
 
+### Version 4.0.0 (October 1, 2020)
+* Adds support for Android 10 and AndroidX support libraries.
+* Adds support for Huawei Push and Xiaomi Push modules.
+* This is a major release, please find the list of all [changes here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTV4CHANGES.md)  
+
 ### Version 3.9.1 (September 17, 2020)
 * Handled Security Exception on `getNetworkType` for Android 11 devices
 
