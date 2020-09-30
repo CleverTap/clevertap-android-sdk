@@ -9,7 +9,6 @@
 * [Create an Application](#-create-an-application)
 * [App Details](#-app-details)
 * [Integration](#-integration)
-* [ProGuard](#-proguard)
 
 ## 👋 Introduction
 [(Back to top)](#-table-of-contents)
@@ -46,11 +45,12 @@ Click on [Mi Push Console](http://admin.xmpush.global.xiaomi.com/) and click on 
 </p>
 
 ## 🚀 Integration
+[(Back to top)](#-table-of-contents)
 
 * Add the CleverTap Xiaomi Push dependency in app’s `build.gradle`
 
 ```groovy
-    implementation 'com.clevertap.android:clevertap-xiaomi-sdk:1.0.0'
+    implementation "com.clevertap.android:clevertap-xiaomi-sdk:1.0.0"
 ```
 
 * Add the following to your app’s `AndroidManifest.xml` file
@@ -74,14 +74,4 @@ Click on [Mi Push Console](http://admin.xmpush.global.xiaomi.com/) and click on 
 <string name="xiaomi_app_key">Your Xiaomi App Key</string>
 <string name="xiaomi_app_id">Your Xiaomi App ID</string>
  
-```
-
-## 📜 Proguard
-
-For smooth functioning of the CleverTap Xiaomi Push SDK, add the following to your Proguard/R8 rules
-
-```proguard
-
--keep class com.xiaomi.mipush.**{*;}
-
 ```
