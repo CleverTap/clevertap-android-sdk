@@ -32,7 +32,7 @@ Old Dependency | New Dependency
 ---:|:---
 `implementation 'com.clevertap.android:clevertap-android-sdk:3.9.1'`| `implementation 'com.clevertap.android:clevertap-android-sdk:4.0.0'`
 `implementation 'com.android.support:support-v4:28.0.0'` | `implementation 'androidx.core:core:1.3.0'`
-                                                         | `implementation 'androidx.fragment:fragment:1.1.0'`
+`implementation 'com.android.support:support-v4:28.0.0'`| `implementation 'androidx.fragment:fragment:1.1.0'`
 `implementation 'com.android.installreferrer:installreferrer:1.0'` | `implementation 'com.android.installreferrer:installreferrer:2.1'`
 
 
@@ -69,8 +69,8 @@ Old Dependency | New Dependency
 ---:|:---
 `implementation 'com.android.support:appcompat-v7:28.0.0'` | `implementation 'androidx.appcompat:appcompat:1.2.0'`
 `implementation 'com.android.support:design:28.0.0'` | `implementation 'androidx.recyclerview:recyclerview:1.1.0'`
-                                                     | `implementation 'androidx.viewpager:viewpager:1.0.0'`
-                                                     | `implementation 'com.google.android.material:material:1.2.1'`
+`implementation 'com.android.support:design:28.0.0'` | `implementation 'androidx.viewpager:viewpager:1.0.0'`
+`implementation 'com.android.support:design:28.0.0'` | `implementation 'com.google.android.material:material:1.2.1'`
 `implementation 'com.github.bumptech.glide:glide:4.9.0'` | `implementation 'com.github.bumptech.glide:glide:4.11.0'`
 
 ## ⚒️ Breaking changes
