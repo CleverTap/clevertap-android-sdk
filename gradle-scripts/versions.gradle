@@ -6,7 +6,7 @@ ext {
 
     // CleverTap modules
     coreVersion = "4.0.0"
-    geofenceVersion = "1.0.0"
+    geofenceVersion = "1.0.1"
     hmsVersion = "1.0.0"
     xpsVersion = "1.0.0"
 
