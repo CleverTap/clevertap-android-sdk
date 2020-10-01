@@ -1,0 +1,29 @@
+apply plugin: 'com.huawei.agconnect'
+
+ext {
+    libraryName = 'HuaweiPushSDK'
+    artifact = 'clevertap-hms-sdk'
+    libraryDescription = 'The CleverTap Android Huawei Push SDK'
+
+    libraryVersion = "$hmsVersion"
+
+    licenseName = 'MIT License'
+    licenseUrl = 'https://opensource.org/licenses/MIT'
+    allLicenses = ["MIT"]
+
+    minSdkVersionVal = 17
+}
+
+apply from: "../gradle-scripts/commons.gradle"
+
+dependencies {
+    compileOnly project(':clevertap-core')
+    implementation deps.huaweiPush
+    compileOnly deps.androidXAnnotation
+
+    testImplementation project(':test_shared')
+    testImplementation deps.huaweiPush
+    testImplementation deps.kotlinStdlib
+    testImplementation deps.json
+    testImplementation deps.gson
+}

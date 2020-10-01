@@ -1,0 +1,2 @@
+-keep class com.huawei.**{*;}
+-keep class com.hianalytics.android.**{*;}

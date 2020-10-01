@@ -1,0 +1,37 @@
+ext {
+    libraryName = 'CleverTapAndroidSDK'
+    artifact = 'clevertap-android-sdk'
+    libraryDescription = 'The CleverTap Android SDK'
+
+    libraryVersion = "$coreVersion"
+
+    licenseName = 'The Apache Software License, Version 2.0'
+    licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+    allLicenses = ["Apache-2.0"]
+
+    minSdkVersionVal = 16
+}
+
+apply from: "../gradle-scripts/commons.gradle"
+
+dependencies {
+    compileOnly deps.firebaseMessaging
+    compileOnly deps.exoPlayer
+    compileOnly deps.exoPlayerHls
+    compileOnly deps.exoPlayerUi
+    compileOnly deps.glide
+    //for notification
+    compileOnly deps.androidXCore
+    compileOnly deps.viewPager
+    implementation deps.appcompat
+    implementation deps.recyclerview
+    compileOnly deps.materialDesign
+    compileOnly deps.fragment
+    implementation deps.installreferrer
+
+    // Unit testing dependencies
+    testImplementation project(':test_shared')
+    testImplementation deps.androidXCoreKTX
+    testImplementation deps.kotlinStdlib
+    testImplementation deps.firebaseMessaging
+}

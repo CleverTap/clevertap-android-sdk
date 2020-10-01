@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <data>
+
+        <variable
+            name="fTitle"
+            type="java.lang.String" />
+
+        <variable
+            name="groupPosition"
+            type="java.lang.Integer" />
+
+        <variable
+            name="childPosition"
+            type="java.lang.Integer" />
+
+        <variable
+            name="viewmodel"
+            type="com.clevertap.demo.ui.main.HomeScreenViewModel" />
+    </data>
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <TextView
+            android:id="@+id/functionTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?android:attr/selectableItemBackground"
+            android:onClick="@{() -> viewmodel.onChildClick(groupPosition,childPosition)}"
+            android:paddingBottom="12dp"
+            android:paddingLeft="?android:attr/expandableListPreferredChildPaddingLeft"
+            android:paddingStart="?android:attr/expandableListPreferredChildPaddingLeft"
+            android:paddingTop="12dp"
+            android:text="@{fTitle}"
+            android:textColor="@android:color/black"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</layout>

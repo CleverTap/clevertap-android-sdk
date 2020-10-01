@@ -1,0 +1,28 @@
+
+ext {
+    libraryName = 'XiaomiPushSDK'
+    artifact = 'clevertap-xiaomi-sdk'
+    libraryDescription = 'The CleverTap Android Xiaomi Push SDK'
+
+    libraryVersion = "$xpsVersion"
+
+    licenseName = 'MIT License'
+    licenseUrl = 'https://opensource.org/licenses/MIT'
+    allLicenses = ["MIT"]
+
+    minSdkVersionVal = 16
+}
+
+apply from: "../gradle-scripts/commons.gradle"
+
+dependencies {
+    implementation fileTree('libs')
+
+    compileOnly project(':clevertap-core')
+    compileOnly deps.androidXAnnotation
+    testImplementation project(':test_shared')
+    testImplementation fileTree('libs')
+    testImplementation deps.kotlinStdlib
+    testImplementation deps.json
+    testImplementation deps.gson
+}

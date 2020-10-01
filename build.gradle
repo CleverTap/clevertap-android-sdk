@@ -1,0 +1,54 @@
+// Top-level build file where you can add configuration options common to all sub-projects/modules.
+buildscript {
+    // do not change order of apply
+    apply from: 'gradle-scripts/versions.gradle'
+    apply from: 'gradle-scripts/dependencies.gradle'
+
+    repositories {
+        google()// Google's Maven repository
+        jcenter()
+        maven { url 'http://developer.huawei.com/repo/' }
+        mavenCentral()
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:$gradlePluginVersion"
+        classpath "com.google.gms:google-services:$googleServicesPluginVersion"// Google Services plugin
+        classpath "com.github.dcendents:android-maven-gradle-plugin:$mavenPluginVersion"
+        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:$bintrayPluginVersion"
+        classpath "com.huawei.agconnect:agcp:$huaweiPluginVersion"// Huawei Push Plugin
+        classpath "org.jacoco:org.jacoco.core:$jacocoVersion"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+allprojects {
+    repositories {
+        jcenter()
+        google()
+        maven { url 'http://developer.huawei.com/repo/' }
+        flatDir {
+            dirs 'libs'
+        }
+    }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
+}
+
+task copyTemplates {
+    outputs.upToDateWhen { false }
+    doLast{
+        copy {
+            from 'templates/README.md'
+            into "."
+            expand('ext': project.ext.properties)
+        }
+        copy {
+            from 'templates'
+            exclude "README.md"
+            into "docs/"
+            expand('ext': project.ext.properties)
+        }
+    }
+}
