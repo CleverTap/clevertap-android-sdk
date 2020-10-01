@@ -4,7 +4,7 @@
 
 # CleverTap Android SDKs
 [![Build Status](https://app.bitrise.io/app/09efc6b9404a6341/status.svg?token=TejL3E1NHyTiR5ajHKGJ6Q&branch=master)](https://app.bitrise.io/app/09efc6b9404a6341)
-[![codebeat badge](https://codebeat.co/badges/e004db82-4b07-4501-aa35-ce8b8b18c6ed)](https://codebeat.co/projects/github-com-clevertap-clevertap-ios-sdk-master)
+[![codebeat badge](https://codebeat.co/badges/49b05fa0-4228-443c-9f1c-d11efa6d2ef8)](https://codebeat.co/projects/github-com-clevertap-clevertap-android-sdk-master)
 [ ![Download](https://api.bintray.com/packages/clevertap/Maven/CleverTapAndroidSDK/images/download.svg) ](https://bintray.com/clevertap/Maven/CleverTapAndroidSDK/_latestVersion)
 
 ## ⍗ Table of contents
