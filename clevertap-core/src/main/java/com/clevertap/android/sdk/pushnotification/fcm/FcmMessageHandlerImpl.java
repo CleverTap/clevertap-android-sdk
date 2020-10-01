@@ -13,6 +13,9 @@ import com.clevertap.android.sdk.pushnotification.PushConstants;
 import com.google.firebase.messaging.RemoteMessage;
 import java.util.Map;
 
+/**
+ * implementation of {@link IFcmMessageHandler}
+ */
 public class FcmMessageHandlerImpl implements IFcmMessageHandler {
 
     @Override

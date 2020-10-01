@@ -17,6 +17,9 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 
+/**
+ * implementation of {@link IFcmMessageHandler}
+ */
 public class FcmSdkHandlerImpl implements IFcmSdkHandler {
 
     private final CTPushProviderListener listener;
@@ -74,7 +77,7 @@ public class FcmSdkHandlerImpl implements IFcmSdkHandler {
 
                             // Get new Instance ID token
                             String token = task.getResult() != null ? task.getResult().getToken() : null;
-                            listener.config().log(LOG_TAG, FCM_LOG_TAG + "FCM token for Sender Id - " + token);
+                            listener.config().log(LOG_TAG, FCM_LOG_TAG + "FCM token - " + token);
                             listener.onNewToken(token, getPushType());
                         }
                     });

@@ -36,6 +36,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -340,7 +341,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private WeakReference<CTProductConfigListener> productConfigListener;
 
-    private CTPushAmpListener pushListener = null;
+    private CTPushAmpListener pushAmpListener = null;
 
     private CTPushNotificationListener pushNotificationListener = null;
 
@@ -1556,6 +1557,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
      * @return {@link Boolean} the value set by the Experiment or the default value if unset
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public Boolean getBooleanVariable(String name, Boolean defaultValue) {
         if (ctABTestController == null) {
@@ -1608,23 +1610,23 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
-     * Returns the CTPushListener object
+     * Returns the CTPushAmpListener object
      *
      * @return The {@link CTPushAmpListener} object
      */
     @SuppressWarnings("WeakerAccess")
-    public CTPushAmpListener getCTPushListener() {
-        return pushListener;
+    public CTPushAmpListener getCTPushAmpListener() {
+        return pushAmpListener;
     }
 
     /**
-     * This method is used to set the CTPushListener
+     * This method is used to set the CTPushAmpListener
      *
-     * @param pushListener - The{@link CTPushAmpListener} object
+     * @param pushAmpListener - The{@link CTPushAmpListener} object
      */
     @SuppressWarnings("unused")
-    public void setCTPushListener(CTPushAmpListener pushListener) {
-        this.pushListener = pushListener;
+    public void setCTPushAmpListener(CTPushAmpListener pushAmpListener) {
+        this.pushAmpListener = pushAmpListener;
     }
 
     /**
@@ -1780,6 +1782,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
      * @return {@link Double} the value set by the Experiment or the default value if unset
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public Double getDoubleVariable(String name, Double defaultValue) {
         if (ctABTestController == null) {
@@ -1925,6 +1928,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
      * @return {@link Integer} the value set by the Experiment or the default value if unset
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public Integer getIntegerVariable(String name, Integer defaultValue) {
         if (ctABTestController == null) {
@@ -1958,6 +1962,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
      * @return {@link List} of {@link Boolean} the value set by the Experiment or the default value if unset
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public List<Boolean> getListOfBooleanVariable(String name, List<Boolean> defaultValue) {
         if (ctABTestController == null) {
@@ -1978,6 +1983,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
      * @return {@link List} of {@link Double} the value set by the Experiment or the default value if unset
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public List<Double> getListOfDoubleVariable(String name, List<Double> defaultValue) {
         if (ctABTestController == null) {
@@ -1998,6 +2004,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
      * @return {@link List} of {@link Integer} the value set by the Experiment or the default value if unset
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public List<Integer> getListOfIntegerVariable(String name, List<Integer> defaultValue) {
         if (ctABTestController == null) {
@@ -2015,6 +2022,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
      * @return {@link List} of {@link String} the value set by the Experiment or the default value if unset
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public List<String> getListOfStringVariable(String name, List<String> defaultValue) {
         if (ctABTestController == null) {
@@ -2058,6 +2066,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
      * @return {@link Map} of {@link Boolean} the value set by the Experiment or the default value if unset
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public Map<String, Boolean> getMapOfBooleanVariable(String name, Map<String, Boolean> defaultValue) {
         if (ctABTestController == null) {
@@ -2075,6 +2084,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
      * @return {@link Map} of {@link Double} the value set by the Experiment or the default value if unset
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public Map<String, Double> getMapOfDoubleVariable(String name, Map<String, Double> defaultValue) {
         if (ctABTestController == null) {
@@ -2092,6 +2102,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
      * @return {@link Map} of {@link Integer} the value set by the Experiment or the default value if unset
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public Map<String, Integer> getMapOfIntegerVariable(String name, Map<String, Integer> defaultValue) {
         if (ctABTestController == null) {
@@ -2109,6 +2120,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
      * @return {@link Map} of {@link String} the value set by the Experiment or the default value if unset
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public Map<String, String> getMapOfStringVariable(String name, Map<String, String> defaultValue) {
         if (ctABTestController == null) {
@@ -2160,6 +2172,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
      * @return {@link String} the value set by the Experiment or the default value if unset
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public String getStringVariable(String name, String defaultValue) {
         if (ctABTestController == null) {
@@ -3356,6 +3369,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      *
      * @param name {@link String} the name of the variable
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public void registerBooleanVariable(String name) {
         if (ctABTestController == null) {
@@ -3370,6 +3384,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      *
      * @param name {@link String} the name of the variable
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public void registerDoubleVariable(String name) {
         if (ctABTestController == null) {
@@ -3384,6 +3399,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      *
      * @param name {@link String} the name of the variable
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public void registerIntegerVariable(String name) {
         if (ctABTestController == null) {
@@ -3399,6 +3415,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      *
      * @param name {@link String} the name of the variable
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public void registerListOfBooleanVariable(String name) {
         if (ctABTestController == null) {
@@ -3414,6 +3431,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      *
      * @param name {@link String} the name of the variable
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public void registerListOfDoubleVariable(String name) {
         if (ctABTestController == null) {
@@ -3429,6 +3447,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      *
      * @param name {@link String} the name of the variable
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public void registerListOfIntegerVariable(String name) {
         if (ctABTestController == null) {
@@ -3444,6 +3463,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      *
      * @param name {@link String} the name of the variable
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public void registerListOfStringVariable(String name) {
         if (ctABTestController == null) {
@@ -3459,6 +3479,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      *
      * @param name {@link String} the name of the variable
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public void registerMapOfBooleanVariable(String name) {
         if (ctABTestController == null) {
@@ -3474,6 +3495,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      *
      * @param name {@link String} the name of the variable
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public void registerMapOfDoubleVariable(String name) {
         if (ctABTestController == null) {
@@ -3489,6 +3511,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      *
      * @param name {@link String} the name of the variable
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public void registerMapOfIntegerVariable(String name) {
         if (ctABTestController == null) {
@@ -3504,6 +3527,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      *
      * @param name {@link String} the name of the variable
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public void registerMapOfStringVariable(String name) {
         if (ctABTestController == null) {
@@ -3518,6 +3542,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      *
      * @param name {@link String} the name of the variable
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @SuppressWarnings({"unused"})
     public void registerStringVariable(String name) {
         if (ctABTestController == null) {
@@ -4149,7 +4174,12 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private void _notifyInboxMessagesDidUpdate() {
         if (this.inboxListener != null) {
-            this.inboxListener.inboxMessagesDidUpdate();
+            Utils.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    CleverTapAPI.this.inboxListener.inboxMessagesDidUpdate();
+                }
+            });
         }
     }
 
@@ -5883,8 +5913,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 if (!pushBundle.isEmpty() && !dbAdapter
                         .doesPushNotificationIdExist(pushObject.getString("wzrk_pid"))) {
                     getConfigLogger().verbose("Creating Push Notification locally");
-                    if (pushListener != null) {
-                        pushListener.onPushAmpPayloadReceived(pushBundle);
+                    if (pushAmpListener != null) {
+                        pushAmpListener.onPushAmpPayloadReceived(pushBundle);
                     } else {
                         createNotification(context, pushBundle);
                     }
@@ -5929,6 +5959,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     private void initABTesting() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
+            return;
+        }
         if (!config.isAnalyticsOnly()) {
             if (!config.isABTestingEnabled()) {
                 getConfigLogger().debug(config.getAccountId(), "AB Testing is not enabled for this instance");
@@ -6806,6 +6839,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     private void processIncomingExperiments(JSONObject response) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
+            return;
+        }
         try {
             JSONArray experimentsArray = response.getJSONArray("ab_exps");
             if (this.ctABTestController != null) {
@@ -7378,6 +7414,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     private void resetABTesting() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
+            return;
+        }
         if (!this.config.isAnalyticsOnly()) {
             if (!config.isABTestingEnabled()) {
                 getConfigLogger().debug(config.getAccountId(), "AB Testing is not enabled for this instance");
@@ -7879,7 +7918,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         // Take all the properties from the notif and add it to the intent
         launchIntent.putExtras(extras);
         launchIntent.removeExtra(Constants.WZRK_ACTIONS);
-        launchIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
         pIntent = PendingIntent.getBroadcast(context, (int) System.currentTimeMillis(),
                 launchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 

@@ -11,6 +11,9 @@ import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Logger;
 import com.huawei.hms.push.RemoteMessage;
 
+/**
+ * Implementation of {@link IHmsMessageHandler}
+ */
 class HmsMessageHandlerImpl implements IHmsMessageHandler {
 
     private IHmsNotificationParser mParser;

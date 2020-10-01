@@ -1,1 +1,1 @@
--keep class com.xiaomi.mipush.**{*;}
+-keep class com.xiaomi.**{*;}

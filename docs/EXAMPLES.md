@@ -1,6 +1,7 @@
 ## Example Usage
 
 ### Get the Default Singleton Instance
+
 ```java
     CleverTapAPI clevertap = CleverTapAPI.getDefaultInstance(getApplicationContext());
 ```
@@ -73,6 +74,7 @@
 ```
 
 ### Record User Profile properties
+
 ```java
     // each of the below fields are optional
     // if set, these populate demographic information in the Dashboard
@@ -110,6 +112,7 @@
 ### Handling Multiple Device Users
 
 Use `onUserLogin` to maintain multiple distinct user profiles on the same device
+
 ```java
     // each of the below fields are optional
     // with the exception of one of Identity, Email, FBID or GPID
@@ -146,21 +149,24 @@ Use `onUserLogin` to maintain multiple distinct user profiles on the same device
 
 Add the following dependencies in your app's `build.gradle`
 
-```
-implementation 'com.android.support:appcompat-v7:28.0.0'//MANDATORY for App Inbox
-implementation 'com.android.support:design:28.0.0'//MANDATORY for App Inbox
-implementation 'com.github.bumptech.glide:glide:4.9.0'//MANDATORY for App Inbox
+```groovy
+implementation "androidx.appcompat:appcompat:1.2.0"//MANDATORY for App Inbox
+implementation "androidx.recyclerview:recyclerview:1.1.0"//MANDATORY for App Inbox
+implementation "androidx.viewpager:viewpager:1.0.0"//MANDATORY for App Inbox
+implementation "com.google.android.material:material:1.2.1"//MANDATORY for App Inbox
+implementation "com.github.bumptech.glide:glide:4.11.0"//MANDATORY for App Inbox
 
 //Optional ExoPlayer Libraries for Audio/Video Inbox Messages. Audio/Video messages will be dropped without these dependencies
-implementation 'com.google.android.exoplayer:exoplayer:2.8.4'
-implementation 'com.google.android.exoplayer:exoplayer-hls:2.8.4'
-implementation 'com.google.android.exoplayer:exoplayer-ui:2.8.4
+implementation "com.google.android.exoplayer:exoplayer:2.11.5"
+implementation "com.google.android.exoplayer:exoplayer-hls:2.11.5"
+implementation "com.google.android.exoplayer:exoplayer-ui:2.11.5"
 ```
 #### Initializing the Inbox
 
 Initializing the Inbox will provide a callback to two methods `inboxDidInitialize()` AND `inboxMessagesDidUpdate()`
 
-```import com.clevertap.android.sdk.CTInboxActivity;
+```java
+import com.clevertap.android.sdk.CTInboxActivity;
 import com.clevertap.android.sdk.CTInboxListener;
 import com.clevertap.android.sdk.CTInboxStyleConfig;
 import com.clevertap.android.sdk.CleverTapAPI;
@@ -185,7 +191,7 @@ public class MainActivity extends AppCompatActivity implements CTInboxListener {
 Customize the config object and call the Inbox in the `inboxDidInitialize()` method
 Call this method on the button click which opens the CleverTap Inbox for your App
 
-```
+```java
 @Override
 public void inboxDidInitialize(){
     ArrayList<String> tabs = new ArrayList<>();
@@ -214,7 +220,7 @@ public void inboxDidInitialize(){
 
 You can choose to create your own App Inbox with the help of the following APIs -
 
-```
+```java
 //Initialize App Inbox
 cleverTapDefaultInstance.initializeInbox();
 
@@ -262,17 +268,9 @@ public void inboxMessagesDidUpdate() {    }
 
 If using FCM, inside the `<application></application>` tags, register the following services
 ```xml
-    <service
-        android:name="com.clevertap.android.sdk.FcmTokenListenerService">
+    <service android:name="com.clevertap.android.sdk.pushnotification.fcm.FcmMessageListenerService">
         <intent-filter>
-            <action android:name="com.google.firebase.INSTANCE_ID_EVENT"/>
-        </intent-filter>
-    </service>
-
-    <service
-        android:name="com.clevertap.android.sdk.FcmMessageListenerService">
-        <intent-filter>
-            <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            <action android:name="com.google.firebase.MESSAGING_EVENT" />
         </intent-filter>
     </service>
 ```
@@ -286,7 +284,7 @@ To set a custom notification icon (only for small icon), add the following meta 
 To track the push notification events and deeplinks add the following receiver in your AndroidManifest.xml -
 ```xml
     <receiver
-        android:name="com.clevertap.android.sdk.CTPushNotificationReceiver"
+        android:name="com.clevertap.android.sdk.pushnotification.CTPushNotificationReceiver"
         android:exported="false"
         android:enabled="true">
     </receiver>
@@ -294,7 +292,7 @@ To track the push notification events and deeplinks add the following receiver i
 CleverTap handles closing the notification with Action buttons. You will have to add an additional CleverTap IntentService to your AndroidManifest.xml and the SDK will do it for you automatically
 ```xml
     <service
-         android:name="com.clevertap.android.sdk.CTNotificationIntentService"
+         android:name="com.clevertap.android.sdk.pushnotification.CTNotificationIntentService"
          android:exported="false">
          <intent-filter>
              <action android:name="com.clevertap.PUSH_EVENT"/>
@@ -313,25 +311,10 @@ Starting with v3.4.3, the CleverTap SDK supports specifying a custom FCM Sender 
 
 Starting with v3.4.0, the SDK supports Push Amplification. Push Amplification is a capability that allows you to reach users on devices which suppress notifications via GCM/FCM. To allow your app to use CleverTap's Push Amplification via background ping service, add the following fields in your app's `AndroidManifest.xml`
 
-```
+```xml
 <meta-data
     android:name="CLEVERTAP_BACKGROUND_SYNC"
     android:value="1"/>
-
-<!--use CTBackgroundIntentService to target users below Android 21 (Lollipop)-->
-<service
-    android:name="com.clevertap.android.sdk.CTBackgroundIntentService"
-    android:exported="false"
-    <intent-filter>
-        <action android:name="com.clevertap.BG_EVENT"/>
-    </intent-filter>
-</service>
-
-<!--use CTBackgroundJobService to target users on and above Android 21 (Lollipop)-->
- <service
-    android:name="com.clevertap.android.sdk.CTBackgroundJobService"
-    android:permission="android.permission.BIND_JOB_SERVICE"
-    android:exported="false"/>
  ```
 
 #### In-App Notifications
@@ -350,19 +333,8 @@ To support in-app notifications, register the following activity in your Android
 
 #### Tracking the Install Referrer
 
-Add the following between the `<application></application>` tags. This will enable you to capture UTM parameters for app installs
-```xml
-    <receiver
-        android:name="com.clevertap.android.sdk.InstallReferrerBroadcastReceiver"
-        android:exported="true">
-            <intent-filter>
-                <action android:name="com.android.vending.INSTALL_REFERRER"/>
-            </intent-filter>
-    </receiver>
-```
-
 From CleverTap SDK v3.6.4 onwards, just remove the above the Broadcast Receiver if you are using it and add the following gradle dependency to capture UTM details, app install time, referrer click time and other metrics provided by the Google Install Referrer Library.
 
-```markdown
-    implementation 'com.android.installreferrer:installreferrer:1.0'
+```groovy
+    implementation "com.android.installreferrer:installreferrer:2.1"
 ```

@@ -3,6 +3,9 @@ package com.clevertap.android.hms;
 import android.os.Bundle;
 import com.huawei.hms.push.RemoteMessage;
 
+/**
+ * Impl converts the RemoteMessage to bundle
+ */
 public interface IHmsNotificationParser {
 
     /**

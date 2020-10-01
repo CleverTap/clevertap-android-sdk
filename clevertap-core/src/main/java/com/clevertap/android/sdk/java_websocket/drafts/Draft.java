@@ -25,6 +25,8 @@
 
 package com.clevertap.android.sdk.java_websocket.drafts;
 
+import android.os.Build.VERSION_CODES;
+import androidx.annotation.RequiresApi;
 import com.clevertap.android.sdk.java_websocket.WebSocketImpl;
 import com.clevertap.android.sdk.java_websocket.enums.CloseHandshakeType;
 import com.clevertap.android.sdk.java_websocket.enums.HandshakeState;
@@ -87,11 +89,13 @@ public abstract class Draft {
         return null;
     }
 
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     public static String readStringLine(ByteBuffer buf) {
         ByteBuffer b = readLine(buf);
         return b == null ? null : Charsetfunctions.stringAscii(b.array(), 0, b.limit());
     }
 
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     public static HandshakeBuilder translateHandshakeHttp(ByteBuffer buf, Role role)
             throws InvalidHandshakeException {
         HandshakeBuilder handshake;
@@ -191,11 +195,13 @@ public abstract class Draft {
     /**
      * @deprecated use createHandshake without the role
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @Deprecated
     public List<ByteBuffer> createHandshake(Handshakedata handshakedata, Role ownrole) {
         return createHandshake(handshakedata);
     }
 
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     public List<ByteBuffer> createHandshake(Handshakedata handshakedata) {
         return createHandshake(handshakedata, true);
     }
@@ -203,11 +209,13 @@ public abstract class Draft {
     /**
      * @deprecated use createHandshake without the role since it does not have any effect
      */
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     @Deprecated
     public List<ByteBuffer> createHandshake(Handshakedata handshakedata, Role ownrole, boolean withcontent) {
         return createHandshake(handshakedata, withcontent);
     }
 
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     public List<ByteBuffer> createHandshake(Handshakedata handshakedata, boolean withcontent) {
         StringBuilder bui = new StringBuilder(100);
         if (handshakedata instanceof ClientHandshake) {
@@ -273,6 +281,7 @@ public abstract class Draft {
 
     public abstract List<Framedata> translateFrame(ByteBuffer buffer) throws InvalidDataException;
 
+    @RequiresApi(api = VERSION_CODES.KITKAT)
     public Handshakedata translateHandshake(ByteBuffer buf) throws InvalidHandshakeException {
         return translateHandshakeHttp(buf, role);
     }

@@ -10,6 +10,9 @@ import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
 import com.huawei.hms.push.RemoteMessage;
 
+/**
+ * Implementation of {@link IHmsNotificationParser}
+ */
 public class HmsNotificationParser implements IHmsNotificationParser {
 
     @Override

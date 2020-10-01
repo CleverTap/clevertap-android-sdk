@@ -11,6 +11,9 @@ import com.huawei.agconnect.config.AGConnectServicesConfig;
 import com.huawei.hms.aaid.HmsInstanceId;
 import com.huawei.hms.api.HuaweiApiAvailability;
 
+/**
+ * Implementation of {@link IHmsSdkHandler}
+ */
 class HmsSdkHandler implements IHmsSdkHandler {
 
     private final BaseCTApiListener mListener;

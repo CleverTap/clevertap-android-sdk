@@ -4,6 +4,9 @@ import androidx.annotation.NonNull;
 import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 
+/**
+ * Clevertap's Implementation for Firebase Message service
+ */
 public class FcmMessageListenerService extends FirebaseMessagingService {
 
     private IFcmMessageHandler mHandler = new FcmMessageHandlerImpl();

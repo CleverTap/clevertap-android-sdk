@@ -22,6 +22,9 @@ import com.xiaomi.mipush.sdk.MiPushCommandMessage;
 import com.xiaomi.mipush.sdk.MiPushMessage;
 import java.util.List;
 
+/**
+ * Implementation of {@link IMiMessageHandler}
+ */
 class XiaomiMessageHandlerImpl implements IMiMessageHandler {
 
     private @NonNull

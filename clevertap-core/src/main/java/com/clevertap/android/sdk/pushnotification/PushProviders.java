@@ -15,7 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * loads providers
+ * Single point of contact to load & support all types of Notification messaging services viz. FCM, XPS, HMS etc.
  */
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -45,6 +45,12 @@ public class PushProviders implements CTPushProviderListener {
         this.ctApiPushListener = ctApiPushListener;
     }
 
+    /**
+     * Saves token for a push type into shared pref
+     *
+     * @param token    - Messaging token
+     * @param pushType - Pushtype, Ref{@link PushConstants.PushType}
+     */
     public void cacheToken(final String token, final PushConstants.PushType pushType) {
         if (TextUtils.isEmpty(token) || pushType == null) {
             return;
@@ -82,6 +88,9 @@ public class PushProviders implements CTPushProviderListener {
         return ctApiPushListener.context();
     }
 
+    /**
+     * @return list of all available push types, contains ( Clevertap's plugin + Custom supported Push Types)
+     */
     @NonNull
     public ArrayList<PushConstants.PushType> getAvailablePushTypes() {
         ArrayList<PushConstants.PushType> pushTypes = new ArrayList<>();
@@ -91,6 +100,10 @@ public class PushProviders implements CTPushProviderListener {
         return pushTypes;
     }
 
+    /**
+     * @param pushType - Pushtype {@link PushConstants.PushType}
+     * @return Messaging token for a particular push type
+     */
     public String getCachedToken(PushConstants.PushType pushType) {
         if (pushType != null) {
             @PushConstants.RegKeyType String key = pushType.getTokenPrefKey();
@@ -106,6 +119,15 @@ public class PushProviders implements CTPushProviderListener {
         return null;
     }
 
+    /**
+     * Direct Method to send tokens to Clevertap's server
+     * Call this method when Clients are handling the Messaging services on their own
+     *
+     * @param token    - Messaging token
+     * @param pushType - Pushtype, Ref:{@link PushConstants.PushType}
+     * @param register - true if we want to register the token to CT server
+     *                 false if we want to unregister the token from CT server
+     */
     public void handleToken(String token, PushConstants.PushType pushType, boolean register) {
         if (register) {
             registerToken(token, pushType);
@@ -114,6 +136,9 @@ public class PushProviders implements CTPushProviderListener {
         }
     }
 
+    /**
+     * @return true if we are able to reach the device via any of the messaging service
+     */
     public boolean isNotificationSupported() {
         for (PushConstants.PushType pushType : getAvailablePushTypes()) {
             if (getCachedToken(pushType) != null) {
@@ -128,6 +153,9 @@ public class PushProviders implements CTPushProviderListener {
         ctApiPushListener.onNewToken(token, pushType);
     }
 
+    /**
+     * Fetches latest tokens from various providers and send to Clevertap's server
+     */
     public void refreshAllTokens() {
         CTExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
@@ -141,6 +169,13 @@ public class PushProviders implements CTPushProviderListener {
         });
     }
 
+    /**
+     * Unregister the token for a push type from Clevertap's server.
+     * Devices with unregistered token wont be reachable.
+     *
+     * @param token    - Messaging token
+     * @param pushType - pushtype Ref:{@link PushConstants.PushType}
+     */
     public void unregisterToken(String token, PushConstants.PushType pushType) {
         ctApiPushListener.pushDeviceTokenEvent(token, false, pushType);
     }
