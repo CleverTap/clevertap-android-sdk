@@ -170,6 +170,7 @@ install {
 }
 
 task sourcesJar(type: Jar) {
+    baseName "$artifact"
     from android.sourceSets.main.java.srcDirs
     classifier = 'sources'
 }
