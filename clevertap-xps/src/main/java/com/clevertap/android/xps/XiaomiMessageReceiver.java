@@ -9,6 +9,9 @@ import com.xiaomi.mipush.sdk.MiPushCommandMessage;
 import com.xiaomi.mipush.sdk.MiPushMessage;
 import com.xiaomi.mipush.sdk.PushMessageReceiver;
 
+/**
+ * Clevertap's Implementation for Xiaomi Message Receiver
+ */
 public class XiaomiMessageReceiver extends PushMessageReceiver {
 
     private IMiMessageHandler handler = new XiaomiMessageHandlerImpl(new XiaomiNotificationParser());

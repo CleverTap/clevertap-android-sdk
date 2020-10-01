@@ -13,6 +13,9 @@ import com.clevertap.android.sdk.ManifestInfo;
 import com.xiaomi.mipush.sdk.MiPushClient;
 import java.util.List;
 
+/**
+ * Implementation of {@link IMiSdkHandler}
+ */
 class XiaomiSdkHandler implements IMiSdkHandler {
 
     private final BaseCTApiListener ctApiListener;

@@ -10,6 +10,9 @@ import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
 import com.xiaomi.mipush.sdk.MiPushMessage;
 
+/**
+ * Implementation of {@link IXiaomiNotificationParser}
+ */
 public class XiaomiNotificationParser implements IXiaomiNotificationParser {
 
     @Override
