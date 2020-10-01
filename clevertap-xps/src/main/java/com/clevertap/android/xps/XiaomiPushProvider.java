@@ -12,6 +12,9 @@ import com.clevertap.android.sdk.pushnotification.CTPushProvider;
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
 
+/**
+ * Clevertap's Xiaomi Plugin Ref: {@link CTPushProvider}
+ */
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class XiaomiPushProvider implements CTPushProvider {
 

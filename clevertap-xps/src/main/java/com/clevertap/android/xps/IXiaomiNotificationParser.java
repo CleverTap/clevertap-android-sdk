@@ -3,6 +3,9 @@ package com.clevertap.android.xps;
 import android.os.Bundle;
 import com.xiaomi.mipush.sdk.MiPushMessage;
 
+/**
+ * Impl converts the MiMessage to bundle
+ */
 public interface IXiaomiNotificationParser {
 
     /**
