@@ -37,6 +37,8 @@ public class ManifestInfo {
 
     private static boolean beta;
 
+    private static String LC;
+
     private static String intentServiceName;
 
     private static String xiaomiAppKey;
@@ -84,6 +86,11 @@ public class ManifestInfo {
         }
         packageName = _getManifestStringValueForKey(metaData, Constants.LABEL_PACKAGE_NAME);
         beta = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_BETA));
+
+        if (LC == null) {
+            LC = _getManifestStringValueForKey(metaData, Constants.LABEL_LC);
+        }
+
         if (intentServiceName == null) {
             intentServiceName = _getManifestStringValueForKey(metaData, Constants.LABEL_INTENT_SERVICE);
         }
@@ -154,6 +161,10 @@ public class ManifestInfo {
 
     boolean useGoogleAdId() {
         return useADID;
+    }
+
+    String getLC() {
+        return LC;
     }
 
     static void changeCredentials(String id, String token, String region) {

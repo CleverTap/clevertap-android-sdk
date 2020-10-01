@@ -36,6 +36,7 @@ import java.lang.ref.WeakReference;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.security.GeneralSecurityException;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -347,12 +348,25 @@ public class CTABTestController {
 
             final String protocol = "wss";
             String region = config.getAccountRegion() != null ? config.getAccountRegion() : DEFAULT_REGION;
-            region = config.isBeta() ? region + "-dashboard-beta" : region;
+            if (this.config.getStaging() > 0 && !region.isEmpty() && !region.equals("in1") && !region.equals("sg1")) {
+                region = region + "-dashboard-staging-" + this.config.getStaging();
+            } else {
+                //String region = config.getAccountRegion() != null ? config.getAccountRegion() : DEFAULT_REGION;
+                region = config.isBeta() ? region + "-dashboard-beta" : region;
+            }
             final String domain = region + "." + DASHBOARD_URL;
             final String url = protocol + "://" + domain + "/" + getAccountId() + "/" + "websocket/screenab/sdk?tk="
                     + config.getAccountToken();
             getConfigLogger().verbose(getAccountId(), "Websocket URL - " + url);
             try {
+                String userAgent = System.getProperty("http.agent");
+                Map<String, String> httpHeaders = new HashMap<>();
+                if (userAgent != null) {
+                    Logger.d("User Agent found " + userAgent);
+                    httpHeaders.put("user-agent", userAgent);
+                } else {
+                    Logger.d("No User Agent found ");
+                }
                 wsClient = new DashboardClient(new URI(url), CONNECT_TIMEOUT);
                 wsClient.connectBlocking();
             } catch (final Exception e) {
