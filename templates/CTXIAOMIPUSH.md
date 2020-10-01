@@ -5,7 +5,7 @@
 ## ⍗ Table of contents
 
 * [Introduction](#-introduction)
-* [Register](#-register)
+* [Register](#%EF%B8%8F-register)
 * [Create an Application](#-create-an-application)
 * [App Details](#-app-details)
 * [Integration](#-integration)

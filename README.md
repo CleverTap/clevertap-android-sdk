@@ -10,12 +10,13 @@
 ## ⍗ Table of contents
 * [Introduction](#-introduction)
 * [Installation](#-installation)
-	* [Dependencies](#-push-notifications)
+	* [Dependencies](#-dependencies)
 * [Integration](#-integration)
 * [Initialization](#-initialization)
 * [Example Usage](#-example-usage)
-* [Geofence SDK](#-geofence-sdk)
+* [CleverTap Geofence SDK](#-clevertap-geofence-sdk)
 * [CleverTap Xiaomi Push SDK](#-clevertap-xiaomi-push-sdk)
+* [CleverTap Huawei Push SDK](#-clevertap-huawei-push-sdk)
 * [License](#-license)
 
 ## 👋 Introduction
@@ -188,6 +189,12 @@ To find the integration steps for CleverTap Geofence SDK, click [here](https://g
 [(Back to top)](#-table-of-contents)
 
 CleverTap Xiaomi Push SDK provides an out of the box service to use the Xiaomi Push SDK. Find the integration steps for the CleverTap Xiaomi Push SDK [here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTXIAOMIPUSH.md)
+
+## 📲 CleverTap Huawei Push SDK
+[(Back to top)](#-table-of-contents)
+
+CleverTap Huawei Push SDK provides an out of the box service to use the Huawei Messaging Service. Find the integration steps for the CleverTap Huawei Push SDK [here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTHUAWEIPUSH.md)
+
 
 ## 📄 License
 [(Back to top)](#-table-of-contents)

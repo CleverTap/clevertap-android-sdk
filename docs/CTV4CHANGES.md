@@ -2,23 +2,27 @@
 
 ## ⍗ Table of contents
 
-* [Migration](#-migration)
-* [Dependencies](#-dependencies)
+* [Migration](#%EF%B8%8F-migration)
+* [Dependencies](#ℹ%EF%B8%8F-dependencies)
     * [Core dependencies](#-core-dependencies)
     * [Firebase dependencies](#-firebase-dependencies)
     * [InApp Notification dependencies](#-inapp-notification-dependencies)
     * [App Inbox dependencies](#-app-inbox-dependencies)
-* [Breaking changes](#-breaking-changes)
-    * [Firebase Messaging changes](#-firebase-messaging-changes-in-androidmanifest.xml)
-    * [Push Notification changes](#-push-notification-changes-in-androidmanifest.xml)
+* [Breaking changes](#%EF%B8%8F-breaking-changes)
+    * [Firebase Messaging changes](#-firebase-messaging-changes)
+    * [Push Notification changes](#-push-notification-changes)
     * [Push Amplification changes](#-push-amplification-changes)
 * [Questions](#-questions)
 
 ## ♻️ Migration
 
-CleverTap Android SDK v4.0.0 has migrated to use AndroidX libraries, please follow this document to know which AndroidX libraries to include in your app to support CleverTap SDK
+CleverTap Android SDK v4.0.0 has migrated to Android 10 & AndroidX libraries, please follow this document to know which AndroidX libraries to include in your app to support CleverTap SDK
 
 ## ℹ️ Dependencies
+
+* The overall minSDKVersion for CleverTap Android SDK is 16 (Android 4.1 JellyBean)
+* Product A/B Tests (Visual Editor & Dynamic Variables) is now supported for API level 18 (Android 4.3.1 JellyBean ) & above. 
+* CleverTap Huawei SDK needs a minSDKVersion of 17 (Android 4.2 JellyBean)
 
 ### 💻 Core dependencies
 
@@ -28,14 +32,14 @@ Old Dependency | New Dependency
 ---:|:---
 `implementation 'com.clevertap.android:clevertap-android-sdk:3.9.1'`| `implementation 'com.clevertap.android:clevertap-android-sdk:4.0.0'`
 `implementation 'com.android.support:support-v4:28.0.0'` | `implementation 'androidx.core:core:1.3.0'`
-  | `implementation 'androidx.fragment:fragment:1.1.0'`
+                                                         | `implementation 'androidx.fragment:fragment:1.1.0'`
 `implementation 'com.android.installreferrer:installreferrer:1.0'` | `implementation 'com.android.installreferrer:installreferrer:2.1'`
 
 
 
 ### 🔥 Firebase dependencies
 
-CleverTap Android SDK v4.0.0 now supports the latest Firebase Cloud Messaging versions.
+CleverTap Android SDK v4.0.0 now supports the latest Firebase Cloud Messaging version.
 
 Old Dependency | New Dependency
 ---:|:---
@@ -43,7 +47,7 @@ Old Dependency | New Dependency
 
 ### 📠 InApp Notification dependencies
 
-InApp Notifications use Fragments and which was a part of `support-v4` dependency which is now replaced with `androidx.fragment` dependency.
+InApp Notifications use Fragments which were a part of `support-v4` dependency, which is now replaced with `androidx.fragment` dependency.
 
 Interstitial InApp Notification templates support Audio and Video with the help of ExoPlayer. To enable Audio/Video in your Interstitial InApp Notifications, change the following dependencies in your `build.gradle` file :
 
@@ -56,7 +60,7 @@ Old Dependency | New Dependency
 
 ### 📥 App Inbox dependencies
 
-App Inbox used Recycler View, TabLayout and other classes which were a part of the `support:design` & `appcompat-v7` dependency which has now been replaced multiple separate dependencies.
+App Inbox used Recycler View, TabLayout and other classes which were a part of the `support:design` & `appcompat-v7` dependencies, which have now been replaced with multiple separate dependencies.
 We have also updated the Glide & Exoplayer dependencies (mentioned above) which is used as a part of App Inbox
 
 Please find the changes in the dependencies for App Inbox here :
@@ -65,8 +69,8 @@ Old Dependency | New Dependency
 ---:|:---
 `implementation 'com.android.support:appcompat-v7:28.0.0'` | `implementation 'androidx.appcompat:appcompat:1.2.0'`
 `implementation 'com.android.support:design:28.0.0'` | `implementation 'androidx.recyclerview:recyclerview:1.1.0'`
-  | `implementation 'androidx.viewpager:viewpager:1.0.0'`
-  | `implementation 'com.google.android.material:material:1.2.1'`
+                                                     | `implementation 'androidx.viewpager:viewpager:1.0.0'`
+                                                     | `implementation 'com.google.android.material:material:1.2.1'`
 `implementation 'com.github.bumptech.glide:glide:4.9.0'` | `implementation 'com.github.bumptech.glide:glide:4.11.0'`
 
 ## ⚒️ Breaking changes
