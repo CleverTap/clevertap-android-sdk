@@ -7,6 +7,9 @@ import com.clevertap.android.sdk.Logger;
 import com.huawei.hms.push.HmsMessageService;
 import com.huawei.hms.push.RemoteMessage;
 
+/**
+ * Clevertap's Implementation for Huawei Message Receiver
+ */
 public class CTHmsMessageService extends HmsMessageService {
 
     private IHmsMessageHandler mHandler = new HmsMessageHandlerImpl(new HmsNotificationParser());
