@@ -3,7 +3,7 @@ package com.clevertap.android.xps;
 import androidx.annotation.RestrictTo;
 
 /**
- * bridge interface to communicate with the Xiaomi SDK to check for availability, tokens etc.
+ * Bridge interface to communicate with the Xiaomi SDK
  */
 @RestrictTo(value = RestrictTo.Scope.LIBRARY)
 public interface IMiSdkHandler {
@@ -18,8 +18,8 @@ public interface IMiSdkHandler {
      */
     String appKey();
 
-    /*
-     * Tells whether Xiaomi Credentials are valid
+    /**
+     * @return true if Xiaomi credentials are properly available
      */
     boolean isAvailable();
 

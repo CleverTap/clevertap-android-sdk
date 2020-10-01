@@ -1,5 +1,8 @@
 package com.clevertap.android.hms;
 
+/**
+ * Bridge interface to communicate with Huawei SDK
+ */
 public interface IHmsSdkHandler {
 
     /**

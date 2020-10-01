@@ -17,6 +17,9 @@ import com.google.firebase.FirebaseApp;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.iid.InstanceIdResult;
 
+/**
+ * implementation of {@link IFcmMessageHandler}
+ */
 public class FcmSdkHandlerImpl implements IFcmSdkHandler {
 
     private final CTPushProviderListener listener;

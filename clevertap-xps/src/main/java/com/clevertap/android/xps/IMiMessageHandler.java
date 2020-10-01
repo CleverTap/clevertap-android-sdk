@@ -13,7 +13,7 @@ public interface IMiMessageHandler {
 
     /**
      * @param context - application context
-     * @param message - MiMessage
+     * @param message - Xiaomi MiPushMessage
      * @return true if everything is fine & notification is rendered successfully
      */
     boolean createNotification(Context context, MiPushMessage message);

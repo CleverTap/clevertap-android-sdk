@@ -9,6 +9,9 @@ import com.clevertap.android.sdk.pushnotification.CTPushProvider;
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
 
+/**
+ * Clevertap's Firebase Plugin Ref: {@link CTPushProvider}
+ */
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 @SuppressLint(value = "unused")
 public class FcmPushProvider implements CTPushProvider {

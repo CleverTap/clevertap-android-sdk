@@ -8,7 +8,7 @@ import com.huawei.hms.push.HmsMessageService;
 import com.huawei.hms.push.RemoteMessage;
 
 /**
- * Clevertap's Implementation for Huawei Message Receiver
+ * Clevertap's Implementation for Huawei Message service
  */
 public class CTHmsMessageService extends HmsMessageService {
 
