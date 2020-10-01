@@ -10,7 +10,7 @@
       "client_info": {
         "mobilesdk_app_id": "your-mobilesdk_app_id",
         "android_client_info": {
-          "package_name": "com.clevertap.android.geofenceapp"
+          "package_name": "com.clevertap.demo"
         }
       },
       "oauth_client": [
