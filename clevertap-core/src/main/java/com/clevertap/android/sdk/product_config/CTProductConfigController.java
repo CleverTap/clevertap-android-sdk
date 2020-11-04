@@ -139,6 +139,14 @@ public class CTProductConfigController {
     }
 
     /**
+     * Returns all the configs
+     * @return
+     */
+    public HashMap<String, String> getAll(){
+        return activatedConfig;
+    }
+
+    /**
      * Returns the parameter value for the given key as a boolean.
      *
      * @param Key - String
