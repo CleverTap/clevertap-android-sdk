@@ -5142,6 +5142,10 @@ public class CleverTapAPI implements CleverTapAPIListener {
     private void destroySession() {
         currentSessionId = 0;
         setAppLaunchPushed(false);
+        if (isFirstSession()) {
+            // SDK-415
+            firstSession = false;
+        }
         getConfigLogger().verbose(getAccountId(), "Session destroyed; Session ID is now 0");
         clearSource();
         clearMedium();
