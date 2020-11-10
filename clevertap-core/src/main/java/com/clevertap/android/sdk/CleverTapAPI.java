@@ -4200,7 +4200,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             // use the first one we find
             for (String key : profile.keySet()) {
                 Object value = profile.get(key);
-                if (Constants.PROFILE_IDENTIFIER_KEYS.contains(key)) {
+                if (Constants.DEFAULT_PROFILE_IDENTIFIER_KEYS.contains(key)) {
                     try {
                         String identifier = null;
                         if (value != null) {
@@ -7220,7 +7220,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                         profileEvent.put(next, value);
 
                         // cache the valid identifier: guid pairs
-                        if (Constants.PROFILE_IDENTIFIER_KEYS.contains(next)) {
+                        if (Constants.DEFAULT_PROFILE_IDENTIFIER_KEYS.contains(next)) {
                             try {
                                 cacheGUIDForIdentifier(guid, next, value.toString());
                             } catch (Throwable t) {
