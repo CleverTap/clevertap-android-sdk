@@ -4,7 +4,13 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.text.TextUtils;
+
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+
+import java.util.Arrays;
+import java.util.HashSet;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ManifestInfo {
@@ -43,11 +49,17 @@ public class ManifestInfo {
 
     private static String xiaomiAppID;
 
+    private final HashSet<String> profileIdentifierKeys;
+
     public synchronized static ManifestInfo getInstance(Context context) {
         if (instance == null) {
             instance = new ManifestInfo(context);
         }
         return instance;
+    }
+
+    public HashSet<String> getProfileIdentifierKeys() {
+        return profileIdentifierKeys;
     }
 
     private ManifestInfo(Context context) {
@@ -90,6 +102,18 @@ public class ManifestInfo {
 
         xiaomiAppKey = _getManifestStringValueForKey(metaData, Constants.LABEL_XIAOMI_APP_KEY);
         xiaomiAppID = _getManifestStringValueForKey(metaData, Constants.LABEL_XIAOMI_APP_ID);
+
+        profileIdentifierKeys = getProfileIdentifier(metaData);
+    }
+
+    @Nullable
+    HashSet<String> getProfileIdentifier(Bundle metaData) {
+        HashSet<String> hashSet = new HashSet<>(4);
+        String identifier = _getManifestStringValueForKey(metaData, Constants.CLEVERTAP_IDENTIFIER);
+        if (!TextUtils.isEmpty(identifier)) {
+            hashSet.addAll(Arrays.asList(identifier.split(Constants.SEPARATOR_COMMA)));
+        }
+        return hashSet;
     }
 
     public String getFCMSenderId() {

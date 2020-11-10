@@ -20,8 +20,14 @@ import android.os.Handler;
 import android.os.Looper;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
+
 import androidx.annotation.RestrictTo;
 import androidx.core.content.ContextCompat;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -31,10 +37,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+
 import javax.net.ssl.HttpsURLConnection;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class Utils {
@@ -386,5 +390,4 @@ public final class Utils {
             return drawableToBitmap(context.getPackageManager().getApplicationIcon(context.getApplicationInfo()));
         }
     }
-
 }

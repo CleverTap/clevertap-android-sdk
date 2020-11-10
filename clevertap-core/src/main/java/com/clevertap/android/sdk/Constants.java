@@ -1,6 +1,10 @@
 package com.clevertap.android.sdk;
 
+import androidx.annotation.IntDef;
 import androidx.annotation.RestrictTo;
+
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -208,8 +212,8 @@ public interface Constants {
     String CUSTOM_CLEVERTAP_ID_PREFIX = "__h";
     String ERROR_PROFILE_PREFIX = "__i";
     // valid profile identifier keys
-    Set<String> PROFILE_IDENTIFIER_KEYS = new HashSet<>(Arrays.asList(
-            "Identity", "Email", "FBID", "GPID"));
+    Set<String> DEFAULT_PROFILE_IDENTIFIER_KEYS = new HashSet<>(Arrays.asList(
+            "Identity", "Email"));
 
     String KEY_ICON = "icon";
     String KEY_POSTER_URL = "poster";
@@ -267,4 +271,18 @@ public interface Constants {
     int RESTRICTED_MULTI_VALUE_KEY = 24;
 
 
+    String CLEVERTAP_IDENTIFIER = "CLEVERTAP_IDENTIFIER";
+
+    String SEPARATOR_COMMA = ",";
+
+    String SP_KEY_PROFILE_IDENTITIES = "SP_KEY_PROFILE_IDENTITIES";
+
+    @Retention(RetentionPolicy.SOURCE)
+    @IntDef({TYPE_IDENTITY, TYPE_EMAIL, TYPE_PHONE})
+    @interface IdentityType {
+    }
+
+    int TYPE_IDENTITY = 0;
+    int TYPE_EMAIL = 1;
+    int TYPE_PHONE = 2;
 }
