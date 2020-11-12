@@ -1,10 +1,9 @@
 package com.clevertap.android.sdk;
 
-import androidx.annotation.IntDef;
-import androidx.annotation.RestrictTo;
+import static com.clevertap.android.sdk.Constants.IdentityType.TYPE_EMAIL;
+import static com.clevertap.android.sdk.Constants.IdentityType.TYPE_IDENTITY;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+import androidx.annotation.RestrictTo;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -14,6 +13,28 @@ import java.util.Set;
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public interface Constants {
 
+    enum IdentityType {
+        TYPE_IDENTITY("Identity"), TYPE_EMAIL("Email"), TYPE_PHONE("Phone"), TYPE_INVALID("Invalid");
+
+        private final String key;
+
+        public static IdentityType fromKey(String key) {
+            for (IdentityType value : IdentityType.values()) {
+                if (value.key.equalsIgnoreCase(key)) {
+                    return value;
+                }
+            }
+            return TYPE_INVALID;
+        }
+
+        IdentityType(String Key) {
+            this.key = Key;
+        }
+
+        public String getKey() {
+            return key;
+        }
+    }
     String LABEL_ACCOUNT_ID = "CLEVERTAP_ACCOUNT_ID";
     String LABEL_TOKEN = "CLEVERTAP_TOKEN";
     String LABEL_NOTIFICATION_ICON = "CLEVERTAP_NOTIFICATION_ICON";
@@ -37,7 +58,6 @@ public interface Constants {
     String DEVICE_ID_TAG = "deviceId";
     String FALLBACK_ID_TAG = "fallbackId";
     SimpleDateFormat FB_DOB_DATE_FORMAT = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
-    SimpleDateFormat GP_DOB_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
     int PAGE_EVENT = 1;
     int PING_EVENT = 2;
     int PROFILE_EVENT = 3;
@@ -206,15 +226,10 @@ public interface Constants {
     String COMMAND_SET = "$set";
     String COMMAND_ADD = "$add";
     String COMMAND_REMOVE = "$remove";
-
     String COMMAND_DELETE = "$delete";
     String GUID_PREFIX_GOOGLE_AD_ID = "__g";
     String CUSTOM_CLEVERTAP_ID_PREFIX = "__h";
     String ERROR_PROFILE_PREFIX = "__i";
-    // valid profile identifier keys
-    Set<String> DEFAULT_PROFILE_IDENTIFIER_KEYS = new HashSet<>(Arrays.asList(
-            "Identity", "Email"));
-
     String KEY_ICON = "icon";
     String KEY_POSTER_URL = "poster";
     String KEY_ACTION = "action";
@@ -237,14 +252,11 @@ public interface Constants {
     String KEY_LINKS = "links";
     String TEST_IDENTIFIER = "0_0";
     String FEATURE_DISPLAY_UNIT = "DisplayUnit : ";
-
     String FEATURE_FLAG_UNIT = "Feature Flag : ";
     String LOG_TAG_PRODUCT_CONFIG = "Product Config : ";
     int FETCH_TYPE_PC = 0;
     int FETCH_TYPE_FF = 1;
-
     String LOG_TAG_GEOFENCES = "Geofences : ";
-
     // error message codes
     int INVALID_MULTI_VALUE = 1;
     int PUSH_KEY_EMPTY = 2;
@@ -269,20 +281,10 @@ public interface Constants {
     int INVALID_CT_CUSTOM_ID = 21;
     int INVALID_MULTI_VALUE_KEY = 23;
     int RESTRICTED_MULTI_VALUE_KEY = 24;
-
-
     String CLEVERTAP_IDENTIFIER = "CLEVERTAP_IDENTIFIER";
-
     String SEPARATOR_COMMA = ",";
-
+    String EMPTY_STRING = "";
     String SP_KEY_PROFILE_IDENTITIES = "SP_KEY_PROFILE_IDENTITIES";
-
-    @Retention(RetentionPolicy.SOURCE)
-    @IntDef({TYPE_IDENTITY, TYPE_EMAIL, TYPE_PHONE})
-    @interface IdentityType {
-    }
-
-    int TYPE_IDENTITY = 0;
-    int TYPE_EMAIL = 1;
-    int TYPE_PHONE = 2;
+    // valid profile identifier keys
+    Set<IdentityType> DEFAULT_PROFILE_IDENTIFIER_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL));
 }

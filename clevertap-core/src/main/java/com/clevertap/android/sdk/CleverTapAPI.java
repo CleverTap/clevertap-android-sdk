@@ -55,6 +55,7 @@ import com.android.installreferrer.api.InstallReferrerClient;
 import com.android.installreferrer.api.InstallReferrerStateListener;
 import com.android.installreferrer.api.ReferrerDetails;
 import com.clevertap.android.sdk.ab_testing.CTABTestController;
+import com.clevertap.android.sdk.core.login.CTProfileHandlerImpl;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
@@ -3610,6 +3611,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
         ctABTestController.registerMapOfStringVariable(name);
     }
 
+    //Session
+
     /**
      * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
      * versions of the CleverTap Android SDK.
@@ -4274,7 +4277,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
             // use the first one we find
             for (String key : profile.keySet()) {
                 Object value = profile.get(key);
-                if (Constants.DEFAULT_PROFILE_IDENTIFIER_KEYS.contains(key)) {
+                boolean isProfileKey = new CTProfileHandlerImpl(this).isProfileKey(key);
+                if (isProfileKey) {
                     try {
                         String identifier = null;
                         if (value != null) {
@@ -7294,7 +7298,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
                         profileEvent.put(next, value);
 
                         // cache the valid identifier: guid pairs
-                        if (Constants.DEFAULT_PROFILE_IDENTIFIER_KEYS.contains(next)) {
+                        boolean isProfileKey = new CTProfileHandlerImpl(this).isProfileKey(next);
+                        if (isProfileKey) {
                             try {
                                 cacheGUIDForIdentifier(guid, next, value.toString());
                             } catch (Throwable t) {
