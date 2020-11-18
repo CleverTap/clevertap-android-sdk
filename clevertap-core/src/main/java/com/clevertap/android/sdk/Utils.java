@@ -268,7 +268,7 @@ public final class Utils {
         }
 
         int networkType = TelephonyManager.NETWORK_TYPE_UNKNOWN;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             if (hasPermission(context, Manifest.permission.READ_PHONE_STATE)) {
                 try {
                     networkType = teleMan.getDataNetworkType();
