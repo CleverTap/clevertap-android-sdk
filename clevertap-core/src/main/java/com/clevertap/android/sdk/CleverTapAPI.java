@@ -5505,6 +5505,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 // Always set this to 0 so that the handshake is not performed during a HTTP failure
                 mResponseFailureCount = 0;
                 if (eventGroup.equals(EventGroup.PUSH_NOTIFICATION_VIEWED)) {
+                    region = region.substring(0,2);
                     return region.trim().toLowerCase() + eventGroup.httpResource + "." + Constants.PRIMARY_DOMAIN;
                 } else {
                     return region.trim().toLowerCase() + "." + Constants.PRIMARY_DOMAIN;
