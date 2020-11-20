@@ -33,25 +33,28 @@ public abstract class CTInAppBaseFullFragment extends CTInAppBaseFragment {
         }
     }
 
+    /**
+     * Checks if a devices is a tablet or a handset based on smallest width qualifier which specifies the smallest of
+     * the screen's two sides, regardless of the device's current orientation.<br>
+     * for example,<br> 600dp: a 7” tablet (600x1024 mdpi)
+     *             <br>480dp: a large phone screen ~5" (480x800 mdpi)
+     *
+     * Adopting this method to determine if a device is tablet over manually calculating diagonal of device due to
+     * some OEM issues. <a href="https://github.com/CleverTap/clevertap-android-sdk/issues/116">#116</a>
+     *
+     * @return true if device screen's smallest width, independent of orientation is >= 600dp else false
+     */
     boolean isTablet() {
         if (Utils.isActivityDead(getActivity())) {
             return false;
         }
-        WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
-        if (wm == null) {
-            Logger.v("Screen size is null ");
-            return false;
-        }
-        DisplayMetrics dm = new DisplayMetrics();
-        wm.getDefaultDisplay().getMetrics(dm);
-        float yInches = dm.heightPixels / dm.ydpi;
-        float xInches = dm.widthPixels / dm.xdpi;
-        double diagonalInches = Math.sqrt(xInches * xInches + yInches * yInches);
-        if (diagonalInches >= 7) {
-            Logger.v("Screen size is : " + diagonalInches);
-            return true;
-        } else {
-            Logger.v("Screen size is : " + diagonalInches);
+
+        try {
+            return getResources().getBoolean(R.bool.ctIsTablet);
+        } catch (Exception e)
+        {
+            // resource not found
+            e.printStackTrace();
             return false;
         }
     }
