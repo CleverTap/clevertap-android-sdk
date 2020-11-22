@@ -99,12 +99,16 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                                 FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout1
                                         .getLayoutParams();
                                 if (inAppNotification.isTablet() && isTablet()) {
+                                    // tablet layout on tablet
                                     redrawInterstitialTabletInApp(relativeLayout, layoutParams, fl, closeImageView);
                                 } else {
+                                    // mobile layout
                                     if (isTablet()) {
+                                        // mobile layout on tablet
                                         redrawInterstitialMobileInAppOnTablet(relativeLayout, layoutParams, fl,
                                                 closeImageView);
                                     } else {
+                                        // mobile layout on mobile
                                         redrawInterstitialInApp(relativeLayout1, layoutParams, closeImageView);
                                     }
                                 }
@@ -121,13 +125,17 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                                 FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout
                                         .getLayoutParams();
                                 if (inAppNotification.isTablet() && isTablet()) {
+                                    // tablet layout on tablet
                                     redrawLandscapeInterstitialTabletInApp(relativeLayout, layoutParams, fl,
                                             closeImageView);
                                 } else {
+                                    // mobile layout
                                     if (isTablet()) {
+                                        // mobile layout on tablet
                                         redrawLandscapeInterstitialMobileInAppOnTablet(relativeLayout, layoutParams,
                                                 fl, closeImageView);
                                     } else {
+                                        // mobile layout on mobile
                                         redrawLandscapeInterstitialInApp(relativeLayout, layoutParams,
                                                 closeImageView);
                                     }
