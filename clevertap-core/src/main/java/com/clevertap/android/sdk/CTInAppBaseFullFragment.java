@@ -1,14 +1,10 @@
 package com.clevertap.android.sdk;
 
-import android.content.Context;
 import android.os.Handler;
-import android.util.DisplayMetrics;
 import android.view.Gravity;
-import android.view.WindowManager;
 import android.widget.FrameLayout;
 import android.widget.FrameLayout.LayoutParams;
 import android.widget.RelativeLayout;
-import androidx.fragment.app.FragmentActivity;
 
 public abstract class CTInAppBaseFullFragment extends CTInAppBaseFragment {
 
@@ -28,7 +24,7 @@ public abstract class CTInAppBaseFullFragment extends CTInAppBaseFragment {
 
     @Override
     void generateListener() {
-        if ((FragmentActivity) context instanceof InAppNotificationActivity) {
+        if (context instanceof InAppNotificationActivity) {
             setListener((CTInAppBaseFragment.InAppListener) context);
         }
     }
@@ -135,23 +131,6 @@ public abstract class CTInAppBaseFullFragment extends CTInAppBaseFragment {
 
     void redrawLandscapeInterstitialMobileInAppOnTablet(final RelativeLayout relativeLayout,
             LayoutParams layoutParams, FrameLayout fl, CloseImageView closeImageView) {
-        int aspectWidth = (int) (relativeLayout.getMeasuredHeight() * 1.78f);
-        int requiredWidth = fl.getMeasuredWidth() - getScaledPixels(80);
-
-        if (aspectWidth > requiredWidth) {
-            layoutParams.width = requiredWidth;
-            layoutParams.height = (int) (requiredWidth / 1.78f);
-        } else {
-            layoutParams.width = aspectWidth;
-        }
-
-        layoutParams.gravity = Gravity.CENTER;
-        relativeLayout.setLayoutParams(layoutParams);
-        addCloseImageView(relativeLayout, closeImageView);
-    }
-
-    void redrawLandscapeInterstitialTabletInApp(final RelativeLayout relativeLayout,
-            LayoutParams layoutParams, FrameLayout fl, CloseImageView closeImageView) {
         int aspectWidth = (int) (
                 (relativeLayout.getMeasuredHeight() - getScaledPixels(120)) * 1.78f);
         int requiredWidth = fl.getMeasuredWidth() - getScaledPixels(280);
@@ -170,6 +149,23 @@ public abstract class CTInAppBaseFullFragment extends CTInAppBaseFragment {
         layoutParams.gravity = Gravity.CENTER;
         relativeLayout.setLayoutParams(layoutParams);
 
+        addCloseImageView(relativeLayout, closeImageView);
+    }
+
+    void redrawLandscapeInterstitialTabletInApp(final RelativeLayout relativeLayout,
+            LayoutParams layoutParams, FrameLayout fl, CloseImageView closeImageView) {
+        int aspectWidth = (int) (relativeLayout.getMeasuredHeight() * 1.78f);
+        int requiredWidth = fl.getMeasuredWidth() - getScaledPixels(80);
+
+        if (aspectWidth > requiredWidth) {
+            layoutParams.width = requiredWidth;
+            layoutParams.height = (int) (requiredWidth / 1.78f);
+        } else {
+            layoutParams.width = aspectWidth;
+        }
+
+        layoutParams.gravity = Gravity.CENTER;
+        relativeLayout.setLayoutParams(layoutParams);
         addCloseImageView(relativeLayout, closeImageView);
     }
 
