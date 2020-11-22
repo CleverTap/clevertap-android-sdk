@@ -9,7 +9,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.CTExecutors;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.StorageHelper;
+import com.clevertap.android.sdk.ValidationResultStack;
 import java.lang.reflect.Constructor;
 import java.util.ArrayList;
 import java.util.List;
@@ -86,6 +88,16 @@ public class PushProviders implements CTPushProviderListener {
     @Override
     public Context context() {
         return ctApiPushListener.context();
+    }
+
+    @Override
+    public DeviceInfo deviceInfo() {
+        return ctApiPushListener.deviceInfo();
+    }
+
+    @Override
+    public ValidationResultStack remoteErrorLogger() {
+        return ctApiPushListener.remoteErrorLogger();
     }
 
     /**

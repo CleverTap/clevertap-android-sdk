@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.core.login
+package com.clevertap.android.sdk.login
 
 import com.clevertap.android.sdk.Constants.IdentityType
 import com.clevertap.android.sdk.Constants.IdentityType.TYPE_EMAIL

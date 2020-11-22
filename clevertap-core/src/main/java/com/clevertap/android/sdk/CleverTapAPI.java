@@ -47,6 +47,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
+
+import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
@@ -55,11 +57,12 @@ import com.android.installreferrer.api.InstallReferrerClient;
 import com.android.installreferrer.api.InstallReferrerStateListener;
 import com.android.installreferrer.api.ReferrerDetails;
 import com.clevertap.android.sdk.ab_testing.CTABTestController;
-import com.clevertap.android.sdk.core.login.CTProfileHandlerImpl;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
+import com.clevertap.android.sdk.login.LoginInfoProvider;
+import com.clevertap.android.sdk.login.ProfileHandlerFactory;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
@@ -1362,6 +1365,17 @@ public class CleverTapAPI implements CleverTapAPIListener {
     @Override
     public Context context() {
         return context;
+    }
+
+    @RestrictTo(Scope.LIBRARY)
+    @Override
+    public DeviceInfo deviceInfo() {
+        return deviceInfo;
+    }
+
+    @Override
+    public ValidationResultStack remoteErrorLogger() {
+        return validationResultStack;
     }
 
     /**
@@ -4272,12 +4286,12 @@ public class CleverTapAPI implements CleverTapAPIListener {
             }
 
             boolean haveIdentifier = false;
-
+            LoginInfoProvider handler = new LoginInfoProvider(this);
             // check for valid identifier keys
             // use the first one we find
             for (String key : profile.keySet()) {
                 Object value = profile.get(key);
-                boolean isProfileKey = new CTProfileHandlerImpl(this).isProfileKey(key);
+                boolean isProfileKey = ProfileHandlerFactory.getProfileHandler(this).isProfileKey(key);
                 if (isProfileKey) {
                     try {
                         String identifier = null;
@@ -4286,7 +4300,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                         }
                         if (identifier != null && identifier.length() > 0) {
                             haveIdentifier = true;
-                            cachedGUID = getGUIDForIdentifier(key, identifier);
+                            cachedGUID = handler.getGUIDForIdentifier(key, identifier);
                             if (cachedGUID != null) {
                                 break;
                             }
@@ -4299,7 +4313,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
             // if no valid identifier provided or there are no identified users on the device; just push on the current profile
             if (!isErrorDeviceId()) {
-                if (!haveIdentifier || isAnonymousDevice()) {
+                if (!haveIdentifier || handler.isAnonymousDevice()) {
                     getConfigLogger().debug(getAccountId(),
                             "onUserLogin: no identifier provided or device is anonymous, pushing on current user profile");
                     pushProfile(profile);
@@ -4939,21 +4953,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         return conn;
     }
 
-    private void cacheGUIDForIdentifier(String guid, String key, String identifier) {
-        if (isErrorDeviceId() || guid == null || key == null || identifier == null) {
-            return;
-        }
-
-        String cacheKey = key + "_" + identifier;
-        JSONObject cache = getCachedGUIDs();
-        try {
-            cache.put(cacheKey, guid);
-            setCachedGUIDs(cache);
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getAccountId(), "Error caching guid: " + t.toString());
-        }
-    }
-
     private boolean canShowInAppOnActivity() {
         updateBlacklistedActivitySet();
 
@@ -5228,10 +5227,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     //util
-    private boolean deviceIsMultiUser() {
-        JSONObject cachedGUIDs = getCachedGUIDs();
-        return cachedGUIDs.length() > 1;
-    }
 
     //Session
 
@@ -5470,31 +5465,13 @@ public class CleverTapAPI implements CleverTapAPIListener {
         try {
             boolean deviceIsMultiUser = false;
             if (deviceInfo.getGoogleAdID() != null) {
-                deviceIsMultiUser = deviceIsMultiUser();
+                deviceIsMultiUser = new LoginInfoProvider(this).deviceIsMultiUser();
             }
             return CTJsonConverter.from(deviceInfo, locationFromUser, enableNetworkInfoReporting,
                     deviceIsMultiUser);
         } catch (Throwable t) {
             getConfigLogger().verbose(getAccountId(), "Failed to construct App Launched event", t);
             return new JSONObject();
-        }
-    }
-
-    //Profile
-    private JSONObject getCachedGUIDs() {
-        String json = StorageHelper.getStringFromPrefs(context, config, Constants.CACHED_GUIDS_KEY, null);
-        return CTJsonConverter.toJsonObject(json, getConfigLogger(), getAccountId());
-    }
-
-    private void setCachedGUIDs(JSONObject cachedGUIDs) {
-        if (cachedGUIDs == null) {
-            return;
-        }
-        try {
-            StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.CACHED_GUIDS_KEY),
-                    cachedGUIDs.toString());
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getAccountId(), "Error persisting guid cache: " + t.toString());
         }
     }
 
@@ -5625,23 +5602,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
     private int getFirstRequestTimestamp() {
         return StorageHelper.getIntFromPrefs(context, config, Constants.KEY_FIRST_TS, 0);
     }
-
-    private String getGUIDForIdentifier(String key, String identifier) {
-        if (key == null || identifier == null) {
-            return null;
-        }
-
-        String cacheKey = key + "_" + identifier;
-        JSONObject cache = getCachedGUIDs();
-        try {
-            return cache.getString(cacheKey);
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getAccountId(), "Error reading guid cache: " + t.toString());
-            return null;
-        }
-    }
-
-    //Util
 
     private int getGeofenceSDKVersion() {
         return geofenceSDKVersion;
@@ -6203,10 +6163,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
-    private boolean isAnonymousDevice() {
-        JSONObject cachedGUIDs = getCachedGUIDs();
-        return cachedGUIDs.length() <= 0;
-    }
 
     private boolean isAppLaunchPushed() {
         synchronized (appLaunchPushedLock) {
@@ -7298,10 +7254,11 @@ public class CleverTapAPI implements CleverTapAPIListener {
                         profileEvent.put(next, value);
 
                         // cache the valid identifier: guid pairs
-                        boolean isProfileKey = new CTProfileHandlerImpl(this).isProfileKey(next);
+                        boolean isProfileKey = ProfileHandlerFactory.getProfileHandler(this).isProfileKey(next);
+                        LoginInfoProvider handler = new LoginInfoProvider(this);
                         if (isProfileKey) {
                             try {
-                                cacheGUIDForIdentifier(guid, next, value.toString());
+                                handler.cacheGUIDForIdentifier(guid, next, value.toString());
                             } catch (Throwable t) {
                                 // no-op
                             }

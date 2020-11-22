@@ -10,6 +10,7 @@ import android.os.Parcelable;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
+import com.clevertap.android.sdk.Constants.IdentityType;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -74,11 +75,11 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     private boolean useGoogleAdId;
 
-    public void setProfileKeys(String... profileKeys) {
+    public void setProfileKeys(@IdentityType String... profileKeys) {
         this.profileKeys = profileKeys;
     }
 
-    private String[] profileKeys = NullObjectFactory.dummyObject(String[].class);
+    private String[] profileKeys;
 
     @SuppressWarnings("unused")
     public static CleverTapInstanceConfig createInstance(Context context, @NonNull String accountId,
@@ -302,17 +303,8 @@ public class CleverTapInstanceConfig implements Parcelable {
         return packageName;
     }
 
-    public String[] getProfileKeys(Context context) {
-        /* For default instance, return manifest meta
-        |*| For non-default instance, return the keys set by the client.
-         */
-        if (isDefaultInstance) {
-            String profileKey = ManifestInfo.getInstance(context).getProfileIdentifierKeys();
-            return !TextUtils.isEmpty(profileKey) ? profileKey.split(Constants.SEPARATOR_COMMA)
-                    : NullObjectFactory.dummyObject(String[].class);
-        } else {
-            return profileKeys;
-        }
+    public String[] getProfileKeys() {
+        return profileKeys != null ? profileKeys : NullObjectFactory.dummyObject(String[].class);
     }
 
     @SuppressWarnings({"BooleanMethodIsAlwaysInverted", "WeakerAccess"})
@@ -413,7 +405,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         return createdPostAppLaunch;
     }
 
-    boolean isDefaultInstance() {
+    public boolean isDefaultInstance() {
         return isDefaultInstance;
     }
 

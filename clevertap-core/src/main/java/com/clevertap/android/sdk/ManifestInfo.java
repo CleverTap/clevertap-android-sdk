@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -43,7 +44,7 @@ public class ManifestInfo {
 
     private static String xiaomiAppID;
 
-    private final String profileIdentifierKeys;
+    private final String[] profileKeys;
 
     public synchronized static ManifestInfo getInstance(Context context) {
         if (instance == null) {
@@ -93,7 +94,7 @@ public class ManifestInfo {
         xiaomiAppKey = _getManifestStringValueForKey(metaData, Constants.LABEL_XIAOMI_APP_KEY);
         xiaomiAppID = _getManifestStringValueForKey(metaData, Constants.LABEL_XIAOMI_APP_ID);
 
-        profileIdentifierKeys = _getManifestStringValueForKey(metaData, Constants.CLEVERTAP_IDENTIFIER);
+        profileKeys = parseProfileKeys(metaData);
     }
 
     public String getAccountId() {
@@ -104,8 +105,14 @@ public class ManifestInfo {
         return fcmSenderId;
     }
 
-    public String getProfileIdentifierKeys() {
-        return profileIdentifierKeys;
+    public String[] getProfileKeys() {
+        return profileKeys;
+    }
+
+    private String[] parseProfileKeys(final Bundle metaData) {
+        String profileKeyString = _getManifestStringValueForKey(metaData, Constants.CLEVERTAP_IDENTIFIER);
+        return !TextUtils.isEmpty(profileKeyString) ? profileKeyString.split(Constants.SEPARATOR_COMMA)
+                : NullObjectFactory.dummyObject(String[].class);
     }
 
     public String getXiaomiAppID() {

@@ -1,40 +1,32 @@
 package com.clevertap.android.sdk;
 
-import static com.clevertap.android.sdk.Constants.IdentityType.TYPE_EMAIL;
-import static com.clevertap.android.sdk.Constants.IdentityType.TYPE_IDENTITY;
-
+import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.StringDef;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
-import java.util.Set;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public interface Constants {
 
-    enum IdentityType {
-        TYPE_IDENTITY("Identity"), TYPE_EMAIL("Email"), TYPE_PHONE("Phone"), TYPE_INVALID("Invalid");
+    @Retention(RetentionPolicy.SOURCE)
+    @StringDef({TYPE_EMAIL, TYPE_PHONE, TYPE_IDENTITY})
+    @interface IdentityType {
 
-        private final String key;
-
-        public static IdentityType fromKey(String key) {
-            for (IdentityType value : IdentityType.values()) {
-                if (value.key.equalsIgnoreCase(key)) {
-                    return value;
-                }
-            }
-            return TYPE_INVALID;
-        }
-
-        IdentityType(String Key) {
-            this.key = Key;
-        }
-
-        public String getKey() {
-            return key;
-        }
     }
+
+    @NonNull
+    String TYPE_IDENTITY = "Identity";
+    @NonNull
+    String TYPE_EMAIL = "Email";
+    @NonNull
+    String TYPE_PHONE = "Phone";
+
+
     String LABEL_ACCOUNT_ID = "CLEVERTAP_ACCOUNT_ID";
     String LABEL_TOKEN = "CLEVERTAP_TOKEN";
     String LABEL_NOTIFICATION_ICON = "CLEVERTAP_NOTIFICATION_ICON";
@@ -285,6 +277,8 @@ public interface Constants {
     String SEPARATOR_COMMA = ",";
     String EMPTY_STRING = "";
     String SP_KEY_PROFILE_IDENTITIES = "SP_KEY_PROFILE_IDENTITIES";
+
     // valid profile identifier keys
-    Set<IdentityType> DEFAULT_PROFILE_IDENTIFIER_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL));
+    HashSet<String> DEFAULT_PROFILE_IDENTIFIER_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL));
+    HashSet<String> ALL_PROFILE_IDENTIFIER_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL, TYPE_PHONE));
 }
