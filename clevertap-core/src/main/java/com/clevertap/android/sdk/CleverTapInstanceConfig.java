@@ -305,6 +305,9 @@ public class CleverTapInstanceConfig implements Parcelable {
     }
 
     public String[] getProfileKeys(Context context) {
+        /*
+         * For default instance, use manifest meta, otherwise use from setter field
+         */
         return isDefaultInstance ? ManifestInfo.getInstance(context).getProfileKeys() : profileKeys;
     }
 
