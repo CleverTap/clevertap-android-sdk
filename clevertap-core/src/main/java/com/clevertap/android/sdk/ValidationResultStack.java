@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk;
 
-}import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import java.util.ArrayList;
 

@@ -6,7 +6,6 @@ import androidx.annotation.NonNull;
 import com.clevertap.android.sdk.BaseCTApiListener;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.ValidationResultStack;
 import java.util.HashSet;
 
@@ -47,26 +46,25 @@ public abstract class BaseProfilerHandler {
         // First Read from pref
         // If not present in the pref, set the default
 
-        String identifier = mInfoProvider.getCachedIdentityKeysForAccount();
-        boolean isSavedInPref = !TextUtils.isEmpty(identifier);
+        String prefProfileKeys = mInfoProvider.getCachedIdentityKeysForAccount();
+        boolean isSavedInPref = !TextUtils.isEmpty(prefProfileKeys);
 
         /* For default instance, use manifest meta
          */
 
-        String[] profileIdentifierKeys = isSavedInPref ? identifier.split(Constants.SEPARATOR_COMMA)
+        String[] profileIdentifierKeys = isSavedInPref ? prefProfileKeys.split(Constants.SEPARATOR_COMMA)
                 : fetchConfig();
         HashSet<String> hashSet = iValidator.toIdentityType(profileIdentifierKeys);
         if (isSavedInPref) {
-            iValidator.sendErrorOnIdentityMismatch(identifier.split(Constants.SEPARATOR_COMMA), fetchConfig());
+            iValidator.sendErrorOnIdentityMismatch(prefProfileKeys.split(Constants.SEPARATOR_COMMA), fetchConfig());
         }
-        if (!hashSet.isEmpty()) {
-            if (!isSavedInPref) {
-                // phone,email,identity,name -> [phone][email][identity]
-                // [phone][email][identity] -> phone,email,identity
-                mInfoProvider.saveIdentityKeysForAccount(iValidator.toIdentityString(hashSet));
-            }
-        } else {
+        if (hashSet.isEmpty()) {
             hashSet.addAll(defaultIdentitySet());
+        }
+        if (!isSavedInPref) {
+            // phone,email,identity,name -> [phone][email][identity]
+            // [phone][email][identity] -> phone,email,identity
+            mInfoProvider.saveIdentityKeysForAccount(iValidator.toIdentityString(hashSet));
         }
 
         return hashSet;
@@ -76,7 +74,7 @@ public abstract class BaseProfilerHandler {
         return Constants.DEFAULT_PROFILE_IDENTIFIER_KEYS;
     }
 
-    String[] fetchConfig() {
-        return ManifestInfo.getInstance(context).getProfileKeys();
+    private String[] fetchConfig() {
+        return mConfig.getProfileKeys(context);
     }
 }

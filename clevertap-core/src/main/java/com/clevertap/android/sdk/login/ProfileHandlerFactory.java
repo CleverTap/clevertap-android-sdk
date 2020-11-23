@@ -20,12 +20,10 @@ public class ProfileHandlerFactory {
         if (cacheHandler.isLegacyProfileLoggedIn()) {
             // case 1: Migration( cached guid but no newly saved profile pref)
             return new LegacyProfileHandlerImpl(ctApiListener);
-        } else if (config.isDefaultInstance()) {
-            // case 2: Not logged in but default config
-            return new DefaultProfileHandlerImpl(ctApiListener);
         } else {
+            // case 2: Not logged in but default config
             // case 3: Not logged in but non-default config
-            return new NonDefaultProfileHandlerImpl(ctApiListener);
+            return new PhoneIdentityHandlerImpl(ctApiListener);
         }
     }
 }
