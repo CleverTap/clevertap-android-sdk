@@ -47,7 +47,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
-
 import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.Fragment;
@@ -5564,7 +5563,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 // Always set this to 0 so that the handshake is not performed during a HTTP failure
                 mResponseFailureCount = 0;
                 if (eventGroup.equals(EventGroup.PUSH_NOTIFICATION_VIEWED)) {
-                    region = region.substring(0,2);
+                    region = region.substring(0, 3);
                     return region.trim().toLowerCase() + eventGroup.httpResource + "." + Constants.PRIMARY_DOMAIN;
                 } else {
                     return region.trim().toLowerCase() + "." + Constants.PRIMARY_DOMAIN;
