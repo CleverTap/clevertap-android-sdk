@@ -386,5 +386,4 @@ public final class Utils {
             return drawableToBitmap(context.getPackageManager().getApplicationIcon(context.getApplicationInfo()));
         }
     }
-
 }

@@ -13,12 +13,15 @@ import android.os.Build;
 import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.view.WindowManager;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationManagerCompat;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.UUID;
 
-class DeviceInfo {
+@RestrictTo(Scope.LIBRARY)
+public class DeviceInfo {
 
     private class DeviceCachedInfo {
 
@@ -418,7 +421,7 @@ class DeviceInfo {
         return isBluetoothEnabled;
     }
 
-    boolean isErrorDeviceId() {
+    public boolean isErrorDeviceId() {
         return getDeviceID() != null && getDeviceID().startsWith(Constants.ERROR_PROFILE_PREFIX);
     }
 

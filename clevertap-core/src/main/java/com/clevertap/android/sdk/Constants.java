@@ -1,14 +1,31 @@
 package com.clevertap.android.sdk;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.StringDef;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Locale;
-import java.util.Set;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public interface Constants {
+
+    @Retention(RetentionPolicy.SOURCE)
+    @StringDef({TYPE_EMAIL, TYPE_PHONE, TYPE_IDENTITY})
+    @interface IdentityType {
+
+    }
+
+    @NonNull
+    String TYPE_IDENTITY = "Identity";
+    @NonNull
+    String TYPE_EMAIL = "Email";
+    @NonNull
+    String TYPE_PHONE = "Phone";
+
 
     String LABEL_ACCOUNT_ID = "CLEVERTAP_ACCOUNT_ID";
     String LABEL_TOKEN = "CLEVERTAP_TOKEN";
@@ -34,7 +51,6 @@ public interface Constants {
     String DEVICE_ID_TAG = "deviceId";
     String FALLBACK_ID_TAG = "fallbackId";
     SimpleDateFormat FB_DOB_DATE_FORMAT = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
-    SimpleDateFormat GP_DOB_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
     int PAGE_EVENT = 1;
     int PING_EVENT = 2;
     int PROFILE_EVENT = 3;
@@ -204,15 +220,10 @@ public interface Constants {
     String COMMAND_SET = "$set";
     String COMMAND_ADD = "$add";
     String COMMAND_REMOVE = "$remove";
-
     String COMMAND_DELETE = "$delete";
     String GUID_PREFIX_GOOGLE_AD_ID = "__g";
     String CUSTOM_CLEVERTAP_ID_PREFIX = "__h";
     String ERROR_PROFILE_PREFIX = "__i";
-    // valid profile identifier keys
-    Set<String> PROFILE_IDENTIFIER_KEYS = new HashSet<>(Arrays.asList(
-            "Identity", "Email", "FBID", "GPID"));
-
     String KEY_ICON = "icon";
     String KEY_POSTER_URL = "poster";
     String KEY_ACTION = "action";
@@ -235,14 +246,11 @@ public interface Constants {
     String KEY_LINKS = "links";
     String TEST_IDENTIFIER = "0_0";
     String FEATURE_DISPLAY_UNIT = "DisplayUnit : ";
-
     String FEATURE_FLAG_UNIT = "Feature Flag : ";
     String LOG_TAG_PRODUCT_CONFIG = "Product Config : ";
     int FETCH_TYPE_PC = 0;
     int FETCH_TYPE_FF = 1;
-
     String LOG_TAG_GEOFENCES = "Geofences : ";
-
     // error message codes
     int INVALID_MULTI_VALUE = 1;
     int PUSH_KEY_EMPTY = 2;
@@ -267,6 +275,12 @@ public interface Constants {
     int INVALID_CT_CUSTOM_ID = 21;
     int INVALID_MULTI_VALUE_KEY = 23;
     int RESTRICTED_MULTI_VALUE_KEY = 24;
+    String CLEVERTAP_IDENTIFIER = "CLEVERTAP_IDENTIFIER";
+    String SEPARATOR_COMMA = ",";
+    String EMPTY_STRING = "";
+    String SP_KEY_PROFILE_IDENTITIES = "SP_KEY_PROFILE_IDENTITIES";
 
-
+    // valid profile identifier keys
+    HashSet<String> DEFAULT_PROFILE_IDENTIFIER_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL));
+    HashSet<String> ALL_PROFILE_IDENTIFIER_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL, TYPE_PHONE));
 }
