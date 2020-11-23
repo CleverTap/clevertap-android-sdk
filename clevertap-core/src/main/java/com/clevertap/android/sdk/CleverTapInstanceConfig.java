@@ -73,7 +73,9 @@ public class CleverTapInstanceConfig implements Parcelable {
     private boolean useGoogleAdId;
 
     public void setProfileKeys(@IdentityType String... profileKeys) {
-        this.profileKeys = profileKeys;
+        if (!isDefaultInstance) {
+            this.profileKeys = profileKeys;
+        }
     }
 
     private String[] profileKeys = NullObjectFactory.dummyObject(String[].class);
@@ -122,6 +124,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.packageName = config.packageName;
         this.beta = config.beta;
         this.allowedPushTypes = config.allowedPushTypes;
+        this.profileKeys = config.profileKeys;
     }
 
     private CleverTapInstanceConfig(Context context, String accountId, String accountToken, String accountRegion,
@@ -147,6 +150,12 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.packageName = manifest.getPackageName();
         this.enableCustomCleverTapId = manifest.useCustomId();
         this.beta = manifest.enableBeta();
+        /*
+         * For default instance, use manifest meta, otherwise use from setter field
+         */
+        if (isDefaultInstance) {
+            profileKeys = manifest.getProfileKeys();
+        }
     }
 
     private CleverTapInstanceConfig(String jsonString) throws Throwable {
@@ -242,6 +251,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         beta = in.readByte() != 0x00;
         allowedPushTypes = new ArrayList<>();
         in.readList(allowedPushTypes, String.class.getClassLoader());
+        in.readStringArray(profileKeys);
     }
 
     @Override
@@ -305,10 +315,7 @@ public class CleverTapInstanceConfig implements Parcelable {
     }
 
     public String[] getProfileKeys(Context context) {
-        /*
-         * For default instance, use manifest meta, otherwise use from setter field
-         */
-        return isDefaultInstance ? ManifestInfo.getInstance(context).getProfileKeys() : profileKeys;
+        return profileKeys;
     }
 
     @SuppressWarnings({"BooleanMethodIsAlwaysInverted", "WeakerAccess"})
@@ -381,6 +388,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         dest.writeString(packageName);
         dest.writeByte((byte) (beta ? 0x01 : 0x00));
         dest.writeList(allowedPushTypes);
+        dest.writeStringArray(profileKeys);
     }
 
     boolean getEnableCustomCleverTapId() {
