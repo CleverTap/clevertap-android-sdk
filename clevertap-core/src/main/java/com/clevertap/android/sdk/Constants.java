@@ -192,6 +192,7 @@ public interface Constants {
     String KEY_ENABLE_ABTEST = "enableABTesting";
     String KEY_ALLOWED_PUSH_TYPES = "allowedPushTypes";
     String KEY_STAGING = "staging";
+    String KEY_IDENTITY_TYPES = "identityTypes";
     String WZRK_PUSH_ID = "wzrk_pid";
     String NOTIF_MSG = "nm";
     String NOTIF_TITLE = "nt";

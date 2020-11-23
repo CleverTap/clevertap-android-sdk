@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk;
 
+import static com.clevertap.android.sdk.JsonUtil.toArray;
+import static com.clevertap.android.sdk.JsonUtil.toArray;
 import static com.clevertap.android.sdk.JsonUtil.toJsonArray;
 import static com.clevertap.android.sdk.JsonUtil.toList;
 import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getAll;
@@ -12,8 +14,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.Constants.IdentityType;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import org.json.JSONObject;
 
 public class CleverTapInstanceConfig implements Parcelable {
@@ -40,8 +40,6 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     @NonNull
     private ArrayList<String> allowedPushTypes = getAll();
-
-    HashSet<Constants.IdentityType> identityTypes = new HashSet<>();
 
     private int staging;
 
@@ -77,6 +75,35 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     private boolean useGoogleAdId;
 
+    public void setProfileKeys(@IdentityType String... profileKeys) {
+        this.profileKeys = profileKeys;
+    }
+
+    private String[] profileKeys = NullObjectFactory.dummyObject(String[].class);
+
+    @SuppressWarnings("unused")
+    public static CleverTapInstanceConfig createInstance(Context context, @NonNull String accountId,
+            @NonNull String accountToken) {
+
+        //noinspection ConstantConditions
+        if (accountId == null || accountToken == null) {
+            Logger.i("CleverTap accountId and accountToken cannot be null");
+            return null;
+        }
+        return new CleverTapInstanceConfig(context, accountId, accountToken, null, false);
+    }
+
+    @SuppressWarnings({"unused"})
+    public static CleverTapInstanceConfig createInstance(Context context, @NonNull String accountId,
+            @NonNull String accountToken, String accountRegion) {
+        //noinspection ConstantConditions
+        if (accountId == null || accountToken == null) {
+            Logger.i("CleverTap accountId and accountToken cannot be null");
+            return null;
+        }
+        return new CleverTapInstanceConfig(context, accountId, accountToken, accountRegion, false);
+    }
+
     CleverTapInstanceConfig(CleverTapInstanceConfig config) {
         this.accountId = config.accountId;
         this.accountToken = config.accountToken;
@@ -99,34 +126,6 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.beta = config.beta;
         this.allowedPushTypes = config.allowedPushTypes;
         this.staging = config.staging;
-    }
-
-    public void setProfileKeys(@IdentityType String... profileKeys) {
-        this.profileKeys = profileKeys;
-    }
-
-    private String[] profileKeys;
-
-    @SuppressWarnings("unused")
-    public static CleverTapInstanceConfig createInstance(Context context, @NonNull String accountId,
-            @NonNull String accountToken) {
-        //noinspection ConstantConditions
-        if (accountId == null || accountToken == null) {
-            Logger.i("CleverTap accountId and accountToken cannot be null");
-            return null;
-        }
-        return new CleverTapInstanceConfig(context, accountId, accountToken, null, false);
-    }
-
-    @SuppressWarnings({"unused"})
-    public static CleverTapInstanceConfig createInstance(Context context, @NonNull String accountId,
-            @NonNull String accountToken, String accountRegion) {
-        //noinspection ConstantConditions
-        if (accountId == null || accountToken == null) {
-            Logger.i("CleverTap accountId and accountToken cannot be null");
-            return null;
-        }
-        return new CleverTapInstanceConfig(context, accountId, accountToken, accountRegion, false);
     }
 
     private CleverTapInstanceConfig(Context context, String accountId, String accountToken, String accountRegion,
@@ -216,6 +215,9 @@ public class CleverTapInstanceConfig implements Parcelable {
             if (configJsonObject.has(Constants.KEY_ALLOWED_PUSH_TYPES)) {
                 this.allowedPushTypes = (ArrayList<String>) toList(
                         configJsonObject.getJSONArray(Constants.KEY_ALLOWED_PUSH_TYPES));
+            }
+            if (configJsonObject.has(Constants.KEY_IDENTITY_TYPES)) {
+                this.profileKeys = (String[]) toArray(configJsonObject.getJSONArray(Constants.KEY_IDENTITY_TYPES));
             }
             if (configJsonObject.has(Constants.KEY_STAGING)) {
                 this.staging = configJsonObject.getInt(Constants.KEY_STAGING);
@@ -311,8 +313,8 @@ public class CleverTapInstanceConfig implements Parcelable {
         return packageName;
     }
 
-    public String[] getProfileKeys() {
-        return profileKeys != null ? profileKeys : NullObjectFactory.dummyObject(String[].class);
+    public String[] getProfileKeys(Context context) {
+        return isDefaultInstance ? ManifestInfo.getInstance(context).getProfileKeys() : profileKeys;
     }
 
     @SuppressWarnings({"BooleanMethodIsAlwaysInverted", "WeakerAccess"})
@@ -357,10 +359,6 @@ public class CleverTapInstanceConfig implements Parcelable {
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     public void setEnableUIEditor(boolean enableUIEditor) {
         this.enableUIEditor = enableUIEditor;
-    }
-
-    public void setIdentityTypes(Constants.IdentityType... types) {
-        identityTypes.addAll(Arrays.asList(types));
     }
 
     @SuppressWarnings({"unused"})

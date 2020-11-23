@@ -90,7 +90,8 @@ public class LoginInfoProvider {
     }
 
     public boolean isLegacyProfileLoggedIn() {
-        return getCachedGUIDs() != null && TextUtils.isEmpty(getCachedIdentityKeysForAccount());
+        JSONObject jsonObject = getCachedGUIDs();
+        return jsonObject != null && jsonObject.length() > 0 && TextUtils.isEmpty(getCachedIdentityKeysForAccount());
     }
 
     public String getCachedIdentityKeysForAccount() {
