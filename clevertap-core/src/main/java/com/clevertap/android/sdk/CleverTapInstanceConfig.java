@@ -40,7 +40,9 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     @NonNull
     private ArrayList<String> allowedPushTypes = getAll();
+
     HashSet<Constants.IdentityType> identityTypes = new HashSet<>();
+
     private int staging;
 
     private boolean analyticsOnly;
@@ -125,29 +127,6 @@ public class CleverTapInstanceConfig implements Parcelable {
             return null;
         }
         return new CleverTapInstanceConfig(context, accountId, accountToken, accountRegion, false);
-    }
-
-    CleverTapInstanceConfig(CleverTapInstanceConfig config) {
-        this.accountId = config.accountId;
-        this.accountToken = config.accountToken;
-        this.accountRegion = config.accountRegion;
-        this.isDefaultInstance = config.isDefaultInstance;
-        this.analyticsOnly = config.analyticsOnly;
-        this.personalization = config.personalization;
-        this.debugLevel = config.debugLevel;
-        this.logger = config.logger;
-        this.useGoogleAdId = config.useGoogleAdId;
-        this.disableAppLaunchedEvent = config.disableAppLaunchedEvent;
-        this.createdPostAppLaunch = config.createdPostAppLaunch;
-        this.sslPinning = config.sslPinning;
-        this.backgroundSync = config.backgroundSync;
-        this.enableCustomCleverTapId = config.enableCustomCleverTapId;
-        this.fcmSenderId = config.fcmSenderId;
-        this.enableABTesting = config.enableABTesting;
-        this.enableUIEditor = config.enableUIEditor;
-        this.packageName = config.packageName;
-        this.beta = config.beta;
-        this.allowedPushTypes = config.allowedPushTypes;
     }
 
     private CleverTapInstanceConfig(Context context, String accountId, String accountToken, String accountRegion,
