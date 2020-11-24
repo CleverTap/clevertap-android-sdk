@@ -4851,6 +4851,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
             @Override
             public void run() {
                 try {
+                    getConfigLogger().verbose(getAccountId(), "asyncProfileSwitchUser:[profile " + profile
+                            + " with Cached GUID " + ((cacheGuid != null) ? cachedGUID
+                            : "NULL" + " and cleverTapID " + cleverTapID));
                     //set optOut to false on the current user to unregister the device token
                     setCurrentUserOptedOut(false);
                     // unregister the device token on the current user
