@@ -1,16 +1,14 @@
 package com.clevertap.android.sdk.login;
 
-import com.clevertap.android.sdk.BaseCTApiListener;
-import java.util.HashSet;
+import androidx.annotation.NonNull;
 
-public class LegacyProfileHandlerImpl extends BaseProfilerHandler {
+public class LegacyProfileHandlerImpl implements IProfileHandler {
 
-    LegacyProfileHandlerImpl(final BaseCTApiListener ctApiListener) {
-        super(ctApiListener);
+    LegacyProfileHandlerImpl() {
     }
 
     @Override
-    HashSet<String> loadIdentitySet() {
-        return defaultIdentitySet();
+    public boolean isProfileKey(@NonNull final String Key) {
+        return ProfileKeysSet.getDefault().containsKey(Key);
     }
 }

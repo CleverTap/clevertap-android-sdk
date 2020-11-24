@@ -20,6 +20,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
+import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.core.content.ContextCompat;
 import java.io.ByteArrayOutputStream;
@@ -28,6 +29,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -385,5 +387,17 @@ public final class Utils {
             // No error handling here - handle upstream
             return drawableToBitmap(context.getPackageManager().getApplicationIcon(context.getApplicationInfo()));
         }
+    }
+
+    public static boolean containsIgnoreCase(@NonNull Collection<String> collection, @NonNull String key) {
+        if (collection == null || key == null) {
+            return false;
+        }
+        for (String entry : collection) {
+            if (key.equalsIgnoreCase(entry)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

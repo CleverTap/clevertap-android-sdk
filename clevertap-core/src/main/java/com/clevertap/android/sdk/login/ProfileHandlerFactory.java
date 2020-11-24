@@ -13,17 +13,16 @@ public class ProfileHandlerFactory {
 
     }
 
-    public static BaseProfilerHandler getProfileHandler(@NonNull BaseCTApiListener ctApiListener) {
-        CleverTapInstanceConfig config = ctApiListener.config();
+    public static IProfileHandler getProfileHandler(@NonNull BaseCTApiListener ctApiListener) {
         LoginInfoProvider cacheHandler = new LoginInfoProvider(ctApiListener);
 
         if (cacheHandler.isLegacyProfileLoggedIn()) {
             // case 1: Migration( cached guid but no newly saved profile pref)
-            return new LegacyProfileHandlerImpl(ctApiListener);
+            return new LegacyProfileHandlerImpl();
         } else {
             // case 2: Not logged in but default config
             // case 3: Not logged in but non-default config
-            return new PhoneIdentityHandlerImpl(ctApiListener);
+            return new ConfigurableProfileHandlerImpl(ctApiListener);
         }
     }
 }
