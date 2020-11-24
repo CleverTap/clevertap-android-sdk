@@ -61,6 +61,7 @@ import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
+import com.clevertap.android.sdk.login.IProfileHandler;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
 import com.clevertap.android.sdk.login.ProfileHandlerFactory;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
@@ -4289,9 +4290,10 @@ public class CleverTapAPI implements CleverTapAPIListener {
             LoginInfoProvider handler = new LoginInfoProvider(this);
             // check for valid identifier keys
             // use the first one we find
+            IProfileHandler iProfileHandler = ProfileHandlerFactory.getProfileHandler(this);
             for (String key : profile.keySet()) {
                 Object value = profile.get(key);
-                boolean isProfileKey = ProfileHandlerFactory.getProfileHandler(this).isProfileKey(key);
+                boolean isProfileKey = iProfileHandler.isProfileKey(key);
                 if (isProfileKey) {
                     try {
                         String identifier = null;
@@ -7238,6 +7240,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
             if (baseProfile != null && baseProfile.length() > 0) {
                 Iterator i = baseProfile.keys();
+                IProfileHandler iProfileHandler = ProfileHandlerFactory.getProfileHandler(this);
+                LoginInfoProvider handler = new LoginInfoProvider(this);
                 while (i.hasNext()) {
                     String next = i.next().toString();
 
@@ -7257,8 +7261,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                         profileEvent.put(next, value);
 
                         // cache the valid identifier: guid pairs
-                        boolean isProfileKey = ProfileHandlerFactory.getProfileHandler(this).isProfileKey(next);
-                        LoginInfoProvider handler = new LoginInfoProvider(this);
+                        boolean isProfileKey = iProfileHandler.isProfileKey(next);
                         if (isProfileKey) {
                             try {
                                 handler.cacheGUIDForIdentifier(guid, next, value.toString());
