@@ -99,8 +99,8 @@ public class LoginInfoProvider {
                 .getStringFromPrefs(context, config, Constants.SP_KEY_PROFILE_IDENTITIES, "");
     }
 
-    public void saveIdentityKeysForAccount(final String keyCommaSeparated) {
-        StorageHelper.putString(context, config, keyCommaSeparated,
-                Constants.EMPTY_STRING);
+    public void saveIdentityKeysForAccount(final String valueCommaSeparated) {
+        StorageHelper.putString(context, config, Constants.SP_KEY_PROFILE_IDENTITIES,
+                valueCommaSeparated);
     }
 }
