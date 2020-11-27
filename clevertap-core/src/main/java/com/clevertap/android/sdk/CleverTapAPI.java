@@ -1333,6 +1333,12 @@ public class CleverTapAPI implements CleverTapAPIListener {
         addMultiValuesForKey(key, new ArrayList<>(Collections.singletonList(value)));
     }
 
+    @Override
+    @RestrictTo(Scope.LIBRARY)
+    public CleverTapInstanceConfig config() {
+        return config;
+    }
+
     /**
      * Add a collection of unique values to a multi-value user profile property
      * If the property does not exist it will be created
@@ -1359,11 +1365,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     @Override
-    public CleverTapInstanceConfig config() {
-        return config;
-    }
-
-    @Override
+    @RestrictTo(Scope.LIBRARY)
     public Context context() {
         return context;
     }
@@ -2965,10 +2967,13 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     *       versions of the CleverTap Android SDK.
      * Pushes everything available in the JSON object returned by the Facebook GraphRequest
      *
      * @param graphUser The object returned from Facebook
      */
+    @Deprecated
     @SuppressWarnings({"unused"})
     public void pushFacebookUser(final JSONObject graphUser) {
         postAsyncSafely("pushFacebookUser", new Runnable() {
