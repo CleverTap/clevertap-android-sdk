@@ -16,10 +16,6 @@ public class PushNotificationUtil {
         return message != null ? message.getString(WZRK_ACCT_ID_KEY, defaultValue) : defaultValue;
     }
 
-    private PushNotificationUtil() {
-
-    }
-
     /**
      * Returns the names of all push types
      *
@@ -42,6 +38,10 @@ public class PushNotificationUtil {
             }
         }
         return pushTypes;
+    }
+
+    private PushNotificationUtil() {
+
     }
 
 }

@@ -2,12 +2,14 @@ package com.clevertap.android.sdk;
 
 import android.location.Location;
 import android.os.Bundle;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import java.util.Iterator;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-class CTJsonConverter {
+@RestrictTo(Scope.LIBRARY)
+public class CTJsonConverter {
 
 
     static JSONObject from(DeviceInfo deviceInfo, Location locationFromUser, boolean enableNetworkInfoReporting
@@ -140,7 +142,7 @@ class CTJsonConverter {
         return root.getWzrkParams();
     }
 
-    static JSONObject toJsonObject(String json, Logger logger, String accountId) {
+    public static JSONObject toJsonObject(String json, Logger logger, String accountId) {
         JSONObject cache = null;
         if (json != null) {
             try {

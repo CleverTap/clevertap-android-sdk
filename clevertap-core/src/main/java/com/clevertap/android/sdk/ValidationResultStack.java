@@ -1,8 +1,11 @@
 package com.clevertap.android.sdk;
 
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import java.util.ArrayList;
 
-class ValidationResultStack {
+@RestrictTo(Scope.LIBRARY)
+public class ValidationResultStack {
 
     private static final Boolean pendingValidationResultsLock = true;
 
@@ -25,7 +28,7 @@ class ValidationResultStack {
     }
 
     //Validation
-    void pushValidationResult(ValidationResult vr) {
+    public void pushValidationResult(ValidationResult vr) {
         synchronized (pendingValidationResultsLock) {
             try {
                 int len = pendingValidationResults.size();
