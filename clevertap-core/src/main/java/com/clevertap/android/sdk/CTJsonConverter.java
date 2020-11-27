@@ -42,6 +42,7 @@ class CTJsonConverter {
             evtData.put("wdt", deviceInfo.getWidth());
             evtData.put("hgt", deviceInfo.getHeight());
             evtData.put("dpi", deviceInfo.getDPI());
+            evtData.put("dt", DeviceInfo.getDeviceType(deviceInfo.getContext()));
             if (deviceInfo.getLibrary() != null) {
                 evtData.put("lib", deviceInfo.getLibrary());
             }
