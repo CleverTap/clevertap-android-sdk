@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.login;
 
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.Utils;
 import java.util.HashSet;
 import java.util.Iterator;
 
@@ -19,8 +20,8 @@ class ProfileKeysSet {
     private void init(final String[] keys) {
         if (keys != null && keys.length > 0) {
             for (String key : keys) {
-                if (Constants.ALL_PROFILE_IDENTIFIER_KEYS.contains(key)) {
-                    profileKeys.add(key);
+                if (Utils.containsIgnoreCase(Constants.ALL_PROFILE_IDENTIFIER_KEYS, key)) {
+                    profileKeys.add(Utils.convertToTitleCase(key));
                 }
             }
         }
