@@ -2,18 +2,23 @@ package com.clevertap.android.sdk;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.UiModeManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.view.WindowManager;
+import androidx.annotation.IntDef;
 import androidx.core.app.NotificationManagerCompat;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.UUID;
@@ -253,6 +258,26 @@ class DeviceInfo {
     private boolean limitAdTracking = false;
 
     private ArrayList<ValidationResult> validationResults = new ArrayList<>();
+
+    @IntDef({MOBILE, TABLET, TV, UNKNOWN, NULL})
+    @Retention(RetentionPolicy.SOURCE)
+    @interface DeviceType {
+
+    }
+
+    static final int MOBILE = 1;
+
+    static final int TABLET = 2;
+
+    static final int TV = 3;
+
+    static final int UNKNOWN = 0;
+
+    static final int NULL = -1;
+
+    @DeviceType
+    static int sDeviceType = NULL;
+
 
     DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID) {
         this.context = context;
@@ -610,6 +635,10 @@ class DeviceInfo {
         StorageHelper.putString(context, getFallbackIdStorageKey(), fallbackId);
     }
 
+    Context getContext() {
+        return context;
+    }
+
     /**
      * Returns the integer identifier for the default app icon.
      *
@@ -619,5 +648,32 @@ class DeviceInfo {
     static int getAppIconAsIntId(final Context context) {
         ApplicationInfo ai = context.getApplicationInfo();
         return ai.icon;
+    }
+
+    @DeviceType
+    static int getDeviceType(final Context context) {
+
+        if (sDeviceType == NULL) {
+
+            try {
+                UiModeManager uiModeManager = (UiModeManager) context.getSystemService(Context.UI_MODE_SERVICE);
+                if (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
+                    sDeviceType = TV;
+                }
+            } catch (Exception e) {
+                //uiModeManager or context is null
+                e.printStackTrace();
+            }
+
+            try {
+                sDeviceType = context.getResources().getBoolean(R.bool.ctIsTablet) ? TABLET : MOBILE;
+            } catch (Exception e) {
+                // resource not found or context is null
+                e.printStackTrace();
+                sDeviceType = UNKNOWN;
+            }
+
+        }
+        return sDeviceType;
     }
 }
