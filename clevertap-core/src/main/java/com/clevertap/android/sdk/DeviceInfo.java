@@ -15,9 +15,9 @@ import android.os.Build;
 import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.view.WindowManager;
-import androidx.annotation.IntDef;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.annotation.IntDef;
 import androidx.core.app.NotificationManagerCompat;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -262,20 +262,43 @@ public class DeviceInfo {
 
     private ArrayList<ValidationResult> validationResults = new ArrayList<>();
 
-    @IntDef({MOBILE, TABLET, TV, UNKNOWN, NULL})
+    /**
+     * Type of a device with below possible values<br>
+     * <li>{@link DeviceInfo#SMART_PHONE}
+     * <li>{@link DeviceInfo#TABLET}
+     * <li>{@link DeviceInfo#TV}
+     * <li>{@link DeviceInfo#UNKNOWN}
+     * <li>{@link DeviceInfo#NULL}
+     */
+    @IntDef({SMART_PHONE, TABLET, TV, UNKNOWN, NULL})
     @Retention(RetentionPolicy.SOURCE)
     @interface DeviceType {
 
     }
 
-    static final int MOBILE = 1;
+    /**
+     * Device is a smart phone
+     */
+    static final int SMART_PHONE = 1;
 
+    /**
+     * Device is a tablet
+     */
     static final int TABLET = 2;
 
+    /**
+     * Device is a television
+     */
     static final int TV = 3;
 
+    /**
+     * Device type is not known
+     */
     static final int UNKNOWN = 0;
 
+    /**
+     * Initial state of device type before determining
+     */
     static final int NULL = -1;
 
     @DeviceType
@@ -653,6 +676,12 @@ public class DeviceInfo {
         return ai.icon;
     }
 
+    /**
+     * Determines if a device is tablet, smart phone or TV
+     *
+     * @param context context
+     * @return one of the possible value of {@link DeviceType}
+     */
     @DeviceType
     static int getDeviceType(final Context context) {
 
@@ -665,13 +694,15 @@ public class DeviceInfo {
                 }
             } catch (Exception e) {
                 //uiModeManager or context is null
+                Logger.d("Failed to decide whether device is a TV!");
                 e.printStackTrace();
             }
 
             try {
-                sDeviceType = context.getResources().getBoolean(R.bool.ctIsTablet) ? TABLET : MOBILE;
+                sDeviceType = context.getResources().getBoolean(R.bool.ctIsTablet) ? TABLET : SMART_PHONE;
             } catch (Exception e) {
                 // resource not found or context is null
+                Logger.d("Failed to decide whether device is a smart phone or tablet!");
                 e.printStackTrace();
                 sDeviceType = UNKNOWN;
             }
