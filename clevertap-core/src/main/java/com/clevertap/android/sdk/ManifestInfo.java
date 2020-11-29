@@ -112,7 +112,7 @@ public class ManifestInfo {
     private String[] parseProfileKeys(final Bundle metaData) {
         String profileKeyString = _getManifestStringValueForKey(metaData, Constants.CLEVERTAP_IDENTIFIER);
         return !TextUtils.isEmpty(profileKeyString) ? profileKeyString.split(Constants.SEPARATOR_COMMA)
-                : NullObjectFactory.dummyObject(String[].class);
+                : NullConstants.NULL_STRING_ARRAY;
     }
 
     public String getXiaomiAppID() {

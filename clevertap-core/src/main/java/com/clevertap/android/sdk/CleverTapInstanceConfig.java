@@ -78,7 +78,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         }
     }
 
-    private String[] profileKeys = NullObjectFactory.dummyObject(String[].class);
+    private String[] profileKeys = NullConstants.NULL_STRING_ARRAY;
 
     @SuppressWarnings("unused")
     public static CleverTapInstanceConfig createInstance(Context context, @NonNull String accountId,
