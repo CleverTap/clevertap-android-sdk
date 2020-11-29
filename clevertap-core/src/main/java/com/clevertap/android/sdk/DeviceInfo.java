@@ -662,6 +662,7 @@ class DeviceInfo {
                 }
             } catch (Exception e) {
                 //uiModeManager or context is null
+                Logger.d("Failed to decide whether device is a TV!");
                 e.printStackTrace();
             }
 
@@ -669,6 +670,7 @@ class DeviceInfo {
                 sDeviceType = context.getResources().getBoolean(R.bool.ctIsTablet) ? TABLET : MOBILE;
             } catch (Exception e) {
                 // resource not found or context is null
+                Logger.d("Failed to decide whether device is a smart phone or tablet!");
                 e.printStackTrace();
                 sDeviceType = UNKNOWN;
             }
