@@ -282,6 +282,6 @@ public interface Constants {
     String SP_KEY_PROFILE_IDENTITIES = "SP_KEY_PROFILE_IDENTITIES";
 
     // valid profile identifier keys
-    HashSet<String> DEFAULT_PROFILE_IDENTIFIER_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL));
-    HashSet<String> ALL_PROFILE_IDENTIFIER_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL, TYPE_PHONE));
+    HashSet<String> LEGACY_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL));
+    HashSet<String> ALL_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL, TYPE_PHONE));
 }

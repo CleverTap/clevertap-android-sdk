@@ -14,6 +14,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.Constants.IdentityType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import org.json.JSONObject;
 
 public class CleverTapInstanceConfig implements Parcelable {
@@ -78,6 +79,8 @@ public class CleverTapInstanceConfig implements Parcelable {
     public void setProfileKeys(@IdentityType String... profileKeys) {
         if (!isDefaultInstance) {
             this.profileKeys = profileKeys;
+            log(LogConstants.LOG_TAG_ON_USER_LOGIN, "Setting Profile Keys via setter: " + Arrays
+                    .toString(this.profileKeys));
         }
     }
 
@@ -160,6 +163,8 @@ public class CleverTapInstanceConfig implements Parcelable {
          */
         if (isDefaultInstance) {
             profileKeys = manifest.getProfileKeys();
+            log(LogConstants.LOG_TAG_ON_USER_LOGIN, "Setting Profile Keys from Manifest: " + Arrays
+                    .toString(profileKeys));
         }
     }
 
