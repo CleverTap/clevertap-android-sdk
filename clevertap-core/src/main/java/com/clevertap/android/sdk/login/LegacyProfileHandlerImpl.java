@@ -16,7 +16,7 @@ public class LegacyProfileHandlerImpl implements IProfileHandler {
     @Override
     public boolean isProfileKey(@NonNull final String Key) {
         boolean isProfileKey = ProfileKeysSet.getDefault().containsKey(Key);
-        mCTApiListener.config().getLogger().verbose(LOG_TAG_ON_USER_LOGIN,
+        mCTApiListener.config().log(LOG_TAG_ON_USER_LOGIN,
                 "isProfileKey [Key: " + Key + " , Value: " + isProfileKey + "]");
         return isProfileKey;
     }

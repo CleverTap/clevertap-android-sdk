@@ -24,11 +24,9 @@ public class ProfileHandlerFactory {
         } else {
             // case 2: Not logged in but default config
             // case 3: Not logged in but non-default config
-            ctApiListener.config().getLogger()
-                    .verbose(LOG_TAG_ON_USER_LOGIN, "getProfileHandler: ConfigurableProfileHandlerImpl");
             profileHandler = new ConfigurableProfileHandlerImpl(ctApiListener);
         }
-        ctApiListener.config().getLogger().verbose(LOG_TAG_ON_USER_LOGIN,
+        ctApiListener.config().log(LOG_TAG_ON_USER_LOGIN,
                 "getProfileHandler Returns: " + profileHandler.getClass().getSimpleName());
         return profileHandler;
     }
