@@ -120,7 +120,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
         private final JSONObject jsonObject;
 
-        private boolean videoSupport = haveVideoPlayerSupport;
+        private final boolean videoSupport = haveVideoPlayerSupport;
 
         NotificationPrepareRunnable(CleverTapAPI cleverTapAPI, JSONObject jsonObject) {
             this.cleverTapAPIWeakReference = new WeakReference<>(cleverTapAPI);
@@ -197,7 +197,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private static int activityCount = 0;
 
-    private static List<CTInAppNotification> pendingNotifications = Collections
+    private static final List<CTInAppNotification> pendingNotifications = Collections
             .synchronizedList(new ArrayList<CTInAppNotification>());
 
     private static CTInAppNotification currentlyDisplayingInApp = null;
@@ -231,9 +231,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private Runnable commsRunnable = null;
 
-    private CleverTapInstanceConfig config;
+    private final CleverTapInstanceConfig config;
 
-    private Context context;
+    private final Context context;
 
     private CTABTestController ctABTestController;
 
@@ -253,7 +253,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private DBAdapter dbAdapter;
 
-    private DeviceInfo deviceInfo;
+    private final DeviceInfo deviceInfo;
 
     private final Object displayUnitControllerLock = new Object();
 
@@ -261,7 +261,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private boolean enableNetworkInfoReporting = false;
 
-    private ExecutorService es;
+    private final ExecutorService es;
 
     private final Boolean eventLock = true;
 
@@ -277,7 +277,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private int geofenceSDKVersion = 0;
 
-    private Handler handlerUsingMainLooper;
+    private final Handler handlerUsingMainLooper;
 
     private InAppFCManager inAppFCManager;
 
@@ -311,7 +311,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private int lastVisitTime;
 
-    private LocalDataStore localDataStore;
+    private final LocalDataStore localDataStore;
 
     private Location locationFromUser = null;
 
@@ -319,7 +319,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private int mResponseFailureCount = 0;
 
-    private int maxDelayFrequency = 1000 * 60 * 10;
+    private final int maxDelayFrequency = 1000 * 60 * 10;
 
     private int minDelayFrequency = 0;
 
@@ -331,7 +331,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private final HashMap<String, Object> notificationViewedIdTagMap = new HashMap<>();
 
-    private ExecutorService ns;
+    private final ExecutorService ns;
 
     private boolean offline = false;
 
@@ -365,7 +365,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private final ValidationResultStack validationResultStack;
 
-    private Validator validator;
+    private final Validator validator;
 
     private JSONObject wzrkParams = null;
 
@@ -5223,11 +5223,17 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
-     * Destroys the current session
+     * Destroys the current session and resets <i>firstSession</i> flag, if first session lasts more than 20 minutes
+     * <br><br>For an app like Music Player <li>user installs an app and plays music and then moves to background.
+     * <li>User then re-launches an App after listening music in background for more than 20 minutes, in this case
+     * since an app is not yet killed due to background music <i>app installed</i> event must not be raised by SDK
      */
     private void destroySession() {
         currentSessionId = 0;
         setAppLaunchPushed(false);
+        if (isFirstSession()) {
+            firstSession = false;
+        }
         getConfigLogger().verbose(getAccountId(), "Session destroyed; Session ID is now 0");
         clearSource();
         clearMedium();
