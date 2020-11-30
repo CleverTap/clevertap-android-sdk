@@ -47,6 +47,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
@@ -59,6 +60,9 @@ import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
+import com.clevertap.android.sdk.login.IdentityRepo;
+import com.clevertap.android.sdk.login.IdentityRepoFactory;
+import com.clevertap.android.sdk.login.LoginInfoProvider;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
@@ -116,7 +120,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
         private final JSONObject jsonObject;
 
-        private boolean videoSupport = haveVideoPlayerSupport;
+        private final boolean videoSupport = haveVideoPlayerSupport;
 
         NotificationPrepareRunnable(CleverTapAPI cleverTapAPI, JSONObject jsonObject) {
             this.cleverTapAPIWeakReference = new WeakReference<>(cleverTapAPI);
@@ -193,7 +197,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private static int activityCount = 0;
 
-    private static List<CTInAppNotification> pendingNotifications = Collections
+    private static final List<CTInAppNotification> pendingNotifications = Collections
             .synchronizedList(new ArrayList<CTInAppNotification>());
 
     private static CTInAppNotification currentlyDisplayingInApp = null;
@@ -227,9 +231,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private Runnable commsRunnable = null;
 
-    private CleverTapInstanceConfig config;
+    private final CleverTapInstanceConfig config;
 
-    private Context context;
+    private final Context context;
 
     private CTABTestController ctABTestController;
 
@@ -249,7 +253,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private DBAdapter dbAdapter;
 
-    private DeviceInfo deviceInfo;
+    private final DeviceInfo deviceInfo;
 
     private final Object displayUnitControllerLock = new Object();
 
@@ -257,7 +261,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private boolean enableNetworkInfoReporting = false;
 
-    private ExecutorService es;
+    private final ExecutorService es;
 
     private final Boolean eventLock = true;
 
@@ -273,7 +277,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private int geofenceSDKVersion = 0;
 
-    private Handler handlerUsingMainLooper;
+    private final Handler handlerUsingMainLooper;
 
     private InAppFCManager inAppFCManager;
 
@@ -307,7 +311,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private int lastVisitTime;
 
-    private LocalDataStore localDataStore;
+    private final LocalDataStore localDataStore;
 
     private Location locationFromUser = null;
 
@@ -315,7 +319,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private int mResponseFailureCount = 0;
 
-    private int maxDelayFrequency = 1000 * 60 * 10;
+    private final int maxDelayFrequency = 1000 * 60 * 10;
 
     private int minDelayFrequency = 0;
 
@@ -327,7 +331,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private final HashMap<String, Object> notificationViewedIdTagMap = new HashMap<>();
 
-    private ExecutorService ns;
+    private final ExecutorService ns;
 
     private boolean offline = false;
 
@@ -361,7 +365,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private final ValidationResultStack validationResultStack;
 
-    private Validator validator;
+    private final Validator validator;
 
     private JSONObject wzrkParams = null;
 
@@ -1173,10 +1177,13 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Disables/Enables the ability to do UI Edits from the CleverTap Dashboard
      * Disabled by default
      */
-    @SuppressWarnings("unused")
+    @Deprecated
     public static void setUIEditorConnectionEnabled(boolean enabled) {
         isUIEditorEnabled = enabled;
     }
@@ -1351,11 +1358,13 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     @Override
+    @RestrictTo(Scope.LIBRARY)
     public CleverTapInstanceConfig config() {
         return config;
     }
 
     @Override
+    @RestrictTo(Scope.LIBRARY)
     public Context context() {
         return context;
     }
@@ -1395,6 +1404,12 @@ public class CleverTapAPI implements CleverTapAPIListener {
         deleteInboxMessage(message);
     }
 
+    @RestrictTo(Scope.LIBRARY)
+    @Override
+    public DeviceInfo deviceInfo() {
+        return deviceInfo;
+    }
+
     /**
      * Disables the Profile/Events Read and Synchronization API
      * Personalization is enabled by default
@@ -1403,8 +1418,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
     public void disablePersonalization() {
         this.config.enablePersonalization(false);
     }
-
-    //Push
 
     /**
      * Use this method to enable device network-related information tracking, including IP address.
@@ -1420,6 +1433,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
         getConfigLogger()
                 .verbose(getAccountId(), "Device Network Information reporting set to " + enableNetworkInfoReporting);
     }
+
+    //Push
 
     /**
      * Enables the Profile/Events Read and Synchronization API
@@ -1504,11 +1519,11 @@ public class CleverTapAPI implements CleverTapAPIListener {
         flushQueueAsync(context, EventGroup.REGULAR);
     }
 
-    //Push
-
     public String getAccountId() {
         return config.getAccountId();
     }
+
+    //Push
 
     /**
      * Getter for retrieving all the Display Units.
@@ -1550,6 +1565,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Returns the {@link Boolean} value of the named variable set via an AB Testing Experiment or the default value
      * if unset
      *
@@ -1558,7 +1576,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @return {@link Boolean} the value set by the Experiment or the default value if unset
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public Boolean getBooleanVariable(String name, Boolean defaultValue) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -1577,8 +1595,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         return experimentsListener;
     }
 
-    //Debug
-
     /**
      * This method is used to set the CTExperimentsListener
      *
@@ -1588,6 +1604,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
     public void setCTExperimentsListener(CTExperimentsListener experimentsListener) {
         this.experimentsListener = experimentsListener;
     }
+
+    //Debug
 
     /**
      * Returns the CTInboxListener object
@@ -1639,8 +1657,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         return pushNotificationListener;
     }
 
-    //Network Info handling
-
     /**
      * This method is used to set the CTPushNotificationListener
      *
@@ -1650,6 +1666,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
     public void setCTPushNotificationListener(CTPushNotificationListener pushNotificationListener) {
         this.pushNotificationListener = pushNotificationListener;
     }
+
+    //Network Info handling
 
     /**
      * Returns a unique CleverTap identifier suitable for use with install attribution providers.
@@ -1671,8 +1689,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         return this.deviceInfo.getDeviceID();
     }
 
-    // OptOut handling
-
     /**
      * Returns the total count of the specified event
      *
@@ -1688,6 +1704,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
         return -1;
     }
+
+    // OptOut handling
 
     /**
      * Returns an EventDetail object for the particular event passed. EventDetail consists of event name, count, first
@@ -1772,9 +1790,10 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
-    //Util
-
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Returns the {@link Double} value of the named variable set via an AB Testing Experiment or the default value if
      * unset
      *
@@ -1783,7 +1802,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @return {@link Double} the value set by the Experiment or the default value if unset
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public Double getDoubleVariable(String name, Double defaultValue) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -1791,6 +1810,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
         return ctABTestController.getDoubleVariable(name, defaultValue);
     }
+
+    //Util
 
     /**
      * Returns the timestamp of the first time the given event was raised
@@ -1818,8 +1839,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         return this.geofenceCallback;
     }
 
-    //Util
-
     /**
      * This method is used to set the geofence callback
      * Register to handle geofence responses from CleverTap
@@ -1845,7 +1864,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
         return getLocalDataStore().getEventHistory(context);
     }
 
-    //DeepLink
+    //Util
 
     /**
      * Returns the InAppNotificationListener object
@@ -1856,6 +1875,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
     public InAppNotificationListener getInAppNotificationListener() {
         return inAppNotificationListener;
     }
+
+    //DeepLink
 
     /**
      * This method sets the InAppNotificationListener
@@ -1921,6 +1942,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Returns the {@link Integer} value of the named variable set via an AB Testing Experiment or the default value
      * if unset
      *
@@ -1955,6 +1979,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Returns the {@link List} of {@link Boolean} value of the named variable set via an AB Testing Experiment or the
      * default value if unset
      *
@@ -1963,7 +1990,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @return {@link List} of {@link Boolean} the value set by the Experiment or the default value if unset
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public List<Boolean> getListOfBooleanVariable(String name, List<Boolean> defaultValue) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -1973,9 +2000,10 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     }
 
-    //Event
-
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Returns the {@link List} of {@link Double} value of the named variable set via an AB Testing Experiment or the
      * default value if unset
      *
@@ -1984,7 +2012,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @return {@link List} of {@link Double} the value set by the Experiment or the default value if unset
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public List<Double> getListOfDoubleVariable(String name, List<Double> defaultValue) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -1994,9 +2022,10 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     }
 
-    //Util
-
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Returns the {@link List} of {@link Integer} value of the named variable set via an AB Testing Experiment or the
      * default value if unset
      *
@@ -2005,7 +2034,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @return {@link List} of {@link Integer} the value set by the Experiment or the default value if unset
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public List<Integer> getListOfIntegerVariable(String name, List<Integer> defaultValue) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -2015,6 +2044,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Returns the {@link List} of {@link String} value of the named variable set via an AB Testing Experiment or the
      * default value if unset
      *
@@ -2023,7 +2055,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @return {@link List} of {@link String} the value set by the Experiment or the default value if unset
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public List<String> getListOfStringVariable(String name, List<String> defaultValue) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -2045,8 +2077,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         return _getLocation();
     }
 
-    //Util
-
     /**
      * set the user profile location in CleverTap
      * location can then be used for geo-segmentation etc.
@@ -2059,6 +2089,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Returns the {@link Map} of {@link Boolean} value of the named variable set via an AB Testing Experiment or the
      * default value if unset
      *
@@ -2067,7 +2100,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @return {@link Map} of {@link Boolean} the value set by the Experiment or the default value if unset
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public Map<String, Boolean> getMapOfBooleanVariable(String name, Map<String, Boolean> defaultValue) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -2077,6 +2110,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Returns the {@link Map} of {@link Double} value of the named variable set via an AB Testing Experiment or the
      * default value if unset
      *
@@ -2085,7 +2121,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @return {@link Map} of {@link Double} the value set by the Experiment or the default value if unset
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public Map<String, Double> getMapOfDoubleVariable(String name, Map<String, Double> defaultValue) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -2095,6 +2131,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Returns the {@link Map} of {@link Integer} value of the named variable set via an AB Testing Experiment or the
      * default value if unset
      *
@@ -2103,7 +2142,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @return {@link Map} of {@link Integer} the value set by the Experiment or the default value if unset
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public Map<String, Integer> getMapOfIntegerVariable(String name, Map<String, Integer> defaultValue) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -2113,6 +2152,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Returns the {@link Map} of {@link String} value of the named variable set via an AB Testing Experiment or the
      * default value if unset
      *
@@ -2121,7 +2163,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @return {@link Map} of {@link String} the value set by the Experiment or the default value if unset
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public Map<String, String> getMapOfStringVariable(String name, Map<String, String> defaultValue) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -2155,6 +2197,13 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Returns the token for a particular push type
+     */
+    public String getPushToken(@NonNull PushConstants.PushType pushType) {
+        return pushProviders.getCachedToken(pushType);
+    }
+
+    /**
      * Returns the number of screens which have been displayed by the app
      *
      * @return Total number of screens which have been displayed by the app
@@ -2165,6 +2214,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Returns the {@link String} value of the named variable set via an AB Testing Experiment or the default value if
      * unset
      *
@@ -2173,7 +2225,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @return {@link String} the value set by the Experiment or the default value if unset
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public String getStringVariable(String name, String defaultValue) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -2909,10 +2961,13 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
      * Pushes everything available in the JSON object returned by the Facebook GraphRequest
      *
      * @param graphUser The object returned from Facebook
      */
+    @Deprecated
     @SuppressWarnings({"unused"})
     public void pushFacebookUser(final JSONObject graphUser) {
         postAsyncSafely("pushFacebookUser", new Runnable() {
@@ -3365,12 +3420,15 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Registers an ABTesting variable of type {@link Boolean} for ease of editing on the CleverTap Dashboard
      *
      * @param name {@link String} the name of the variable
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public void registerBooleanVariable(String name) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -3380,12 +3438,15 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Registers an ABTesting variable of type {@link Double} for ease of editing on the CleverTap Dashboard
      *
      * @param name {@link String} the name of the variable
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public void registerDoubleVariable(String name) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -3395,12 +3456,15 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Registers an ABTesting variable of type {@link Integer} for ease of editing on the CleverTap Dashboard
      *
      * @param name {@link String} the name of the variable
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public void registerIntegerVariable(String name) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -3410,13 +3474,16 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Registers an ABTesting variable of type {@link List} of {@link Boolean} for ease of editing on the CleverTap
      * Dashboard
      *
      * @param name {@link String} the name of the variable
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public void registerListOfBooleanVariable(String name) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -3426,13 +3493,16 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Registers an ABTesting variable of type {@link List} of {@link Double} for ease of editing on the CleverTap
      * Dashboard
      *
      * @param name {@link String} the name of the variable
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public void registerListOfDoubleVariable(String name) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -3442,13 +3512,16 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Registers an ABTesting variable of type {@link List} of {@link Integer} for ease of editing on the CleverTap
      * Dashboard
      *
      * @param name {@link String} the name of the variable
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public void registerListOfIntegerVariable(String name) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -3458,13 +3531,16 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Registers an ABTesting variable of type {@link List} of {@link String} for ease of editing on the CleverTap
      * Dashboard
      *
      * @param name {@link String} the name of the variable
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public void registerListOfStringVariable(String name) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -3474,13 +3550,16 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Registers an ABTesting variable of type {@link Map} of {@link Boolean} for ease of editing on the CleverTap
      * Dashboard
      *
      * @param name {@link String} the name of the variable
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public void registerMapOfBooleanVariable(String name) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -3490,13 +3569,16 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Registers an ABTesting variable of type {@link Map} of {@link Double} for ease of editing on the CleverTap
      * Dashboard
      *
      * @param name {@link String} the name of the variable
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public void registerMapOfDoubleVariable(String name) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -3506,13 +3588,16 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Registers an ABTesting variable of type {@link Map} of {@link Integer} for ease of editing on the CleverTap
      * Dashboard
      *
      * @param name {@link String} the name of the variable
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public void registerMapOfIntegerVariable(String name) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -3522,13 +3607,16 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Registers an ABTesting variable of type {@link Map} of {@link String} for ease of editing on the CleverTap
      * Dashboard
      *
      * @param name {@link String} the name of the variable
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public void registerMapOfStringVariable(String name) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -3538,12 +3626,15 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
+     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
+     * versions of the CleverTap Android SDK.
+     *
      * Registers an ABTesting variable of type {@link String} for ease of editing on the CleverTap Dashboard
      *
      * @param name {@link String} the name of the variable
      */
     @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
+    @Deprecated
     public void registerStringVariable(String name) {
         if (ctABTestController == null) {
             getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
@@ -3553,6 +3644,11 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     //Session
+
+    @Override
+    public ValidationResultStack remoteErrorLogger() {
+        return validationResultStack;
+    }
 
     /**
      * Remove a unique value from a multi-value user profile property
@@ -3656,6 +3752,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
         this.inboxMessageButtonListener = new WeakReference<>(listener);
     }
 
+    //Listener
+
     /**
      * Not to be used by developers. This is used internally to help CleverTap know which library is wrapping the
      * native SDK
@@ -3667,8 +3765,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
             deviceInfo.setLibrary(library);
         }
     }
-
-    //Listener
 
     /**
      * Sets the location in CleverTap to get updated GeoFences
@@ -4195,12 +4291,14 @@ public class CleverTapAPI implements CleverTapAPIListener {
             }
 
             boolean haveIdentifier = false;
-
+            LoginInfoProvider loginInfoProvider = new LoginInfoProvider(this);
             // check for valid identifier keys
             // use the first one we find
+            IdentityRepo iProfileHandler = IdentityRepoFactory.getRepo(this);
             for (String key : profile.keySet()) {
                 Object value = profile.get(key);
-                if (Constants.PROFILE_IDENTIFIER_KEYS.contains(key)) {
+                boolean isProfileKey = iProfileHandler.hasIdentity(key);
+                if (isProfileKey) {
                     try {
                         String identifier = null;
                         if (value != null) {
@@ -4208,7 +4306,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                         }
                         if (identifier != null && identifier.length() > 0) {
                             haveIdentifier = true;
-                            cachedGUID = getGUIDForIdentifier(key, identifier);
+                            cachedGUID = loginInfoProvider.getGUIDForIdentifier(key, identifier);
                             if (cachedGUID != null) {
                                 break;
                             }
@@ -4221,7 +4319,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
             // if no valid identifier provided or there are no identified users on the device; just push on the current profile
             if (!isErrorDeviceId()) {
-                if (!haveIdentifier || isAnonymousDevice()) {
+                if (!haveIdentifier || loginInfoProvider.isAnonymousDevice()) {
                     getConfigLogger().debug(getAccountId(),
                             "onUserLogin: no identifier provided or device is anonymous, pushing on current user profile");
                     pushProfile(profile);
@@ -4368,6 +4466,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
+    //Session
+
     @SuppressWarnings("ConstantConditions")
     private void _pushFacebookUser(JSONObject graphUser) {
         try {
@@ -4494,8 +4594,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
             getConfigLogger().verbose(getAccountId(), "Failed to parse graph user object successfully", t);
         }
     }
-
-    //Session
 
     private void _removeValueForKey(String key) {
         try {
@@ -4629,6 +4727,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
         return val;
     }
 
+    //Profile
+
     private void _validateAndPushMultiValue(JSONArray currentValues, JSONArray newValues,
             ArrayList<String> originalValues, String key, String command) {
 
@@ -4679,8 +4779,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
             getConfigLogger().verbose(getAccountId(), "Error pushing multiValue for key " + key, t);
         }
     }
-
-    //Profile
 
     //Lifecycle
     private void activityPaused() {
@@ -4760,6 +4858,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
             @Override
             public void run() {
                 try {
+                    getConfigLogger().verbose(getAccountId(), "asyncProfileSwitchUser:[profile " + profile
+                            + " with Cached GUID " + ((cacheGuid != null) ? cachedGUID
+                            : "NULL" + " and cleverTapID " + cleverTapID));
                     //set optOut to false on the current user to unregister the device token
                     setCurrentUserOptedOut(false);
                     // unregister the device token on the current user
@@ -4861,21 +4962,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         return conn;
     }
 
-    private void cacheGUIDForIdentifier(String guid, String key, String identifier) {
-        if (isErrorDeviceId() || guid == null || key == null || identifier == null) {
-            return;
-        }
-
-        String cacheKey = key + "_" + identifier;
-        JSONObject cache = getCachedGUIDs();
-        try {
-            cache.put(cacheKey, guid);
-            setCachedGUIDs(cache);
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getAccountId(), "Error caching guid: " + t.toString());
-        }
-    }
-
     private boolean canShowInAppOnActivity() {
         updateBlacklistedActivitySet();
 
@@ -4939,6 +5025,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
+    // private multi-value handlers and helpers
+
     private void checkPendingInAppNotifications(Activity activity) {
         final boolean canShow = canShowInAppOnActivity();
         if (canShow) {
@@ -4954,8 +5042,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
                     + (activity != null ? activity.getLocalClassName() : "") + ")");
         }
     }
-
-    // private multi-value handlers and helpers
 
     // SessionManager/session management
     private void checkTimeoutSession() {
@@ -5137,11 +5223,17 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
-     * Destroys the current session
+     * Destroys the current session and resets <i>firstSession</i> flag, if first session lasts more than 20 minutes
+     * <br><br>For an app like Music Player <li>user installs an app and plays music and then moves to background.
+     * <li>User then re-launches an App after listening music in background for more than 20 minutes, in this case
+     * since an app is not yet killed due to background music <i>app installed</i> event must not be raised by SDK
      */
     private void destroySession() {
         currentSessionId = 0;
         setAppLaunchPushed(false);
+        if (isFirstSession()) {
+            firstSession = false;
+        }
         getConfigLogger().verbose(getAccountId(), "Session destroyed; Session ID is now 0");
         clearSource();
         clearMedium();
@@ -5150,10 +5242,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     //util
-    private boolean deviceIsMultiUser() {
-        JSONObject cachedGUIDs = getCachedGUIDs();
-        return cachedGUIDs.length() > 1;
-    }
+
+    //Session
 
     //Push
     @SuppressWarnings("SameParameterValue")
@@ -5163,8 +5253,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
             tokenRefreshListener.devicePushTokenDidRefresh(token, type);
         }
     }
-
-    //Session
 
     //InApp
     private void displayNotification(final CTInAppNotification inAppNotification) {
@@ -5322,6 +5410,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
         pushAppLaunchedEvent();
     }
 
+    //Event
+
     /**
      * push the device token outside of the normal course
      */
@@ -5332,7 +5422,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
-    //Event
+    //Profile
 
     /**
      * The ARP is additional request parameters, which must be sent once
@@ -5380,8 +5470,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
-    //Profile
-
     private long getAppInstallTime() {
         return appInstallTime;
     }
@@ -5392,31 +5480,13 @@ public class CleverTapAPI implements CleverTapAPIListener {
         try {
             boolean deviceIsMultiUser = false;
             if (deviceInfo.getGoogleAdID() != null) {
-                deviceIsMultiUser = deviceIsMultiUser();
+                deviceIsMultiUser = new LoginInfoProvider(this).deviceIsMultiUser();
             }
             return CTJsonConverter.from(deviceInfo, locationFromUser, enableNetworkInfoReporting,
                     deviceIsMultiUser);
         } catch (Throwable t) {
             getConfigLogger().verbose(getAccountId(), "Failed to construct App Launched event", t);
             return new JSONObject();
-        }
-    }
-
-    //Profile
-    private JSONObject getCachedGUIDs() {
-        String json = StorageHelper.getStringFromPrefs(context, config, Constants.CACHED_GUIDS_KEY, null);
-        return CTJsonConverter.toJsonObject(json, getConfigLogger(), getAccountId());
-    }
-
-    private void setCachedGUIDs(JSONObject cachedGUIDs) {
-        if (cachedGUIDs == null) {
-            return;
-        }
-        try {
-            StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.CACHED_GUIDS_KEY),
-                    cachedGUIDs.toString());
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getAccountId(), "Error persisting guid cache: " + t.toString());
         }
     }
 
@@ -5430,11 +5500,11 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
+    //Push
+
     private CleverTapInstanceConfig getConfig() {
         return config;
     }
-
-    //Push
 
     private Logger getConfigLogger() {
         return getConfig().getLogger();
@@ -5548,26 +5618,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
         return StorageHelper.getIntFromPrefs(context, config, Constants.KEY_FIRST_TS, 0);
     }
 
-    private String getGUIDForIdentifier(String key, String identifier) {
-        if (key == null || identifier == null) {
-            return null;
-        }
-
-        String cacheKey = key + "_" + identifier;
-        JSONObject cache = getCachedGUIDs();
-        try {
-            return cache.getString(cacheKey);
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getAccountId(), "Error reading guid cache: " + t.toString());
-            return null;
-        }
-    }
-
     private int getGeofenceSDKVersion() {
         return geofenceSDKVersion;
     }
-
-    //Util
 
     private void setGeofenceSDKVersion(int geofenceSDKVersion) {
         this.geofenceSDKVersion = geofenceSDKVersion;
@@ -6057,6 +6110,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             header.put("tk", token);
             header.put("l_ts", getLastRequestTimestamp());
             header.put("f_ts", getFirstRequestTimestamp());
+            header.put("ct_pi", IdentityRepoFactory.getRepo(this).getIdentitySet().toString());
             header.put("ddnd",
                     !(this.deviceInfo.getNotificationsEnabledForUser() && (pushProviders.isNotificationSupported())));
             if (isBgPing) {
@@ -6125,10 +6179,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
-    private boolean isAnonymousDevice() {
-        JSONObject cachedGUIDs = getCachedGUIDs();
-        return cachedGUIDs.length() <= 0;
-    }
 
     private boolean isAppLaunchPushed() {
         synchronized (appLaunchPushedLock) {
@@ -6193,6 +6243,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
         return now - muteTS < 24 * 60 * 60;
     }
 
+    //Notification Inbox public APIs
+
     //Util
     private boolean isNetworkOnline(Context context) {
         try {
@@ -6209,8 +6261,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
             return true;
         }
     }
-
-    //Notification Inbox public APIs
 
     private boolean isOffline() {
         return offline;
@@ -6710,6 +6760,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
+    //ABTesting
+
     private void processGeofenceResponse(JSONObject response) {
         if (response == null) {
             getConfigLogger().verbose(getAccountId(),
@@ -6740,8 +6792,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
 
     }
-
-    //ABTesting
 
     //InApp
     private void processInAppResponse(final JSONObject response, final Context context) {
@@ -7201,6 +7251,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
             if (baseProfile != null && baseProfile.length() > 0) {
                 Iterator i = baseProfile.keys();
+                IdentityRepo iProfileHandler = IdentityRepoFactory.getRepo(this);
+                LoginInfoProvider loginInfoProvider = new LoginInfoProvider(this);
                 while (i.hasNext()) {
                     String next = i.next().toString();
 
@@ -7220,9 +7272,10 @@ public class CleverTapAPI implements CleverTapAPIListener {
                         profileEvent.put(next, value);
 
                         // cache the valid identifier: guid pairs
-                        if (Constants.PROFILE_IDENTIFIER_KEYS.contains(next)) {
+                        boolean isProfileKey = iProfileHandler.hasIdentity(next);
+                        if (isProfileKey) {
                             try {
-                                cacheGUIDForIdentifier(guid, next, value.toString());
+                                loginInfoProvider.cacheGUIDForIdentifier(guid, next, value.toString());
                             } catch (Throwable t) {
                                 // no-op
                             }
@@ -7701,6 +7754,10 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
+    // -----------------------------------------------------------------------//
+    // ********                        Display Unit LOGIC                *****//
+    // -----------------------------------------------------------------------//
+
     private void setCurrentUserOptOutStateFromStorage() {
         String key = optOutKey();
         if (key == null) {
@@ -7713,10 +7770,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         getConfigLogger().verbose(getAccountId(),
                 "Set current user OptOut state from storage to: " + storedOptOut + " for key: " + key);
     }
-
-    // -----------------------------------------------------------------------//
-    // ********                        Display Unit LOGIC                *****//
-    // -----------------------------------------------------------------------//
 
     private void setDeviceNetworkInfoReportingFromStorage() {
         boolean enabled = StorageHelper.getBooleanFromPrefs(context, config, Constants.NETWORK_INFO);
@@ -7792,17 +7845,17 @@ public class CleverTapAPI implements CleverTapAPIListener {
         StorageHelper.putInt(context, Constants.PING_FREQUENCY, pingFrequency);
     }
 
-    private void setSpikyDomain(final Context context, String spikyDomainName) {
-        getConfigLogger().verbose(getAccountId(), "Setting spiky domain to " + spikyDomainName);
-        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.SPIKY_KEY_DOMAIN_NAME),
-                spikyDomainName);
-    }
-
     // -----------------------------------------------------------------------//
     // ********                        Feature Flags Logic               *****//
     // -----------------------------------------------------------------------//
 
     // ********                       Feature Flags Public API           *****//
+
+    private void setSpikyDomain(final Context context, String spikyDomainName) {
+        getConfigLogger().verbose(getAccountId(), "Setting spiky domain to " + spikyDomainName);
+        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.SPIKY_KEY_DOMAIN_NAME),
+                spikyDomainName);
+    }
 
     private boolean shouldDeferProcessingEvent(JSONObject event, int eventType) {
         //noinspection SimplifiableIfStatement
@@ -7820,6 +7873,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
         return (eventType == Constants.RAISED_EVENT && !isAppLaunchPushed());
     }
+
+    // ********                        Feature Flags Internal methods        *****//
 
     private boolean shouldDropEvent(JSONObject event, int eventType) {
         if (eventType == Constants.FETCH_EVENT) {
@@ -7839,8 +7894,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
         return false;
     }
-
-    // ********                        Feature Flags Internal methods        *****//
 
     private void showInAppNotificationIfAny() {
         if (!this.config.isAnalyticsOnly()) {
@@ -8243,6 +8296,11 @@ public class CleverTapAPI implements CleverTapAPIListener {
                     "In-app notifications will not be shown on " + Arrays.toString(inappActivityExclude.toArray()));
         }
     }
+    // -----------------------------------------------------------------------//
+    // ********                        PRODUCT CONFIG Logic              *****//
+    // -----------------------------------------------------------------------//
+
+    // ********                       PRODUCT CONFIG Public API           *****//
 
     // helper extracts the cursor data from the db object
     private QueueCursor updateCursorForDBObject(JSONObject dbObject, QueueCursor cursor) {
@@ -8265,11 +8323,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
         return cursor;
     }
-    // -----------------------------------------------------------------------//
-    // ********                        PRODUCT CONFIG Logic              *****//
-    // -----------------------------------------------------------------------//
-
-    // ********                       PRODUCT CONFIG Public API           *****//
 
     //Util
     // only call async
@@ -8278,6 +8331,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
             getLocalDataStore().persistEvent(context, event, type);
         }
     }
+
+    // ********                       PRODUCT CONFIG Internal API           *****//
 
     /**
      * updates the ping frequency if there is a change & reschedules existing ping tasks.
@@ -8303,8 +8358,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
             }
         }
     }
-
-    // ********                       PRODUCT CONFIG Internal API           *****//
 
     //Deprecation warning because Google Play install referrer via intent will be deprecated in March 2020
     @Deprecated
@@ -8517,6 +8570,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
+    //GEOFENCE APIs
+
     private static ArrayList<CleverTapAPI> getAvailableInstances(Context context) {
         ArrayList<CleverTapAPI> apiArrayList = new ArrayList<>();
         if (instances == null || instances.isEmpty()) {
@@ -8529,8 +8584,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
         return apiArrayList;
     }
-
-    //GEOFENCE APIs
 
     private static Activity getCurrentActivity() {
         return (currentActivity == null) ? null : currentActivity.get();
@@ -8759,13 +8812,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 Logger.v(config.getAccountId(), "Fragment not able to render", t);
             }
         }
-    }
-
-    /**
-     * Returns the token for a particular push type
-     */
-    public String getPushToken(@NonNull PushConstants.PushType pushType) {
-        return pushProviders.getCachedToken(pushType);
     }
 
     static {

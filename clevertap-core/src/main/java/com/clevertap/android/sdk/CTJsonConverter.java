@@ -2,13 +2,30 @@ package com.clevertap.android.sdk;
 
 import android.location.Location;
 import android.os.Bundle;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import java.util.Iterator;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-class CTJsonConverter {
+@RestrictTo(Scope.LIBRARY)
+public class CTJsonConverter {
 
+
+    public static JSONObject toJsonObject(String json, Logger logger, String accountId) {
+        JSONObject cache = null;
+        if (json != null) {
+            try {
+                cache = new JSONObject(json);
+            } catch (Throwable t) {
+                // no-op
+                logger.verbose(accountId, "Error reading guid cache: " + t.toString());
+            }
+        }
+
+        return (cache != null) ? cache : new JSONObject();
+    }
 
     static JSONObject from(DeviceInfo deviceInfo, Location locationFromUser, boolean enableNetworkInfoReporting
             , boolean deviceIsMultiUser) throws JSONException {
@@ -42,6 +59,7 @@ class CTJsonConverter {
             evtData.put("wdt", deviceInfo.getWidth());
             evtData.put("hgt", deviceInfo.getHeight());
             evtData.put("dpi", deviceInfo.getDPI());
+            evtData.put("dt", DeviceInfo.getDeviceType(deviceInfo.getContext()));
             if (deviceInfo.getLibrary() != null) {
                 evtData.put("lib", deviceInfo.getLibrary());
             }
@@ -138,20 +156,6 @@ class CTJsonConverter {
 
     static JSONObject getWzrkFields(CTInboxMessage root) {
         return root.getWzrkParams();
-    }
-
-    static JSONObject toJsonObject(String json, Logger logger, String accountId) {
-        JSONObject cache = null;
-        if (json != null) {
-            try {
-                cache = new JSONObject(json);
-            } catch (Throwable t) {
-                // no-op
-                logger.verbose(accountId, "Error reading guid cache: " + t.toString());
-            }
-        }
-
-        return (cache != null) ? cache : new JSONObject();
     }
 
     static String toJsonString(Object value) {

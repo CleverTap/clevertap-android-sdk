@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -42,6 +43,8 @@ public class ManifestInfo {
     private static String xiaomiAppKey;
 
     private static String xiaomiAppID;
+
+    private final String[] profileKeys;
 
     public synchronized static ManifestInfo getInstance(Context context) {
         if (instance == null) {
@@ -90,10 +93,20 @@ public class ManifestInfo {
 
         xiaomiAppKey = _getManifestStringValueForKey(metaData, Constants.LABEL_XIAOMI_APP_KEY);
         xiaomiAppID = _getManifestStringValueForKey(metaData, Constants.LABEL_XIAOMI_APP_ID);
+
+        profileKeys = parseProfileKeys(metaData);
+    }
+
+    public String getAccountId() {
+        return accountId;
     }
 
     public String getFCMSenderId() {
         return fcmSenderId;
+    }
+
+    public String[] getProfileKeys() {
+        return profileKeys;
     }
 
     public String getXiaomiAppID() {
@@ -106,10 +119,6 @@ public class ManifestInfo {
 
     boolean enableBeta() {
         return beta;
-    }
-
-    String getAccountId() {
-        return accountId;
     }
 
     String getAccountRegion() {
@@ -154,6 +163,12 @@ public class ManifestInfo {
 
     boolean useGoogleAdId() {
         return useADID;
+    }
+
+    private String[] parseProfileKeys(final Bundle metaData) {
+        String profileKeyString = _getManifestStringValueForKey(metaData, Constants.CLEVERTAP_IDENTIFIER);
+        return !TextUtils.isEmpty(profileKeyString) ? profileKeyString.split(Constants.SEPARATOR_COMMA)
+                : NullConstants.NULL_STRING_ARRAY;
     }
 
     static void changeCredentials(String id, String token, String region) {

@@ -2,59 +2,67 @@ package com.clevertap.android.sdk;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.UiModeManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
+import android.content.res.Configuration;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.view.WindowManager;
+import androidx.annotation.IntDef;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationManagerCompat;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.UUID;
 
-class DeviceInfo {
+@RestrictTo(Scope.LIBRARY)
+public class DeviceInfo {
 
     private class DeviceCachedInfo {
 
-        private String bluetoothVersion;
+        private final String bluetoothVersion;
 
-        private int build;
+        private final int build;
 
-        private String carrier;
+        private final String carrier;
 
-        private String countryCode;
+        private final String countryCode;
 
-        private int dpi;
+        private final int dpi;
 
-        private double height;
+        private final double height;
 
-        private int heightPixels;
+        private final int heightPixels;
 
-        private String manufacturer;
+        private final String manufacturer;
 
-        private String model;
+        private final String model;
 
-        private String networkType;
+        private final String networkType;
 
-        private boolean notificationsEnabled;
+        private final boolean notificationsEnabled;
 
-        private String osName;
+        private final String osName;
 
-        private String osVersion;
+        private final String osVersion;
 
-        private int sdkVersion;
+        private final int sdkVersion;
 
-        private String versionName;
+        private final String versionName;
 
-        private double width;
+        private final double width;
 
-        private int widthPixels;
+        private final int widthPixels;
 
         DeviceCachedInfo() {
             versionName = getVersionName();
@@ -230,9 +238,51 @@ class DeviceInfo {
         }
     }
 
+    /**
+     * Type of a device with below possible values<br>
+     * <li>{@link DeviceInfo#SMART_PHONE}
+     * <li>{@link DeviceInfo#TABLET}
+     * <li>{@link DeviceInfo#TV}
+     * <li>{@link DeviceInfo#UNKNOWN}
+     * <li>{@link DeviceInfo#NULL}
+     */
+    @IntDef({SMART_PHONE, TABLET, TV, UNKNOWN, NULL})
+    @Retention(RetentionPolicy.SOURCE)
+    @interface DeviceType {
+
+    }
+
     private static final String GUID_PREFIX = "__";
 
     private static final String OS_NAME = "Android";
+
+    /**
+     * Device is a smart phone
+     */
+    static final int SMART_PHONE = 1;
+
+    /**
+     * Device is a tablet
+     */
+    static final int TABLET = 2;
+
+    /**
+     * Device is a television
+     */
+    static final int TV = 3;
+
+    /**
+     * Device type is not known
+     */
+    static final int UNKNOWN = 0;
+
+    /**
+     * Initial state of device type before determining
+     */
+    static final int NULL = -1;
+
+    @DeviceType
+    static int sDeviceType = NULL;
 
     private final Object adIDLock = new Object();
 
@@ -240,9 +290,9 @@ class DeviceInfo {
 
     private DeviceCachedInfo cachedInfo;
 
-    private CleverTapInstanceConfig config;
+    private final CleverTapInstanceConfig config;
 
-    private Context context;
+    private final Context context;
 
     private final Object deviceIDLock = new Object();
 
@@ -252,7 +302,8 @@ class DeviceInfo {
 
     private boolean limitAdTracking = false;
 
-    private ArrayList<ValidationResult> validationResults = new ArrayList<>();
+    private final ArrayList<ValidationResult> validationResults = new ArrayList<>();
+
 
     DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID) {
         this.context = context;
@@ -266,6 +317,10 @@ class DeviceInfo {
         });
         deviceInfoCacheThread.start();
         initDeviceID(cleverTapID);
+    }
+
+    public boolean isErrorDeviceId() {
+        return getDeviceID() != null && getDeviceID().startsWith(Constants.ERROR_PROFILE_PREFIX);
     }
 
     void forceNewDeviceID() {
@@ -316,6 +371,10 @@ class DeviceInfo {
 
     String getCarrier() {
         return getDeviceCachedInfo().carrier;
+    }
+
+    Context getContext() {
+        return context;
     }
 
     String getCountryCode() {
@@ -416,10 +475,6 @@ class DeviceInfo {
             // do nothing since we don't have permissions
         }
         return isBluetoothEnabled;
-    }
-
-    boolean isErrorDeviceId() {
-        return getDeviceID() != null && getDeviceID().startsWith(Constants.ERROR_PROFILE_PREFIX);
     }
 
     boolean isLimitAdTrackingEnabled() {
@@ -619,5 +674,41 @@ class DeviceInfo {
     static int getAppIconAsIntId(final Context context) {
         ApplicationInfo ai = context.getApplicationInfo();
         return ai.icon;
+    }
+
+    /**
+     * Determines if a device is tablet, smart phone or TV
+     *
+     * @param context context
+     * @return one of the possible value of {@link DeviceType}
+     */
+    @DeviceType
+    static int getDeviceType(final Context context) {
+
+        if (sDeviceType == NULL) {
+
+            try {
+                UiModeManager uiModeManager = (UiModeManager) context.getSystemService(Context.UI_MODE_SERVICE);
+                if (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
+                    sDeviceType = TV;
+                    return sDeviceType;
+                }
+            } catch (Exception e) {
+                //uiModeManager or context is null
+                Logger.d("Failed to decide whether device is a TV!");
+                e.printStackTrace();
+            }
+
+            try {
+                sDeviceType = context.getResources().getBoolean(R.bool.ctIsTablet) ? TABLET : SMART_PHONE;
+            } catch (Exception e) {
+                // resource not found or context is null
+                Logger.d("Failed to decide whether device is a smart phone or tablet!");
+                e.printStackTrace();
+                sDeviceType = UNKNOWN;
+            }
+
+        }
+        return sDeviceType;
     }
 }

@@ -23,15 +23,15 @@ public class FcmPushProvider implements CTPushProvider {
         mHandler = new FcmSdkHandlerImpl(ctPushListener);
     }
 
+    @Override
+    public int getPlatform() {
+        return ANDROID_PLATFORM;
+    }
+
     @NonNull
     @Override
     public PushConstants.PushType getPushType() {
         return mHandler.getPushType();
-    }
-
-    @Override
-    public int getPlatform() {
-        return ANDROID_PLATFORM;
     }
 
     /**
@@ -55,13 +55,13 @@ public class FcmPushProvider implements CTPushProvider {
     }
 
     @Override
-    public void requestToken() {
-        mHandler.requestToken();
+    public int minSDKSupportVersionCode() {
+        return 0;// supporting FCM from base version
     }
 
     @Override
-    public int minSDKSupportVersionCode() {
-        return 0;// supporting FCM from base version
+    public void requestToken() {
+        mHandler.requestToken();
     }
 
     void setHandler(final IFcmSdkHandler handler) {

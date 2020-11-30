@@ -1,3 +1,3 @@
--keep class com.google.android.gms.common.**{*;}
--keep class com.google.android.gms.location.**{*;}
--keep class androidx.concurrent.futures.**{*;}
+-keep class com.google.android.gms.common.GooglePlayServicesUtil{*;}
+-keep class com.google.android.gms.location.FusedLocationProviderClient{*;}
+-keep class androidx.concurrent.futures.CallbackToFutureAdapter{*;}

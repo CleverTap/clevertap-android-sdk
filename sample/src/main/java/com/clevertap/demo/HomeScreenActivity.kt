@@ -57,10 +57,11 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
         //With CleverTap Android SDK v3.2.0 you can create additional instances to send data to multiple CleverTap accounts
         //Create config object for an additional instance
         //While using this app, replace the below Account Id and token with your Account Id and token
-        //val config = CleverTapInstanceConfig.createInstance(this, "YOUR_ACCOUNT_ID", "YOUR_ACCOUNT_TOKEN")
-
+//        val config = CleverTapInstanceConfig.createInstance(this, "YOUR_ACCOUNT_ID", "YOUR_ACCOUNT_TOKEN")
+        // configure your clevertap identifiers as mentioned below
+//        config.setIdentityKeys(Constants.TYPE_EMAIL,Constants.TYPE_PHONE, Constants.TYPE_IDENTITY)
         //Use the config object to create a custom instance
-        //var cleverTapInstanceTwo = CleverTapAPI.instanceWithConfig(this, config)
+//        var cleverTapInstanceTwo = CleverTapAPI.instanceWithConfig(this, config)
     }
 
     override fun inboxDidInitialize() {

@@ -28,6 +28,7 @@ import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -38,6 +39,41 @@ import org.json.JSONObject;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class Utils {
+
+    public static boolean containsIgnoreCase(Collection<String> collection, String key) {
+        if (collection == null || key == null) {
+            return false;
+        }
+        for (String entry : collection) {
+            if (key.equalsIgnoreCase(entry)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static String convertToTitleCase(String text) {
+        if (text == null || text.isEmpty()) {
+            return text;
+        }
+
+        StringBuilder converted = new StringBuilder();
+
+        boolean convertNext = true;
+        for (char ch : text.toCharArray()) {
+            if (Character.isSpaceChar(ch)) {
+                convertNext = true;
+            } else if (convertNext) {
+                ch = Character.toTitleCase(ch);
+                convertNext = false;
+            } else {
+                ch = Character.toLowerCase(ch);
+            }
+            converted.append(ch);
+        }
+
+        return converted.toString();
+    }
 
     public static boolean isActivityDead(Activity activity) {
         if (activity == null) {
@@ -386,5 +422,4 @@ public final class Utils {
             return drawableToBitmap(context.getPackageManager().getApplicationIcon(context.getApplicationInfo()));
         }
     }
-
 }

@@ -1,9 +1,13 @@
 package com.clevertap.android.sdk;
 
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
+
 /**
  * Groups all error messages in one place
  */
-class ValidationResultFactory {
+@RestrictTo(Scope.LIBRARY)
+public class ValidationResultFactory {
 
     /**
      * Returns error object containing error code and message based on given parameters
@@ -13,7 +17,7 @@ class ValidationResultFactory {
      * @param values      values to add in error message
      * @return instance of {@link ValidationResult}
      */
-    static ValidationResult create(int errorCode, int messageCode, String... values) {
+    public static ValidationResult create(int errorCode, int messageCode, String... values) {
         ValidationResult error = new ValidationResult();
         error.setErrorCode(errorCode);
         String msg = "";
@@ -147,6 +151,9 @@ class ValidationResultFactory {
                             break;
                     }
                     break;
+                case 531:
+                    msg = "Profile Identifiers mismatch with the previously saved ones";
+                    break;
             }
         } catch (Exception e) {
             msg = "";
@@ -157,7 +164,7 @@ class ValidationResultFactory {
     }
 
     @SuppressWarnings("SameParameterValue")
-    static ValidationResult create(int errorCode) {
+    public static ValidationResult create(int errorCode) {
         return create(errorCode, -1);
     }
 

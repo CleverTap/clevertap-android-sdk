@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk;
 
+import static com.clevertap.android.sdk.JsonUtil.toArray;
 import static com.clevertap.android.sdk.JsonUtil.toJsonArray;
 import static com.clevertap.android.sdk.JsonUtil.toList;
 import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getAll;
@@ -10,7 +11,9 @@ import android.os.Parcelable;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
+import com.clevertap.android.sdk.Constants.IdentityType;
 import java.util.ArrayList;
+import java.util.Arrays;
 import org.json.JSONObject;
 
 public class CleverTapInstanceConfig implements Parcelable {
@@ -37,29 +40,6 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     @NonNull
     private ArrayList<String> allowedPushTypes = getAll();
-
-    CleverTapInstanceConfig(CleverTapInstanceConfig config) {
-        this.accountId = config.accountId;
-        this.accountToken = config.accountToken;
-        this.accountRegion = config.accountRegion;
-        this.isDefaultInstance = config.isDefaultInstance;
-        this.analyticsOnly = config.analyticsOnly;
-        this.personalization = config.personalization;
-        this.debugLevel = config.debugLevel;
-        this.logger = config.logger;
-        this.useGoogleAdId = config.useGoogleAdId;
-        this.disableAppLaunchedEvent = config.disableAppLaunchedEvent;
-        this.createdPostAppLaunch = config.createdPostAppLaunch;
-        this.sslPinning = config.sslPinning;
-        this.backgroundSync = config.backgroundSync;
-        this.enableCustomCleverTapId = config.enableCustomCleverTapId;
-        this.fcmSenderId = config.fcmSenderId;
-        this.enableABTesting = config.enableABTesting;
-        this.enableUIEditor = config.enableUIEditor;
-        this.packageName = config.packageName;
-        this.beta = config.beta;
-        this.allowedPushTypes = config.allowedPushTypes;
-    }
 
     private boolean analyticsOnly;
 
@@ -89,6 +69,8 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     private boolean personalization;
 
+    private String[] indentityKeys = NullConstants.NULL_STRING_ARRAY;
+
     private boolean sslPinning;
 
     private boolean useGoogleAdId;
@@ -96,6 +78,7 @@ public class CleverTapInstanceConfig implements Parcelable {
     @SuppressWarnings("unused")
     public static CleverTapInstanceConfig createInstance(Context context, @NonNull String accountId,
             @NonNull String accountToken) {
+
         //noinspection ConstantConditions
         if (accountId == null || accountToken == null) {
             Logger.i("CleverTap accountId and accountToken cannot be null");
@@ -113,6 +96,30 @@ public class CleverTapInstanceConfig implements Parcelable {
             return null;
         }
         return new CleverTapInstanceConfig(context, accountId, accountToken, accountRegion, false);
+    }
+
+    CleverTapInstanceConfig(CleverTapInstanceConfig config) {
+        this.accountId = config.accountId;
+        this.accountToken = config.accountToken;
+        this.accountRegion = config.accountRegion;
+        this.isDefaultInstance = config.isDefaultInstance;
+        this.analyticsOnly = config.analyticsOnly;
+        this.personalization = config.personalization;
+        this.debugLevel = config.debugLevel;
+        this.logger = config.logger;
+        this.useGoogleAdId = config.useGoogleAdId;
+        this.disableAppLaunchedEvent = config.disableAppLaunchedEvent;
+        this.createdPostAppLaunch = config.createdPostAppLaunch;
+        this.sslPinning = config.sslPinning;
+        this.backgroundSync = config.backgroundSync;
+        this.enableCustomCleverTapId = config.enableCustomCleverTapId;
+        this.fcmSenderId = config.fcmSenderId;
+        this.enableABTesting = config.enableABTesting;
+        this.enableUIEditor = config.enableUIEditor;
+        this.packageName = config.packageName;
+        this.beta = config.beta;
+        this.allowedPushTypes = config.allowedPushTypes;
+        this.indentityKeys = config.indentityKeys;
     }
 
     private CleverTapInstanceConfig(Context context, String accountId, String accountToken, String accountRegion,
@@ -138,6 +145,14 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.packageName = manifest.getPackageName();
         this.enableCustomCleverTapId = manifest.useCustomId();
         this.beta = manifest.enableBeta();
+        /*
+         * For default instance, use manifest meta, otherwise use from setter field
+         */
+        if (isDefaultInstance) {
+            indentityKeys = manifest.getProfileKeys();
+            log(LogConstants.LOG_TAG_ON_USER_LOGIN, "Setting Profile Keys from Manifest: " + Arrays
+                    .toString(indentityKeys));
+        }
     }
 
     private CleverTapInstanceConfig(String jsonString) throws Throwable {
@@ -202,6 +217,9 @@ public class CleverTapInstanceConfig implements Parcelable {
                 this.allowedPushTypes = (ArrayList<String>) toList(
                         configJsonObject.getJSONArray(Constants.KEY_ALLOWED_PUSH_TYPES));
             }
+            if (configJsonObject.has(Constants.KEY_IDENTITY_TYPES)) {
+                this.indentityKeys = (String[]) toArray(configJsonObject.getJSONArray(Constants.KEY_IDENTITY_TYPES));
+            }
         } catch (Throwable t) {
             Logger.v("Error constructing CleverTapInstanceConfig from JSON: " + jsonString + ": ", t.getCause());
             throw (t);
@@ -230,11 +248,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         beta = in.readByte() != 0x00;
         allowedPushTypes = new ArrayList<>();
         in.readList(allowedPushTypes, String.class.getClassLoader());
-    }
-
-    @NonNull
-    public ArrayList<String> getAllowedPushTypes() {
-        return allowedPushTypes;
+        in.readStringArray(indentityKeys);
     }
 
     @Override
@@ -259,6 +273,11 @@ public class CleverTapInstanceConfig implements Parcelable {
     @SuppressWarnings({"unused"})
     public String getAccountToken() {
         return accountToken;
+    }
+
+    @NonNull
+    public ArrayList<String> getAllowedPushTypes() {
+        return allowedPushTypes;
     }
 
     @SuppressWarnings({"unused", "WeakerAccess"})
@@ -292,6 +311,10 @@ public class CleverTapInstanceConfig implements Parcelable {
         return packageName;
     }
 
+    public String[] getIdentityKeys() {
+        return indentityKeys;
+    }
+
     @SuppressWarnings({"BooleanMethodIsAlwaysInverted", "WeakerAccess"})
     public boolean isABTestingEnabled() {
         return enableABTesting;
@@ -311,15 +334,21 @@ public class CleverTapInstanceConfig implements Parcelable {
         return beta;
     }
 
+    public boolean isDefaultInstance() {
+        return isDefaultInstance;
+    }
+
     @SuppressWarnings({"unused"})
     public boolean isUIEditorEnabled() {
         return enableUIEditor;
     }
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
     public void log(@NonNull String tag, @NonNull String message) {
         logger.verbose(getDefaultSuffix(tag), message);
     }
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
     public void log(@NonNull String tag, @NonNull String message, Throwable throwable) {
         logger.verbose(getDefaultSuffix(tag), message, throwable);
     }
@@ -334,6 +363,14 @@ public class CleverTapInstanceConfig implements Parcelable {
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     public void setEnableUIEditor(boolean enableUIEditor) {
         this.enableUIEditor = enableUIEditor;
+    }
+
+    public void setIdentityKeys(@IdentityType String... identityKeys) {
+        if (!isDefaultInstance) {
+            this.indentityKeys = identityKeys;
+            log(LogConstants.LOG_TAG_ON_USER_LOGIN, "Setting Profile Keys via setter: " + Arrays
+                    .toString(this.indentityKeys));
+        }
     }
 
     @SuppressWarnings({"unused"})
@@ -362,6 +399,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         dest.writeString(packageName);
         dest.writeByte((byte) (beta ? 0x01 : 0x00));
         dest.writeList(allowedPushTypes);
+        dest.writeStringArray(indentityKeys);
     }
 
     boolean getEnableCustomCleverTapId() {
@@ -384,10 +422,6 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     boolean isCreatedPostAppLaunch() {
         return createdPostAppLaunch;
-    }
-
-    boolean isDefaultInstance() {
-        return isDefaultInstance;
     }
 
     boolean isDisableAppLaunchedEvent() {
