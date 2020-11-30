@@ -13,12 +13,9 @@ import com.clevertap.android.sdk.BaseCTApiListener;
 @RestrictTo(Scope.LIBRARY)
 public class IdentityRepoFactory {
 
-    private IdentityRepoFactory() {
-        // private constructor
-    }
-
     /**
      * Creates repo provider based on login state & config details.
+     *
      * @param ctApiListener - CleverTapAPI instance
      * @return - repo provider
      */
@@ -26,16 +23,21 @@ public class IdentityRepoFactory {
         final LoginInfoProvider infoProvider = new LoginInfoProvider(ctApiListener);
         final IdentityRepo repo;
         if (infoProvider.isLegacyProfileLoggedIn()) {
-            repo = new LegacyIdentityRepo(ctApiListener);// case 1: Migration (cached guid but no newly saved profile pref)
+            repo = new LegacyIdentityRepo(
+                    ctApiListener);// case 1: Migration (cached guid but no newly saved profile pref)
         } else {
-              /* ----------------------------------------------------
-               * case 2: Not logged in & using default config
-               * case 3: Not logged in & using multi instance config
-               * -----------------------------------------------------*/
+            /* ----------------------------------------------------
+             * case 2: Not logged in & using default config
+             * case 3: Not logged in & using multi instance config
+             * -----------------------------------------------------*/
             repo = new ConfigurableIdentityRepo(ctApiListener);
         }
         ctApiListener.config().log(LOG_TAG_ON_USER_LOGIN,
                 "Repo provider: " + repo.getClass().getSimpleName());
         return repo;
+    }
+
+    private IdentityRepoFactory() {
+        // private constructor
     }
 }

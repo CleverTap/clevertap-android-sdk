@@ -1332,12 +1332,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         addMultiValuesForKey(key, new ArrayList<>(Collections.singletonList(value)));
     }
 
-    @Override
-    @RestrictTo(Scope.LIBRARY)
-    public CleverTapInstanceConfig config() {
-        return config;
-    }
-
     /**
      * Add a collection of unique values to a multi-value user profile property
      * If the property does not exist it will be created
@@ -1365,19 +1359,14 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     @Override
     @RestrictTo(Scope.LIBRARY)
+    public CleverTapInstanceConfig config() {
+        return config;
+    }
+
+    @Override
+    @RestrictTo(Scope.LIBRARY)
     public Context context() {
         return context;
-    }
-
-    @RestrictTo(Scope.LIBRARY)
-    @Override
-    public DeviceInfo deviceInfo() {
-        return deviceInfo;
-    }
-
-    @Override
-    public ValidationResultStack remoteErrorLogger() {
-        return validationResultStack;
     }
 
     /**
@@ -1415,6 +1404,12 @@ public class CleverTapAPI implements CleverTapAPIListener {
         deleteInboxMessage(message);
     }
 
+    @RestrictTo(Scope.LIBRARY)
+    @Override
+    public DeviceInfo deviceInfo() {
+        return deviceInfo;
+    }
+
     /**
      * Disables the Profile/Events Read and Synchronization API
      * Personalization is enabled by default
@@ -1423,8 +1418,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
     public void disablePersonalization() {
         this.config.enablePersonalization(false);
     }
-
-    //Push
 
     /**
      * Use this method to enable device network-related information tracking, including IP address.
@@ -1440,6 +1433,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
         getConfigLogger()
                 .verbose(getAccountId(), "Device Network Information reporting set to " + enableNetworkInfoReporting);
     }
+
+    //Push
 
     /**
      * Enables the Profile/Events Read and Synchronization API
@@ -1524,11 +1519,11 @@ public class CleverTapAPI implements CleverTapAPIListener {
         flushQueueAsync(context, EventGroup.REGULAR);
     }
 
-    //Push
-
     public String getAccountId() {
         return config.getAccountId();
     }
+
+    //Push
 
     /**
      * Getter for retrieving all the Display Units.
@@ -1600,8 +1595,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         return experimentsListener;
     }
 
-    //Debug
-
     /**
      * This method is used to set the CTExperimentsListener
      *
@@ -1611,6 +1604,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
     public void setCTExperimentsListener(CTExperimentsListener experimentsListener) {
         this.experimentsListener = experimentsListener;
     }
+
+    //Debug
 
     /**
      * Returns the CTInboxListener object
@@ -1662,8 +1657,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         return pushNotificationListener;
     }
 
-    //Network Info handling
-
     /**
      * This method is used to set the CTPushNotificationListener
      *
@@ -1673,6 +1666,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
     public void setCTPushNotificationListener(CTPushNotificationListener pushNotificationListener) {
         this.pushNotificationListener = pushNotificationListener;
     }
+
+    //Network Info handling
 
     /**
      * Returns a unique CleverTap identifier suitable for use with install attribution providers.
@@ -1694,8 +1689,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         return this.deviceInfo.getDeviceID();
     }
 
-    // OptOut handling
-
     /**
      * Returns the total count of the specified event
      *
@@ -1711,6 +1704,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
         return -1;
     }
+
+    // OptOut handling
 
     /**
      * Returns an EventDetail object for the particular event passed. EventDetail consists of event name, count, first
@@ -1795,8 +1790,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
-    //Util
-
     /**
      * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
      * versions of the CleverTap Android SDK.
@@ -1817,6 +1810,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
         return ctABTestController.getDoubleVariable(name, defaultValue);
     }
+
+    //Util
 
     /**
      * Returns the timestamp of the first time the given event was raised
@@ -1844,8 +1839,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         return this.geofenceCallback;
     }
 
-    //Util
-
     /**
      * This method is used to set the geofence callback
      * Register to handle geofence responses from CleverTap
@@ -1871,7 +1864,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
         return getLocalDataStore().getEventHistory(context);
     }
 
-    //DeepLink
+    //Util
 
     /**
      * Returns the InAppNotificationListener object
@@ -1882,6 +1875,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
     public InAppNotificationListener getInAppNotificationListener() {
         return inAppNotificationListener;
     }
+
+    //DeepLink
 
     /**
      * This method sets the InAppNotificationListener
@@ -2465,8 +2460,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         });
     }
 
-    //Session
-
     //InApp
     @Override
     public void notificationReady(final CTInAppNotification inAppNotification) {
@@ -2488,6 +2481,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
         getConfigLogger().debug(getAccountId(), "Notification ready: " + inAppNotification.getJsonDescription());
         displayNotification(inAppNotification);
     }
+
+    //Session
 
     /**
      * This method is internal to CleverTap SDK.
@@ -3630,8 +3625,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         ctABTestController.registerMapOfStringVariable(name);
     }
 
-    //Session
-
     /**
      * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
      * versions of the CleverTap Android SDK.
@@ -3648,6 +3641,13 @@ public class CleverTapAPI implements CleverTapAPIListener {
             return;
         }
         ctABTestController.registerStringVariable(name);
+    }
+
+    //Session
+
+    @Override
+    public ValidationResultStack remoteErrorLogger() {
+        return validationResultStack;
     }
 
     /**

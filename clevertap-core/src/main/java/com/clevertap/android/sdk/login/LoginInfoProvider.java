@@ -19,9 +19,9 @@ import org.json.JSONObject;
 @RestrictTo(Scope.LIBRARY)
 public class LoginInfoProvider {
 
-    private final Context context;
-
     private final CleverTapInstanceConfig config;
+
+    private final Context context;
 
     private final DeviceInfo mDeviceInfo;
 
@@ -34,57 +34,13 @@ public class LoginInfoProvider {
     //Profile
 
     /**
-     * @return - All pairs of cached <Identity_Value, Guid> for this account in json format.
-     */
-    public JSONObject getCachedGUIDs() {
-        String json = StorageHelper.getStringFromPrefs(context, config, Constants.CACHED_GUIDS_KEY, null);
-        config.log(LogConstants.LOG_TAG_ON_USER_LOGIN,
-                "getCachedGUIDs:[" + json + "]");
-        return CTJsonConverter.toJsonObject(json, config.getLogger(), config.getAccountId());
-    }
-
-    /**
-     * Caches the <Identity_Value, Guid> pairs for this account
-     * @param cachedGUIDs - jsonObject of the Pairs
-     */
-    public void setCachedGUIDs(JSONObject cachedGUIDs) {
-        if (cachedGUIDs == null) {
-            return;
-        }
-        try {
-            String cachedGuid = cachedGUIDs.toString();
-            StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.CACHED_GUIDS_KEY),
-                    cachedGuid);
-            config.log(LogConstants.LOG_TAG_ON_USER_LOGIN,
-                    "setCachedGUIDs:[" + cachedGuid + "]");
-        } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Error persisting guid cache: " + t.toString());
-        }
-    }
-
-    public boolean isAnonymousDevice() {
-        JSONObject cachedGUIDs = getCachedGUIDs();
-        boolean isAnonymousDevice = cachedGUIDs.length() <= 0;
-        config.log(LogConstants.LOG_TAG_ON_USER_LOGIN,
-                "isAnonymousDevice:[" + isAnonymousDevice + "]");
-        return isAnonymousDevice;
-    }
-
-    public boolean deviceIsMultiUser() {
-        JSONObject cachedGUIDs = getCachedGUIDs();
-        boolean deviceIsMultiUser = cachedGUIDs.length() > 1;
-        config.log(LogConstants.LOG_TAG_ON_USER_LOGIN,
-                "deviceIsMultiUser:[" + deviceIsMultiUser + "]");
-        return deviceIsMultiUser;
-    }
-
-    /**
      * Caches a single pair of <Identity_Value, Guid> for this account
-     * @param guid - guid of the user
-     * @param key - Identity Key e.g Email
+     *
+     * @param guid       - guid of the user
+     * @param key        - Identity Key e.g Email
      * @param identifier - Value corresponding to the Key e.g abc@gmail.com
-     *  Format in which the entries are saved
-     *      "Email_abc@gmail.com:Guid"
+     *                   Format in which the entries are saved
+     *                   "Email_abc@gmail.com:Guid"
      */
     public void cacheGUIDForIdentifier(String guid, String key, String identifier) {
         if (isErrorDeviceId() || guid == null || key == null || identifier == null) {
@@ -101,16 +57,38 @@ public class LoginInfoProvider {
         }
     }
 
-    private boolean isErrorDeviceId() {
-        boolean isErrorDeviceId = mDeviceInfo.isErrorDeviceId();
+    public boolean deviceIsMultiUser() {
+        JSONObject cachedGUIDs = getCachedGUIDs();
+        boolean deviceIsMultiUser = cachedGUIDs.length() > 1;
         config.log(LogConstants.LOG_TAG_ON_USER_LOGIN,
-                "isErrorDeviceId:[" + isErrorDeviceId + "]");
-        return isErrorDeviceId;
+                "deviceIsMultiUser:[" + deviceIsMultiUser + "]");
+        return deviceIsMultiUser;
+    }
+
+    /**
+     * @return - All pairs of cached <Identity_Value, Guid> for this account in json format.
+     */
+    public JSONObject getCachedGUIDs() {
+        String json = StorageHelper.getStringFromPrefs(context, config, Constants.CACHED_GUIDS_KEY, null);
+        config.log(LogConstants.LOG_TAG_ON_USER_LOGIN,
+                "getCachedGUIDs:[" + json + "]");
+        return CTJsonConverter.toJsonObject(json, config.getLogger(), config.getAccountId());
+    }
+
+    /**
+     * @return - Cached Identity Keys for the account
+     */
+    public String getCachedIdentityKeysForAccount() {
+        String cachedKeys = StorageHelper
+                .getStringFromPrefs(context, config, Constants.SP_KEY_PROFILE_IDENTITIES, "");
+        config.log(LogConstants.LOG_TAG_ON_USER_LOGIN, "getCachedIdentityKeysForAccount:" + cachedKeys);
+        return cachedKeys;
     }
 
     /**
      * Returns the Guid Value corresponding to the given <Key, Value>
-     * @param key - Identity Key e.g Email
+     *
+     * @param key        - Identity Key e.g Email
      * @param identifier - Value corresponding to the Key e.g abc@gmail.com
      * @return - String value of Guid if any entry is saved with Key_Value
      */
@@ -132,6 +110,34 @@ public class LoginInfoProvider {
         }
     }
 
+    public boolean isAnonymousDevice() {
+        JSONObject cachedGUIDs = getCachedGUIDs();
+        boolean isAnonymousDevice = cachedGUIDs.length() <= 0;
+        config.log(LogConstants.LOG_TAG_ON_USER_LOGIN,
+                "isAnonymousDevice:[" + isAnonymousDevice + "]");
+        return isAnonymousDevice;
+    }
+
+    /**
+     * Caches the <Identity_Value, Guid> pairs for this account
+     *
+     * @param cachedGUIDs - jsonObject of the Pairs
+     */
+    public void setCachedGUIDs(JSONObject cachedGUIDs) {
+        if (cachedGUIDs == null) {
+            return;
+        }
+        try {
+            String cachedGuid = cachedGUIDs.toString();
+            StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.CACHED_GUIDS_KEY),
+                    cachedGuid);
+            config.log(LogConstants.LOG_TAG_ON_USER_LOGIN,
+                    "setCachedGUIDs:[" + cachedGuid + "]");
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(), "Error persisting guid cache: " + t.toString());
+        }
+    }
+
     /**
      * Checks if any user was previously logged in using the legacy identity set{@link
      * Constants#LEGACY_IDENTITY_KEYS}for the
@@ -146,16 +152,6 @@ public class LoginInfoProvider {
     }
 
     /**
-     * @return - Cached Identity Keys for the account
-     */
-    public String getCachedIdentityKeysForAccount() {
-        String cachedKeys = StorageHelper
-                .getStringFromPrefs(context, config, Constants.SP_KEY_PROFILE_IDENTITIES, "");
-        config.log(LogConstants.LOG_TAG_ON_USER_LOGIN, "getCachedIdentityKeysForAccount:" + cachedKeys);
-        return cachedKeys;
-    }
-
-    /**
      * Saves cached identity keys in the preference
      *
      * @param valueCommaSeparated - identity keys in comma separated format e.g. (Email,Phone)
@@ -164,5 +160,12 @@ public class LoginInfoProvider {
         StorageHelper.putString(context, config, Constants.SP_KEY_PROFILE_IDENTITIES,
                 valueCommaSeparated);
         config.log(LogConstants.LOG_TAG_ON_USER_LOGIN, "saveIdentityKeysForAccount:" + valueCommaSeparated);
+    }
+
+    private boolean isErrorDeviceId() {
+        boolean isErrorDeviceId = mDeviceInfo.isErrorDeviceId();
+        config.log(LogConstants.LOG_TAG_ON_USER_LOGIN,
+                "isErrorDeviceId:[" + isErrorDeviceId + "]");
+        return isErrorDeviceId;
     }
 }

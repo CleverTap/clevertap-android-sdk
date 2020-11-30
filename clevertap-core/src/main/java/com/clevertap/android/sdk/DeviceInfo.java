@@ -238,16 +238,6 @@ public class DeviceInfo {
         }
     }
 
-    private static final String GUID_PREFIX = "__";
-
-    private static final String OS_NAME = "Android";
-
-    private final Object adIDLock = new Object();
-
-    private boolean adIdRun = false;
-
-    private DeviceCachedInfo cachedInfo;
-
     /**
      * Type of a device with below possible values<br>
      * <li>{@link DeviceInfo#SMART_PHONE}
@@ -262,18 +252,14 @@ public class DeviceInfo {
 
     }
 
+    private static final String GUID_PREFIX = "__";
+
+    private static final String OS_NAME = "Android";
+
     /**
      * Device is a smart phone
      */
     static final int SMART_PHONE = 1;
-
-    private final Object deviceIDLock = new Object();
-
-    private String googleAdID = null;
-
-    private String library;
-
-    private boolean limitAdTracking = false;
 
     /**
      * Device is a tablet
@@ -298,9 +284,23 @@ public class DeviceInfo {
     @DeviceType
     static int sDeviceType = NULL;
 
+    private final Object adIDLock = new Object();
+
+    private boolean adIdRun = false;
+
+    private DeviceCachedInfo cachedInfo;
+
     private final CleverTapInstanceConfig config;
 
     private final Context context;
+
+    private final Object deviceIDLock = new Object();
+
+    private String googleAdID = null;
+
+    private String library;
+
+    private boolean limitAdTracking = false;
 
     private final ArrayList<ValidationResult> validationResults = new ArrayList<>();
 
@@ -317,6 +317,10 @@ public class DeviceInfo {
         });
         deviceInfoCacheThread.start();
         initDeviceID(cleverTapID);
+    }
+
+    public boolean isErrorDeviceId() {
+        return getDeviceID() != null && getDeviceID().startsWith(Constants.ERROR_PROFILE_PREFIX);
     }
 
     void forceNewDeviceID() {
@@ -367,6 +371,10 @@ public class DeviceInfo {
 
     String getCarrier() {
         return getDeviceCachedInfo().carrier;
+    }
+
+    Context getContext() {
+        return context;
     }
 
     String getCountryCode() {
@@ -467,10 +475,6 @@ public class DeviceInfo {
             // do nothing since we don't have permissions
         }
         return isBluetoothEnabled;
-    }
-
-    public boolean isErrorDeviceId() {
-        return getDeviceID() != null && getDeviceID().startsWith(Constants.ERROR_PROFILE_PREFIX);
     }
 
     boolean isLimitAdTrackingEnabled() {
@@ -659,10 +663,6 @@ public class DeviceInfo {
     private void updateFallbackID(String fallbackId) {
         getConfigLogger().verbose(this.config.getAccountId(), "Updating the fallback id - " + fallbackId);
         StorageHelper.putString(context, getFallbackIdStorageKey(), fallbackId);
-    }
-
-    Context getContext() {
-        return context;
     }
 
     /**

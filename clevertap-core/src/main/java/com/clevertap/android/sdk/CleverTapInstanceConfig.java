@@ -69,19 +69,11 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     private boolean personalization;
 
+    private String[] profileKeys = NullConstants.NULL_STRING_ARRAY;
+
     private boolean sslPinning;
 
     private boolean useGoogleAdId;
-
-    public void setProfileKeys(@IdentityType String... profileKeys) {
-        if (!isDefaultInstance) {
-            this.profileKeys = profileKeys;
-            log(LogConstants.LOG_TAG_ON_USER_LOGIN, "Setting Profile Keys via setter: " + Arrays
-                    .toString(this.profileKeys));
-        }
-    }
-
-    private String[] profileKeys = NullConstants.NULL_STRING_ARRAY;
 
     @SuppressWarnings("unused")
     public static CleverTapInstanceConfig createInstance(Context context, @NonNull String accountId,
@@ -342,6 +334,10 @@ public class CleverTapInstanceConfig implements Parcelable {
         return beta;
     }
 
+    public boolean isDefaultInstance() {
+        return isDefaultInstance;
+    }
+
     @SuppressWarnings({"unused"})
     public boolean isUIEditorEnabled() {
         return enableUIEditor;
@@ -367,6 +363,14 @@ public class CleverTapInstanceConfig implements Parcelable {
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     public void setEnableUIEditor(boolean enableUIEditor) {
         this.enableUIEditor = enableUIEditor;
+    }
+
+    public void setProfileKeys(@IdentityType String... profileKeys) {
+        if (!isDefaultInstance) {
+            this.profileKeys = profileKeys;
+            log(LogConstants.LOG_TAG_ON_USER_LOGIN, "Setting Profile Keys via setter: " + Arrays
+                    .toString(this.profileKeys));
+        }
     }
 
     @SuppressWarnings({"unused"})
@@ -418,10 +422,6 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     boolean isCreatedPostAppLaunch() {
         return createdPostAppLaunch;
-    }
-
-    public boolean isDefaultInstance() {
-        return isDefaultInstance;
     }
 
     boolean isDisableAppLaunchedEvent() {

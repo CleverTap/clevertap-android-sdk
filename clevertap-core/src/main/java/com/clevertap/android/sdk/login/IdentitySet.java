@@ -24,22 +24,6 @@ public class IdentitySet {
     }
 
     /**
-     * Initialises the identity set using the string array items.
-     * It also filters out invalid identities during initialisation
-     *
-     * @param keysArrays - String array containing identities.
-     */
-    private void init(final String[] keysArrays) {
-        if (keysArrays != null && keysArrays.length > 0) {
-            for (String key : keysArrays) {
-                if (Utils.containsIgnoreCase(Constants.ALL_IDENTITY_KEYS, key)) {
-                    identities.add(Utils.convertToTitleCase(key));
-                }
-            }
-        }
-    }
-
-    /**
      * Checks if two identity sets contain same identities
      *
      * @param thatObj - the second object to which we are comparing
@@ -79,10 +63,36 @@ public class IdentitySet {
     }
 
     /**
+     * checks if a given key is an identity or not
+     *
+     * @param Key - String value of key
+     * @return - true , if the given key is an identity key else false.
+     */
+    boolean contains(String Key) {
+        return Utils.containsIgnoreCase(identities, Key);
+    }
+
+    /**
      * @return true - if the set contains at least one of the valid identities {@link Constants#ALL_IDENTITY_KEYS}
      */
     boolean isValid() {
         return !identities.isEmpty();
+    }
+
+    /**
+     * Initialises the identity set using the string array items.
+     * It also filters out invalid identities during initialisation
+     *
+     * @param keysArrays - String array containing identities.
+     */
+    private void init(final String[] keysArrays) {
+        if (keysArrays != null && keysArrays.length > 0) {
+            for (String key : keysArrays) {
+                if (Utils.containsIgnoreCase(Constants.ALL_IDENTITY_KEYS, key)) {
+                    identities.add(Utils.convertToTitleCase(key));
+                }
+            }
+        }
     }
 
     /**
@@ -114,15 +124,5 @@ public class IdentitySet {
      */
     static IdentitySet getDefault() {
         return new IdentitySet(Constants.LEGACY_IDENTITY_KEYS);
-    }
-
-    /**
-     * checks if a given key is an identity or not
-     *
-     * @param Key - String value of key
-     * @return - true , if the given key is an identity key else false.
-     */
-    boolean contains(String Key) {
-        return Utils.containsIgnoreCase(identities, Key);
     }
 }

@@ -8,6 +8,18 @@ import org.json.JSONException;
 
 public class JsonUtil {
 
+    public static <T> Object[] toArray(@NonNull JSONArray jsonArray) {
+        Object[] array = new Object[jsonArray.length()];
+        try {
+            for (int i = 0; i < jsonArray.length(); i++) {
+                array[i] = jsonArray.get(i);
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return array;
+    }
+
     public static JSONArray toJsonArray(@NonNull List<?> list) {
         JSONArray array = new JSONArray();
         for (Object item : list) {
@@ -28,18 +40,5 @@ public class JsonUtil {
             }
         }
         return list;
-    }
-
-
-    public static <T> Object[] toArray(@NonNull JSONArray jsonArray) {
-        Object[] array = new Object[jsonArray.length()];
-        try {
-            for (int i = 0; i < jsonArray.length(); i++) {
-                array[i] = jsonArray.get(i);
-            }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
-        return array;
     }
 }
