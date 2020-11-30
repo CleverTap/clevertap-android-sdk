@@ -69,7 +69,7 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     private boolean personalization;
 
-    private String[] profileKeys = NullConstants.NULL_STRING_ARRAY;
+    private String[] indentityKeys = NullConstants.NULL_STRING_ARRAY;
 
     private boolean sslPinning;
 
@@ -119,7 +119,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.packageName = config.packageName;
         this.beta = config.beta;
         this.allowedPushTypes = config.allowedPushTypes;
-        this.profileKeys = config.profileKeys;
+        this.indentityKeys = config.indentityKeys;
     }
 
     private CleverTapInstanceConfig(Context context, String accountId, String accountToken, String accountRegion,
@@ -149,9 +149,9 @@ public class CleverTapInstanceConfig implements Parcelable {
          * For default instance, use manifest meta, otherwise use from setter field
          */
         if (isDefaultInstance) {
-            profileKeys = manifest.getProfileKeys();
+            indentityKeys = manifest.getProfileKeys();
             log(LogConstants.LOG_TAG_ON_USER_LOGIN, "Setting Profile Keys from Manifest: " + Arrays
-                    .toString(profileKeys));
+                    .toString(indentityKeys));
         }
     }
 
@@ -218,7 +218,7 @@ public class CleverTapInstanceConfig implements Parcelable {
                         configJsonObject.getJSONArray(Constants.KEY_ALLOWED_PUSH_TYPES));
             }
             if (configJsonObject.has(Constants.KEY_IDENTITY_TYPES)) {
-                this.profileKeys = (String[]) toArray(configJsonObject.getJSONArray(Constants.KEY_IDENTITY_TYPES));
+                this.indentityKeys = (String[]) toArray(configJsonObject.getJSONArray(Constants.KEY_IDENTITY_TYPES));
             }
         } catch (Throwable t) {
             Logger.v("Error constructing CleverTapInstanceConfig from JSON: " + jsonString + ": ", t.getCause());
@@ -248,7 +248,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         beta = in.readByte() != 0x00;
         allowedPushTypes = new ArrayList<>();
         in.readList(allowedPushTypes, String.class.getClassLoader());
-        in.readStringArray(profileKeys);
+        in.readStringArray(indentityKeys);
     }
 
     @Override
@@ -312,7 +312,7 @@ public class CleverTapInstanceConfig implements Parcelable {
     }
 
     public String[] getProfileKeys(Context context) {
-        return profileKeys;
+        return indentityKeys;
     }
 
     @SuppressWarnings({"BooleanMethodIsAlwaysInverted", "WeakerAccess"})
@@ -365,11 +365,11 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.enableUIEditor = enableUIEditor;
     }
 
-    public void setProfileKeys(@IdentityType String... profileKeys) {
+    public void setIdentityKeys(@IdentityType String... identityKeys) {
         if (!isDefaultInstance) {
-            this.profileKeys = profileKeys;
+            this.indentityKeys = identityKeys;
             log(LogConstants.LOG_TAG_ON_USER_LOGIN, "Setting Profile Keys via setter: " + Arrays
-                    .toString(this.profileKeys));
+                    .toString(this.indentityKeys));
         }
     }
 
@@ -399,7 +399,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         dest.writeString(packageName);
         dest.writeByte((byte) (beta ? 0x01 : 0x00));
         dest.writeList(allowedPushTypes);
-        dest.writeStringArray(profileKeys);
+        dest.writeStringArray(indentityKeys);
     }
 
     boolean getEnableCustomCleverTapId() {

@@ -1,5 +1,11 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 4.0.1 (November 30, 2020)
+* Adds support for configurable CleverTap identifiers.
+* Fix for multiple App Launched and App Installed events in the first session.
+* Fixes crash which occurred due to wrong classification of some mobile devices as tablets #116.
+* Optimized proguard rules for better obfuscation.
+
 ### Version 4.0.0 (October 1, 2020)
 
 * Adds support for Android 10 and AndroidX support libraries.
