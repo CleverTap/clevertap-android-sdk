@@ -347,10 +347,12 @@ public class CleverTapInstanceConfig implements Parcelable {
         return enableUIEditor;
     }
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
     public void log(@NonNull String tag, @NonNull String message) {
         logger.verbose(getDefaultSuffix(tag), message);
     }
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
     public void log(@NonNull String tag, @NonNull String message, Throwable throwable) {
         logger.verbose(getDefaultSuffix(tag), message, throwable);
     }

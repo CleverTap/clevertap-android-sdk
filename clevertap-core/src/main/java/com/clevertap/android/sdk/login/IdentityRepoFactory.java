@@ -22,10 +22,10 @@ public class IdentityRepoFactory {
      * @param ctApiListener - CleverTapAPI instance
      * @return - repo provider
      */
-    public static IdentityRepo repo(@NonNull BaseCTApiListener ctApiListener) {
-        final LoginInfoProvider cacheHandler = new LoginInfoProvider(ctApiListener);
+    public static IdentityRepo getRepo(@NonNull BaseCTApiListener ctApiListener) {
+        final LoginInfoProvider infoProvider = new LoginInfoProvider(ctApiListener);
         final IdentityRepo repo;
-        if (cacheHandler.isLegacyProfileLoggedIn()) {
+        if (infoProvider.isLegacyProfileLoggedIn()) {
             repo = new LegacyIdentityRepo(ctApiListener);// case 1: Migration (cached guid but no newly saved profile pref)
         } else {
               /* ----------------------------------------------------

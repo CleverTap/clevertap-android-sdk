@@ -24,15 +24,15 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
     }
 
     @Override
-    public boolean isIdentity(@NonNull String Key) {
-        boolean isProfileKey = identitySet.contains(Key);
+    public boolean hasIdentity(@NonNull String Key) {
+        boolean hasIdentity = identitySet.contains(Key);
         ctApiListener.config().log(LOG_TAG_ON_USER_LOGIN,
-                TAG + "isIdentity [Key: " + Key + " , Value: " + isProfileKey + "]");
-        return isProfileKey;
+                TAG + "isIdentity [Key: " + Key + " , Value: " + hasIdentity + "]");
+        return hasIdentity;
     }
 
     @Override
-    public IdentitySet identities() {
+    public IdentitySet getIdentitySet() {
         return identitySet;
     }
 

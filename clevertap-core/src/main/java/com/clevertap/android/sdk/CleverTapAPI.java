@@ -4291,13 +4291,13 @@ public class CleverTapAPI implements CleverTapAPIListener {
             }
 
             boolean haveIdentifier = false;
-            LoginInfoProvider handler = new LoginInfoProvider(this);
+            LoginInfoProvider loginInfoProvider = new LoginInfoProvider(this);
             // check for valid identifier keys
             // use the first one we find
-            IdentityRepo iProfileHandler = IdentityRepoFactory.repo(this);
+            IdentityRepo iProfileHandler = IdentityRepoFactory.getRepo(this);
             for (String key : profile.keySet()) {
                 Object value = profile.get(key);
-                boolean isProfileKey = iProfileHandler.isIdentity(key);
+                boolean isProfileKey = iProfileHandler.hasIdentity(key);
                 if (isProfileKey) {
                     try {
                         String identifier = null;
@@ -4306,7 +4306,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                         }
                         if (identifier != null && identifier.length() > 0) {
                             haveIdentifier = true;
-                            cachedGUID = handler.getGUIDForIdentifier(key, identifier);
+                            cachedGUID = loginInfoProvider.getGUIDForIdentifier(key, identifier);
                             if (cachedGUID != null) {
                                 break;
                             }
@@ -4319,7 +4319,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
             // if no valid identifier provided or there are no identified users on the device; just push on the current profile
             if (!isErrorDeviceId()) {
-                if (!haveIdentifier || handler.isAnonymousDevice()) {
+                if (!haveIdentifier || loginInfoProvider.isAnonymousDevice()) {
                     getConfigLogger().debug(getAccountId(),
                             "onUserLogin: no identifier provided or device is anonymous, pushing on current user profile");
                     pushProfile(profile);
@@ -6104,7 +6104,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             header.put("tk", token);
             header.put("l_ts", getLastRequestTimestamp());
             header.put("f_ts", getFirstRequestTimestamp());
-            header.put("ct_pi", IdentityRepoFactory.repo(this).identities().toString());
+            header.put("ct_pi", IdentityRepoFactory.getRepo(this).getIdentitySet().toString());
             header.put("ddnd",
                     !(this.deviceInfo.getNotificationsEnabledForUser() && (pushProviders.isNotificationSupported())));
             if (isBgPing) {
@@ -7245,8 +7245,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
             if (baseProfile != null && baseProfile.length() > 0) {
                 Iterator i = baseProfile.keys();
-                IdentityRepo iProfileHandler = IdentityRepoFactory.repo(this);
-                LoginInfoProvider handler = new LoginInfoProvider(this);
+                IdentityRepo iProfileHandler = IdentityRepoFactory.getRepo(this);
+                LoginInfoProvider loginInfoProvider = new LoginInfoProvider(this);
                 while (i.hasNext()) {
                     String next = i.next().toString();
 
@@ -7266,10 +7266,10 @@ public class CleverTapAPI implements CleverTapAPIListener {
                         profileEvent.put(next, value);
 
                         // cache the valid identifier: guid pairs
-                        boolean isProfileKey = iProfileHandler.isIdentity(next);
+                        boolean isProfileKey = iProfileHandler.hasIdentity(next);
                         if (isProfileKey) {
                             try {
-                                handler.cacheGUIDForIdentifier(guid, next, value.toString());
+                                loginInfoProvider.cacheGUIDForIdentifier(guid, next, value.toString());
                             } catch (Throwable t) {
                                 // no-op
                             }

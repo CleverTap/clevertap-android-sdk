@@ -21,15 +21,15 @@ public class LegacyIdentityRepo implements IdentityRepo {
     }
 
     @Override
-    public boolean isIdentity(@NonNull final String Key) {
-        boolean isIdentity = identities.contains(Key);
+    public boolean hasIdentity(@NonNull final String Key) {
+        boolean hasIdentity = identities.contains(Key);
         mCTApiListener.config().log(LOG_TAG_ON_USER_LOGIN,
-                "isIdentity [Key: " + Key + " , Value: " + isIdentity + "]");
-        return isIdentity;
+                "isIdentity [Key: " + Key + " , Value: " + hasIdentity + "]");
+        return hasIdentity;
     }
 
     @Override
-    public IdentitySet identities() {
+    public IdentitySet getIdentitySet() {
         return identities;
     }
 }
