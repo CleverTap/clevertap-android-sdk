@@ -52,7 +52,7 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
          *   For Multi Instance - Get Identity Set configured via the setter
          * ---------------------------------------------------------------- */
         IdentitySet configKeySet = IdentitySet
-                .from(ctApiListener.config().getProfileKeys(ctApiListener.context()));
+                .from(ctApiListener.config().getIdentityKeys());
 
         ctApiListener.config().log(LOG_TAG_ON_USER_LOGIN,
                 TAG + "ConfigIdentitySet [" + configKeySet + "]");

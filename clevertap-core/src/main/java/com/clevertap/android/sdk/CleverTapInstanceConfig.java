@@ -311,7 +311,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         return packageName;
     }
 
-    public String[] getProfileKeys() {
+    public String[] getIdentityKeys() {
         return indentityKeys;
     }
 
