@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.login;
 
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Utils;
 import java.util.HashSet;
@@ -8,7 +10,8 @@ import java.util.Iterator;
 /**
  * Wrapper class of identities & related behaviors
  */
-class IdentitySet {
+@RestrictTo(Scope.LIBRARY)
+public class IdentitySet {
 
     private final HashSet<String> identities = new HashSet<>();
 
@@ -23,6 +26,7 @@ class IdentitySet {
     /**
      * Initialises the identity set using the string array items.
      * It also filters out invalid identities during initialisation
+     *
      * @param keysArrays - String array containing identities.
      */
     private void init(final String[] keysArrays) {
@@ -37,6 +41,7 @@ class IdentitySet {
 
     /**
      * Checks if two identity sets contain same identities
+     *
      * @param thatObj - the second object to which we are comparing
      * @return - true if all entries are same else false
      */
@@ -54,9 +59,9 @@ class IdentitySet {
 
     /**
      * Stringifies the identity set in comma separated string value.
-     *        Set           String
-     *    {Email, Phone} =>   Email,Phone
-     * e.g
+     * Set           String
+     * e.g   {Email, Phone} =>   Email,Phone
+     *
      * @return String value of the identity set.
      */
     @Override
@@ -113,6 +118,7 @@ class IdentitySet {
 
     /**
      * checks if a given key is an identity or not
+     *
      * @param Key - String value of key
      * @return - true , if the given key is an identity key else false.
      */

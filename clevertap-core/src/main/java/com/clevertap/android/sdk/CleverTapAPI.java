@@ -47,7 +47,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
-
 import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationCompat;
 import androidx.fragment.app.Fragment;
@@ -62,8 +61,8 @@ import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.login.IdentityRepo;
-import com.clevertap.android.sdk.login.LoginInfoProvider;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
+import com.clevertap.android.sdk.login.LoginInfoProvider;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
@@ -2968,7 +2967,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     /**
      * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     *       versions of the CleverTap Android SDK.
+     * versions of the CleverTap Android SDK.
      * Pushes everything available in the JSON object returned by the Facebook GraphRequest
      *
      * @param graphUser The object returned from Facebook
@@ -6105,6 +6104,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             header.put("tk", token);
             header.put("l_ts", getLastRequestTimestamp());
             header.put("f_ts", getFirstRequestTimestamp());
+            header.put("ct_pi", IdentityRepoFactory.repo(this).identities().toString());
             header.put("ddnd",
                     !(this.deviceInfo.getNotificationsEnabledForUser() && (pushProviders.isNotificationSupported())));
             if (isBgPing) {

@@ -14,4 +14,6 @@ public interface IdentityRepo {
      */
     boolean isIdentity(@NonNull String Key);
 
+    IdentitySet identities();
+
 }

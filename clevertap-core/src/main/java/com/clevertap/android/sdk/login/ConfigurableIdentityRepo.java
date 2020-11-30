@@ -31,6 +31,11 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
         return isProfileKey;
     }
 
+    @Override
+    public IdentitySet identities() {
+        return identitySet;
+    }
+
     /**
      * Loads the identity set
      */
