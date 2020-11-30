@@ -11,13 +11,21 @@ import com.clevertap.android.sdk.BaseCTApiListener;
  */
 public class LegacyIdentityRepo implements IdentityRepo {
 
-    private final IdentitySet identities;
+    private static final String TAG = "LegacyIdentityRepo";
 
     private final BaseCTApiListener mCTApiListener;
 
+    private IdentitySet identities;
+
     public LegacyIdentityRepo(final BaseCTApiListener ctApiListener) {
         this.mCTApiListener = ctApiListener;
+        loadIdentitySet();
+    }
+
+    private void loadIdentitySet() {
         this.identities = IdentitySet.getDefault();
+        mCTApiListener.config().log(LOG_TAG_ON_USER_LOGIN,
+                TAG + " Setting the default IdentitySet[" + identities + "]");
     }
 
     @Override
