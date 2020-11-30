@@ -152,7 +152,7 @@ public class ValidationResultFactory {
                     }
                     break;
                 case 531:
-                    msg = "Profile Identities mismatch with the previously saved ones";
+                    msg = "Profile Identifiers mismatch with the previously saved ones";
                     break;
             }
         } catch (Exception e) {
