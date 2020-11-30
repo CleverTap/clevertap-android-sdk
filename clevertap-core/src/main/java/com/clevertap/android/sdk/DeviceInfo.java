@@ -688,6 +688,7 @@ class DeviceInfo {
                 UiModeManager uiModeManager = (UiModeManager) context.getSystemService(Context.UI_MODE_SERVICE);
                 if (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
                     sDeviceType = TV;
+                    return sDeviceType;
                 }
             } catch (Exception e) {
                 //uiModeManager or context is null
