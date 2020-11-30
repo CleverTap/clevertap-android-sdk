@@ -22,6 +22,10 @@ public final class StorageHelper {
         return getPreferences(context, null);
     }
 
+    public static String getString(Context context, String key, String defaultValue) {
+        return getPreferences(context).getString(key, defaultValue);
+    }
+
     public static String getStringFromPrefs(Context context, CleverTapInstanceConfig config, String rawKey,
             String defaultValue) {
         if (config.isDefaultInstance()) {
@@ -59,6 +63,12 @@ public final class StorageHelper {
         persist(editor);
     }
 
+    public static void putString(Context context, CleverTapInstanceConfig config, String key, String value) {
+        SharedPreferences prefs = getPreferences(context);
+        SharedPreferences.Editor editor = prefs.edit().putString(storageKeyWithSuffix(config, key), value);
+        persist(editor);
+    }
+
     public static void putStringImmediate(Context context, String key, String value) {
 
         SharedPreferences prefs = getPreferences(context);
@@ -91,7 +101,7 @@ public final class StorageHelper {
     static boolean getBooleanFromPrefs(Context context, CleverTapInstanceConfig config, String rawKey) {
         if (config.isDefaultInstance()) {
             boolean _new = getBoolean(context, storageKeyWithSuffix(config, rawKey), false);
-            //noinspection ConstantConditions
+            //noinspection Constant Conditions
             return !_new ? getBoolean(context, rawKey, false) : _new;
         } else {
             return getBoolean(context, storageKeyWithSuffix(config, rawKey), false);
@@ -131,10 +141,6 @@ public final class StorageHelper {
         } else {
             return getLong(context, nameSpace, storageKeyWithSuffix(config, rawKey), defaultValue);
         }
-    }
-
-    static String getString(Context context, String key, String defaultValue) {
-        return getPreferences(context).getString(key, defaultValue);
     }
 
     static String getString(Context context, String nameSpace, String key, String defaultValue) {

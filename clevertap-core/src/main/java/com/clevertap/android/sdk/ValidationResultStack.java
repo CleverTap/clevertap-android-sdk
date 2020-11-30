@@ -1,31 +1,18 @@
 package com.clevertap.android.sdk;
 
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import java.util.ArrayList;
 
-class ValidationResultStack {
+@RestrictTo(Scope.LIBRARY)
+public class ValidationResultStack {
 
     private static final Boolean pendingValidationResultsLock = true;
 
     private ArrayList<ValidationResult> pendingValidationResults = new ArrayList<>();
 
-    ValidationResult popValidationResult() {
-        // really a shift
-        ValidationResult vr = null;
-
-        synchronized (pendingValidationResultsLock) {
-            try {
-                if (!pendingValidationResults.isEmpty()) {
-                    vr = pendingValidationResults.remove(0);
-                }
-            } catch (Exception e) {
-                // no-op
-            }
-        }
-        return vr;
-    }
-
     //Validation
-    void pushValidationResult(ValidationResult vr) {
+    public void pushValidationResult(ValidationResult vr) {
         synchronized (pendingValidationResultsLock) {
             try {
                 int len = pendingValidationResults.size();
@@ -45,5 +32,21 @@ class ValidationResultStack {
                 // no-op
             }
         }
+    }
+
+    ValidationResult popValidationResult() {
+        // really a shift
+        ValidationResult vr = null;
+
+        synchronized (pendingValidationResultsLock) {
+            try {
+                if (!pendingValidationResults.isEmpty()) {
+                    vr = pendingValidationResults.remove(0);
+                }
+            } catch (Exception e) {
+                // no-op
+            }
+        }
+        return vr;
     }
 }

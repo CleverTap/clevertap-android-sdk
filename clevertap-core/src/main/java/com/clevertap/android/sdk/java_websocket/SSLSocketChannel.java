@@ -280,7 +280,8 @@ public class SSLSocketChannel implements WrappedByteChannel, ByteChannel {
 
     /**
      * Implements the handshake protocol between two peers, required for the establishment of the SSL/TLS connection.
-     * During the handshake, encryption configuration information - such as the list of available cipher suites - will
+     * During the handshake, encryption configuration information - such as the list of available cipher suites -
+     * will
      * be exchanged
      * and if the handshake is successful will lead to an established SSL/TLS session.
      * <p>

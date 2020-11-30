@@ -7,4 +7,8 @@ public interface BaseCTApiListener {
     CleverTapInstanceConfig config();
 
     Context context();
+
+    DeviceInfo deviceInfo();
+
+    ValidationResultStack remoteErrorLogger();
 }

@@ -1,9 +1,13 @@
 package com.clevertap.android.sdk;
 
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
+
 /**
  * Represents a validation result, with an error code.
  */
-final class ValidationResult {
+@RestrictTo(Scope.LIBRARY)
+public final class ValidationResult {
 
     private int errorCode;
 
