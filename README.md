@@ -3,7 +3,7 @@
 </p>
 
 # CleverTap Android SDKs
-[![Build Status](https://app.bitrise.io/app/09efc6b9404a6341/status.svg?token=TejL3E1NHyTiR5ajHKGJ6Q)](https://app.bitrise.io/app/09efc6b9404a6341)
+[![Build Status](https://app.bitrise.io/app/09efc6b9404a6341/status.svg?token=TejL3E1NHyTiR5ajHKGJ6Q&branch=master)](https://app.bitrise.io/app/09efc6b9404a6341)
 [![codebeat badge](https://codebeat.co/badges/49b05fa0-4228-443c-9f1c-d11efa6d2ef8)](https://codebeat.co/projects/github-com-clevertap-clevertap-android-sdk-master)
 [ ![Download](https://api.bintray.com/packages/clevertap/Maven/CleverTapAndroidSDK/images/download.svg) ](https://bintray.com/clevertap/Maven/CleverTapAndroidSDK/_latestVersion)
 
@@ -37,7 +37,7 @@ We publish the SDK to `jcenter` and `mavenCentral` as an `AAR` file. Just declar
 
 ```groovy
     dependencies {      
-         implementation "com.clevertap.android:clevertap-android-sdk:4.0.0"
+         implementation "com.clevertap.android:clevertap-android-sdk:4.0.1"
     }
 ```
 
@@ -45,7 +45,7 @@ Alternatively, you can download and add the AAR file included in this repo in yo
     
  ```groovy
     dependencies {      
-        implementation (name: "clevertap-android-sdk-4.0.0", ext: 'aar')
+        implementation (name: "clevertap-android-sdk-4.0.1", ext: 'aar')
     }
 ```
 
@@ -57,7 +57,7 @@ Add the Firebase Messaging library and Android Support Library v4 as dependencie
 
 ```groovy
      dependencies {      
-         implementation "com.clevertap.android:clevertap-android-sdk:4.0.0"
+         implementation "com.clevertap.android:clevertap-android-sdk:4.0.1"
          implementation "androidx.core:core:1.3.0"
          implementation "com.google.firebase:firebase-messaging:20.2.4"
          implementation "com.google.android.gms:play-services-ads:19.4.0" // Required only if you enable Google ADID collection in the SDK (turned off by default).

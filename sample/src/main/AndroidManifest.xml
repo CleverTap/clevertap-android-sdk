@@ -65,6 +65,9 @@
         <meta-data
             android:name="CLEVERTAP_USE_CUSTOM_ID"
             android:value="0" /> <!-- Add CleverTap Push Notification Services & Install Referrer Receivers -->
+        <!-- <meta-data
+             android:name="CLEVERTAP_IDENTIFIER"
+             android:value="Email,Phone" />-->
         <service
             android:name="com.clevertap.android.sdk.pushnotification.fcm.FcmMessageListenerService"
             android:exported="true">

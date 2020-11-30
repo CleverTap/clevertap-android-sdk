@@ -11,22 +11,6 @@ public class ValidationResultStack {
 
     private ArrayList<ValidationResult> pendingValidationResults = new ArrayList<>();
 
-    ValidationResult popValidationResult() {
-        // really a shift
-        ValidationResult vr = null;
-
-        synchronized (pendingValidationResultsLock) {
-            try {
-                if (!pendingValidationResults.isEmpty()) {
-                    vr = pendingValidationResults.remove(0);
-                }
-            } catch (Exception e) {
-                // no-op
-            }
-        }
-        return vr;
-    }
-
     //Validation
     public void pushValidationResult(ValidationResult vr) {
         synchronized (pendingValidationResultsLock) {
@@ -48,5 +32,21 @@ public class ValidationResultStack {
                 // no-op
             }
         }
+    }
+
+    ValidationResult popValidationResult() {
+        // really a shift
+        ValidationResult vr = null;
+
+        synchronized (pendingValidationResultsLock) {
+            try {
+                if (!pendingValidationResults.isEmpty()) {
+                    vr = pendingValidationResults.remove(0);
+                }
+            } catch (Exception e) {
+                // no-op
+            }
+        }
+        return vr;
     }
 }

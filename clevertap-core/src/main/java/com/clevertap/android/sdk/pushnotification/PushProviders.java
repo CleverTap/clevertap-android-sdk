@@ -95,11 +95,6 @@ public class PushProviders implements CTPushProviderListener {
         return ctApiPushListener.deviceInfo();
     }
 
-    @Override
-    public ValidationResultStack remoteErrorLogger() {
-        return ctApiPushListener.remoteErrorLogger();
-    }
-
     /**
      * @return list of all available push types, contains ( Clevertap's plugin + Custom supported Push Types)
      */
@@ -179,6 +174,11 @@ public class PushProviders implements CTPushProviderListener {
                 refreshCustomProviderTokens();
             }
         });
+    }
+
+    @Override
+    public ValidationResultStack remoteErrorLogger() {
+        return ctApiPushListener.remoteErrorLogger();
     }
 
     /**
