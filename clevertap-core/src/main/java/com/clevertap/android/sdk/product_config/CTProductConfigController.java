@@ -106,7 +106,6 @@ public class CTProductConfigController {
                 config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
                         "Activated successfully with configs: " + activatedConfig);
                 sendCallback(PROCESSING_STATE.ACTIVATED);
-                isFetchAndActivating = false;
             }
         });
     }
@@ -267,6 +266,7 @@ public class CTProductConfigController {
                     });
                     if (isFetchAndActivating) {
                         activate();
+                        isFetchAndActivating = false;
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
