@@ -2,7 +2,6 @@
 
 ### Version 4.0.1 (November 30, 2020)
 * Adds support for configurable CleverTap identifiers.
-* Adds support for Android 11.
 * Adds deprecation warnings for Product A/B Tests public methods.
 * Fix for multiple App Launched and App Installed events in the first session.
 * Fixes crash which occurred due to wrong classification of some mobile devices as tablets #116.
