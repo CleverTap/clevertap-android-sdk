@@ -40,7 +40,7 @@ We publish the SDK to `jcenter` and `mavenCentral` as an `AAR` file. Just declar
          implementation "com.clevertap.android:clevertap-android-sdk:4.0.1"
     }
 ```
-Android Studio version similar to that of SDK version is recommended.
+
 
 Alternatively, you can download and add the AAR file included in this repo in your Module libs directory and tell gradle to install it like this:
     
