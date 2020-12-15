@@ -244,4 +244,4 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     private String getFragmentTag() {
         return config.getAccountId() + ":CT_INBOX_LIST_VIEW_FRAGMENT";
     }
- }
+}
