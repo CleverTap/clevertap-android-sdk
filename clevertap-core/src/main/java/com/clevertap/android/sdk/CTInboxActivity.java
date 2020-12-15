@@ -23,7 +23,6 @@ import java.util.List;
 /**
  * This activity shows the {@link CTInboxMessage} objects as per {@link CTInboxStyleConfig} style parameters
  */
-@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public class CTInboxActivity extends FragmentActivity implements CTInboxListViewFragment.InboxListener {
 
     interface InboxActivityListener {
