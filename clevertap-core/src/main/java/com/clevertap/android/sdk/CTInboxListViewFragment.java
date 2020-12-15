@@ -197,22 +197,7 @@ public class CTInboxListViewFragment extends Fragment {
             listener.messageDidClick(getActivity().getBaseContext(), inboxMessages.get(position), data,
                     keyValuePayload);
         }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    }
+}
 
     @SuppressWarnings("SameParameterValue")
     void didShow(Bundle data, int position) {
