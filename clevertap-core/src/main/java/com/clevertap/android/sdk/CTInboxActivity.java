@@ -1,4 +1,5 @@
 package com.clevertap.android.sdk;
+
 import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
