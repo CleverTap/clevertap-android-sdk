@@ -129,15 +129,15 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     arrayListOf("Promotions", "Offers", "Others")//Anything after the first 2 will be ignored
                 CTInboxStyleConfig().apply {
                     tabs = inboxTabs //Do not use this if you don't want to use tabs
-                    tabBackgroundColor = "#FF0000"
-                    selectedTabIndicatorColor = "#0000FF"
-                    selectedTabColor = "#000000"
-                    unselectedTabColor = "#FFFFFF"
-                    backButtonColor = "#FF0000"
-                    navBarTitleColor = "#FF0000"
+                    tabBackgroundColor = "#6960EC"
+                    selectedTabIndicatorColor = "#FFFFFF"
+                    selectedTabColor = "#FFFFFF"
+                    unselectedTabColor = "#E5E4E2"
+                    backButtonColor = "#FFFFFF"
+                    navBarTitleColor = "#FFFFFF"
                     navBarTitle = "MY INBOX"
-                    navBarColor = "#FFFFFF"
-                    inboxBackgroundColor = "#00FF00"
+                    navBarColor = "#3F51B5"
+                    inboxBackgroundColor = "#E5E4E2"
                     cleverTapAPI?.showAppInbox(this) //Opens activity With Tabs
                 }
             }

@@ -197,6 +197,21 @@ public class CTInboxListViewFragment extends Fragment {
             listener.messageDidClick(getActivity().getBaseContext(), inboxMessages.get(position), data,
                     keyValuePayload);
         }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -323,4 +338,6 @@ public class CTInboxListViewFragment extends Fragment {
     private boolean shouldAutoPlayOnFirstLaunch() {
         return tabPosition <= 0;
     }
+
+
 }

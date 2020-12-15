@@ -54,6 +54,7 @@ dependencies {
     implementation project(':clevertap-core')
     implementation project(':clevertap-geofence')
     implementation project(':clevertap-xps')
+
     // For Xiaomi Push use implementation 'com.clevertap.android:clevertap-xiaomi-sdk:1.0.0'
     implementation project(':clevertap-hms')
     // For Huawei Push use

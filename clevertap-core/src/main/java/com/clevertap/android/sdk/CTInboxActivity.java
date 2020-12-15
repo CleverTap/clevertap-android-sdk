@@ -4,11 +4,15 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.view.Window;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
@@ -23,6 +27,7 @@ import java.util.List;
 /**
  * This activity shows the {@link CTInboxMessage} objects as per {@link CTInboxStyleConfig} style parameters
  */
+@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 public class CTInboxActivity extends FragmentActivity implements CTInboxListViewFragment.InboxListener {
 
     interface InboxActivityListener {
@@ -244,4 +249,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     private String getFragmentTag() {
         return config.getAccountId() + ":CT_INBOX_LIST_VIEW_FRAGMENT";
     }
+
+
 }
