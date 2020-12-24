@@ -248,7 +248,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         beta = in.readByte() != 0x00;
         allowedPushTypes = new ArrayList<>();
         in.readList(allowedPushTypes, String.class.getClassLoader());
-        in.readStringArray(indentityKeys);
+        indentityKeys = in.createStringArray();
     }
 
     @Override
