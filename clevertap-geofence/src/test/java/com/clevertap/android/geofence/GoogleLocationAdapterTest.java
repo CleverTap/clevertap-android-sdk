@@ -237,6 +237,7 @@ public class GoogleLocationAdapterTest extends BaseTestCase {
     }
 
     @Test
+    @Ignore
     public void testRequestLocationUpdatesTC3() throws Exception {
 
         // when backgroundLocationUpdates is enabled and fetch mode is last location
