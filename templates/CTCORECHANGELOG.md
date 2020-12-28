@@ -1,5 +1,8 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 4.0.2 (December 28, 2020)
+* Fix for In-apps/Inbox not rendering in v4.0.1 on using configurable Clevertap Identities feature introduced in v4.0.1
+
 ### Version 4.0.1 (November 30, 2020)
 * Adds support for configurable CleverTap identifiers.
 * Adds deprecation warnings for Product A/B Tests public methods.
