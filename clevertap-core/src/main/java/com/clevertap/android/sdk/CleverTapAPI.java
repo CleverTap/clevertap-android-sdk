@@ -4273,7 +4273,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
             Utils.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
-                    CleverTapAPI.this.inboxListener.inboxMessagesDidUpdate();
+                    if (CleverTapAPI.this.inboxListener != null) {
+                        CleverTapAPI.this.inboxListener.inboxMessagesDidUpdate();
+                    }
                 }
             });
         }
