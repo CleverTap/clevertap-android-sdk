@@ -1,9 +1,9 @@
 # CleverTap Android SDK v4.0.0 Changes
 
-## ??? Table of contents
+## ⍗ Table of contents
 
 * [Migration](#%EF%B8%8F-migration)
-* [Dependencies](#???%EF%B8%8F-dependencies)
+* [Dependencies](#ℹ%EF%B8%8F-dependencies)
     * [Core dependencies](#-core-dependencies)
     * [Firebase dependencies](#-firebase-dependencies)
     * [InApp Notification dependencies](#-inapp-notification-dependencies)
@@ -14,17 +14,17 @@
     * [Push Amplification changes](#-push-amplification-changes)
 * [Questions](#-questions)
 
-## ?????? Migration
+## ♻️ Migration
 
 CleverTap Android SDK v4.0.0 has migrated to Android 10 & AndroidX libraries, please follow this document to know which AndroidX libraries to include in your app to support CleverTap SDK
 
-## ?????? Dependencies
+## ℹ️ Dependencies
 
 * The overall minSDKVersion for CleverTap Android SDK is 16 (Android 4.1 JellyBean)
 * Product A/B Tests (Visual Editor & Dynamic Variables) is now supported for API level 18 (Android 4.3.1 JellyBean ) & above. 
 * CleverTap Huawei SDK needs a minSDKVersion of 17 (Android 4.2 JellyBean)
 
-### ???? Core dependencies
+### 💻 Core dependencies
 
 Replace the `support-v4` dependency with `androidx.core` to start using AndroidX dependencies and add `android.useAndroidX=true` in the `gradle.properties` file.
 
@@ -37,7 +37,7 @@ Old Dependency | New Dependency
 
 
 
-### ???? Firebase dependencies
+### 🔥 Firebase dependencies
 
 CleverTap Android SDK v4.0.0 now supports the latest Firebase Cloud Messaging version.
 
@@ -45,7 +45,7 @@ Old Dependency | New Dependency
 ---:|:---
 `implementation 'com.google.firebase:firebase-messaging:17.3.3'` | `implementation 'com.google.firebase:firebase-messaging:20.2.4'`
 
-### ???? InApp Notification dependencies
+### 📠 InApp Notification dependencies
 
 InApp Notifications use Fragments which were a part of `support-v4` dependency, which is now replaced with `androidx.fragment` dependency.
 
@@ -58,7 +58,7 @@ Old Dependency | New Dependency
 `implementation 'com.google.android.exoplayer:exoplayer-hls:2.8.4'` | `implementation 'com.google.android.exoplayer:exoplayer-hls:2.11.5'`
 `implementation 'com.google.android.exoplayer:exoplayer-ui:2.8.4'` | `implementation 'com.google.android.exoplayer:exoplayer-ui:2.11.5'`
 
-### ???? App Inbox dependencies
+### 📥 App Inbox dependencies
 
 App Inbox used Recycler View, TabLayout and other classes which were a part of the `support:design` & `appcompat-v7` dependencies, which have now been replaced with multiple separate dependencies.
 We have also updated the Glide & Exoplayer dependencies (mentioned above) which is used as a part of App Inbox
@@ -73,7 +73,7 @@ Old Dependency | New Dependency
 `implementation 'com.android.support:design:28.0.0'` | `implementation 'com.google.android.material:material:1.2.1'`
 `implementation 'com.github.bumptech.glide:glide:4.9.0'` | `implementation 'com.github.bumptech.glide:glide:4.11.0'`
 
-## ?????? Breaking changes
+## ⚒️ Breaking changes
 
 As part of the major release we have introduced a few breaking changes in the CleverTap Android SDK v4.0.0.
 
@@ -81,7 +81,7 @@ These changes were needed to improve the quality and efficiency of the SDK to se
 
 Below is a list of all the files/package names which have changed as a part of this release
 
-### ???? Firebase Messaging changes
+### 🔥 Firebase Messaging changes
 
 We have changed the package name of our `FcmMessageListenerService` class and removed the `FcmTokenListenerService` class as a part of our upgrade to support the latest version of the Firebase Messaging Library.
 
@@ -113,7 +113,7 @@ New `AndroidManifest.xml` entries
 </service>
 ```
 
-### ???? Push Notification changes
+### 📲 Push Notification changes
 
 We've changed the package name of the following classes -
 
@@ -149,7 +149,7 @@ New `AndroidManifest.xml` entries
 
 `com.clevertap.android.sdk.NotificationInfo` has been renamed to `com.clevertap.android.sdk.pushnotification.NotificationInfo`
 
-### ???? Push Amplification changes
+### 📲 Push Amplification changes
 
 The following `AndroidManifest.xml` entries are no longer needed to be added -
 
@@ -178,7 +178,7 @@ To enable Push Amplification only the following entry is required in the `Androi
     android:value="1"/>
 ```
 
-## ???? Questions
+## 🤝 Questions
 [(Back to top)](#-table-of-contents)
 
 If your question is not found in FAQ and you have other questions or concerns, you can reach out to the CleverTap support team by raising an issue from the CleverTap Dashboard.

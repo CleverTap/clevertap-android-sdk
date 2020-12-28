@@ -2,7 +2,7 @@
   <img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/clevertap-logo.png" width="300"/>
 </p>
 
-## ??? Table of contents
+## ⍗ Table of contents
 
 * [Introduction](#-introduction)
 * [Register](#%EF%B8%8F-register)
@@ -10,17 +10,17 @@
 * [App Details](#-app-details)
 * [Integration](#-integration)
 
-## ???? Introduction
+## 👋 Introduction
 [(Back to top)](#-table-of-contents)
 
 CleverTap Xiaomi Push SDK provides an out of the box service to use the Xiaomi Push SDK.
 
-## ????? Register
+## ®️ Register
 [(Back to top)](#-table-of-contents)
 
 The first step to access the Xiaomi cloud push is registered as a Xiaomi developer on the [Xiaomi Website](https://dev.mi.com/console/).
 
-## ???? Create an Application
+## 🔨 Create an Application
 [(Back to top)](#-table-of-contents)
 
 Once you login to the console, click on Create App and enter the required details.
@@ -29,10 +29,10 @@ Once you login to the console, click on Create App and enter the required detail
   <img src="https://files.readme.io/27d3874-Xiaomi_push_Developer_console.png"/>
 </p>
 
-## ???? App Details
+## 📱 App Details
 [(Back to top)](#-table-of-contents)
 
-Once the App is created on your console, click on the App name to get your Package Name/App ID/ App Key/ App Secret. Among these, the AppID and AppKey are the client???s identity, used when the client SDK initializes; the AppSecret is authenticated for sending a message at the server-side.
+Once the App is created on your console, click on the App name to get your Package Name/App ID/ App Key/ App Secret. Among these, the AppID and AppKey are the client’s identity, used when the client SDK initializes; the AppSecret is authenticated for sending a message at the server-side.
 
 <p align="center">
   <img src="https://files.readme.io/ee0d481-Xiaomi_Push_API_Key.png"/>
@@ -44,16 +44,16 @@ Click on [Mi Push Console](http://admin.xmpush.global.xiaomi.com/) and click on 
   <img src="https://files.readme.io/14ff6c4-Xiaomi_Push_MI_Console.png"/>
 </p>
 
-## ???? Integration
+## 🚀 Integration
 [(Back to top)](#-table-of-contents)
 
-* Add the CleverTap Xiaomi Push dependency in app???s `build.gradle`
+* Add the CleverTap Xiaomi Push dependency in app’s `build.gradle`
 
 ```groovy
     implementation "com.clevertap.android:clevertap-xiaomi-sdk:1.0.0"
 ```
 
-* Add the following to your app???s `AndroidManifest.xml` file
+* Add the following to your app’s `AndroidManifest.xml` file
 
 ```xml
 
@@ -67,7 +67,7 @@ Click on [Mi Push Console](http://admin.xmpush.global.xiaomi.com/) and click on 
 
 ```
 
-* Add the following to your app???s `strings.xml` file
+* Add the following to your app’s `strings.xml` file
 
 ```xml
 

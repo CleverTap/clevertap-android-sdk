@@ -29,7 +29,7 @@
 
 ### Record Events
 ```java
-   clevertap.pushEvent(???Event Name???);
+   clevertap.pushEvent(“Event Name”);
 ```
 
 * Record an Event with properties  
