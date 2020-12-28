@@ -7,7 +7,7 @@
 [![codebeat badge](https://codebeat.co/badges/49b05fa0-4228-443c-9f1c-d11efa6d2ef8)](https://codebeat.co/projects/github-com-clevertap-clevertap-android-sdk-master)
 [ ![Download](https://api.bintray.com/packages/clevertap/Maven/CleverTapAndroidSDK/images/download.svg) ](https://bintray.com/clevertap/Maven/CleverTapAndroidSDK/_latestVersion)
 
-## ⍗ Table of contents
+## ??? Table of contents
 * [Introduction](#-introduction)
 * [Installation](#-installation)
 	* [Dependencies](#-dependencies)
@@ -19,25 +19,25 @@
 * [CleverTap Huawei Push SDK](#-clevertap-huawei-push-sdk)
 * [License](#-license)
 
-## 👋 Introduction
+## ???? Introduction
 [(Back to top)](#-table-of-contents)
 
 The CleverTap Android SDK for Mobile Customer Engagement and Analytics solutions
 
-CleverTap brings together real-time user insights, an advanced segmentation engine, and easy-to-use marketing tools in one mobile marketing platform — giving your team the power to create amazing experiences that deepen customer relationships. Our intelligent mobile marketing platform provides the insights you need to keep users engaged and drive long-term retention and growth.
+CleverTap brings together real-time user insights, an advanced segmentation engine, and easy-to-use marketing tools in one mobile marketing platform ??? giving your team the power to create amazing experiences that deepen customer relationships. Our intelligent mobile marketing platform provides the insights you need to keep users engaged and drive long-term retention and growth.
 
 For more information check out our  [website](https://clevertap.com/ "CleverTap")  and  [documentation](https://developer.clevertap.com/docs/ "CleverTap Technical Documentation").
 
 To get started, sign up [here](https://clevertap.com/live-product-demo/)
 
-## 🎉 Installation
+## ???? Installation
 [(Back to top)](#-table-of-contents)
 
 We publish the SDK to `jcenter` and `mavenCentral` as an `AAR` file. Just declare it as dependency in your `build.gradle` file.
 
 ```groovy
     dependencies {      
-         implementation "com.clevertap.android:clevertap-android-sdk:4.0.1"
+         implementation "com.clevertap.android:clevertap-android-sdk:4.0.2"
     }
 ```
 
@@ -45,19 +45,19 @@ Alternatively, you can download and add the AAR file included in this repo in yo
     
  ```groovy
     dependencies {      
-        implementation (name: "clevertap-android-sdk-4.0.1", ext: 'aar')
+        implementation (name: "clevertap-android-sdk-4.0.2", ext: 'aar')
     }
 ```
 
 
-### 📖 Dependencies
+### ???? Dependencies
 [(Back to top)](#-table-of-contents)
 
 Add the Firebase Messaging library and Android Support Library v4 as dependencies to your Module `build.gradle` file.
 
 ```groovy
      dependencies {      
-         implementation "com.clevertap.android:clevertap-android-sdk:4.0.1"
+         implementation "com.clevertap.android:clevertap-android-sdk:4.0.2"
          implementation "androidx.core:core:1.3.0"
          implementation "com.google.firebase:firebase-messaging:20.2.4"
          implementation "com.google.android.gms:play-services-ads:19.4.0" // Required only if you enable Google ADID collection in the SDK (turned off by default).
@@ -106,7 +106,7 @@ Interstitial InApp Notification templates support Audio and Video with the help 
 
 Once you've updated your module `build.gradle` file, make sure you have specified `jcenter()` and `google()` as a repositories in your project `build.gradle` and then sync your project in File -> Sync Project with Gradle Files.
 
-## 🎉 Integration
+## ???? Integration
 [(Back to top)](#-table-of-contents)
 
 ### Add Your CleverTap Account Credentials
@@ -139,7 +139,7 @@ Add the `android:name` property to the `<application>` tag in your AndroidManife
     
 **Note:** The above step is extremely important and enables CleverTap to track notification opens, display in-app notifications, track deep links, and other important user behavior.
 
-## 🚀 Initialization
+## ???? Initialization
 [(Back to top)](#-table-of-contents)
 
 By default the library creates a shared default instance based on the Account ID and Account Token included in your AndroidManifest.xml.   To access this default shared singleton instance in your code call -
@@ -172,30 +172,30 @@ CleverTapAPI clevertapAdditionalInstance = CleverTapAPI.instanceWithConfig(cleve
 
 **Note:**  All configuration to the CleverTapInstanceConfig object must be done prior to calling CleverTapAPI.instanceWithConfig.  Subsequent changes to the CleverTapInstanceConfig object will have no effect on the additional CleverTap instance created.
 
-## 𝌡 Example Usage  
+## ???? Example Usage  
 [(Back to top)](#-table-of-contents)
  
 See the [usage examples here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/EXAMPLES.md). Also, see the [example project](https://github.com/CleverTap/clevertap-android-sdk/tree/master/sample), included with this repo. 
 
 See our [full documentation here](https://developer.clevertap.com/docs/android) for more information on Events and Profile Tracking, Push Notifications, In-App messages, Install Referrer tracking and app personalization.
 
-## 📍 CleverTap Geofence SDK
+## ???? CleverTap Geofence SDK
 [(Back to top)](#-table-of-contents)
 
 CleverTap Android Geofence SDK provides **Geofencing capabilities** to CleverTap Android SDK by using the Play Services Location library.
 To find the integration steps for CleverTap Geofence SDK, click [here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTGEOFENCE.md)
 
-## 📲 CleverTap Xiaomi Push SDK
+## ???? CleverTap Xiaomi Push SDK
 [(Back to top)](#-table-of-contents)
 
 CleverTap Xiaomi Push SDK provides an out of the box service to use the Xiaomi Push SDK. Find the integration steps for the CleverTap Xiaomi Push SDK [here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTXIAOMIPUSH.md)
 
-## 📲 CleverTap Huawei Push SDK
+## ???? CleverTap Huawei Push SDK
 [(Back to top)](#-table-of-contents)
 
 CleverTap Huawei Push SDK provides an out of the box service to use the Huawei Messaging Service. Find the integration steps for the CleverTap Huawei Push SDK [here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTHUAWEIPUSH.md)
 
 
-## 📄 License
+## ???? License
 [(Back to top)](#-table-of-contents)
 CleverTap Android SDK is MIT licensed, as found in the [LICENSE](https://github.com/CleverTap/clevertap-android-sdk/blob/master/LICENSE) file.

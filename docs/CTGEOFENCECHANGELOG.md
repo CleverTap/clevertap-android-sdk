@@ -5,4 +5,4 @@
 * Add support for CleverTap Android SDK v4.0.0
 
 ### Version 1.0.0 (September 2, 2020)
-* First release of CleverTap Android Geofence SDK 🎉
+* First release of CleverTap Android Geofence SDK ????
