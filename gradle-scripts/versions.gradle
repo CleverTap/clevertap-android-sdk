@@ -5,13 +5,13 @@ ext {
     buildToolsVersionVal = "29.0.3"
 
     // CleverTap modules
-    coreVersion = "4.0.2"
+    coreVersion = "4.1.0"
     geofenceVersion = "1.0.1"
     hmsVersion = "1.0.0"
     xpsVersion = "1.0.0"
 
     //gradle plugins
-    gradlePluginVersion = '4.0.1'
+    gradlePluginVersion = '4.1.1'
     googleServicesPluginVersion = '4.3.3'
     bintrayPluginVersion = '1.8.4'
     mavenPluginVersion = '2.1'

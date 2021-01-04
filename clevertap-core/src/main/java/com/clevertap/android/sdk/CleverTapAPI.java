@@ -55,7 +55,6 @@ import androidx.fragment.app.FragmentTransaction;
 import com.android.installreferrer.api.InstallReferrerClient;
 import com.android.installreferrer.api.InstallReferrerStateListener;
 import com.android.installreferrer.api.ReferrerDetails;
-import com.clevertap.android.sdk.ab_testing.CTABTestController;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
@@ -80,7 +79,6 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
 import java.net.URL;
-import java.net.URLDecoder;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -234,8 +232,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
     private final CleverTapInstanceConfig config;
 
     private final Context context;
-
-    private CTABTestController ctABTestController;
 
     private CTFeatureFlagsController ctFeatureFlagsController;
 
@@ -1176,18 +1172,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Disables/Enables the ability to do UI Edits from the CleverTap Dashboard
-     * Disabled by default
-     */
-    @Deprecated
-    public static void setUIEditorConnectionEnabled(boolean enabled) {
-        isUIEditorEnabled = enabled;
-    }
-
     //Push
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static void tokenRefresh(Context context) {
@@ -1259,7 +1243,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 config.setEnableABTesting(true);
             }
         }
-        initABTesting();
 
         postAsyncSafely("setStatesAsync", new Runnable() {
             @Override
@@ -1295,18 +1278,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
         Logger.i("CleverTap SDK initialized with accountId: " + config.getAccountId() + " accountToken: " + config
                 .getAccountToken() + " accountRegion: " + config.getAccountRegion());
-    }
-
-    @Override
-    public void ABExperimentsUpdated() {
-        try {
-            final CTExperimentsListener sl = getCTExperimentsListener();
-            if (sl != null) {
-                sl.CTExperimentsUpdated();
-            }
-        } catch (Throwable t) {
-            // no-op
-        }
     }
 
     /**
@@ -1565,27 +1536,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Returns the {@link Boolean} value of the named variable set via an AB Testing Experiment or the default value
-     * if unset
-     *
-     * @param name         - the name of the variable
-     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
-     * @return {@link Boolean} the value set by the Experiment or the default value if unset
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public Boolean getBooleanVariable(String name, Boolean defaultValue) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return defaultValue;
-        }
-        return ctABTestController.getBooleanVariable(name, defaultValue);
-    }
-
-    /**
      * Returns the CTExperimentsListener object
      *
      * @return The {@link CTExperimentsListener} object
@@ -1790,27 +1740,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Returns the {@link Double} value of the named variable set via an AB Testing Experiment or the default value if
-     * unset
-     *
-     * @param name         - the name of the variable
-     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
-     * @return {@link Double} the value set by the Experiment or the default value if unset
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public Double getDoubleVariable(String name, Double defaultValue) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return defaultValue;
-        }
-        return ctABTestController.getDoubleVariable(name, defaultValue);
-    }
-
     //Util
 
     /**
@@ -1942,27 +1871,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Returns the {@link Integer} value of the named variable set via an AB Testing Experiment or the default value
-     * if unset
-     *
-     * @param name         - the name of the variable
-     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
-     * @return {@link Integer} the value set by the Experiment or the default value if unset
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @SuppressWarnings({"unused"})
-    public Integer getIntegerVariable(String name, Integer defaultValue) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return defaultValue;
-        }
-        return ctABTestController.getIntegerVariable(name, defaultValue);
-    }
-
-    /**
      * Returns the timestamp of the last time the given event was raised
      *
      * @param event The event name for which you want the last time timestamp
@@ -1976,92 +1884,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
 
         return -1;
-    }
-
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Returns the {@link List} of {@link Boolean} value of the named variable set via an AB Testing Experiment or the
-     * default value if unset
-     *
-     * @param name         - the name of the variable
-     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
-     * @return {@link List} of {@link Boolean} the value set by the Experiment or the default value if unset
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public List<Boolean> getListOfBooleanVariable(String name, List<Boolean> defaultValue) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return defaultValue;
-        }
-        return ctABTestController.getListOfBooleanVariable(name, defaultValue);
-
-    }
-
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Returns the {@link List} of {@link Double} value of the named variable set via an AB Testing Experiment or the
-     * default value if unset
-     *
-     * @param name         - the name of the variable
-     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
-     * @return {@link List} of {@link Double} the value set by the Experiment or the default value if unset
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public List<Double> getListOfDoubleVariable(String name, List<Double> defaultValue) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return defaultValue;
-        }
-        return ctABTestController.getListOfDoubleVariable(name, defaultValue);
-
-    }
-
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Returns the {@link List} of {@link Integer} value of the named variable set via an AB Testing Experiment or the
-     * default value if unset
-     *
-     * @param name         - the name of the variable
-     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
-     * @return {@link List} of {@link Integer} the value set by the Experiment or the default value if unset
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public List<Integer> getListOfIntegerVariable(String name, List<Integer> defaultValue) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return defaultValue;
-        }
-        return ctABTestController.getListOfIntegerVariable(name, defaultValue);
-    }
-
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Returns the {@link List} of {@link String} value of the named variable set via an AB Testing Experiment or the
-     * default value if unset
-     *
-     * @param name         - the name of the variable
-     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
-     * @return {@link List} of {@link String} the value set by the Experiment or the default value if unset
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public List<String> getListOfStringVariable(String name, List<String> defaultValue) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return defaultValue;
-        }
-        return ctABTestController.getListOfStringVariable(name, defaultValue);
     }
 
     /**
@@ -2086,90 +1908,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void setLocation(Location location) {
         _setLocation(location);
-    }
-
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Returns the {@link Map} of {@link Boolean} value of the named variable set via an AB Testing Experiment or the
-     * default value if unset
-     *
-     * @param name         - the name of the variable
-     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
-     * @return {@link Map} of {@link Boolean} the value set by the Experiment or the default value if unset
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public Map<String, Boolean> getMapOfBooleanVariable(String name, Map<String, Boolean> defaultValue) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return defaultValue;
-        }
-        return ctABTestController.getMapOfBooleanVariable(name, defaultValue);
-    }
-
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Returns the {@link Map} of {@link Double} value of the named variable set via an AB Testing Experiment or the
-     * default value if unset
-     *
-     * @param name         - the name of the variable
-     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
-     * @return {@link Map} of {@link Double} the value set by the Experiment or the default value if unset
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public Map<String, Double> getMapOfDoubleVariable(String name, Map<String, Double> defaultValue) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return defaultValue;
-        }
-        return ctABTestController.getMapOfDoubleVariable(name, defaultValue);
-    }
-
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Returns the {@link Map} of {@link Integer} value of the named variable set via an AB Testing Experiment or the
-     * default value if unset
-     *
-     * @param name         - the name of the variable
-     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
-     * @return {@link Map} of {@link Integer} the value set by the Experiment or the default value if unset
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public Map<String, Integer> getMapOfIntegerVariable(String name, Map<String, Integer> defaultValue) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return defaultValue;
-        }
-        return ctABTestController.getMapOfIntegerVariable(name, defaultValue);
-    }
-
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Returns the {@link Map} of {@link String} value of the named variable set via an AB Testing Experiment or the
-     * default value if unset
-     *
-     * @param name         - the name of the variable
-     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
-     * @return {@link Map} of {@link String} the value set by the Experiment or the default value if unset
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public Map<String, String> getMapOfStringVariable(String name, Map<String, String> defaultValue) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return defaultValue;
-        }
-        return ctABTestController.getMapOfStringVariable(name, defaultValue);
     }
 
     /**
@@ -2211,27 +1949,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
     @SuppressWarnings({"unused"})
     public int getScreenCount() {
         return CleverTapAPI.activityCount;
-    }
-
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Returns the {@link String} value of the named variable set via an AB Testing Experiment or the default value if
-     * unset
-     *
-     * @param name         - the name of the variable
-     * @param defaultValue - the default value to return if the value has not been set via an AB Testing Experiment
-     * @return {@link String} the value set by the Experiment or the default value if unset
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public String getStringVariable(String name, String defaultValue) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return defaultValue;
-        }
-        return ctABTestController.getStringVariable(name, defaultValue);
     }
 
     /**
@@ -2961,24 +2678,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     * Pushes everything available in the JSON object returned by the Facebook GraphRequest
-     *
-     * @param graphUser The object returned from Facebook
-     */
-    @Deprecated
-    @SuppressWarnings({"unused"})
-    public void pushFacebookUser(final JSONObject graphUser) {
-        postAsyncSafely("pushFacebookUser", new Runnable() {
-            @Override
-            public void run() {
-                _pushFacebookUser(graphUser);
-            }
-        });
-    }
-
-    /**
      * Sends the FCM registration ID to CleverTap.
      *
      * @param fcmId    The FCM registration ID
@@ -3060,52 +2759,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
     public void pushInboxNotificationViewedEvent(String messageId) {
         CTInboxMessage message = getInboxMessageForId(messageId);
         pushInboxMessageStateEvent(false, message, null);
-    }
-
-    /**
-     * This method is used to push install referrer via Intent
-     * Deprecation warning because Google Play install referrer via intent will be deprecated in March 2020
-     *
-     * @param intent An Intent with the install referrer parameters
-     */
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    @Deprecated
-    public void pushInstallReferrer(Intent intent) {
-        try {
-            final Bundle extras = intent.getExtras();
-            // Preliminary checks
-            if (extras == null || !extras.containsKey("referrer")) {
-                return;
-            }
-            final String url;
-            try {
-                url = URLDecoder.decode(extras.getString("referrer"), "UTF-8");
-
-                getConfigLogger().verbose(getAccountId(), "Referrer received: " + url);
-            } catch (Throwable e) {
-                // Could not decode
-                return;
-            }
-            if (url == null) {
-                return;
-            }
-            int now = (int) (System.currentTimeMillis() / 1000);
-
-            //noinspection ConstantConditions
-            if (installReferrerMap.containsKey(url) && now - installReferrerMap.get(url) < 10) {
-                getConfigLogger()
-                        .verbose(getAccountId(), "Skipping install referrer due to duplicate within 10 seconds");
-                return;
-            }
-
-            installReferrerMap.put(url, now);
-
-            Uri uri = Uri.parse("wzrk://track?install=true&" + url);
-
-            pushDeepLink(uri, true);
-        } catch (Throwable t) {
-            // no-op
-        }
     }
 
     /**
@@ -3419,230 +3072,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         recordPageEventWithExtras(null);
     }
 
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Registers an ABTesting variable of type {@link Boolean} for ease of editing on the CleverTap Dashboard
-     *
-     * @param name {@link String} the name of the variable
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public void registerBooleanVariable(String name) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return;
-        }
-        ctABTestController.registerBooleanVariable(name);
-    }
-
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Registers an ABTesting variable of type {@link Double} for ease of editing on the CleverTap Dashboard
-     *
-     * @param name {@link String} the name of the variable
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public void registerDoubleVariable(String name) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return;
-        }
-        ctABTestController.registerDoubleVariable(name);
-    }
-
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Registers an ABTesting variable of type {@link Integer} for ease of editing on the CleverTap Dashboard
-     *
-     * @param name {@link String} the name of the variable
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public void registerIntegerVariable(String name) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return;
-        }
-        ctABTestController.registerIntegerVariable(name);
-    }
-
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Registers an ABTesting variable of type {@link List} of {@link Boolean} for ease of editing on the CleverTap
-     * Dashboard
-     *
-     * @param name {@link String} the name of the variable
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public void registerListOfBooleanVariable(String name) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return;
-        }
-        ctABTestController.registerListOfBooleanVariable(name);
-    }
-
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Registers an ABTesting variable of type {@link List} of {@link Double} for ease of editing on the CleverTap
-     * Dashboard
-     *
-     * @param name {@link String} the name of the variable
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public void registerListOfDoubleVariable(String name) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return;
-        }
-        ctABTestController.registerListOfDoubleVariable(name);
-    }
-
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Registers an ABTesting variable of type {@link List} of {@link Integer} for ease of editing on the CleverTap
-     * Dashboard
-     *
-     * @param name {@link String} the name of the variable
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public void registerListOfIntegerVariable(String name) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return;
-        }
-        ctABTestController.registerListOfIntegerVariable(name);
-    }
-
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Registers an ABTesting variable of type {@link List} of {@link String} for ease of editing on the CleverTap
-     * Dashboard
-     *
-     * @param name {@link String} the name of the variable
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public void registerListOfStringVariable(String name) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return;
-        }
-        ctABTestController.registerListOfStringVariable(name);
-    }
-
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Registers an ABTesting variable of type {@link Map} of {@link Boolean} for ease of editing on the CleverTap
-     * Dashboard
-     *
-     * @param name {@link String} the name of the variable
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public void registerMapOfBooleanVariable(String name) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return;
-        }
-        ctABTestController.registerMapOfBooleanVariable(name);
-    }
-
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Registers an ABTesting variable of type {@link Map} of {@link Double} for ease of editing on the CleverTap
-     * Dashboard
-     *
-     * @param name {@link String} the name of the variable
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public void registerMapOfDoubleVariable(String name) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return;
-        }
-        ctABTestController.registerMapOfDoubleVariable(name);
-    }
-
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Registers an ABTesting variable of type {@link Map} of {@link Integer} for ease of editing on the CleverTap
-     * Dashboard
-     *
-     * @param name {@link String} the name of the variable
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public void registerMapOfIntegerVariable(String name) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return;
-        }
-        ctABTestController.registerMapOfIntegerVariable(name);
-    }
-
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Registers an ABTesting variable of type {@link Map} of {@link String} for ease of editing on the CleverTap
-     * Dashboard
-     *
-     * @param name {@link String} the name of the variable
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public void registerMapOfStringVariable(String name) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return;
-        }
-        ctABTestController.registerMapOfStringVariable(name);
-    }
-
-    /**
-     * Deprecation Notice - This method has been deprecated by CleverTap, this code will be removed from future
-     * versions of the CleverTap Android SDK.
-     *
-     * Registers an ABTesting variable of type {@link String} for ease of editing on the CleverTap Dashboard
-     *
-     * @param name {@link String} the name of the variable
-     */
-    @RequiresApi(api = VERSION_CODES.KITKAT)
-    @Deprecated
-    public void registerStringVariable(String name) {
-        if (ctABTestController == null) {
-            getConfigLogger().verbose(getAccountId(), "ABTesting is not enabled for this instance");
-            return;
-        }
-        ctABTestController.registerStringVariable(name);
-    }
-
     //Session
 
     @Override
@@ -3889,7 +3318,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         Logger.v("Initializing InAppFC after Device ID Created = " + deviceId);
         this.inAppFCManager = new InAppFCManager(context, config, deviceId);
         Logger.v("Initializing ABTesting after Device ID Created = " + deviceId);
-        initABTesting();
         initFeatureFlags(true);
         initProductConfig(true);
         getConfigLogger()
@@ -4898,7 +4326,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
                         processingUserLoginIdentifier = null;
                     }
                     resetInbox();
-                    resetABTesting();
                     resetFeatureFlags();
                     resetProductConfigs();
                     recordDeviceIDErrors();
@@ -6013,30 +5440,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         return currentSessionId > 0;
     }
 
-    private void initABTesting() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
-            return;
-        }
-        if (!config.isAnalyticsOnly()) {
-            if (!config.isABTestingEnabled()) {
-                getConfigLogger().debug(config.getAccountId(), "AB Testing is not enabled for this instance");
-                return;
-            }
-
-            if (getCleverTapID() == null) {
-                getConfigLogger()
-                        .verbose(config.getAccountId(), "GUID not set yet, deferring ABTesting initialization");
-                return;
-            }
-
-            config.setEnableUIEditor(isUIEditorEnabled);
-            if (ctABTestController == null) {
-                ctABTestController = new CTABTestController(context, config, getCleverTapID(), this);
-                getConfigLogger().verbose(config.getAccountId(), "AB Testing initialized");
-            }
-        }
-    }
-
     private void initFeatureFlags(boolean fromPlayServices) {
         Logger.v("Initializing Feature Flags with device Id = " + getCleverTapID());
 
@@ -6890,21 +6293,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
-    private void processIncomingExperiments(JSONObject response) {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
-            return;
-        }
-        try {
-            JSONArray experimentsArray = response.getJSONArray("ab_exps");
-            if (this.ctABTestController != null) {
-                ctABTestController.updateExperiments(experimentsArray);
-            }
-        } catch (JSONException e) {
-            getConfigLogger()
-                    .debug(config.getAccountId(), "Error parsing AB Testing response " + e.getLocalizedMessage());
-        }
-    }
-
     /**
      * Processes the incoming response headers for a change in domain and/or mute.
      *
@@ -7155,18 +6543,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
                     }
                 } catch (Throwable t) {
                     //Ignore
-                }
-            }
-
-            //Handle ABTesting response
-            if (!getConfig().isAnalyticsOnly()) {
-                try {
-                    if (response.has("ab_exps")) {
-                        getConfigLogger().verbose(getAccountId(), "Processing ABTest experiments...");
-                        processIncomingExperiments(response);
-                    }
-                } catch (Throwable t) {
-                    getConfigLogger().verbose("Error handling AB Testing response : " + t.getMessage());
                 }
             }
 
@@ -7465,21 +6841,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
             queueEvent(context, jsonObject, Constants.PAGE_EVENT);
         } catch (Throwable t) {
             // We won't get here
-        }
-    }
-
-    private void resetABTesting() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
-            return;
-        }
-        if (!this.config.isAnalyticsOnly()) {
-            if (!config.isABTestingEnabled()) {
-                getConfigLogger().debug(config.getAccountId(), "AB Testing is not enabled for this instance");
-                return;
-            }
-        }
-        if (ctABTestController != null) {
-            ctABTestController.resetWithGuid(getCleverTapID());
         }
     }
 
@@ -8359,27 +7720,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 });
             }
         }
-    }
-
-    //Deprecation warning because Google Play install referrer via intent will be deprecated in March 2020
-    @Deprecated
-    static void handleInstallReferrer(Context context, Intent intent) {
-        if (instances == null) {
-            Logger.v("No CleverTap Instance found");
-            CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
-            if (instance != null) {
-                instance.pushInstallReferrer(intent);
-            }
-            return;
-        }
-
-        for (String accountId : CleverTapAPI.instances.keySet()) {
-            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
-            if (instance != null) {
-                instance.pushInstallReferrer(intent);
-            }
-        }
-
     }
 
     /**

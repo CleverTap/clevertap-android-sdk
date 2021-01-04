@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk;
 
-import com.clevertap.android.sdk.ab_testing.CTABTestListener;
 import com.clevertap.android.sdk.featureFlags.FeatureFlagListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigControllerListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
@@ -11,7 +10,6 @@ public interface CleverTapAPIListener extends
         InAppNotificationActivity.InAppActivityListener,
         CTInAppBaseFragment.InAppListener,
         CTInboxActivity.InboxActivityListener,
-        CTABTestListener,
         FeatureFlagListener,
         CTProductConfigControllerListener,
         CTProductConfigListener,
