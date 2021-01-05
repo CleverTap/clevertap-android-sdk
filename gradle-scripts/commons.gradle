@@ -35,7 +35,7 @@ android {
         versionName libraryVersion
 
         //AGP 4.1.0 change https://developer.android.com/studio/releases/gradle-plugin#version_properties_removed_from_buildconfig_class_in_library_projects
-        buildConfigField ("int", "VERSION_CODE", "\"$versionCode\"")
+        buildConfigField ("int", "VERSION_CODE", "$versionCode")
         buildConfigField ("String", "VERSION_NAME", "\"$versionName\"")
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
