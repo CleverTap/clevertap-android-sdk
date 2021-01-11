@@ -9,7 +9,6 @@ import com.clevertap.android.sdk.CleverTapAPI
 class TestApplication : Application() {
 
     override fun onCreate() {
-        CleverTapAPI.setUIEditorConnectionEnabled(true)
         CleverTapAPI.setDebugLevel(3)
         ActivityLifecycleCallback.register(this)
         super.onCreate()
