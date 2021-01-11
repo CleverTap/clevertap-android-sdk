@@ -1,7 +1,7 @@
 ext {
     // Android SDK
-    compileSdkVersionVal = 29
-    targetSdkVersionVal = 29
+    compileSdkVersionVal = 30
+    targetSdkVersionVal = 30
     buildToolsVersionVal = "29.0.3"
 
     // CleverTap modules
