@@ -36,7 +36,6 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
-import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -168,17 +167,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
-    private enum EventGroup {
-
-        REGULAR(""),
-        PUSH_NOTIFICATION_VIEWED("-spiky");
-
-        private final String httpResource;
-
-        EventGroup(String httpResource) {
-            this.httpResource = httpResource;
-        }
-    }
 
     @SuppressWarnings("unused")
     public static final String NOTIFICATION_TAG = "wzrk_pn";
