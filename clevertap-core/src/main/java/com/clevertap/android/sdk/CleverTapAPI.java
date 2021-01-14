@@ -237,8 +237,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private String currentScreenName = "";
 
-    private boolean currentUserOptedOut = false;
-
     private DBAdapter dbAdapter;
 
     private final DeviceInfo deviceInfo;
@@ -316,8 +314,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
     private final ExecutorService ns;
 
     private boolean offline = false;
-
-    private final Object optOutFlagLock = new Object();
 
     private Runnable pendingInappRunnable = null;
 
@@ -3243,9 +3239,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 // determine order of operations depending on enabled/disabled
                 if (enable) {  // if opting out first push profile event then set the flag
                     pushProfile(optOutMap);
-                    setCurrentUserOptedOut(true);
+                    mCleverTapMetaData.setCurrentUserOptedOut(true);
                 } else {  // if opting back in first reset the flag to false then push the profile event
-                    setCurrentUserOptedOut(false);
+                    mCleverTapMetaData.setCurrentUserOptedOut(false);
                     pushProfile(optOutMap);
                 }
                 // persist the new optOut state
@@ -4270,7 +4266,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                             + " with Cached GUID " + ((cacheGuid != null) ? cachedGUID
                             : "NULL" + " and cleverTapID " + cleverTapID));
                     //set optOut to false on the current user to unregister the device token
-                    setCurrentUserOptedOut(false);
+                    mCleverTapMetaData.setCurrentUserOptedOut(false);
                     // unregister the device token on the current user
                     forcePushDeviceToken(false);
 
@@ -5445,17 +5441,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         return this.mConfig.isDisableAppLaunchedEvent();
     }
 
-    private boolean isCurrentUserOptedOut() {
-        synchronized (optOutFlagLock) {
-            return currentUserOptedOut;
-        }
-    }
-
-    private void setCurrentUserOptedOut(boolean enable) {
-        synchronized (optOutFlagLock) {
-            currentUserOptedOut = enable;
-        }
-    }
 
     private boolean isErrorDeviceId() {
         return this.deviceInfo.isErrorDeviceId();
@@ -6805,7 +6790,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             return;
         }
         boolean storedOptOut = StorageHelper.getBooleanFromPrefs(context, mConfig, key);
-        setCurrentUserOptedOut(storedOptOut);
+        mCleverTapMetaData.setCurrentUserOptedOut(storedOptOut);
         getConfigLogger().verbose(getAccountId(),
                 "Set current user OptOut state from storage to: " + storedOptOut + " for key: " + key);
     }

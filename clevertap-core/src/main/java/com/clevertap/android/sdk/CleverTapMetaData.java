@@ -18,6 +18,12 @@ class CleverTapMetaData {
 
     private boolean appLaunchPushed = false;
 
+    private boolean currentUserOptedOut = false;
+
+    private final Object optOutFlagLock = new Object();
+
+    private final Object appLaunchPushedLock = new Object();
+
 
     void setFirstSession(final boolean firstSession) {
         this.firstSession = firstSession;
@@ -70,23 +76,27 @@ class CleverTapMetaData {
         return false;
     }
 
-    void setCurrentUserOptedOut(boolean enable){
-        //TODO
-    }
-    boolean isCurrentUserOptedOut(){
-        //TODO
-        return false;
-    }
-
-    boolean isAppLaunchPushed(){
-        synchronized (this){
+    boolean isAppLaunchPushed() {
+        synchronized (appLaunchPushedLock) {
             return appLaunchPushed;
         }
     }
 
     void setAppLaunchPushed(boolean pushed) {
-        synchronized (this) {
+        synchronized (appLaunchPushedLock) {
             appLaunchPushed = pushed;
+        }
+    }
+
+    boolean isCurrentUserOptedOut() {
+        synchronized (optOutFlagLock) {
+            return currentUserOptedOut;
+        }
+    }
+
+    void setCurrentUserOptedOut(boolean enable) {
+        synchronized (optOutFlagLock) {
+            currentUserOptedOut = enable;
         }
     }
 
