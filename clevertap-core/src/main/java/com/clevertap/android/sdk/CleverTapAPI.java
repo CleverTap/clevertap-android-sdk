@@ -110,6 +110,10 @@ import org.json.JSONObject;
  */
 public class CleverTapAPI implements CleverTapAPIListener {
 
+    private final EventMediator mEventMediator;
+
+    private final CleverTapMetaData mCleverTapMetaData;
+
     //InApp
     private final class NotificationPrepareRunnable implements Runnable {
 
@@ -1266,6 +1270,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
         Logger.i("CleverTap SDK initialized with accountId: " + config.getAccountId() + " accountToken: " + config
                 .getAccountToken() + " accountRegion: " + config.getAccountRegion());
+        mCleverTapMetaData = new CleverTapMetaData();
+        mEventMediator = new EventMediator(mCleverTapMetaData, this.config);
     }
 
     /**
@@ -6722,10 +6728,10 @@ public class CleverTapAPI implements CleverTapAPIListener {
         return postAsyncSafely("queueEvent", new Runnable() {
             @Override
             public void run() {
-                if (shouldDropEvent(event, eventType)) {
+                if (mEventMediator.shouldDropEvent(event, eventType)) {
                     return;
                 }
-                if (shouldDeferProcessingEvent(event, eventType)) {
+                if (mEventMediator.shouldDeferProcessingEvent(event, eventType)) {
                     getConfigLogger().debug(getAccountId(),
                             "App Launched not yet processed, re-queuing event " + event + "after 2s");
                     getHandlerUsingMainLooper().postDelayed(new Runnable() {
@@ -7208,43 +7214,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 spikyDomainName);
     }
 
-    private boolean shouldDeferProcessingEvent(JSONObject event, int eventType) {
-        //noinspection SimplifiableIfStatement
-        if (getConfig().isCreatedPostAppLaunch()) {
-            return false;
-        }
-        if (event.has("evtName")) {
-            try {
-                if (Arrays.asList(Constants.SYSTEM_EVENTS).contains(event.getString("evtName"))) {
-                    return false;
-                }
-            } catch (JSONException e) {
-                //no-op
-            }
-        }
-        return (eventType == Constants.RAISED_EVENT && !isAppLaunchPushed());
-    }
-
     // ********                        Feature Flags Internal methods        *****//
 
-    private boolean shouldDropEvent(JSONObject event, int eventType) {
-        if (eventType == Constants.FETCH_EVENT) {
-            return false;
-        }
-
-        if (isCurrentUserOptedOut()) {
-            String eventString = event == null ? "null" : event.toString();
-            getConfigLogger().debug(getAccountId(), "Current user is opted out dropping event: " + eventString);
-            return true;
-        }
-
-        if (isMuted()) {
-            getConfigLogger().verbose(getAccountId(), "CleverTap is muted, dropping event - " + event.toString());
-            return true;
-        }
-
-        return false;
-    }
 
     private void showInAppNotificationIfAny() {
         if (!this.config.isAnalyticsOnly()) {
