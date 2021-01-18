@@ -335,8 +335,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private final Validator validator;
 
-
-    private CoreState mCoreState;
+    private CleverTapState mCleverTapState;
 
     // Initialize
     private CleverTapAPI(final Context context, final CleverTapInstanceConfig config, String cleverTapID) {
@@ -1291,8 +1290,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
-    CoreState getCoreState() {
-        return mCoreState;
+    CleverTapState getCleverTapState() {
+        return mCleverTapState;
     }
 
     /**
@@ -4337,8 +4336,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
         });
     }
 
-    void setCoreState(final CoreState coreState) {
-        mCoreState = coreState;
+    void setCoreState(final CleverTapState cleverTapState) {
+        mCleverTapState = cleverTapState;
     }
 
     /**
