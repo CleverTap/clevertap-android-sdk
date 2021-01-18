@@ -32,8 +32,6 @@ import android.location.Location;
 import android.location.LocationManager;
 import android.media.AudioAttributes;
 import android.media.RingtoneManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -77,7 +75,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.ref.WeakReference;
-import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -96,8 +93,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSocketFactory;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -199,14 +194,10 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private static int initialAppEnteredForegroundTime = 0;
 
-    private static SSLContext sslContext;
-
-    private static SSLSocketFactory sslSocketFactory;
-
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private static String sdkVersion;  // For Google Play Store/Android Studio analytics
 
-    private static boolean isUIEditorEnabled = false;
+    private static final boolean isUIEditorEnabled = false;
 
     private final PostAsyncSafelyHandler mPostAsyncSafelyHandler;
 
@@ -233,7 +224,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private CTProductConfigController ctProductConfigController;
 
-    private int currentRequestTimestamp = 0;
+    private final int currentRequestTimestamp = 0;
 
     private String currentScreenName = "";
 
@@ -313,8 +304,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private final ExecutorService ns;
 
-    private boolean offline = false;
-
     private Runnable pendingInappRunnable = null;
 
     private String processingUserLoginIdentifier = null;
@@ -346,6 +335,123 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private final Validator validator;
 
+
+    private CoreState mCoreState;
+
+    // Initialize
+    private CleverTapAPI(final Context context, final CleverTapInstanceConfig config, String cleverTapID) {
+        this.mConfig = new CleverTapInstanceConfig(config);
+        this.context = context;
+        this.mMainLooperHandler = new MainLooperHandler();
+        this.ns = Executors.newFixedThreadPool(1);
+        this.localDataStore = new LocalDataStore(context, config);
+        validationResultStack = new ValidationResultStack();
+        this.deviceInfo = new DeviceInfo(context, config, cleverTapID);
+        if (this.deviceInfo.getDeviceID() != null) {
+            Logger.v("Initializing InAppFC with device Id = " + this.deviceInfo.getDeviceID());
+            this.inAppFCManager = new InAppFCManager(context, config, this.deviceInfo.getDeviceID());
+        }
+        initFeatureFlags(false);
+
+        this.validator = new Validator();
+        this.pushProviders = PushProviders.load(this);
+        mPostAsyncSafelyHandler = new PostAsyncSafelyHandler(mConfig);
+
+        mPostAsyncSafelyHandler.postAsyncSafely("CleverTapAPI#initializeDeviceInfo", new Runnable() {
+            @Override
+            public void run() {
+
+                if (config.isDefaultInstance()) {
+                    manifestAsyncValidation();
+                }
+            }
+        });
+
+        int now = (int) System.currentTimeMillis() / 1000;
+        if (now - initialAppEnteredForegroundTime > 5) {
+            this.mConfig.setCreatedPostAppLaunch();
+        }
+
+        setLastVisitTime();
+
+        // Default (flag is set in the config init) or first non-default instance gets the ABTestController
+        if (!config.isDefaultInstance()) {
+            if (instances == null || instances.size() <= 0) {
+                config.setEnableABTesting(true);
+            }
+        }
+
+        mPostAsyncSafelyHandler.postAsyncSafely("setStatesAsync", new Runnable() {
+            @Override
+            public void run() {
+                setDeviceNetworkInfoReportingFromStorage();
+                setCurrentUserOptOutStateFromStorage();
+            }
+        });
+
+        mPostAsyncSafelyHandler.postAsyncSafely("saveConfigtoSharedPrefs", new Runnable() {
+            @Override
+            public void run() {
+                String configJson = config.toJSONString();
+                if (configJson == null) {
+                    Logger.v("Unable to save config to SharedPrefs, config Json is null");
+                    return;
+                }
+                StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, "instance"), configJson);
+            }
+        });
+
+        if (this.mConfig.isBackgroundSync() && !this.mConfig.isAnalyticsOnly()) {
+            mPostAsyncSafelyHandler.postAsyncSafely("createOrResetJobScheduler", new Runnable() {
+                @Override
+                public void run() {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        createOrResetJobScheduler(context);
+                    } else {
+                        createAlarmScheduler(context);
+                    }
+                }
+            });
+        }
+        Logger.i("CleverTap SDK initialized with accountId: " + config.getAccountId() + " accountToken: " + config
+                .getAccountToken() + " accountRegion: " + config.getAccountRegion());
+        mCleverTapMetaData = new CleverTapMetaData();
+        mEventMediator = new EventMediator(mCleverTapMetaData, this.mConfig);
+        mSessionHandler = new SessionHandler(mCleverTapMetaData, validator, mConfig);
+        mEventProcessor = new EventProcessor();
+        mEventQueue = new EventQueue(mEventMediator, this, mSessionHandler, mMainLooperHandler,
+                mPostAsyncSafelyHandler, mEventProcessor);
+
+        CoreState coreState = new CoreState();
+        coreState.setNetworkManager(new NetworkManager(this));
+        coreState.setDatabaseManager(new DBManager());
+        coreState.setPostAsyncSafelyHandler(mPostAsyncSafelyHandler);
+
+        setCoreState(coreState);
+    }
+
+    /**
+     * If you want to stop recorded events from being sent to the server, use this method to set the SDK instance to
+     * offline.
+     * Once offline, events will be recorded and queued locally but will not be sent to the server until offline is
+     * disabled.
+     * Calling this method again with offline set to false will allow events to be sent to server and the SDK instance
+     * will immediately attempt to send events that have been queued while offline.
+     *
+     * @param value boolean, true sets the sdk offline, false sets the sdk back online
+     */
+    @SuppressWarnings({"unused"})
+    public void setOffline(boolean value) {
+        mCleverTapMetaData.setOffline(value);
+        if (value) {
+            getConfigLogger()
+                    .debug(getAccountId(), "CleverTap Instance has been set to offline, won't send events queue");
+        } else {
+            getConfigLogger()
+                    .debug(getAccountId(), "CleverTap Instance has been set to online, sending events queue");
+            flush();
+        }
+    }
 
     /**
      * This method is used to change the credentials of CleverTap account Id and token programmatically
@@ -1185,89 +1291,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
-    // Initialize
-    private CleverTapAPI(final Context context, final CleverTapInstanceConfig config, String cleverTapID) {
-        this.mConfig = new CleverTapInstanceConfig(config);
-        this.context = context;
-        this.mMainLooperHandler = new MainLooperHandler();
-        this.ns = Executors.newFixedThreadPool(1);
-        this.localDataStore = new LocalDataStore(context, config);
-        validationResultStack = new ValidationResultStack();
-        this.deviceInfo = new DeviceInfo(context, config, cleverTapID);
-        if (this.deviceInfo.getDeviceID() != null) {
-            Logger.v("Initializing InAppFC with device Id = " + this.deviceInfo.getDeviceID());
-            this.inAppFCManager = new InAppFCManager(context, config, this.deviceInfo.getDeviceID());
-        }
-        initFeatureFlags(false);
-
-        this.validator = new Validator();
-        this.pushProviders = PushProviders.load(this);
-        mPostAsyncSafelyHandler = new PostAsyncSafelyHandler(mConfig);
-
-        mPostAsyncSafelyHandler.postAsyncSafely("CleverTapAPI#initializeDeviceInfo", new Runnable() {
-            @Override
-            public void run() {
-
-                if (config.isDefaultInstance()) {
-                    manifestAsyncValidation();
-                }
-            }
-        });
-
-        int now = (int) System.currentTimeMillis() / 1000;
-        if (now - initialAppEnteredForegroundTime > 5) {
-            this.mConfig.setCreatedPostAppLaunch();
-        }
-
-        setLastVisitTime();
-
-        // Default (flag is set in the config init) or first non-default instance gets the ABTestController
-        if (!config.isDefaultInstance()) {
-            if (instances == null || instances.size() <= 0) {
-                config.setEnableABTesting(true);
-            }
-        }
-
-        mPostAsyncSafelyHandler.postAsyncSafely("setStatesAsync", new Runnable() {
-            @Override
-            public void run() {
-                setDeviceNetworkInfoReportingFromStorage();
-                setCurrentUserOptOutStateFromStorage();
-            }
-        });
-
-        mPostAsyncSafelyHandler.postAsyncSafely("saveConfigtoSharedPrefs", new Runnable() {
-            @Override
-            public void run() {
-                String configJson = config.toJSONString();
-                if (configJson == null) {
-                    Logger.v("Unable to save config to SharedPrefs, config Json is null");
-                    return;
-                }
-                StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, "instance"), configJson);
-            }
-        });
-
-        if (this.mConfig.isBackgroundSync() && !this.mConfig.isAnalyticsOnly()) {
-            mPostAsyncSafelyHandler.postAsyncSafely("createOrResetJobScheduler", new Runnable() {
-                @Override
-                public void run() {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        createOrResetJobScheduler(context);
-                    } else {
-                        createAlarmScheduler(context);
-                    }
-                }
-            });
-        }
-        Logger.i("CleverTap SDK initialized with accountId: " + config.getAccountId() + " accountToken: " + config
-                .getAccountToken() + " accountRegion: " + config.getAccountRegion());
-        mCleverTapMetaData = new CleverTapMetaData();
-        mEventMediator = new EventMediator(mCleverTapMetaData, this.mConfig);
-        mSessionHandler = new SessionHandler(mCleverTapMetaData, validator, mConfig);
-        mEventProcessor = new EventProcessor();
-        mEventQueue = new EventQueue(mEventMediator, this, mSessionHandler, mMainLooperHandler,
-                mPostAsyncSafelyHandler, mEventProcessor);
+    CoreState getCoreState() {
+        return mCoreState;
     }
 
     /**
@@ -4312,6 +4337,10 @@ public class CleverTapAPI implements CleverTapAPIListener {
         });
     }
 
+    void setCoreState(final CoreState coreState) {
+        mCoreState = coreState;
+    }
+
     /**
      * Attaches meta info about the current state of the device to an event.
      * Typically, this meta is added only to the ping event.
@@ -4343,26 +4372,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         } catch (Throwable t) {
             // Ignore
         }
-    }
-
-    private HttpsURLConnection buildHttpsURLConnection(final String endpoint)
-            throws IOException {
-
-        URL url = new URL(endpoint);
-        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-        conn.setConnectTimeout(10000);
-        conn.setReadTimeout(10000);
-        conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-        conn.setRequestProperty("X-CleverTap-Account-ID", getAccountId());
-        conn.setRequestProperty("X-CleverTap-Token", this.mConfig.getAccountToken());
-        conn.setInstanceFollowRedirects(false);
-        if (this.mConfig.isSslPinningEnabled()) {
-            SSLContext _sslContext = getSSLContext();
-            if (_sslContext != null) {
-                conn.setSSLSocketFactory(getPinnedCertsSslSocketfactory(_sslContext));
-            }
-        }
-        return conn;
     }
 
     private boolean canShowInAppOnActivity() {
@@ -4707,48 +4716,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
-    private void flushQueueAsync(final Context context, final EventGroup eventGroup) {
-        mPostAsyncSafelyHandler.postAsyncSafely("CommsManager#flushQueueAsync", new Runnable() {
-            @Override
-            public void run() {
-                if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
-                    getConfigLogger()
-                            .verbose(getAccountId(), "Pushing Notification Viewed event onto queue flush sync");
-                } else {
-                    getConfigLogger().verbose(getAccountId(), "Pushing event onto queue flush sync");
-                }
-                flushQueueSync(context, eventGroup);
-            }
-        });
-    }
-
-    private void flushQueueSync(final Context context, final EventGroup eventGroup) {
-        if (!isNetworkOnline(context)) {
-            getConfigLogger().verbose(getAccountId(), "Network connectivity unavailable. Will retry later");
-            return;
-        }
-
-        if (isOffline()) {
-            getConfigLogger()
-                    .debug(getAccountId(), "CleverTap Instance has been set to offline, won't send events queue");
-            return;
-        }
-
-        if (needsHandshakeForDomain(eventGroup)) {
-            mResponseFailureCount = 0;
-            setDomain(context, null);
-            performHandshakeForDomain(context, eventGroup, new Runnable() {
-                @Override
-                public void run() {
-                    flushDBQueue(context, eventGroup);
-                }
-            });
-        } else {
-            getConfigLogger().verbose(getAccountId(), "Pushing Notification Viewed event onto queue DB flush");
-            flushDBQueue(context, eventGroup);
-        }
-    }
-
     //Event
     private void forcePushAppLaunchedEvent() {
         mCleverTapMetaData.setAppLaunchPushed(false);
@@ -4878,23 +4845,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
-    private String getDomain(boolean defaultToHandshakeURL, final EventGroup eventGroup) {
-        String domain = getDomainFromPrefsOrMetadata(eventGroup);
-
-        final boolean emptyDomain = domain == null || domain.trim().length() == 0;
-        if (emptyDomain && !defaultToHandshakeURL) {
-            return null;
-        }
-
-        if (emptyDomain) {
-            domain = Constants.PRIMARY_DOMAIN + "/hello";
-        } else {
-            domain += "/a1";
-        }
-
-        return domain;
-    }
-
     private String getDomainFromPrefsOrMetadata(final EventGroup eventGroup) {
         try {
             final String region = this.mConfig.getAccountRegion();
@@ -4917,32 +4867,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
-    private String getEndpoint(final boolean defaultToHandshakeURL, final EventGroup eventGroup) {
-        String domain = getDomain(defaultToHandshakeURL, eventGroup);
-        if (domain == null) {
-            getConfigLogger().verbose(getAccountId(), "Unable to configure endpoint, domain is null");
-            return null;
-        }
-
-        final String accountId = getAccountId();
-        if (accountId == null) {
-            getConfigLogger().verbose(getAccountId(), "Unable to configure endpoint, accountID is null");
-            return null;
-        }
-
-        String endpoint = "https://" + domain + "?os=Android&t=" + this.deviceInfo.getSdkVersion();
-        endpoint += "&z=" + accountId;
-
-        final boolean needsHandshake = needsHandshakeForDomain(eventGroup);
-        // Don't attach ts if its handshake
-        if (needsHandshake) {
-            return endpoint;
-        }
-
-        currentRequestTimestamp = (int) (System.currentTimeMillis() / 1000);
-        endpoint += "&ts=" + currentRequestTimestamp;
-
-        return endpoint;
+    private HttpsURLConnection buildHttpsURLConnection(final String endpoint) {
+        // TODO dummy method, remove after complete development
+        return null;
     }
 
     private int getFirstRequestTimestamp() {
@@ -5465,50 +5392,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
         return now - muteTS < 24 * 60 * 60;
     }
 
-    //Notification Inbox public APIs
+    private void flushQueueAsync(final Context context, final EventGroup pushNotificationViewed) {
 
-    //Util
-    private boolean isNetworkOnline(Context context) {
-        try {
-            ConnectivityManager cm =
-                    (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
-            if (cm == null) {
-                // lets be optimistic, if we are truly offline we handle the exception
-                return true;
-            }
-            @SuppressLint("MissingPermission") NetworkInfo netInfo = cm.getActiveNetworkInfo();
-            return netInfo != null && netInfo.isConnected();
-        } catch (Throwable ignore) {
-            // lets be optimistic, if we are truly offline we handle the exception
-            return true;
-        }
-    }
-
-    private boolean isOffline() {
-        return offline;
-    }
-
-    /**
-     * If you want to stop recorded events from being sent to the server, use this method to set the SDK instance to
-     * offline.
-     * Once offline, events will be recorded and queued locally but will not be sent to the server until offline is
-     * disabled.
-     * Calling this method again with offline set to false will allow events to be sent to server and the SDK instance
-     * will immediately attempt to send events that have been queued while offline.
-     *
-     * @param value boolean, true sets the sdk offline, false sets the sdk back online
-     */
-    @SuppressWarnings({"unused"})
-    public void setOffline(boolean value) {
-        offline = value;
-        if (offline) {
-            getConfigLogger()
-                    .debug(getAccountId(), "CleverTap Instance has been set to offline, won't send events queue");
-        } else {
-            getConfigLogger()
-                    .debug(getAccountId(), "CleverTap Instance has been set to online, sending events queue");
-            flush();
-        }
+        // TODO dummy method, remove after complete development
     }
 
     private boolean isProcessUserLoginWithIdentifier(String identifier) {
@@ -6661,6 +6547,10 @@ public class CleverTapAPI implements CleverTapAPIListener {
         mMainLooperHandler.getMainLooperHandler().post(pushNotificationViewedRunnable);
     }
 
+    private void flushQueueSync(final Context context, final EventGroup regular) {
+        // TODO dummy method, remove after complete development
+    }
+
     //Event
     private void scheduleQueueFlush(final Context context) {
         if (commsRunnable == null) {
@@ -6776,6 +6666,11 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 }
             }
         }
+    }
+
+    private String getEndpoint(final boolean defaultToHandshakeURL, final EventGroup eventGroup) {
+        // TODO dummy method, remove after complete development
+        return null;
     }
 
     // -----------------------------------------------------------------------//
@@ -7620,29 +7515,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         return null;
     }
 
-    private static SSLSocketFactory getPinnedCertsSslSocketfactory(SSLContext sslContext) {
-        if (sslContext == null) {
-            return null;
-        }
-
-        if (sslSocketFactory == null) {
-            try {
-                sslSocketFactory = sslContext.getSocketFactory();
-                Logger.d("Pinning SSL session to DigiCertGlobalRoot CA certificate");
-            } catch (Throwable e) {
-                Logger.d("Issue in pinning SSL,", e);
-            }
-        }
-        return sslSocketFactory;
-    }
-
-    private static synchronized SSLContext getSSLContext() {
-        if (sslContext == null) {
-            sslContext = new SSLContextBuilder().build();
-        }
-        return sslContext;
-    }
-
     //InApp
     private static void inAppDidDismiss(Context context, CleverTapInstanceConfig config,
             CTInAppNotification inAppNotification) {
@@ -7785,4 +7657,5 @@ public class CleverTapAPI implements CleverTapAPIListener {
     static {
         haveVideoPlayerSupport = checkForExoPlayer();
     }
+
 }
