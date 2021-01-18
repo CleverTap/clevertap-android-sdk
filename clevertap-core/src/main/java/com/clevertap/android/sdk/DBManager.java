@@ -3,7 +3,7 @@ package com.clevertap.android.sdk;
 import android.content.Context;
 import org.json.JSONObject;
 
-public class DBManager {
+public class DBManager extends BaseDatabaseManager {
 
     QueueCursor updateCursorForDBObject(JSONObject dbObject, QueueCursor cursor) {
         //TODO
@@ -33,6 +33,7 @@ public class DBManager {
         return null;
     }
 
+    @Override
     void flushDBQueue(final Context context, final EventGroup eventGroup) {
         //TODO
     }

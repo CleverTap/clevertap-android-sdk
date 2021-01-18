@@ -6,6 +6,8 @@ import org.json.JSONObject;
 //TODO make singleton
 class CleverTapMetaData {
 
+    private boolean offline;
+
     private String source = null, medium = null, campaign = null;
 
     private boolean firstSession = false;
@@ -143,5 +145,13 @@ class CleverTapMetaData {
 
     synchronized String getCampaign() {
         return campaign;
+    }
+
+    boolean isOffline() {
+        return offline;
+    }
+
+    void setOffline(boolean value) {
+        offline = value;
     }
 }
