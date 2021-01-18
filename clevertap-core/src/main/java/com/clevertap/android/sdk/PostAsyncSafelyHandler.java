@@ -7,14 +7,14 @@ import java.util.concurrent.Future;
 
 class PostAsyncSafelyHandler {
 
-    private final CleverTapInstanceConfig mConfig;
-
     private long EXECUTOR_THREAD_ID = 0;
 
     private final ExecutorService es;
 
-    PostAsyncSafelyHandler(final CleverTapInstanceConfig config) {
-        mConfig = config;
+    private final CleverTapInstanceConfig mConfig;
+
+    PostAsyncSafelyHandler(CoreState coreState) {
+        mConfig = coreState.getConfig();
         this.es = Executors.newFixedThreadPool(1);
     }
 

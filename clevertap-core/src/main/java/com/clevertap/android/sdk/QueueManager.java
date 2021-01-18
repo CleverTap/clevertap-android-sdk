@@ -5,7 +5,7 @@ import org.json.JSONObject;
 
 public class QueueManager {
 
-    private final CleverTapMetaData mCleverTapMetaData;
+    private final CoreMetaData mCleverTapMetaData;
 
     private final CleverTapState mCleverTapState;
 
@@ -21,7 +21,7 @@ public class QueueManager {
 
     private final PostAsyncSafelyHandler mPostAsyncSafelyHandler;
 
-    QueueManager(Context context, CleverTapInstanceConfig config, CleverTapMetaData cleverTapMetaData,
+    QueueManager(Context context, CleverTapInstanceConfig config, CoreMetaData cleverTapMetaData,
             CleverTapState cleverTapState) {
         mContext = context;
         mConfig = config;

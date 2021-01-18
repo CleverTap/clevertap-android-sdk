@@ -4,7 +4,6 @@ import android.content.Context;
 import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
-import com.clevertap.android.sdk.BaseCTApiListener;
 import com.clevertap.android.sdk.CTJsonConverter;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
@@ -25,10 +24,10 @@ public class LoginInfoProvider {
 
     private final DeviceInfo mDeviceInfo;
 
-    public LoginInfoProvider(BaseCTApiListener ctApiListener) {
-        context = ctApiListener.context();
-        config = ctApiListener.config();
-        mDeviceInfo = ctApiListener.deviceInfo();
+    public LoginInfoProvider(Context context, CleverTapInstanceConfig config, DeviceInfo deviceInfo) {
+        this.context = context;
+        this.config = config;
+        this.mDeviceInfo = deviceInfo;
     }
 
     //Profile
@@ -76,6 +75,26 @@ public class LoginInfoProvider {
     }
 
     /**
+     * Caches the <Identity_Value, Guid> pairs for this account
+     *
+     * @param cachedGUIDs - jsonObject of the Pairs
+     */
+    public void setCachedGUIDs(JSONObject cachedGUIDs) {
+        if (cachedGUIDs == null) {
+            return;
+        }
+        try {
+            String cachedGuid = cachedGUIDs.toString();
+            StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.CACHED_GUIDS_KEY),
+                    cachedGuid);
+            config.log(LogConstants.LOG_TAG_ON_USER_LOGIN,
+                    "setCachedGUIDs:[" + cachedGuid + "]");
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(), "Error persisting guid cache: " + t.toString());
+        }
+    }
+
+    /**
      * @return - Cached Identity Keys for the account
      */
     public String getCachedIdentityKeysForAccount() {
@@ -116,26 +135,6 @@ public class LoginInfoProvider {
         config.log(LogConstants.LOG_TAG_ON_USER_LOGIN,
                 "isAnonymousDevice:[" + isAnonymousDevice + "]");
         return isAnonymousDevice;
-    }
-
-    /**
-     * Caches the <Identity_Value, Guid> pairs for this account
-     *
-     * @param cachedGUIDs - jsonObject of the Pairs
-     */
-    public void setCachedGUIDs(JSONObject cachedGUIDs) {
-        if (cachedGUIDs == null) {
-            return;
-        }
-        try {
-            String cachedGuid = cachedGUIDs.toString();
-            StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.CACHED_GUIDS_KEY),
-                    cachedGuid);
-            config.log(LogConstants.LOG_TAG_ON_USER_LOGIN,
-                    "setCachedGUIDs:[" + cachedGuid + "]");
-        } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Error persisting guid cache: " + t.toString());
-        }
     }
 
     /**

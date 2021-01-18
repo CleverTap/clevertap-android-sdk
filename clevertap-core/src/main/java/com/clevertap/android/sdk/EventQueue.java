@@ -12,107 +12,34 @@ import org.json.JSONObject;
 
 class EventQueue {
 
+    private final CleverTapInstanceConfig mConfig;
+
     private final Context mContext;
+
+    private final DeviceInfo mDeviceInfo;
 
     private final EventMediator mEventMediator;
 
-    private final SessionHandler mSessionHandler;
+    private final EventProcessor mEventProcessor;
 
     private final MainLooperHandler mMainLooperHandler;
 
     private final PostAsyncSafelyHandler mPostAsyncSafelyHandler;
 
-    private final EventProcessor mEventProcessor;
+    private final SessionHandler mSessionHandler;
 
-    private final BaseCTApiListener mBaseCTApiListener;
+    private final ValidationResultStack remoteLogger;
 
-    private final CleverTapInstanceConfig mConfig;
-    private final DeviceInfo mDeviceInfo;
-
-    EventQueue(final EventMediator eventMediator,
-            final BaseCTApiListener baseCTApiListener, final SessionHandler sessionHandler,
-            final MainLooperHandler mainLooperHandler,
-            final PostAsyncSafelyHandler postAsyncSafelyHandler,
-            final EventProcessor eventProcessor) {
-        mEventMediator = eventMediator;
-        mSessionHandler = sessionHandler;
-        mMainLooperHandler = mainLooperHandler;
-        mPostAsyncSafelyHandler = postAsyncSafelyHandler;
-        mEventProcessor = eventProcessor;
-        mBaseCTApiListener = baseCTApiListener;
-        mConfig = baseCTApiListener.config();
-        mDeviceInfo = baseCTApiListener.deviceInfo();
-        mContext = baseCTApiListener.context();
-    }
-
-    /**
-     * Adds a new event to the queue, to be sent later.
-     *
-     * @param context   The Android context
-     * @param event     The event to be queued
-     * @param eventType The type of event to be queued
-     */
-    Future<?> queueEvent(final Context context, final JSONObject event, final int eventType) {
-        return mPostAsyncSafelyHandler.postAsyncSafely("queueEvent", new Runnable() {
-            @Override
-            public void run() {
-                if (mEventMediator.shouldDropEvent(event, eventType)) {
-                    return;
-                }
-                if (mEventMediator.shouldDeferProcessingEvent(event, eventType)) {
-                    mConfig.getLogger().debug(mConfig.getAccountId(),
-                            "App Launched not yet processed, re-queuing event " + event + "after 2s");
-                    mMainLooperHandler.getMainLooperHandler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            mPostAsyncSafelyHandler.postAsyncSafely("queueEventWithDelay", new Runnable() {
-                                @Override
-                                public void run() {
-                                    mSessionHandler.lazyCreateSession(context);
-                                    pushInitialEventsAsync();
-                                    addToQueue(context, event, eventType);
-                                }
-                            });
-                        }
-                    }, 2000);
-                } else {
-                    if (eventType == Constants.FETCH_EVENT) {
-                        addToQueue(context, event, eventType);
-                    } else {
-                        mSessionHandler.lazyCreateSession(context);
-                        pushInitialEventsAsync();
-                        addToQueue(context, event, eventType);
-                    }
-                }
-            }
-        });
-    }
-
-    // only call async
-    private void addToQueue(final Context context, final JSONObject event, final int eventType) {
-        if (eventType == Constants.NV_EVENT) {
-            mConfig.getLogger()
-                    .verbose(mConfig.getAccountId(), "Pushing Notification Viewed event onto separate queue");
-            mEventProcessor.processPushNotificationViewedEvent(context, event);
-        } else {
-            mEventProcessor.processEvent(context, event, eventType);
-        }
-    }
-
-    //Event
-    void pushInitialEventsAsync() {
-
-        mPostAsyncSafelyHandler.postAsyncSafely("CleverTapAPI#pushInitialEventsAsync", new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    mConfig.getLogger().verbose(mConfig.getAccountId(), "Queuing daily events");
-                    pushBasicProfile(null);
-                } catch (Throwable t) {
-                    mConfig.getLogger().verbose(mConfig.getAccountId(), "Daily profile sync failed", t);
-                }
-            }
-        });
+    public EventQueue(final CoreState coreState) {
+        mEventMediator = coreState.getEventMediator();
+        mSessionHandler = coreState.getSessionHandler();
+        mMainLooperHandler = coreState.getMainLooperHandler();
+        mPostAsyncSafelyHandler = coreState.getPostAsyncSafelyHandler();
+        mEventProcessor = coreState.getEventProcessor();
+        mConfig = coreState.getConfig();
+        mDeviceInfo = coreState.getDeviceInfo();
+        mContext = coreState.getContext();
+        remoteLogger = coreState.getRemoteLogger();
     }
 
     //Profile
@@ -124,8 +51,9 @@ class EventQueue {
 
             if (baseProfile != null && baseProfile.length() > 0) {
                 Iterator<String> i = baseProfile.keys();
-                IdentityRepo iProfileHandler = IdentityRepoFactory.getRepo(mBaseCTApiListener);
-                LoginInfoProvider loginInfoProvider = new LoginInfoProvider(mBaseCTApiListener);
+                IdentityRepo iProfileHandler = IdentityRepoFactory
+                        .getRepo(mContext, mConfig, mDeviceInfo, remoteLogger);
+                LoginInfoProvider loginInfoProvider = new LoginInfoProvider(mContext, mConfig, mDeviceInfo);
                 while (i.hasNext()) {
                     String next = i.next();
 
@@ -179,6 +107,76 @@ class EventQueue {
             }
         } catch (Throwable t) {
             mConfig.getLogger().verbose(mConfig.getAccountId(), "Basic profile sync", t);
+        }
+    }
+
+    //Event
+    void pushInitialEventsAsync() {
+
+        mPostAsyncSafelyHandler.postAsyncSafely("CleverTapAPI#pushInitialEventsAsync", new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    mConfig.getLogger().verbose(mConfig.getAccountId(), "Queuing daily events");
+                    pushBasicProfile(null);
+                } catch (Throwable t) {
+                    mConfig.getLogger().verbose(mConfig.getAccountId(), "Daily profile sync failed", t);
+                }
+            }
+        });
+    }
+
+    /**
+     * Adds a new event to the queue, to be sent later.
+     *
+     * @param context   The Android context
+     * @param event     The event to be queued
+     * @param eventType The type of event to be queued
+     */
+    Future<?> queueEvent(final Context context, final JSONObject event, final int eventType) {
+        return mPostAsyncSafelyHandler.postAsyncSafely("queueEvent", new Runnable() {
+            @Override
+            public void run() {
+                if (mEventMediator.shouldDropEvent(event, eventType)) {
+                    return;
+                }
+                if (mEventMediator.shouldDeferProcessingEvent(event, eventType)) {
+                    mConfig.getLogger().debug(mConfig.getAccountId(),
+                            "App Launched not yet processed, re-queuing event " + event + "after 2s");
+                    mMainLooperHandler.getMainLooperHandler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            mPostAsyncSafelyHandler.postAsyncSafely("queueEventWithDelay", new Runnable() {
+                                @Override
+                                public void run() {
+                                    mSessionHandler.lazyCreateSession(context);
+                                    pushInitialEventsAsync();
+                                    addToQueue(context, event, eventType);
+                                }
+                            });
+                        }
+                    }, 2000);
+                } else {
+                    if (eventType == Constants.FETCH_EVENT) {
+                        addToQueue(context, event, eventType);
+                    } else {
+                        mSessionHandler.lazyCreateSession(context);
+                        pushInitialEventsAsync();
+                        addToQueue(context, event, eventType);
+                    }
+                }
+            }
+        });
+    }
+
+    // only call async
+    private void addToQueue(final Context context, final JSONObject event, final int eventType) {
+        if (eventType == Constants.NV_EVENT) {
+            mConfig.getLogger()
+                    .verbose(mConfig.getAccountId(), "Pushing Notification Viewed event onto separate queue");
+            mEventProcessor.processPushNotificationViewedEvent(context, event);
+        } else {
+            mEventProcessor.processEvent(context, event, eventType);
         }
     }
 

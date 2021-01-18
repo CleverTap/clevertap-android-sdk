@@ -4,16 +4,33 @@ import java.util.Arrays;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class EventMediator {
+class EventMediator {
 
-    public EventMediator(final CleverTapMetaData cleverTapMetaData, final CleverTapInstanceConfig config) {
-        mCleverTapMetaData = cleverTapMetaData;
-        mConfig = config;
-    }
-
-    private final CleverTapMetaData mCleverTapMetaData;
+    private final CoreMetaData mCleverTapMetaData;
 
     private final CleverTapInstanceConfig mConfig;
+
+    public EventMediator(final CoreState coreState) {
+        mConfig = coreState.getConfig();
+        mCleverTapMetaData = coreState.getCoreMetaData();
+    }
+
+    boolean shouldDeferProcessingEvent(JSONObject event, int eventType) {
+        //noinspection SimplifiableIfStatement
+        if (mConfig.isCreatedPostAppLaunch()) {
+            return false;
+        }
+        if (event.has("evtName")) {
+            try {
+                if (Arrays.asList(Constants.SYSTEM_EVENTS).contains(event.getString("evtName"))) {
+                    return false;
+                }
+            } catch (JSONException e) {
+                //no-op
+            }
+        }
+        return (eventType == Constants.RAISED_EVENT && !mCleverTapMetaData.isAppLaunchPushed());
+    }
 
     boolean shouldDropEvent(JSONObject event, int eventType) {
         if (eventType == Constants.FETCH_EVENT) {
@@ -34,22 +51,5 @@ public class EventMediator {
         }
 
         return false;
-    }
-
-    boolean shouldDeferProcessingEvent(JSONObject event, int eventType) {
-        //noinspection SimplifiableIfStatement
-        if (mConfig.isCreatedPostAppLaunch()) {
-            return false;
-        }
-        if (event.has("evtName")) {
-            try {
-                if (Arrays.asList(Constants.SYSTEM_EVENTS).contains(event.getString("evtName"))) {
-                    return false;
-                }
-            } catch (JSONException e) {
-                //no-op
-            }
-        }
-        return (eventType == Constants.RAISED_EVENT && !mCleverTapMetaData.isAppLaunchPushed());
     }
 }

@@ -29,11 +29,10 @@ class NetworkManager extends BaseNetworkManager {
 
     private int mResponseFailureCount = 0;// TODO encapsulate into NetworkState class
 
-    NetworkManager(BaseCTApiListener baseCTApiListener) {
-        mContext = baseCTApiListener.context();
-        mConfig = baseCTApiListener.config();
-        mDeviceInfo = baseCTApiListener.deviceInfo();
-
+    NetworkManager(CoreState coreState) {
+        mContext = coreState.getContext();
+        mConfig = coreState.getConfig();
+        mDeviceInfo = coreState.getDeviceInfo();
         mLogger = mConfig.getLogger();
     }
 
@@ -81,11 +80,6 @@ class NetworkManager extends BaseNetworkManager {
         return domain;
     }
 
-    boolean hasDomainChanged(final String newDomain) {
-        // TODO implementation
-        return true;
-    }
-
     String getDomainFromPrefsOrMetadata(final EventGroup eventGroup) {
 
         try {
@@ -108,11 +102,6 @@ class NetworkManager extends BaseNetworkManager {
             return StorageHelper.getStringFromPrefs(mContext, mConfig, Constants.KEY_DOMAIN_NAME, null);
         }
 
-    }
-
-    String insertHeader(Context context, JSONArray arr) {
-        // TODO implementation
-        return null;
     }
 
     String getEndpoint(final boolean defaultToHandshakeURL, final EventGroup eventGroup) {
@@ -148,6 +137,47 @@ class NetworkManager extends BaseNetworkManager {
         return StorageHelper.getIntFromPrefs(mContext, mConfig, Constants.KEY_FIRST_TS, 0);
     }
 
+    int getLastRequestTimestamp() {
+        return StorageHelper.getIntFromPrefs(mContext, mConfig, Constants.KEY_LAST_TS, 0);
+    }
+
+    void setLastRequestTimestamp(int ts) {
+        StorageHelper.putInt(mContext, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_LAST_TS), ts);
+    }
+
+    // TODO encapsulate into NetworkState class
+    int getResponseFailureCount() {
+        return mResponseFailureCount;
+    }
+
+    // TODO encapsulate into NetworkState class
+    void setResponseFailureCount(final int responseFailureCount) {
+        mResponseFailureCount = responseFailureCount;
+    }
+
+    boolean hasDomainChanged(final String newDomain) {
+        // TODO implementation
+        return true;
+    }
+
+    @Override
+    void initHandshake(final EventGroup eventGroup, final Runnable handshakeSuccessCallback) {
+        mResponseFailureCount = 0;
+        setDomain(mContext, null);
+        performHandshakeForDomain(mContext, eventGroup, handshakeSuccessCallback);
+    }
+
+    String insertHeader(Context context, JSONArray arr) {
+        // TODO implementation
+        return null;
+    }
+
+    @Override
+    boolean needsHandshakeForDomain(final EventGroup eventGroup) {
+        // TODO implementation
+        return true;
+    }
+
     void performHandshakeForDomain(final Context context, final EventGroup eventGroup,
             final Runnable handshakeSuccessCallback) {
         // TODO implementation
@@ -167,46 +197,15 @@ class NetworkManager extends BaseNetworkManager {
         // TODO implementation
     }
 
-    void setSpikyDomain(final Context context, String spikyDomainName) {
-        // TODO implementation
-    }
-
-    int getLastRequestTimestamp() {
-        return StorageHelper.getIntFromPrefs(mContext, mConfig, Constants.KEY_LAST_TS, 0);
-    }
-
-    void setLastRequestTimestamp(int ts) {
-        StorageHelper.putInt(mContext, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_LAST_TS), ts);
-    }
-
-    // TODO encapsulate into NetworkState class
-    int getResponseFailureCount() {
-        return mResponseFailureCount;
-    }
-
-    // TODO encapsulate into NetworkState class
-    void setResponseFailureCount(final int responseFailureCount) {
-        mResponseFailureCount = responseFailureCount;
-    }
-
-    @Override
-    void initHandshake(final EventGroup eventGroup, final Runnable handshakeSuccessCallback) {
-        mResponseFailureCount = 0;
-        setDomain(mContext, null);
-        performHandshakeForDomain(mContext, eventGroup, handshakeSuccessCallback);
-    }
-
-    @Override
-    boolean needsHandshakeForDomain(final EventGroup eventGroup) {
-        // TODO implementation
-        return true;
-    }
-
     void setFirstRequestTimestampIfNeeded(int ts) {
         if (getFirstRequestTimestamp() > 0) {
             return;
         }
         StorageHelper.putInt(mContext, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_FIRST_TS), ts);
+    }
+
+    void setSpikyDomain(final Context context, String spikyDomainName) {
+        // TODO implementation
     }
 
     static boolean isNetworkOnline(Context context) {

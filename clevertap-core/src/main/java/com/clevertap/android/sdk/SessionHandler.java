@@ -5,18 +5,35 @@ import android.content.SharedPreferences;
 
 public class SessionHandler {
 
-    private final CleverTapMetaData mCleverTapMetaData;
-
-    private final Validator mValidator;
+    private final CoreMetaData mCleverTapMetaData;
 
     private final CleverTapInstanceConfig mConfig;
 
-    SessionHandler(final CleverTapMetaData cleverTapMetaData,
-            Validator validator,
-            CleverTapInstanceConfig config) {
-        mCleverTapMetaData = cleverTapMetaData;
+    private final Validator mValidator;
+
+    public SessionHandler(final CoreState coreState, final Validator validator) {
+        mCleverTapMetaData = coreState.getCoreMetaData();
         mValidator = validator;
-        mConfig = config;
+        mConfig = coreState.getConfig();
+    }
+
+    /**
+     * Destroys the current session and resets <i>firstSession</i> flag, if first session lasts more than 20 minutes
+     * <br><br>For an app like Music Player <li>user installs an app and plays music and then moves to background.
+     * <li>User then re-launches an App after listening music in background for more than 20 minutes, in this case
+     * since an app is not yet killed due to background music <i>app installed</i> event must not be raised by SDK
+     */
+    void destroySession() {
+        mCleverTapMetaData.setSessionId(0);
+        mCleverTapMetaData.setAppLaunchPushed(false);
+        if (mCleverTapMetaData.isFirstSession()) {
+            mCleverTapMetaData.setFirstSession(false);
+        }
+        mConfig.getLogger().verbose(mConfig.getAccountId(), "Session destroyed; Session ID is now 0");
+        mCleverTapMetaData.clearSource();
+        mCleverTapMetaData.clearMedium();
+        mCleverTapMetaData.clearCampaign();
+        mCleverTapMetaData.clearWzrkParams();
     }
 
     void lazyCreateSession(Context context) {
@@ -55,25 +72,6 @@ public class SessionHandler {
                 .putInt(StorageHelper.storageKeyWithSuffix(mConfig, Constants.SESSION_ID_LAST),
                         mCleverTapMetaData.getCurrentSession());
         StorageHelper.persist(editor);
-    }
-
-    /**
-     * Destroys the current session and resets <i>firstSession</i> flag, if first session lasts more than 20 minutes
-     * <br><br>For an app like Music Player <li>user installs an app and plays music and then moves to background.
-     * <li>User then re-launches an App after listening music in background for more than 20 minutes, in this case
-     * since an app is not yet killed due to background music <i>app installed</i> event must not be raised by SDK
-     */
-    void destroySession() {
-        mCleverTapMetaData.setSessionId(0);
-        mCleverTapMetaData.setAppLaunchPushed(false);
-        if (mCleverTapMetaData.isFirstSession()) {
-            mCleverTapMetaData.setFirstSession(false);
-        }
-        mConfig.getLogger().verbose(mConfig.getAccountId(), "Session destroyed; Session ID is now 0");
-        mCleverTapMetaData.clearSource();
-        mCleverTapMetaData.clearMedium();
-        mCleverTapMetaData.clearCampaign();
-        mCleverTapMetaData.clearWzrkParams();
     }
 
 }

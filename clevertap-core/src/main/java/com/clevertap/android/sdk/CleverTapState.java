@@ -1,6 +1,18 @@
 package com.clevertap.android.sdk;
 
+import android.content.Context;
+
 abstract class CleverTapState {
+
+    private final Context context;
+
+    CleverTapState(final Context context) {
+        this.context = context;
+    }
+
+    Context getContext() {
+        return context;
+    }
 
     abstract BaseDatabaseManager getDatabaseManager();
 

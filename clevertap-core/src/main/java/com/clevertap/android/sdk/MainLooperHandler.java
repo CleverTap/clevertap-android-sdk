@@ -3,7 +3,9 @@ package com.clevertap.android.sdk;
 import android.os.Handler;
 import android.os.Looper;
 
+//ToDO move this a single Task manager
 class MainLooperHandler {
+
     private final Handler mHandler = new Handler(Looper.getMainLooper());
 
     /**
