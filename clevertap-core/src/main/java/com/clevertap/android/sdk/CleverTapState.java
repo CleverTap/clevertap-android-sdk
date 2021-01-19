@@ -10,7 +10,7 @@ abstract class CleverTapState {
         this.context = context;
     }
 
-    Context getContext() {
+    public Context getContext() {
         return context;
     }
 

@@ -10,9 +10,13 @@ import org.json.JSONObject;
  */
 class CoreMetaData extends CleverTapMetaData {
 
+    private static int activityCount = 0;
+
     private boolean appLaunchPushed = false;
 
     private final Object appLaunchPushedLock = new Object();
+
+    private String currentScreenName = "";
 
     private int currentSessionId = 0;
 
@@ -21,6 +25,12 @@ class CoreMetaData extends CleverTapMetaData {
     private boolean firstRequestInSession = false;
 
     private boolean firstSession = false;
+
+    private int geofenceSDKVersion = 0;
+
+    private boolean isBgPing = false;
+
+    private boolean isLocationForGeofence = false;
 
     private int lastSessionLength = 0;
 
@@ -31,6 +41,10 @@ class CoreMetaData extends CleverTapMetaData {
     private String source = null, medium = null, campaign = null;
 
     private JSONObject wzrkParams = null;
+
+    public void setCurrentScreenName(final String currentScreenName) {
+        this.currentScreenName = currentScreenName;
+    }
 
     synchronized void clearCampaign() {
         campaign = null;
@@ -62,6 +76,14 @@ class CoreMetaData extends CleverTapMetaData {
         return currentSessionId;
     }
 
+    int getGeofenceSDKVersion() {
+        return geofenceSDKVersion;
+    }
+
+    void setGeofenceSDKVersion(int geofenceSDKVersion) {
+        this.geofenceSDKVersion = geofenceSDKVersion;
+    }
+
     //Session
     int getLastSessionLength() {
         return lastSessionLength;
@@ -80,6 +102,10 @@ class CoreMetaData extends CleverTapMetaData {
         if (this.medium == null) {
             this.medium = medium;
         }
+    }
+
+    String getScreenName() {
+        return currentScreenName.equals("") ? null : currentScreenName;
     }
 
     synchronized String getSource() {
@@ -120,6 +146,14 @@ class CoreMetaData extends CleverTapMetaData {
         }
     }
 
+    boolean isBgPing() {
+        return isBgPing;
+    }
+
+    void setBgPing(final boolean bgPing) {
+        isBgPing = bgPing;
+    }
+
     boolean isCurrentUserOptedOut() {
         synchronized (optOutFlagLock) {
             return currentUserOptedOut;
@@ -149,6 +183,14 @@ class CoreMetaData extends CleverTapMetaData {
         this.firstSession = firstSession;
     }
 
+    boolean isLocationForGeofence() {
+        return isLocationForGeofence;
+    }
+
+    void setLocationForGeofence(boolean locationForGeofence) {
+        isLocationForGeofence = locationForGeofence;
+    }
+
     boolean isMuted() {
         //TODO
         return false;
@@ -168,5 +210,17 @@ class CoreMetaData extends CleverTapMetaData {
 
     void setSessionId(int sessionId) {
         this.currentSessionId = sessionId;
+    }
+
+    static int getActivityCount() {
+        return activityCount;
+    }
+
+    static void setActivityCount(final int count) {
+        activityCount = activityCount;
+    }
+
+    static void incrementActivityCount() {
+        activityCount++;
     }
 }

@@ -67,7 +67,6 @@ import com.clevertap.android.sdk.pushnotification.CTPushNotificationReceiver;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
-import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundIntentService;
 import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundJobService;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
@@ -175,8 +174,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private static boolean appForeground = false;
 
-    private static int activityCount = 0;
-
     private static final List<CTInAppNotification> pendingNotifications = Collections
             .synchronizedList(new ArrayList<CTInAppNotification>());
 
@@ -199,8 +196,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private String cachedGUID = null;
 
-    private Runnable commsRunnable = null;
-
     private final Context context;
 
     private CTFeatureFlagsController ctFeatureFlagsController;
@@ -211,11 +206,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private final int currentRequestTimestamp = 0;
 
-    private String currentScreenName = "";
-
     private DBAdapter dbAdapter;
-
-    private final DeviceInfo deviceInfo;
 
     private final Object displayUnitControllerLock = new Object();
 
@@ -223,17 +214,11 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private boolean enableNetworkInfoReporting = false;
 
-    private final Boolean eventLock = true;
-
     private CTExperimentsListener experimentsListener = null;
 
     private WeakReference<CTFeatureFlagsListener> featureFlagsListener;
 
     private GeofenceCallback geofenceCallback;
-
-    private int geofenceSDKVersion = 0;
-
-    private InAppFCManager inAppFCManager;
 
     private WeakReference<InAppNotificationButtonListener> inAppNotificationButtonListener;
 
@@ -251,9 +236,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private final HashMap<String, Integer> installReferrerMap = new HashMap<>(8);
 
-    private boolean isBgPing = false;
-
-    private boolean isLocationForGeofence = false;
 
     private boolean isProductConfigRequested;
 
@@ -263,17 +245,13 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private int lastVisitTime;
 
-    private final LocalDataStore localDataStore;
 
     private Location locationFromUser = null;
 
     private CTDisplayUnitController mCTDisplayUnitController;
 
-    private final CleverTapInstanceConfig mConfig;
-
     private CoreState mCoreState;
 
-    private final MainLooperHandler mMainLooperHandler;
 
     private int mResponseFailureCount = 0;
 
@@ -303,21 +281,10 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private CTPushNotificationListener pushNotificationListener = null;
 
-    private Runnable pushNotificationViewedRunnable = null;
-
-    private final PushProviders pushProviders;
-
     private long referrerClickTime = 0;
 
     private SyncListener syncListener = null;
 
-    private final Object tokenLock = new Object();
-
-    private DevicePushTokenRefreshListener tokenRefreshListener;
-
-    private final ValidationResultStack validationResultStack;
-
-    private final Validator validator;
 
     /**
      * This method is used to change the credentials of CleverTap account Id and token programmatically
@@ -378,7 +345,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
             boolean shouldProcess = false;
             if (instance != null) {
-                shouldProcess = (_accountId == null && instance.mConfig.isDefaultInstance()) || instance
+                shouldProcess = (_accountId == null && instance.getCoreState().getConfig().isDefaultInstance()) || instance
                         .getAccountId()
                         .equals(_accountId);
             }
@@ -938,7 +905,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
             boolean shouldProcess = false;
             if (instance != null) {
-                shouldProcess = (_accountId == null && instance.mConfig.isDefaultInstance()) || instance
+                shouldProcess = (_accountId == null && instance.getCoreState().getConfig().isDefaultInstance()) || instance
                         .getAccountId()
                         .equals(_accountId);
             }
@@ -1040,7 +1007,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
         String currentActivityName = getCurrentActivityName();
         setCurrentActivity(activity);
         if (currentActivityName == null || !currentActivityName.equals(activity.getLocalClassName())) {
-            activityCount++;
+            CoreMetaData.incrementActivityCount();
         }
 
         if (initialAppEnteredForegroundTime <= 0) {
@@ -1166,31 +1133,19 @@ public class CleverTapAPI implements CleverTapAPIListener {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static void tokenRefresh(Context context, String token, PushType pushType) {
         for (CleverTapAPI instance : getAvailableInstances(context)) {
-            instance.doTokenRefresh(token, pushType);
+            instance.getCoreState().getPushProviders().doTokenRefresh(token, pushType);
         }
     }
 
     // Initialize
     private CleverTapAPI(final Context context, final CleverTapInstanceConfig config, String cleverTapID) {
-        this.mConfig = new CleverTapInstanceConfig(config);
         this.context = context;
-        this.mMainLooperHandler = new MainLooperHandler();
         this.ns = Executors.newFixedThreadPool(1);
-        this.localDataStore = new LocalDataStore(context, config);
-        validationResultStack = new ValidationResultStack();
-        this.deviceInfo = new DeviceInfo(context, config, cleverTapID);
-        if (this.deviceInfo.getDeviceID() != null) {
-            Logger.v("Initializing InAppFC with device Id = " + this.deviceInfo.getDeviceID());
-            this.inAppFCManager = new InAppFCManager(context, config, this.deviceInfo.getDeviceID());
-        }
+
         initFeatureFlags(false);
 
-        this.validator = new Validator();
-        this.pushProviders = PushProviders.load(this);
-        //
-
         CoreState coreState = CleverTapFactory
-                .getCoreState(context, mConfig, deviceInfo, validator, validationResultStack);
+                .getCoreState(context, config, cleverTapID);
         setCoreState(coreState);
 
         coreState.getPostAsyncSafelyHandler().postAsyncSafely("CleverTapAPI#initializeDeviceInfo", new Runnable() {
@@ -1205,7 +1160,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
         int now = (int) System.currentTimeMillis() / 1000;
         if (now - initialAppEnteredForegroundTime > 5) {
-            this.mConfig.setCreatedPostAppLaunch();
+            this.getCoreState().getConfig().setCreatedPostAppLaunch();
         }
 
         setLastVisitTime();
@@ -1237,7 +1192,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             }
         });
 
-        if (this.mConfig.isBackgroundSync() && !this.mConfig.isAnalyticsOnly()) {
+        if (this.getCoreState().getConfig().isBackgroundSync() && !this.getCoreState().getConfig().isAnalyticsOnly()) {
             coreState.getPostAsyncSafelyHandler().postAsyncSafely("createOrResetJobScheduler", new Runnable() {
                 @Override
                 public void run() {
@@ -1296,24 +1251,13 @@ public class CleverTapAPI implements CleverTapAPIListener {
         getCoreState().getPostAsyncSafelyHandler().postAsyncSafely("addMultiValuesForKey", new Runnable() {
             @Override
             public void run() {
-                final String command = (getLocalDataStore().getProfileValueForKey(key) != null)
+                final String command = (getCoreState().getLocalDataStore().getProfileValueForKey(key) != null)
                         ? Constants.COMMAND_ADD : Constants.COMMAND_SET;
                 _handleMultiValues(values, key, command);
             }
         });
     }
 
-    @Override
-    @RestrictTo(Scope.LIBRARY)
-    public CleverTapInstanceConfig config() {
-        return mConfig;
-    }
-
-    @Override
-    @RestrictTo(Scope.LIBRARY)
-    public Context context() {
-        return context;
-    }
 
     /**
      * Deletes the given {@link CTInboxMessage} object
@@ -1350,11 +1294,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         deleteInboxMessage(message);
     }
 
-    @RestrictTo(Scope.LIBRARY)
-    @Override
-    public DeviceInfo deviceInfo() {
-        return deviceInfo;
-    }
 
     /**
      * Disables the Profile/Events Read and Synchronization API
@@ -1362,7 +1301,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings({"unused"})
     public void disablePersonalization() {
-        this.mConfig.enablePersonalization(false);
+        this.getCoreState().getConfig().enablePersonalization(false);
     }
 
     /**
@@ -1374,7 +1313,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
     @SuppressWarnings({"unused"})
     public void enableDeviceNetworkInfoReporting(boolean value) {
         enableNetworkInfoReporting = value;
-        StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.NETWORK_INFO),
+        StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(getCoreState().getConfig(), Constants.NETWORK_INFO),
                 enableNetworkInfoReporting);
         getConfigLogger()
                 .verbose(getAccountId(), "Device Network Information reporting set to " + enableNetworkInfoReporting);
@@ -1386,7 +1325,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings({"unused"})
     public void enablePersonalization() {
-        this.mConfig.enablePersonalization(true);
+        this.getCoreState().getConfig().enablePersonalization(true);
     }
 
     /**
@@ -1420,7 +1359,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @Override
     public void fetchFeatureFlags() {
-        if (mConfig.isAnalyticsOnly()) {
+        if (getCoreState().getConfig().isAnalyticsOnly()) {
             return;
         }
         JSONObject event = new JSONObject();
@@ -1433,7 +1372,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             e.printStackTrace();
         }
 
-        getCoreState().getEventQueue().queueEvent(context, event, Constants.FETCH_EVENT);
+        getCoreState().getBaseEventQueueManager().queueEvent(context, event, Constants.FETCH_EVENT);
     }
 
     /**
@@ -1452,7 +1391,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             e.printStackTrace();
         }
 
-        getCoreState().getEventQueue().queueEvent(context, event, Constants.FETCH_EVENT);
+        getCoreState().getBaseEventQueueManager().queueEvent(context, event, Constants.FETCH_EVENT);
         isProductConfigRequested = true;
         getConfigLogger().verbose(getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Fetching product config");
     }
@@ -1466,7 +1405,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     public String getAccountId() {
-        return mConfig.getAccountId();
+        return getCoreState().getConfig().getAccountId();
     }
 
     /**
@@ -1599,7 +1538,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings("unused")
     public String getCleverTapAttributionIdentifier() {
-        return this.deviceInfo.getAttributionID();
+        return getCoreState().getDeviceInfo().getAttributionID();
     }
 
     /**
@@ -1609,7 +1548,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public String getCleverTapID() {
-        return this.deviceInfo.getDeviceID();
+        return getCoreState().getDeviceInfo().getDeviceID();
     }
 
     //Network Info handling
@@ -1622,7 +1561,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings({"unused"})
     public int getCount(String event) {
-        EventDetail eventDetail = getLocalDataStore().getEventDetail(event);
+        EventDetail eventDetail = getCoreState().getLocalDataStore().getEventDetail(event);
         if (eventDetail != null) {
             return eventDetail.getCount();
         }
@@ -1640,23 +1579,23 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings({"unused"})
     public EventDetail getDetails(String event) {
-        return getLocalDataStore().getEventDetail(event);
+        return getCoreState().getLocalDataStore().getEventDetail(event);
     }
 
     public Map<String, String> getDeviceInfo() {
         final Map<String, String> deviceInfo = new HashMap<>();
-        deviceInfo.put("build", String.valueOf(this.deviceInfo.getBuild()));
-        deviceInfo.put("versionName", this.deviceInfo.getVersionName());
-        deviceInfo.put("osName", this.deviceInfo.getOsName());
-        deviceInfo.put("osVersion", this.deviceInfo.getOsVersion());
-        deviceInfo.put("manufacturer", this.deviceInfo.getManufacturer());
-        deviceInfo.put("model", this.deviceInfo.getModel());
-        deviceInfo.put("sdkVersion", String.valueOf(this.deviceInfo.getSdkVersion()));
-        deviceInfo.put("dpi", String.valueOf(this.deviceInfo.getDPI()));
-        deviceInfo.put("device_width", String.valueOf(this.deviceInfo.getWidthPixels()));
-        deviceInfo.put("device_height", String.valueOf(this.deviceInfo.getHeightPixels()));
-        if (this.deviceInfo.getLibrary() != null) {
-            deviceInfo.put("library", this.deviceInfo.getLibrary());
+        deviceInfo.put("build", String.valueOf(getCoreState().getDeviceInfo().getBuild()));
+        deviceInfo.put("versionName", getCoreState().getDeviceInfo().getVersionName());
+        deviceInfo.put("osName", getCoreState().getDeviceInfo().getOsName());
+        deviceInfo.put("osVersion", getCoreState().getDeviceInfo().getOsVersion());
+        deviceInfo.put("manufacturer", getCoreState().getDeviceInfo().getManufacturer());
+        deviceInfo.put("model", getCoreState().getDeviceInfo().getModel());
+        deviceInfo.put("sdkVersion", String.valueOf(getCoreState().getDeviceInfo().getSdkVersion()));
+        deviceInfo.put("dpi", String.valueOf(getCoreState().getDeviceInfo().getDPI()));
+        deviceInfo.put("device_width", String.valueOf(getCoreState().getDeviceInfo().getWidthPixels()));
+        deviceInfo.put("device_height", String.valueOf(getCoreState().getDeviceInfo().getHeightPixels()));
+        if (getCoreState().getDeviceInfo().getLibrary() != null) {
+            deviceInfo.put("library", getCoreState().getDeviceInfo().getLibrary());
         }
         return deviceInfo;
     }
@@ -1675,7 +1614,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings("unused")
     public String getDevicePushToken(final PushType type) {
-        return pushProviders.getCachedToken(type);
+        return getCoreState().getPushProviders().getCachedToken(type);
     }
 
     /**
@@ -1685,7 +1624,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings("unused")
     public DevicePushTokenRefreshListener getDevicePushTokenRefreshListener() {
-        return tokenRefreshListener;
+        return getCoreState().getPushProviders().getDevicePushTokenRefreshListener();
     }
 
     /**
@@ -1695,7 +1634,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings("unused")
     public void setDevicePushTokenRefreshListener(DevicePushTokenRefreshListener tokenRefreshListener) {
-        this.tokenRefreshListener = tokenRefreshListener;
+        getCoreState().getPushProviders().setDevicePushTokenRefreshListener(tokenRefreshListener);
+
     }
 
     /**
@@ -1723,7 +1663,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings({"unused"})
     public int getFirstTime(String event) {
-        EventDetail eventDetail = getLocalDataStore().getEventDetail(event);
+        EventDetail eventDetail = getCoreState().getLocalDataStore().getEventDetail(event);
         if (eventDetail != null) {
             return eventDetail.getFirstTime();
         }
@@ -1763,7 +1703,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings({"unused"})
     public Map<String, EventDetail> getHistory() {
-        return getLocalDataStore().getEventHistory(context);
+        return getCoreState().getLocalDataStore().getEventHistory(context);
     }
 
     /**
@@ -1853,7 +1793,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings({"unused"})
     public int getLastTime(String event) {
-        EventDetail eventDetail = getLocalDataStore().getEventDetail(event);
+        EventDetail eventDetail = getCoreState().getLocalDataStore().getEventDetail(event);
         if (eventDetail != null) {
             return eventDetail.getLastTime();
         }
@@ -1903,17 +1843,17 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings({"unused"})
     public Object getProperty(String name) {
-        if (!this.mConfig.isPersonalizationEnabled()) {
+        if (!getCoreState().getConfig().isPersonalizationEnabled()) {
             return null;
         }
-        return getLocalDataStore().getProfileProperty(name);
+        return getCoreState().getLocalDataStore().getProfileProperty(name);
     }
 
     /**
      * Returns the token for a particular push type
      */
     public String getPushToken(@NonNull PushConstants.PushType pushType) {
-        return pushProviders.getCachedToken(pushType);
+        return getCoreState().getPushProviders().getCachedToken(pushType);
     }
 
     /**
@@ -1923,7 +1863,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings({"unused"})
     public int getScreenCount() {
-        return CleverTapAPI.activityCount;
+        return CoreMetaData.getActivityCount();
     }
 
     /**
@@ -1969,7 +1909,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings({"unused"})
     public int getTotalVisits() {
-        EventDetail ed = getLocalDataStore().getEventDetail(Constants.APP_LAUNCHED_EVENT);
+        EventDetail ed = getCoreState().getLocalDataStore().getEventDetail(Constants.APP_LAUNCHED_EVENT);
         if (ed != null) {
             return ed.getCount();
         }
@@ -2028,8 +1968,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
     public void inAppNotificationDidDismiss(final Context context, final CTInAppNotification inAppNotification,
             Bundle formData) {
         inAppNotification.didDismiss();
-        if (inAppFCManager != null) {
-            inAppFCManager.didDismiss(inAppNotification);
+        if (getCoreState().getInAppFCManager()!= null) {
+            getCoreState().getInAppFCManager().didDismiss(inAppNotification);
             getConfigLogger().verbose(getAccountId(), "InApp Dismissed: " + inAppNotification.getCampaignId());
         }
         try {
@@ -2156,7 +2096,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
     @Override
     public void notificationReady(final CTInAppNotification inAppNotification) {
         if (Looper.myLooper() != Looper.getMainLooper()) {
-            mMainLooperHandler.getMainLooperHandler().post(new Runnable() {
+            getCoreState().getMainLooperHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     notificationReady(inAppNotification);
@@ -2205,18 +2145,11 @@ public class CleverTapAPI implements CleverTapAPIListener {
     @Override
     public void onInit() {
         if (productConfigListener != null && productConfigListener.get() != null) {
-            getConfigLogger().verbose(mConfig.getAccountId(), "Product Config initialized");
+            getConfigLogger().verbose(getCoreState().getConfig().getAccountId(), "Product Config initialized");
             productConfigListener.get().onInit();
         }
     }
 
-    @Override
-    public void onNewToken(String freshToken, PushType pushType) {
-        if (!TextUtils.isEmpty(freshToken)) {
-            doTokenRefresh(freshToken, pushType);
-            deviceTokenDidRefresh(freshToken, pushType);
-        }
-    }
 
     /**
      * Creates a separate and distinct user profile identified by one or more of Identity,
@@ -2322,7 +2255,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings("unused")
     public void pushBaiduRegistrationId(String regId, boolean register) {
-        pushProviders.handleToken(regId, PushType.BPS, register);
+        getCoreState().getPushProviders().handleToken(regId, PushType.BPS, register);
     }
 
     /**
@@ -2346,7 +2279,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
         if (items.size() > 50) {
             ValidationResult error = ValidationResultFactory.create(522);
             getConfigLogger().debug(getAccountId(), error.getErrorDesc());
-            validationResultStack.pushValidationResult(error);
+            getCoreState().getValidationResultStack().pushValidationResult(error);
         }
 
         JSONObject evtData = new JSONObject();
@@ -2355,7 +2288,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
         try {
             for (String key : chargeDetails.keySet()) {
                 Object value = chargeDetails.get(key);
-                vr = validator.cleanObjectKey(key);
+                vr = getCoreState().getValidator().cleanObjectKey(key);
                 key = vr.getObject().toString();
                 // Check for an error
                 if (vr.getErrorCode() != 0) {
@@ -2363,13 +2296,13 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 }
 
                 try {
-                    vr = validator.cleanObjectValue(value, Validator.ValidationContext.Event);
+                    vr = getCoreState().getValidator().cleanObjectValue(value, Validator.ValidationContext.Event);
                 } catch (IllegalArgumentException e) {
                     // The object was neither a String, Boolean, or any number primitives
                     ValidationResult error = ValidationResultFactory.create(511,
                             Constants.PROP_VALUE_NOT_PRIMITIVE, "Charged", key,
                             value != null ? value.toString() : "");
-                    validationResultStack.pushValidationResult(error);
+                    getCoreState().getValidationResultStack().pushValidationResult(error);
                     getConfigLogger().debug(getAccountId(), error.getErrorDesc());
                     // Skip this property
                     continue;
@@ -2388,7 +2321,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 JSONObject itemDetails = new JSONObject();
                 for (String key : map.keySet()) {
                     Object value = map.get(key);
-                    vr = validator.cleanObjectKey(key);
+                    vr = getCoreState().getValidator().cleanObjectKey(key);
                     key = vr.getObject().toString();
                     // Check for an error
                     if (vr.getErrorCode() != 0) {
@@ -2396,14 +2329,14 @@ public class CleverTapAPI implements CleverTapAPIListener {
                     }
 
                     try {
-                        vr = validator.cleanObjectValue(value, Validator.ValidationContext.Event);
+                        vr = getCoreState().getValidator().cleanObjectValue(value, Validator.ValidationContext.Event);
                     } catch (IllegalArgumentException e) {
                         // The object was neither a String, Boolean, or any number primitives
                         ValidationResult error = ValidationResultFactory
                                 .create(511, Constants.OBJECT_VALUE_NOT_PRIMITIVE, key,
                                         value != null ? value.toString() : "");
                         getConfigLogger().debug(getAccountId(), error.getErrorDesc());
-                        validationResultStack.pushValidationResult(error);
+                        getCoreState().getValidationResultStack().pushValidationResult(error);
                         // Skip this property
                         continue;
                     }
@@ -2420,7 +2353,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
             chargedEvent.put("evtName", Constants.CHARGED_EVENT);
             chargedEvent.put("evtData", evtData);
-            getCoreState().getEventQueue().queueEvent(context, chargedEvent, Constants.RAISED_EVENT);
+            getCoreState().getBaseEventQueueManager().queueEvent(context, chargedEvent, Constants.RAISED_EVENT);
         } catch (Throwable t) {
             // We won't get here
         }
@@ -2436,33 +2369,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
         pushDeepLink(uri, false);
     }
 
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
-    @Override
-    public void pushDeviceTokenEvent(String token, boolean register, PushType pushType) {
-        if (pushType == null) {
-            return;
-        }
-        token = !TextUtils.isEmpty(token) ? token : pushProviders.getCachedToken(pushType);
-        if (TextUtils.isEmpty(token)) {
-            return;
-        }
-        synchronized (tokenLock) {
-            JSONObject event = new JSONObject();
-            JSONObject data = new JSONObject();
-            String action = register ? "register" : "unregister";
-            try {
-                data.put("action", action);
-                data.put("id", token);
-                data.put("type", pushType.getType());
-                event.put("data", data);
-                getConfigLogger().verbose(getAccountId(), pushType + action + " device token " + token);
-                getCoreState().getEventQueue().queueEvent(context, event, Constants.DATA_EVENT);
-            } catch (Throwable t) {
-                // we won't get here
-                getConfigLogger().verbose(getAccountId(), pushType + action + " device token failed", t);
-            }
-        }
-    }
+
 
     /**
      * Raises the Display Unit Clicked event
@@ -2492,7 +2399,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 }
             }
 
-            getCoreState().getEventQueue().queueEvent(context, event, Constants.RAISED_EVENT);
+            getCoreState().getBaseEventQueueManager().queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (Throwable t) {
             // We won't get here
             getConfigLogger().verbose(getAccountId(),
@@ -2523,7 +2430,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 }
             }
 
-            getCoreState().getEventQueue().queueEvent(context, event, Constants.RAISED_EVENT);
+            getCoreState().getBaseEventQueueManager().queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (Throwable t) {
             // We won't get here
             getConfigLogger().verbose(getAccountId(),
@@ -2587,17 +2494,17 @@ public class CleverTapAPI implements CleverTapAPIListener {
             return;
         }
 
-        ValidationResult validationResult = validator.isRestrictedEventName(eventName);
+        ValidationResult validationResult = getCoreState().getValidator().isRestrictedEventName(eventName);
         // Check for a restricted event name
         if (validationResult.getErrorCode() > 0) {
-            validationResultStack.pushValidationResult(validationResult);
+            getCoreState().getValidationResultStack().pushValidationResult(validationResult);
             return;
         }
 
-        ValidationResult discardedResult = validator.isEventDiscarded(eventName);
+        ValidationResult discardedResult = getCoreState().getValidator().isEventDiscarded(eventName);
         // Check for a discarded event name
         if (discardedResult.getErrorCode() > 0) {
-            validationResultStack.pushValidationResult(discardedResult);
+            getCoreState().getValidationResultStack().pushValidationResult(discardedResult);
             return;
         }
 
@@ -2608,7 +2515,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
         JSONObject event = new JSONObject();
         try {
             // Validate
-            ValidationResult vr = validator.cleanEventName(eventName);
+            ValidationResult vr = getCoreState().getValidator().cleanEventName(eventName);
 
             // Check for an error
             if (vr.getErrorCode() != 0) {
@@ -2619,21 +2526,21 @@ public class CleverTapAPI implements CleverTapAPIListener {
             JSONObject actions = new JSONObject();
             for (String key : eventActions.keySet()) {
                 Object value = eventActions.get(key);
-                vr = validator.cleanObjectKey(key);
+                vr = getCoreState().getValidator().cleanObjectKey(key);
                 key = vr.getObject().toString();
                 // Check for an error
                 if (vr.getErrorCode() != 0) {
                     event.put(Constants.ERROR_KEY, getErrorObject(vr));
                 }
                 try {
-                    vr = validator.cleanObjectValue(value, Validator.ValidationContext.Event);
+                    vr = getCoreState().getValidator().cleanObjectValue(value, Validator.ValidationContext.Event);
                 } catch (IllegalArgumentException e) {
                     // The object was neither a String, Boolean, or any number primitives
                     ValidationResult error = ValidationResultFactory
                             .create(512, Constants.PROP_VALUE_NOT_PRIMITIVE, eventName, key,
                                     value != null ? value.toString() : "");
                     getConfigLogger().debug(getAccountId(), error.getErrorDesc());
-                    validationResultStack.pushValidationResult(error);
+                    getCoreState().getValidationResultStack().pushValidationResult(error);
                     // Skip this record
                     continue;
                 }
@@ -2646,7 +2553,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             }
             event.put("evtName", eventName);
             event.put("evtData", actions);
-            getCoreState().getEventQueue().queueEvent(context, event, Constants.RAISED_EVENT);
+            getCoreState().getBaseEventQueueManager().queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (Throwable t) {
             // We won't get here
         }
@@ -2663,7 +2570,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings("unused")
     public void pushFcmRegistrationId(String fcmId, boolean register) {
-        pushProviders.handleToken(fcmId, PushType.FCM, register);
+        getCoreState().getPushProviders().handleToken(fcmId, PushType.FCM, register);
     }
 
     /**
@@ -2675,7 +2582,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
     @SuppressWarnings("unused")
     public void pushGeoFenceError(int errorCode, String errorMessage) {
         ValidationResult validationResult = new ValidationResult(errorCode, errorMessage);
-        validationResultStack.pushValidationResult(validationResult);
+        getCoreState().getValidationResultStack().pushValidationResult(validationResult);
     }
 
     /**
@@ -2711,7 +2618,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings("unused")
     public void pushHuaweiRegistrationId(String regId, boolean register) {
-        pushProviders.handleToken(regId, PushType.HPS, register);
+        getCoreState().getPushProviders().handleToken(regId, PushType.HPS, register);
     }
 
     /**
@@ -2826,7 +2733,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void pushNotificationClickedEvent(final Bundle extras) {
 
-        if (this.mConfig.isAnalyticsOnly()) {
+        if (getCoreState().getConfig().isAnalyticsOnly()) {
             getConfigLogger()
                     .debug(getAccountId(), "is Analytics Only - will not process Notification Clicked event.");
             return;
@@ -2846,7 +2753,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             // no-op
         }
 
-        boolean shouldProcess = (accountId == null && mConfig.isDefaultInstance()) || getAccountId()
+        boolean shouldProcess = (accountId == null && getCoreState().getConfig().isDefaultInstance()) || getAccountId()
                 .equals(accountId);
 
         if (!shouldProcess) {
@@ -2934,7 +2841,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
             event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
             event.put("evtData", notif);
-            getCoreState().getEventQueue().queueEvent(context, event, Constants.RAISED_EVENT);
+            getCoreState().getBaseEventQueueManager().queueEvent(context, event, Constants.RAISED_EVENT);
 
             try {
                 getCoreState().getCoreMetaData().setWzrkParams(getWzrkFields(extras));
@@ -2995,7 +2902,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
         } catch (Throwable ignored) {
             //no-op
         }
-        getCoreState().getEventQueue().queueEvent(context, event, Constants.NV_EVENT);
+        getCoreState().getBaseEventQueueManager().queueEvent(context, event, Constants.NV_EVENT);
     }
 
     /**
@@ -3030,7 +2937,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings("unused")
     public void pushXiaomiRegistrationId(String regId, boolean register) {
-        pushProviders.handleToken(regId, PushType.XPS, register);
+        getCoreState().getPushProviders().handleToken(regId, PushType.XPS, register);
     }
 
     /**
@@ -3040,17 +2947,12 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings({"unused"})
     public void recordScreen(String screenName) {
-        if (screenName == null || (!currentScreenName.isEmpty() && currentScreenName.equals(screenName))) {
+        if (screenName == null || (!getCoreState().getCoreMetaData().getScreenName().isEmpty() && getCoreState().getCoreMetaData().getScreenName().equals(screenName))) {
             return;
         }
         getConfigLogger().debug(getAccountId(), "Screen changed to " + screenName);
-        currentScreenName = screenName;
+        getCoreState().getCoreMetaData().setCurrentScreenName(screenName);
         recordPageEventWithExtras(null);
-    }
-
-    @Override
-    public ValidationResultStack remoteErrorLogger() {
-        return validationResultStack;
     }
 
     /**
@@ -3164,8 +3066,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @param library {@link String} library name
      */
     public void setLibrary(String library) {
-        if (this.deviceInfo != null) {
-            deviceInfo.setLibrary(library);
+        if (getCoreState().getDeviceInfo() != null) {
+            getCoreState().getDeviceInfo().setLibrary(library);
         }
     }
 
@@ -3176,8 +3078,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings("unused")
     public Future<?> setLocationForGeofences(Location location, int sdkVersion) {
-        setLocationForGeofence(true);
-        setGeofenceSDKVersion(sdkVersion);
+        getCoreState().getCoreMetaData().setLocationForGeofence(true);
+        getCoreState().getCoreMetaData().setGeofenceSDKVersion(sdkVersion);
         return _setLocation(location);
     }
 
@@ -3259,7 +3161,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                             .verbose(getAccountId(), "Unable to persist user OptOut state, storage key is null");
                     return;
                 }
-                StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(mConfig, key), enable);
+                StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(getConfig(), key), enable);
                 getConfigLogger().verbose(getAccountId(), "Set current user OptOut state to: " + enable);
             }
         });
@@ -3286,7 +3188,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
         Intent intent = new Intent(context, CTInboxActivity.class);
         intent.putExtra("styleConfig", _styleConfig);
         Bundle configBundle = new Bundle();
-        configBundle.putParcelable("config", mConfig);
+        configBundle.putParcelable("config", getConfig());
         intent.putExtra("configBundle", configBundle);
         try {
             Activity currentActivity = getCurrentActivity();
@@ -3315,7 +3217,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
     //To be called from DeviceInfo AdID GUID generation
     void deviceIDCreated(String deviceId) {
         Logger.v("Initializing InAppFC after Device ID Created = " + deviceId);
-        this.inAppFCManager = new InAppFCManager(context, mConfig, deviceId);
+        getCoreState().setInAppFCManager(new InAppFCManager(context, getCoreState().getConfig(), deviceId));
         Logger.v("Initializing ABTesting after Device ID Created = " + deviceId);
         initFeatureFlags(true);
         initProductConfig(true);
@@ -3324,7 +3226,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
         notifyUserProfileInitialized(deviceId);
     }
 
-    CoreState getCoreState() {
+    @RestrictTo(Scope.LIBRARY)
+    public CoreState getCoreState() {
         return mCoreState;
     }
 
@@ -3368,7 +3271,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             }
 
             event.put("evtData", notif);
-            getCoreState().getEventQueue().queueEvent(context, event, Constants.RAISED_EVENT);
+            getCoreState().getBaseEventQueueManager().queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (Throwable ignored) {
             // We won't get here
         }
@@ -3410,7 +3313,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             }
 
             event.put("evtData", notif);
-            getCoreState().getEventQueue().queueEvent(context, event, Constants.RAISED_EVENT);
+            getCoreState().getBaseEventQueueManager().queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (Throwable ignored) {
             // We won't get here
         }
@@ -3431,11 +3334,11 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 value = (value == null) ? "" : value;  // so we will generate a validation error later on
 
                 // validate value
-                vr = validator.cleanMultiValuePropertyValue(value);
+                vr = getCoreState().getValidator().cleanMultiValuePropertyValue(value);
 
                 // Check for an error
                 if (vr.getErrorCode() != 0) {
-                    validationResultStack.pushValidationResult(vr);
+                    getCoreState().getValidationResultStack().pushValidationResult(vr);
                 }
 
                 // reset the value
@@ -3538,7 +3441,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             return;
         }
 
-        if (mConfig.isAnalyticsOnly()) {
+        if (getConfig().isAnalyticsOnly()) {
             getConfigLogger().debug(getAccountId(), "Instance is set for Analytics only, cannot create notification");
             return;
         }
@@ -3592,13 +3495,13 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private void _generateEmptyMultiValueError(String key) {
         ValidationResult error = ValidationResultFactory.create(512, Constants.INVALID_MULTI_VALUE, key);
-        validationResultStack.pushValidationResult(error);
+        getCoreState().getValidationResultStack().pushValidationResult(error);
         getConfigLogger().debug(getAccountId(), error.getErrorDesc());
     }
 
     private void _generateInvalidMultiValueKeyError(String key) {
         ValidationResult error = ValidationResultFactory.create(523, Constants.INVALID_MULTI_VALUE_KEY, key);
-        validationResultStack.pushValidationResult(error);
+        getCoreState().getValidationResultStack().pushValidationResult(error);
         getConfigLogger().debug(getAccountId(),
                 "Invalid multi-value property key " + key + " profile multi value operation aborted");
     }
@@ -3639,7 +3542,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     // use for internal profile getter doesn't do the personalization check
     private Object _getProfilePropertyIgnorePersonalizationFlag(String key) {
-        return getLocalDataStore().getProfileValueForKey(key);
+        return getCoreState().getLocalDataStore().getProfileValueForKey(key);
     }
 
     private void _handleMultiValues(ArrayList<String> values, String key, String command) {
@@ -3655,11 +3558,11 @@ public class CleverTapAPI implements CleverTapAPIListener {
         ValidationResult vr;
 
         // validate the key
-        vr = validator.cleanMultiValuePropertyKey(key);
+        vr = getCoreState().getValidator().cleanMultiValuePropertyKey(key);
 
         // Check for an error
         if (vr.getErrorCode() != 0) {
-            validationResultStack.pushValidationResult(vr);
+            getCoreState().getValidationResultStack().pushValidationResult(vr);
         }
 
         // reset the key
@@ -3738,7 +3641,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             // use the first one we find
             IdentityRepo iProfileHandler = IdentityRepoFactory
                     .getRepo(mCoreState.getContext(), mCoreState.getConfig(), mCoreState.getDeviceInfo(),
-                            mCoreState.getRemoteLogger());
+                            mCoreState.getValidationResultStack());
             for (String key : profile.keySet()) {
                 Object value = profile.get(key);
                 boolean isProfileKey = iProfileHandler.hasIdentity(key);
@@ -3834,29 +3737,29 @@ public class CleverTapAPI implements CleverTapAPIListener {
             for (String key : profile.keySet()) {
                 Object value = profile.get(key);
 
-                vr = validator.cleanObjectKey(key);
+                vr = getCoreState().getValidator().cleanObjectKey(key);
                 key = vr.getObject().toString();
                 // Check for an error
                 if (vr.getErrorCode() != 0) {
-                    validationResultStack.pushValidationResult(vr);
+                    getCoreState().getValidationResultStack().pushValidationResult(vr);
                 }
 
                 if (key.isEmpty()) {
                     ValidationResult keyError = ValidationResultFactory.create(512, Constants.PUSH_KEY_EMPTY);
-                    validationResultStack.pushValidationResult(keyError);
+                    getCoreState().getValidationResultStack().pushValidationResult(keyError);
                     getConfigLogger().debug(getAccountId(), keyError.getErrorDesc());
                     // Skip this property
                     continue;
                 }
 
                 try {
-                    vr = validator.cleanObjectValue(value, Validator.ValidationContext.Profile);
+                    vr = getCoreState().getValidator().cleanObjectValue(value, Validator.ValidationContext.Profile);
                 } catch (Throwable e) {
                     // The object was neither a String, Boolean, or any number primitives
                     ValidationResult error = ValidationResultFactory.create(512,
                             Constants.OBJECT_VALUE_NOT_PRIMITIVE_PROFILE,
                             value != null ? value.toString() : "", key);
-                    validationResultStack.pushValidationResult(error);
+                    getCoreState().getValidationResultStack().pushValidationResult(error);
                     getConfigLogger().debug(getAccountId(), error.getErrorDesc());
                     // Skip this property
                     continue;
@@ -3864,20 +3767,20 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 value = vr.getObject();
                 // Check for an error
                 if (vr.getErrorCode() != 0) {
-                    validationResultStack.pushValidationResult(vr);
+                    getCoreState().getValidationResultStack().pushValidationResult(vr);
                 }
 
                 // test Phone:  if no device country code, test if phone starts with +, log but always send
                 if (key.equalsIgnoreCase("Phone")) {
                     try {
                         value = value.toString();
-                        String countryCode = this.deviceInfo.getCountryCode();
+                        String countryCode = getCoreState().getDeviceInfo().getCountryCode();
                         if (countryCode == null || countryCode.isEmpty()) {
                             String _value = (String) value;
                             if (!_value.startsWith("+")) {
                                 ValidationResult error = ValidationResultFactory
                                         .create(512, Constants.INVALID_COUNTRY_CODE, _value);
-                                validationResultStack.pushValidationResult(error);
+                                getCoreState().getValidationResultStack().pushValidationResult(error);
                                 getConfigLogger().debug(getAccountId(), error.getErrorDesc());
                             }
                         }
@@ -3885,7 +3788,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                                 "Profile phone is: " + value + " device country code is: " + ((countryCode != null)
                                         ? countryCode : "null"));
                     } catch (Exception e) {
-                        validationResultStack
+                        getCoreState().getValidationResultStack()
                                 .pushValidationResult(ValidationResultFactory.create(512, Constants.INVALID_PHONE));
                         getConfigLogger().debug(getAccountId(), "Invalid phone number: " + e.getLocalizedMessage());
                         continue;
@@ -3901,10 +3804,10 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
             // update local profile values
             if (fieldsToUpdateLocally.length() > 0) {
-                getLocalDataStore().setProfileFields(fieldsToUpdateLocally);
+                getCoreState().getLocalDataStore().setProfileFields(fieldsToUpdateLocally);
             }
 
-            getCoreState().getEventQueue().pushBasicProfile(customProfile);
+            getCoreState().getBaseEventQueueManager().pushBasicProfile(customProfile);
 
         } catch (Throwable t) {
             // Will not happen
@@ -3923,11 +3826,11 @@ public class CleverTapAPI implements CleverTapAPIListener {
             try {
                 // Certain users have nasty looking names - unicode chars, validate for any
                 // not allowed chars
-                ValidationResult vr = validator.cleanObjectValue(name, Validator.ValidationContext.Profile);
+                ValidationResult vr = getCoreState().getValidator().cleanObjectValue(name, Validator.ValidationContext.Profile);
                 name = vr.getObject().toString();
 
                 if (vr.getErrorCode() != 0) {
-                    validationResultStack.pushValidationResult(vr);
+                    getCoreState().getValidationResultStack().pushValidationResult(vr);
                 }
             } catch (IllegalArgumentException e) {
                 // Weird name, wasn't a string, or any number
@@ -4033,7 +3936,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 profile.put("Married", married);
             }
 
-            getCoreState().getEventQueue().pushBasicProfile(profile);
+            getCoreState().getBaseEventQueueManager().pushBasicProfile(profile);
         } catch (Throwable t) {
             getConfigLogger().verbose(getAccountId(), "Failed to parse graph user object successfully", t);
         }
@@ -4046,28 +3949,28 @@ public class CleverTapAPI implements CleverTapAPIListener {
             // validate the key
             ValidationResult vr;
 
-            vr = validator.cleanObjectKey(key);
+            vr = getCoreState().getValidator().cleanObjectKey(key);
             key = vr.getObject().toString();
 
             if (key.isEmpty()) {
                 ValidationResult error = ValidationResultFactory.create(512, Constants.KEY_EMPTY);
-                validationResultStack.pushValidationResult(error);
+                getCoreState().getValidationResultStack().pushValidationResult(error);
                 getConfigLogger().debug(getAccountId(), error.getErrorDesc());
                 // Abort
                 return;
             }
             // Check for an error
             if (vr.getErrorCode() != 0) {
-                validationResultStack.pushValidationResult(vr);
+                getCoreState().getValidationResultStack().pushValidationResult(vr);
             }
 
             // remove from the local profile
-            getLocalDataStore().removeProfileField(key);
+            getCoreState().getLocalDataStore().removeProfileField(key);
 
             // send the delete command
             JSONObject command = new JSONObject().put(Constants.COMMAND_DELETE, true);
             JSONObject update = new JSONObject().put(key, command);
-            getCoreState().getEventQueue().pushBasicProfile(update);
+            getCoreState().getBaseEventQueueManager().pushBasicProfile(update);
 
             getConfigLogger().verbose(getAccountId(), "removing value for key " + key + " from user profile");
 
@@ -4086,7 +3989,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 "Location updated (" + location.getLatitude() + ", " + location.getLongitude() + ")");
 
         // only queue the location ping if we are in the foreground
-        if (!isLocationForGeofence() && !isAppForeground()) {
+        if (!getCoreState().getCoreMetaData().isLocationForGeofence() && !isAppForeground()) {
             return null;
         }
 
@@ -4095,16 +3998,16 @@ public class CleverTapAPI implements CleverTapAPIListener {
         final int now = (int) (System.currentTimeMillis() / 1000);
         Future<?> future = null;
 
-        if (isLocationForGeofence() && now > (lastLocationPingTimeForGeofence
+        if (getCoreState().getCoreMetaData().isLocationForGeofence() && now > (lastLocationPingTimeForGeofence
                 + Constants.LOCATION_PING_INTERVAL_IN_SECONDS)) {
-            future = getCoreState().getEventQueue().queueEvent(context, new JSONObject(), Constants.PING_EVENT);
+            future = getCoreState().getBaseEventQueueManager().queueEvent(context, new JSONObject(), Constants.PING_EVENT);
             lastLocationPingTimeForGeofence = now;
             getConfigLogger().verbose(getAccountId(),
                     "Queuing location ping event for geofence location (" + location.getLatitude() + ", " + location
                             .getLongitude() + ")");
-        } else if (!isLocationForGeofence() && now > (lastLocationPingTime
+        } else if (!getCoreState().getCoreMetaData().isLocationForGeofence() && now > (lastLocationPingTime
                 + Constants.LOCATION_PING_INTERVAL_IN_SECONDS)) {
-            future = getCoreState().getEventQueue().queueEvent(context, new JSONObject(), Constants.PING_EVENT);
+            future = getCoreState().getBaseEventQueueManager().queueEvent(context, new JSONObject(), Constants.PING_EVENT);
             lastLocationPingTime = now;
             getConfigLogger().verbose(getAccountId(),
                     "Queuing location ping event for location (" + location.getLatitude() + ", " + location
@@ -4123,10 +4026,10 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 return;
             }
 
-            checkPendingNotifications(context, mConfig);  // see if we have any pending notifications
+            checkPendingNotifications(context, getCoreState().getConfig());  // see if we have any pending notifications
 
             JSONArray inapps = new JSONArray(
-                    StorageHelper.getStringFromPrefs(context, mConfig, Constants.INAPP_KEY, "[]"));
+                    StorageHelper.getStringFromPrefs(context, getCoreState().getConfig(), Constants.INAPP_KEY, "[]"));
             if (inapps.length() < 1) {
                 return;
             }
@@ -4144,7 +4047,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 inappsUpdated.put(inapps.get(i));
             }
             SharedPreferences.Editor editor = prefs.edit()
-                    .putString(StorageHelper.storageKeyWithSuffix(mConfig, Constants.INAPP_KEY),
+                    .putString(StorageHelper.storageKeyWithSuffix(getConfig(), Constants.INAPP_KEY),
                             inappsUpdated.toString());
             StorageHelper.persist(editor);
         } catch (Throwable t) {
@@ -4159,11 +4062,11 @@ public class CleverTapAPI implements CleverTapAPIListener {
         String val = CTJsonConverter.toJsonString(value);
 
         if (val != null) {
-            ValidationResult vr = validator.cleanMultiValuePropertyValue(val);
+            ValidationResult vr = getCoreState().getValidator().cleanMultiValuePropertyValue(val);
 
             // Check for an error
             if (vr.getErrorCode() != 0) {
-                validationResultStack.pushValidationResult(vr);
+                getCoreState().getValidationResultStack().pushValidationResult(vr);
             }
 
             Object _value = vr.getObject();
@@ -4188,12 +4091,12 @@ public class CleverTapAPI implements CleverTapAPIListener {
                     : Validator.ADD_VALUES_OPERATION;
 
             // merge currentValues and newValues
-            ValidationResult vr = validator
+            ValidationResult vr = getCoreState().getValidator()
                     .mergeMultiValuePropertyForKey(currentValues, newValues, mergeOperation, key);
 
             // Check for an error
             if (vr.getErrorCode() != 0) {
-                validationResultStack.pushValidationResult(vr);
+                getCoreState().getValidationResultStack().pushValidationResult(vr);
             }
 
             // set the merged local values array
@@ -4202,10 +4105,10 @@ public class CleverTapAPI implements CleverTapAPIListener {
             // update local profile
             // remove an empty array
             if (localValues == null || localValues.length() <= 0) {
-                getLocalDataStore().removeProfileField(key);
+                getCoreState().getLocalDataStore().removeProfileField(key);
             } else {
                 // not empty so save to local profile
-                getLocalDataStore().setProfileField(key, localValues);
+                getCoreState().getLocalDataStore().setProfileField(key, localValues);
             }
 
             // push to server
@@ -4215,7 +4118,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             JSONObject fields = new JSONObject();
             fields.put(key, commandObj);
 
-            getCoreState().getEventQueue().pushBasicProfile(fields);
+            getCoreState().getBaseEventQueueManager().pushBasicProfile(fields);
 
             getConfigLogger().verbose(getAccountId(), "Constructed multi-value profile push: " + fields.toString());
 
@@ -4233,7 +4136,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
         if (getCoreState().getCoreMetaData().inCurrentSession()) {
             try {
                 StorageHelper
-                        .putInt(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.LAST_SESSION_EPOCH),
+                        .putInt(context, StorageHelper.storageKeyWithSuffix(getConfig(), Constants.LAST_SESSION_EPOCH),
                                 now);
                 getConfigLogger().verbose(getAccountId(), "Updated session time: " + now);
             } catch (Throwable t) {
@@ -4272,7 +4175,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             }
         }
         if (!getCoreState().getCoreMetaData().inCurrentSession()) {
-            getCoreState().getEventQueue().pushInitialEventsAsync();
+            getCoreState().getBaseEventQueueManager().pushInitialEventsAsync();
         }
         checkExistingInAppNotifications(activity);
         checkPendingInAppNotifications(activity);
@@ -4290,7 +4193,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                     //set optOut to false on the current user to unregister the device token
                     getCoreState().getCoreMetaData().setCurrentUserOptedOut(false);
                     // unregister the device token on the current user
-                    forcePushDeviceToken(false);
+                    getCoreState().getPushProviders().forcePushDeviceToken(false);
 
                     // try and flush and then reset the queues
                     flushQueueSync(context, EventGroup.REGULAR);
@@ -4298,18 +4201,18 @@ public class CleverTapAPI implements CleverTapAPIListener {
                     clearQueues(context);
 
                     // clear out the old data
-                    getLocalDataStore().changeUser();
-                    activityCount = 1;
-                    getCoreState().getSessionHandler().destroySession();
+                    getCoreState().getLocalDataStore().changeUser();
+                    CoreMetaData.setActivityCount(1);
+                    getCoreState().getSessionManager().destroySession();
 
                     // either force restore the cached GUID or generate a new one
                     if (cacheGuid != null) {
-                        deviceInfo.forceUpdateDeviceId(cacheGuid);
+                        getCoreState().getDeviceInfo().forceUpdateDeviceId(cacheGuid);
                         notifyUserProfileInitialized(cacheGuid);
                     } else if (getConfig().getEnableCustomCleverTapId()) {
-                        deviceInfo.forceUpdateCustomCleverTapID(cleverTapID);
+                        getCoreState().getDeviceInfo().forceUpdateCustomCleverTapID(cleverTapID);
                     } else {
-                        deviceInfo.forceNewDeviceID();
+                        getCoreState().getDeviceInfo().forceNewDeviceID();
                     }
                     notifyUserProfileInitialized(getCleverTapID());
                     setCurrentUserOptOutStateFromStorage(); // be sure to call this after the guid is updated
@@ -4317,7 +4220,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                     if (profile != null) {
                         pushProfile(profile);
                     }
-                    forcePushDeviceToken(true);
+                    getCoreState().getPushProviders().forcePushDeviceToken(true);
                     synchronized (processingUserLoginLock) {
                         processingUserLoginIdentifier = null;
                     }
@@ -4326,7 +4229,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                     resetProductConfigs();
                     recordDeviceIDErrors();
                     resetDisplayUnits();
-                    inAppFCManager.changeUser(getCleverTapID());
+                    getCoreState().getInAppFCManager().changeUser(getCleverTapID());
                 } catch (Throwable t) {
                     getConfigLogger().verbose(getAccountId(), "Reset Profile error", t);
                 }
@@ -4334,38 +4237,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
         });
     }
 
-    /**
-     * Attaches meta info about the current state of the device to an event.
-     * Typically, this meta is added only to the ping event.
-     */
-    private void attachMeta(final JSONObject o, final Context context) {
-        // Memory consumption
-        try {
-            o.put("mc", Utils.getMemoryConsumption());
-        } catch (Throwable t) {
-            // Ignore
-        }
 
-        // Attach the network type
-        try {
-            o.put("nt", Utils.getCurrentNetworkType(context));
-        } catch (Throwable t) {
-            // Ignore
-        }
-    }
-
-    //Session
-    private void attachPackageNameIfRequired(final Context context, final JSONObject event) {
-        try {
-            final String type = event.getString("type");
-            // Send it only for app launched events
-            if ("event".equals(type) && Constants.APP_LAUNCHED_EVENT.equals(event.getString("evtName"))) {
-                event.put("pai", context.getPackageName());
-            }
-        } catch (Throwable t) {
-            // Ignore
-        }
-    }
 
     private HttpsURLConnection buildHttpsURLConnection(final String endpoint) {
         // TODO dummy method, remove after complete development
@@ -4425,11 +4297,11 @@ public class CleverTapAPI implements CleverTapAPIListener {
                             .beginTransaction();
                     Bundle bundle = new Bundle();
                     bundle.putParcelable("inApp", currentlyDisplayingInApp);
-                    bundle.putParcelable("config", mConfig);
+                    bundle.putParcelable("config", getConfig());
                     inAppFragment.setArguments(bundle);
                     fragmentTransaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
                     fragmentTransaction.add(android.R.id.content, inAppFragment, currentlyDisplayingInApp.getType());
-                    Logger.v(mConfig.getAccountId(),
+                    Logger.v(getConfig().getAccountId(),
                             "calling InAppFragment " + currentlyDisplayingInApp.getCampaignId());
                     fragmentTransaction.commit();
                 }
@@ -4442,7 +4314,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
         if (canShow) {
             if (pendingInappRunnable != null) {
                 getConfigLogger().verbose(getAccountId(), "Found a pending inapp runnable. Scheduling it");
-                mMainLooperHandler.getMainLooperHandler().postDelayed(pendingInappRunnable, 200);
+                getCoreState().getMainLooperHandler().postDelayed(pendingInappRunnable, 200);
                 pendingInappRunnable = null;
             } else {
                 showNotificationIfAvailable(context);
@@ -4461,14 +4333,14 @@ public class CleverTapAPI implements CleverTapAPIListener {
         long now = System.currentTimeMillis();
         if ((now - appLastSeen) > Constants.SESSION_LENGTH_MINS * 60 * 1000) {
             getConfigLogger().verbose(getAccountId(), "Session Timed Out");
-            getCoreState().getSessionHandler().destroySession();
+            getCoreState().getSessionManager().destroySession();
             setCurrentActivity(null);
         }
     }
 
     //Session
     private void clearFirstRequestTimestampIfNeeded(Context context) {
-        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_FIRST_TS), 0);
+        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(getConfig(), Constants.KEY_FIRST_TS), 0);
     }
 
     //Session
@@ -4481,14 +4353,14 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     //Session
     private void clearLastRequestTimestamp(Context context) {
-        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_LAST_TS), 0);
+        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(getConfig(), Constants.KEY_LAST_TS), 0);
     }
 
     /**
      * Only call async
      */
     private void clearQueues(final Context context) {
-        synchronized (eventLock) {
+        synchronized (getCoreState().getCTLockManager().getEventLock()) {
 
             DBAdapter adapter = loadDBAdapter(context);
             DBAdapter.Table tableName = DBAdapter.Table.EVENTS;
@@ -4596,20 +4468,12 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
-    //Push
-    @SuppressWarnings("SameParameterValue")
-    private void deviceTokenDidRefresh(String token, PushType type) {
-        if (tokenRefreshListener != null) {
-            getConfigLogger().debug(getAccountId(), "Notifying devicePushTokenDidRefresh: " + token);
-            tokenRefreshListener.devicePushTokenDidRefresh(token, type);
-        }
-    }
 
     //InApp
     private void displayNotification(final CTInAppNotification inAppNotification) {
 
         if (Looper.myLooper() != Looper.getMainLooper()) {
-            mMainLooperHandler.getMainLooperHandler().post(new Runnable() {
+            getCoreState().getMainLooperHandler().post(new Runnable() {
                 @Override
                 public void run() {
                     displayNotification(inAppNotification);
@@ -4618,18 +4482,18 @@ public class CleverTapAPI implements CleverTapAPIListener {
             return;
         }
 
-        if (inAppFCManager != null) {
-            if (!inAppFCManager.canShow(inAppNotification)) {
+        if (getCoreState().getInAppFCManager() != null) {
+            if (!getCoreState().getInAppFCManager().canShow(inAppNotification)) {
                 getConfigLogger().verbose(getAccountId(),
                         "InApp has been rejected by FC, not showing " + inAppNotification.getCampaignId());
                 showInAppNotificationIfAny();
                 return;
             }
 
-            inAppFCManager.didShow(context, inAppNotification);
+            getCoreState().getInAppFCManager().didShow(context, inAppNotification);
         } else {
             getConfigLogger().verbose(getAccountId(),
-                    "InAppFCManager is NULL, not showing " + inAppNotification.getCampaignId());
+                    "getCoreState().getInAppFCManager() is NULL, not showing " + inAppNotification.getCampaignId());
             return;
         }
 
@@ -4658,60 +4522,11 @@ public class CleverTapAPI implements CleverTapAPIListener {
             showInAppNotificationIfAny();
             return;
         }
-        showInApp(context, inAppNotification, mConfig);
+        showInApp(context, inAppNotification, getCoreState().getConfig());
 
     }
 
-    private void doTokenRefresh(String token, PushType pushType) {
-        if (TextUtils.isEmpty(token) || pushType == null) {
-            return;
-        }
-        switch (pushType) {
-            case FCM:
-                pushFcmRegistrationId(token, true);
-                break;
-            case XPS:
-                pushXiaomiRegistrationId(token, true);
-                break;
-            case HPS:
-                pushHuaweiRegistrationId(token, true);
-                break;
-            case BPS:
-                pushBaiduRegistrationId(token, true);
-                break;
-            case ADM:
-                pushAmazonRegistrationId(token, true);
-                break;
-        }
-    }
 
-    private void flushDBQueue(final Context context, final EventGroup eventGroup) {
-        getConfigLogger().verbose(getAccountId(), "Somebody has invoked me to send the queue to CleverTap servers");
-
-        QueueCursor cursor;
-        QueueCursor previousCursor = null;
-        boolean loadMore = true;
-
-        while (loadMore) {
-
-            cursor = getQueuedEvents(context, 50, previousCursor, eventGroup);
-
-            if (cursor == null || cursor.isEmpty()) {
-                getConfigLogger().verbose(getAccountId(), "No events in the queue, failing");
-                break;
-            }
-
-            previousCursor = cursor;
-            JSONArray queue = cursor.getData();
-
-            if (queue == null || queue.length() <= 0) {
-                getConfigLogger().verbose(getAccountId(), "No events in the queue, failing");
-                break;
-            }
-
-            loadMore = sendQueue(context, eventGroup, queue);
-        }
-    }
 
     //Event
 
@@ -4732,15 +4547,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         pushAppLaunchedEvent();
     }
 
-    /**
-     * push the device token outside of the normal course
-     */
-    private void forcePushDeviceToken(final boolean register) {
-
-        for (PushType pushType : pushProviders.getAvailablePushTypes()) {
-            pushDeviceTokenEvent(null, register, pushType);
-        }
-    }
 
     //Push
 
@@ -4757,7 +4563,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 return null;
             }
 
-            SharedPreferences prefs = null;
+            SharedPreferences prefs;
 
             //checking whether new namespace is empty or not
             //if not empty, using prefs of new namespace to send ARP
@@ -4799,10 +4605,10 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
         try {
             boolean deviceIsMultiUser = false;
-            if (deviceInfo.getGoogleAdID() != null) {
+            if (getCoreState().getDeviceInfo().getGoogleAdID() != null) {
                 deviceIsMultiUser = new LoginInfoProvider(mCoreState.getContext(),mCoreState.getConfig(),mCoreState.getDeviceInfo()).deviceIsMultiUser();
             }
-            return CTJsonConverter.from(deviceInfo, locationFromUser, enableNetworkInfoReporting,
+            return CTJsonConverter.from(getCoreState().getDeviceInfo(), locationFromUser, enableNetworkInfoReporting,
                     deviceIsMultiUser);
         } catch (Throwable t) {
             getConfigLogger().verbose(getAccountId(), "Failed to construct App Launched event", t);
@@ -4811,7 +4617,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     private CleverTapInstanceConfig getConfig() {
-        return mConfig;
+        return getCoreState().getConfig();
     }
 
     private Logger getConfigLogger() {
@@ -4831,7 +4637,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             return minDelayFrequency;
         }
 
-        if (mConfig.getAccountRegion() == null) {
+        if (getConfig().getAccountRegion() == null) {
             //Retry with delay as 1s if region is null in case of eu1
             getConfigLogger().debug(getAccountId(), "Setting delay frequency to 1s");
             return Constants.PUSH_DELAY_MS;
@@ -4853,7 +4659,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private String getDomainFromPrefsOrMetadata(final EventGroup eventGroup) {
         try {
-            final String region = this.mConfig.getAccountRegion();
+            final String region = getCoreState().getConfig().getAccountRegion();
             if (region != null && region.trim().length() > 0) {
                 // Always set this to 0 so that the handshake is not performed during a HTTP failure
                 mResponseFailureCount = 0;
@@ -4867,9 +4673,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
             // Ignore
         }
         if (eventGroup.equals(EventGroup.PUSH_NOTIFICATION_VIEWED)) {
-            return StorageHelper.getStringFromPrefs(context, mConfig, Constants.SPIKY_KEY_DOMAIN_NAME, null);
+            return StorageHelper.getStringFromPrefs(context, getCoreState().getConfig(), Constants.SPIKY_KEY_DOMAIN_NAME, null);
         } else {
-            return StorageHelper.getStringFromPrefs(context, mConfig, Constants.KEY_DOMAIN_NAME, null);
+            return StorageHelper.getStringFromPrefs(context, getCoreState().getConfig(), Constants.KEY_DOMAIN_NAME, null);
         }
     }
 
@@ -4879,15 +4685,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     private int getFirstRequestTimestamp() {
-        return StorageHelper.getIntFromPrefs(context, mConfig, Constants.KEY_FIRST_TS, 0);
-    }
-
-    private int getGeofenceSDKVersion() {
-        return geofenceSDKVersion;
-    }
-
-    private void setGeofenceSDKVersion(int geofenceSDKVersion) {
-        this.geofenceSDKVersion = geofenceSDKVersion;
+        return StorageHelper.getIntFromPrefs(context, getCoreState().getConfig(), Constants.KEY_FIRST_TS, 0);
     }
 
     private String getGraphUserPropertySafely(JSONObject graphUser, String key, String def) {
@@ -4904,20 +4702,17 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     private long getI() {
-        return StorageHelper.getLongFromPrefs(context, mConfig, Constants.KEY_I, 0, Constants.NAMESPACE_IJ);
+        return StorageHelper.getLongFromPrefs(context, getCoreState().getConfig(), Constants.KEY_I, 0, Constants.NAMESPACE_IJ);
     }
 
     private long getJ() {
-        return StorageHelper.getLongFromPrefs(context, mConfig, Constants.KEY_J, 0, Constants.NAMESPACE_IJ);
+        return StorageHelper.getLongFromPrefs(context, getCoreState().getConfig(), Constants.KEY_J, 0, Constants.NAMESPACE_IJ);
     }
 
     private int getLastRequestTimestamp() {
-        return StorageHelper.getIntFromPrefs(context, mConfig, Constants.KEY_LAST_TS, 0);
+        return StorageHelper.getIntFromPrefs(context, getCoreState().getConfig(), Constants.KEY_LAST_TS, 0);
     }
 
-    private LocalDataStore getLocalDataStore() {
-        return localDataStore;
-    }
 
     //Session
     //Old namespace for ARP Shared Prefs
@@ -4949,64 +4744,10 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 Constants.PING_FREQUENCY_VALUE); //intentional global key because only one Job is running
     }
 
-    private QueueCursor getPushNotificationViewedQueuedEvents(final Context context, final int batchSize,
-            final QueueCursor previousCursor) {
-        return getQueueCursor(context, DBAdapter.Table.PUSH_NOTIFICATION_VIEWED, batchSize, previousCursor);
-    }
 
-    private QueueCursor getQueueCursor(final Context context, DBAdapter.Table table, final int batchSize,
-            final QueueCursor previousCursor) {
-        synchronized (eventLock) {
-            DBAdapter adapter = loadDBAdapter(context);
-            DBAdapter.Table tableName = (previousCursor != null) ? previousCursor.getTableName() : table;
-
-            // if previousCursor that means the batch represented by the previous cursor was processed so remove those from the db
-            if (previousCursor != null) {
-                adapter.cleanupEventsFromLastId(previousCursor.getLastId(), previousCursor.getTableName());
-            }
-
-            // grab the new batch
-            QueueCursor newCursor = new QueueCursor();
-            newCursor.setTableName(tableName);
-            JSONObject queuedDBEvents = adapter.fetchEvents(tableName, batchSize);
-            newCursor = updateCursorForDBObject(queuedDBEvents, newCursor);
-
-            return newCursor;
-        }
-    }
-
-    private QueueCursor getQueuedDBEvents(final Context context, final int batchSize,
-            final QueueCursor previousCursor) {
-
-        synchronized (eventLock) {
-            QueueCursor newCursor = getQueueCursor(context, DBAdapter.Table.EVENTS, batchSize, previousCursor);
-
-            if (newCursor.isEmpty() && newCursor.getTableName().equals(DBAdapter.Table.EVENTS)) {
-                newCursor = getQueueCursor(context, DBAdapter.Table.PROFILE_EVENTS, batchSize, null);
-            }
-
-            return newCursor.isEmpty() ? null : newCursor;
-        }
-    }
-
-    @SuppressWarnings("SameParameterValue")
-    private QueueCursor getQueuedEvents(final Context context, final int batchSize, final QueueCursor previousCursor,
-            final EventGroup eventGroup) {
-        if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
-            getConfigLogger().verbose(getAccountId(), "Returning Queued Notification Viewed events");
-            return getPushNotificationViewedQueuedEvents(context, batchSize, previousCursor);
-        } else {
-            getConfigLogger().verbose(getAccountId(), "Returning Queued events");
-            return getQueuedDBEvents(context, batchSize, previousCursor);
-        }
-    }
 
     private long getReferrerClickTime() {
         return referrerClickTime;
-    }
-
-    private String getScreenName() {
-        return currentScreenName.equals("") ? null : currentScreenName;
     }
 
     //Saves ARP directly to new namespace
@@ -5218,21 +4959,21 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     private boolean hasDomainChanged(final String newDomain) {
-        final String oldDomain = StorageHelper.getStringFromPrefs(context, mConfig, Constants.KEY_DOMAIN_NAME, null);
+        final String oldDomain = StorageHelper.getStringFromPrefs(context, getCoreState().getConfig(), Constants.KEY_DOMAIN_NAME, null);
         return !newDomain.equals(oldDomain);
     }
 
     private void initFeatureFlags(boolean fromPlayServices) {
         Logger.v("Initializing Feature Flags with device Id = " + getCleverTapID());
 
-        if (mConfig.isAnalyticsOnly()) {
-            getConfigLogger().debug(mConfig.getAccountId(), "Feature Flag is not enabled for this instance");
+        if (getConfig().isAnalyticsOnly()) {
+            getConfigLogger().debug(getConfig().getAccountId(), "Feature Flag is not enabled for this instance");
             return;
         }
 
         if (ctFeatureFlagsController == null) {
-            ctFeatureFlagsController = new CTFeatureFlagsController(context, getCleverTapID(), mConfig, this);
-            getConfigLogger().verbose(mConfig.getAccountId(), "Feature Flags initialized");
+            ctFeatureFlagsController = new CTFeatureFlagsController(context, getCleverTapID(), getCoreState().getConfig(), this);
+            getConfigLogger().verbose(getConfig().getAccountId(), "Feature Flags initialized");
         }
 
         if (fromPlayServices && !ctFeatureFlagsController.isInitialized()) {
@@ -5243,13 +4984,13 @@ public class CleverTapAPI implements CleverTapAPIListener {
     private void initProductConfig(boolean fromPlayServices) {
         Logger.v("Initializing Product Config with device Id = " + getCleverTapID());
 
-        if (mConfig.isAnalyticsOnly()) {
-            getConfigLogger().debug(mConfig.getAccountId(), "Product Config is not enabled for this instance");
+        if (getConfig().isAnalyticsOnly()) {
+            getConfigLogger().debug(getConfig().getAccountId(), "Product Config is not enabled for this instance");
             return;
         }
 
         if (ctProductConfigController == null) {
-            ctProductConfigController = new CTProductConfigController(context, getCleverTapID(), mConfig, this);
+            ctProductConfigController = new CTProductConfigController(context, getCleverTapID(), getCoreState().getConfig(), this);
         }
         if (fromPlayServices && !ctProductConfigController.isInitialized()) {
             ctProductConfigController.setGuidAndInit(getCleverTapID());
@@ -5285,7 +5026,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             }
 
             String accountId = getAccountId();
-            String token = this.mConfig.getAccountToken();
+            String token = getCoreState().getConfig().getAccountToken();
 
             if (accountId == null || token == null) {
                 getConfigLogger()
@@ -5297,12 +5038,12 @@ public class CleverTapAPI implements CleverTapAPIListener {
             header.put("tk", token);
             header.put("l_ts", getLastRequestTimestamp());
             header.put("f_ts", getFirstRequestTimestamp());
-            header.put("ct_pi", IdentityRepoFactory.getRepo(mCoreState.getContext(),mCoreState.getConfig(),mCoreState.getDeviceInfo(),mCoreState.getRemoteLogger()).getIdentitySet().toString());
+            header.put("ct_pi", IdentityRepoFactory.getRepo(mCoreState.getContext(),mCoreState.getConfig(),mCoreState.getDeviceInfo(),mCoreState.getValidationResultStack()).getIdentitySet().toString());
             header.put("ddnd",
-                    !(this.deviceInfo.getNotificationsEnabledForUser() && (pushProviders.isNotificationSupported())));
-            if (isBgPing) {
+                    !(getCoreState().getDeviceInfo().getNotificationsEnabledForUser() && (getCoreState().getPushProviders().isNotificationSupported())));
+            if (getCoreState().getCoreMetaData().isBgPing()) {
                 header.put("bk", 1);
-                isBgPing = false;
+                getCoreState().getCoreMetaData().setBgPing(false);
             }
             header.put("rtl", getRenderedTargetList(this.dbAdapter));
             if (!installReferrerDataSent) {
@@ -5353,9 +5094,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 header.put("wzrk_ref", wzrkParams);
             }
 
-            if (inAppFCManager != null) {
+            if (getCoreState().getInAppFCManager() != null) {
                 Logger.v("Attaching InAppFC to Header");
-                inAppFCManager.attachToHeader(context, header);
+                getCoreState().getInAppFCManager().attachToHeader(context, header);
             }
 
             // Resort to string concat for backward compatibility
@@ -5367,19 +5108,11 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     private boolean isAppLaunchReportingDisabled() {
-        return this.mConfig.isDisableAppLaunchedEvent();
+        return getCoreState().getConfig().isDisableAppLaunchedEvent();
     }
 
     private boolean isErrorDeviceId() {
-        return this.deviceInfo.isErrorDeviceId();
-    }
-
-    private boolean isLocationForGeofence() {
-        return isLocationForGeofence;
-    }
-
-    private void setLocationForGeofence(boolean locationForGeofence) {
-        isLocationForGeofence = locationForGeofence;
+        return getCoreState().getDeviceInfo().isErrorDeviceId();
     }
 
     /**
@@ -5387,7 +5120,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     private boolean isMuted() {
         final int now = (int) (System.currentTimeMillis() / 1000);
-        final int muteTS = StorageHelper.getIntFromPrefs(context, mConfig, Constants.KEY_MUTED, 0);
+        final int muteTS = StorageHelper.getIntFromPrefs(context, getCoreState().getConfig(), Constants.KEY_MUTED, 0);
 
         return now - muteTS < 24 * 60 * 60;
     }
@@ -5424,7 +5157,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
     //Util
     private DBAdapter loadDBAdapter(Context context) {
         if (dbAdapter == null) {
-            dbAdapter = new DBAdapter(context, this.mConfig);
+            dbAdapter = new DBAdapter(context, getCoreState().getConfig());
             dbAdapter.cleanupStaleEvents(DBAdapter.Table.EVENTS);
             dbAdapter.cleanupStaleEvents(DBAdapter.Table.PROFILE_EVENTS);
             dbAdapter.cleanupStaleEvents(DBAdapter.Table.PUSH_NOTIFICATION_VIEWED);
@@ -5438,7 +5171,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
         getCoreState().getPostAsyncSafelyHandler().postAsyncSafely("Manifest Validation", new Runnable() {
             @Override
             public void run() {
-                ManifestValidator.validate(context, deviceInfo, pushProviders);
+                ManifestValidator.validate(context, getCoreState().getDeviceInfo(), getCoreState().getPushProviders());
             }
         });
     }
@@ -5527,7 +5260,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     private void notifyUserProfileInitialized() {
-        notifyUserProfileInitialized(this.deviceInfo.getDeviceID());
+        notifyUserProfileInitialized(getCoreState().getDeviceInfo().getDeviceID());
     }
 
     private void onProductConfigFailed() {
@@ -5541,7 +5274,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     //Push
     private void onTokenRefresh() {
-        pushProviders.refreshAllTokens();
+        getCoreState().getPushProviders().refreshAllTokens();
     }
 
     private String optOutKey() {
@@ -5698,8 +5431,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
                     discardedEventsList.add(discardedEventsArray.getString(i));
                 }
             }
-            if (validator != null) {
-                validator.setDiscardedEvents(discardedEventsList);
+            if (getCoreState().getValidator() != null) {
+                getCoreState().getValidator().setDiscardedEvents(discardedEventsList);
             } else {
                 getConfigLogger().verbose(getAccountId(), "Validator object is NULL");
             }
@@ -5738,67 +5471,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
     //ABTesting
 
     //Event
-    private void processEvent(final Context context, final JSONObject event, final int eventType) {
-        synchronized (eventLock) {
-            try {
-                activityCount = activityCount == 0 ? 1 : activityCount;
-                String type;
-                if (eventType == Constants.PAGE_EVENT) {
-                    type = "page";
-                } else if (eventType == Constants.PING_EVENT) {
-                    type = "ping";
-                    attachMeta(event, context);
-                    if (event.has("bk")) {
-                        isBgPing = true;
-                        event.remove("bk");
-                    }
-
-                    //Add a flag to denote, PING event is for geofences
-                    if (isLocationForGeofence()) {
-                        event.put("gf", true);
-                        setLocationForGeofence(false);
-                        event.put("gfSDKVersion", getGeofenceSDKVersion());
-                        setGeofenceSDKVersion(0);
-                    }
-                } else if (eventType == Constants.PROFILE_EVENT) {
-                    type = "profile";
-                } else if (eventType == Constants.DATA_EVENT) {
-                    type = "data";
-                } else {
-                    type = "event";
-                }
-
-                // Complete the received event with the other params
-
-                String currentActivityName = getScreenName();
-                if (currentActivityName != null) {
-                    event.put("n", currentActivityName);
-                }
-
-                int session = getCoreState().getCoreMetaData().getCurrentSession();
-                event.put("s", session);
-                event.put("pg", activityCount);
-                event.put("type", type);
-                event.put("ep", System.currentTimeMillis() / 1000);
-                event.put("f", getCoreState().getCoreMetaData().isFirstSession());
-                event.put("lsl", getCoreState().getCoreMetaData().getLastSessionLength());
-                attachPackageNameIfRequired(context, event);
-
-                // Report any pending validation error
-                ValidationResult vr = validationResultStack.popValidationResult();
-                if (vr != null) {
-                    event.put(Constants.ERROR_KEY, getErrorObject(vr));
-                }
-                getLocalDataStore().setDataSyncFlag(event);
-                queueEventToDB(context, event, eventType);
-                updateLocalStore(context, event, eventType);
-                scheduleQueueFlush(context);
-
-            } catch (Throwable e) {
-                getConfigLogger().verbose(getAccountId(), "Failed to queue event: " + event.toString(), e);
-            }
-        }
-    }
 
     private void processFeatureFlagsResponse(JSONObject response) {
         if (response == null) {
@@ -5874,9 +5546,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 perDay = response.getInt("imp");
             }
 
-            if (inAppFCManager != null) {
+            if (getCoreState().getInAppFCManager() != null) {
                 Logger.v("Updating InAppFC Limits");
-                inAppFCManager.updateLimits(context, perDay, perSession);
+                getCoreState().getInAppFCManager().updateLimits(context, perDay, perSession);
             }
 
             JSONArray inappNotifs;
@@ -5892,7 +5564,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             SharedPreferences.Editor editor = prefs.edit();
             try {
                 JSONArray inappsFromPrefs = new JSONArray(
-                        StorageHelper.getStringFromPrefs(context, mConfig, Constants.INAPP_KEY, "[]"));
+                        StorageHelper.getStringFromPrefs(context, getCoreState().getConfig(), Constants.INAPP_KEY, "[]"));
 
                 // Now add the rest of them :)
                 if (inappNotifs != null && inappNotifs.length() > 0) {
@@ -5907,7 +5579,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 }
 
                 // Commit all the changes
-                editor.putString(StorageHelper.storageKeyWithSuffix(mConfig, Constants.INAPP_KEY),
+                editor.putString(StorageHelper.storageKeyWithSuffix(getConfig(), Constants.INAPP_KEY),
                         inappsFromPrefs.toString());
                 StorageHelper.persist(editor);
             } catch (Throwable e) {
@@ -6009,29 +5681,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
-    private void processPushNotificationViewedEvent(final Context context, final JSONObject event) {
-        synchronized (eventLock) {
-            try {
-                int session = getCoreState().getCoreMetaData().getCurrentSession();
-                event.put("s", session);
-                event.put("type", "event");
-                event.put("ep", System.currentTimeMillis() / 1000);
-                // Report any pending validation error
-                ValidationResult vr = validationResultStack.popValidationResult();
-                if (vr != null) {
-                    event.put(Constants.ERROR_KEY, getErrorObject(vr));
-                }
-                getConfigLogger().verbose(getAccountId(), "Pushing Notification Viewed event onto DB");
-                queuePushNotificationViewedEventToDB(context, event);
-                getConfigLogger().verbose(getAccountId(), "Pushing Notification Viewed event onto queue flush");
-                schedulePushNotificationViewedQueueFlush(context);
-            } catch (Throwable t) {
-                getConfigLogger()
-                        .verbose(getAccountId(), "Failed to queue notification viewed event: " + event.toString(), t);
-            }
-        }
-    }
-
     //Event
     private void processResponse(final Context context, final String responseStr) {
         if (responseStr == null) {
@@ -6043,7 +5692,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
             JSONObject response = new JSONObject(responseStr);
             try {
-                if (!this.mConfig.isAnalyticsOnly()) {
+                if (!getCoreState().getConfig().isAnalyticsOnly()) {
                     processInAppResponse(response, context);
                 }
             } catch (Throwable t) {
@@ -6055,7 +5704,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             try {
                 if (response.has("g")) {
                     final String deviceID = response.getString("g");
-                    this.deviceInfo.forceUpdateDeviceId(deviceID);
+                    getCoreState().getDeviceInfo().forceUpdateDeviceId(deviceID);
                     getConfigLogger().verbose(getAccountId(), "Got a new device ID: " + deviceID);
                 }
             } catch (Throwable t) {
@@ -6063,7 +5712,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             }
 
             try {
-                getLocalDataStore().syncWithUpstream(context, response);
+                getCoreState().getLocalDataStore().syncWithUpstream(context, response);
             } catch (Throwable t) {
                 getConfigLogger().verbose(getAccountId(), "Failed to sync local cache with upstream", t);
             }
@@ -6140,8 +5789,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
             // Handle stale_inapp
             try {
-                if (inAppFCManager != null) {
-                    inAppFCManager.processResponse(context, response);
+                if (getCoreState().getInAppFCManager() != null) {
+                    getCoreState().getInAppFCManager().processResponse(context, response);
                 }
             } catch (Throwable t) {
                 // Ignore
@@ -6246,7 +5895,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     private void pushAmazonRegistrationId(String token, boolean register) {
-        pushProviders.handleToken(token, PushType.ADM, register);
+        getCoreState().getPushProviders().handleToken(token, PushType.ADM, register);
     }
 
     //Event
@@ -6273,7 +5922,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
         } catch (Throwable t) {
             // We won't get here
         }
-        getCoreState().getEventQueue().queueEvent(context, event, Constants.RAISED_EVENT);
+        getCoreState().getBaseEventQueueManager().queueEvent(context, event, Constants.RAISED_EVENT);
     }
 
     private synchronized void pushDeepLink(Uri uri, boolean install) {
@@ -6304,29 +5953,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
-    private void queueEventInternal(final Context context, final JSONObject event, DBAdapter.Table table) {
-        synchronized (eventLock) {
-            DBAdapter adapter = loadDBAdapter(context);
-            int returnCode = adapter.storeObject(event, table);
-
-            if (returnCode > 0) {
-                getConfigLogger().debug(getAccountId(), "Queued event: " + event.toString());
-                getConfigLogger()
-                        .verbose(getAccountId(), "Queued event to DB table " + table + ": " + event.toString());
-            }
-        }
-    }
-
-    //Event
-    private void queueEventToDB(final Context context, final JSONObject event, final int type) {
-        DBAdapter.Table table = (type == Constants.PROFILE_EVENT) ? DBAdapter.Table.PROFILE_EVENTS
-                : DBAdapter.Table.EVENTS;
-        queueEventInternal(context, event, table);
-    }
-
-    private void queuePushNotificationViewedEventToDB(final Context context, final JSONObject event) {
-        queueEventInternal(context, event, DBAdapter.Table.PUSH_NOTIFICATION_VIEWED);
-    }
 
     private Future<?> raiseEventForGeofences(String eventName, JSONObject geofenceProperties) {
 
@@ -6346,7 +5972,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
             locationFromUser = location;
 
-            future = getCoreState().getEventQueue().queueEvent(context, event, Constants.RAISED_EVENT);
+            future = getCoreState().getBaseEventQueueManager().queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (JSONException e) {
             getConfigLogger().debug(getAccountId(), Constants.LOG_TAG_GEOFENCES +
                     "JSON Exception when raising GeoFence event "
@@ -6357,8 +5983,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     private void recordDeviceIDErrors() {
-        for (ValidationResult validationResult : this.deviceInfo.getValidationResults()) {
-            validationResultStack.pushValidationResult(validationResult);
+        for (ValidationResult validationResult : getCoreState().getDeviceInfo().getValidationResults()) {
+            getCoreState().getValidationResultStack().pushValidationResult(validationResult);
         }
     }
 
@@ -6378,7 +6004,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                     }
                 }
             }
-            getCoreState().getEventQueue().queueEvent(context, jsonObject, Constants.PAGE_EVENT);
+            getCoreState().getBaseEventQueueManager().queueEvent(context, jsonObject, Constants.PAGE_EVENT);
         } catch (Throwable t) {
             // We won't get here
         }
@@ -6421,22 +6047,22 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     private void resetProductConfigs() {
-        if (this.mConfig.isAnalyticsOnly()) {
-            getConfigLogger().debug(mConfig.getAccountId(), "Product Config is not enabled for this instance");
+        if (getCoreState().getConfig().isAnalyticsOnly()) {
+            getConfigLogger().debug(getConfig().getAccountId(), "Product Config is not enabled for this instance");
             return;
         }
         if (ctProductConfigController != null) {
             ctProductConfigController.resetSettings();
         }
-        ctProductConfigController = new CTProductConfigController(context, getCleverTapID(), mConfig, this);
-        getConfigLogger().verbose(mConfig.getAccountId(), "Product Config reset");
+        ctProductConfigController = new CTProductConfigController(context, getCleverTapID(), getCoreState().getConfig(), this);
+        getConfigLogger().verbose(getConfig().getAccountId(), "Product Config reset");
     }
 
     private void runInstanceJobWork(final Context context, final JobParameters parameters) {
         getCoreState().getPostAsyncSafelyHandler().postAsyncSafely("runningJobService", new Runnable() {
             @Override
             public void run() {
-                if (pushProviders.isNotificationSupported()) {
+                if (getCoreState().getPushProviders().isNotificationSupported()) {
                     Logger.v(getAccountId(), "Token is not present, not running the Job");
                     return;
                 }
@@ -6461,7 +6087,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                     try {
                         JSONObject eventObject = new JSONObject();
                         eventObject.put("bk", 1);
-                        getCoreState().getEventQueue().queueEvent(context, eventObject, Constants.PING_EVENT);
+                        getCoreState().getBaseEventQueueManager().queueEvent(context, eventObject, Constants.PING_EVENT);
 
                         if (parameters == null) {
                             int pingFrequency = getPingFrequency(context);
@@ -6523,39 +6149,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
             getConfigLogger()
                     .verbose(getAccountId(), "Failed to submit task to the notification executor service", t);
         }
-    }
-
-    private void schedulePushNotificationViewedQueueFlush(final Context context) {
-        if (pushNotificationViewedRunnable == null) {
-            pushNotificationViewedRunnable = new Runnable() {
-                @Override
-                public void run() {
-                    getConfigLogger()
-                            .verbose(getAccountId(), "Pushing Notification Viewed event onto queue flush async");
-                    flushQueueAsync(context, EventGroup.PUSH_NOTIFICATION_VIEWED);
-                }
-            };
-        }
-        mMainLooperHandler.getMainLooperHandler().removeCallbacks(pushNotificationViewedRunnable);
-        mMainLooperHandler.getMainLooperHandler().post(pushNotificationViewedRunnable);
-    }
-
-    //Event
-    private void scheduleQueueFlush(final Context context) {
-        if (commsRunnable == null) {
-            commsRunnable = new Runnable() {
-                @Override
-                public void run() {
-                    flushQueueAsync(context, EventGroup.REGULAR);
-                    flushQueueAsync(context, EventGroup.PUSH_NOTIFICATION_VIEWED);
-                }
-            };
-        }
-        // Cancel any outstanding send runnables, and issue a new delayed one
-        mMainLooperHandler.getMainLooperHandler().removeCallbacks(commsRunnable);
-        mMainLooperHandler.getMainLooperHandler().postDelayed(commsRunnable, getDelayFrequency());
-
-        getConfigLogger().verbose(getAccountId(), "Scheduling delayed queue flush on main event loop");
     }
 
     /**
@@ -6643,7 +6236,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                     "An exception occurred while sending the queue, will retry: " + e.getLocalizedMessage());
             mResponseFailureCount++;
             networkRetryCount++;
-            scheduleQueueFlush(context);
+            getCoreState().getBaseEventQueueManager().scheduleQueueFlush(context);
             return false;
         } finally {
             if (conn != null) {
@@ -6668,14 +6261,14 @@ public class CleverTapAPI implements CleverTapAPIListener {
                     "Unable to set current user OptOut state from storage: storage key is null");
             return;
         }
-        boolean storedOptOut = StorageHelper.getBooleanFromPrefs(context, mConfig, key);
+        boolean storedOptOut = StorageHelper.getBooleanFromPrefs(context, getCoreState().getConfig(), key);
         getCoreState().getCoreMetaData().setCurrentUserOptedOut(storedOptOut);
         getConfigLogger().verbose(getAccountId(),
                 "Set current user OptOut state from storage to: " + storedOptOut + " for key: " + key);
     }
 
     private void setDeviceNetworkInfoReportingFromStorage() {
-        boolean enabled = StorageHelper.getBooleanFromPrefs(context, mConfig, Constants.NETWORK_INFO);
+        boolean enabled = StorageHelper.getBooleanFromPrefs(context, getCoreState().getConfig(), Constants.NETWORK_INFO);
         getConfigLogger()
                 .verbose(getAccountId(), "Setting device network info reporting state from storage to " + enabled);
         enableNetworkInfoReporting = enabled;
@@ -6683,7 +6276,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private void setDomain(final Context context, String domainName) {
         getConfigLogger().verbose(getAccountId(), "Setting domain to " + domainName);
-        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_DOMAIN_NAME),
+        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(getConfig(), Constants.KEY_DOMAIN_NAME),
                 domainName);
     }
 
@@ -6691,14 +6284,14 @@ public class CleverTapAPI implements CleverTapAPIListener {
         if (getFirstRequestTimestamp() > 0) {
             return;
         }
-        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_FIRST_TS), ts);
+        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(getConfig(), Constants.KEY_FIRST_TS), ts);
     }
 
     @SuppressLint("CommitPrefEdits")
     private void setI(Context context, long i) {
         final SharedPreferences prefs = StorageHelper.getPreferences(context, Constants.NAMESPACE_IJ);
         final SharedPreferences.Editor editor = prefs.edit();
-        editor.putLong(StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_I), i);
+        editor.putLong(StorageHelper.storageKeyWithSuffix(getConfig(), Constants.KEY_I), i);
         StorageHelper.persist(editor);
     }
 
@@ -6706,18 +6299,18 @@ public class CleverTapAPI implements CleverTapAPIListener {
     private void setJ(Context context, long j) {
         final SharedPreferences prefs = StorageHelper.getPreferences(context, Constants.NAMESPACE_IJ);
         final SharedPreferences.Editor editor = prefs.edit();
-        editor.putLong(StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_J), j);
+        editor.putLong(StorageHelper.storageKeyWithSuffix(getConfig(), Constants.KEY_J), j);
         StorageHelper.persist(editor);
     }
 
     //Session
     private void setLastRequestTimestamp(Context context, int ts) {
-        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_LAST_TS), ts);
+        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(getConfig(), Constants.KEY_LAST_TS), ts);
     }
 
     //Session
     private void setLastVisitTime() {
-        EventDetail ed = getLocalDataStore().getEventDetail(Constants.APP_LAUNCHED_EVENT);
+        EventDetail ed = getCoreState().getLocalDataStore().getEventDetail(Constants.APP_LAUNCHED_EVENT);
         if (ed == null) {
             lastVisitTime = -1;
         } else {
@@ -6729,7 +6322,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
     private void setMuted(final Context context, boolean mute) {
         if (mute) {
             final int now = (int) (System.currentTimeMillis() / 1000);
-            StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_MUTED), now);
+            StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(getConfig(), Constants.KEY_MUTED), now);
             setDomain(context, null);
 
             // Clear all the queues
@@ -6740,7 +6333,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 }
             });
         } else {
-            StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_MUTED), 0);
+            StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(getConfig(), Constants.KEY_MUTED), 0);
         }
     }
 
@@ -6756,7 +6349,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private void setSpikyDomain(final Context context, String spikyDomainName) {
         getConfigLogger().verbose(getAccountId(), "Setting spiky domain to " + spikyDomainName);
-        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.SPIKY_KEY_DOMAIN_NAME),
+        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(getConfig(), Constants.SPIKY_KEY_DOMAIN_NAME),
                 spikyDomainName);
     }
 
@@ -6764,7 +6357,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
 
     private void showInAppNotificationIfAny() {
-        if (!this.mConfig.isAnalyticsOnly()) {
+        if (!getCoreState().getConfig().isAnalyticsOnly()) {
             runOnNotificationQueue(new Runnable() {
                 @Override
                 public void run() {
@@ -6777,7 +6370,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
     //InApp
     @SuppressWarnings({"unused"})
     private void showNotificationIfAvailable(final Context context) {
-        if (!this.mConfig.isAnalyticsOnly()) {
+        if (!getCoreState().getConfig().isAnalyticsOnly()) {
             runOnNotificationQueue(new Runnable() {
                 @Override
                 public void run() {
@@ -6826,7 +6419,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             if (messageCode != -1) {
                 ValidationResult channelIdError = ValidationResultFactory.create(512, messageCode, value);
                 getConfigLogger().debug(getAccountId(), channelIdError.getErrorDesc());
-                validationResultStack.pushValidationResult(channelIdError);
+                getCoreState().getValidationResultStack().pushValidationResult(channelIdError);
                 return;
             }
         }
@@ -7140,7 +6733,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             ValidationResult notificationViewedError = ValidationResultFactory
                     .create(512, Constants.NOTIFICATION_VIEWED_DISABLED, extras.toString());
             getConfigLogger().debug(notificationViewedError.getErrorDesc());
-            validationResultStack.pushValidationResult(notificationViewedError);
+            getCoreState().getValidationResultStack().pushValidationResult(notificationViewedError);
             return;
         }
         pushNotificationViewedEvent(extras);
@@ -7192,13 +6785,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
         return cursor;
     }
 
-    //Util
-    // only call async
-    private void updateLocalStore(final Context context, final JSONObject event, final int type) {
-        if (type == Constants.RAISED_EVENT) {
-            getLocalDataStore().persistEvent(context, event, type);
-        }
-    }
+
 
     // ********                       PRODUCT CONFIG Internal API           *****//
 
@@ -7210,7 +6797,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
         getConfigLogger().verbose("Stored Ping Frequency - " + getPingFrequency(context));
         if (frequency != getPingFrequency(context)) {
             setPingFrequency(context, frequency);
-            if (this.mConfig.isBackgroundSync() && !this.mConfig.isAnalyticsOnly()) {
+            if (getCoreState().getConfig().isBackgroundSync() && !getCoreState().getConfig().isAnalyticsOnly()) {
                 getCoreState().getPostAsyncSafelyHandler()
                         .postAsyncSafely("createOrResetJobScheduler", new Runnable() {
                             @Override
@@ -7313,7 +6900,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
                 boolean shouldProcess = false;
                 if (instance != null) {
-                    shouldProcess = (_accountId == null && instance.mConfig.isDefaultInstance()) || instance
+                    shouldProcess = (_accountId == null && instance.getCoreState().getConfig().isDefaultInstance()) || instance
                             .getAccountId().equals(_accountId);
                 }
 
@@ -7407,7 +6994,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             } else {
                 try {
                     CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
-                    return (instance != null && instance.mConfig.getAccountId().equals(_accountId)) ? instance : null;
+                    return (instance != null && instance.getCoreState().getConfig().getAccountId().equals(_accountId)) ? instance : null;
                 } catch (Throwable t) {
                     Logger.v("Error creating shared Instance: ", t.getCause());
                     return null;

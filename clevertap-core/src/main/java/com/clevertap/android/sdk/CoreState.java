@@ -1,9 +1,11 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
+import android.os.Handler;
+import com.clevertap.android.sdk.pushnotification.PushProviders;
 
 //TODO move this to builder pattern & add sanity check for dependencies at the time of creation
-class CoreState extends CleverTapState {
+public class CoreState extends CleverTapState {
 
     private CleverTapInstanceConfig config;
 
@@ -17,7 +19,19 @@ class CoreState extends CleverTapState {
 
     private EventProcessor eventProcessor;
 
-    private EventQueue eventQueue;
+    private InAppFCManager inAppFCManager;
+
+    private LocalDataStore localDataStore;
+
+    private BaseQueueManager mBaseEventQueueManager;
+
+    private CTLockManager mCTLockManager;
+
+    private SessionManager mSessionManager;
+
+    private ValidationResultStack mValidationResultStack;
+
+    private Validator mValidator;
 
     private MainLooperHandler mainLooperHandler;
 
@@ -25,12 +39,18 @@ class CoreState extends CleverTapState {
 
     private PostAsyncSafelyHandler postAsyncSafelyHandler;
 
-    private ValidationResultStack remoteLogger;
-
-    private SessionHandler sessionHandler;
+    private PushProviders pushProviders;
 
     CoreState(final Context context) {
         super(context);
+    }
+
+    public CTLockManager getCTLockManager() {
+        return mCTLockManager;
+    }
+
+    public void setCTLockManager(final CTLockManager CTLockManager) {
+        mCTLockManager = CTLockManager;
     }
 
     public CleverTapInstanceConfig getConfig() {
@@ -49,23 +69,63 @@ class CoreState extends CleverTapState {
         this.deviceInfo = deviceInfo;
     }
 
-    public ValidationResultStack getRemoteLogger() {
-        return remoteLogger;
+    public InAppFCManager getInAppFCManager() {
+        return inAppFCManager;
     }
 
-    public void setRemoteLogger(final ValidationResultStack remoteLogger) {
-        this.remoteLogger = remoteLogger;
+    public void setInAppFCManager(final InAppFCManager inAppFCManager) {
+        this.inAppFCManager = inAppFCManager;
     }
 
-    public SessionHandler getSessionHandler() {
-        return sessionHandler;
+    public LocalDataStore getLocalDataStore() {
+        return localDataStore;
     }
 
-    public void setSessionHandler(final SessionHandler sessionHandler) {
-        this.sessionHandler = sessionHandler;
+    public void setLocalDataStore(final LocalDataStore localDataStore) {
+        this.localDataStore = localDataStore;
     }
 
-    CoreMetaData getCoreMetaData() {
+    public PushProviders getPushProviders() {
+        return pushProviders;
+    }
+
+    public void setPushProviders(final PushProviders pushProviders) {
+        this.pushProviders = pushProviders;
+    }
+
+    public SessionManager getSessionManager() {
+        return mSessionManager;
+    }
+
+    public void setSessionManager(final SessionManager sessionManager) {
+        this.mSessionManager = sessionManager;
+    }
+
+    public ValidationResultStack getValidationResultStack() {
+        return mValidationResultStack;
+    }
+
+    public void setValidationResultStack(final ValidationResultStack validationResultStack) {
+        this.mValidationResultStack = validationResultStack;
+    }
+
+    public Validator getValidator() {
+        return mValidator;
+    }
+
+    public void setValidator(final Validator validator) {
+        mValidator = validator;
+    }
+
+    public BaseQueueManager getBaseEventQueueManager() {
+        return mBaseEventQueueManager;
+    }
+
+    void setBaseEventQueueManager(final BaseQueueManager baseEventQueueManager) {
+        this.mBaseEventQueueManager = baseEventQueueManager;
+    }
+
+    public CoreMetaData getCoreMetaData() {
         return coreMetaData;
     }
 
@@ -99,13 +159,13 @@ class CoreState extends CleverTapState {
         this.eventProcessor = eventProcessor;
     }
 
-    EventQueue getEventQueue() {
-        return eventQueue;
-    }
-
-    void setEventQueue(final EventQueue eventQueue) {
-        this.eventQueue = eventQueue;
-    }
+    /**
+     * Returns the generic handler object which is used to post
+     * runnables. The returned value will never be null.
+     *
+     * @return The generic handler
+     * @see Handler
+     */
 
     MainLooperHandler getMainLooperHandler() {
         return mainLooperHandler;

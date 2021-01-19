@@ -33,7 +33,7 @@ public class FcmMessageHandlerImpl implements IFcmMessageHandler {
 
                 if (info.fromCleverTap) {
                     if (cleverTapAPI != null) {
-                        cleverTapAPI.config().log(LOG_TAG,
+                        cleverTapAPI.getCoreState().getConfig().log(LOG_TAG,
                                 FCM_LOG_TAG + "received notification from CleverTap: " + extras.toString());
                     } else {
                         Logger.d(LOG_TAG, FCM_LOG_TAG + "received notification from CleverTap: " + extras.toString());

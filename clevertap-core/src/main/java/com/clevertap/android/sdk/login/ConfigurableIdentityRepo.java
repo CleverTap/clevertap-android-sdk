@@ -20,13 +20,13 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
 
     private final CleverTapInstanceConfig mConfig;
 
-    private final ValidationResultStack remoteLogger;
+    private final ValidationResultStack mValidationResultStack;
 
     public ConfigurableIdentityRepo(Context context, CleverTapInstanceConfig config, DeviceInfo deviceInfo,
-            ValidationResultStack remoteLogger) {
+            ValidationResultStack mValidationResultStack) {
         this.mConfig = config;
         this.infoProvider = new LoginInfoProvider(context, config, deviceInfo);
-        this.remoteLogger = remoteLogger;
+        this.mValidationResultStack = mValidationResultStack;
         loadIdentitySet();
     }
 
@@ -110,7 +110,7 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
     private void handleError(final IdentitySet prefKeySet, final IdentitySet configKeySet) {
         if (prefKeySet.isValid() && configKeySet.isValid() && !prefKeySet.equals(configKeySet)) {
             ValidationResult error = ValidationResultFactory.create(531);
-            remoteLogger.pushValidationResult(error);
+            mValidationResultStack.pushValidationResult(error);
             mConfig.log(LOG_TAG_ON_USER_LOGIN,
                     TAG + "pushing error due to mismatch [Pref:" + prefKeySet + "], [Config:" + configKeySet + "]");
         } else {

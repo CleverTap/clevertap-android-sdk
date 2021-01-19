@@ -182,6 +182,7 @@ class NetworkManager extends BaseNetworkManager {
         return true;
     }
 
+    @Override
     boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue) {
         // TODO implementation
         return true;
