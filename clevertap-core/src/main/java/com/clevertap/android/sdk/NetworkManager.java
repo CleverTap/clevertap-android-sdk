@@ -137,6 +137,64 @@ class NetworkManager extends BaseNetworkManager {
         return StorageHelper.getIntFromPrefs(mContext, mConfig, Constants.KEY_FIRST_TS, 0);
     }
 
+    void performHandshakeForDomain(final Context context, final EventGroup eventGroup,
+            final Runnable handshakeSuccessCallback) {
+        final String endpoint = getEndpoint(true, eventGroup);
+        if (endpoint == null) {
+            mLogger.verbose(mConfig.getAccountId(), "Unable to perform handshake, endpoint is null");
+        }
+        mLogger.verbose(mConfig.getAccountId(), "Performing handshake with " + endpoint);
+
+        HttpsURLConnection conn = null;
+        try {
+            conn = buildHttpsURLConnection(endpoint);
+            final int responseCode = conn.getResponseCode();
+            if (responseCode != 200) {
+                mLogger
+                        .verbose(mConfig.getAccountId(),
+                                "Invalid HTTP status code received for handshake - " + responseCode);
+                return;
+            }
+
+            mLogger.verbose(mConfig.getAccountId(), "Received success from handshake :)");
+
+            if (processIncomingHeaders(context, conn)) {
+                mLogger.verbose(mConfig.getAccountId(), "We are not muted");
+                // We have a new domain, run the callback
+                handshakeSuccessCallback.run();
+            }
+        } catch (Throwable t) {
+            mLogger.verbose(mConfig.getAccountId(), "Failed to perform handshake!", t);
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.getInputStream().close();
+                    conn.disconnect();
+                } catch (Throwable t) {
+                    // Ignore
+                }
+            }
+        }
+    }
+
+    boolean processIncomingHeaders(final Context context, final HttpsURLConnection conn) {
+        // TODO implementation
+        return true;
+    }
+
+    boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue) {
+        // TODO implementation
+        return true;
+    }
+
+    void setDomain(final Context context, String domainName) {
+        // TODO implementation
+    }
+
+    void setSpikyDomain(final Context context, String spikyDomainName) {
+        // TODO implementation
+    }
+
     int getLastRequestTimestamp() {
         return StorageHelper.getIntFromPrefs(mContext, mConfig, Constants.KEY_LAST_TS, 0);
     }
@@ -178,34 +236,11 @@ class NetworkManager extends BaseNetworkManager {
         return true;
     }
 
-    void performHandshakeForDomain(final Context context, final EventGroup eventGroup,
-            final Runnable handshakeSuccessCallback) {
-        // TODO implementation
-    }
-
-    boolean processIncomingHeaders(final Context context, final HttpsURLConnection conn) {
-        // TODO implementation
-        return true;
-    }
-
-    boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue) {
-        // TODO implementation
-        return true;
-    }
-
-    void setDomain(final Context context, String domainName) {
-        // TODO implementation
-    }
-
     void setFirstRequestTimestampIfNeeded(int ts) {
         if (getFirstRequestTimestamp() > 0) {
             return;
         }
         StorageHelper.putInt(mContext, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_FIRST_TS), ts);
-    }
-
-    void setSpikyDomain(final Context context, String spikyDomainName) {
-        // TODO implementation
     }
 
     static boolean isNetworkOnline(Context context) {
