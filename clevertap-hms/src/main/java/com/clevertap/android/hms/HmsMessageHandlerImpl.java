@@ -44,7 +44,7 @@ class HmsMessageHandlerImpl implements IHmsMessageHandler {
                 .getGlobalInstance(context, getAccountIdFromNotificationBundle(messageBundle));
         CleverTapAPI.createNotification(context, messageBundle);
         if (cleverTapAPI != null) {
-            cleverTapAPI.config().log(LOG_TAG, HMS_LOG_TAG + "Creating Notification");
+            cleverTapAPI.getCoreState().getConfig().log(LOG_TAG, HMS_LOG_TAG + "Creating Notification");
         } else {
             Logger.d(LOG_TAG, HMS_LOG_TAG + "Creating Notification");
         }
