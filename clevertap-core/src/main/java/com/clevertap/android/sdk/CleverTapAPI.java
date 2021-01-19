@@ -206,8 +206,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private final int currentRequestTimestamp = 0;
 
-    private DBAdapter dbAdapter;
-
     private final Object displayUnitControllerLock = new Object();
 
     private WeakReference<DisplayUnitListener> displayUnitListenerWeakReference;
@@ -3454,9 +3452,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
                             try {
                                 getConfigLogger()
                                         .debug(getAccountId(), "Handling notification: " + extras.toString());
-                                dbAdapter = loadDBAdapter(context);
                                 if (extras.getString(Constants.WZRK_PUSH_ID) != null) {
-                                    if (dbAdapter
+                                    if (getCoreState().getDatabaseManager().loadDBAdapter(context)
                                             .doesPushNotificationIdExist(extras.getString(Constants.WZRK_PUSH_ID))) {
                                         getConfigLogger().debug(getAccountId(),
                                                 "Push Notification already rendered, not showing again");
@@ -3470,7 +3467,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                                     getConfigLogger()
                                             .verbose(getAccountId(),
                                                     "Push notification message is empty, not rendering");
-                                    loadDBAdapter(context).storeUninstallTimestamp();
+                                    getCoreState().getDatabaseManager().loadDBAdapter(context).storeUninstallTimestamp();
                                     String pingFreq = extras.getString("pf", "");
                                     if (!TextUtils.isEmpty(pingFreq)) {
                                         updatePingFrequencyIfNeeded(context, Integer.parseInt(pingFreq));
@@ -3595,7 +3592,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 return;
             }
             if (getCleverTapID() != null) {
-                this.ctInboxController = new CTInboxController(getCleverTapID(), loadDBAdapter(context),
+                this.ctInboxController = new CTInboxController(getCleverTapID(), getCoreState().getDatabaseManager().loadDBAdapter(context),
                         haveVideoPlayerSupport);
                 _notifyInboxInitialized();
             } else {
@@ -4362,7 +4359,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
     private void clearQueues(final Context context) {
         synchronized (getCoreState().getCTLockManager().getEventLock()) {
 
-            DBAdapter adapter = loadDBAdapter(context);
+            DBAdapter adapter = getCoreState().getDatabaseManager().loadDBAdapter(context);
             DBAdapter.Table tableName = DBAdapter.Table.EVENTS;
 
             adapter.removeEvents(tableName);
@@ -4919,7 +4916,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                     String key = iterator.next().toString();
                     pushBundle.putString(key, pushObject.getString(key));
                 }
-                if (!pushBundle.isEmpty() && !dbAdapter
+                if (!pushBundle.isEmpty() && !getCoreState().getDatabaseManager().loadDBAdapter(context)
                         .doesPushNotificationIdExist(pushObject.getString("wzrk_pid"))) {
                     getConfigLogger().verbose("Creating Push Notification locally");
                     if (pushAmpListener != null) {
@@ -5045,7 +5042,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 header.put("bk", 1);
                 getCoreState().getCoreMetaData().setBgPing(false);
             }
-            header.put("rtl", getRenderedTargetList(this.dbAdapter));
+            header.put("rtl", getRenderedTargetList(getCoreState().getDatabaseManager().loadDBAdapter(context)));
             if (!installReferrerDataSent) {
                 header.put("rct", getReferrerClickTime());
                 header.put("ait", getAppInstallTime());
@@ -5155,16 +5152,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     //Util
-    private DBAdapter loadDBAdapter(Context context) {
-        if (dbAdapter == null) {
-            dbAdapter = new DBAdapter(context, getCoreState().getConfig());
-            dbAdapter.cleanupStaleEvents(DBAdapter.Table.EVENTS);
-            dbAdapter.cleanupStaleEvents(DBAdapter.Table.PROFILE_EVENTS);
-            dbAdapter.cleanupStaleEvents(DBAdapter.Table.PUSH_NOTIFICATION_VIEWED);
-            dbAdapter.cleanUpPushNotifications();
-        }
-        return dbAdapter;
-    }
 
     //Run manifest validation in async
     private void manifestAsyncValidation() {
@@ -5398,7 +5385,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 if (notifMessage.isEmpty()) {
                     //silent notification
                     getConfigLogger().verbose(getAccountId(), "Push notification message is empty, not rendering");
-                    loadDBAdapter(context).storeUninstallTimestamp();
+                    getCoreState().getDatabaseManager().loadDBAdapter(context).storeUninstallTimestamp();
                     String pingFreq = extras.getString("pf", "");
                     if (!TextUtils.isEmpty(pingFreq)) {
                         updatePingFrequencyIfNeeded(context, Integer.parseInt(pingFreq));
@@ -5408,7 +5395,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                     String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE,
                             (System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL) / 1000 + "");
                     long wzrk_ttl = Long.parseLong(ttl);
-                    DBAdapter dbAdapter = loadDBAdapter(context);
+                    DBAdapter dbAdapter = getCoreState().getDatabaseManager().loadDBAdapter(context);
                     getConfigLogger().verbose("Storing Push Notification..." + wzrk_pid + " - with ttl - " + ttl);
                     dbAdapter.storePushNotificationId(wzrk_pid, wzrk_ttl);
                 }
@@ -5831,7 +5818,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                             boolean ack = pushAmpObject.getBoolean("ack");
                             getConfigLogger().verbose("Received ACK -" + ack);
                             if (ack) {
-                                JSONArray rtlArray = getRenderedTargetList(this.dbAdapter);
+                                JSONArray rtlArray = getRenderedTargetList(getCoreState().getDatabaseManager().loadDBAdapter(context));
                                 String[] rtlStringArray = new String[0];
                                 if (rtlArray != null) {
                                     rtlStringArray = new String[rtlArray.length()];
@@ -5840,7 +5827,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                                     rtlStringArray[i] = rtlArray.getString(i);
                                 }
                                 getConfigLogger().verbose("Updating RTL values...");
-                                this.dbAdapter.updatePushNotificationIds(rtlStringArray);
+                                getCoreState().getDatabaseManager().loadDBAdapter(context).updatePushNotificationIds(rtlStringArray);
                             }
                         }
                     }
@@ -6081,7 +6068,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                     return;
                 }
 
-                long lastTS = loadDBAdapter(context).getLastUninstallTimestamp();
+                long lastTS = getCoreState().getDatabaseManager().loadDBAdapter(context).getLastUninstallTimestamp();
 
                 if (lastTS == 0 || lastTS > System.currentTimeMillis() - 24 * 60 * 60 * 1000) {
                     try {
@@ -6724,7 +6711,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 (System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL) / 1000 + "");
         long wzrk_ttl = Long.parseLong(ttl);
         String wzrk_pid = extras.getString(Constants.WZRK_PUSH_ID);
-        DBAdapter dbAdapter = loadDBAdapter(context);
+        DBAdapter dbAdapter = getCoreState().getDatabaseManager().loadDBAdapter(context);
         getConfigLogger().verbose("Storing Push Notification..." + wzrk_pid + " - with ttl - " + ttl);
         dbAdapter.storePushNotificationId(wzrk_pid, wzrk_ttl);
 
@@ -6763,27 +6750,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     // ********                       PRODUCT CONFIG Public API           *****//
 
-    // helper extracts the cursor data from the db object
-    private QueueCursor updateCursorForDBObject(JSONObject dbObject, QueueCursor cursor) {
-
-        if (dbObject == null) {
-            return cursor;
-        }
-
-        Iterator<String> keys = dbObject.keys();
-        if (keys.hasNext()) {
-            String key = keys.next();
-            cursor.setLastId(key);
-            try {
-                cursor.setData(dbObject.getJSONArray(key));
-            } catch (JSONException e) {
-                cursor.setLastId(null);
-                cursor.setData(null);
-            }
-        }
-
-        return cursor;
-    }
 
 
 

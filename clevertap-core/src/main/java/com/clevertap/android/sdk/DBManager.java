@@ -2,13 +2,16 @@ package com.clevertap.android.sdk;
 
 import android.content.Context;
 import com.clevertap.android.sdk.DBAdapter.Table;
+import java.util.Iterator;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class DBManager extends BaseDatabaseManager {
     private final CleverTapInstanceConfig mConfig;
     private final CTLockManager mCTLockManager;
     private final BaseNetworkManager mBaseNetworkManager;
+    private DBAdapter dbAdapter;
     public DBManager(CoreState coreState) {
         mConfig = coreState.getConfig();
         mCTLockManager =coreState.getCTLockManager();
@@ -32,14 +35,39 @@ public class DBManager extends BaseDatabaseManager {
         queueEventInternal(context, event, DBAdapter.Table.PUSH_NOTIFICATION_VIEWED);
     }
 
+    // helper extracts the cursor data from the db object
+
     @Override
     QueueCursor updateCursorForDBObject(final JSONObject dbObject, final QueueCursor cursor) {
-        return null;
+        if (dbObject == null) {
+            return cursor;
+        }
+
+        Iterator<String> keys = dbObject.keys();
+        if (keys.hasNext()) {
+            String key = keys.next();
+            cursor.setLastId(key);
+            try {
+                cursor.setData(dbObject.getJSONArray(key));
+            } catch (JSONException e) {
+                cursor.setLastId(null);
+                cursor.setData(null);
+            }
+        }
+
+        return cursor;
     }
 
     @Override
     DBAdapter loadDBAdapter(final Context context) {
-        return null;
+        if (dbAdapter == null) {
+            dbAdapter = new DBAdapter(context, mConfig);
+            dbAdapter.cleanupStaleEvents(DBAdapter.Table.EVENTS);
+            dbAdapter.cleanupStaleEvents(DBAdapter.Table.PROFILE_EVENTS);
+            dbAdapter.cleanupStaleEvents(DBAdapter.Table.PUSH_NOTIFICATION_VIEWED);
+            dbAdapter.cleanUpPushNotifications();
+        }
+        return dbAdapter;
     }
 
     @Override
