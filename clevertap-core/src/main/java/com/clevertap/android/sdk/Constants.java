@@ -282,4 +282,6 @@ public interface Constants {
     // valid profile identifier keys
     HashSet<String> LEGACY_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL));
     HashSet<String> ALL_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL, TYPE_PHONE));
+
+    int MAX_DELAY_FREQUENCY = 1000 * 60 * 10;
 }

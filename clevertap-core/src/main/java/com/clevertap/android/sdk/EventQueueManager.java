@@ -1,12 +1,9 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
-import android.text.TextUtils;
-import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.login.IdentityRepo;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import java.util.Iterator;
 import java.util.TimeZone;
 import java.util.concurrent.Future;
@@ -273,7 +270,7 @@ class EventQueueManager extends BaseQueueManager {
         // Cancel any outstanding send runnables, and issue a new delayed one
         mMainLooperHandler.removeCallbacks(commsRunnable);
         //TODO merge
-        mMainLooperHandler.postDelayed(commsRunnable, getDelayFrequency());
+        mMainLooperHandler.postDelayed(commsRunnable, mNetworkManager.getDelayFrequency());
 
         mLogger.verbose(mConfig.getAccountId(), "Scheduling delayed queue flush on main event loop");
     }

@@ -5,6 +5,8 @@ import org.json.JSONArray;
 
 abstract class BaseNetworkManager {
 
+    abstract int getDelayFrequency();
+
     abstract void initHandshake(final EventGroup eventGroup,
             final Runnable handshakeSuccessCallback);
 

@@ -7,6 +7,8 @@ import com.clevertap.android.sdk.pushnotification.PushProviders;
 //TODO move this to builder pattern & add sanity check for dependencies at the time of creation
 public class CoreState extends CleverTapState {
 
+    private BaseLocationManager baseLocationManager;
+
     private CleverTapInstanceConfig config;
 
     private CoreMetaData coreMetaData;
@@ -195,4 +197,13 @@ public class CoreState extends CleverTapState {
         this.postAsyncSafelyHandler = postAsyncSafelyHandler;
     }
 
+    @Override
+    BaseLocationManager getLocationManager() {
+        return baseLocationManager;
+    }
+
+    @Override
+    void setLocationManager(final BaseLocationManager baseLocationManager) {
+        this.baseLocationManager = baseLocationManager;
+    }
 }

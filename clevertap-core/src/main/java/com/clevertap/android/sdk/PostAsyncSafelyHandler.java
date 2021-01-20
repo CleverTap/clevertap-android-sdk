@@ -9,6 +9,10 @@ class PostAsyncSafelyHandler {
 
     private long EXECUTOR_THREAD_ID = 0;
 
+    private long NOTIFICATION_THREAD_ID = 0;
+
+    private final ExecutorService ns;
+
     private final ExecutorService es;
 
     private final CleverTapInstanceConfig mConfig;
@@ -16,6 +20,7 @@ class PostAsyncSafelyHandler {
     PostAsyncSafelyHandler(CoreState coreState) {
         mConfig = coreState.getConfig();
         this.es = Executors.newFixedThreadPool(1);
+        this.ns = Executors.newFixedThreadPool(1);
     }
 
     /**
@@ -50,5 +55,32 @@ class PostAsyncSafelyHandler {
         }
 
         return future;
+    }
+
+    //InApp
+    void runOnNotificationQueue(final Runnable runnable) {
+        try {
+            final boolean executeSync = Thread.currentThread().getId() == NOTIFICATION_THREAD_ID;
+
+            if (executeSync) {
+                runnable.run();
+            } else {
+                ns.submit(new Runnable() {
+                    @Override
+                    public void run() {
+                        NOTIFICATION_THREAD_ID = Thread.currentThread().getId();
+                        try {
+                            runnable.run();
+                        } catch (Throwable t) {
+                            mConfig.getLogger().verbose(mConfig.getAccountId(),
+                                    "Notification executor service: Failed to complete the scheduled task", t);
+                        }
+                    }
+                });
+            }
+        } catch (Throwable t) {
+            mConfig.getLogger()
+                    .verbose(mConfig.getAccountId(), "Failed to submit task to the notification executor service", t);
+        }
     }
 }

@@ -26,4 +26,8 @@ abstract class CleverTapState {
 
     abstract void setPostAsyncSafelyHandler(final PostAsyncSafelyHandler postAsyncSafelyHandler);
 
+    abstract BaseLocationManager getLocationManager();
+
+    abstract void setLocationManager(BaseLocationManager baseLocationManager);
+
 }

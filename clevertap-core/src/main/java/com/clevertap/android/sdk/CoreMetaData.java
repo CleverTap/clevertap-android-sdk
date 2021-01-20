@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
+import android.location.Location;
 import org.json.JSONObject;
 
 //TODO make singleton
@@ -41,6 +42,22 @@ class CoreMetaData extends CleverTapMetaData {
     private String source = null, medium = null, campaign = null;
 
     private JSONObject wzrkParams = null;
+
+    private long appInstallTime = 0;
+
+    private boolean installReferrerDataSent = false;
+
+    private Location locationFromUser = null;
+
+    private long referrerClickTime = 0;
+
+    public long getAppInstallTime() {
+        return appInstallTime;
+    }
+
+    public void setAppInstallTime(final long appInstallTime) {
+        this.appInstallTime = appInstallTime;
+    }
 
     public void setCurrentScreenName(final String currentScreenName) {
         this.currentScreenName = currentScreenName;
@@ -222,5 +239,29 @@ class CoreMetaData extends CleverTapMetaData {
 
     static void incrementActivityCount() {
         activityCount++;
+    }
+
+    public Location getLocationFromUser() {
+        return locationFromUser;
+    }
+
+    public void setLocationFromUser(final Location locationFromUser) {
+        this.locationFromUser = locationFromUser;
+    }
+
+    long getReferrerClickTime() {
+        return referrerClickTime;
+    }
+
+    void setReferrerClickTime(final long referrerClickTime) {
+        this.referrerClickTime = referrerClickTime;
+    }
+
+    boolean isInstallReferrerDataSent() {
+        return installReferrerDataSent;
+    }
+
+    void setInstallReferrerDataSent(final boolean installReferrerDataSent) {
+        this.installReferrerDataSent = installReferrerDataSent;
     }
 }

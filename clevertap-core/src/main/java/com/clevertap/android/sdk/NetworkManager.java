@@ -1,15 +1,28 @@
 package com.clevertap.android.sdk;
 
+import static com.clevertap.android.sdk.CTJsonConverter.getRenderedTargetList;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import com.clevertap.android.sdk.login.IdentityRepoFactory;
+import com.clevertap.android.sdk.login.LoginInfoProvider;
+import com.clevertap.android.sdk.pushnotification.PushProviders;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Random;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import org.json.JSONArray;
+import org.json.JSONObject;
 
 class NetworkManager extends BaseNetworkManager {
 
@@ -17,23 +30,50 @@ class NetworkManager extends BaseNetworkManager {
 
     private static SSLContext sslContext;
 
+    private boolean enableNetworkInfoReporting = false;
+
     private final CleverTapInstanceConfig mConfig;
 
     private final Context mContext;
 
+    private final BaseQueueManager mBaseEventQueueManager;
+
     private int mCurrentRequestTimestamp = 0;
+
+    private CleverTapResponse mCleverTapResponse;
 
     private final DeviceInfo mDeviceInfo;
 
+    private final CoreMetaData mCoreMetaData;
+
     private final Logger mLogger;
 
+    private final BaseDatabaseManager mDatabaseManager;
+
     private int mResponseFailureCount = 0;// TODO encapsulate into NetworkState class
+
+    private final InAppFCManager mInAppFCManager;
+
+    private final PushProviders mPushProvider;
+
+    private final ValidationResultStack mValidationResultStack;
+
+    private int networkRetryCount = 0;// TODO encapsulate into NetworkState class
 
     NetworkManager(CoreState coreState) {
         mContext = coreState.getContext();
         mConfig = coreState.getConfig();
         mDeviceInfo = coreState.getDeviceInfo();
         mLogger = mConfig.getLogger();
+
+        mCoreMetaData = coreState.getCoreMetaData();
+        mValidationResultStack = coreState.getValidationResultStack();
+        mPushProvider = coreState.getPushProviders();
+        mInAppFCManager = coreState.getInAppFCManager();
+        mDatabaseManager = coreState.getDatabaseManager();
+        mBaseEventQueueManager = coreState.getBaseEventQueueManager();
+        setCleverTapResponse(new BaseResponse(coreState));
+
     }
 
     HttpsURLConnection buildHttpsURLConnection(final String endpoint)
@@ -182,10 +222,21 @@ class NetworkManager extends BaseNetworkManager {
         return true;
     }
 
-    @Override
-    boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue) {
-        // TODO implementation
-        return true;
+    void enableDeviceNetworkInfoReporting(boolean value) {
+        enableNetworkInfoReporting = value;
+        StorageHelper.putBoolean(mContext, StorageHelper.storageKeyWithSuffix(mConfig, Constants.NETWORK_INFO),
+                enableNetworkInfoReporting);
+        mLogger
+                .verbose(mConfig.getAccountId(),
+                        "Device Network Information reporting set to " + enableNetworkInfoReporting);
+    }
+
+    CleverTapResponse getCleverTapResponse() {
+        return mCleverTapResponse;
+    }
+
+    void setCleverTapResponse(final CleverTapResponse cleverTapResponse) {
+        mCleverTapResponse = cleverTapResponse;
     }
 
     void setDomain(final Context context, String domainName) {
@@ -214,6 +265,41 @@ class NetworkManager extends BaseNetworkManager {
         mResponseFailureCount = responseFailureCount;
     }
 
+    @Override
+    int getDelayFrequency() {
+
+        int minDelayFrequency = 0;
+
+        mLogger.debug(mConfig.getAccountId(), "Network retry #" + networkRetryCount);
+
+        //Retry with delay as 1s for first 10 retries
+        if (networkRetryCount < 10) {
+            mLogger.debug(mConfig.getAccountId(),
+                    "Failure count is " + networkRetryCount + ". Setting delay frequency to 1s");
+            minDelayFrequency = Constants.PUSH_DELAY_MS; //reset minimum delay to 1s
+            return minDelayFrequency;
+        }
+
+        if (mConfig.getAccountRegion() == null) {
+            //Retry with delay as 1s if region is null in case of eu1
+            mLogger.debug(mConfig.getAccountId(), "Setting delay frequency to 1s");
+            return Constants.PUSH_DELAY_MS;
+        } else {
+            //Retry with delay as minimum delay frequency and add random number of seconds to scatter traffic
+            Random randomGen = new Random();
+            int randomDelay = (randomGen.nextInt(10) + 1) * 1000;
+            minDelayFrequency += randomDelay;
+            if (minDelayFrequency < Constants.MAX_DELAY_FREQUENCY) {
+                mLogger.debug(mConfig.getAccountId(), "Setting delay frequency to " + minDelayFrequency);
+                return minDelayFrequency;
+            } else {
+                minDelayFrequency = Constants.PUSH_DELAY_MS;
+            }
+            mLogger.debug(mConfig.getAccountId(), "Setting delay frequency to " + minDelayFrequency);
+            return minDelayFrequency;
+        }
+    }
+
     boolean hasDomainChanged(final String newDomain) {
         // TODO implementation
         return true;
@@ -226,9 +312,16 @@ class NetworkManager extends BaseNetworkManager {
         performHandshakeForDomain(mContext, eventGroup, handshakeSuccessCallback);
     }
 
-    String insertHeader(Context context, JSONArray arr) {
-        // TODO implementation
-        return null;
+    //New namespace for ARP Shared Prefs
+    String getNewNamespaceARPKey() {
+
+        final String accountId = mConfig.getAccountId();
+        if (accountId == null) {
+            return null;
+        }
+
+        mLogger.verbose(mConfig.getAccountId(), "New ARP Key = ARP:" + accountId + ":" + mDeviceInfo.getDeviceID());
+        return "ARP:" + accountId + ":" + mDeviceInfo.getDeviceID();
     }
 
     @Override
@@ -242,6 +335,13 @@ class NetworkManager extends BaseNetworkManager {
             return;
         }
         StorageHelper.putInt(mContext, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_FIRST_TS), ts);
+    }
+
+    //gives delay frequency based on region
+    //randomly adds delay to 1s delay in case of non-EU regions
+
+    void incrementResponseFailureCount() {
+        mResponseFailureCount++;
     }
 
     static boolean isNetworkOnline(Context context) {
@@ -283,4 +383,355 @@ class NetworkManager extends BaseNetworkManager {
         }
         return sslContext;
     }
+
+    String insertHeader(Context context, JSONArray arr) {
+        try {
+            final JSONObject header = new JSONObject();
+
+            String deviceId = mDeviceInfo.getDeviceID();
+            if (deviceId != null && !deviceId.equals("")) {
+                header.put("g", deviceId);
+            } else {
+                mLogger.verbose(mConfig.getAccountId(),
+                        "CRITICAL: Couldn't finalise on a device ID! Using error device ID instead!");
+            }
+
+            header.put("type", "meta");
+
+            JSONObject appFields = getAppLaunchedFields();
+            header.put("af", appFields);
+
+            long i = getI();
+            if (i > 0) {
+                header.put("_i", i);
+            }
+
+            long j = getJ();
+            if (j > 0) {
+                header.put("_j", j);
+            }
+
+            String accountId = mConfig.getAccountId();
+            String token = mConfig.getAccountToken();
+
+            if (accountId == null || token == null) {
+                mLogger
+                        .debug(mConfig.getAccountId(),
+                                "Account ID/token not found, unable to configure queue request");
+                return null;
+            }
+
+            header.put("id", accountId);
+            header.put("tk", token);
+            header.put("l_ts", getLastRequestTimestamp());
+            header.put("f_ts", getFirstRequestTimestamp());
+            header.put("ct_pi", IdentityRepoFactory
+                    .getRepo(mContext, mConfig, mDeviceInfo,
+                            mValidationResultStack).getIdentitySet().toString());
+            header.put("ddnd",
+                    !(mDeviceInfo.getNotificationsEnabledForUser() && (mPushProvider.isNotificationSupported())));
+            if (mCoreMetaData.isBgPing()) {
+                header.put("bk", 1);
+                mCoreMetaData.setBgPing(false);
+            }
+            header.put("rtl", getRenderedTargetList(mDatabaseManager.loadDBAdapter(mContext)));
+            if (!mCoreMetaData.isInstallReferrerDataSent()) {
+                header.put("rct", mCoreMetaData.getReferrerClickTime());
+                header.put("ait", mCoreMetaData.getAppInstallTime());
+            }
+            header.put("frs", mCoreMetaData.isFirstRequestInSession());
+            mCoreMetaData.setFirstRequestInSession(false);
+
+            // Attach ARP
+            try {
+                final JSONObject arp = getARP();
+                if (arp != null && arp.length() > 0) {
+                    header.put("arp", arp);
+                }
+            } catch (Throwable t) {
+                mLogger.verbose(mConfig.getAccountId(), "Failed to attach ARP", t);
+            }
+
+            JSONObject ref = new JSONObject();
+            try {
+
+                String utmSource = mCoreMetaData.getSource();
+                if (utmSource != null) {
+                    ref.put("us", utmSource);
+                }
+
+                String utmMedium = mCoreMetaData.getMedium();
+                if (utmMedium != null) {
+                    ref.put("um", utmMedium);
+                }
+
+                String utmCampaign = mCoreMetaData.getCampaign();
+                if (utmCampaign != null) {
+                    ref.put("uc", utmCampaign);
+                }
+
+                if (ref.length() > 0) {
+                    header.put("ref", ref);
+                }
+
+            } catch (Throwable t) {
+                mLogger.verbose(mConfig.getAccountId(), "Failed to attach ref", t);
+            }
+
+            JSONObject wzrkParams = mCoreMetaData.getWzrkParams();
+            if (wzrkParams != null && wzrkParams.length() > 0) {
+                header.put("wzrk_ref", wzrkParams);
+            }
+
+            if (mInAppFCManager != null) {
+                Logger.v("Attaching InAppFC to Header");
+                mInAppFCManager.attachToHeader(context, header);
+            }
+
+            // Resort to string concat for backward compatibility
+            return "[" + header.toString() + ", " + arr.toString().substring(1);
+        } catch (Throwable t) {
+            mLogger.verbose(mConfig.getAccountId(), "CommsManager: Failed to attach header", t);
+            return arr.toString();
+        }
+    }
+
+    /**
+     * @return true if the network request succeeded. Anything non 200 results in a false.
+     */
+    @Override
+    boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue) {
+        if (queue == null || queue.length() <= 0) {
+            return false;
+        }
+
+        if (mDeviceInfo.getDeviceID() == null) {
+            mLogger.debug(mConfig.getAccountId(), "CleverTap Id not finalized, unable to send queue");
+            return false;
+        }
+
+        HttpsURLConnection conn = null;
+        try {
+            final String endpoint = getEndpoint(false, eventGroup);
+
+            // This is just a safety check, which would only arise
+            // if upstream didn't adhere to the protocol (sent nothing during the initial handshake)
+            if (endpoint == null) {
+                mLogger.debug(mConfig.getAccountId(), "Problem configuring queue endpoint, unable to send queue");
+                return false;
+            }
+
+            conn = buildHttpsURLConnection(endpoint);
+
+            final String body;
+            final String req = insertHeader(context, queue);
+            if (req == null) {
+                mLogger.debug(mConfig.getAccountId(), "Problem configuring queue request, unable to send queue");
+                return false;
+            }
+
+            mLogger.debug(mConfig.getAccountId(), "Send queue contains " + queue.length() + " items: " + req);
+            mLogger.debug(mConfig.getAccountId(), "Sending queue to: " + endpoint);
+            conn.setDoOutput(true);
+            // noinspection all
+            conn.getOutputStream().write(req.getBytes("UTF-8"));
+
+            final int responseCode = conn.getResponseCode();
+
+            // Always check for a 200 OK
+            if (responseCode != 200) {
+                throw new IOException("Response code is not 200. It is " + responseCode);
+            }
+
+            // Check for a change in domain
+            final String newDomain = conn.getHeaderField(Constants.HEADER_DOMAIN_NAME);
+            if (newDomain != null && newDomain.trim().length() > 0) {
+                if (hasDomainChanged(newDomain)) {
+                    // The domain has changed. Return a status of -1 so that the caller retries
+                    setDomain(context, newDomain);
+                    mLogger.debug(mConfig.getAccountId(),
+                            "The domain has changed to " + newDomain + ". The request will be retried shortly.");
+                    return false;
+                }
+            }
+
+            if (processIncomingHeaders(context, conn)) {
+                // noinspection all
+                BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream(), "utf-8"));
+
+                StringBuilder sb = new StringBuilder();
+                String line;
+                while ((line = br.readLine()) != null) {
+                    sb.append(line);
+                }
+                body = sb.toString();
+                getCleverTapResponse().processResponse(null, body, mContext);
+            }
+
+            setLastRequestTimestamp(getCurrentRequestTimestamp());
+            setFirstRequestTimestampIfNeeded(getCurrentRequestTimestamp());
+
+            mLogger.debug(mConfig.getAccountId(), "Queue sent successfully");
+
+            mResponseFailureCount = 0;
+            networkRetryCount = 0; //reset retry count when queue is sent successfully
+            return true;
+        } catch (Throwable e) {
+            mLogger.debug(mConfig.getAccountId(),
+                    "An exception occurred while sending the queue, will retry: " + e.getLocalizedMessage());
+            mResponseFailureCount++;
+            networkRetryCount++;
+            mBaseEventQueueManager.scheduleQueueFlush(context);
+            return false;
+        } finally {
+            if (conn != null) {
+                try {
+                    conn.getInputStream().close();
+                    conn.disconnect();
+                } catch (Throwable t) {
+                    // Ignore
+                }
+            }
+        }
+    }
+
+    void setDeviceNetworkInfoReportingFromStorage() {
+        boolean enabled = StorageHelper.getBooleanFromPrefs(mContext, mConfig, Constants.NETWORK_INFO);
+        mLogger
+                .verbose(mConfig.getAccountId(),
+                        "Setting device network info reporting state from storage to " + enabled);
+        enableNetworkInfoReporting = enabled;
+    }
+
+    @SuppressLint("CommitPrefEdits")
+    void setI(Context context, long i) {
+        final SharedPreferences prefs = StorageHelper.getPreferences(context, Constants.NAMESPACE_IJ);
+        final SharedPreferences.Editor editor = prefs.edit();
+        editor.putLong(StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_I), i);
+        StorageHelper.persist(editor);
+    }
+
+    @SuppressLint("CommitPrefEdits")
+    void setJ(Context context, long j) {
+        final SharedPreferences prefs = StorageHelper.getPreferences(context, Constants.NAMESPACE_IJ);
+        final SharedPreferences.Editor editor = prefs.edit();
+        editor.putLong(StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_J), j);
+        StorageHelper.persist(editor);
+    }
+
+    /**
+     * The ARP is additional request parameters, which must be sent once
+     * received after any HTTP call. This is sort of a proxy for cookies.
+     *
+     * @return A JSON object containing the ARP key/values. Can be null.
+     */
+    private JSONObject getARP() {
+        try {
+            final String nameSpaceKey = getNewNamespaceARPKey();
+            if (nameSpaceKey == null) {
+                return null;
+            }
+
+            SharedPreferences prefs;
+
+            //checking whether new namespace is empty or not
+            //if not empty, using prefs of new namespace to send ARP
+            //if empty, checking for old prefs
+            if (!StorageHelper.getPreferences(mContext, nameSpaceKey).getAll().isEmpty()) {
+                //prefs point to new namespace
+                prefs = StorageHelper.getPreferences(mContext, nameSpaceKey);
+            } else {
+                //prefs point to new namespace migrated from old namespace
+                prefs = migrateARPToNewNameSpace(nameSpaceKey, getNamespaceARPKey());
+            }
+
+            final Map<String, ?> all = prefs.getAll();
+            final Iterator<? extends Entry<String, ?>> iter = all.entrySet().iterator();
+
+            while (iter.hasNext()) {
+                final Map.Entry<String, ?> kv = iter.next();
+                final Object o = kv.getValue();
+                if (o instanceof Number && ((Number) o).intValue() == -1) {
+                    iter.remove();
+                }
+            }
+            final JSONObject ret = new JSONObject(all);
+            mLogger.verbose(mConfig.getAccountId(),
+                    "Fetched ARP for namespace key: " + nameSpaceKey + " values: " + all.toString());
+            return ret;
+        } catch (Throwable t) {
+            mLogger.verbose(mConfig.getAccountId(), "Failed to construct ARP object", t);
+            return null;
+        }
+    }
+
+    //Event
+    private JSONObject getAppLaunchedFields() {
+
+        try {
+            boolean deviceIsMultiUser = false;
+            if (mDeviceInfo.getGoogleAdID() != null) {
+                deviceIsMultiUser = new LoginInfoProvider(mContext, mConfig, mDeviceInfo).deviceIsMultiUser();
+            }
+            return CTJsonConverter.from(mDeviceInfo, mCoreMetaData.getLocationFromUser(), enableNetworkInfoReporting,
+                    deviceIsMultiUser);
+        } catch (Throwable t) {
+            mLogger.verbose(mConfig.getAccountId(), "Failed to construct App Launched event", t);
+            return new JSONObject();
+        }
+    }
+
+    private long getI() {
+        return StorageHelper.getLongFromPrefs(mContext, mConfig, Constants.KEY_I, 0, Constants.NAMESPACE_IJ);
+    }
+
+    private long getJ() {
+        return StorageHelper.getLongFromPrefs(mContext, mConfig, Constants.KEY_J, 0, Constants.NAMESPACE_IJ);
+    }
+
+    //Session
+    //Old namespace for ARP Shared Prefs
+    private String getNamespaceARPKey() {
+
+        final String accountId = mConfig.getAccountId();
+        if (accountId == null) {
+            return null;
+        }
+
+        mLogger.verbose(mConfig.getAccountId(), "Old ARP Key = ARP:" + accountId);
+        return "ARP:" + accountId;
+    }
+
+    private SharedPreferences migrateARPToNewNameSpace(String newKey, String oldKey) {
+        SharedPreferences oldPrefs = StorageHelper.getPreferences(mContext, oldKey);
+        SharedPreferences newPrefs = StorageHelper.getPreferences(mContext, newKey);
+        SharedPreferences.Editor editor = newPrefs.edit();
+        Map<String, ?> all = oldPrefs.getAll();
+
+        for (Map.Entry<String, ?> kv : all.entrySet()) {
+            final Object o = kv.getValue();
+            if (o instanceof Number) {
+                final int update = ((Number) o).intValue();
+                editor.putInt(kv.getKey(), update);
+            } else if (o instanceof String) {
+                if (((String) o).length() < 100) {
+                    editor.putString(kv.getKey(), (String) o);
+                } else {
+                    mLogger.verbose(mConfig.getAccountId(),
+                            "ARP update for key " + kv.getKey() + " rejected (string value too long)");
+                }
+            } else if (o instanceof Boolean) {
+                editor.putBoolean(kv.getKey(), (Boolean) o);
+            } else {
+                mLogger.verbose(mConfig.getAccountId(),
+                        "ARP update for key " + kv.getKey() + " rejected (invalid data type)");
+            }
+        }
+        mLogger.verbose(mConfig.getAccountId(), "Completed ARP update for namespace key: " + newKey + "");
+        StorageHelper.persist(editor);
+        oldPrefs.edit().clear().apply();
+        return newPrefs;
+    }
+
+
 }
