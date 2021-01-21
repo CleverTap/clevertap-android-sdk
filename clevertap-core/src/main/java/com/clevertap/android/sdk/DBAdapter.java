@@ -496,7 +496,7 @@ public class DBAdapter {
         return profile;
     }
 
-    synchronized long getLastUninstallTimestamp() {
+    public synchronized long getLastUninstallTimestamp() {
         final String tName = Table.UNINSTALL_TS.getName();
         Cursor cursor = null;
         long timestamp = 0;

@@ -59,7 +59,7 @@ public class DBManager extends BaseDatabaseManager {
     }
 
     @Override
-    DBAdapter loadDBAdapter(final Context context) {
+    public DBAdapter loadDBAdapter(final Context context) {
         if (dbAdapter == null) {
             dbAdapter = new DBAdapter(context, mConfig);
             dbAdapter.cleanupStaleEvents(DBAdapter.Table.EVENTS);

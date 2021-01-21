@@ -198,13 +198,8 @@ class EventQueueManager extends BaseQueueManager {
     }
 
     @Override
-    void clearQueues(final Context context) {
-        //TODO
-    }
-
-    @Override
     void flush() {
-//TOD
+        flushQueueAsync(mContext, EventGroup.REGULAR);
     }
 
     private String getCleverTapID() {
@@ -268,7 +263,7 @@ class EventQueueManager extends BaseQueueManager {
         }
         // Cancel any outstanding send runnables, and issue a new delayed one
         mMainLooperHandler.removeCallbacks(commsRunnable);
-        //TODO merge
+
         mMainLooperHandler.postDelayed(commsRunnable, mNetworkManager.getDelayFrequency());
 
         mLogger.verbose(mConfig.getAccountId(), "Scheduling delayed queue flush on main event loop");

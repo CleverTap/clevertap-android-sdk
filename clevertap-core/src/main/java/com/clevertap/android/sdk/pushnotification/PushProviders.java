@@ -12,6 +12,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.job.JobInfo;
+import android.app.job.JobParameters;
 import android.app.job.JobScheduler;
 import android.content.ComponentName;
 import android.content.ContentResolver;
@@ -57,10 +58,15 @@ import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundIntentService;
 import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundJobService;
 import java.lang.reflect.Constructor;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -124,6 +130,7 @@ public class PushProviders {
         mValidationResultStack = coreState.getValidationResultStack();
         mCoreMetaData = coreState.getCoreMetaData();
         mCallbackManager = coreState.getCallbackManager();
+        initPushAmp();
     }
 
     /**
@@ -229,6 +236,22 @@ public class PushProviders {
         return tokenRefreshListener;
     }
 
+    private void initPushAmp() {
+        if (mConfig.isBackgroundSync() && !mConfig
+                .isAnalyticsOnly()) {
+            mPostAsyncSafelyHandler.postAsyncSafely("createOrResetJobScheduler", new Runnable() {
+                @Override
+                public void run() {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        createOrResetJobScheduler(mContext);
+                    } else {
+                        createAlarmScheduler(mContext);
+                    }
+                }
+            });
+        }
+    }
+
     public void setDevicePushTokenRefreshListener(final DevicePushTokenRefreshListener tokenRefreshListener) {
         this.tokenRefreshListener = tokenRefreshListener;
     }
@@ -314,7 +337,7 @@ public class PushProviders {
                         r.put(Constants.INAPP_JSON_RESPONSE_KEY, inappNotifs);
                         inappNotifs.put(new JSONObject(extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)));
 
-                        processInAppResponse(r, context);
+                        processInAppResponse(r, mContext);
                     } catch (Throwable t) {
                         Logger.v("Failed to display inapp notification from push notification payload", t);
                     }
@@ -513,7 +536,7 @@ public class PushProviders {
      * @param extras         The {@link Bundle} object received by the broadcast receiver
      * @param notificationId A custom id to build a notification
      */
-    private void _createNotification(final Context context, final Bundle extras, final int notificationId) {
+    public void _createNotification(final Context context, final Bundle extras, final int notificationId) {
         if (extras == null || extras.get(Constants.NOTIFICATION_TAG) == null) {
             return;
         }
@@ -1301,4 +1324,138 @@ public class PushProviders {
         }
         return null;
     }
+
+    public void runInstanceJobWork(final Context context, final JobParameters parameters) {
+        mPostAsyncSafelyHandler.postAsyncSafely("runningJobService", new Runnable() {
+            @Override
+            public void run() {
+                if (isNotificationSupported()) {
+                    Logger.v(mConfig.getAccountId(), "Token is not present, not running the Job");
+                    return;
+                }
+
+                Calendar now = Calendar.getInstance();
+
+                int hour = now.get(Calendar.HOUR_OF_DAY); // Get hour in 24 hour format
+                int minute = now.get(Calendar.MINUTE);
+
+                Date currentTime = parseTimeToDate(hour + ":" + minute);
+                Date startTime = parseTimeToDate(Constants.DND_START);
+                Date endTime = parseTimeToDate(Constants.DND_STOP);
+
+                if (isTimeBetweenDNDTime(startTime, endTime, currentTime)) {
+                    Logger.v(mConfig.getAccountId(), "Job Service won't run in default DND hours");
+                    return;
+                }
+
+                long lastTS = mBaseDatabaseManager.loadDBAdapter(context).getLastUninstallTimestamp();
+
+                if (lastTS == 0 || lastTS > System.currentTimeMillis() - 24 * 60 * 60 * 1000) {
+                    try {
+                        JSONObject eventObject = new JSONObject();
+                        eventObject.put("bk", 1);
+                        mBaseQueueManager
+                                .queueEvent(context, eventObject, Constants.PING_EVENT);
+
+                        if (parameters == null) {
+                            int pingFrequency = getPingFrequency(context);
+                            AlarmManager alarmManager = (AlarmManager) context
+                                    .getSystemService(Context.ALARM_SERVICE);
+                            Intent cancelIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
+                            cancelIntent.setPackage(context.getPackageName());
+                            PendingIntent alarmPendingIntent = PendingIntent
+                                    .getService(context, mConfig.getAccountId().hashCode(), cancelIntent,
+                                            PendingIntent.FLAG_UPDATE_CURRENT);
+                            if (alarmManager != null) {
+                                alarmManager.cancel(alarmPendingIntent);
+                            }
+                            Intent alarmIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
+                            alarmIntent.setPackage(context.getPackageName());
+                            PendingIntent alarmServicePendingIntent = PendingIntent
+                                    .getService(context, mConfig.getAccountId().hashCode(), alarmIntent,
+                                            PendingIntent.FLAG_UPDATE_CURRENT);
+                            if (alarmManager != null) {
+                                if (pingFrequency != -1) {
+                                    alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                                            SystemClock.elapsedRealtime() + (pingFrequency
+                                                    * Constants.ONE_MIN_IN_MILLIS),
+                                            Constants.ONE_MIN_IN_MILLIS * pingFrequency, alarmServicePendingIntent);
+                                }
+                            }
+                        }
+                    } catch (JSONException e) {
+                        Logger.v("Unable to raise background Ping event");
+                    }
+
+                }
+            }
+        });
+    }
+
+    private Date parseTimeToDate(String time) {
+
+        final String inputFormat = "HH:mm";
+        SimpleDateFormat inputParser = new SimpleDateFormat(inputFormat, Locale.US);
+        try {
+            return inputParser.parse(time);
+        } catch (java.text.ParseException e) {
+            return new Date(0);
+        }
+    }
+
+    private boolean isTimeBetweenDNDTime(Date startTime, Date stopTime, Date currentTime) {
+        //Start Time
+        Calendar startTimeCalendar = Calendar.getInstance();
+        startTimeCalendar.setTime(startTime);
+        //Current Time
+        Calendar currentTimeCalendar = Calendar.getInstance();
+        currentTimeCalendar.setTime(currentTime);
+        //Stop Time
+        Calendar stopTimeCalendar = Calendar.getInstance();
+        stopTimeCalendar.setTime(stopTime);
+
+        if (stopTime.compareTo(startTime) < 0) {
+            if (currentTimeCalendar.compareTo(stopTimeCalendar) < 0) {
+                currentTimeCalendar.add(Calendar.DATE, 1);
+            }
+            stopTimeCalendar.add(Calendar.DATE, 1);
+        }
+        return currentTimeCalendar.compareTo(startTimeCalendar) >= 0
+                && currentTimeCalendar.compareTo(stopTimeCalendar) < 0;
+    }
+
+    /**
+     * Stores silent push notification in DB for smooth working of Push Amplification
+     * Background Job Service and also stores wzrk_pid to the DB to avoid duplication of Push
+     * Notifications from Push Amplification.
+     *
+     * @param extras - Bundle
+     */
+    public void processCustomPushNotification(final Bundle extras) {
+        mPostAsyncSafelyHandler.postAsyncSafely("customHandlePushAmplification", new Runnable() {
+            @Override
+            public void run() {
+                String notifMessage = extras.getString(Constants.NOTIF_MSG);
+                notifMessage = (notifMessage != null) ? notifMessage : "";
+                if (notifMessage.isEmpty()) {
+                    //silent notification
+                    mConfig.getLogger().verbose(mConfig.getAccountId(), "Push notification message is empty, not rendering");
+                    mBaseDatabaseManager.loadDBAdapter(mContext).storeUninstallTimestamp();
+                    String pingFreq = extras.getString("pf", "");
+                    if (!TextUtils.isEmpty(pingFreq)) {
+                        updatePingFrequencyIfNeeded(mContext, Integer.parseInt(pingFreq));
+                    }
+                } else {
+                    String wzrk_pid = extras.getString(Constants.WZRK_PUSH_ID);
+                    String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE,
+                            (System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL) / 1000 + "");
+                    long wzrk_ttl = Long.parseLong(ttl);
+                    DBAdapter dbAdapter = mBaseDatabaseManager.loadDBAdapter(mContext);
+                    mConfig.getLogger().verbose("Storing Push Notification..." + wzrk_pid + " - with ttl - " + ttl);
+                    dbAdapter.storePushNotificationId(wzrk_pid, wzrk_ttl);
+                }
+            }
+        });
+    }
+
 }

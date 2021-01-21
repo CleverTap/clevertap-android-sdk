@@ -14,8 +14,6 @@ public abstract class BaseQueueManager {
 
     abstract void addToQueue(final Context context, final JSONObject event, final int eventType) ;
 
-    abstract void clearQueues(final Context context);
-
     abstract void flush();
 
     abstract void flushQueueAsync(final Context context, final EventGroup eventGroup);

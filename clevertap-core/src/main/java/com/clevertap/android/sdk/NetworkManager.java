@@ -712,7 +712,7 @@ class NetworkManager extends BaseNetworkManager {
     }
 
     //Event
-    private JSONObject getAppLaunchedFields() {
+    JSONObject getAppLaunchedFields() {
 
         try {
             boolean deviceIsMultiUser = false;

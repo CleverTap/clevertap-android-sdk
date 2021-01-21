@@ -15,28 +15,9 @@ import java.util.ArrayList;
 @RestrictTo(Scope.LIBRARY)
 public class CallbackManager {
 
-    public CTPushNotificationListener getPushNotificationListener() {
-        return pushNotificationListener;
-    }
-
-    public void setPushNotificationListener(
-            final CTPushNotificationListener pushNotificationListener) {
-        this.pushNotificationListener = pushNotificationListener;
-    }
-
-    private CTPushNotificationListener pushNotificationListener = null;
-
-    public CTPushAmpListener getPushAmpListener() {
-        return pushAmpListener;
-    }
-
-    public void setPushAmpListener(final CTPushAmpListener pushAmpListener) {
-        this.pushAmpListener = pushAmpListener;
-    }
-
-    private CTPushAmpListener pushAmpListener = null;
-
     private WeakReference<DisplayUnitListener> displayUnitListenerWeakReference;
+
+    private GeofenceCallback geofenceCallback;
 
     private CTInboxListener inboxListener;
 
@@ -44,8 +25,20 @@ public class CallbackManager {
 
     private WeakReference<CTProductConfigListener> productConfigListener;
 
+    private CTPushAmpListener pushAmpListener = null;
+
+    private CTPushNotificationListener pushNotificationListener = null;
+
     CallbackManager(final CleverTapInstanceConfig config) {
         mConfig = config;
+    }
+
+    public GeofenceCallback getGeofenceCallback() {
+        return geofenceCallback;
+    }
+
+    public void setGeofenceCallback(final GeofenceCallback geofenceCallback) {
+        this.geofenceCallback = geofenceCallback;
     }
 
     public CTInboxListener getInboxListener() {
@@ -65,6 +58,23 @@ public class CallbackManager {
         if (productConfigListener != null) {
             this.productConfigListener = new WeakReference<>(productConfigListener);
         }
+    }
+
+    public CTPushAmpListener getPushAmpListener() {
+        return pushAmpListener;
+    }
+
+    public void setPushAmpListener(final CTPushAmpListener pushAmpListener) {
+        this.pushAmpListener = pushAmpListener;
+    }
+
+    public CTPushNotificationListener getPushNotificationListener() {
+        return pushNotificationListener;
+    }
+
+    public void setPushNotificationListener(
+            final CTPushNotificationListener pushNotificationListener) {
+        this.pushNotificationListener = pushNotificationListener;
     }
 
     public void setDisplayUnitListener(DisplayUnitListener listener) {

@@ -8,6 +8,5 @@ public interface CleverTapAPIListener extends
         InAppNotificationActivity.InAppActivityListener,
         CTInAppBaseFragment.InAppListener,
         CTInboxActivity.InboxActivityListener,
-        FeatureFlagListener,
-        CTProductConfigListener{
+        FeatureFlagListener{
 }

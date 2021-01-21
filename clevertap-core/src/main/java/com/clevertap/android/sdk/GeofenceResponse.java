@@ -8,11 +8,13 @@ class GeofenceResponse extends CleverTapResponse {
     private final CleverTapInstanceConfig mConfig;
 
     private final Logger mLogger;
+    private final CallbackManager mCallbackManager;
 
     GeofenceResponse() {
         CoreState coreState = getCoreState();
         mConfig = coreState.getConfig();
         mLogger = mConfig.getLogger();
+        mCallbackManager = coreState.getCallbackManager();
     }
 
     @Override
@@ -37,14 +39,14 @@ class GeofenceResponse extends CleverTapResponse {
             return;
         }
         try {
-            if (this.geofenceCallback != null) {
+            if (mCallbackManager.getGeofenceCallback() != null) {
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("geofences", response.getJSONArray(Constants.GEOFENCES_JSON_RESPONSE_KEY));
 
                 mLogger
                         .verbose(mConfig.getAccountId(),
                                 Constants.LOG_TAG_GEOFENCES + "Processing Geofences response");
-                this.geofenceCallback.handleGeoFences(jsonObject);
+                mCallbackManager.getGeofenceCallback().handleGeoFences(jsonObject);
             } else {
                 mLogger.debug(mConfig.getAccountId(),
                         Constants.LOG_TAG_GEOFENCES + "Geofence SDK has not been initialized to handle the response");

@@ -17,6 +17,8 @@ class PushAmpResponse extends CleverTapResponse {
 
     private final CleverTapInstanceConfig mConfig;
 
+    private final Context mContext;
+
     private final DBAdapter mDBAdapter;
 
     private final Logger mLogger;
@@ -29,6 +31,7 @@ class PushAmpResponse extends CleverTapResponse {
         inboxControllerLock = coreState.getCTLockManager().getInboxControllerLock();
         mDBAdapter = coreState.getDatabaseManager().loadDBAdapter(coreState.getContext());
 
+        mContext = coreState.context;
     }
 
     @Override
@@ -108,7 +111,8 @@ class PushAmpResponse extends CleverTapResponse {
                     if (getCoreState().getCallbackManager().getPushAmpListener() != null) {
                         getCoreState().getCallbackManager().getPushAmpListener().onPushAmpPayloadReceived(pushBundle);
                     } else {
-                        createNotification(context, pushBundle);
+                        getCoreState().getPushProviders()
+                                ._createNotification(mContext, pushBundle, Constants.EMPTY_NOTIFICATION_ID);
                     }
                 } else {
                     mLogger.verbose(mConfig.getAccountId(),
@@ -120,11 +124,6 @@ class PushAmpResponse extends CleverTapResponse {
             mLogger.verbose(mConfig.getAccountId(), "Error parsing push notification JSON");
         }
     }
-
-
-
-
-
 
 
 }
