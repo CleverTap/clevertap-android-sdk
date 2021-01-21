@@ -38,6 +38,8 @@ class NetworkManager extends BaseNetworkManager {
 
     private final BaseQueueManager mBaseEventQueueManager;
 
+    private final CTLockManager mCtLockManager;
+
     private int mCurrentRequestTimestamp = 0;
 
     private CleverTapResponse mCleverTapResponse;
@@ -49,6 +51,8 @@ class NetworkManager extends BaseNetworkManager {
     private final Logger mLogger;
 
     private final BaseDatabaseManager mDatabaseManager;
+
+    private final PostAsyncSafelyHandler mPostAsyncSafelyHandler;
 
     private int mResponseFailureCount = 0;// TODO encapsulate into NetworkState class
 
@@ -71,7 +75,9 @@ class NetworkManager extends BaseNetworkManager {
         mPushProvider = coreState.getPushProviders();
         mInAppFCManager = coreState.getInAppFCManager();
         mDatabaseManager = coreState.getDatabaseManager();
+        mCtLockManager = coreState.getCTLockManager();
         mBaseEventQueueManager = coreState.getBaseEventQueueManager();
+        mPostAsyncSafelyHandler = coreState.getPostAsyncSafelyHandler();
         setCleverTapResponse(new BaseResponse(coreState));
 
     }
@@ -217,9 +223,15 @@ class NetworkManager extends BaseNetworkManager {
         }
     }
 
-    boolean processIncomingHeaders(final Context context, final HttpsURLConnection conn) {
-        // TODO implementation
-        return true;
+    boolean hasDomainChanged(final String newDomain) {
+        final String oldDomain = StorageHelper.getStringFromPrefs(mContext, mConfig, Constants.KEY_DOMAIN_NAME, null);
+        return !newDomain.equals(oldDomain);
+    }
+
+    @Override
+    boolean needsHandshakeForDomain(final EventGroup eventGroup) {
+        final String domain = getDomainFromPrefsOrMetadata(eventGroup);
+        return domain == null || mResponseFailureCount > 5;
     }
 
     void enableDeviceNetworkInfoReporting(boolean value) {
@@ -239,12 +251,46 @@ class NetworkManager extends BaseNetworkManager {
         mCleverTapResponse = cleverTapResponse;
     }
 
-    void setDomain(final Context context, String domainName) {
-        // TODO implementation
+    /**
+     * Processes the incoming response headers for a change in domain and/or mute.
+     *
+     * @return True to continue sending requests, false otherwise.
+     */
+    boolean processIncomingHeaders(final Context context, final HttpsURLConnection conn) {
+        final String muteCommand = conn.getHeaderField(Constants.HEADER_MUTE);
+        if (muteCommand != null && muteCommand.trim().length() > 0) {
+            if (muteCommand.equals("true")) {
+                setMuted(context, true);
+                return false;
+            } else {
+                setMuted(context, false);
+            }
+        }
+
+        final String domainName = conn.getHeaderField(Constants.HEADER_DOMAIN_NAME);
+        Logger.v("Getting domain from header - " + domainName);
+        if (domainName == null || domainName.trim().length() == 0) {
+            return true;
+        }
+
+        final String spikyDomainName = conn.getHeaderField(Constants.SPIKY_HEADER_DOMAIN_NAME);
+        Logger.v("Getting spiky domain from header - " + spikyDomainName);
+
+        setMuted(context, false);
+        setDomain(context, domainName);
+        Logger.v("Setting spiky domain from header as -" + spikyDomainName);
+        if (spikyDomainName == null) {
+            setSpikyDomain(context, domainName);
+        } else {
+            setSpikyDomain(context, spikyDomainName);
+        }
+        return true;
     }
 
-    void setSpikyDomain(final Context context, String spikyDomainName) {
-        // TODO implementation
+    void setDomain(final Context context, String domainName) {
+        mLogger.verbose(mConfig.getAccountId(), "Setting domain to " + domainName);
+        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_DOMAIN_NAME),
+                domainName);
     }
 
     int getLastRequestTimestamp() {
@@ -300,9 +346,10 @@ class NetworkManager extends BaseNetworkManager {
         }
     }
 
-    boolean hasDomainChanged(final String newDomain) {
-        // TODO implementation
-        return true;
+    void setSpikyDomain(final Context context, String spikyDomainName) {
+        mLogger.verbose(mConfig.getAccountId(), "Setting spiky domain to " + spikyDomainName);
+        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.SPIKY_KEY_DOMAIN_NAME),
+                spikyDomainName);
     }
 
     @Override
@@ -324,10 +371,9 @@ class NetworkManager extends BaseNetworkManager {
         return "ARP:" + accountId + ":" + mDeviceInfo.getDeviceID();
     }
 
-    @Override
-    boolean needsHandshakeForDomain(final EventGroup eventGroup) {
-        // TODO implementation
-        return true;
+    //Session
+    private void clearFirstRequestTimestampIfNeeded(Context context) {
+        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_FIRST_TS), 0);
     }
 
     void setFirstRequestTimestampIfNeeded(int ts) {
@@ -733,5 +779,59 @@ class NetworkManager extends BaseNetworkManager {
         return newPrefs;
     }
 
+    //Session
+    private void clearIJ(Context context) {
+        final SharedPreferences prefs = StorageHelper.getPreferences(context, Constants.NAMESPACE_IJ);
+        final SharedPreferences.Editor editor = prefs.edit();
+        editor.clear();
+        StorageHelper.persist(editor);
+    }
+
+    //Session
+    private void clearLastRequestTimestamp(Context context) {
+        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_LAST_TS), 0);
+    }
+
+    /**
+     * Only call async
+     */
+    private void clearQueues(final Context context) {
+        synchronized (mCtLockManager.getEventLock()) {
+
+            DBAdapter adapter = mDatabaseManager.loadDBAdapter(context);
+            DBAdapter.Table tableName = DBAdapter.Table.EVENTS;
+
+            adapter.removeEvents(tableName);
+            tableName = DBAdapter.Table.PROFILE_EVENTS;
+            adapter.removeEvents(tableName);
+
+            clearUserContext(context);
+        }
+    }
+
+    //Session
+    private void clearUserContext(final Context context) {
+        clearIJ(context);
+        clearFirstRequestTimestampIfNeeded(context);
+        clearLastRequestTimestamp(context);
+    }
+
+    private void setMuted(final Context context, boolean mute) {
+        if (mute) {
+            final int now = (int) (System.currentTimeMillis() / 1000);
+            StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_MUTED), now);
+            setDomain(context, null);
+
+            // Clear all the queues
+            mPostAsyncSafelyHandler.postAsyncSafely("CommsManager#setMuted", new Runnable() {
+                @Override
+                public void run() {
+                    clearQueues(context);
+                }
+            });
+        } else {
+            StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_MUTED), 0);
+        }
+    }
 
 }
