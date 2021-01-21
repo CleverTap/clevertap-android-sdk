@@ -7,11 +7,34 @@ import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
+import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
+import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 @RestrictTo(Scope.LIBRARY)
 public class CallbackManager {
+
+    public CTPushNotificationListener getPushNotificationListener() {
+        return pushNotificationListener;
+    }
+
+    public void setPushNotificationListener(
+            final CTPushNotificationListener pushNotificationListener) {
+        this.pushNotificationListener = pushNotificationListener;
+    }
+
+    private CTPushNotificationListener pushNotificationListener = null;
+
+    public CTPushAmpListener getPushAmpListener() {
+        return pushAmpListener;
+    }
+
+    public void setPushAmpListener(final CTPushAmpListener pushAmpListener) {
+        this.pushAmpListener = pushAmpListener;
+    }
+
+    private CTPushAmpListener pushAmpListener = null;
 
     private WeakReference<DisplayUnitListener> displayUnitListenerWeakReference;
 

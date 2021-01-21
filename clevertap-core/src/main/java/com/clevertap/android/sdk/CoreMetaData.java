@@ -170,7 +170,7 @@ public class CoreMetaData extends CleverTapMetaData {
         return wzrkParams;
     }
 
-    synchronized void setWzrkParams(JSONObject wzrkParams) {
+    public synchronized void setWzrkParams(JSONObject wzrkParams) {
         if (this.wzrkParams == null) {
             this.wzrkParams = wzrkParams;
         }

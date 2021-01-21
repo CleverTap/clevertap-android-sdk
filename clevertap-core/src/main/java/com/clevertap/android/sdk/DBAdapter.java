@@ -8,14 +8,16 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-class DBAdapter {
+@RestrictTo(Scope.LIBRARY)
+public class DBAdapter {
 
     @SuppressWarnings("FieldCanBeLocal")
     private static class DatabaseHelper extends SQLiteOpenHelper {
@@ -374,7 +376,7 @@ class DBAdapter {
         }
     }
 
-    synchronized boolean doesPushNotificationIdExist(String id) {
+    public synchronized boolean doesPushNotificationIdExist(String id) {
         return id.equals(fetchPushNotificationId(id));
     }
 
@@ -662,7 +664,7 @@ class DBAdapter {
         return (int) count;
     }
 
-    synchronized void storePushNotificationId(String id, long ttl) {
+    public synchronized void storePushNotificationId(String id, long ttl) {
 
         if (id == null) {
             return;
@@ -698,7 +700,7 @@ class DBAdapter {
     /**
      * Adds a String timestamp representing uninstall flag to the DB.
      */
-    synchronized void storeUninstallTimestamp() {
+    public synchronized void storeUninstallTimestamp() {
 
         if (!this.belowMemThreshold()) {
             getConfigLogger().verbose("There is not enough space left on the device to store data, data discarded");

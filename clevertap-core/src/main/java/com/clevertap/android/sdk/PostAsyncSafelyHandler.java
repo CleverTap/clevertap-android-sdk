@@ -1,11 +1,14 @@
 package com.clevertap.android.sdk;
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
-class PostAsyncSafelyHandler {
+@RestrictTo(Scope.LIBRARY_GROUP)
+public class PostAsyncSafelyHandler {
 
     private long EXECUTOR_THREAD_ID = 0;
 
@@ -29,7 +32,7 @@ class PostAsyncSafelyHandler {
      */
     @SuppressWarnings("UnusedParameters")
     @Nullable
-    Future<?> postAsyncSafely(final String name, final Runnable runnable) {
+    public Future<?> postAsyncSafely(final String name, final Runnable runnable) {
         Future<?> future = null;
         try {
             final boolean executeSync = Thread.currentThread().getId() == EXECUTOR_THREAD_ID;

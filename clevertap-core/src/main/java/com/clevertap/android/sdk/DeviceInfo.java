@@ -671,7 +671,7 @@ public class DeviceInfo {
      * @param context The Android context
      * @return The integer identifier for the image resource
      */
-    static int getAppIconAsIntId(final Context context) {
+    public static int getAppIconAsIntId(final Context context) {
         ApplicationInfo ai = context.getApplicationInfo();
         return ai.icon;
     }

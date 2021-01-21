@@ -11,6 +11,7 @@ import android.os.Parcelable;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants.IdentityType;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -411,7 +412,8 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.enableCustomCleverTapId = enableCustomCleverTapId;
     }
 
-    boolean isBackgroundSync() {
+    @RestrictTo(Scope.LIBRARY)
+    public boolean isBackgroundSync() {
         return backgroundSync;
     }
 

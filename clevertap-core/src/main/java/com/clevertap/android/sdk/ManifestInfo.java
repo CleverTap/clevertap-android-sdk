@@ -133,11 +133,11 @@ public class ManifestInfo {
         return excludedActivities;
     }
 
-    String getIntentServiceName() {
+    public String getIntentServiceName() {
         return intentServiceName;
     }
 
-    String getNotificationIcon() {
+    public String getNotificationIcon() {
         return notificationIcon;
     }
 

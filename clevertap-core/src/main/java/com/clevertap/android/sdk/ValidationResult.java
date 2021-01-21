@@ -32,7 +32,7 @@ public final class ValidationResult {
         this.errorCode = errorCode;
     }
 
-    String getErrorDesc() {
+    public String getErrorDesc() {
         return errorDesc;
     }
 

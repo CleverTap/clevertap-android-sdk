@@ -1,9 +1,11 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import org.json.JSONObject;
-
-abstract class BaseDatabaseManager {
+@RestrictTo(Scope.LIBRARY_GROUP)
+public abstract class BaseDatabaseManager {
 
     abstract void flushDBQueue(final Context context, final EventGroup eventGroup);
 
@@ -12,7 +14,7 @@ abstract class BaseDatabaseManager {
     abstract void queuePushNotificationViewedEventToDB(final Context context, final JSONObject event);
 
     abstract QueueCursor updateCursorForDBObject(JSONObject dbObject, QueueCursor cursor);
-    abstract DBAdapter loadDBAdapter(Context context);
+    public abstract DBAdapter loadDBAdapter(Context context);
 
     abstract QueueCursor getQueueCursor(final Context context, DBAdapter.Table table, final int batchSize,
             final QueueCursor previousCursor);

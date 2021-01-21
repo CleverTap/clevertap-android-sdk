@@ -184,7 +184,7 @@ public class CoreState extends CleverTapState {
         this.ctProductConfigController = ctProductConfigController;
     }
 
-    CallbackManager getCallbackManager() {
+    public CallbackManager getCallbackManager() {
         return mCallbackManager;
     }
 
@@ -193,7 +193,7 @@ public class CoreState extends CleverTapState {
     }
 
     @Override
-    BaseDatabaseManager getDatabaseManager() {
+    public BaseDatabaseManager getDatabaseManager() {
         return databaseManager;
     }
 
@@ -255,7 +255,7 @@ public class CoreState extends CleverTapState {
     }
 
     @Override
-    PostAsyncSafelyHandler getPostAsyncSafelyHandler() {
+    public PostAsyncSafelyHandler getPostAsyncSafelyHandler() {
         return postAsyncSafelyHandler;
     }
 

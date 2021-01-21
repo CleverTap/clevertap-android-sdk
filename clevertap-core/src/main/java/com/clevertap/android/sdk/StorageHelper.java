@@ -108,7 +108,7 @@ public final class StorageHelper {
         }
     }
 
-    static int getInt(Context context, String key, int defaultValue) {
+    public static int getInt(Context context, String key, int defaultValue) {
         return getPreferences(context).getInt(key, defaultValue);
     }
 
@@ -153,7 +153,7 @@ public final class StorageHelper {
         persist(editor);
     }
 
-    static void putInt(Context context, String key, int value) {
+    public static void putInt(Context context, String key, int value) {
         SharedPreferences prefs = getPreferences(context);
         SharedPreferences.Editor editor = prefs.edit().putInt(key, value);
         persist(editor);

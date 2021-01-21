@@ -135,7 +135,7 @@ public class CTJsonConverter {
         return fields;
     }
 
-    static JSONObject getWzrkFields(Bundle root) throws JSONException {
+    public static JSONObject getWzrkFields(Bundle root) throws JSONException {
         final JSONObject fields = new JSONObject();
         for (String s : root.keySet()) {
             final Object o = root.get(s);

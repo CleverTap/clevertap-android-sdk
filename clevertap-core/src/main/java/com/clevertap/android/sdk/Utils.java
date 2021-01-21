@@ -37,7 +37,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class Utils {
 
     static boolean haveVideoPlayerSupport;
@@ -151,7 +150,7 @@ public final class Utils {
         return bundle;
     }
 
-    static HashMap<String, Object> convertBundleObjectToHashMap(Bundle b) {
+    public static HashMap<String, Object> convertBundleObjectToHashMap(Bundle b) {
         final HashMap<String, Object> map = new HashMap<>();
         for (String s : b.keySet()) {
             final Object o = b.get(s);
@@ -352,7 +351,7 @@ public final class Utils {
         return total - free;
     }
 
-    static Bitmap getNotificationBitmap(String icoPath, boolean fallbackToAppIcon, final Context context)
+    public static Bitmap getNotificationBitmap(String icoPath, boolean fallbackToAppIcon, final Context context)
             throws NullPointerException {
         // If the icon path is not specified
         if (icoPath == null || icoPath.equals("")) {
@@ -380,7 +379,7 @@ public final class Utils {
      * @param context    The Android {@link Context}
      * @param permission The fully qualified Android permission name
      */
-    static boolean hasPermission(final Context context, String permission) {
+    public static boolean hasPermission(final Context context, String permission) {
         try {
             return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permission);
         } catch (Throwable t) {
