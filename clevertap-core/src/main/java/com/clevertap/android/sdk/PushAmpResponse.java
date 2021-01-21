@@ -9,7 +9,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-class PushAmpResponse extends CleverTapResponse {
+class PushAmpResponse extends CleverTapResponseDecorator {
 
     private final Object inboxControllerLock;
 

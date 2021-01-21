@@ -3,7 +3,7 @@ package com.clevertap.android.sdk;
 import android.content.Context;
 import org.json.JSONObject;
 
-class MetadataResponse extends CleverTapResponse {
+class MetadataResponse extends CleverTapResponseDecorator {
 
 
     private final CleverTapResponse mCleverTapResponse;

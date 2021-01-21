@@ -3,9 +3,9 @@ package com.clevertap.android.sdk;
 import android.content.Context;
 import org.json.JSONObject;
 
-class BaseResponse extends CleverTapResponse {
+class BaseResponse extends CleverTapResponseDecorator {
 
-    private CleverTapResponse mCleverTapResponse;
+    private final CleverTapResponse mCleverTapResponse;
 
     private final CleverTapInstanceConfig mConfig;
 
@@ -19,7 +19,11 @@ class BaseResponse extends CleverTapResponse {
 
     private final NetworkManager mNetworkManager;
 
-    BaseResponse(final CoreState coreState) {
+    BaseResponse(CleverTapResponse cleverTapResponse) {
+        mCleverTapResponse = cleverTapResponse;
+
+        CoreState coreState = getCoreState();
+
         mContext = coreState.getContext();
         mConfig = coreState.getConfig();
         mDeviceInfo = coreState.getDeviceInfo();
@@ -27,21 +31,6 @@ class BaseResponse extends CleverTapResponse {
 
         mNetworkManager = (NetworkManager) coreState.getNetworkManager();
         mLocalDataStore = coreState.getLocalDataStore();
-
-        setCoreState(coreState);
-
-        // maintain order
-        mCleverTapResponse = new GeofenceResponse();
-        mCleverTapResponse = new ProductConfigResponse(mCleverTapResponse);
-        mCleverTapResponse = new FeatureFlagResponse(mCleverTapResponse);
-        mCleverTapResponse = new DisplayUnitResponse(mCleverTapResponse);
-        mCleverTapResponse = new PushAmpResponse(mCleverTapResponse);
-        mCleverTapResponse = new InboxResponse(mCleverTapResponse);
-
-        mCleverTapResponse = new ConsoleResponse(mCleverTapResponse);
-        mCleverTapResponse = new ARPResponse(mCleverTapResponse);
-        mCleverTapResponse = new MetadataResponse(mCleverTapResponse);
-        mCleverTapResponse = new InAppResponse(mCleverTapResponse);
 
     }
 

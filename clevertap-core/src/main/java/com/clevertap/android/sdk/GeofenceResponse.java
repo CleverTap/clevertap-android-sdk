@@ -3,14 +3,18 @@ package com.clevertap.android.sdk;
 import android.content.Context;
 import org.json.JSONObject;
 
-class GeofenceResponse extends CleverTapResponse {
+class GeofenceResponse extends CleverTapResponseDecorator {
+
+    private final CleverTapResponse mCleverTapResponse;
 
     private final CleverTapInstanceConfig mConfig;
 
     private final Logger mLogger;
+
     private final CallbackManager mCallbackManager;
 
-    GeofenceResponse() {
+    GeofenceResponse(final CleverTapResponse cleverTapResponse) {
+        mCleverTapResponse = cleverTapResponse;
         CoreState coreState = getCoreState();
         mConfig = coreState.getConfig();
         mLogger = mConfig.getLogger();
@@ -24,6 +28,9 @@ class GeofenceResponse extends CleverTapResponse {
         if (mConfig.isAnalyticsOnly()) {
             mLogger.verbose(mConfig.getAccountId(),
                     "CleverTap instance is configured to analytics only, not processing geofence response");
+
+            // process further response
+            mCleverTapResponse.processResponse(response, stringBody, context);
             return;
         }
 
@@ -57,6 +64,8 @@ class GeofenceResponse extends CleverTapResponse {
                             Constants.LOG_TAG_GEOFENCES + "Failed to handle Geofences response", t);
         }
 
+        // process further response
+        mCleverTapResponse.processResponse(response, stringBody, context);
 
     }
 }

@@ -6,7 +6,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-class InAppResponse extends CleverTapResponse {
+class InAppResponse extends CleverTapResponseDecorator {
 
     private final CleverTapResponse mCleverTapResponse;
 

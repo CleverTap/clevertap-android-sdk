@@ -1,11 +1,12 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
+import android.util.Log;
 import org.json.JSONObject;
 
 abstract class CleverTapResponse {
 
-    private CoreState mCorestate;
+    protected CoreState mCorestate;
 
     CoreState getCoreState() {
         return mCorestate;
@@ -15,6 +16,8 @@ abstract class CleverTapResponse {
         mCorestate = coreState;
     }
 
-    abstract void processResponse(final JSONObject jsonBody, final String stringBody,
-            final Context context);
+    void processResponse(final JSONObject jsonBody, final String stringBody,
+            final Context context) {
+        Log.i("CleverTapResponse", "Done processing response!");
+    }
 }

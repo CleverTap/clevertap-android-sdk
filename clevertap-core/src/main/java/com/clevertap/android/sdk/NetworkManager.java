@@ -78,7 +78,25 @@ class NetworkManager extends BaseNetworkManager {
         mCtLockManager = coreState.getCTLockManager();
         mBaseEventQueueManager = coreState.getBaseEventQueueManager();
         mPostAsyncSafelyHandler = coreState.getPostAsyncSafelyHandler();
-        setCleverTapResponse(new BaseResponse(coreState));
+
+        // maintain order
+        CleverTapResponse cleverTapResponse = new CleverTapResponseHelper(coreState);
+
+        cleverTapResponse = new GeofenceResponse(cleverTapResponse);
+        cleverTapResponse = new ProductConfigResponse(cleverTapResponse);
+        cleverTapResponse = new FeatureFlagResponse(cleverTapResponse);
+        cleverTapResponse = new DisplayUnitResponse(cleverTapResponse);
+        cleverTapResponse = new PushAmpResponse(cleverTapResponse);
+        cleverTapResponse = new InboxResponse(cleverTapResponse);
+
+        cleverTapResponse = new ConsoleResponse(cleverTapResponse);
+        cleverTapResponse = new ARPResponse(cleverTapResponse);
+        cleverTapResponse = new MetadataResponse(cleverTapResponse);
+        cleverTapResponse = new InAppResponse(cleverTapResponse);
+
+        cleverTapResponse = new BaseResponse(cleverTapResponse);
+
+        setCleverTapResponse(cleverTapResponse);
 
     }
 

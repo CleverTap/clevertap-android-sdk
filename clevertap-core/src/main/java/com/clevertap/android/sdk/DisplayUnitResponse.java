@@ -7,7 +7,7 @@ import java.util.ArrayList;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-class DisplayUnitResponse extends CleverTapResponse {
+class DisplayUnitResponse extends CleverTapResponseDecorator {
 
     private final Object displayUnitControllerLock = new Object();
 

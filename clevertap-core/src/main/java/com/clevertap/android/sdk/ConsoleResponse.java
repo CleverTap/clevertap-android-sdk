@@ -4,7 +4,7 @@ import android.content.Context;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-class ConsoleResponse extends CleverTapResponse {
+class ConsoleResponse extends CleverTapResponseDecorator {
 
     private final CleverTapResponse mCleverTapResponse;
 

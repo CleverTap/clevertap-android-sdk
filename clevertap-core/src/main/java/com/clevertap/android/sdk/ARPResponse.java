@@ -8,7 +8,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-class ARPResponse extends CleverTapResponse {
+class ARPResponse extends CleverTapResponseDecorator {
 
     private final CleverTapResponse mCleverTapResponse;
 

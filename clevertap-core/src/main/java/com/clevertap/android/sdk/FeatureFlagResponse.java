@@ -5,7 +5,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-class FeatureFlagResponse extends CleverTapResponse {
+class FeatureFlagResponse extends CleverTapResponseDecorator {
 
     private final CleverTapResponse mCleverTapResponse;
 

@@ -4,7 +4,7 @@ import android.content.Context;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-class InboxResponse extends CleverTapResponse {
+class InboxResponse extends CleverTapResponseDecorator {
 
     private final Object inboxControllerLock;
 
