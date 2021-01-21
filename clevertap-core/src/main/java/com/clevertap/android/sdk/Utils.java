@@ -40,6 +40,8 @@ import org.json.JSONObject;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class Utils {
 
+    static boolean haveVideoPlayerSupport;
+
     public static boolean containsIgnoreCase(Collection<String> collection, String key) {
         if (collection == null || key == null) {
             return false;
@@ -408,6 +410,33 @@ public final class Utils {
         return true;
     }
 
+    /**
+     * Method to check whether app has ExoPlayer dependencies
+     *
+     * @return boolean - true/false depending on app's availability of ExoPlayer dependencies
+     */
+    private static boolean checkForExoPlayer() {
+        boolean exoPlayerPresent = false;
+        Class className = null;
+        try {
+            className = Class.forName("com.google.android.exoplayer2.SimpleExoPlayer");
+            className = Class.forName("com.google.android.exoplayer2.source.hls.HlsMediaSource");
+            className = Class.forName("com.google.android.exoplayer2.ui.PlayerView");
+            Logger.d("ExoPlayer is present");
+            exoPlayerPresent = true;
+        } catch (Throwable t) {
+            Logger.d("ExoPlayer library files are missing!!!");
+            Logger.d(
+                    "Please add ExoPlayer dependencies to render InApp or Inbox messages playing video. For more information checkout CleverTap documentation.");
+            if (className != null) {
+                Logger.d("ExoPlayer classes not found " + className.getName());
+            } else {
+                Logger.d("ExoPlayer classes not found");
+            }
+        }
+        return exoPlayerPresent;
+    }
+
     private static Bitmap getAppIcon(final Context context) throws NullPointerException {
         // Try to get the app logo first
         try {
@@ -421,5 +450,9 @@ public final class Utils {
             // No error handling here - handle upstream
             return drawableToBitmap(context.getPackageManager().getApplicationIcon(context.getApplicationInfo()));
         }
+    }
+
+    static {
+        haveVideoPlayerSupport = checkForExoPlayer();
     }
 }

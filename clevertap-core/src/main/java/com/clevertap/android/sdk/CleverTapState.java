@@ -4,7 +4,7 @@ import android.content.Context;
 
 abstract class CleverTapState {
 
-    private final Context context;
+    protected final Context context;
 
     CleverTapState(final Context context) {
         this.context = context;

@@ -1,6 +1,8 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 class ProductConfigResponse extends CleverTapResponse {
@@ -60,5 +62,22 @@ class ProductConfigResponse extends CleverTapResponse {
         mCleverTapResponse.processResponse(response, stringBody, context);
 
     }
+    private void onProductConfigFailed() {
+        if (getCoreState().getCoreMetaData().isProductConfigRequested()) {
+            if (getCoreState().getCtProductConfigController() != null) {
+                getCoreState().getCtProductConfigController().onFetchFailed();
+            }
+            getCoreState().getCoreMetaData().setProductConfigRequested(false);
+        }
+    }
 
+    private void parseProductConfigs(JSONObject responseKV) throws JSONException {
+        JSONArray kvArray = responseKV.getJSONArray(Constants.KEY_KV);
+
+        if (kvArray != null && getCoreState().getCtProductConfigController() != null) {
+            getCoreState().getCtProductConfigController().onFetchSuccess(responseKV);
+        } else {
+            onProductConfigFailed();
+        }
+    }
 }

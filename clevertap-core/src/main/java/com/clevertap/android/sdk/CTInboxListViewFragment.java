@@ -37,7 +37,7 @@ public class CTInboxListViewFragment extends Fragment {
 
     CleverTapInstanceConfig config;
 
-    boolean haveVideoPlayerSupport = CleverTapAPI.haveVideoPlayerSupport;
+    boolean haveVideoPlayerSupport = Utils.haveVideoPlayerSupport;
 
     ArrayList<CTInboxMessage> inboxMessages = new ArrayList<>();
 

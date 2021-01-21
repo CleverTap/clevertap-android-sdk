@@ -59,13 +59,13 @@ class InboxResponse extends CleverTapResponse {
     // always call async
     private void _processInboxMessages(JSONArray messages) {
         synchronized (inboxControllerLock) {
-            if (this.ctInboxController == null) {
-                _initializeInbox();
+            if (getCoreState().getCtInboxController() == null) {
+                getCoreState().initializeInbox();
             }
-            if (this.ctInboxController != null) {
-                boolean update = this.ctInboxController.updateMessages(messages);
+            if (getCoreState().getCtInboxController() != null) {
+                boolean update = getCoreState().getCtInboxController().updateMessages(messages);
                 if (update) {
-                    _notifyInboxMessagesDidUpdate();
+                    getCoreState().getCallbackManager()._notifyInboxMessagesDidUpdate();
                 }
             }
         }

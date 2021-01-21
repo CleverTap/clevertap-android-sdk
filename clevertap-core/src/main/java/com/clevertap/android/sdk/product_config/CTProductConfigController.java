@@ -9,8 +9,11 @@ import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.
 
 import android.content.Context;
 import android.text.TextUtils;
+import com.clevertap.android.sdk.BaseQueueManager;
+import com.clevertap.android.sdk.CallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.FileUtils;
 import com.clevertap.android.sdk.TaskManager;
 import com.clevertap.android.sdk.Utils;
@@ -20,6 +23,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class CTProductConfigController {
@@ -44,7 +48,11 @@ public class CTProductConfigController {
 
     private boolean isInitialized = false;
 
-    private final CTProductConfigControllerListener listener;
+    private final BaseQueueManager mBaseQueueManager;
+
+    private final CallbackManager mCallbackManager;
+
+    private final CoreMetaData mCoreMetaData;
 
     private final ProductConfigSettings settings;
 
@@ -55,11 +63,14 @@ public class CTProductConfigController {
     // -----------------------------------------------------------------------//
 
     public CTProductConfigController(Context context, String guid, CleverTapInstanceConfig config,
-            CTProductConfigControllerListener listener) {
+            final BaseQueueManager baseQueueManager, final CoreMetaData coreMetaData,
+            final CallbackManager callbackManager) {
         this.context = context;
         this.guid = guid;
         this.config = config;
-        this.listener = listener;
+        this.mBaseQueueManager = baseQueueManager;
+        mCoreMetaData = coreMetaData;
+        mCallbackManager = callbackManager;
         this.settings = new ProductConfigSettings(context, guid, config);
         initAsync();
     }
@@ -126,7 +137,7 @@ public class CTProductConfigController {
     @SuppressWarnings("WeakerAccess")
     public void fetch(long minimumFetchIntervalInSeconds) {
         if (canRequest(minimumFetchIntervalInSeconds)) {
-            listener.fetchProductConfig();
+            fetchProductConfig();
         }
     }
 
@@ -136,6 +147,28 @@ public class CTProductConfigController {
     public void fetchAndActivate() {
         fetch();
         isFetchAndActivating = true;
+    }
+
+    /**
+     * This method is internal to CleverTap SDK.
+     * Developers should not use this method manually.
+     */
+
+    public void fetchProductConfig() {
+        JSONObject event = new JSONObject();
+        JSONObject notif = new JSONObject();
+        try {
+            notif.put("t", Constants.FETCH_TYPE_PC);
+            event.put("evtName", Constants.WZRK_FETCH);
+            event.put("evtData", notif);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        mBaseQueueManager.queueEvent(context, event, Constants.FETCH_EVENT);
+        mCoreMetaData.setProductConfigRequested(true);
+        config.getLogger()
+                .verbose(config.getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Fetching product config");
     }
 
     /**
@@ -278,6 +311,10 @@ public class CTProductConfigController {
         }
     }
 
+    // -----------------------------------------------------------------------//
+    // ********                        Internal API                      *****//
+    // -----------------------------------------------------------------------//
+
     /**
      * Deletes all activated, fetched and defaults configs as well as all Product Config settings.
      */
@@ -312,10 +349,6 @@ public class CTProductConfigController {
             settings.initDefaults();
         }
     }
-
-    // -----------------------------------------------------------------------//
-    // ********                        Internal API                      *****//
-    // -----------------------------------------------------------------------//
 
     public void resetSettings() {
         settings.reset();
@@ -394,6 +427,9 @@ public class CTProductConfigController {
      * Developers should not use this method manually.
      */
     public void setGuidAndInit(String cleverTapID) {
+        if (isInitialized()) {
+            return;
+        }
         if (TextUtils.isEmpty(guid)) {
             return;
         }
@@ -560,6 +596,30 @@ public class CTProductConfigController {
         });
     }
 
+    private void onActivated() {
+        if (mCallbackManager.getProductConfigListener() != null
+                && mCallbackManager.getProductConfigListener().get() != null) {
+            mCallbackManager.getProductConfigListener().get().onActivated();
+        }
+    }
+
+    //Event
+
+    private void onFetched() {
+        if (mCallbackManager.getProductConfigListener() != null
+                && mCallbackManager.getProductConfigListener().get() != null) {
+            mCallbackManager.getProductConfigListener().get().onFetched();
+        }
+    }
+
+    private void onInit() {
+        if (mCallbackManager.getProductConfigListener() != null
+                && mCallbackManager.getProductConfigListener().get() != null) {
+            config.getLogger().verbose(config.getAccountId(), "Product Config initialized");
+            mCallbackManager.getProductConfigListener().get().onInit();
+        }
+    }
+
     private void parseFetchedResponse(JSONObject jsonObject) {
         HashMap<String, String> map = convertServerJsonToMap(jsonObject);
         waitingTobeActivatedConfig.clear();
@@ -583,13 +643,13 @@ public class CTProductConfigController {
         if (state != null) {
             switch (state) {
                 case INIT:
-                    listener.onInit();
+                    onInit();
                     break;
                 case FETCHED:
-                    listener.onFetched();
+                    onFetched();
                     break;
                 case ACTIVATED:
-                    listener.onActivated();
+                    onActivated();
                     break;
             }
         }

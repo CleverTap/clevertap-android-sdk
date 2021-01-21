@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk;
 
 import com.clevertap.android.sdk.featureFlags.FeatureFlagListener;
-import com.clevertap.android.sdk.product_config.CTProductConfigControllerListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 
 public interface CleverTapAPIListener extends
@@ -10,6 +9,5 @@ public interface CleverTapAPIListener extends
         CTInAppBaseFragment.InAppListener,
         CTInboxActivity.InboxActivityListener,
         FeatureFlagListener,
-        CTProductConfigControllerListener,
         CTProductConfigListener{
 }

@@ -3,3 +3,7 @@
 2. Init Controllers in CoreState Lazily
 3. StorageManager
 4. typecasting revisit or add instance of check
+5. All listeners should be passed inside the feature & decoupled from CLEVERTAPAPI
+6. Create a class for Notification Creation Handling.
+7. Activity Lifecycle Callback controller.
+8. Enable/Disable sub-feature via controllers.e.g ( disable xioami push on-demand)

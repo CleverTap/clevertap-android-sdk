@@ -9,13 +9,15 @@ class CleverTapFactory {
     static CoreState getCoreState(Context context, CleverTapInstanceConfig config, String cleverTapID) {
         CoreState coreState = new CoreState(context);
         coreState.setConfig(new CleverTapInstanceConfig(config));
+        coreState.setCallbackManager(new CallbackManager(config));
         coreState.setValidator(new Validator());
         coreState.setValidationResultStack(new ValidationResultStack());
         coreState.setLocalDataStore(new LocalDataStore(context, config));
         coreState.setDeviceInfo(new DeviceInfo(context, config, cleverTapID));
         coreState.setCTLockManager(new CTLockManager());
         if (coreState.getDeviceInfo() != null && coreState.getDeviceInfo().getDeviceID() != null) {
-            coreState.getConfig().getLogger().verbose("Initializing InAppFC with device Id = " + coreState.getDeviceInfo().getDeviceID());
+            coreState.getConfig().getLogger()
+                    .verbose("Initializing InAppFC with device Id = " + coreState.getDeviceInfo().getDeviceID());
             coreState.setInAppFCManager(new InAppFCManager(context, config, coreState.getDeviceInfo().getDeviceID()));
         }
         coreState.setPushProviders(PushProviders.load(coreState));

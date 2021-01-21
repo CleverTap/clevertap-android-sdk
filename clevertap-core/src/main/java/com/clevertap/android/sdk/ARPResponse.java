@@ -35,8 +35,8 @@ class ARPResponse extends CleverTapResponse {
             if (response.has("arp")) {
                 final JSONObject arp = (JSONObject) response.get("arp");
                 if (arp.length() > 0) {
-                    if (ctProductConfigController != null) {
-                        ctProductConfigController.setArpValue(arp);
+                    if (getCoreState().getCtProductConfigController() != null) {
+                        getCoreState().getCtProductConfigController().setArpValue(arp);
                     }
                     //Handle Discarded events in ARP
                     try {

@@ -2,6 +2,9 @@ package com.clevertap.android.sdk;
 
 import android.content.Context;
 import android.os.Handler;
+import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
+import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
+import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 
 //TODO move this to builder pattern & add sanity check for dependencies at the time of creation
@@ -12,6 +15,12 @@ public class CoreState extends CleverTapState {
     private CleverTapInstanceConfig config;
 
     private CoreMetaData coreMetaData;
+
+    private CTFeatureFlagsController ctFeatureFlagsController;
+
+    private CTInboxController ctInboxController;
+
+    private CTProductConfigController ctProductConfigController;
 
     private BaseDatabaseManager databaseManager;
 
@@ -27,7 +36,11 @@ public class CoreState extends CleverTapState {
 
     private BaseQueueManager mBaseEventQueueManager;
 
+    private CTDisplayUnitController mCTDisplayUnitController;
+
     private CTLockManager mCTLockManager;
+
+    private CallbackManager mCallbackManager;
 
     private SessionManager mSessionManager;
 
@@ -47,6 +60,23 @@ public class CoreState extends CleverTapState {
         super(context);
     }
 
+    public BaseQueueManager getBaseEventQueueManager() {
+        return mBaseEventQueueManager;
+    }
+
+    void setBaseEventQueueManager(final BaseQueueManager baseEventQueueManager) {
+        this.mBaseEventQueueManager = baseEventQueueManager;
+    }
+
+    public CTDisplayUnitController getCTDisplayUnitController() {
+        return mCTDisplayUnitController;
+    }
+
+    public void setCTDisplayUnitController(
+            final CTDisplayUnitController CTDisplayUnitController) {
+        mCTDisplayUnitController = CTDisplayUnitController;
+    }
+
     public CTLockManager getCTLockManager() {
         return mCTLockManager;
     }
@@ -61,6 +91,36 @@ public class CoreState extends CleverTapState {
 
     public void setConfig(final CleverTapInstanceConfig config) {
         this.config = config;
+    }
+
+    public CoreMetaData getCoreMetaData() {
+        return coreMetaData;
+    }
+
+    void setCoreMetaData(final CoreMetaData coreMetaData) {
+        this.coreMetaData = coreMetaData;
+    }
+
+    public CTFeatureFlagsController getCtFeatureFlagsController() {
+        return ctFeatureFlagsController;
+    }
+
+    public void setCtFeatureFlagsController(
+            final CTFeatureFlagsController ctFeatureFlagsController) {
+        this.ctFeatureFlagsController = ctFeatureFlagsController;
+    }
+
+    public CTInboxController getCtInboxController() {
+        return ctInboxController;
+    }
+
+    public void setCtInboxController(final CTInboxController ctInboxController) {
+        this.ctInboxController = ctInboxController;
+    }
+
+    public CTProductConfigController getCtProductConfigController() {
+        initProductConfig();
+        return ctProductConfigController;
     }
 
     public DeviceInfo getDeviceInfo() {
@@ -119,20 +179,17 @@ public class CoreState extends CleverTapState {
         mValidator = validator;
     }
 
-    public BaseQueueManager getBaseEventQueueManager() {
-        return mBaseEventQueueManager;
+    public void setCtProductConfigController(
+            final CTProductConfigController ctProductConfigController) {
+        this.ctProductConfigController = ctProductConfigController;
     }
 
-    void setBaseEventQueueManager(final BaseQueueManager baseEventQueueManager) {
-        this.mBaseEventQueueManager = baseEventQueueManager;
+    CallbackManager getCallbackManager() {
+        return mCallbackManager;
     }
 
-    public CoreMetaData getCoreMetaData() {
-        return coreMetaData;
-    }
-
-    void setCoreMetaData(final CoreMetaData coreMetaData) {
-        this.coreMetaData = coreMetaData;
+    void setCallbackManager(final CallbackManager callbackManager) {
+        mCallbackManager = callbackManager;
     }
 
     @Override
@@ -159,6 +216,16 @@ public class CoreState extends CleverTapState {
 
     void setEventProcessor(final EventProcessor eventProcessor) {
         this.eventProcessor = eventProcessor;
+    }
+
+    @Override
+    BaseLocationManager getLocationManager() {
+        return baseLocationManager;
+    }
+
+    @Override
+    void setLocationManager(final BaseLocationManager baseLocationManager) {
+        this.baseLocationManager = baseLocationManager;
     }
 
     /**
@@ -197,13 +264,49 @@ public class CoreState extends CleverTapState {
         this.postAsyncSafelyHandler = postAsyncSafelyHandler;
     }
 
-    @Override
-    BaseLocationManager getLocationManager() {
-        return baseLocationManager;
+    private void initProductConfig() {
+        Logger.v("Initializing Product Config with device Id = " + getDeviceInfo().getDeviceID());
+        if (getConfig().isAnalyticsOnly()) {
+            getConfig().getLogger()
+                    .debug(getConfig().getAccountId(), "Product Config is not enabled for this instance");
+            return;
+        }
+        if (ctProductConfigController == null) {
+            setCtProductConfigController(new CTProductConfigController(context, getDeviceInfo().getDeviceID(),
+                    getConfig(), mBaseEventQueueManager, coreMetaData, mCallbackManager));
+        }
     }
 
-    @Override
-    void setLocationManager(final BaseLocationManager baseLocationManager) {
-        this.baseLocationManager = baseLocationManager;
+    void initializeInbox() {
+        if (getConfig().isAnalyticsOnly()) {
+            config.getLogger()
+                    .debug(config.getAccountId(), "Instance is analytics only, not initializing Notification Inbox");
+            return;
+        }
+        postAsyncSafelyHandler.postAsyncSafely("initializeInbox", new Runnable() {
+            @Override
+            public void run() {
+                _initializeInbox();
+            }
+        });
     }
+
+    // always call async
+    private void _initializeInbox() {
+        synchronized (mCTLockManager.getInboxControllerLock()) {
+            if (this.ctInboxController != null) {
+                mCallbackManager._notifyInboxInitialized();
+                return;
+            }
+            if (deviceInfo.getDeviceID() != null) {
+                this.ctInboxController = new CTInboxController(deviceInfo.getDeviceID(),
+                        databaseManager.loadDBAdapter(context),
+                        Utils.haveVideoPlayerSupport);
+                mCallbackManager._notifyInboxInitialized();
+            } else {
+                config.getLogger().info("CRITICAL : No device ID found!");
+            }
+        }
+    }
+
 }

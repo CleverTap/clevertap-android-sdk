@@ -61,8 +61,8 @@ class FeatureFlagResponse extends CleverTapResponse {
     private void parseFeatureFlags(JSONObject responseKV) throws JSONException {
         JSONArray kvArray = responseKV.getJSONArray(Constants.KEY_KV);
 
-        if (kvArray != null && ctFeatureFlagsController != null) {
-            ctFeatureFlagsController.updateFeatureFlags(responseKV);
+        if (kvArray != null && getCoreState().getCtFeatureFlagsController() != null) {
+            getCoreState().getCtFeatureFlagsController().updateFeatureFlags(responseKV);
         }
     }
 }

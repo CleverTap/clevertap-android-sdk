@@ -124,7 +124,6 @@ class EventQueueManager extends BaseQueueManager {
         }
     }
 
-    //Event
     @Override
     void pushInitialEventsAsync() {
 

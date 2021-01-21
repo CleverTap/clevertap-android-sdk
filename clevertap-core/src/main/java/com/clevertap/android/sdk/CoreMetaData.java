@@ -2,6 +2,8 @@ package com.clevertap.android.sdk;
 
 import android.content.Context;
 import android.location.Location;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import org.json.JSONObject;
 
 //TODO make singleton
@@ -9,9 +11,12 @@ import org.json.JSONObject;
 /**
  * This class stores run time state of CleverTap's instance
  */
-class CoreMetaData extends CleverTapMetaData {
+@RestrictTo(Scope.LIBRARY)
+public class CoreMetaData extends CleverTapMetaData {
 
     private static int activityCount = 0;
+
+    private long appInstallTime = 0;
 
     private boolean appLaunchPushed = false;
 
@@ -29,27 +34,35 @@ class CoreMetaData extends CleverTapMetaData {
 
     private int geofenceSDKVersion = 0;
 
+    private boolean installReferrerDataSent = false;
+
     private boolean isBgPing = false;
 
     private boolean isLocationForGeofence = false;
 
+    public boolean isProductConfigRequested() {
+        return isProductConfigRequested;
+    }
+
+    public void setProductConfigRequested(final boolean productConfigRequested) {
+        isProductConfigRequested = productConfigRequested;
+    }
+
+    private boolean isProductConfigRequested;
+
     private int lastSessionLength = 0;
+
+    private Location locationFromUser = null;
 
     private boolean offline;
 
     private final Object optOutFlagLock = new Object();
 
+    private long referrerClickTime = 0;
+
     private String source = null, medium = null, campaign = null;
 
     private JSONObject wzrkParams = null;
-
-    private long appInstallTime = 0;
-
-    private boolean installReferrerDataSent = false;
-
-    private Location locationFromUser = null;
-
-    private long referrerClickTime = 0;
 
     public long getAppInstallTime() {
         return appInstallTime;
@@ -57,6 +70,14 @@ class CoreMetaData extends CleverTapMetaData {
 
     public void setAppInstallTime(final long appInstallTime) {
         this.appInstallTime = appInstallTime;
+    }
+
+    public Location getLocationFromUser() {
+        return locationFromUser;
+    }
+
+    public void setLocationFromUser(final Location locationFromUser) {
+        this.locationFromUser = locationFromUser;
     }
 
     public void setCurrentScreenName(final String currentScreenName) {
@@ -119,6 +140,14 @@ class CoreMetaData extends CleverTapMetaData {
         if (this.medium == null) {
             this.medium = medium;
         }
+    }
+
+    long getReferrerClickTime() {
+        return referrerClickTime;
+    }
+
+    void setReferrerClickTime(final long referrerClickTime) {
+        this.referrerClickTime = referrerClickTime;
     }
 
     String getScreenName() {
@@ -200,6 +229,14 @@ class CoreMetaData extends CleverTapMetaData {
         this.firstSession = firstSession;
     }
 
+    boolean isInstallReferrerDataSent() {
+        return installReferrerDataSent;
+    }
+
+    void setInstallReferrerDataSent(final boolean installReferrerDataSent) {
+        this.installReferrerDataSent = installReferrerDataSent;
+    }
+
     boolean isLocationForGeofence() {
         return isLocationForGeofence;
     }
@@ -239,29 +276,5 @@ class CoreMetaData extends CleverTapMetaData {
 
     static void incrementActivityCount() {
         activityCount++;
-    }
-
-    public Location getLocationFromUser() {
-        return locationFromUser;
-    }
-
-    public void setLocationFromUser(final Location locationFromUser) {
-        this.locationFromUser = locationFromUser;
-    }
-
-    long getReferrerClickTime() {
-        return referrerClickTime;
-    }
-
-    void setReferrerClickTime(final long referrerClickTime) {
-        this.referrerClickTime = referrerClickTime;
-    }
-
-    boolean isInstallReferrerDataSent() {
-        return installReferrerDataSent;
-    }
-
-    void setInstallReferrerDataSent(final boolean installReferrerDataSent) {
-        this.installReferrerDataSent = installReferrerDataSent;
     }
 }

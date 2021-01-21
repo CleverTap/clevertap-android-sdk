@@ -9,6 +9,10 @@ import org.json.JSONObject;
 
 class DisplayUnitResponse extends CleverTapResponse {
 
+    private final Object displayUnitControllerLock = new Object();
+
+    private CTDisplayUnitController mCTDisplayUnitController;
+
     private final CleverTapResponse mCleverTapResponse;
 
     private final CleverTapInstanceConfig mConfig;
@@ -20,7 +24,7 @@ class DisplayUnitResponse extends CleverTapResponse {
         CoreState coreState = getCoreState();
         mConfig = coreState.getConfig();
         mLogger = mConfig.getLogger();
-
+        mCTDisplayUnitController = coreState.getCTDisplayUnitController();
     }
 
     //Logic for the processing of Display Unit response
@@ -77,10 +81,11 @@ class DisplayUnitResponse extends CleverTapResponse {
         synchronized (displayUnitControllerLock) {// lock to avoid multiple instance creation for controller
             if (mCTDisplayUnitController == null) {
                 mCTDisplayUnitController = new CTDisplayUnitController();
+                getCoreState().setCTDisplayUnitController(mCTDisplayUnitController);
             }
         }
         ArrayList<CleverTapDisplayUnit> displayUnits = mCTDisplayUnitController.updateDisplayUnits(messages);
 
-        notifyDisplayUnitsLoaded(displayUnits);
+        getCoreState().getCallbackManager().notifyDisplayUnitsLoaded(displayUnits);
     }
 }
