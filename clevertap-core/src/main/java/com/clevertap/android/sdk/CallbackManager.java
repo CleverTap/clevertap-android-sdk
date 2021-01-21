@@ -23,14 +23,19 @@ public class CallbackManager {
 
     private final CleverTapInstanceConfig mConfig;
 
+    private final DeviceInfo mDeviceInfo;
+
     private WeakReference<CTProductConfigListener> productConfigListener;
 
     private CTPushAmpListener pushAmpListener = null;
 
     private CTPushNotificationListener pushNotificationListener = null;
 
-    CallbackManager(final CleverTapInstanceConfig config) {
-        mConfig = config;
+    private SyncListener syncListener = null;
+
+    CallbackManager(CoreState coreState) {
+        mConfig = coreState.getConfig();
+        mDeviceInfo = coreState.getDeviceInfo();
     }
 
     public GeofenceCallback getGeofenceCallback() {
@@ -75,6 +80,14 @@ public class CallbackManager {
     public void setPushNotificationListener(
             final CTPushNotificationListener pushNotificationListener) {
         this.pushNotificationListener = pushNotificationListener;
+    }
+
+    public SyncListener getSyncListener() {
+        return syncListener;
+    }
+
+    public void setSyncListener(final SyncListener syncListener) {
+        this.syncListener = syncListener;
     }
 
     public void setDisplayUnitListener(DisplayUnitListener listener) {
@@ -130,6 +143,29 @@ public class CallbackManager {
         } else {
             mConfig.getLogger()
                     .verbose(mConfig.getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "No Display Units found");
+        }
+    }
+
+    void notifyUserProfileInitialized() {
+        notifyUserProfileInitialized(mDeviceInfo.getDeviceID());
+    }
+
+    //Profile
+    public void notifyUserProfileInitialized(String deviceID) {
+        deviceID = (deviceID != null) ? deviceID : mDeviceInfo.getDeviceID();
+
+        if (deviceID == null) {
+            return;
+        }
+
+        final SyncListener sl;
+        try {
+            sl = getSyncListener();
+            if (sl != null) {
+                sl.profileDidInitialize(deviceID);
+            }
+        } catch (Throwable t) {
+            // Ignore
         }
     }
 

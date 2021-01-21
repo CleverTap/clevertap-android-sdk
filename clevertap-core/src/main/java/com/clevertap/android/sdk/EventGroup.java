@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk;
 
-enum EventGroup {
+public enum EventGroup {
 
     REGULAR(""),
     PUSH_NOTIFICATION_VIEWED("-spiky");

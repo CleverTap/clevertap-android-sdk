@@ -403,7 +403,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         dest.writeStringArray(identityKeys);
     }
 
-    boolean getEnableCustomCleverTapId() {
+    public boolean getEnableCustomCleverTapId() {
         return enableCustomCleverTapId;
     }
 

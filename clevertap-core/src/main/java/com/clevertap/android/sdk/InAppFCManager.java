@@ -4,6 +4,8 @@ import static com.clevertap.android.sdk.StorageHelper.getPreferences;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -13,7 +15,8 @@ import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-class InAppFCManager {
+@RestrictTo(Scope.LIBRARY)
+public class InAppFCManager {
 
     private static final SimpleDateFormat ddMMyyyy = new SimpleDateFormat("ddMMyyyy", Locale.US);
 
@@ -95,7 +98,7 @@ class InAppFCManager {
         return false;
     }
 
-    void changeUser(String deviceId) {
+    public void changeUser(String deviceId) {
         // reset counters
         mShownThisSession.clear();
         mShownThisSessionCount = 0;

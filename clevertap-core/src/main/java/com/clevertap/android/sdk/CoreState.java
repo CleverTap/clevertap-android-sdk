@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Handler;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
+import com.clevertap.android.sdk.login.LoginController;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 
@@ -34,6 +35,8 @@ public class CoreState extends CleverTapState {
 
     private LocalDataStore localDataStore;
 
+    private AnalyticsManager mAnalyticsManager;
+
     private BaseQueueManager mBaseEventQueueManager;
 
     private CTDisplayUnitController mCTDisplayUnitController;
@@ -41,6 +44,8 @@ public class CoreState extends CleverTapState {
     private CTLockManager mCTLockManager;
 
     private CallbackManager mCallbackManager;
+
+    private LoginController mLoginController;
 
     private SessionManager mSessionManager;
 
@@ -58,6 +63,14 @@ public class CoreState extends CleverTapState {
 
     CoreState(final Context context) {
         super(context);
+    }
+
+    public AnalyticsManager getAnalyticsManager() {
+        return mAnalyticsManager;
+    }
+
+    public void setAnalyticsManager(final AnalyticsManager analyticsManager) {
+        mAnalyticsManager = analyticsManager;
     }
 
     public BaseQueueManager getBaseEventQueueManager() {
@@ -83,6 +96,14 @@ public class CoreState extends CleverTapState {
 
     public void setCTLockManager(final CTLockManager CTLockManager) {
         mCTLockManager = CTLockManager;
+    }
+
+    public CallbackManager getCallbackManager() {
+        return mCallbackManager;
+    }
+
+    void setCallbackManager(final CallbackManager callbackManager) {
+        mCallbackManager = callbackManager;
     }
 
     public CleverTapInstanceConfig getConfig() {
@@ -123,6 +144,21 @@ public class CoreState extends CleverTapState {
         return ctProductConfigController;
     }
 
+    public void setCtProductConfigController(
+            final CTProductConfigController ctProductConfigController) {
+        this.ctProductConfigController = ctProductConfigController;
+    }
+
+    @Override
+    public BaseDatabaseManager getDatabaseManager() {
+        return databaseManager;
+    }
+
+    @Override
+    void setDatabaseManager(final BaseDatabaseManager databaseManager) {
+        this.databaseManager = databaseManager;
+    }
+
     public DeviceInfo getDeviceInfo() {
         return deviceInfo;
     }
@@ -145,6 +181,24 @@ public class CoreState extends CleverTapState {
 
     public void setLocalDataStore(final LocalDataStore localDataStore) {
         this.localDataStore = localDataStore;
+    }
+
+    public LoginController getLoginController() {
+        return mLoginController;
+    }
+
+    public void setLoginController(final LoginController loginController) {
+        mLoginController = loginController;
+    }
+
+    @Override
+    public PostAsyncSafelyHandler getPostAsyncSafelyHandler() {
+        return postAsyncSafelyHandler;
+    }
+
+    @Override
+    void setPostAsyncSafelyHandler(final PostAsyncSafelyHandler postAsyncSafelyHandler) {
+        this.postAsyncSafelyHandler = postAsyncSafelyHandler;
     }
 
     public PushProviders getPushProviders() {
@@ -177,29 +231,6 @@ public class CoreState extends CleverTapState {
 
     public void setValidator(final Validator validator) {
         mValidator = validator;
-    }
-
-    public void setCtProductConfigController(
-            final CTProductConfigController ctProductConfigController) {
-        this.ctProductConfigController = ctProductConfigController;
-    }
-
-    public CallbackManager getCallbackManager() {
-        return mCallbackManager;
-    }
-
-    void setCallbackManager(final CallbackManager callbackManager) {
-        mCallbackManager = callbackManager;
-    }
-
-    @Override
-    public BaseDatabaseManager getDatabaseManager() {
-        return databaseManager;
-    }
-
-    @Override
-    void setDatabaseManager(final BaseDatabaseManager databaseManager) {
-        this.databaseManager = databaseManager;
     }
 
     EventMediator getEventMediator() {
@@ -245,7 +276,7 @@ public class CoreState extends CleverTapState {
     }
 
     @Override
-    BaseNetworkManager getNetworkManager() {
+    public BaseNetworkManager getNetworkManager() {
         return networkManager;
     }
 
@@ -254,30 +285,7 @@ public class CoreState extends CleverTapState {
         this.networkManager = networkManager;
     }
 
-    @Override
-    public PostAsyncSafelyHandler getPostAsyncSafelyHandler() {
-        return postAsyncSafelyHandler;
-    }
-
-    @Override
-    void setPostAsyncSafelyHandler(final PostAsyncSafelyHandler postAsyncSafelyHandler) {
-        this.postAsyncSafelyHandler = postAsyncSafelyHandler;
-    }
-
-    private void initProductConfig() {
-        Logger.v("Initializing Product Config with device Id = " + getDeviceInfo().getDeviceID());
-        if (getConfig().isAnalyticsOnly()) {
-            getConfig().getLogger()
-                    .debug(getConfig().getAccountId(), "Product Config is not enabled for this instance");
-            return;
-        }
-        if (ctProductConfigController == null) {
-            setCtProductConfigController(new CTProductConfigController(context, getDeviceInfo().getDeviceID(),
-                    getConfig(), mBaseEventQueueManager, coreMetaData, mCallbackManager));
-        }
-    }
-
-    void initializeInbox() {
+    public void initializeInbox() {
         if (getConfig().isAnalyticsOnly()) {
             config.getLogger()
                     .debug(config.getAccountId(), "Instance is analytics only, not initializing Notification Inbox");
@@ -306,6 +314,19 @@ public class CoreState extends CleverTapState {
             } else {
                 config.getLogger().info("CRITICAL : No device ID found!");
             }
+        }
+    }
+
+    private void initProductConfig() {
+        Logger.v("Initializing Product Config with device Id = " + getDeviceInfo().getDeviceID());
+        if (getConfig().isAnalyticsOnly()) {
+            getConfig().getLogger()
+                    .debug(getConfig().getAccountId(), "Product Config is not enabled for this instance");
+            return;
+        }
+        if (ctProductConfigController == null) {
+            setCtProductConfigController(new CTProductConfigController(context, getDeviceInfo().getDeviceID(),
+                    getConfig(), mBaseEventQueueManager, coreMetaData, mCallbackManager));
         }
     }
 

@@ -7,6 +7,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
@@ -24,7 +26,8 @@ import javax.net.ssl.SSLSocketFactory;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-class NetworkManager extends BaseNetworkManager {
+@RestrictTo(Scope.LIBRARY)
+public class NetworkManager extends BaseNetworkManager {
 
     private static SSLSocketFactory sslSocketFactory;
 

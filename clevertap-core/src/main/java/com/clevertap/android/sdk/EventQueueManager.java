@@ -224,7 +224,7 @@ class EventQueueManager extends BaseQueueManager {
     }
 
     @Override
-    void flushQueueSync(final Context context, final EventGroup eventGroup) {
+    public void flushQueueSync(final Context context, final EventGroup eventGroup) {
         if (!NetworkManager.isNetworkOnline(context)) {
             mLogger.verbose(mConfig.getAccountId(), "Network connectivity unavailable. Will retry later");
             return;

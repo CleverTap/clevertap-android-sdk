@@ -18,7 +18,7 @@ public class SessionManager extends BaseSessionManager{
     }
 
     @Override
-    void destroySession() {
+    public void destroySession() {
         mCleverTapMetaData.setSessionId(0);
         mCleverTapMetaData.setAppLaunchPushed(false);
         if (mCleverTapMetaData.isFirstSession()) {

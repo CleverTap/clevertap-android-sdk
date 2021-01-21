@@ -1,9 +1,12 @@
 package com.clevertap.android.sdk;
 
+import android.app.Activity;
 import android.content.Context;
 import android.location.Location;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import java.lang.ref.WeakReference;
 import org.json.JSONObject;
 
 //TODO make singleton
@@ -13,6 +16,8 @@ import org.json.JSONObject;
  */
 @RestrictTo(Scope.LIBRARY)
 public class CoreMetaData extends CleverTapMetaData {
+
+    private static WeakReference<Activity> currentActivity;
 
     private static int activityCount = 0;
 
@@ -206,7 +211,7 @@ public class CoreMetaData extends CleverTapMetaData {
         }
     }
 
-    void setCurrentUserOptedOut(boolean enable) {
+    public void setCurrentUserOptedOut(boolean enable) {
         synchronized (optOutFlagLock) {
             currentUserOptedOut = enable;
         }
@@ -270,11 +275,30 @@ public class CoreMetaData extends CleverTapMetaData {
         return activityCount;
     }
 
-    static void setActivityCount(final int count) {
+    public static void setActivityCount(final int count) {
         activityCount = activityCount;
     }
 
     static void incrementActivityCount() {
         activityCount++;
+    }
+
+    public static Activity getCurrentActivity() {
+        return (currentActivity == null) ? null : currentActivity.get();
+    }
+
+    public static void setCurrentActivity(@Nullable Activity activity) {
+        if (activity == null) {
+            currentActivity = null;
+            return;
+        }
+        if (!activity.getLocalClassName().contains("InAppNotificationActivity")) {
+            currentActivity = new WeakReference<>(activity);
+        }
+    }
+
+    public static String getCurrentActivityName() {
+        Activity current = getCurrentActivity();
+        return (current != null) ? current.getLocalClassName() : null;
     }
 }

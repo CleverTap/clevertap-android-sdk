@@ -1,6 +1,10 @@
 package com.clevertap.android.sdk;
 
-class CTLockManager {
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
+
+@RestrictTo(Scope.LIBRARY)
+public class CTLockManager {
 
     private final Boolean eventLock = true;
 
@@ -10,7 +14,7 @@ class CTLockManager {
         return eventLock;
     }
 
-    Object getInboxControllerLock() {
+    public Object getInboxControllerLock() {
         return inboxControllerLock;
     }
 }

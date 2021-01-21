@@ -3,6 +3,8 @@ package com.clevertap.android.sdk;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -14,7 +16,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 @SuppressWarnings("unused")
-class LocalDataStore {
+@RestrictTo(Scope.LIBRARY)
+public class LocalDataStore {
 
     private static long EXECUTOR_THREAD_ID = 0;
 
@@ -46,7 +49,7 @@ class LocalDataStore {
         inflateLocalProfileAsync(context);
     }
 
-    void changeUser() {
+    public void changeUser() {
         resetLocalProfileSync();
     }
 

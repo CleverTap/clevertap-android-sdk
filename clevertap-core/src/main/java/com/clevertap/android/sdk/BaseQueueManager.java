@@ -18,7 +18,7 @@ public abstract class BaseQueueManager {
 
     abstract void flushQueueAsync(final Context context, final EventGroup eventGroup);
 
-    abstract void flushQueueSync(final Context context, final EventGroup eventGroup);
+    public abstract void flushQueueSync(final Context context, final EventGroup eventGroup);
 
     abstract void scheduleQueueFlush(final Context context);
 }

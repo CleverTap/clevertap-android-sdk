@@ -323,12 +323,12 @@ public class DeviceInfo {
         return getDeviceID() != null && getDeviceID().startsWith(Constants.ERROR_PROFILE_PREFIX);
     }
 
-    void forceNewDeviceID() {
+    public void forceNewDeviceID() {
         String deviceID = generateGUID();
         forceUpdateDeviceId(deviceID);
     }
 
-    void forceUpdateCustomCleverTapID(String cleverTapID) {
+    public void forceUpdateCustomCleverTapID(String cleverTapID) {
         if (Utils.validateCTID(cleverTapID)) {
             getConfigLogger()
                     .info(config.getAccountId(), "Setting CleverTap ID to custom CleverTap ID : " + cleverTapID);
@@ -350,7 +350,7 @@ public class DeviceInfo {
      * @param id The new device ID
      */
     @SuppressLint("CommitPrefEdits")
-    void forceUpdateDeviceId(String id) {
+    public void forceUpdateDeviceId(String id) {
         getConfigLogger().verbose(this.config.getAccountId(), "Force updating the device ID to " + id);
         synchronized (deviceIDLock) {
             StorageHelper.putString(context, getDeviceIdStorageKey(), id);
@@ -385,7 +385,7 @@ public class DeviceInfo {
         return getDeviceCachedInfo().dpi;
     }
 
-    String getDeviceID() {
+    public String getDeviceID() {
         return _getDeviceID() != null ? _getDeviceID() : getFallBackDeviceID();
     }
 
@@ -439,7 +439,7 @@ public class DeviceInfo {
         return getDeviceCachedInfo().sdkVersion;
     }
 
-    ArrayList<ValidationResult> getValidationResults() {
+    public ArrayList<ValidationResult> getValidationResults() {
         // noinspection unchecked
         ArrayList<ValidationResult> tempValidationResults = (ArrayList<ValidationResult>) validationResults.clone();
         validationResults.clear();
