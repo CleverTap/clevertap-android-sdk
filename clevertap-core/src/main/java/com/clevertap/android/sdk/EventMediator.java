@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk;
 
+import android.content.Context;
 import java.util.Arrays;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -10,9 +11,12 @@ class EventMediator {
 
     private final CleverTapInstanceConfig mConfig;
 
+    private final Context mContext;
+
     public EventMediator(final CoreState coreState) {
         mConfig = coreState.getConfig();
         mCleverTapMetaData = coreState.getCoreMetaData();
+        mContext = coreState.getContext();
     }
 
     boolean shouldDeferProcessingEvent(JSONObject event, int eventType) {
@@ -44,12 +48,23 @@ class EventMediator {
             return true;
         }
 
-        if (mCleverTapMetaData.isMuted()) {
+        if (isMuted()) {
             mConfig.getLogger()
                     .verbose(mConfig.getAccountId(), "CleverTap is muted, dropping event - " + event.toString());
             return true;
         }
 
         return false;
+    }
+
+
+    /**
+     * @return true if the mute command was sent anytime between now and now - 24 hours.
+     */
+    private boolean isMuted() {
+        final int now = (int) (System.currentTimeMillis() / 1000);
+        final int muteTS = StorageHelper.getIntFromPrefs(mContext, mConfig, Constants.KEY_MUTED, 0);
+
+        return now - muteTS < 24 * 60 * 60;
     }
 }

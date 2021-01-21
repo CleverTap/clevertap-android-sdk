@@ -193,7 +193,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
     private CoreState mCoreState;
 
 
-    private int mResponseFailureCount = 0;
+    private final int mResponseFailureCount = 0;
 
     private String processingUserLoginIdentifier = null;
 
@@ -3837,50 +3837,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
-    //Session
-    private void clearFirstRequestTimestampIfNeeded(Context context) {
-        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(getConfig(), Constants.KEY_FIRST_TS), 0);
-    }
-
-    //Session
-    private void clearIJ(Context context) {
-        final SharedPreferences prefs = StorageHelper.getPreferences(context, Constants.NAMESPACE_IJ);
-        final SharedPreferences.Editor editor = prefs.edit();
-        editor.clear();
-        StorageHelper.persist(editor);
-    }
-
-    //Session
-    private void clearLastRequestTimestamp(Context context) {
-        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(getConfig(), Constants.KEY_LAST_TS), 0);
-    }
-
-    /**
-     * Only call async
-     */
-    private void clearQueues(final Context context) {
-        synchronized (getCoreState().getCTLockManager().getEventLock()) {
-
-            DBAdapter adapter = getCoreState().getDatabaseManager().loadDBAdapter(context);
-            DBAdapter.Table tableName = DBAdapter.Table.EVENTS;
-
-            adapter.removeEvents(tableName);
-            tableName = DBAdapter.Table.PROFILE_EVENTS;
-            adapter.removeEvents(tableName);
-
-            clearUserContext(context);
-        }
-    }
-
-    //Session
-    private void clearUserContext(final Context context) {
-        clearIJ(context);
-        clearFirstRequestTimestampIfNeeded(context);
-        clearLastRequestTimestamp(context);
-    }
-
-    //util
-
     //InApp
     private void displayNotification(final CTInAppNotification inAppNotification) {
 
@@ -3972,30 +3928,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
     private int getDelayFrequency() {
         // TODO dummy method, remove after complete development
         return 0;
-    }
-
-    private String getDomainFromPrefsOrMetadata(final EventGroup eventGroup) {
-        try {
-            final String region = getCoreState().getConfig().getAccountRegion();
-            if (region != null && region.trim().length() > 0) {
-                // Always set this to 0 so that the handshake is not performed during a HTTP failure
-                mResponseFailureCount = 0;
-                if (eventGroup.equals(EventGroup.PUSH_NOTIFICATION_VIEWED)) {
-                    return region.trim().toLowerCase() + eventGroup.httpResource + "." + Constants.PRIMARY_DOMAIN;
-                } else {
-                    return region.trim().toLowerCase() + "." + Constants.PRIMARY_DOMAIN;
-                }
-            }
-        } catch (Throwable t) {
-            // Ignore
-        }
-        if (eventGroup.equals(EventGroup.PUSH_NOTIFICATION_VIEWED)) {
-            return StorageHelper
-                    .getStringFromPrefs(context, getCoreState().getConfig(), Constants.SPIKY_KEY_DOMAIN_NAME, null);
-        } else {
-            return StorageHelper
-                    .getStringFromPrefs(context, getCoreState().getConfig(), Constants.KEY_DOMAIN_NAME, null);
-        }
     }
 
     private String getEndpoint(final boolean defaultToHandshakeURL, final EventGroup eventGroup) {
@@ -4106,12 +4038,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
-    private boolean hasDomainChanged(final String newDomain) {
-        final String oldDomain = StorageHelper
-                .getStringFromPrefs(context, getCoreState().getConfig(), Constants.KEY_DOMAIN_NAME, null);
-        return !newDomain.equals(oldDomain);
-    }
-
     private void initFeatureFlags(boolean fromPlayServices) {
         Logger.v("Initializing Feature Flags with device Id = " + getCleverTapID());
 
@@ -4143,16 +4069,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private boolean isErrorDeviceId() {
         return getCoreState().getDeviceInfo().isErrorDeviceId();
-    }
-
-    /**
-     * @return true if the mute command was sent anytime between now and now - 24 hours.
-     */
-    private boolean isMuted() {
-        final int now = (int) (System.currentTimeMillis() / 1000);
-        final int muteTS = StorageHelper.getIntFromPrefs(context, getCoreState().getConfig(), Constants.KEY_MUTED, 0);
-
-        return now - muteTS < 24 * 60 * 60;
     }
 
     //Session
@@ -4195,12 +4111,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
                         .validate(context, getCoreState().getDeviceInfo(), getCoreState().getPushProviders());
             }
         });
-    }
-
-    //Networking
-    private boolean needsHandshakeForDomain(final EventGroup eventGroup) {
-        final String domain = getDomainFromPrefsOrMetadata(eventGroup);
-        return domain == null || mResponseFailureCount > 5;
     }
 
 
@@ -4291,125 +4201,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 }
             }
         });
-    }
-
-    //ABTesting
-
-    private void processGeofenceResponse(JSONObject response) {
-
-    }
-
-    //InApp
-    private void processInAppResponse(final JSONObject response, final Context context) {
-        try {
-            getConfigLogger().verbose(getAccountId(), "InApp: Processing response");
-
-            if (!response.has("inapp_notifs")) {
-                getConfigLogger().verbose(getAccountId(),
-                        "InApp: Response JSON object doesn't contain the inapp key, failing");
-                return;
-            }
-
-            int perSession = 10;
-            int perDay = 10;
-            if (response.has(Constants.INAPP_MAX_PER_SESSION) && response
-                    .get(Constants.INAPP_MAX_PER_SESSION) instanceof Integer) {
-                perSession = response.getInt(Constants.INAPP_MAX_PER_SESSION);
-            }
-
-            if (response.has("imp") && response.get("imp") instanceof Integer) {
-                perDay = response.getInt("imp");
-            }
-
-            if (getCoreState().getInAppFCManager() != null) {
-                Logger.v("Updating InAppFC Limits");
-                getCoreState().getInAppFCManager().updateLimits(context, perDay, perSession);
-            }
-
-            JSONArray inappNotifs;
-            try {
-                inappNotifs = response.getJSONArray(Constants.INAPP_JSON_RESPONSE_KEY);
-            } catch (JSONException e) {
-                getConfigLogger().debug(getAccountId(), "InApp: In-app key didn't contain a valid JSON array");
-                return;
-            }
-
-            // Add all the new notifications to the queue
-            SharedPreferences prefs = StorageHelper.getPreferences(context);
-            SharedPreferences.Editor editor = prefs.edit();
-            try {
-                JSONArray inappsFromPrefs = new JSONArray(
-                        StorageHelper
-                                .getStringFromPrefs(context, getCoreState().getConfig(), Constants.INAPP_KEY, "[]"));
-
-                // Now add the rest of them :)
-                if (inappNotifs != null && inappNotifs.length() > 0) {
-                    for (int i = 0; i < inappNotifs.length(); i++) {
-                        try {
-                            JSONObject inappNotif = inappNotifs.getJSONObject(i);
-                            inappsFromPrefs.put(inappNotif);
-                        } catch (JSONException e) {
-                            Logger.v("InAppManager: Malformed inapp notification");
-                        }
-                    }
-                }
-
-                // Commit all the changes
-                editor.putString(StorageHelper.storageKeyWithSuffix(getConfig(), Constants.INAPP_KEY),
-                        inappsFromPrefs.toString());
-                StorageHelper.persist(editor);
-            } catch (Throwable e) {
-                getConfigLogger().verbose(getAccountId(), "InApp: Failed to parse the in-app notifications properly");
-                getConfigLogger().verbose(getAccountId(), "InAppManager: Reason: " + e.getMessage(), e);
-            }
-            // Fire the first notification, if any
-            runOnNotificationQueue(new Runnable() {
-                @Override
-                public void run() {
-                    _showNotificationIfAvailable(context);
-                }
-            });
-        } catch (Throwable t) {
-            Logger.v("InAppManager: Failed to parse response", t);
-        }
-    }
-
-
-    /**
-     * Processes the incoming response headers for a change in domain and/or mute.
-     *
-     * @return True to continue sending requests, false otherwise.
-     */
-    private boolean processIncomingHeaders(final Context context, final HttpsURLConnection conn) {
-
-        final String muteCommand = conn.getHeaderField(Constants.HEADER_MUTE);
-        if (muteCommand != null && muteCommand.trim().length() > 0) {
-            if (muteCommand.equals("true")) {
-                setMuted(context, true);
-                return false;
-            } else {
-                setMuted(context, false);
-            }
-        }
-
-        final String domainName = conn.getHeaderField(Constants.HEADER_DOMAIN_NAME);
-        Logger.v("Getting domain from header - " + domainName);
-        if (domainName == null || domainName.trim().length() == 0) {
-            return true;
-        }
-
-        final String spikyDomainName = conn.getHeaderField(Constants.SPIKY_HEADER_DOMAIN_NAME);
-        Logger.v("Getting spiky domain from header - " + spikyDomainName);
-
-        setMuted(context, false);
-        setDomain(context, domainName);
-        Logger.v("Setting spiky domain from header as -" + spikyDomainName);
-        if (spikyDomainName == null) {
-            setSpikyDomain(context, domainName);
-        } else {
-            setSpikyDomain(context, spikyDomainName);
-        }
-        return true;
     }
 
     private void pushAmazonRegistrationId(String token, boolean register) {
@@ -4655,12 +4446,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
                 "Set current user OptOut state from storage to: " + storedOptOut + " for key: " + key);
     }
 
-    private void setDomain(final Context context, String domainName) {
-        getConfigLogger().verbose(getAccountId(), "Setting domain to " + domainName);
-        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(getConfig(), Constants.KEY_DOMAIN_NAME),
-                domainName);
-    }
-
     private void setFirstRequestTimestampIfNeeded(Context context, int ts) {
         if (getFirstRequestTimestamp() > 0) {
             return;
@@ -4684,36 +4469,12 @@ public class CleverTapAPI implements CleverTapAPIListener {
     }
 
     //Util
-    private void setMuted(final Context context, boolean mute) {
-        if (mute) {
-            final int now = (int) (System.currentTimeMillis() / 1000);
-            StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(getConfig(), Constants.KEY_MUTED), now);
-            setDomain(context, null);
-
-            // Clear all the queues
-            getCoreState().getPostAsyncSafelyHandler().postAsyncSafely("CommsManager#setMuted", new Runnable() {
-                @Override
-                public void run() {
-                    clearQueues(context);
-                }
-            });
-        } else {
-            StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(getConfig(), Constants.KEY_MUTED), 0);
-        }
-    }
 
     // -----------------------------------------------------------------------//
     // ********                        Feature Flags Logic               *****//
     // -----------------------------------------------------------------------//
 
     // ********                       Feature Flags Public API           *****//
-
-    private void setSpikyDomain(final Context context, String spikyDomainName) {
-        getConfigLogger().verbose(getAccountId(), "Setting spiky domain to " + spikyDomainName);
-        StorageHelper
-                .putString(context, StorageHelper.storageKeyWithSuffix(getConfig(), Constants.SPIKY_KEY_DOMAIN_NAME),
-                        spikyDomainName);
-    }
 
     // ********                        Feature Flags Internal methods        *****//
 
