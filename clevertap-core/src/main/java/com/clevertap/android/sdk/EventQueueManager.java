@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
+import android.content.SharedPreferences;
 import com.clevertap.android.sdk.login.IdentityRepo;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
@@ -15,6 +16,8 @@ class EventQueueManager extends BaseQueueManager {
     private final CleverTapInstanceConfig mConfig;
 
     private final Context mContext;
+
+    private CTLockManager mCtLockManager;
 
     private final DeviceInfo mDeviceInfo;
 
@@ -53,6 +56,7 @@ class EventQueueManager extends BaseQueueManager {
         mDatabaseManager = coreState.getDatabaseManager();
         mLogger = mConfig.getLogger();
         mCleverTapMetaData = coreState.getCoreMetaData();
+        mCtLockManager = coreState.getCTLockManager();
     }
 
     //Profile
@@ -267,6 +271,49 @@ class EventQueueManager extends BaseQueueManager {
         mMainLooperHandler.postDelayed(commsRunnable, mNetworkManager.getDelayFrequency());
 
         mLogger.verbose(mConfig.getAccountId(), "Scheduling delayed queue flush on main event loop");
+    }
+
+    //Session
+    private void clearIJ(Context context) {
+        final SharedPreferences prefs = StorageHelper.getPreferences(context, Constants.NAMESPACE_IJ);
+        final SharedPreferences.Editor editor = prefs.edit();
+        editor.clear();
+        StorageHelper.persist(editor);
+    }
+
+    //Session
+    private void clearLastRequestTimestamp(Context context) {
+        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_LAST_TS), 0);
+    }
+
+    /**
+     * Only call async
+     */
+    @Override
+    public void clearQueues(final Context context) {
+        synchronized (mCtLockManager.getEventLock()) {
+
+            DBAdapter adapter = mDatabaseManager.loadDBAdapter(context);
+            DBAdapter.Table tableName = DBAdapter.Table.EVENTS;
+
+            adapter.removeEvents(tableName);
+            tableName = DBAdapter.Table.PROFILE_EVENTS;
+            adapter.removeEvents(tableName);
+
+            clearUserContext(context);
+        }
+    }
+
+    //Session
+    private void clearUserContext(final Context context) {
+        clearIJ(context);
+        clearFirstRequestTimestampIfNeeded(context);
+        clearLastRequestTimestamp(context);
+    }
+
+    //Session
+    private void clearFirstRequestTimestampIfNeeded(Context context) {
+        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_FIRST_TS), 0);
     }
 
 }

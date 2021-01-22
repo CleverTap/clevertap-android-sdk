@@ -15,6 +15,8 @@ import java.util.ArrayList;
 @RestrictTo(Scope.LIBRARY)
 public class CallbackManager {
 
+    private CTExperimentsListener experimentsListener = null;
+
     private WeakReference<DisplayUnitListener> displayUnitListenerWeakReference;
 
     private GeofenceCallback geofenceCallback;
@@ -38,8 +40,16 @@ public class CallbackManager {
         mDeviceInfo = coreState.getDeviceInfo();
     }
 
+    public CTExperimentsListener getExperimentsListener() {
+        return experimentsListener;
+    }
+
     public GeofenceCallback getGeofenceCallback() {
         return geofenceCallback;
+    }
+
+    public void setExperimentsListener(final CTExperimentsListener experimentsListener) {
+        this.experimentsListener = experimentsListener;
     }
 
     public void setGeofenceCallback(final GeofenceCallback geofenceCallback) {

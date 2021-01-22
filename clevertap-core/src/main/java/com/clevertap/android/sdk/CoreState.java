@@ -330,4 +330,25 @@ public class CoreState extends CleverTapState {
         }
     }
 
+    public void setCurrentUserOptOutStateFromStorage() {
+        String key = optOutKey();
+        if (key == null) {
+            getConfig().getLogger().verbose(getConfig().getAccountId(),
+                    "Unable to set current user OptOut state from storage: storage key is null");
+            return;
+        }
+        boolean storedOptOut = StorageHelper.getBooleanFromPrefs(context, getConfig(), key);
+        getCoreMetaData().setCurrentUserOptedOut(storedOptOut);
+        getConfig().getLogger().verbose(getConfig().getAccountId(),
+                "Set current user OptOut state from storage to: " + storedOptOut + " for key: " + key);
+    }
+
+    String optOutKey() {
+        String guid = getDeviceInfo().getDeviceID();
+        if (guid == null) {
+            return null;
+        }
+        return "OptOut:" + guid;
+    }
+
 }

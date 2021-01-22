@@ -194,7 +194,7 @@ public class LoginController {
                     // try and flush and then reset the queues
                     mBaseQueueManager.flushQueueSync(mContext, EventGroup.REGULAR);
                     mBaseQueueManager.flushQueueSync(mContext, EventGroup.PUSH_NOTIFICATION_VIEWED);
-                    clearQueues(mContext);
+                    mBaseQueueManager.clearQueues(mContext);
 
                     // clear out the old data
                     mLocalDataStore.changeUser();
@@ -211,7 +211,7 @@ public class LoginController {
                         mDeviceInfo.forceNewDeviceID();
                     }
                     mCallbackManager.notifyUserProfileInitialized(mDeviceInfo.getDeviceID());
-                    setCurrentUserOptOutStateFromStorage(); // be sure to call this after the guid is updated
+                    mCoreState.setCurrentUserOptOutStateFromStorage(); // be sure to call this after the guid is updated
                     mAnalyticsManager.forcePushAppLaunchedEvent();
                     if (profile != null) {
                         mAnalyticsManager.pushProfile(profile);

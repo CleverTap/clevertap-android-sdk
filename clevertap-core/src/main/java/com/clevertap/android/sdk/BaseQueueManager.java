@@ -6,6 +6,8 @@ import org.json.JSONObject;
 
 public abstract class BaseQueueManager {
 
+    public abstract void clearQueues(final Context context);
+
     public abstract Future<?> queueEvent(final Context context, final JSONObject event, final int eventType);
 
     abstract void pushBasicProfile(JSONObject baseProfile);

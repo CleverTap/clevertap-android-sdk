@@ -11,10 +11,19 @@ public class SessionManager extends BaseSessionManager{
 
     private final Validator mValidator;
 
+    private final LocalDataStore mLocalDataStore;
+
+    public int getLastVisitTime() {
+        return lastVisitTime;
+    }
+
+    private int lastVisitTime;
+
     public SessionManager(final CoreState coreState) {
         mCleverTapMetaData = coreState.getCoreMetaData();
         mValidator = coreState.getValidator();
         mConfig = coreState.getConfig();
+        mLocalDataStore = coreState.getLocalDataStore();
     }
 
     @Override
@@ -68,6 +77,16 @@ public class SessionManager extends BaseSessionManager{
                 .putInt(StorageHelper.storageKeyWithSuffix(mConfig, Constants.SESSION_ID_LAST),
                         mCleverTapMetaData.getCurrentSession());
         StorageHelper.persist(editor);
+    }
+
+    //Session
+    void setLastVisitTime() {
+        EventDetail ed = mLocalDataStore.getEventDetail(Constants.APP_LAUNCHED_EVENT);
+        if (ed == null) {
+            lastVisitTime = -1;
+        } else {
+            lastVisitTime = ed.getLastTime();
+        }
     }
 
 }

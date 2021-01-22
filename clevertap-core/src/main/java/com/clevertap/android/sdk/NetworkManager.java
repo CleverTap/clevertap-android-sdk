@@ -332,6 +332,8 @@ public class NetworkManager extends BaseNetworkManager {
         mResponseFailureCount = responseFailureCount;
     }
 
+    //gives delay frequency based on region
+    //randomly adds delay to 1s delay in case of non-EU regions
     @Override
     int getDelayFrequency() {
 
@@ -392,10 +394,7 @@ public class NetworkManager extends BaseNetworkManager {
         return "ARP:" + accountId + ":" + mDeviceInfo.getDeviceID();
     }
 
-    //Session
-    private void clearFirstRequestTimestampIfNeeded(Context context) {
-        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_FIRST_TS), 0);
-    }
+
 
     void setFirstRequestTimestampIfNeeded(int ts) {
         if (getFirstRequestTimestamp() > 0) {
@@ -800,43 +799,6 @@ public class NetworkManager extends BaseNetworkManager {
         return newPrefs;
     }
 
-    //Session
-    private void clearIJ(Context context) {
-        final SharedPreferences prefs = StorageHelper.getPreferences(context, Constants.NAMESPACE_IJ);
-        final SharedPreferences.Editor editor = prefs.edit();
-        editor.clear();
-        StorageHelper.persist(editor);
-    }
-
-    //Session
-    private void clearLastRequestTimestamp(Context context) {
-        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_LAST_TS), 0);
-    }
-
-    /**
-     * Only call async
-     */
-    private void clearQueues(final Context context) {
-        synchronized (mCtLockManager.getEventLock()) {
-
-            DBAdapter adapter = mDatabaseManager.loadDBAdapter(context);
-            DBAdapter.Table tableName = DBAdapter.Table.EVENTS;
-
-            adapter.removeEvents(tableName);
-            tableName = DBAdapter.Table.PROFILE_EVENTS;
-            adapter.removeEvents(tableName);
-
-            clearUserContext(context);
-        }
-    }
-
-    //Session
-    private void clearUserContext(final Context context) {
-        clearIJ(context);
-        clearFirstRequestTimestampIfNeeded(context);
-        clearLastRequestTimestamp(context);
-    }
-
     private void setMuted(final Context context, boolean mute) {
         if (mute) {
             final int now = (int) (System.currentTimeMillis() / 1000);
@@ -847,7 +809,7 @@ public class NetworkManager extends BaseNetworkManager {
             mPostAsyncSafelyHandler.postAsyncSafely("CommsManager#setMuted", new Runnable() {
                 @Override
                 public void run() {
-                    clearQueues(context);
+                    mBaseEventQueueManager.clearQueues(context);
                 }
             });
         } else {

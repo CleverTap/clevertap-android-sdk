@@ -148,8 +148,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private static String sdkVersion;  // For Google Play Store/Android Studio analytics
 
-    private static final boolean isUIEditorEnabled = false;
-
 
     private long appLastSeen = 0;
 
@@ -157,7 +155,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private final int currentRequestTimestamp = 0;
 
-    private CTExperimentsListener experimentsListener = null;
+
 
     private WeakReference<CTFeatureFlagsListener> featureFlagsListener;
 
@@ -170,8 +168,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
     private WeakReference<InboxMessageButtonListener> inboxMessageButtonListener;
 
     private final HashMap<String, Integer> installReferrerMap = new HashMap<>(8);
-
-    private int lastVisitTime;
 
     private CoreState mCoreState;
 
@@ -1057,20 +1053,13 @@ public class CleverTapAPI implements CleverTapAPIListener {
             this.getCoreState().getConfig().setCreatedPostAppLaunch();
         }
 
-        setLastVisitTime();
-
-        // Default (flag is set in the config init) or first non-default instance gets the ABTestController
-        if (!config.isDefaultInstance()) {
-            if (instances == null || instances.size() <= 0) {
-                config.setEnableABTesting(true);
-            }
-        }
+        coreState.getSessionManager().setLastVisitTime();
 
         coreState.getPostAsyncSafelyHandler().postAsyncSafely("setStatesAsync", new Runnable() {
             @Override
             public void run() {
                 ((NetworkManager) getCoreState().getNetworkManager()).setDeviceNetworkInfoReportingFromStorage();
-                setCurrentUserOptOutStateFromStorage();
+                getCoreState().setCurrentUserOptOutStateFromStorage();
             }
         });
 
@@ -1108,7 +1097,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void addMultiValueForKey(String key, String value) {
         if (value == null || value.isEmpty()) {
-            _generateEmptyMultiValueError(key);
+            mCoreState.getAnalyticsManager()._generateEmptyMultiValueError(key);
             return;
         }
 
@@ -1130,14 +1119,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void addMultiValuesForKey(final String key, final ArrayList<String> values) {
-        getCoreState().getPostAsyncSafelyHandler().postAsyncSafely("addMultiValuesForKey", new Runnable() {
-            @Override
-            public void run() {
-                final String command = (getCoreState().getLocalDataStore().getProfileValueForKey(key) != null)
-                        ? Constants.COMMAND_ADD : Constants.COMMAND_SET;
-                _handleMultiValues(values, key, command);
-            }
-        });
+        mCoreState.getAnalyticsManager().addMultiValuesForKey(key,values);
     }
 
 
@@ -1314,9 +1296,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
      *
      * @return The {@link CTExperimentsListener} object
      */
-    @SuppressWarnings("WeakerAccess")
+    @SuppressWarnings({"WeakerAccess"})
     public CTExperimentsListener getCTExperimentsListener() {
-        return experimentsListener;
+        return mCoreState.getCallbackManager().getExperimentsListener();
     }
 
     /**
@@ -1326,7 +1308,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings("unused")
     public void setCTExperimentsListener(CTExperimentsListener experimentsListener) {
-        this.experimentsListener = experimentsListener;
+        mCoreState.getCallbackManager().setExperimentsListener(experimentsListener);
     }
 
     /**
@@ -1449,24 +1431,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
     @SuppressWarnings({"unused"})
     public EventDetail getDetails(String event) {
         return getCoreState().getLocalDataStore().getEventDetail(event);
-    }
-
-    public Map<String, String> getDeviceInfo() {
-        final Map<String, String> deviceInfo = new HashMap<>();
-        deviceInfo.put("build", String.valueOf(getCoreState().getDeviceInfo().getBuild()));
-        deviceInfo.put("versionName", getCoreState().getDeviceInfo().getVersionName());
-        deviceInfo.put("osName", getCoreState().getDeviceInfo().getOsName());
-        deviceInfo.put("osVersion", getCoreState().getDeviceInfo().getOsVersion());
-        deviceInfo.put("manufacturer", getCoreState().getDeviceInfo().getManufacturer());
-        deviceInfo.put("model", getCoreState().getDeviceInfo().getModel());
-        deviceInfo.put("sdkVersion", String.valueOf(getCoreState().getDeviceInfo().getSdkVersion()));
-        deviceInfo.put("dpi", String.valueOf(getCoreState().getDeviceInfo().getDPI()));
-        deviceInfo.put("device_width", String.valueOf(getCoreState().getDeviceInfo().getWidthPixels()));
-        deviceInfo.put("device_height", String.valueOf(getCoreState().getDeviceInfo().getHeightPixels()));
-        if (getCoreState().getDeviceInfo().getLibrary() != null) {
-            deviceInfo.put("library", getCoreState().getDeviceInfo().getLibrary());
-        }
-        return deviceInfo;
     }
 
     /**
@@ -1674,7 +1638,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings({"unused"})
     public Location getLocation() {
-        return _getLocation();
+        return mCoreState.getLocationManager()._getLocation();
     }
 
     /**
@@ -1695,7 +1659,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings({"unused"})
     public int getPreviousVisitTime() {
-        return lastVisitTime;
+        return mCoreState.getSessionManager().getLastVisitTime();
     }
 
     /**
@@ -2075,93 +2039,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
     @SuppressWarnings({"unused"})
     public void pushChargedEvent(HashMap<String, Object> chargeDetails,
             ArrayList<HashMap<String, Object>> items) {
-
-        if (chargeDetails == null || items == null) {
-            getConfigLogger().debug(getAccountId(), "Invalid Charged event: details and or items is null");
-            return;
-        }
-
-        if (items.size() > 50) {
-            ValidationResult error = ValidationResultFactory.create(522);
-            getConfigLogger().debug(getAccountId(), error.getErrorDesc());
-            getCoreState().getValidationResultStack().pushValidationResult(error);
-        }
-
-        JSONObject evtData = new JSONObject();
-        JSONObject chargedEvent = new JSONObject();
-        ValidationResult vr;
-        try {
-            for (String key : chargeDetails.keySet()) {
-                Object value = chargeDetails.get(key);
-                vr = getCoreState().getValidator().cleanObjectKey(key);
-                key = vr.getObject().toString();
-                // Check for an error
-                if (vr.getErrorCode() != 0) {
-                    chargedEvent.put(Constants.ERROR_KEY, getErrorObject(vr));
-                }
-
-                try {
-                    vr = getCoreState().getValidator().cleanObjectValue(value, Validator.ValidationContext.Event);
-                } catch (IllegalArgumentException e) {
-                    // The object was neither a String, Boolean, or any number primitives
-                    ValidationResult error = ValidationResultFactory.create(511,
-                            Constants.PROP_VALUE_NOT_PRIMITIVE, "Charged", key,
-                            value != null ? value.toString() : "");
-                    getCoreState().getValidationResultStack().pushValidationResult(error);
-                    getConfigLogger().debug(getAccountId(), error.getErrorDesc());
-                    // Skip this property
-                    continue;
-                }
-                value = vr.getObject();
-                // Check for an error
-                if (vr.getErrorCode() != 0) {
-                    chargedEvent.put(Constants.ERROR_KEY, getErrorObject(vr));
-                }
-
-                evtData.put(key, value);
-            }
-
-            JSONArray jsonItemsArray = new JSONArray();
-            for (HashMap<String, Object> map : items) {
-                JSONObject itemDetails = new JSONObject();
-                for (String key : map.keySet()) {
-                    Object value = map.get(key);
-                    vr = getCoreState().getValidator().cleanObjectKey(key);
-                    key = vr.getObject().toString();
-                    // Check for an error
-                    if (vr.getErrorCode() != 0) {
-                        chargedEvent.put(Constants.ERROR_KEY, getErrorObject(vr));
-                    }
-
-                    try {
-                        vr = getCoreState().getValidator().cleanObjectValue(value, Validator.ValidationContext.Event);
-                    } catch (IllegalArgumentException e) {
-                        // The object was neither a String, Boolean, or any number primitives
-                        ValidationResult error = ValidationResultFactory
-                                .create(511, Constants.OBJECT_VALUE_NOT_PRIMITIVE, key,
-                                        value != null ? value.toString() : "");
-                        getConfigLogger().debug(getAccountId(), error.getErrorDesc());
-                        getCoreState().getValidationResultStack().pushValidationResult(error);
-                        // Skip this property
-                        continue;
-                    }
-                    value = vr.getObject();
-                    // Check for an error
-                    if (vr.getErrorCode() != 0) {
-                        chargedEvent.put(Constants.ERROR_KEY, getErrorObject(vr));
-                    }
-                    itemDetails.put(key, value);
-                }
-                jsonItemsArray.put(itemDetails);
-            }
-            evtData.put("Items", jsonItemsArray);
-
-            chargedEvent.put("evtName", Constants.CHARGED_EVENT);
-            chargedEvent.put("evtData", evtData);
-            getCoreState().getBaseEventQueueManager().queueEvent(context, chargedEvent, Constants.RAISED_EVENT);
-        } catch (Throwable t) {
-            // We won't get here
-        }
+        mCoreState.getAnalyticsManager().pushChargedEvent(chargeDetails,items);
     }
 
     /**
@@ -2171,7 +2049,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void pushDeepLink(Uri uri) {
-        pushDeepLink(uri, false);
+        mCoreState.getAnalyticsManager().pushDeepLink(uri, false);
     }
 
     /**
@@ -2391,7 +2269,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
             Uri uri = Uri.parse("wzrk://track?install=true&" + url);
 
-            pushDeepLink(uri, true);
+            mCoreState.getAnalyticsManager().pushDeepLink(uri, true);
         } catch (Throwable t) {
             // no-op
         }
@@ -2440,7 +2318,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             }
 
             Uri uri = Uri.parse(uriStr);
-            pushDeepLink(uri, true);
+            mCoreState.getAnalyticsManager().pushDeepLink(uri, true);
         } catch (Throwable t) {
             Logger.v("Failed to push install referrer", t);
         }
@@ -2509,7 +2387,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
         getConfigLogger().debug(getAccountId(), "Screen changed to " + screenName);
         getCoreState().getCoreMetaData().setCurrentScreenName(screenName);
-        recordPageEventWithExtras(null);
+        mCoreState.getAnalyticsManager().recordPageEventWithExtras(null);
     }
 
     /**
@@ -2525,7 +2403,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void removeMultiValueForKey(String key, String value) {
         if (value == null || value.isEmpty()) {
-            _generateEmptyMultiValueError(key);
+            mCoreState.getAnalyticsManager()._generateEmptyMultiValueError(key);
             return;
         }
 
@@ -2545,12 +2423,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void removeMultiValuesForKey(final String key, final ArrayList<String> values) {
-        getCoreState().getPostAsyncSafelyHandler().postAsyncSafely("removeMultiValuesForKey", new Runnable() {
-            @Override
-            public void run() {
-                _handleMultiValues(values, key, Constants.COMMAND_REMOVE);
-            }
-        });
+        mCoreState.getAnalyticsManager().removeMultiValuesForKey(key,values);
     }
 
     /**
@@ -2560,12 +2433,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void removeValueForKey(final String key) {
-        getCoreState().getPostAsyncSafelyHandler().postAsyncSafely("removeValueForKey", new Runnable() {
-            @Override
-            public void run() {
-                _removeValueForKey(key);
-            }
-        });
+        mCoreState.getAnalyticsManager().removeValueForKey(key);
     }
 
     /**
@@ -2644,12 +2512,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void setMultiValuesForKey(final String key, final ArrayList<String> values) {
-        getCoreState().getPostAsyncSafelyHandler().postAsyncSafely("setMultiValuesForKey", new Runnable() {
-            @Override
-            public void run() {
-                _handleMultiValues(values, key, Constants.COMMAND_SET);
-            }
-        });
+        mCoreState.getAnalyticsManager().setMultiValuesForKey(key,values);
     }
 
     /**
@@ -2703,7 +2566,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                     pushProfile(optOutMap);
                 }
                 // persist the new optOut state
-                String key = optOutKey();
+                String key = mCoreState.optOutKey();
                 if (key == null) {
                     getConfigLogger()
                             .verbose(getAccountId(), "Unable to persist user OptOut state, storage key is null");
@@ -2859,374 +2722,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
-    private JSONArray _cleanMultiValues(ArrayList<String> values, String key) {
-
-        try {
-            if (values == null || key == null) {
-                return null;
-            }
-
-            JSONArray cleanedValues = new JSONArray();
-            ValidationResult vr;
-
-            // loop through and clean the new values
-            for (String value : values) {
-                value = (value == null) ? "" : value;  // so we will generate a validation error later on
-
-                // validate value
-                vr = getCoreState().getValidator().cleanMultiValuePropertyValue(value);
-
-                // Check for an error
-                if (vr.getErrorCode() != 0) {
-                    getCoreState().getValidationResultStack().pushValidationResult(vr);
-                }
-
-                // reset the value
-                Object _value = vr.getObject();
-                value = (_value != null) ? vr.getObject().toString() : null;
-
-                // if value is empty generate an error and return
-                if (value == null || value.isEmpty()) {
-                    _generateEmptyMultiValueError(key);
-                    // Abort
-                    return null;
-                }
-                // add to the newValues to be merged
-                cleanedValues.put(value);
-            }
-
-            return cleanedValues;
-
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getAccountId(), "Error cleaning multi values for key " + key, t);
-            _generateEmptyMultiValueError(key);
-            return null;
-        }
-    }
-
-    private JSONArray _constructExistingMultiValue(String key, String command) {
-
-        boolean remove = command.equals(Constants.COMMAND_REMOVE);
-        boolean add = command.equals(Constants.COMMAND_ADD);
-
-        // only relevant for add's and remove's; a set overrides the existing value, so return a new array
-        if (!remove && !add) {
-            return new JSONArray();
-        }
-
-        Object existing = _getProfilePropertyIgnorePersonalizationFlag(key);
-
-        // if there is no existing value
-        if (existing == null) {
-            // if its a remove then return null to abort operation
-            // no point in running remove against a nonexistent value
-            if (remove) {
-                return null;
-            }
-
-            // otherwise return an empty array
-            return new JSONArray();
-        }
-
-        // value exists
-
-        // the value should only ever be a JSONArray or scalar (String really)
-
-        // if its already a JSONArray return that
-        if (existing instanceof JSONArray) {
-            return (JSONArray) existing;
-        }
-
-        // handle a scalar value as the existing value
-        /*
-            if its an add, our rule is to promote the scalar value to multi value and include the cleaned stringified
-            scalar value as the first element of the resulting array
-
-            NOTE: the existing scalar value is currently limited to 120 bytes; when adding it to a multi value
-            it is subject to the current 40 byte limit
-
-            if its a remove, our rule is to delete the key from the local copy
-            if the cleaned stringified existing value is equal to any of the cleaned values passed to the remove method
-
-            if its an add, return an empty array as the default,
-            in the event the existing scalar value fails stringifying/cleaning
-
-            returning null will signal that a remove operation should be aborted,
-            as there is no valid promoted multi value to remove against
-         */
-
-        JSONArray _default = (add) ? new JSONArray() : null;
-
-        String stringified = _stringifyAndCleanScalarProfilePropValue(existing);
-
-        return (stringified != null) ? new JSONArray().put(stringified) : _default;
-    }
-
-
-    private void _generateEmptyMultiValueError(String key) {
-        ValidationResult error = ValidationResultFactory.create(512, Constants.INVALID_MULTI_VALUE, key);
-        getCoreState().getValidationResultStack().pushValidationResult(error);
-        getConfigLogger().debug(getAccountId(), error.getErrorDesc());
-    }
-
-    private void _generateInvalidMultiValueKeyError(String key) {
-        ValidationResult error = ValidationResultFactory.create(523, Constants.INVALID_MULTI_VALUE_KEY, key);
-        getCoreState().getValidationResultStack().pushValidationResult(error);
-        getConfigLogger().debug(getAccountId(),
-                "Invalid multi-value property key " + key + " profile multi value operation aborted");
-    }
-
-    @SuppressLint("MissingPermission")
-    private Location _getLocation() {
-        try {
-            LocationManager lm = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
-            if (lm == null) {
-                Logger.d("Location Manager is null.");
-                return null;
-            }
-            List<String> providers = lm.getProviders(true);
-            Location bestLocation = null;
-            Location l = null;
-            for (String provider : providers) {
-                try {
-                    l = lm.getLastKnownLocation(provider);
-                } catch (SecurityException e) {
-                    //no-op
-                    Logger.v("Location security exception", e);
-                }
-
-                if (l == null) {
-                    continue;
-                }
-                if (bestLocation == null || l.getAccuracy() < bestLocation.getAccuracy()) {
-                    bestLocation = l;
-                }
-            }
-
-            return bestLocation;
-        } catch (Throwable t) {
-            Logger.v("Couldn't get user's location", t);
-            return null;
-        }
-    }
-
-    // use for internal profile getter doesn't do the personalization check
-    private Object _getProfilePropertyIgnorePersonalizationFlag(String key) {
-        return getCoreState().getLocalDataStore().getProfileValueForKey(key);
-    }
-
-    private void _handleMultiValues(ArrayList<String> values, String key, String command) {
-        if (key == null) {
-            return;
-        }
-
-        if (values == null || values.isEmpty()) {
-            _generateEmptyMultiValueError(key);
-            return;
-        }
-
-        ValidationResult vr;
-
-        // validate the key
-        vr = getCoreState().getValidator().cleanMultiValuePropertyKey(key);
-
-        // Check for an error
-        if (vr.getErrorCode() != 0) {
-            getCoreState().getValidationResultStack().pushValidationResult(vr);
-        }
-
-        // reset the key
-        Object _key = vr.getObject();
-        String cleanKey = (_key != null) ? vr.getObject().toString() : null;
-
-        // if key is empty generate an error and return
-        if (cleanKey == null || cleanKey.isEmpty()) {
-            _generateInvalidMultiValueKeyError(key);
-            return;
-        }
-
-        key = cleanKey;
-
-        try {
-            JSONArray currentValues = _constructExistingMultiValue(key, command);
-            JSONArray newValues = _cleanMultiValues(values, key);
-            _validateAndPushMultiValue(currentValues, newValues, values, key, command);
-
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getAccountId(), "Error handling multi value operation for key " + key, t);
-        }
-    }
-
-    //Session
-
-
-
-    @SuppressWarnings("ConstantConditions")
-    private void _pushFacebookUser(JSONObject graphUser) {
-        try {
-            if (graphUser == null) {
-                return;
-            }
-            // Note: No validations are required here, as everything is controlled
-            String name = getGraphUserPropertySafely(graphUser, "name", "");
-            try {
-                // Certain users have nasty looking names - unicode chars, validate for any
-                // not allowed chars
-                ValidationResult vr = getCoreState().getValidator()
-                        .cleanObjectValue(name, Validator.ValidationContext.Profile);
-                name = vr.getObject().toString();
-
-                if (vr.getErrorCode() != 0) {
-                    getCoreState().getValidationResultStack().pushValidationResult(vr);
-                }
-            } catch (IllegalArgumentException e) {
-                // Weird name, wasn't a string, or any number
-                // This would never happen with FB
-                name = "";
-            }
-
-            String gender = getGraphUserPropertySafely(graphUser, "gender", null);
-            // Convert to WR format
-            if (gender != null) {
-                if (gender.toLowerCase().startsWith("m")) {
-                    gender = "M";
-                } else if (gender.toLowerCase().startsWith("f")) {
-                    gender = "F";
-                } else {
-                    gender = "";
-                }
-            } else {
-                gender = null;
-            }
-            String email = getGraphUserPropertySafely(graphUser, "email", "");
-
-            String birthday = getGraphUserPropertySafely(graphUser, "birthday", null);
-            if (birthday != null) {
-                // Some users don't have the year of birth mentioned
-                // FB returns only MM/dd in those cases
-                if (birthday.matches("^../..")) {
-                    // This means that the year is not available(~30% of the times)
-                    // Ignore
-                    birthday = "";
-                } else {
-                    try {
-                        Date date = Constants.FB_DOB_DATE_FORMAT.parse(birthday);
-                        birthday = "$D_" + (int) (date.getTime() / 1000);
-                    } catch (ParseException e) {
-                        // Differs from the specs
-                        birthday = "";
-                    }
-                }
-            }
-
-            String work;
-            try {
-                JSONArray workArray = graphUser.getJSONArray("work");
-                work = (workArray.length() > 0) ? "Y" : "N";
-            } catch (Throwable t) {
-                work = null;
-            }
-
-            String education;
-            try {
-                JSONArray eduArray = graphUser.getJSONArray("education");
-                // FB returns the education levels in a descending order - highest = last entry
-                String fbEdu = eduArray.getJSONObject(eduArray.length() - 1).getString("type");
-                if (fbEdu.toLowerCase().contains("high school")) {
-                    education = "School";
-                } else if (fbEdu.toLowerCase().contains("college")) {
-                    education = "College";
-                } else if (fbEdu.toLowerCase().contains("graduate school")) {
-                    education = "Graduate";
-                } else {
-                    education = "";
-                }
-            } catch (Throwable t) {
-                // No education info available
-                education = null;
-            }
-
-            String id = getGraphUserPropertySafely(graphUser, "id", "");
-
-            String married = getGraphUserPropertySafely(graphUser, "relationship_status", null);
-            if (married != null) {
-                if (married.equalsIgnoreCase("married")) {
-                    married = "Y";
-                } else {
-                    married = "N";
-                }
-            }
-
-            final JSONObject profile = new JSONObject();
-            if (id != null && id.length() > 3) {
-                profile.put("FBID", id);
-            }
-            if (name != null && name.length() > 3) {
-                profile.put("Name", name);
-            }
-            if (email != null && email.length() > 3) {
-                profile.put("Email", email);
-            }
-            if (gender != null && !gender.trim().equals("")) {
-                profile.put("Gender", gender);
-            }
-            if (education != null && !education.trim().equals("")) {
-                profile.put("Education", education);
-            }
-            if (work != null && !work.trim().equals("")) {
-                profile.put("Employed", work);
-            }
-            if (birthday != null && birthday.length() > 3) {
-                profile.put("DOB", birthday);
-            }
-            if (married != null && !married.trim().equals("")) {
-                profile.put("Married", married);
-            }
-
-            getCoreState().getBaseEventQueueManager().pushBasicProfile(profile);
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getAccountId(), "Failed to parse graph user object successfully", t);
-        }
-    }
-
-    private void _removeValueForKey(String key) {
-        try {
-            key = (key == null) ? "" : key; // so we will generate a validation error later on
-
-            // validate the key
-            ValidationResult vr;
-
-            vr = getCoreState().getValidator().cleanObjectKey(key);
-            key = vr.getObject().toString();
-
-            if (key.isEmpty()) {
-                ValidationResult error = ValidationResultFactory.create(512, Constants.KEY_EMPTY);
-                getCoreState().getValidationResultStack().pushValidationResult(error);
-                getConfigLogger().debug(getAccountId(), error.getErrorDesc());
-                // Abort
-                return;
-            }
-            // Check for an error
-            if (vr.getErrorCode() != 0) {
-                getCoreState().getValidationResultStack().pushValidationResult(vr);
-            }
-
-            // remove from the local profile
-            getCoreState().getLocalDataStore().removeProfileField(key);
-
-            // send the delete command
-            JSONObject command = new JSONObject().put(Constants.COMMAND_DELETE, true);
-            JSONObject update = new JSONObject().put(key, command);
-            getCoreState().getBaseEventQueueManager().pushBasicProfile(update);
-
-            getConfigLogger().verbose(getAccountId(), "removing value for key " + key + " from user profile");
-
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getAccountId(), "Failed to remove profile value for key " + key, t);
-        }
-    }
-
-
     //InApp
     private void _showNotificationIfAvailable(Context context) {
         SharedPreferences prefs = StorageHelper.getPreferences(context);
@@ -3264,77 +2759,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         } catch (Throwable t) {
             // We won't get here
             getConfigLogger().verbose(getAccountId(), "InApp: Couldn't parse JSON array string from prefs", t);
-        }
-    }
-
-    //Profile
-
-    private String _stringifyAndCleanScalarProfilePropValue(Object value) {
-        String val = CTJsonConverter.toJsonString(value);
-
-        if (val != null) {
-            ValidationResult vr = getCoreState().getValidator().cleanMultiValuePropertyValue(val);
-
-            // Check for an error
-            if (vr.getErrorCode() != 0) {
-                getCoreState().getValidationResultStack().pushValidationResult(vr);
-            }
-
-            Object _value = vr.getObject();
-            val = (_value != null) ? vr.getObject().toString() : null;
-        }
-
-        return val;
-    }
-
-    private void _validateAndPushMultiValue(JSONArray currentValues, JSONArray newValues,
-            ArrayList<String> originalValues, String key, String command) {
-
-        try {
-
-            // if any of these are null, indicates some problem along the way so abort operation
-            if (currentValues == null || newValues == null || originalValues == null || key == null
-                    || command == null) {
-                return;
-            }
-
-            String mergeOperation = command.equals(Constants.COMMAND_REMOVE) ? Validator.REMOVE_VALUES_OPERATION
-                    : Validator.ADD_VALUES_OPERATION;
-
-            // merge currentValues and newValues
-            ValidationResult vr = getCoreState().getValidator()
-                    .mergeMultiValuePropertyForKey(currentValues, newValues, mergeOperation, key);
-
-            // Check for an error
-            if (vr.getErrorCode() != 0) {
-                getCoreState().getValidationResultStack().pushValidationResult(vr);
-            }
-
-            // set the merged local values array
-            JSONArray localValues = (JSONArray) vr.getObject();
-
-            // update local profile
-            // remove an empty array
-            if (localValues == null || localValues.length() <= 0) {
-                getCoreState().getLocalDataStore().removeProfileField(key);
-            } else {
-                // not empty so save to local profile
-                getCoreState().getLocalDataStore().setProfileField(key, localValues);
-            }
-
-            // push to server
-            JSONObject commandObj = new JSONObject();
-            commandObj.put(command, new JSONArray(originalValues));
-
-            JSONObject fields = new JSONObject();
-            fields.put(key, commandObj);
-
-            getCoreState().getBaseEventQueueManager().pushBasicProfile(fields);
-
-            getConfigLogger().verbose(getAccountId(), "Constructed multi-value profile push: " + fields.toString());
-
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getAccountId(), "Error pushing multiValue for key " + key, t);
         }
     }
 
@@ -3392,13 +2816,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
         checkExistingInAppNotifications(activity);
         checkPendingInAppNotifications(activity);
-    }
-
-
-
-    private HttpsURLConnection buildHttpsURLConnection(final String endpoint) {
-        // TODO dummy method, remove after complete development
-        return null;
     }
 
     private boolean canShowInAppOnActivity() {
@@ -3527,39 +2944,12 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     }
 
-    //Event
-
-    private void flushQueueAsync(final Context context, final EventGroup pushNotificationViewed) {
-
-        // TODO dummy method, remove after complete development
-    }
-
-    //Profile
-
-    private void flushQueueSync(final Context context, final EventGroup regular) {
-        // TODO dummy method, remove after complete development
-    }
-
-    //Push
-
     private CleverTapInstanceConfig getConfig() {
         return getCoreState().getConfig();
     }
 
     private Logger getConfigLogger() {
         return getConfig().getLogger();
-    }
-
-    //gives delay frequency based on region
-    //randomly adds delay to 1s delay in case of non-EU regions
-    private int getDelayFrequency() {
-        // TODO dummy method, remove after complete development
-        return 0;
-    }
-
-    private String getEndpoint(final boolean defaultToHandshakeURL, final EventGroup eventGroup) {
-        // TODO dummy method, remove after complete development
-        return null;
     }
 
     private int getFirstRequestTimestamp() {
@@ -3684,12 +3074,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
         }
     }
 
-
-    //Networking
-    private String insertHeader(Context context, JSONArray arr) {
-
-    }
-
     private boolean isAppLaunchReportingDisabled() {
         return getCoreState().getConfig().isDisableAppLaunchedEvent();
     }
@@ -3719,13 +3103,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
         getCoreState().getPushProviders().refreshAllTokens();
     }
 
-    private String optOutKey() {
-        String guid = getCleverTapID();
-        if (guid == null) {
-            return null;
-        }
-        return "OptOut:" + guid;
-    }
+
 
 
     //InApp
@@ -3744,33 +3122,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
     //Event
 
 
-    private synchronized void pushDeepLink(Uri uri, boolean install) {
-        if (uri == null) {
-            return;
-        }
 
-        try {
-            JSONObject referrer = UriHelper.getUrchinFromUri(uri);
-            if (referrer.has("us")) {
-                getCoreState().getCoreMetaData().setSource(referrer.get("us").toString());
-            }
-            if (referrer.has("um")) {
-                getCoreState().getCoreMetaData().setMedium(referrer.get("um").toString());
-            }
-            if (referrer.has("uc")) {
-                getCoreState().getCoreMetaData().setCampaign(referrer.get("uc").toString());
-            }
-
-            referrer.put("referrer", uri.toString());
-            if (install) {
-                referrer.put("install", true);
-            }
-            recordPageEventWithExtras(referrer);
-
-        } catch (Throwable t) {
-            getConfigLogger().verbose(getAccountId(), "Failed to push deep link", t);
-        }
-    }
 
 
     private Future<?> raiseEventForGeofences(String eventName, JSONObject geofenceProperties) {
@@ -3800,80 +3152,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
         return future;
     }
-
-    //Event
-    private void recordPageEventWithExtras(JSONObject extras) {
-        try {
-            JSONObject jsonObject = new JSONObject();
-            // Add the extras
-            if (extras != null && extras.length() > 0) {
-                Iterator keys = extras.keys();
-                while (keys.hasNext()) {
-                    try {
-                        String key = (String) keys.next();
-                        jsonObject.put(key, extras.getString(key));
-                    } catch (ClassCastException ignore) {
-                        // Really won't get here
-                    }
-                }
-            }
-            getCoreState().getBaseEventQueueManager().queueEvent(context, jsonObject, Constants.PAGE_EVENT);
-        } catch (Throwable t) {
-            // We won't get here
-        }
-    }
-
-
-
-    // -----------------------------------------------------------------------//
-    // ********                        Display Unit LOGIC                *****//
-    // -----------------------------------------------------------------------//
-
-    private void setCurrentUserOptOutStateFromStorage() {
-        String key = optOutKey();
-        if (key == null) {
-            getConfigLogger().verbose(getAccountId(),
-                    "Unable to set current user OptOut state from storage: storage key is null");
-            return;
-        }
-        boolean storedOptOut = StorageHelper.getBooleanFromPrefs(context, getCoreState().getConfig(), key);
-        getCoreState().getCoreMetaData().setCurrentUserOptedOut(storedOptOut);
-        getConfigLogger().verbose(getAccountId(),
-                "Set current user OptOut state from storage to: " + storedOptOut + " for key: " + key);
-    }
-
-    private void setFirstRequestTimestampIfNeeded(Context context, int ts) {
-        if (getFirstRequestTimestamp() > 0) {
-            return;
-        }
-        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(getConfig(), Constants.KEY_FIRST_TS), ts);
-    }
-
-    //Session
-    private void setLastRequestTimestamp(Context context, int ts) {
-        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(getConfig(), Constants.KEY_LAST_TS), ts);
-    }
-
-    //Session
-    private void setLastVisitTime() {
-        EventDetail ed = getCoreState().getLocalDataStore().getEventDetail(Constants.APP_LAUNCHED_EVENT);
-        if (ed == null) {
-            lastVisitTime = -1;
-        } else {
-            lastVisitTime = ed.getLastTime();
-        }
-    }
-
-    //Util
-
-    // -----------------------------------------------------------------------//
-    // ********                        Feature Flags Logic               *****//
-    // -----------------------------------------------------------------------//
-
-    // ********                       Feature Flags Public API           *****//
-
-    // ********                        Feature Flags Internal methods        *****//
-
 
     private void showInAppNotificationIfAny() {
         if (!getCoreState().getConfig().isAnalyticsOnly()) {
