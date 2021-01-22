@@ -13,23 +13,22 @@ class InAppResponse extends CleverTapResponseDecorator {
 
     private final CleverTapInstanceConfig mConfig;
 
+    private final InAppController mInAppController;
+
     private final InAppFCManager mInAppFCManager;
 
     private final Logger mLogger;
 
     private final PostAsyncSafelyHandler mPostAsyncSafelyHandler;
 
-    private final InAppController mInAppController;
-
-    InAppResponse(CleverTapResponse cleverTapResponse) {
+    InAppResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config, InAppFCManager inAppFCManager,
+            PostAsyncSafelyHandler postAsyncSafelyHandler, InAppController inAppController) {
         mCleverTapResponse = cleverTapResponse;
-        CoreState coreState = getCoreState();
-        mConfig = coreState.getConfig();
+        mConfig = config;
         mLogger = mConfig.getLogger();
-        mInAppFCManager = coreState.getInAppFCManager();
-        mPostAsyncSafelyHandler = coreState.getPostAsyncSafelyHandler();
-
-        mInAppController = coreState.getInAppController();
+        mInAppFCManager = inAppFCManager;
+        mPostAsyncSafelyHandler = postAsyncSafelyHandler;
+        mInAppController = inAppController;
     }
 
     @Override

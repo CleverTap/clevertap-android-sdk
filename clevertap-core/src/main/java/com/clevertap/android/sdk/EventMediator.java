@@ -13,10 +13,10 @@ class EventMediator {
 
     private final Context mContext;
 
-    public EventMediator(final CoreState coreState) {
-        mConfig = coreState.getConfig();
-        mCleverTapMetaData = coreState.getCoreMetaData();
-        mContext = coreState.getContext();
+    public EventMediator(Context context, CleverTapInstanceConfig config, CoreMetaData coreMetaData) {
+        mContext = context;
+        mConfig = config;
+        mCleverTapMetaData = coreMetaData;
     }
 
     boolean shouldDeferProcessingEvent(JSONObject event, int eventType) {

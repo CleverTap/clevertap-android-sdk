@@ -5,20 +5,21 @@ import org.json.JSONObject;
 
 class GeofenceResponse extends CleverTapResponseDecorator {
 
+    private final CallbackManager mCallbackManager;
+
     private final CleverTapResponse mCleverTapResponse;
 
     private final CleverTapInstanceConfig mConfig;
 
     private final Logger mLogger;
 
-    private final CallbackManager mCallbackManager;
-
-    GeofenceResponse(final CleverTapResponse cleverTapResponse) {
+    GeofenceResponse(final CleverTapResponse cleverTapResponse,
+            CleverTapInstanceConfig config,
+            CallbackManager callbackManager) {
         mCleverTapResponse = cleverTapResponse;
-        CoreState coreState = getCoreState();
-        mConfig = coreState.getConfig();
+        mConfig = config;
         mLogger = mConfig.getLogger();
-        mCallbackManager = coreState.getCallbackManager();
+        mCallbackManager = callbackManager;
     }
 
     @Override

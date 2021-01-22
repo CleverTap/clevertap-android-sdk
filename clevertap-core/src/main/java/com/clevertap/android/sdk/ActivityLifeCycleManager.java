@@ -15,7 +15,7 @@ class ActivityLifeCycleManager {
 
     private final AnalyticsManager mAnalyticsManager;
 
-    private final BaseQueueManager mBaseQueueManager;
+    private final BaseEventQueueManager mBaseEventQueueManager;
 
     private final CallbackManager mCallbackManager;
 
@@ -33,17 +33,26 @@ class ActivityLifeCycleManager {
 
     private final SessionManager mSessionManager;
 
-    ActivityLifeCycleManager(CoreState coreState) {
-        mConfig = coreState.getConfig();
-        mAnalyticsManager = coreState.getAnalyticsManager();
-        mCoreMetaData = coreState.getCoreMetaData();
-        mContext = coreState.getContext();
-        mSessionManager = coreState.getSessionManager();
-        mPushProviders = coreState.getPushProviders();
-        mCallbackManager = coreState.getCallbackManager();
-        mInAppController = coreState.getInAppController();
-        mBaseQueueManager = coreState.getBaseEventQueueManager();
-        mPostAsyncSafelyHandler = coreState.getPostAsyncSafelyHandler();
+    ActivityLifeCycleManager(Context context,
+            CleverTapInstanceConfig config,
+            AnalyticsManager analyticsManager,
+            CoreMetaData coreMetaData,
+            SessionManager sessionManager,
+            PushProviders pushProviders,
+            CallbackManager callbackManager,
+            InAppController inAppController,
+            BaseEventQueueManager baseEventQueueManager,
+            PostAsyncSafelyHandler postAsyncSafelyHandler) {
+        mContext = context;
+        mConfig = config;
+        mAnalyticsManager = analyticsManager;
+        mCoreMetaData = coreMetaData;
+        mSessionManager = sessionManager;
+        mPushProviders = pushProviders;
+        mCallbackManager = callbackManager;
+        mInAppController = inAppController;
+        mBaseEventQueueManager = baseEventQueueManager;
+        mPostAsyncSafelyHandler = postAsyncSafelyHandler;
     }
 
     //Lifecycle
@@ -98,7 +107,7 @@ class ActivityLifeCycleManager {
             }
         }
         if (!mCoreMetaData.inCurrentSession()) {
-            mBaseQueueManager.pushInitialEventsAsync();
+            mBaseEventQueueManager.pushInitialEventsAsync();
         }
         mInAppController.checkExistingInAppNotifications(activity);
         mInAppController.checkPendingInAppNotifications(activity);

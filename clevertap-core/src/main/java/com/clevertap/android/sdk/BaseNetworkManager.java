@@ -5,6 +5,8 @@ import org.json.JSONArray;
 
 abstract class BaseNetworkManager {
 
+    abstract void flushDBQueue(final Context context, final EventGroup eventGroup);
+
     abstract int getDelayFrequency();
 
     abstract void initHandshake(final EventGroup eventGroup,

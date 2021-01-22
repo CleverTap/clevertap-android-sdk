@@ -35,12 +35,11 @@ import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationCompat;
 import com.clevertap.android.sdk.AnalyticsManager;
 import com.clevertap.android.sdk.BaseDatabaseManager;
-import com.clevertap.android.sdk.BaseQueueManager;
+import com.clevertap.android.sdk.BaseEventQueueManager;
 import com.clevertap.android.sdk.CTExecutors;
 import com.clevertap.android.sdk.CleverTapAPI.DevicePushTokenRefreshListener;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.CoreState;
 import com.clevertap.android.sdk.DBAdapter;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.Logger;
@@ -82,8 +81,6 @@ public class PushProviders {
 
     private final BaseDatabaseManager mBaseDatabaseManager;
 
-    private final BaseQueueManager mBaseQueueManager;
-
     private final CleverTapInstanceConfig mConfig;
 
     private final Context mContext;
@@ -102,21 +99,31 @@ public class PushProviders {
      * @return A PushProviders class with the loaded providers.
      */
     @NonNull
-    public static PushProviders load(CoreState coreState) {
-        PushProviders providers = new PushProviders(coreState);
+    public static PushProviders load(Context context,
+            CleverTapInstanceConfig config,
+            BaseDatabaseManager baseDatabaseManager,
+            PostAsyncSafelyHandler postAsyncSafelyHandler,
+            ValidationResultStack validationResultStack,
+            AnalyticsManager analyticsManager) {
+        PushProviders providers = new PushProviders(context, config, baseDatabaseManager,
+                postAsyncSafelyHandler, validationResultStack, analyticsManager);
         providers.init();
         return providers;
     }
 
     private PushProviders(
-            CoreState coreState) {
-        mBaseDatabaseManager = coreState.getDatabaseManager();
-        this.mConfig = coreState.getConfig();
-        this.mContext = coreState.getContext();
-        mBaseQueueManager = coreState.getBaseEventQueueManager();
-        mPostAsyncSafelyHandler = coreState.getPostAsyncSafelyHandler();
-        mValidationResultStack = coreState.getValidationResultStack();
-        mAnalyticsManager = coreState.getAnalyticsManager();
+            Context context,
+            CleverTapInstanceConfig config,
+            BaseDatabaseManager baseDatabaseManager,
+            PostAsyncSafelyHandler postAsyncSafelyHandler,
+            ValidationResultStack validationResultStack,
+            AnalyticsManager analyticsManager) {
+        this.mContext = context;
+        this.mConfig = config;
+        mBaseDatabaseManager = baseDatabaseManager;
+        mPostAsyncSafelyHandler = postAsyncSafelyHandler;
+        mValidationResultStack = validationResultStack;
+        mAnalyticsManager = analyticsManager;
         initPushAmp();
     }
 
@@ -336,6 +343,11 @@ public class PushProviders {
         }
     }
 
+    //Push
+    public void onTokenRefresh() {
+        refreshAllTokens();
+    }
+
     /**
      * Stores silent push notification in DB for smooth working of Push Amplification
      * Background Job Service and also stores wzrk_pid to the DB to avoid duplication of Push
@@ -371,22 +383,6 @@ public class PushProviders {
         });
     }
 
-    /**
-     * Fetches latest tokens from various providers and send to Clevertap's server
-     */
-    private void refreshAllTokens() {
-        CTExecutors.getInstance().diskIO().execute(new Runnable() {
-            @Override
-            public void run() {
-                // refresh tokens of Push Providers
-                refreshCTProviderTokens();
-
-                // refresh tokens of custom Providers
-                refreshCustomProviderTokens();
-            }
-        });
-    }
-
     public void runInstanceJobWork(final Context context, final JobParameters parameters) {
         mPostAsyncSafelyHandler.postAsyncSafely("runningJobService", new Runnable() {
             @Override
@@ -416,8 +412,7 @@ public class PushProviders {
                     try {
                         JSONObject eventObject = new JSONObject();
                         eventObject.put("bk", 1);
-                        mBaseQueueManager
-                                .queueEvent(context, eventObject, Constants.PING_EVENT);
+                        mAnalyticsManager.sendPingEvent(eventObject);
 
                         if (parameters == null) {
                             int pingFrequency = getPingFrequency(context);
@@ -824,12 +819,28 @@ public class PushProviders {
                 data.put("type", pushType.getType());
                 event.put("data", data);
                 mConfig.getLogger().verbose(mConfig.getAccountId(), pushType + action + " device token " + token);
-                mBaseQueueManager.queueEvent(mContext, event, Constants.DATA_EVENT);
+                mAnalyticsManager.senDataEvent(event);
             } catch (Throwable t) {
                 // we won't get here
                 mConfig.getLogger().verbose(mConfig.getAccountId(), pushType + action + " device token failed", t);
             }
         }
+    }
+
+    /**
+     * Fetches latest tokens from various providers and send to Clevertap's server
+     */
+    private void refreshAllTokens() {
+        CTExecutors.getInstance().diskIO().execute(new Runnable() {
+            @Override
+            public void run() {
+                // refresh tokens of Push Providers
+                refreshCTProviderTokens();
+
+                // refresh tokens of custom Providers
+                refreshCustomProviderTokens();
+            }
+        });
     }
 
     private void refreshCTProviderTokens() {
@@ -1242,10 +1253,5 @@ public class PushProviders {
             }
         }
         return null;
-    }
-
-    //Push
-    public void onTokenRefresh() {
-        refreshAllTokens();
     }
 }

@@ -4,6 +4,7 @@ import static com.clevertap.android.sdk.CTJsonConverter.getRenderedTargetList;
 
 import android.content.Context;
 import android.os.Bundle;
+import com.clevertap.android.sdk.pushnotification.PushProviders;
 import java.util.Iterator;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -12,6 +13,8 @@ import org.json.JSONObject;
 class PushAmpResponse extends CleverTapResponseDecorator {
 
     private final Object inboxControllerLock;
+
+    private final CallbackManager mCallbackManager;
 
     private final CleverTapResponse mCleverTapResponse;
 
@@ -23,15 +26,24 @@ class PushAmpResponse extends CleverTapResponseDecorator {
 
     private final Logger mLogger;
 
-    PushAmpResponse(CleverTapResponse cleverTapResponse) {
-        mCleverTapResponse = cleverTapResponse;
-        CoreState coreState = getCoreState();
-        mConfig = coreState.getConfig();
-        mLogger = mConfig.getLogger();
-        inboxControllerLock = coreState.getCTLockManager().getInboxControllerLock();
-        mDBAdapter = coreState.getDatabaseManager().loadDBAdapter(coreState.getContext());
+    private final PushProviders mPushProviders;
 
-        mContext = coreState.context;
+    PushAmpResponse(CleverTapResponse cleverTapResponse,
+            Context context,
+            CleverTapInstanceConfig config,
+            CTLockManager ctLockManager,
+            BaseDatabaseManager dbManager,
+            CallbackManager callbackManager,
+            final PushProviders pushProviders) {
+        mCleverTapResponse = cleverTapResponse;
+        mContext = context;
+        mConfig = config;
+        mPushProviders = pushProviders;
+        mLogger = mConfig.getLogger();
+        inboxControllerLock = ctLockManager.getInboxControllerLock();
+        mDBAdapter = dbManager.loadDBAdapter(context);
+
+        mCallbackManager = callbackManager;
     }
 
     @Override
@@ -58,7 +70,7 @@ class PushAmpResponse extends CleverTapResponseDecorator {
                 if (pushAmpObject.has("pf")) {
                     try {
                         int frequency = pushAmpObject.getInt("pf");
-                        getCoreState().getPushProviders().updatePingFrequencyIfNeeded(context, frequency);
+                        mPushProviders.updatePingFrequencyIfNeeded(context, frequency);
                     } catch (Throwable t) {
                         mLogger
                                 .verbose("Error handling ping frequency in response : " + t.getMessage());
@@ -108,10 +120,10 @@ class PushAmpResponse extends CleverTapResponseDecorator {
                 if (!pushBundle.isEmpty() && !mDBAdapter
                         .doesPushNotificationIdExist(pushObject.getString("wzrk_pid"))) {
                     mLogger.verbose("Creating Push Notification locally");
-                    if (getCoreState().getCallbackManager().getPushAmpListener() != null) {
-                        getCoreState().getCallbackManager().getPushAmpListener().onPushAmpPayloadReceived(pushBundle);
+                    if (mCallbackManager.getPushAmpListener() != null) {
+                        mCallbackManager.getPushAmpListener().onPushAmpPayloadReceived(pushBundle);
                     } else {
-                        getCoreState().getPushProviders()
+                        mPushProviders
                                 ._createNotification(mContext, pushBundle, Constants.EMPTY_NOTIFICATION_ID);
                     }
                 } else {

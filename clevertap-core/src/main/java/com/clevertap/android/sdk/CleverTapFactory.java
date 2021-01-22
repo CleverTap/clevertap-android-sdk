@@ -8,40 +8,105 @@ import com.clevertap.android.sdk.pushnotification.PushProviders;
 class CleverTapFactory {
 
     //TODO piyush check it in builder
-    static CoreState getCoreState(Context context, CleverTapInstanceConfig config, String cleverTapID) {
+    static CoreState getCoreState(Context context, CleverTapInstanceConfig cleverTapInstanceConfig,
+            String cleverTapID) {
         CoreState coreState = new CoreState(context);
-        coreState.setConfig(new CleverTapInstanceConfig(config));
-        coreState.setValidator(new Validator());
-        coreState.setValidationResultStack(new ValidationResultStack());
-        coreState.setLocalDataStore(new LocalDataStore(context, config));
-        coreState.setDeviceInfo(new DeviceInfo(context, config, cleverTapID));
-        coreState.setCTLockManager(new CTLockManager());
+
+        CoreMetaData coreMetaData = new CoreMetaData();
+        coreState.setCoreMetaData(coreMetaData);
+
+        Validator validator = new Validator();
+        coreState.setValidator(validator);
+
+        ValidationResultStack validationResultStack = new ValidationResultStack();
+        coreState.setValidationResultStack(validationResultStack);
+
+        CTLockManager ctLockManager = new CTLockManager();
+        coreState.setCTLockManager(ctLockManager);
+
+        MainLooperHandler mainLooperHandler = new MainLooperHandler();
+        coreState.setMainLooperHandler(mainLooperHandler);
+
+        CleverTapInstanceConfig config = new CleverTapInstanceConfig(cleverTapInstanceConfig);
+        coreState.setConfig(config);
+
+        EventMediator eventMediator = new EventMediator(context, config, coreMetaData);
+        coreState.setEventMediator(eventMediator);
+
+        PostAsyncSafelyHandler postAsyncSafelyHandler = new PostAsyncSafelyHandler(config);
+        coreState.setPostAsyncSafelyHandler(postAsyncSafelyHandler);
+
+        LocalDataStore localDataStore = new LocalDataStore(context, config);
+        coreState.setLocalDataStore(localDataStore);
+
+        DeviceInfo deviceInfo = new DeviceInfo(context, config, cleverTapID);
+        coreState.setDeviceInfo(deviceInfo);
+
+        CallbackManager callbackManager = new CallbackManager(config, deviceInfo);
+        coreState.setCallbackManager(callbackManager);
+
+        SessionManager sessionManager = new SessionManager(config, coreMetaData, validator, localDataStore);
+        coreState.setSessionManager(sessionManager);
+
+        InAppFCManager inAppFCManager = null;
         if (coreState.getDeviceInfo() != null && coreState.getDeviceInfo().getDeviceID() != null) {
+            inAppFCManager = new InAppFCManager(context, config, coreState.getDeviceInfo().getDeviceID());
             coreState.getConfig().getLogger()
                     .verbose("Initializing InAppFC with device Id = " + coreState.getDeviceInfo().getDeviceID());
-            coreState.setInAppFCManager(new InAppFCManager(context, config, coreState.getDeviceInfo().getDeviceID()));
+            coreState.setInAppFCManager(inAppFCManager);
         }
-        coreState.setPushProviders(PushProviders.load(coreState));
-        coreState.setCTLockManager(new CTLockManager());
-        coreState.setCoreMetaData(new CoreMetaData());
-        coreState.setNetworkManager(new NetworkManager(coreState));
-        coreState.setDatabaseManager(new DBManager(coreState));
-        coreState.setEventMediator(new EventMediator(coreState));
+
+        DBManager baseDatabaseManager = new DBManager(config, ctLockManager);
+        coreState.setDatabaseManager(baseDatabaseManager);
+
         //config
 
-        coreState.setPostAsyncSafelyHandler(new PostAsyncSafelyHandler(coreState));
-        coreState.setMainLooperHandler(new MainLooperHandler());
-
-        coreState.setEventMediator(new EventMediator(coreState));
-        coreState.setEventProcessor(new EventProcessor(coreState));
-        coreState.setSessionManager(new SessionManager(coreState));
-        coreState.setCallbackManager(new CallbackManager(coreState));
         // initializing feature flag so that feature flag will automatically gets initialized
         coreState.getCtFeatureFlagsController();
-        coreState.setBaseEventQueueManager(new EventQueueManager(coreState));
-        coreState.setAnalyticsManager(new AnalyticsManager(coreState));
-        coreState.setLoginController(new LoginController(coreState));
-        coreState.setInAppController(new InAppController(coreState));
+
+
+
+        LocationManager locationManager = new LocationManager(context, config, coreMetaData, baseEventQueueManager);
+        coreState.setLocationManager(locationManager);
+
+        InAppController inAppController = new InAppController(context, config, mainLooperHandler,
+                postAsyncSafelyHandler, inAppFCManager, callbackManager, analyticsManager, coreMetaData);
+        coreState.setInAppController(inAppController);
+
+        NetworkManager networkManager = new NetworkManager(context, config, deviceInfo, coreMetaData,
+                validationResultStack, pushProviders, inAppFCManager, baseDatabaseManager, ctLockManager,baseEventQueueManager,
+                postAsyncSafelyHandler, inAppController,
+                coreState.getCtProductConfigController(), validator, coreState.getCtInboxController(),
+                coreState.getCTDisplayUnitController(), callbackManager, coreState.getCtFeatureFlagsController());
+        coreState.setNetworkManager(networkManager);
+
+
+        EventQueueManager baseEventQueueManager = new EventQueueManager(baseDatabaseManager, context, config, eventMediator,
+                sessionManager,
+                mainLooperHandler, postAsyncSafelyHandler, deviceInfo, validationResultStack,
+                networkManager, baseDatabaseManager, coreMetaData, ctLockManager, localDataStore);
+        coreState.setBaseEventQueueManager(baseEventQueueManager);
+
+        AnalyticsManager analyticsManager = new AnalyticsManager(context, config, baseEventQueueManager, validator,
+                validationResultStack, coreMetaData, postAsyncSafelyHandler, localDataStore, deviceInfo,
+                networkManager, mainLooperHandler, callbackManager);
+        coreState.setAnalyticsManager(analyticsManager);
+
+
+        PushProviders pushProviders = PushProviders
+                .load(context, config, baseDatabaseManager,  postAsyncSafelyHandler, validationResultStack,
+                        analyticsManager);
+        coreState.setPushProviders(pushProviders);
+
+
+
+        ActivityLifeCycleManager activityLifeCycleManager = new ActivityLifeCycleManager(context, config,
+                analyticsManager, coreMetaData, sessionManager, pushProviders, callbackManager, inAppController,
+                baseEventQueueManager, postAsyncSafelyHandler);
+        coreState.setActivityLifeCycleManager(activityLifeCycleManager);
+
+        LoginController loginController = new LoginController(coreState);
+        coreState.setLoginController(loginController);
         return coreState;
     }
 }

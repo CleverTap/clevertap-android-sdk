@@ -14,7 +14,6 @@ import com.clevertap.android.sdk.CallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.CoreMetaData;
-import com.clevertap.android.sdk.CoreState;
 import com.clevertap.android.sdk.InAppFCManager;
 import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.InAppNotificationActivity.InAppActivityListener;
@@ -92,17 +91,24 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     private final PostAsyncSafelyHandler mPostAsyncSafelyHandler;
 
 
-    public InAppController(final CoreState coreState) {
+    public InAppController(Context context,
+            CleverTapInstanceConfig config,
+            MainLooperHandler mainLooperHandler,
+            PostAsyncSafelyHandler postAsyncSafelyHandler,
+            InAppFCManager inAppFCManager,
+            CallbackManager callbackManager,
+            AnalyticsManager analyticsManager,
+            CoreMetaData coreMetaData) {
 
-        mConfig = coreState.getConfig();
+        mContext = context;
+        mConfig = config;
         mLogger = mConfig.getLogger();
-        mMainLooperHandler = coreState.getMainLooperHandler();
-        mContext = coreState.getContext();
-        mPostAsyncSafelyHandler = coreState.getPostAsyncSafelyHandler();
-        mInAppFCManager = coreState.getInAppFCManager();
-        mCallbackManager = coreState.getCallbackManager();
-        mAnalyticsManager = coreState.getAnalyticsManager();
-        mCoreMetaData = coreState.getCoreMetaData();
+        mMainLooperHandler = mainLooperHandler;
+        mPostAsyncSafelyHandler = postAsyncSafelyHandler;
+        mInAppFCManager = inAppFCManager;
+        mCallbackManager = callbackManager;
+        mAnalyticsManager = analyticsManager;
+        mCoreMetaData = coreMetaData;
     }
 
     public void checkExistingInAppNotifications(Activity activity) {

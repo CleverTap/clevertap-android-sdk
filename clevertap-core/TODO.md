@@ -10,3 +10,4 @@
 9. Revisit Utils class to move internal methods to CleverTapUtils class
 10. Test In-app/inbox/display-unit - piyush
 11. Callbackmanage weakreference listeners getters null check
+12. Add null check for InappFCManager

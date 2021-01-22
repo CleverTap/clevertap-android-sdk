@@ -2,6 +2,7 @@ package com.clevertap.android.sdk;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import java.util.ArrayList;
 import java.util.Iterator;
 import org.json.JSONArray;
@@ -10,22 +11,26 @@ import org.json.JSONObject;
 
 class ARPResponse extends CleverTapResponseDecorator {
 
+    private final CTProductConfigController mCTProductConfigController;
+
     private final CleverTapResponse mCleverTapResponse;
 
     private final CleverTapInstanceConfig mConfig;
-
 
     private final Logger mLogger;
 
     private final NetworkManager mNetworkManager;
 
-    ARPResponse(CleverTapResponse cleverTapResponse) {
-        mCleverTapResponse = cleverTapResponse;
-        CoreState coreState = getCoreState();
-        mConfig = coreState.getConfig();
-        mLogger = mConfig.getLogger();
-        mNetworkManager = (NetworkManager) coreState.getNetworkManager();
+    private final Validator mValidator;
 
+    ARPResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config, NetworkManager networkManager,
+            final CTProductConfigController ctProductConfigController, Validator validator) {
+        mCleverTapResponse = cleverTapResponse;
+        mConfig = config;
+        mCTProductConfigController = ctProductConfigController;
+        mLogger = mConfig.getLogger();
+        mNetworkManager = networkManager;
+        mValidator = validator;
     }
 
     @Override
@@ -35,8 +40,8 @@ class ARPResponse extends CleverTapResponseDecorator {
             if (response.has("arp")) {
                 final JSONObject arp = (JSONObject) response.get("arp");
                 if (arp.length() > 0) {
-                    if (getCoreState().getCtProductConfigController() != null) {
-                        getCoreState().getCtProductConfigController().setArpValue(arp);
+                    if (mCTProductConfigController != null) {
+                        mCTProductConfigController.setArpValue(arp);
                     }
                     //Handle Discarded events in ARP
                     try {
@@ -116,8 +121,8 @@ class ARPResponse extends CleverTapResponseDecorator {
                     discardedEventsList.add(discardedEventsArray.getString(i));
                 }
             }
-            if (getCoreState().getValidator() != null) {
-                getCoreState().getValidator().setDiscardedEvents(discardedEventsList);
+            if (mValidator != null) {
+                mValidator.setDiscardedEvents(discardedEventsList);
             } else {
                 mLogger.verbose(mConfig.getAccountId(), "Validator object is NULL");
             }

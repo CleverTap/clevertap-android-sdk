@@ -3,37 +3,39 @@ package com.clevertap.android.sdk;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-public class SessionManager extends BaseSessionManager{
+public class SessionManager extends BaseSessionManager {
+
+    private long appLastSeen = 0;
+
+    private int lastVisitTime;
 
     private final CoreMetaData mCleverTapMetaData;
 
     private final CleverTapInstanceConfig mConfig;
 
-    private final Validator mValidator;
-
     private final LocalDataStore mLocalDataStore;
 
-    public int getLastVisitTime() {
-        return lastVisitTime;
+    private final Validator mValidator;
+
+    public SessionManager(CleverTapInstanceConfig config, CoreMetaData coreMetaData, Validator validator,
+            LocalDataStore localDataStore) {
+        mConfig = config;
+        mCleverTapMetaData = coreMetaData;
+        mValidator = validator;
+        mLocalDataStore = localDataStore;
     }
 
-    private int lastVisitTime;
-
-    public long getAppLastSeen() {
-        return appLastSeen;
-    }
-
-    public void setAppLastSeen(final long appLastSeen) {
-        this.appLastSeen = appLastSeen;
-    }
-
-    private long appLastSeen = 0;
-
-    public SessionManager(final CoreState coreState) {
-        mCleverTapMetaData = coreState.getCoreMetaData();
-        mValidator = coreState.getValidator();
-        mConfig = coreState.getConfig();
-        mLocalDataStore = coreState.getLocalDataStore();
+    // SessionManager/session management
+    public void checkTimeoutSession() {
+        if (appLastSeen <= 0) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        if ((now - appLastSeen) > Constants.SESSION_LENGTH_MINS * 60 * 1000) {
+            mConfig.getLogger().verbose(mConfig.getAccountId(), "Session Timed Out");
+            destroySession();
+            CoreMetaData.setCurrentActivity(null);
+        }
     }
 
     @Override
@@ -50,6 +52,18 @@ public class SessionManager extends BaseSessionManager{
         mCleverTapMetaData.clearWzrkParams();
     }
 
+    public long getAppLastSeen() {
+        return appLastSeen;
+    }
+
+    public void setAppLastSeen(final long appLastSeen) {
+        this.appLastSeen = appLastSeen;
+    }
+
+    public int getLastVisitTime() {
+        return lastVisitTime;
+    }
+
     @Override
     void lazyCreateSession(Context context) {
         if (!mCleverTapMetaData.inCurrentSession()) {
@@ -58,6 +72,16 @@ public class SessionManager extends BaseSessionManager{
                 mValidator.setDiscardedEvents(null);
             }
             createSession(context);
+        }
+    }
+
+    //Session
+    void setLastVisitTime() {
+        EventDetail ed = mLocalDataStore.getEventDetail(Constants.APP_LAUNCHED_EVENT);
+        if (ed == null) {
+            lastVisitTime = -1;
+        } else {
+            lastVisitTime = ed.getLastTime();
         }
     }
 
@@ -87,29 +111,6 @@ public class SessionManager extends BaseSessionManager{
                 .putInt(StorageHelper.storageKeyWithSuffix(mConfig, Constants.SESSION_ID_LAST),
                         mCleverTapMetaData.getCurrentSession());
         StorageHelper.persist(editor);
-    }
-
-    //Session
-    void setLastVisitTime() {
-        EventDetail ed = mLocalDataStore.getEventDetail(Constants.APP_LAUNCHED_EVENT);
-        if (ed == null) {
-            lastVisitTime = -1;
-        } else {
-            lastVisitTime = ed.getLastTime();
-        }
-    }
-
-    // SessionManager/session management
-    public void checkTimeoutSession() {
-        if (appLastSeen <= 0) {
-            return;
-        }
-        long now = System.currentTimeMillis();
-        if ((now - appLastSeen) > Constants.SESSION_LENGTH_MINS * 60 * 1000) {
-            mConfig.getLogger().verbose(mConfig.getAccountId(), "Session Timed Out");
-            destroySession();
-            CoreMetaData.setCurrentActivity(null);
-        }
     }
 
 }

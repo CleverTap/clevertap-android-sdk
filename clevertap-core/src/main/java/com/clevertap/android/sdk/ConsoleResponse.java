@@ -13,10 +13,9 @@ class ConsoleResponse extends CleverTapResponseDecorator {
 
     private final Logger mLogger;
 
-    ConsoleResponse(CleverTapResponse cleverTapResponse) {
+    ConsoleResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config) {
         mCleverTapResponse = cleverTapResponse;
-        CoreState coreState = getCoreState();
-        mConfig = coreState.getConfig();
+        mConfig = config;
         mLogger = mConfig.getLogger();
     }
 

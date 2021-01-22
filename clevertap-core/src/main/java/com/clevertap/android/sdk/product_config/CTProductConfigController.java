@@ -9,7 +9,7 @@ import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.
 
 import android.content.Context;
 import android.text.TextUtils;
-import com.clevertap.android.sdk.BaseQueueManager;
+import com.clevertap.android.sdk.BaseEventQueueManager;
 import com.clevertap.android.sdk.CallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
@@ -48,7 +48,7 @@ public class CTProductConfigController {
 
     private boolean isInitialized = false;
 
-    private final BaseQueueManager mBaseQueueManager;
+    private final BaseEventQueueManager mBaseEventQueueManager;
 
     private final CallbackManager mCallbackManager;
 
@@ -63,12 +63,12 @@ public class CTProductConfigController {
     // -----------------------------------------------------------------------//
 
     public CTProductConfigController(Context context, String guid, CleverTapInstanceConfig config,
-            final BaseQueueManager baseQueueManager, final CoreMetaData coreMetaData,
+            final BaseEventQueueManager baseEventQueueManager, final CoreMetaData coreMetaData,
             final CallbackManager callbackManager) {
         this.context = context;
         this.guid = guid;
         this.config = config;
-        this.mBaseQueueManager = baseQueueManager;
+        this.mBaseEventQueueManager = baseEventQueueManager;
         mCoreMetaData = coreMetaData;
         mCallbackManager = callbackManager;
         this.settings = new ProductConfigSettings(context, guid, config);
@@ -165,7 +165,7 @@ public class CTProductConfigController {
             e.printStackTrace();
         }
 
-        mBaseQueueManager.queueEvent(context, event, Constants.FETCH_EVENT);
+        mBaseEventQueueManager.queueEvent(context, event, Constants.FETCH_EVENT);
         mCoreMetaData.setProductConfigRequested(true);
         config.getLogger()
                 .verbose(config.getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Fetching product config");

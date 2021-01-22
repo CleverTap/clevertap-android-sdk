@@ -25,11 +25,11 @@ public class CallbackManager {
 
     private CTInboxListener inboxListener;
 
-    private WeakReference<CTFeatureFlagsListener> mFeatureFlagListenerWeakReference;
-
     private final CleverTapInstanceConfig mConfig;
 
     private final DeviceInfo mDeviceInfo;
+
+    private WeakReference<CTFeatureFlagsListener> mFeatureFlagListenerWeakReference;
 
     private WeakReference<CTProductConfigListener> productConfigListener;
 
@@ -39,9 +39,9 @@ public class CallbackManager {
 
     private SyncListener syncListener = null;
 
-    CallbackManager(CoreState coreState) {
-        mConfig = coreState.getConfig();
-        mDeviceInfo = coreState.getDeviceInfo();
+    CallbackManager(CleverTapInstanceConfig config, DeviceInfo deviceInfo) {
+        mConfig = config;
+        mDeviceInfo = deviceInfo;
     }
 
     public CTFeatureFlagsListener getFeatureFlagListener() {

@@ -20,8 +20,8 @@ public class PostAsyncSafelyHandler {
 
     private final CleverTapInstanceConfig mConfig;
 
-    PostAsyncSafelyHandler(CoreState coreState) {
-        mConfig = coreState.getConfig();
+    PostAsyncSafelyHandler(CleverTapInstanceConfig config) {
+        mConfig = config;
         this.es = Executors.newFixedThreadPool(1);
         this.ns = Executors.newFixedThreadPool(1);
     }

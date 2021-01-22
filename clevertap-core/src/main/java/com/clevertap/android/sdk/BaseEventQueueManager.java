@@ -4,9 +4,7 @@ import android.content.Context;
 import java.util.concurrent.Future;
 import org.json.JSONObject;
 
-public abstract class BaseQueueManager {
-
-    public abstract void clearQueues(final Context context);
+public abstract class BaseEventQueueManager {
 
     public abstract Future<?> queueEvent(final Context context, final JSONObject event, final int eventType);
 

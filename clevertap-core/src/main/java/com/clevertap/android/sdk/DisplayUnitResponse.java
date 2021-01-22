@@ -13,18 +13,23 @@ class DisplayUnitResponse extends CleverTapResponseDecorator {
 
     private CTDisplayUnitController mCTDisplayUnitController;
 
+    private final CallbackManager mCallbackManager;
+
     private final CleverTapResponse mCleverTapResponse;
 
     private final CleverTapInstanceConfig mConfig;
 
     private final Logger mLogger;
 
-    DisplayUnitResponse(CleverTapResponse cleverTapResponse) {
+    DisplayUnitResponse(CleverTapResponse cleverTapResponse,
+            CleverTapInstanceConfig config,
+            CTDisplayUnitController ctDisplayUnitController,
+            CallbackManager callbackManager) {
         mCleverTapResponse = cleverTapResponse;
-        CoreState coreState = getCoreState();
-        mConfig = coreState.getConfig();
+        mConfig = config;
         mLogger = mConfig.getLogger();
-        mCTDisplayUnitController = coreState.getCTDisplayUnitController();
+        mCTDisplayUnitController = ctDisplayUnitController;
+        mCallbackManager = callbackManager;
     }
 
     //Logic for the processing of Display Unit response
@@ -81,11 +86,12 @@ class DisplayUnitResponse extends CleverTapResponseDecorator {
         synchronized (displayUnitControllerLock) {// lock to avoid multiple instance creation for controller
             if (mCTDisplayUnitController == null) {
                 mCTDisplayUnitController = new CTDisplayUnitController();
+                //TODO add a mechanism to transfer display unit lazily without using corestate instance
                 getCoreState().setCTDisplayUnitController(mCTDisplayUnitController);
             }
         }
         ArrayList<CleverTapDisplayUnit> displayUnits = mCTDisplayUnitController.updateDisplayUnits(messages);
 
-        getCoreState().getCallbackManager().notifyDisplayUnitsLoaded(displayUnits);
+        mCallbackManager.notifyDisplayUnitsLoaded(displayUnits);
     }
 }

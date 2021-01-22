@@ -7,7 +7,7 @@ import org.json.JSONObject;
 @RestrictTo(Scope.LIBRARY_GROUP)
 public abstract class BaseDatabaseManager {
 
-    abstract void flushDBQueue(final Context context, final EventGroup eventGroup);
+    public abstract void clearQueues(final Context context);
 
     abstract void queueEventToDB(final Context context, final JSONObject event, final int type);
 

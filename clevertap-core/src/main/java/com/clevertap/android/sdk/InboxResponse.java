@@ -8,19 +8,25 @@ class InboxResponse extends CleverTapResponseDecorator {
 
     private final Object inboxControllerLock;
 
+    private final CTInboxController mCTInboxController;
+
+    private final CallbackManager mCallbackManager;
+
     private final CleverTapResponse mCleverTapResponse;
 
     private final CleverTapInstanceConfig mConfig;
 
     private final Logger mLogger;
 
-    InboxResponse(CleverTapResponse cleverTapResponse) {
+    InboxResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config, CTLockManager ctLockManager,
+            final CTInboxController ctInboxController,
+            final CallbackManager callbackManager) {
         mCleverTapResponse = cleverTapResponse;
-        CoreState coreState = getCoreState();
-        mConfig = coreState.getConfig();
+        mConfig = config;
+        mCTInboxController = ctInboxController;
+        mCallbackManager = callbackManager;
         mLogger = mConfig.getLogger();
-        inboxControllerLock = coreState.getCTLockManager().getInboxControllerLock();
-
+        inboxControllerLock = ctLockManager.getInboxControllerLock();
     }
 
     //NotificationInbox
@@ -59,13 +65,13 @@ class InboxResponse extends CleverTapResponseDecorator {
     // always call async
     private void _processInboxMessages(JSONArray messages) {
         synchronized (inboxControllerLock) {
-            if (getCoreState().getCtInboxController() == null) {
-                getCoreState().initializeInbox();
+            if (mCTInboxController == null) {
+                mCTInboxController.initializeInbox();
             }
-            if (getCoreState().getCtInboxController() != null) {
-                boolean update = getCoreState().getCtInboxController().updateMessages(messages);
+            if (mCTInboxController != null) {
+                boolean update = mCTInboxController.updateMessages(messages);
                 if (update) {
-                    getCoreState().getCallbackManager()._notifyInboxMessagesDidUpdate();
+                    mCallbackManager._notifyInboxMessagesDidUpdate();
                 }
             }
         }

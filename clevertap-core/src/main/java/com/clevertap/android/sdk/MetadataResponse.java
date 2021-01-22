@@ -16,14 +16,13 @@ class MetadataResponse extends CleverTapResponseDecorator {
 
     private final NetworkManager mNetworkManager;
 
-    MetadataResponse(CleverTapResponse cleverTapResponse) {
+    MetadataResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config, DeviceInfo deviceInfo,
+            NetworkManager networkManager) {
         mCleverTapResponse = cleverTapResponse;
-        CoreState coreState = getCoreState();
-        mConfig = coreState.getConfig();
+        mConfig = config;
         mLogger = mConfig.getLogger();
-        mDeviceInfo = coreState.getDeviceInfo();
-        mNetworkManager = (NetworkManager) coreState.getNetworkManager();
-
+        mDeviceInfo = deviceInfo;
+        mNetworkManager = networkManager;
     }
 
 

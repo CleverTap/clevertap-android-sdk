@@ -1,11 +1,14 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
+import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 class FeatureFlagResponse extends CleverTapResponseDecorator {
+
+    private final CTFeatureFlagsController mCTFeatureFlagsController;
 
     private final CleverTapResponse mCleverTapResponse;
 
@@ -13,12 +16,13 @@ class FeatureFlagResponse extends CleverTapResponseDecorator {
 
     private final Logger mLogger;
 
-    FeatureFlagResponse(CleverTapResponse cleverTapResponse) {
+    FeatureFlagResponse(CleverTapResponse cleverTapResponse,
+            CleverTapInstanceConfig config,
+            final CTFeatureFlagsController ctFeatureFlagsController) {
         mCleverTapResponse = cleverTapResponse;
-        CoreState coreState = getCoreState();
-        mConfig = coreState.getConfig();
+        mConfig = config;
+        mCTFeatureFlagsController = ctFeatureFlagsController;
         mLogger = mConfig.getLogger();
-
     }
 
     @Override
@@ -61,8 +65,8 @@ class FeatureFlagResponse extends CleverTapResponseDecorator {
     private void parseFeatureFlags(JSONObject responseKV) throws JSONException {
         JSONArray kvArray = responseKV.getJSONArray(Constants.KEY_KV);
 
-        if (kvArray != null && getCoreState().getCtFeatureFlagsController() != null) {
-            getCoreState().getCtFeatureFlagsController().updateFeatureFlags(responseKV);
+        if (kvArray != null && mCTFeatureFlagsController != null) {
+            mCTFeatureFlagsController.updateFeatureFlags(responseKV);
         }
     }
 }

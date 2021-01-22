@@ -15,7 +15,7 @@ class LocationManager extends BaseLocationManager {
 
     private int lastLocationPingTimeForGeofence = 0;
 
-    private final BaseQueueManager mBaseQueueManager;
+    private final BaseEventQueueManager mBaseEventQueueManager;
 
     private final CleverTapInstanceConfig mConfig;
 
@@ -23,67 +23,25 @@ class LocationManager extends BaseLocationManager {
 
     private final CoreMetaData mCoreMetaData;
 
-    private final DeviceInfo mDeviceInfo;
-
     private final Logger mLogger;
 
-    LocationManager(CoreState coreState) {
-        mContext = coreState.getContext();
-        mConfig = coreState.getConfig();
-        mDeviceInfo = coreState.getDeviceInfo();
+    LocationManager(Context context,
+            CleverTapInstanceConfig config,
+            CoreMetaData coreMetaData,
+            BaseEventQueueManager baseEventQueueManager) {
+        mContext = context;
+        mConfig = config;
         mLogger = mConfig.getLogger();
-
-        mCoreMetaData = coreState.getCoreMetaData();
-        mBaseQueueManager = coreState.getBaseEventQueueManager();
-    }
-
-    @Override
-    Future<?> _setLocation(Location location) {
-        if (location == null) {
-            return null;
-        }
-
-        mCoreMetaData.setLocationFromUser(location);
-        mLogger.verbose(mConfig.getAccountId(),
-                "Location updated (" + location.getLatitude() + ", " + location.getLongitude() + ")");
-
-        // only queue the location ping if we are in the foreground
-        if (!mCoreMetaData.isLocationForGeofence() && !isAppForeground()) {
-            return null;
-        }
-
-        // Queue the ping event to transmit location update to server
-        // min 10 second interval between location pings
-        final int now = (int) (System.currentTimeMillis() / 1000);
-        Future<?> future = null;
-
-        if (mCoreMetaData.isLocationForGeofence() && now > (lastLocationPingTimeForGeofence
-                + Constants.LOCATION_PING_INTERVAL_IN_SECONDS)) {
-
-            future = mBaseQueueManager.queueEvent(mContext, new JSONObject(), Constants.PING_EVENT);
-            lastLocationPingTimeForGeofence = now;
-            mLogger.verbose(mConfig.getAccountId(),
-                    "Queuing location ping event for geofence location (" + location.getLatitude() + ", " + location
-                            .getLongitude() + ")");
-
-        } else if (!mCoreMetaData.isLocationForGeofence() && now > (lastLocationPingTime
-                + Constants.LOCATION_PING_INTERVAL_IN_SECONDS)) {
-
-            future = mBaseQueueManager.queueEvent(mContext, new JSONObject(), Constants.PING_EVENT);
-            lastLocationPingTime = now;
-            mLogger.verbose(mConfig.getAccountId(),
-                    "Queuing location ping event for location (" + location.getLatitude() + ", " + location
-                            .getLongitude() + ")");
-        }
-
-        return future;
+        mCoreMetaData = coreMetaData;
+        mBaseEventQueueManager = baseEventQueueManager;
     }
 
     @SuppressLint("MissingPermission")
     @Override
     public Location _getLocation() {
         try {
-            android.location.LocationManager lm = (android.location.LocationManager) mContext.getSystemService(Context.LOCATION_SERVICE);
+            android.location.LocationManager lm = (android.location.LocationManager) mContext
+                    .getSystemService(Context.LOCATION_SERVICE);
             if (lm == null) {
                 Logger.d("Location Manager is null.");
                 return null;
@@ -112,6 +70,48 @@ class LocationManager extends BaseLocationManager {
             Logger.v("Couldn't get user's location", t);
             return null;
         }
+    }
+
+    @Override
+    Future<?> _setLocation(Location location) {
+        if (location == null) {
+            return null;
+        }
+
+        mCoreMetaData.setLocationFromUser(location);
+        mLogger.verbose(mConfig.getAccountId(),
+                "Location updated (" + location.getLatitude() + ", " + location.getLongitude() + ")");
+
+        // only queue the location ping if we are in the foreground
+        if (!mCoreMetaData.isLocationForGeofence() && !isAppForeground()) {
+            return null;
+        }
+
+        // Queue the ping event to transmit location update to server
+        // min 10 second interval between location pings
+        final int now = (int) (System.currentTimeMillis() / 1000);
+        Future<?> future = null;
+
+        if (mCoreMetaData.isLocationForGeofence() && now > (lastLocationPingTimeForGeofence
+                + Constants.LOCATION_PING_INTERVAL_IN_SECONDS)) {
+
+            future = mBaseEventQueueManager.queueEvent(mContext, new JSONObject(), Constants.PING_EVENT);
+            lastLocationPingTimeForGeofence = now;
+            mLogger.verbose(mConfig.getAccountId(),
+                    "Queuing location ping event for geofence location (" + location.getLatitude() + ", " + location
+                            .getLongitude() + ")");
+
+        } else if (!mCoreMetaData.isLocationForGeofence() && now > (lastLocationPingTime
+                + Constants.LOCATION_PING_INTERVAL_IN_SECONDS)) {
+
+            future = mBaseEventQueueManager.queueEvent(mContext, new JSONObject(), Constants.PING_EVENT);
+            lastLocationPingTime = now;
+            mLogger.verbose(mConfig.getAccountId(),
+                    "Queuing location ping event for location (" + location.getLatitude() + ", " + location
+                            .getLongitude() + ")");
+        }
+
+        return future;
     }
 
 }

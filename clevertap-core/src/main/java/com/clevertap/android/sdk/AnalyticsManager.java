@@ -23,7 +23,7 @@ public class AnalyticsManager {
 
     private final HashMap<String, Integer> installReferrerMap = new HashMap<>(8);
 
-    private final BaseQueueManager mBaseQueueManager;
+    private final BaseEventQueueManager mBaseEventQueueManager;
 
     private final CTDisplayUnitController mCTDisplayUnitController;
 
@@ -55,21 +55,33 @@ public class AnalyticsManager {
 
     private final HashMap<String, Object> notificationViewedIdTagMap = new HashMap<>();
 
-    AnalyticsManager(CoreState coreState) {
-        mBaseQueueManager = coreState.getBaseEventQueueManager();
-
-        mValidator = coreState.getValidator();
-        mValidationResultStack = coreState.getValidationResultStack();
-        mConfig = coreState.getConfig();
-        mContext = coreState.getContext();
-        mCoreMetaData = coreState.getCoreMetaData();
-        mPostAsyncSafelyHandler = coreState.getPostAsyncSafelyHandler();
-        mLocalDataStore = coreState.getLocalDataStore();
-        mDeviceInfo = coreState.getDeviceInfo();
-        mNetworkManager = (NetworkManager) coreState.getNetworkManager();
-        mMainLooperHandler = coreState.getMainLooperHandler();
-        mCallbackManager = coreState.getCallbackManager();
-        mCTDisplayUnitController = coreState.getCTDisplayUnitController();
+    AnalyticsManager(Context context,
+            CleverTapInstanceConfig config,
+            BaseEventQueueManager baseEventQueueManager,
+            Validator validator,
+            ValidationResultStack validationResultStack,
+            CoreMetaData coreMetaData,
+            PostAsyncSafelyHandler postAsyncSafelyHandler,
+            LocalDataStore localDataStore,
+            DeviceInfo deviceInfo,
+            NetworkManager networkManager,
+            MainLooperHandler mainLooperHandler,
+            CallbackManager callbackManager) {
+        mContext = context;
+        mConfig = config;
+        mBaseEventQueueManager = baseEventQueueManager;
+        mValidator = validator;
+        mValidationResultStack = validationResultStack;
+        mCoreMetaData = coreMetaData;
+        mPostAsyncSafelyHandler = postAsyncSafelyHandler;
+        mLocalDataStore = localDataStore;
+        mDeviceInfo = deviceInfo;
+        mNetworkManager = networkManager;
+        mMainLooperHandler = mainLooperHandler;
+        mCallbackManager = callbackManager;
+        //TODO set display unit using observer pattern once it's created lazily, check for it's usage in
+        // pushDisplayUnitClickedEventForID & pushDisplayUnitViewedEventForID
+//        mCTDisplayUnitController = ctDisplayUnitController;
     }
 
     public void addMultiValuesForKey(final String key, final ArrayList<String> values) {
@@ -101,7 +113,7 @@ public class AnalyticsManager {
             e.printStackTrace();
         }
 
-        mBaseQueueManager.queueEvent(mContext, event, Constants.FETCH_EVENT);
+        mBaseEventQueueManager.queueEvent(mContext, event, Constants.FETCH_EVENT);
     }
 
     //Event
@@ -134,7 +146,7 @@ public class AnalyticsManager {
         } catch (Throwable t) {
             // We won't get here
         }
-        mBaseQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
+        mBaseEventQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
     }
 
     public void pushDisplayUnitClickedEventForID(String unitID) {
@@ -160,11 +172,37 @@ public class AnalyticsManager {
                 }
             }
 
-            mBaseQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
+            mBaseEventQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
         } catch (Throwable t) {
             // We won't get here
             mConfig.getLogger().verbose(mConfig.getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "Failed to push Display Unit clicked event" + t);
+        }
+    }
+
+    public void pushDisplayUnitViewedEventForID(String unitID) {
+        JSONObject event = new JSONObject();
+
+        try {
+            event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
+
+            //wzrk fields
+            if (mCTDisplayUnitController != null) {
+                CleverTapDisplayUnit displayUnit = mCTDisplayUnitController
+                        .getDisplayUnitForID(unitID);
+                if (displayUnit != null) {
+                    JSONObject eventExtras = displayUnit.getWZRKFields();
+                    if (eventExtras != null) {
+                        event.put("evtData", eventExtras);
+                    }
+                }
+            }
+
+            mBaseEventQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
+        } catch (Throwable t) {
+            // We won't get here
+            mConfig.getLogger().verbose(mConfig.getAccountId(),
+                    Constants.FEATURE_DISPLAY_UNIT + "Failed to push Display Unit viewed event" + t);
         }
     }
 
@@ -254,7 +292,7 @@ public class AnalyticsManager {
             }
             event.put("evtName", eventName);
             event.put("evtData", actions);
-            mBaseQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
+            mBaseEventQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
         } catch (Throwable t) {
             // We won't get here
         }
@@ -296,7 +334,7 @@ public class AnalyticsManager {
             }
 
             event.put("evtData", notif);
-            mBaseQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
+            mBaseEventQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
         } catch (Throwable ignored) {
             // We won't get here
         }
@@ -326,6 +364,47 @@ public class AnalyticsManager {
             pushDeepLink(uri, true);
         } catch (Throwable t) {
             // no-op
+        }
+    }
+
+    public synchronized void pushInstallReferrer(String source, String medium, String campaign) {
+        if (source == null && medium == null && campaign == null) {
+            return;
+        }
+        try {
+            // If already pushed, don't send it again
+            int status = StorageHelper.getInt(mContext, "app_install_status", 0);
+            if (status != 0) {
+                Logger.d("Install referrer has already been set. Will not override it");
+                return;
+            }
+            StorageHelper.putInt(mContext, "app_install_status", 1);
+
+            if (source != null) {
+                source = Uri.encode(source);
+            }
+            if (medium != null) {
+                medium = Uri.encode(medium);
+            }
+            if (campaign != null) {
+                campaign = Uri.encode(campaign);
+            }
+
+            String uriStr = "wzrk://track?install=true";
+            if (source != null) {
+                uriStr += "&utm_source=" + source;
+            }
+            if (medium != null) {
+                uriStr += "&utm_medium=" + medium;
+            }
+            if (campaign != null) {
+                uriStr += "&utm_campaign=" + campaign;
+            }
+
+            Uri uri = Uri.parse(uriStr);
+            pushDeepLink(uri, true);
+        } catch (Throwable t) {
+            Logger.v("Failed to push install referrer", t);
         }
     }
 
@@ -445,7 +524,7 @@ public class AnalyticsManager {
 
             event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
             event.put("evtData", notif);
-            mBaseQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
+            mBaseEventQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
 
             try {
                 mCoreMetaData.setWzrkParams(getWzrkFields(extras));
@@ -506,7 +585,7 @@ public class AnalyticsManager {
         } catch (Throwable ignored) {
             //no-op
         }
-        mBaseQueueManager.queueEvent(mContext, event, Constants.NV_EVENT);
+        mBaseEventQueueManager.queueEvent(mContext, event, Constants.NV_EVENT);
     }
 
     public void pushProfile(final Map<String, Object> profile) {
@@ -538,6 +617,10 @@ public class AnalyticsManager {
                 _removeValueForKey(key);
             }
         });
+    }
+
+    public void senDataEvent(final JSONObject event) {
+        mBaseEventQueueManager.queueEvent(mContext, event, Constants.DATA_EVENT);
     }
 
     void _generateEmptyMultiValueError(String key) {
@@ -631,7 +714,7 @@ public class AnalyticsManager {
 
             chargedEvent.put("evtName", Constants.CHARGED_EVENT);
             chargedEvent.put("evtData", evtData);
-            mBaseQueueManager.queueEvent(mContext, chargedEvent, Constants.RAISED_EVENT);
+            mBaseEventQueueManager.queueEvent(mContext, chargedEvent, Constants.RAISED_EVENT);
         } catch (Throwable t) {
             // We won't get here
         }
@@ -683,7 +766,7 @@ public class AnalyticsManager {
 
             mCoreMetaData.setLocationFromUser(location);
 
-            future = mBaseQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
+            future = mBaseEventQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
         } catch (JSONException e) {
             mConfig.getLogger().debug(mConfig.getAccountId(), Constants.LOG_TAG_GEOFENCES +
                     "JSON Exception when raising GeoFence event "
@@ -708,7 +791,7 @@ public class AnalyticsManager {
                     }
                 }
             }
-            mBaseQueueManager.queueEvent(mContext, jsonObject, Constants.PAGE_EVENT);
+            mBaseEventQueueManager.queueEvent(mContext, jsonObject, Constants.PAGE_EVENT);
         } catch (Throwable t) {
             // We won't get here
         }
@@ -965,7 +1048,7 @@ public class AnalyticsManager {
                 mLocalDataStore.setProfileFields(fieldsToUpdateLocally);
             }
 
-            mBaseQueueManager.pushBasicProfile(customProfile);
+            mBaseEventQueueManager.pushBasicProfile(customProfile);
 
         } catch (Throwable t) {
             // Will not happen
@@ -1001,7 +1084,7 @@ public class AnalyticsManager {
             // send the delete command
             JSONObject command = new JSONObject().put(Constants.COMMAND_DELETE, true);
             JSONObject update = new JSONObject().put(key, command);
-            mBaseQueueManager.pushBasicProfile(update);
+            mBaseEventQueueManager.pushBasicProfile(update);
 
             mConfig.getLogger()
                     .verbose(mConfig.getAccountId(), "removing value for key " + key + " from user profile");
@@ -1071,7 +1154,7 @@ public class AnalyticsManager {
             JSONObject fields = new JSONObject();
             fields.put(key, commandObj);
 
-            mBaseQueueManager.pushBasicProfile(fields);
+            mBaseEventQueueManager.pushBasicProfile(fields);
 
             mConfig.getLogger()
                     .verbose(mConfig.getAccountId(), "Constructed multi-value profile push: " + fields.toString());
@@ -1106,70 +1189,8 @@ public class AnalyticsManager {
         }
     }
 
-    public void pushDisplayUnitViewedEventForID(String unitID) {
-        JSONObject event = new JSONObject();
-
-        try {
-            event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
-
-            //wzrk fields
-            if (mCTDisplayUnitController != null) {
-                CleverTapDisplayUnit displayUnit = mCTDisplayUnitController
-                        .getDisplayUnitForID(unitID);
-                if (displayUnit != null) {
-                    JSONObject eventExtras = displayUnit.getWZRKFields();
-                    if (eventExtras != null) {
-                        event.put("evtData", eventExtras);
-                    }
-                }
-            }
-
-            mBaseQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
-        } catch (Throwable t) {
-            // We won't get here
-            mConfig.getLogger().verbose(mConfig.getAccountId(),
-                    Constants.FEATURE_DISPLAY_UNIT + "Failed to push Display Unit viewed event" + t);
-        }
-    }
-
-    public synchronized void pushInstallReferrer(String source, String medium, String campaign) {
-        if (source == null && medium == null && campaign == null) {
-            return;
-        }
-        try {
-            // If already pushed, don't send it again
-            int status = StorageHelper.getInt(mContext, "app_install_status", 0);
-            if (status != 0) {
-                Logger.d("Install referrer has already been set. Will not override it");
-                return;
-            }
-            StorageHelper.putInt(mContext, "app_install_status", 1);
-
-            if (source != null) {
-                source = Uri.encode(source);
-            }
-            if (medium != null) {
-                medium = Uri.encode(medium);
-            }
-            if (campaign != null) {
-                campaign = Uri.encode(campaign);
-            }
-
-            String uriStr = "wzrk://track?install=true";
-            if (source != null) {
-                uriStr += "&utm_source=" + source;
-            }
-            if (medium != null) {
-                uriStr += "&utm_medium=" + medium;
-            }
-            if (campaign != null) {
-                uriStr += "&utm_campaign=" + campaign;
-            }
-
-            Uri uri = Uri.parse(uriStr);
-            pushDeepLink(uri, true);
-        } catch (Throwable t) {
-            Logger.v("Failed to push install referrer", t);
-        }
+    public void sendPingEvent(final JSONObject eventObject){
+        mBaseEventQueueManager
+                .queueEvent(mContext, eventObject, Constants.PING_EVENT);
     }
 }

@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
+import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -8,18 +9,26 @@ import org.json.JSONObject;
 class ProductConfigResponse extends CleverTapResponseDecorator {
 
 
+    private final CTProductConfigController mCTProductConfigController;
+
     private final CleverTapResponse mCleverTapResponse;
 
     private final CleverTapInstanceConfig mConfig;
 
+    private final CoreMetaData mCoreMetaData;
+
     private final Logger mLogger;
 
-    ProductConfigResponse(CleverTapResponse cleverTapResponse) {
+    ProductConfigResponse(CleverTapResponse cleverTapResponse,
+            CleverTapInstanceConfig config,
+            CoreMetaData coreMetaData,
+            CTProductConfigController ctProductConfigController) {
         mCleverTapResponse = cleverTapResponse;
-        CoreState coreState = getCoreState();
-        mConfig = coreState.getConfig();
+        mConfig = config;
         mLogger = mConfig.getLogger();
 
+        mCoreMetaData = coreMetaData;
+        mCTProductConfigController = ctProductConfigController;
     }
 
     @Override
@@ -62,20 +71,21 @@ class ProductConfigResponse extends CleverTapResponseDecorator {
         mCleverTapResponse.processResponse(response, stringBody, context);
 
     }
+
     private void onProductConfigFailed() {
-        if (getCoreState().getCoreMetaData().isProductConfigRequested()) {
-            if (getCoreState().getCtProductConfigController() != null) {
-                getCoreState().getCtProductConfigController().onFetchFailed();
+        if (mCoreMetaData.isProductConfigRequested()) {
+            if (mCTProductConfigController != null) {
+                mCTProductConfigController.onFetchFailed();
             }
-            getCoreState().getCoreMetaData().setProductConfigRequested(false);
+            mCoreMetaData.setProductConfigRequested(false);
         }
     }
 
     private void parseProductConfigs(JSONObject responseKV) throws JSONException {
         JSONArray kvArray = responseKV.getJSONArray(Constants.KEY_KV);
 
-        if (kvArray != null && getCoreState().getCtProductConfigController() != null) {
-            getCoreState().getCtProductConfigController().onFetchSuccess(responseKV);
+        if (kvArray != null && mCTProductConfigController != null) {
+            mCTProductConfigController.onFetchSuccess(responseKV);
         } else {
             onProductConfigFailed();
         }

@@ -30,8 +30,6 @@ public class CoreState extends CleverTapState {
 
     private EventMediator eventMediator;
 
-    private EventProcessor eventProcessor;
-
     private InAppFCManager inAppFCManager;
 
     private LocalDataStore localDataStore;
@@ -40,7 +38,7 @@ public class CoreState extends CleverTapState {
 
     private AnalyticsManager mAnalyticsManager;
 
-    private BaseQueueManager mBaseEventQueueManager;
+    private BaseEventQueueManager mBaseEventQueueManager;
 
     private CTDisplayUnitController mCTDisplayUnitController;
 
@@ -86,11 +84,11 @@ public class CoreState extends CleverTapState {
         mAnalyticsManager = analyticsManager;
     }
 
-    public BaseQueueManager getBaseEventQueueManager() {
+    public BaseEventQueueManager getBaseEventQueueManager() {
         return mBaseEventQueueManager;
     }
 
-    void setBaseEventQueueManager(final BaseQueueManager baseEventQueueManager) {
+    void setBaseEventQueueManager(final BaseEventQueueManager baseEventQueueManager) {
         this.mBaseEventQueueManager = baseEventQueueManager;
     }
 
@@ -314,14 +312,6 @@ public class CoreState extends CleverTapState {
 
     void setEventMediator(final EventMediator eventMediator) {
         this.eventMediator = eventMediator;
-    }
-
-    EventProcessor getEventProcessor() {
-        return eventProcessor;
-    }
-
-    void setEventProcessor(final EventProcessor eventProcessor) {
-        this.eventProcessor = eventProcessor;
     }
 
     @Override
