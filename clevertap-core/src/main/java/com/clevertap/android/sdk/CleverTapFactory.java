@@ -36,6 +36,8 @@ class CleverTapFactory {
         coreState.setEventProcessor(new EventProcessor(coreState));
         coreState.setSessionManager(new SessionManager(coreState));
         coreState.setCallbackManager(new CallbackManager(coreState));
+        // initializing feature flag so that feature flag will automatically gets initialized
+        coreState.getCtFeatureFlagsController();
         coreState.setBaseEventQueueManager(new EventQueueManager(coreState));
         coreState.setAnalyticsManager(new AnalyticsManager(coreState));
         coreState.setLoginController(new LoginController(coreState));

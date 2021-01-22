@@ -3,7 +3,6 @@ package com.clevertap.android.sdk.pushnotification;
 import static android.content.Context.JOB_SCHEDULER_SERVICE;
 import static android.content.Context.NOTIFICATION_SERVICE;
 import static com.clevertap.android.sdk.BuildConfig.VERSION_CODE;
-import static com.clevertap.android.sdk.CTJsonConverter.getWzrkFields;
 import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getPushTypes;
 
 import android.annotation.SuppressLint;
@@ -34,20 +33,17 @@ import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationCompat;
+import com.clevertap.android.sdk.AnalyticsManager;
 import com.clevertap.android.sdk.BaseDatabaseManager;
 import com.clevertap.android.sdk.BaseQueueManager;
 import com.clevertap.android.sdk.CTExecutors;
-import com.clevertap.android.sdk.CTJsonConverter;
-import com.clevertap.android.sdk.CallbackManager;
 import com.clevertap.android.sdk.CleverTapAPI.DevicePushTokenRefreshListener;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.CoreState;
 import com.clevertap.android.sdk.DBAdapter;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.MainLooperHandler;
 import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.PostAsyncSafelyHandler;
 import com.clevertap.android.sdk.StorageHelper;
@@ -63,7 +59,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import org.json.JSONArray;
@@ -83,32 +78,23 @@ public class PushProviders {
 
     private final ArrayList<PushConstants.PushType> customEnabledPushTypes = new ArrayList<>();
 
+    private final AnalyticsManager mAnalyticsManager;
+
     private final BaseDatabaseManager mBaseDatabaseManager;
 
     private final BaseQueueManager mBaseQueueManager;
-
-    private final CallbackManager mCallbackManager;
 
     private final CleverTapInstanceConfig mConfig;
 
     private final Context mContext;
 
-    private final CoreMetaData mCoreMetaData;
-
     private final PostAsyncSafelyHandler mPostAsyncSafelyHandler;
 
     private final ValidationResultStack mValidationResultStack;
 
-    private final HashMap<String, Object> notificationIdTagMap = new HashMap<>();
-
-    private final Object notificationMapLock = new Object();
-
-    private final HashMap<String, Object> notificationViewedIdTagMap = new HashMap<>();
-
     private final Object tokenLock = new Object();
 
     private DevicePushTokenRefreshListener tokenRefreshListener;
-    private final MainLooperHandler mMainLooperHandler;
 
     /**
      * Factory method to load push providers.
@@ -130,10 +116,81 @@ public class PushProviders {
         mBaseQueueManager = coreState.getBaseEventQueueManager();
         mPostAsyncSafelyHandler = coreState.getPostAsyncSafelyHandler();
         mValidationResultStack = coreState.getValidationResultStack();
-        mCoreMetaData = coreState.getCoreMetaData();
-        mCallbackManager = coreState.getCallbackManager();
-        mMainLooperHandler = coreState.getMainLooperHandler();
+        mAnalyticsManager = coreState.getAnalyticsManager();
         initPushAmp();
+    }
+
+    /**
+     * Launches an asynchronous task to download the notification icon from CleverTap,
+     * and create the Android notification.
+     * <p/>
+     * If your app is using CleverTap SDK's built in FCM message handling,
+     * this method does not need to be called explicitly.
+     * <p/>
+     * Use this method when implementing your own FCM handling mechanism. Refer to the
+     * SDK documentation for usage scenarios and examples.
+     *
+     * @param context        A reference to an Android context
+     * @param extras         The {@link Bundle} object received by the broadcast receiver
+     * @param notificationId A custom id to build a notification
+     */
+    public void _createNotification(final Context context, final Bundle extras, final int notificationId) {
+        if (extras == null || extras.get(Constants.NOTIFICATION_TAG) == null) {
+            return;
+        }
+
+        if (mConfig.isAnalyticsOnly()) {
+            mConfig.getLogger()
+                    .debug(mConfig.getAccountId(), "Instance is set for Analytics only, cannot create notification");
+            return;
+        }
+
+        try {
+            mPostAsyncSafelyHandler
+                    .postAsyncSafely("CleverTapAPI#_createNotification", new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                mConfig.getLogger()
+                                        .debug(mConfig.getAccountId(), "Handling notification: " + extras.toString());
+                                if (extras.getString(Constants.WZRK_PUSH_ID) != null) {
+                                    if (mBaseDatabaseManager.loadDBAdapter(context)
+                                            .doesPushNotificationIdExist(extras.getString(Constants.WZRK_PUSH_ID))) {
+                                        mConfig.getLogger().debug(mConfig.getAccountId(),
+                                                "Push Notification already rendered, not showing again");
+                                        return;
+                                    }
+                                }
+                                String notifMessage = extras.getString(Constants.NOTIF_MSG);
+                                notifMessage = (notifMessage != null) ? notifMessage : "";
+                                if (notifMessage.isEmpty()) {
+                                    //silent notification
+                                    mConfig.getLogger()
+                                            .verbose(mConfig.getAccountId(),
+                                                    "Push notification message is empty, not rendering");
+                                    mBaseDatabaseManager.loadDBAdapter(context)
+                                            .storeUninstallTimestamp();
+                                    String pingFreq = extras.getString("pf", "");
+                                    if (!TextUtils.isEmpty(pingFreq)) {
+                                        updatePingFrequencyIfNeeded(context, Integer.parseInt(pingFreq));
+                                    }
+                                    return;
+                                }
+                                String notifTitle = extras.getString(Constants.NOTIF_TITLE, "");
+                                notifTitle = notifTitle.isEmpty() ? context.getApplicationInfo().name : notifTitle;
+                                triggerNotification(context, extras, notifMessage, notifTitle, notificationId);
+                            } catch (Throwable t) {
+                                // Occurs if the notification image was null
+                                // Let's return, as we couldn't get a handle on the app's icon
+                                // Some devices throw a PackageManager* exception too
+                                mConfig.getLogger()
+                                        .debug(mConfig.getAccountId(), "Couldn't render notification: ", t);
+                            }
+                        }
+                    });
+        } catch (Throwable t) {
+            mConfig.getLogger().debug(mConfig.getAccountId(), "Failed to process push notification", t);
+        }
     }
 
     /**
@@ -239,22 +296,6 @@ public class PushProviders {
         return tokenRefreshListener;
     }
 
-    private void initPushAmp() {
-        if (mConfig.isBackgroundSync() && !mConfig
-                .isAnalyticsOnly()) {
-            mPostAsyncSafelyHandler.postAsyncSafely("createOrResetJobScheduler", new Runnable() {
-                @Override
-                public void run() {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                        createOrResetJobScheduler(mContext);
-                    } else {
-                        createAlarmScheduler(mContext);
-                    }
-                }
-            });
-        }
-    }
-
     public void setDevicePushTokenRefreshListener(final DevicePushTokenRefreshListener tokenRefreshListener) {
         this.tokenRefreshListener = tokenRefreshListener;
     }
@@ -295,190 +336,45 @@ public class PushProviders {
         }
     }
 
-    public void pushNotificationClickedEvent(final Bundle extras) {
-
-        if (mConfig.isAnalyticsOnly()) {
-            mConfig.getLogger()
-                    .debug(mConfig.getAccountId(),
-                            "is Analytics Only - will not process Notification Clicked event.");
-            return;
-        }
-
-        if (extras == null || extras.isEmpty() || extras.get(Constants.NOTIFICATION_TAG) == null) {
-            mConfig.getLogger().debug(mConfig.getAccountId(),
-                    "Push notification: " + (extras == null ? "NULL" : extras.toString())
-                            + " not from CleverTap - will not process Notification Clicked event.");
-            return;
-        }
-
-        String accountId = null;
-        try {
-            accountId = extras.getString(Constants.WZRK_ACCT_ID_KEY);
-        } catch (Throwable t) {
-            // no-op
-        }
-
-        boolean shouldProcess = (accountId == null && mConfig.isDefaultInstance())
-                || mConfig.getAccountId()
-                .equals(accountId);
-
-        if (!shouldProcess) {
-            mConfig.getLogger().debug(mConfig.getAccountId(),
-                    "Push notification not targeted at this instance, not processing Notification Clicked Event");
-            return;
-        }
-
-        if (extras.containsKey(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            Runnable pendingInappRunnable = new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Logger.v("Received in-app via push payload: " + extras
-                                .getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY));
-                        JSONObject r = new JSONObject();
-                        JSONArray inappNotifs = new JSONArray();
-                        r.put(Constants.INAPP_JSON_RESPONSE_KEY, inappNotifs);
-                        inappNotifs.put(new JSONObject(extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)));
-
-                        processInAppResponse(r, mContext);
-                    } catch (Throwable t) {
-                        Logger.v("Failed to display inapp notification from push notification payload", t);
-                    }
-                }
-            };
-
-            mMainLooperHandler.setPendingRunnable(pendingInappRunnable);
-            return;
-        }
-
-        if (extras.containsKey(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            Runnable pendingInboxRunnable = new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        Logger.v("Received inbox via push payload: " + extras
-                                .getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
-                        JSONObject r = new JSONObject();
-                        JSONArray inappNotifs = new JSONArray();
-                        r.put(Constants.INBOX_JSON_RESPONSE_KEY, inappNotifs);
-                        JSONObject testPushObject = new JSONObject(
-                                extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
-                        testPushObject.put("_id", String.valueOf(System.currentTimeMillis() / 1000));
-                        inappNotifs.put(testPushObject);
-                        processInboxResponse(r);
-                    } catch (Throwable t) {
-                        Logger.v("Failed to process inbox message from push notification payload", t);
-                    }
-                }
-            };
-            mMainLooperHandler.setPendingRunnable(pendingInboxRunnable);
-            return;
-        }
-
-        if (extras.containsKey(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            handleSendTestForDisplayUnits(extras);
-            return;
-        }
-
-        if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG) || (extras.getString(Constants.NOTIFICATION_ID_TAG)
-                == null)) {
-            mConfig.getLogger().debug(mConfig.getAccountId(),
-                    "Push notification ID Tag is null, not processing Notification Clicked event for:  " + extras
-                            .toString());
-            return;
-        }
-
-        // Check for dupe notification views; if same notficationdId within specified time interval (5 secs) don't process
-        boolean isDuplicate = checkDuplicateNotificationIds(extras, notificationIdTagMap,
-                Constants.NOTIFICATION_ID_TAG_INTERVAL);
-        if (isDuplicate) {
-            mConfig.getLogger().debug(mConfig.getAccountId(),
-                    "Already processed Notification Clicked event for " + extras.toString()
-                            + ", dropping duplicate.");
-            return;
-        }
-
-        JSONObject event = new JSONObject();
-        JSONObject notif = new JSONObject();
-        try {
-            for (String x : extras.keySet()) {
-                if (!x.startsWith(Constants.WZRK_PREFIX)) {
-                    continue;
-                }
-                Object value = extras.get(x);
-                notif.put(x, value);
-            }
-
-            event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
-            event.put("evtData", notif);
-            mBaseQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
-
-            try {
-                mCoreMetaData.setWzrkParams(getWzrkFields(extras));
-            } catch (Throwable t) {
-                // no-op
-            }
-        } catch (Throwable t) {
-            // We won't get here
-        }
-        if (mCallbackManager.getPushNotificationListener() != null) {
-            mCallbackManager.getPushNotificationListener()
-                    .onNotificationClickedPayloadReceived(Utils.convertBundleObjectToHashMap(extras));
-        } else {
-            Logger.d("CTPushNotificationListener is not set");
-        }
-    }
-
     /**
-     * Pushes the Notification Viewed event to CleverTap.
+     * Stores silent push notification in DB for smooth working of Push Amplification
+     * Background Job Service and also stores wzrk_pid to the DB to avoid duplication of Push
+     * Notifications from Push Amplification.
      *
-     * @param extras The {@link Bundle} object that contains the
-     *               notification details
+     * @param extras - Bundle
      */
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    public void pushNotificationViewedEvent(Bundle extras) {
-
-        if (extras == null || extras.isEmpty() || extras.get(Constants.NOTIFICATION_TAG) == null) {
-            mConfig.getLogger().debug(mConfig.getAccountId(),
-                    "Push notification: " + (extras == null ? "NULL" : extras.toString())
-                            + " not from CleverTap - will not process Notification Viewed event.");
-            return;
-        }
-
-        if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG) || (extras.getString(Constants.NOTIFICATION_ID_TAG)
-                == null)) {
-            mConfig.getLogger().debug(mConfig.getAccountId(),
-                    "Push notification ID Tag is null, not processing Notification Viewed event for:  " + extras
-                            .toString());
-            return;
-        }
-
-        // Check for dupe notification views; if same notficationdId within specified time interval (2 secs) don't process
-        boolean isDuplicate = checkDuplicateNotificationIds(extras, notificationViewedIdTagMap,
-                Constants.NOTIFICATION_VIEWED_ID_TAG_INTERVAL);
-        if (isDuplicate) {
-            mConfig.getLogger().debug(mConfig.getAccountId(),
-                    "Already processed Notification Viewed event for " + extras.toString() + ", dropping duplicate.");
-            return;
-        }
-
-        mConfig.getLogger().debug("Recording Notification Viewed event for notification:  " + extras.toString());
-
-        JSONObject event = new JSONObject();
-        try {
-            JSONObject notif = CTJsonConverter.getWzrkFields(extras);
-            event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
-            event.put("evtData", notif);
-        } catch (Throwable ignored) {
-            //no-op
-        }
-        mBaseQueueManager.queueEvent(mContext, event, Constants.NV_EVENT);
+    public void processCustomPushNotification(final Bundle extras) {
+        mPostAsyncSafelyHandler.postAsyncSafely("customHandlePushAmplification", new Runnable() {
+            @Override
+            public void run() {
+                String notifMessage = extras.getString(Constants.NOTIF_MSG);
+                notifMessage = (notifMessage != null) ? notifMessage : "";
+                if (notifMessage.isEmpty()) {
+                    //silent notification
+                    mConfig.getLogger()
+                            .verbose(mConfig.getAccountId(), "Push notification message is empty, not rendering");
+                    mBaseDatabaseManager.loadDBAdapter(mContext).storeUninstallTimestamp();
+                    String pingFreq = extras.getString("pf", "");
+                    if (!TextUtils.isEmpty(pingFreq)) {
+                        updatePingFrequencyIfNeeded(mContext, Integer.parseInt(pingFreq));
+                    }
+                } else {
+                    String wzrk_pid = extras.getString(Constants.WZRK_PUSH_ID);
+                    String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE,
+                            (System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL) / 1000 + "");
+                    long wzrk_ttl = Long.parseLong(ttl);
+                    DBAdapter dbAdapter = mBaseDatabaseManager.loadDBAdapter(mContext);
+                    mConfig.getLogger().verbose("Storing Push Notification..." + wzrk_pid + " - with ttl - " + ttl);
+                    dbAdapter.storePushNotificationId(wzrk_pid, wzrk_ttl);
+                }
+            }
+        });
     }
 
     /**
      * Fetches latest tokens from various providers and send to Clevertap's server
      */
-    public void refreshAllTokens() {
+    private void refreshAllTokens() {
         CTExecutors.getInstance().diskIO().execute(new Runnable() {
             @Override
             public void run() {
@@ -487,6 +383,73 @@ public class PushProviders {
 
                 // refresh tokens of custom Providers
                 refreshCustomProviderTokens();
+            }
+        });
+    }
+
+    public void runInstanceJobWork(final Context context, final JobParameters parameters) {
+        mPostAsyncSafelyHandler.postAsyncSafely("runningJobService", new Runnable() {
+            @Override
+            public void run() {
+                if (isNotificationSupported()) {
+                    Logger.v(mConfig.getAccountId(), "Token is not present, not running the Job");
+                    return;
+                }
+
+                Calendar now = Calendar.getInstance();
+
+                int hour = now.get(Calendar.HOUR_OF_DAY); // Get hour in 24 hour format
+                int minute = now.get(Calendar.MINUTE);
+
+                Date currentTime = parseTimeToDate(hour + ":" + minute);
+                Date startTime = parseTimeToDate(Constants.DND_START);
+                Date endTime = parseTimeToDate(Constants.DND_STOP);
+
+                if (isTimeBetweenDNDTime(startTime, endTime, currentTime)) {
+                    Logger.v(mConfig.getAccountId(), "Job Service won't run in default DND hours");
+                    return;
+                }
+
+                long lastTS = mBaseDatabaseManager.loadDBAdapter(context).getLastUninstallTimestamp();
+
+                if (lastTS == 0 || lastTS > System.currentTimeMillis() - 24 * 60 * 60 * 1000) {
+                    try {
+                        JSONObject eventObject = new JSONObject();
+                        eventObject.put("bk", 1);
+                        mBaseQueueManager
+                                .queueEvent(context, eventObject, Constants.PING_EVENT);
+
+                        if (parameters == null) {
+                            int pingFrequency = getPingFrequency(context);
+                            AlarmManager alarmManager = (AlarmManager) context
+                                    .getSystemService(Context.ALARM_SERVICE);
+                            Intent cancelIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
+                            cancelIntent.setPackage(context.getPackageName());
+                            PendingIntent alarmPendingIntent = PendingIntent
+                                    .getService(context, mConfig.getAccountId().hashCode(), cancelIntent,
+                                            PendingIntent.FLAG_UPDATE_CURRENT);
+                            if (alarmManager != null) {
+                                alarmManager.cancel(alarmPendingIntent);
+                            }
+                            Intent alarmIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
+                            alarmIntent.setPackage(context.getPackageName());
+                            PendingIntent alarmServicePendingIntent = PendingIntent
+                                    .getService(context, mConfig.getAccountId().hashCode(), alarmIntent,
+                                            PendingIntent.FLAG_UPDATE_CURRENT);
+                            if (alarmManager != null) {
+                                if (pingFrequency != -1) {
+                                    alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                                            SystemClock.elapsedRealtime() + (pingFrequency
+                                                    * Constants.ONE_MIN_IN_MILLIS),
+                                            Constants.ONE_MIN_IN_MILLIS * pingFrequency, alarmServicePendingIntent);
+                                }
+                            }
+                        }
+                    } catch (JSONException e) {
+                        Logger.v("Unable to raise background Ping event");
+                    }
+
+                }
             }
         });
     }
@@ -528,79 +491,6 @@ public class PushProviders {
         }
     }
 
-    /**
-     * Launches an asynchronous task to download the notification icon from CleverTap,
-     * and create the Android notification.
-     * <p/>
-     * If your app is using CleverTap SDK's built in FCM message handling,
-     * this method does not need to be called explicitly.
-     * <p/>
-     * Use this method when implementing your own FCM handling mechanism. Refer to the
-     * SDK documentation for usage scenarios and examples.
-     *
-     * @param context        A reference to an Android context
-     * @param extras         The {@link Bundle} object received by the broadcast receiver
-     * @param notificationId A custom id to build a notification
-     */
-    public void _createNotification(final Context context, final Bundle extras, final int notificationId) {
-        if (extras == null || extras.get(Constants.NOTIFICATION_TAG) == null) {
-            return;
-        }
-
-        if (mConfig.isAnalyticsOnly()) {
-            mConfig.getLogger()
-                    .debug(mConfig.getAccountId(), "Instance is set for Analytics only, cannot create notification");
-            return;
-        }
-
-        try {
-            mPostAsyncSafelyHandler
-                    .postAsyncSafely("CleverTapAPI#_createNotification", new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                mConfig.getLogger()
-                                        .debug(mConfig.getAccountId(), "Handling notification: " + extras.toString());
-                                if (extras.getString(Constants.WZRK_PUSH_ID) != null) {
-                                    if (mBaseDatabaseManager.loadDBAdapter(context)
-                                            .doesPushNotificationIdExist(extras.getString(Constants.WZRK_PUSH_ID))) {
-                                        mConfig.getLogger().debug(mConfig.getAccountId(),
-                                                "Push Notification already rendered, not showing again");
-                                        return;
-                                    }
-                                }
-                                String notifMessage = extras.getString(Constants.NOTIF_MSG);
-                                notifMessage = (notifMessage != null) ? notifMessage : "";
-                                if (notifMessage.isEmpty()) {
-                                    //silent notification
-                                    mConfig.getLogger()
-                                            .verbose(mConfig.getAccountId(),
-                                                    "Push notification message is empty, not rendering");
-                                    mBaseDatabaseManager.loadDBAdapter(context)
-                                            .storeUninstallTimestamp();
-                                    String pingFreq = extras.getString("pf", "");
-                                    if (!TextUtils.isEmpty(pingFreq)) {
-                                        updatePingFrequencyIfNeeded(context, Integer.parseInt(pingFreq));
-                                    }
-                                    return;
-                                }
-                                String notifTitle = extras.getString(Constants.NOTIF_TITLE, "");
-                                notifTitle = notifTitle.isEmpty() ? context.getApplicationInfo().name : notifTitle;
-                                triggerNotification(context, extras, notifMessage, notifTitle, notificationId);
-                            } catch (Throwable t) {
-                                // Occurs if the notification image was null
-                                // Let's return, as we couldn't get a handle on the app's icon
-                                // Some devices throw a PackageManager* exception too
-                                mConfig.getLogger()
-                                        .debug(mConfig.getAccountId(), "Couldn't render notification: ", t);
-                            }
-                        }
-                    });
-        } catch (Throwable t) {
-            mConfig.getLogger().debug(mConfig.getAccountId(), "Failed to process push notification", t);
-        }
-    }
-
     private boolean alreadyHaveToken(String newToken, PushConstants.PushType pushType) {
         boolean alreadyAvailable = !TextUtils.isEmpty(newToken) && pushType != null && newToken
                 .equalsIgnoreCase(getCachedToken(pushType));
@@ -608,31 +498,6 @@ public class PushProviders {
             mConfig.log(PushConstants.LOG_TAG, pushType + "Token Already available value: " + alreadyAvailable);
         }
         return alreadyAvailable;
-    }
-
-    private boolean checkDuplicateNotificationIds(Bundle extras, HashMap<String, Object> notificationTagMap,
-            int interval) {
-        synchronized (notificationMapLock) {
-            // default to false; only return true if we are sure we've seen this one before
-            boolean isDupe = false;
-            try {
-                String notificationIdTag = extras.getString(Constants.NOTIFICATION_ID_TAG);
-                long now = System.currentTimeMillis();
-                if (notificationTagMap.containsKey(notificationIdTag)) {
-                    long timestamp;
-                    // noinspection ConstantConditions
-                    timestamp = (Long) notificationTagMap.get(notificationIdTag);
-                    // same notificationId within time internal treat as dupe
-                    if (now - timestamp < interval) {
-                        isDupe = true;
-                    }
-                }
-                notificationTagMap.put(notificationIdTag, now);
-            } catch (Throwable ignored) {
-                // no-op
-            }
-            return isDupe;
-        }
     }
 
     private void createAlarmScheduler(Context context) {
@@ -802,6 +667,8 @@ public class PushProviders {
         }
     }
 
+    //Session
+
     private void findEnabledPushTypes() {
         for (PushConstants.PushType pushType : getPushTypes(mConfig.getAllowedPushTypes())) {
             String className = pushType.getMessagingSDKClassName();
@@ -815,8 +682,6 @@ public class PushProviders {
             }
         }
     }
-
-    //Session
 
     private int getPingFrequency(Context context) {
         return StorageHelper.getInt(context, Constants.PING_FREQUENCY,
@@ -835,6 +700,22 @@ public class PushProviders {
         findCTPushProviders(providers);
 
         findCustomEnabledPushTypes();
+    }
+
+    private void initPushAmp() {
+        if (mConfig.isBackgroundSync() && !mConfig
+                .isAnalyticsOnly()) {
+            mPostAsyncSafelyHandler.postAsyncSafely("createOrResetJobScheduler", new Runnable() {
+                @Override
+                public void run() {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                        createOrResetJobScheduler(mContext);
+                    } else {
+                        createAlarmScheduler(mContext);
+                    }
+                }
+            });
+        }
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -860,6 +741,27 @@ public class PushProviders {
             Logger.d("Intent Service name not found exception - " + e.getLocalizedMessage());
         }
         return false;
+    }
+
+    private boolean isTimeBetweenDNDTime(Date startTime, Date stopTime, Date currentTime) {
+        //Start Time
+        Calendar startTimeCalendar = Calendar.getInstance();
+        startTimeCalendar.setTime(startTime);
+        //Current Time
+        Calendar currentTimeCalendar = Calendar.getInstance();
+        currentTimeCalendar.setTime(currentTime);
+        //Stop Time
+        Calendar stopTimeCalendar = Calendar.getInstance();
+        stopTimeCalendar.setTime(stopTime);
+
+        if (stopTime.compareTo(startTime) < 0) {
+            if (currentTimeCalendar.compareTo(stopTimeCalendar) < 0) {
+                currentTimeCalendar.add(Calendar.DATE, 1);
+            }
+            stopTimeCalendar.add(Calendar.DATE, 1);
+        }
+        return currentTimeCalendar.compareTo(startTimeCalendar) >= 0
+                && currentTimeCalendar.compareTo(stopTimeCalendar) < 0;
     }
 
     private boolean isValid(CTPushProvider provider) {
@@ -891,6 +793,17 @@ public class PushProviders {
         }
 
         return true;
+    }
+
+    private Date parseTimeToDate(String time) {
+
+        final String inputFormat = "HH:mm";
+        SimpleDateFormat inputParser = new SimpleDateFormat(inputFormat, Locale.US);
+        try {
+            return inputParser.parse(time);
+        } catch (java.text.ParseException e) {
+            return new Date(0);
+        }
     }
 
     private void pushDeviceTokenEvent(String token, boolean register, PushType pushType) {
@@ -1318,7 +1231,7 @@ public class PushProviders {
             mValidationResultStack.pushValidationResult(notificationViewedError);
             return;
         }
-        pushNotificationViewedEvent(extras);
+        mAnalyticsManager.pushNotificationViewedEvent(extras);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -1331,137 +1244,8 @@ public class PushProviders {
         return null;
     }
 
-    public void runInstanceJobWork(final Context context, final JobParameters parameters) {
-        mPostAsyncSafelyHandler.postAsyncSafely("runningJobService", new Runnable() {
-            @Override
-            public void run() {
-                if (isNotificationSupported()) {
-                    Logger.v(mConfig.getAccountId(), "Token is not present, not running the Job");
-                    return;
-                }
-
-                Calendar now = Calendar.getInstance();
-
-                int hour = now.get(Calendar.HOUR_OF_DAY); // Get hour in 24 hour format
-                int minute = now.get(Calendar.MINUTE);
-
-                Date currentTime = parseTimeToDate(hour + ":" + minute);
-                Date startTime = parseTimeToDate(Constants.DND_START);
-                Date endTime = parseTimeToDate(Constants.DND_STOP);
-
-                if (isTimeBetweenDNDTime(startTime, endTime, currentTime)) {
-                    Logger.v(mConfig.getAccountId(), "Job Service won't run in default DND hours");
-                    return;
-                }
-
-                long lastTS = mBaseDatabaseManager.loadDBAdapter(context).getLastUninstallTimestamp();
-
-                if (lastTS == 0 || lastTS > System.currentTimeMillis() - 24 * 60 * 60 * 1000) {
-                    try {
-                        JSONObject eventObject = new JSONObject();
-                        eventObject.put("bk", 1);
-                        mBaseQueueManager
-                                .queueEvent(context, eventObject, Constants.PING_EVENT);
-
-                        if (parameters == null) {
-                            int pingFrequency = getPingFrequency(context);
-                            AlarmManager alarmManager = (AlarmManager) context
-                                    .getSystemService(Context.ALARM_SERVICE);
-                            Intent cancelIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
-                            cancelIntent.setPackage(context.getPackageName());
-                            PendingIntent alarmPendingIntent = PendingIntent
-                                    .getService(context, mConfig.getAccountId().hashCode(), cancelIntent,
-                                            PendingIntent.FLAG_UPDATE_CURRENT);
-                            if (alarmManager != null) {
-                                alarmManager.cancel(alarmPendingIntent);
-                            }
-                            Intent alarmIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
-                            alarmIntent.setPackage(context.getPackageName());
-                            PendingIntent alarmServicePendingIntent = PendingIntent
-                                    .getService(context, mConfig.getAccountId().hashCode(), alarmIntent,
-                                            PendingIntent.FLAG_UPDATE_CURRENT);
-                            if (alarmManager != null) {
-                                if (pingFrequency != -1) {
-                                    alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                                            SystemClock.elapsedRealtime() + (pingFrequency
-                                                    * Constants.ONE_MIN_IN_MILLIS),
-                                            Constants.ONE_MIN_IN_MILLIS * pingFrequency, alarmServicePendingIntent);
-                                }
-                            }
-                        }
-                    } catch (JSONException e) {
-                        Logger.v("Unable to raise background Ping event");
-                    }
-
-                }
-            }
-        });
+    //Push
+    public void onTokenRefresh() {
+        refreshAllTokens();
     }
-
-    private Date parseTimeToDate(String time) {
-
-        final String inputFormat = "HH:mm";
-        SimpleDateFormat inputParser = new SimpleDateFormat(inputFormat, Locale.US);
-        try {
-            return inputParser.parse(time);
-        } catch (java.text.ParseException e) {
-            return new Date(0);
-        }
-    }
-
-    private boolean isTimeBetweenDNDTime(Date startTime, Date stopTime, Date currentTime) {
-        //Start Time
-        Calendar startTimeCalendar = Calendar.getInstance();
-        startTimeCalendar.setTime(startTime);
-        //Current Time
-        Calendar currentTimeCalendar = Calendar.getInstance();
-        currentTimeCalendar.setTime(currentTime);
-        //Stop Time
-        Calendar stopTimeCalendar = Calendar.getInstance();
-        stopTimeCalendar.setTime(stopTime);
-
-        if (stopTime.compareTo(startTime) < 0) {
-            if (currentTimeCalendar.compareTo(stopTimeCalendar) < 0) {
-                currentTimeCalendar.add(Calendar.DATE, 1);
-            }
-            stopTimeCalendar.add(Calendar.DATE, 1);
-        }
-        return currentTimeCalendar.compareTo(startTimeCalendar) >= 0
-                && currentTimeCalendar.compareTo(stopTimeCalendar) < 0;
-    }
-
-    /**
-     * Stores silent push notification in DB for smooth working of Push Amplification
-     * Background Job Service and also stores wzrk_pid to the DB to avoid duplication of Push
-     * Notifications from Push Amplification.
-     *
-     * @param extras - Bundle
-     */
-    public void processCustomPushNotification(final Bundle extras) {
-        mPostAsyncSafelyHandler.postAsyncSafely("customHandlePushAmplification", new Runnable() {
-            @Override
-            public void run() {
-                String notifMessage = extras.getString(Constants.NOTIF_MSG);
-                notifMessage = (notifMessage != null) ? notifMessage : "";
-                if (notifMessage.isEmpty()) {
-                    //silent notification
-                    mConfig.getLogger().verbose(mConfig.getAccountId(), "Push notification message is empty, not rendering");
-                    mBaseDatabaseManager.loadDBAdapter(mContext).storeUninstallTimestamp();
-                    String pingFreq = extras.getString("pf", "");
-                    if (!TextUtils.isEmpty(pingFreq)) {
-                        updatePingFrequencyIfNeeded(mContext, Integer.parseInt(pingFreq));
-                    }
-                } else {
-                    String wzrk_pid = extras.getString(Constants.WZRK_PUSH_ID);
-                    String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE,
-                            (System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL) / 1000 + "");
-                    long wzrk_ttl = Long.parseLong(ttl);
-                    DBAdapter dbAdapter = mBaseDatabaseManager.loadDBAdapter(mContext);
-                    mConfig.getLogger().verbose("Storing Push Notification..." + wzrk_pid + " - with ttl - " + ttl);
-                    dbAdapter.storePushNotificationId(wzrk_pid, wzrk_ttl);
-                }
-            }
-        });
-    }
-
 }

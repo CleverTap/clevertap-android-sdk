@@ -17,8 +17,6 @@ public class CallbackManager {
 
     private WeakReference<DisplayUnitListener> displayUnitListenerWeakReference;
 
-    private CTExperimentsListener experimentsListener = null;
-
     private GeofenceCallback geofenceCallback;
 
     private WeakReference<InAppNotificationButtonListener> inAppNotificationButtonListener;
@@ -26,6 +24,8 @@ public class CallbackManager {
     private InAppNotificationListener inAppNotificationListener;
 
     private CTInboxListener inboxListener;
+
+    private WeakReference<CTFeatureFlagsListener> mFeatureFlagListenerWeakReference;
 
     private final CleverTapInstanceConfig mConfig;
 
@@ -44,12 +44,15 @@ public class CallbackManager {
         mDeviceInfo = coreState.getDeviceInfo();
     }
 
-    public CTExperimentsListener getExperimentsListener() {
-        return experimentsListener;
+    public CTFeatureFlagsListener getFeatureFlagListener() {
+        if (mFeatureFlagListenerWeakReference != null && mFeatureFlagListenerWeakReference.get() != null) {
+            return mFeatureFlagListenerWeakReference.get();
+        }
+        return null;
     }
 
-    public void setExperimentsListener(final CTExperimentsListener experimentsListener) {
-        this.experimentsListener = experimentsListener;
+    public void setFeatureFlagListener(final CTFeatureFlagsListener listener) {
+        this.mFeatureFlagListenerWeakReference = new WeakReference<>(listener);
     }
 
     public GeofenceCallback getGeofenceCallback() {

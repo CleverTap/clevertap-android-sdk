@@ -19,6 +19,16 @@ public class SessionManager extends BaseSessionManager{
 
     private int lastVisitTime;
 
+    public long getAppLastSeen() {
+        return appLastSeen;
+    }
+
+    public void setAppLastSeen(final long appLastSeen) {
+        this.appLastSeen = appLastSeen;
+    }
+
+    private long appLastSeen = 0;
+
     public SessionManager(final CoreState coreState) {
         mCleverTapMetaData = coreState.getCoreMetaData();
         mValidator = coreState.getValidator();
@@ -86,6 +96,19 @@ public class SessionManager extends BaseSessionManager{
             lastVisitTime = -1;
         } else {
             lastVisitTime = ed.getLastTime();
+        }
+    }
+
+    // SessionManager/session management
+    public void checkTimeoutSession() {
+        if (appLastSeen <= 0) {
+            return;
+        }
+        long now = System.currentTimeMillis();
+        if ((now - appLastSeen) > Constants.SESSION_LENGTH_MINS * 60 * 1000) {
+            mConfig.getLogger().verbose(mConfig.getAccountId(), "Session Timed Out");
+            destroySession();
+            CoreMetaData.setCurrentActivity(null);
         }
     }
 

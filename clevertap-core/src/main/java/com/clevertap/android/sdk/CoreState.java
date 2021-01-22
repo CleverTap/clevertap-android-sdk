@@ -36,6 +36,8 @@ public class CoreState extends CleverTapState {
 
     private LocalDataStore localDataStore;
 
+    private ActivityLifeCycleManager mActivityLifeCycleManager;
+
     private AnalyticsManager mAnalyticsManager;
 
     private BaseQueueManager mBaseEventQueueManager;
@@ -66,6 +68,14 @@ public class CoreState extends CleverTapState {
 
     CoreState(final Context context) {
         super(context);
+    }
+
+    public ActivityLifeCycleManager getActivityLifeCycleManager() {
+        return mActivityLifeCycleManager;
+    }
+
+    public void setActivityLifeCycleManager(final ActivityLifeCycleManager activityLifeCycleManager) {
+        mActivityLifeCycleManager = activityLifeCycleManager;
     }
 
     public AnalyticsManager getAnalyticsManager() {
@@ -126,6 +136,7 @@ public class CoreState extends CleverTapState {
     }
 
     public CTFeatureFlagsController getCtFeatureFlagsController() {
+        initFeatureFlags();
         return ctFeatureFlagsController;
     }
 
@@ -202,6 +213,22 @@ public class CoreState extends CleverTapState {
         mLoginController = loginController;
     }
 
+    /**
+     * Returns the generic handler object which is used to post
+     * runnables. The returned value will never be null.
+     *
+     * @return The generic handler
+     * @see Handler
+     */
+
+    public MainLooperHandler getMainLooperHandler() {
+        return mainLooperHandler;
+    }
+
+    void setMainLooperHandler(final MainLooperHandler mainLooperHandler) {
+        this.mainLooperHandler = mainLooperHandler;
+    }
+
     @Override
     public BaseNetworkManager getNetworkManager() {
         return networkManager;
@@ -268,6 +295,19 @@ public class CoreState extends CleverTapState {
         });
     }
 
+    public void setCurrentUserOptOutStateFromStorage() {
+        String key = optOutKey();
+        if (key == null) {
+            getConfig().getLogger().verbose(getConfig().getAccountId(),
+                    "Unable to set current user OptOut state from storage: storage key is null");
+            return;
+        }
+        boolean storedOptOut = StorageHelper.getBooleanFromPrefs(context, getConfig(), key);
+        getCoreMetaData().setCurrentUserOptedOut(storedOptOut);
+        getConfig().getLogger().verbose(getConfig().getAccountId(),
+                "Set current user OptOut state from storage to: " + storedOptOut + " for key: " + key);
+    }
+
     EventMediator getEventMediator() {
         return eventMediator;
     }
@@ -294,20 +334,12 @@ public class CoreState extends CleverTapState {
         this.baseLocationManager = baseLocationManager;
     }
 
-    /**
-     * Returns the generic handler object which is used to post
-     * runnables. The returned value will never be null.
-     *
-     * @return The generic handler
-     * @see Handler
-     */
-
-    public MainLooperHandler getMainLooperHandler() {
-        return mainLooperHandler;
-    }
-
-    void setMainLooperHandler(final MainLooperHandler mainLooperHandler) {
-        this.mainLooperHandler = mainLooperHandler;
+    String optOutKey() {
+        String guid = getDeviceInfo().getDeviceID();
+        if (guid == null) {
+            return null;
+        }
+        return "OptOut:" + guid;
     }
 
     // always call async
@@ -341,25 +373,18 @@ public class CoreState extends CleverTapState {
         }
     }
 
-    public void setCurrentUserOptOutStateFromStorage() {
-        String key = optOutKey();
-        if (key == null) {
-            getConfig().getLogger().verbose(getConfig().getAccountId(),
-                    "Unable to set current user OptOut state from storage: storage key is null");
+    private void initFeatureFlags() {
+        Logger.v("Initializing Feature Flags with device Id = " + getDeviceInfo().getDeviceID());
+
+        if (getConfig().isAnalyticsOnly()) {
+            getConfig().getLogger().debug(getConfig().getAccountId(), "Feature Flag is not enabled for this instance");
             return;
         }
-        boolean storedOptOut = StorageHelper.getBooleanFromPrefs(context, getConfig(), key);
-        getCoreMetaData().setCurrentUserOptedOut(storedOptOut);
-        getConfig().getLogger().verbose(getConfig().getAccountId(),
-                "Set current user OptOut state from storage to: " + storedOptOut + " for key: " + key);
-    }
 
-    String optOutKey() {
-        String guid = getDeviceInfo().getDeviceID();
-        if (guid == null) {
-            return null;
+        if (getCtFeatureFlagsController() == null) {
+            setCtFeatureFlagsController(new CTFeatureFlagsController(context, getDeviceInfo().getDeviceID(),
+                    getConfig(), mCallbackManager, mAnalyticsManager));
+            getConfig().getLogger().verbose(getConfig().getAccountId(), "Feature Flags initialized");
         }
-        return "OptOut:" + guid;
     }
-
 }

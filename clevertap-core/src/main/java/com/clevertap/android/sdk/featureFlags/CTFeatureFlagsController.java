@@ -5,13 +5,14 @@ import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.
 
 import android.content.Context;
 import android.text.TextUtils;
+import com.clevertap.android.sdk.AnalyticsManager;
+import com.clevertap.android.sdk.CallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.FileUtils;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.TaskManager;
 import com.clevertap.android.sdk.Utils;
-import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -25,19 +26,22 @@ public class CTFeatureFlagsController {
 
     private boolean isInitialized = false;
 
-    private final WeakReference<FeatureFlagListener> listenerWeakReference;
+    private final AnalyticsManager mAnalyticsManager;
+
+    private final CallbackManager mCallbackManager;
 
     private final Context mContext;
 
-    private HashMap<String, Boolean> store;
+    private final HashMap<String, Boolean> store;
 
     public CTFeatureFlagsController(Context context, String guid, CleverTapInstanceConfig config,
-            FeatureFlagListener listener) {
+            CallbackManager callbackManager, AnalyticsManager analyticsManager) {
         this.guid = guid;
         this.config = config;
         this.store = new HashMap<>();
-        listenerWeakReference = new WeakReference<>(listener);
         this.mContext = context.getApplicationContext();
+        mCallbackManager = callbackManager;
+        mAnalyticsManager = analyticsManager;
         init();
     }
 
@@ -50,20 +54,16 @@ public class CTFeatureFlagsController {
      * Developers should not use this method
      */
     public void fetchFeatureFlags() {
-        if (listenerWeakReference != null && listenerWeakReference.get() != null) {
-            Utils.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        if (listenerWeakReference.get() != null) {
-                            listenerWeakReference.get().fetchFeatureFlags();
-                        }
-                    } catch (Exception e) {
-                        getConfigLogger().verbose(getLogTag(), e.getLocalizedMessage());
-                    }
+        Utils.runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    mAnalyticsManager.fetchFeatureFlags();
+                } catch (Exception e) {
+                    getConfigLogger().verbose(getLogTag(), e.getLocalizedMessage());
                 }
-            });
-        }
+            }
+        });
     }
 
     /**
@@ -118,6 +118,9 @@ public class CTFeatureFlagsController {
      * Developers should not use this method
      */
     public void setGuidAndInit(String cleverTapID) {
+        if (isInitialized) {
+            return;
+        }
         this.guid = cleverTapID;
         init();
     }
@@ -231,13 +234,13 @@ public class CTFeatureFlagsController {
     }
 
     private void notifyFeatureFlagUpdate() {
-        if (listenerWeakReference != null && listenerWeakReference.get() != null) {
+        if (mCallbackManager.getFeatureFlagListener() != null) {
             Utils.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     try {
-                        if (listenerWeakReference.get() != null) {
-                            listenerWeakReference.get().featureFlagsDidUpdate();
+                        if (mCallbackManager.getFeatureFlagListener() != null) {
+                            mCallbackManager.getFeatureFlagListener().featureFlagsUpdated();
                         }
                     } catch (Exception e) {
                         getConfigLogger().verbose(getLogTag(), e.getLocalizedMessage());
