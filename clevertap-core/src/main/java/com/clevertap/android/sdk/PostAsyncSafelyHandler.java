@@ -61,7 +61,7 @@ public class PostAsyncSafelyHandler {
     }
 
     //InApp
-    void runOnNotificationQueue(final Runnable runnable) {
+    public void runOnNotificationQueue(final Runnable runnable) {
         try {
             final boolean executeSync = Thread.currentThread().getId() == NOTIFICATION_THREAD_ID;
 

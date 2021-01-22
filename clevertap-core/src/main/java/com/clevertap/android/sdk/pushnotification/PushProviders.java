@@ -47,6 +47,7 @@ import com.clevertap.android.sdk.CoreState;
 import com.clevertap.android.sdk.DBAdapter;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.MainLooperHandler;
 import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.PostAsyncSafelyHandler;
 import com.clevertap.android.sdk.StorageHelper;
@@ -107,6 +108,7 @@ public class PushProviders {
     private final Object tokenLock = new Object();
 
     private DevicePushTokenRefreshListener tokenRefreshListener;
+    private final MainLooperHandler mMainLooperHandler;
 
     /**
      * Factory method to load push providers.
@@ -130,6 +132,7 @@ public class PushProviders {
         mValidationResultStack = coreState.getValidationResultStack();
         mCoreMetaData = coreState.getCoreMetaData();
         mCallbackManager = coreState.getCallbackManager();
+        mMainLooperHandler = coreState.getMainLooperHandler();
         initPushAmp();
     }
 
@@ -326,7 +329,7 @@ public class PushProviders {
         }
 
         if (extras.containsKey(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            pendingInappRunnable = new Runnable() {
+            Runnable pendingInappRunnable = new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -343,11 +346,13 @@ public class PushProviders {
                     }
                 }
             };
+
+            mMainLooperHandler.setPendingRunnable(pendingInappRunnable);
             return;
         }
 
         if (extras.containsKey(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            pendingInappRunnable = new Runnable() {
+            Runnable pendingInboxRunnable = new Runnable() {
                 @Override
                 public void run() {
                     try {
@@ -366,6 +371,7 @@ public class PushProviders {
                     }
                 }
             };
+            mMainLooperHandler.setPendingRunnable(pendingInboxRunnable);
             return;
         }
 

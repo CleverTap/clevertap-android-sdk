@@ -15,11 +15,15 @@ import java.util.ArrayList;
 @RestrictTo(Scope.LIBRARY)
 public class CallbackManager {
 
-    private CTExperimentsListener experimentsListener = null;
-
     private WeakReference<DisplayUnitListener> displayUnitListenerWeakReference;
 
+    private CTExperimentsListener experimentsListener = null;
+
     private GeofenceCallback geofenceCallback;
+
+    private WeakReference<InAppNotificationButtonListener> inAppNotificationButtonListener;
+
+    private InAppNotificationListener inAppNotificationListener;
 
     private CTInboxListener inboxListener;
 
@@ -44,16 +48,36 @@ public class CallbackManager {
         return experimentsListener;
     }
 
-    public GeofenceCallback getGeofenceCallback() {
-        return geofenceCallback;
-    }
-
     public void setExperimentsListener(final CTExperimentsListener experimentsListener) {
         this.experimentsListener = experimentsListener;
     }
 
+    public GeofenceCallback getGeofenceCallback() {
+        return geofenceCallback;
+    }
+
     public void setGeofenceCallback(final GeofenceCallback geofenceCallback) {
         this.geofenceCallback = geofenceCallback;
+    }
+
+    public InAppNotificationButtonListener getInAppNotificationButtonListener() {
+        if (inAppNotificationButtonListener != null && inAppNotificationButtonListener.get() != null) {
+            return inAppNotificationButtonListener.get();
+        }
+        return null;
+    }
+
+    public void setInAppNotificationButtonListener(
+            InAppNotificationButtonListener inAppNotificationButtonListener) {
+        this.inAppNotificationButtonListener = new WeakReference<>(inAppNotificationButtonListener);
+    }
+
+    public InAppNotificationListener getInAppNotificationListener() {
+        return inAppNotificationListener;
+    }
+
+    public void setInAppNotificationListener(final InAppNotificationListener inAppNotificationListener) {
+        this.inAppNotificationListener = inAppNotificationListener;
     }
 
     public CTInboxListener getInboxListener() {
@@ -98,6 +122,25 @@ public class CallbackManager {
 
     public void setSyncListener(final SyncListener syncListener) {
         this.syncListener = syncListener;
+    }
+
+    //Profile
+    public void notifyUserProfileInitialized(String deviceID) {
+        deviceID = (deviceID != null) ? deviceID : mDeviceInfo.getDeviceID();
+
+        if (deviceID == null) {
+            return;
+        }
+
+        final SyncListener sl;
+        try {
+            sl = getSyncListener();
+            if (sl != null) {
+                sl.profileDidInitialize(deviceID);
+            }
+        } catch (Throwable t) {
+            // Ignore
+        }
     }
 
     public void setDisplayUnitListener(DisplayUnitListener listener) {
@@ -158,25 +201,6 @@ public class CallbackManager {
 
     void notifyUserProfileInitialized() {
         notifyUserProfileInitialized(mDeviceInfo.getDeviceID());
-    }
-
-    //Profile
-    public void notifyUserProfileInitialized(String deviceID) {
-        deviceID = (deviceID != null) ? deviceID : mDeviceInfo.getDeviceID();
-
-        if (deviceID == null) {
-            return;
-        }
-
-        final SyncListener sl;
-        try {
-            sl = getSyncListener();
-            if (sl != null) {
-                sl.profileDidInitialize(deviceID);
-            }
-        } catch (Throwable t) {
-            // Ignore
-        }
     }
 
 }

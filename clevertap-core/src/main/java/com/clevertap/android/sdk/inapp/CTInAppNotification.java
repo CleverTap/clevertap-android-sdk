@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inapp;
 
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
@@ -6,13 +6,20 @@ import android.os.Bundle;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.LruCache;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
+import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.ImageCache;
+import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.Utils;
 import java.util.ArrayList;
 import java.util.Iterator;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-class CTInAppNotification implements Parcelable {
+@RestrictTo(Scope.LIBRARY)
+public class CTInAppNotification implements Parcelable {
 
     // intended to only hold an gif byte array reference for the life of the parent CTInAppNotification, in order to facilitate parceling
     private static class GifCache {
@@ -279,6 +286,10 @@ class CTInAppNotification implements Parcelable {
         return actionExtras;
     }
 
+    public String getId() {
+        return id;
+    }
+
     @SuppressWarnings({"WeakerAccess"})
     public CTInAppType getInAppType() {
         return inAppType;
@@ -286,6 +297,10 @@ class CTInAppNotification implements Parcelable {
 
     public long getTimeToLive() {
         return timeToLive;
+    }
+
+    public boolean isExcludeFromCaps() {
+        return excludeFromCaps;
     }
 
     @Override
@@ -356,11 +371,11 @@ class CTInAppNotification implements Parcelable {
         return buttonCount;
     }
 
-    ArrayList<CTInAppNotificationButton> getButtons() {
+    public ArrayList<CTInAppNotificationButton> getButtons() {
         return buttons;
     }
 
-    String getCampaignId() {
+    public String getCampaignId() {
         return campaignId;
     }
 
@@ -392,10 +407,6 @@ class CTInAppNotification implements Parcelable {
         return html;
     }
 
-    String getId() {
-        return id;
-    }
-
     Bitmap getImage(CTInAppNotificationMedia inAppMedia) {
         return ImageCache.getBitmap(inAppMedia.getCacheKey());
     }
@@ -411,11 +422,11 @@ class CTInAppNotification implements Parcelable {
         return returningMedia;
     }
 
-    JSONObject getJsonDescription() {
+    public JSONObject getJsonDescription() {
         return jsonDescription;
     }
 
-    int getMaxPerSession() {
+    public int getMaxPerSession() {
         return maxPerSession;
     }
 
@@ -423,7 +434,7 @@ class CTInAppNotification implements Parcelable {
         return mediaList;
     }
 
-    String getMessage() {
+    public String getMessage() {
         return message;
     }
 
@@ -435,7 +446,7 @@ class CTInAppNotification implements Parcelable {
         return position;
     }
 
-    String getTitle() {
+    public String getTitle() {
         return title;
     }
 
@@ -443,11 +454,11 @@ class CTInAppNotification implements Parcelable {
         return titleColor;
     }
 
-    int getTotalDailyCount() {
+    public int getTotalDailyCount() {
         return totalDailyCount;
     }
 
-    int getTotalLifetimeCount() {
+    public int getTotalLifetimeCount() {
         return totalLifetimeCount;
     }
 
@@ -487,10 +498,6 @@ class CTInAppNotification implements Parcelable {
         return darkenScreen;
     }
 
-    boolean isExcludeFromCaps() {
-        return excludeFromCaps;
-    }
-
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     boolean isHideCloseButton() {
         return hideCloseButton;
@@ -500,11 +507,11 @@ class CTInAppNotification implements Parcelable {
         return jsEnabled;
     }
 
-    boolean isLandscape() {
+    public boolean isLandscape() {
         return isLandscape;
     }
 
-    boolean isPortrait() {
+    public boolean isPortrait() {
         return isPortrait;
     }
 

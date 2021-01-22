@@ -8,7 +8,7 @@ import android.util.AttributeSet;
 import androidx.appcompat.widget.AppCompatImageView;
 
 @SuppressWarnings({"unused"})
-class GifImageView extends AppCompatImageView implements Runnable {
+public class GifImageView extends AppCompatImageView implements Runnable {
 
     public interface OnFrameAvailable {
 

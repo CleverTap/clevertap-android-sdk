@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
+import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.login.LoginController;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 
@@ -38,6 +39,7 @@ class CleverTapFactory {
         coreState.setBaseEventQueueManager(new EventQueueManager(coreState));
         coreState.setAnalyticsManager(new AnalyticsManager(coreState));
         coreState.setLoginController(new LoginController(coreState));
+        coreState.setInAppController(new InAppController(coreState));
         return coreState;
     }
 }

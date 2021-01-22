@@ -1,8 +1,9 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inapp;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import com.clevertap.android.sdk.R;
 
 public class CTInAppHtmlHeaderFragment extends CTInAppBasePartialHtmlFragment {
 

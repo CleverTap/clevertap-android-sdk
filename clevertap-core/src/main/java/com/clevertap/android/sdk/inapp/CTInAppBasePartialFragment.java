@@ -1,7 +1,9 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inapp;
 
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
+import com.clevertap.android.sdk.CleverTapAPI;
+import com.clevertap.android.sdk.Utils;
 
 
 public abstract class CTInAppBasePartialFragment extends CTInAppBaseFragment {
@@ -46,7 +48,9 @@ public abstract class CTInAppBasePartialFragment extends CTInAppBaseFragment {
     @Override
     void generateListener() {
         if (config != null) {
-            setListener(CleverTapAPI.instanceWithConfig(this.context, config));
+            CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(this.context, config);
+            //TODO
+            setListener(cleverTapAPI.getCoreState().getInAppController());
         }
     }
 }

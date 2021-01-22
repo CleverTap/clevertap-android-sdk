@@ -1,7 +1,8 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inapp;
 
 import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
+import com.clevertap.android.sdk.Constants;
 
 public class CTInAppHtmlCoverFragment extends CTInAppBaseFullHtmlFragment {
 

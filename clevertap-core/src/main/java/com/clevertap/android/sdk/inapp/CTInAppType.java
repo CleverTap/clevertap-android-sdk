@@ -1,8 +1,11 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inapp;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 
-enum CTInAppType {
+@RestrictTo(Scope.LIBRARY)
+public enum CTInAppType {
 
     CTInAppTypeHTML("html"),
     CTInAppTypeCoverHTML("coverHtml"),

@@ -6,6 +6,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -40,38 +41,7 @@ public class InAppFCManager {
         init(deviceId);
     }
 
-    void attachToHeader(final Context context, JSONObject header) {
-        try {
-            // Trigger reset for dates
-
-            header.put("imp", getIntFromPrefs(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId), 0));
-
-            // tlc: [[targetID, todayCount, lifetime]]
-            JSONArray arr = new JSONArray();
-            final SharedPreferences prefs = StorageHelper
-                    .getPreferences(context, getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId));
-            final Map<String, ?> all = prefs.getAll();
-            for (String inapp : all.keySet()) {
-                final Object o = all.get(inapp);
-                if (o instanceof String) {
-                    final String[] parts = ((String) o).split(",");
-                    if (parts.length == 2) {
-                        JSONArray a = new JSONArray();
-                        a.put(0, inapp);
-                        a.put(1, Integer.parseInt(parts[0]));
-                        a.put(2, Integer.parseInt(parts[1]));
-                        arr.put(a);
-                    }
-                }
-            }
-
-            header.put("tlc", arr);
-        } catch (Throwable t) {
-            Logger.v("Failed to attach FC to header", t);
-        }
-    }
-
-    boolean canShow(CTInAppNotification inapp) {
+    public boolean canShow(CTInAppNotification inapp) {
         try {
             if (inapp == null) {
                 return false;
@@ -107,14 +77,14 @@ public class InAppFCManager {
         init(deviceId);
     }
 
-    void didDismiss(CTInAppNotification inapp) {
+    public void didDismiss(CTInAppNotification inapp) {
         final Object id = inapp.getId();
         if (id != null) {
             mDismissedThisSession.add(id.toString());
         }
     }
 
-    void didShow(final Context context, CTInAppNotification inapp) {
+    public void didShow(final Context context, CTInAppNotification inapp) {
         final String id = getInAppID(inapp);
         if (id == null) {
             return;
@@ -135,6 +105,37 @@ public class InAppFCManager {
         StorageHelper
                 .putInt(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId)),
                         ++shownToday);
+    }
+
+    void attachToHeader(final Context context, JSONObject header) {
+        try {
+            // Trigger reset for dates
+
+            header.put("imp", getIntFromPrefs(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId), 0));
+
+            // tlc: [[targetID, todayCount, lifetime]]
+            JSONArray arr = new JSONArray();
+            final SharedPreferences prefs = StorageHelper
+                    .getPreferences(context, getKeyWithDeviceId(Constants.KEY_COUNTS_PER_INAPP, deviceId));
+            final Map<String, ?> all = prefs.getAll();
+            for (String inapp : all.keySet()) {
+                final Object o = all.get(inapp);
+                if (o instanceof String) {
+                    final String[] parts = ((String) o).split(",");
+                    if (parts.length == 2) {
+                        JSONArray a = new JSONArray();
+                        a.put(0, inapp);
+                        a.put(1, Integer.parseInt(parts[0]));
+                        a.put(2, Integer.parseInt(parts[1]));
+                        arr.put(a);
+                    }
+                }
+            }
+
+            header.put("tlc", arr);
+        } catch (Throwable t) {
+            Logger.v("Failed to attach FC to header", t);
+        }
     }
 
     void processResponse(final Context context, final JSONObject response) {

@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inapp;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -15,6 +15,13 @@ import android.widget.RelativeLayout;
 import android.widget.RelativeLayout.LayoutParams;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import com.clevertap.android.sdk.CTWebInterface;
+import com.clevertap.android.sdk.CleverTapAPI;
+import com.clevertap.android.sdk.CloseImageView;
+import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.R;
+import com.clevertap.android.sdk.UriHelper;
 import java.net.URLDecoder;
 
 public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragment {

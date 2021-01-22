@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inapp;
 
 import android.annotation.SuppressLint;
 import android.content.Context;

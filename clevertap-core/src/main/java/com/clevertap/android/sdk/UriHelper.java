@@ -3,13 +3,16 @@ package com.clevertap.android.sdk;
 import android.net.Uri;
 import android.net.UrlQuerySanitizer;
 import android.os.Bundle;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import java.net.URLDecoder;
 import java.util.Set;
 import org.json.JSONObject;
 
-final class UriHelper {
+@RestrictTo(Scope.LIBRARY)
+public final class UriHelper {
 
-    static Bundle getAllKeyValuePairs(String url, boolean encodeValues) {
+    public static Bundle getAllKeyValuePairs(String url, boolean encodeValues) {
         if (url == null) {
             return new Bundle();
         }

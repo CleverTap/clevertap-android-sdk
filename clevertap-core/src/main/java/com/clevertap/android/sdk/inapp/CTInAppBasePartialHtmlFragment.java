@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inapp;
 
 import android.annotation.SuppressLint;
 import android.content.res.Configuration;
@@ -16,6 +16,9 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.UriHelper;
 import java.net.URLDecoder;
 
 public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialFragment

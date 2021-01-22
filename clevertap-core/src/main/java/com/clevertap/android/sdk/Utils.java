@@ -39,7 +39,7 @@ import org.json.JSONObject;
 
 public final class Utils {
 
-    static boolean haveVideoPlayerSupport;
+    public static boolean haveVideoPlayerSupport;
 
     public static boolean containsIgnoreCase(Collection<String> collection, String key) {
         if (collection == null || key == null) {
@@ -177,7 +177,7 @@ public final class Utils {
         return listdata;
     }
 
-    static HashMap<String, Object> convertJSONObjectToHashMap(JSONObject b) {
+    public static HashMap<String, Object> convertJSONObjectToHashMap(JSONObject b) {
         final HashMap<String, Object> map = new HashMap<>();
         final Iterator<String> keys = b.keys();
 
@@ -213,7 +213,7 @@ public final class Utils {
         return bitmap;
     }
 
-    static Bitmap getBitmapFromURL(String srcUrl) {
+    public static Bitmap getBitmapFromURL(String srcUrl) {
         // Safe bet, won't have more than three /s
         srcUrl = srcUrl.replace("///", "/");
         srcUrl = srcUrl.replace("//", "/");
@@ -242,7 +242,7 @@ public final class Utils {
         }
     }
 
-    static byte[] getByteArrayFromImageURL(String srcUrl) {
+    public static byte[] getByteArrayFromImageURL(String srcUrl) {
         srcUrl = srcUrl.replace("///", "/");
         srcUrl = srcUrl.replace("//", "/");
         srcUrl = srcUrl.replace("http:/", "http://");

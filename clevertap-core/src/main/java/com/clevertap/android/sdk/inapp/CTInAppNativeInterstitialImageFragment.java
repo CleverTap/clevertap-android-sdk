@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inapp;
 
 import android.annotation.SuppressLint;
 import android.content.res.Configuration;
@@ -14,6 +14,8 @@ import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import com.clevertap.android.sdk.CloseImageView;
+import com.clevertap.android.sdk.R;
 
 public class CTInAppNativeInterstitialImageFragment extends CTInAppBaseFullFragment {
 

@@ -17,6 +17,8 @@ import org.json.JSONObject;
 @RestrictTo(Scope.LIBRARY)
 public class CoreMetaData extends CleverTapMetaData {
 
+    private static boolean appForeground = false;
+
     private static WeakReference<Activity> currentActivity;
 
     private static int activityCount = 0;
@@ -45,14 +47,6 @@ public class CoreMetaData extends CleverTapMetaData {
 
     private boolean isLocationForGeofence = false;
 
-    public boolean isProductConfigRequested() {
-        return isProductConfigRequested;
-    }
-
-    public void setProductConfigRequested(final boolean productConfigRequested) {
-        isProductConfigRequested = productConfigRequested;
-    }
-
     private boolean isProductConfigRequested;
 
     private int lastSessionLength = 0;
@@ -69,6 +63,33 @@ public class CoreMetaData extends CleverTapMetaData {
 
     private JSONObject wzrkParams = null;
 
+    public static Activity getCurrentActivity() {
+        return (currentActivity == null) ? null : currentActivity.get();
+    }
+
+    public static void setCurrentActivity(@Nullable Activity activity) {
+        if (activity == null) {
+            currentActivity = null;
+            return;
+        }
+        if (!activity.getLocalClassName().contains("InAppNotificationActivity")) {
+            currentActivity = new WeakReference<>(activity);
+        }
+    }
+
+    public static String getCurrentActivityName() {
+        Activity current = getCurrentActivity();
+        return (current != null) ? current.getLocalClassName() : null;
+    }
+
+    public static boolean isAppForeground() {
+        return appForeground;
+    }
+
+    public static void setAppForeground(boolean isForeground) {
+        appForeground = isForeground;
+    }
+
     public long getAppInstallTime() {
         return appInstallTime;
     }
@@ -83,6 +104,14 @@ public class CoreMetaData extends CleverTapMetaData {
 
     public void setLocationFromUser(final Location locationFromUser) {
         this.locationFromUser = locationFromUser;
+    }
+
+    public boolean isProductConfigRequested() {
+        return isProductConfigRequested;
+    }
+
+    public void setProductConfigRequested(final boolean productConfigRequested) {
+        isProductConfigRequested = productConfigRequested;
     }
 
     public void setCurrentScreenName(final String currentScreenName) {
@@ -159,7 +188,7 @@ public class CoreMetaData extends CleverTapMetaData {
         return currentScreenName.equals("") ? null : currentScreenName;
     }
 
-    synchronized String getSource() {
+    public synchronized String getSource() {
         return source;
     }
 
@@ -281,24 +310,5 @@ public class CoreMetaData extends CleverTapMetaData {
 
     static void incrementActivityCount() {
         activityCount++;
-    }
-
-    public static Activity getCurrentActivity() {
-        return (currentActivity == null) ? null : currentActivity.get();
-    }
-
-    public static void setCurrentActivity(@Nullable Activity activity) {
-        if (activity == null) {
-            currentActivity = null;
-            return;
-        }
-        if (!activity.getLocalClassName().contains("InAppNotificationActivity")) {
-            currentActivity = new WeakReference<>(activity);
-        }
-    }
-
-    public static String getCurrentActivityName() {
-        Activity current = getCurrentActivity();
-        return (current != null) ? current.getLocalClassName() : null;
     }
 }

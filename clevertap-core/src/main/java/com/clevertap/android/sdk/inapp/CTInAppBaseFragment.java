@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inapp;
 
 import android.content.Context;
 import android.content.Intent;
@@ -8,6 +8,10 @@ import android.util.TypedValue;
 import android.view.View;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.CloseImageView;
+import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.Utils;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Set;
@@ -23,7 +27,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
         }
     }
 
-    interface InAppListener {
+    public interface InAppListener {
 
         void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData,
                 HashMap<String, String> keyValueMap);
@@ -31,6 +35,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
         void inAppNotificationDidDismiss(Context context, CTInAppNotification inAppNotification, Bundle formData);
 
         void inAppNotificationDidShow(CTInAppNotification inAppNotification, Bundle formData);
+
     }
 
     CloseImageView closeImageView = null;

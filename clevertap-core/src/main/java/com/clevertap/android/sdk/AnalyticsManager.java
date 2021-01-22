@@ -1,9 +1,12 @@
 package com.clevertap.android.sdk;
 
 import static com.clevertap.android.sdk.CTJsonConverter.getErrorObject;
+import static com.clevertap.android.sdk.CTJsonConverter.getWzrkFields;
 
 import android.content.Context;
 import android.net.Uri;
+import android.os.Bundle;
+import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -718,4 +721,47 @@ public class AnalyticsManager {
             }
         });
     }
+
+    /**
+     * Raises the Notification Clicked event, if {@param clicked} is true,
+     * otherwise the Notification Viewed event, if {@param clicked} is false.
+     *
+     * @param clicked    Whether or not this notification was clicked
+     * @param data       The data to be attached as the event data
+     * @param customData Additional data such as form input to to be added to the event data
+     */
+    @SuppressWarnings({"unused", "WeakerAccess"})
+    public void pushInAppNotificationStateEvent(boolean clicked, CTInAppNotification data, Bundle customData) {
+        JSONObject event = new JSONObject();
+        try {
+            JSONObject notif = getWzrkFields(data);
+
+            if (customData != null) {
+                for (String x : customData.keySet()) {
+
+                    Object value = customData.get(x);
+                    if (value != null) {
+                        notif.put(x, value);
+                    }
+                }
+            }
+
+            if (clicked) {
+                try {
+                    mCoreMetaData.setWzrkParams(notif);
+                } catch (Throwable t) {
+                    // no-op
+                }
+                event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
+            } else {
+                event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
+            }
+
+            event.put("evtData", notif);
+            mBaseQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
+        } catch (Throwable ignored) {
+            // We won't get here
+        }
+    }
+
 }

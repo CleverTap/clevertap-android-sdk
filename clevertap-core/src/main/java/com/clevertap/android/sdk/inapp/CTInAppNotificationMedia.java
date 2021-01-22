@@ -1,7 +1,9 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inapp;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.Logger;
 import java.util.UUID;
 import org.json.JSONException;
 import org.json.JSONObject;

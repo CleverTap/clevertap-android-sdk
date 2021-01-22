@@ -129,7 +129,7 @@ public class ManifestInfo {
         return accountToken;
     }
 
-    String getExcludedActivities() {
+    public String getExcludedActivities() {
         return excludedActivities;
     }
 

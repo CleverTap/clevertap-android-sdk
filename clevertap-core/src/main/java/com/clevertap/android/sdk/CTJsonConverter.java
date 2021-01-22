@@ -4,6 +4,7 @@ import android.location.Location;
 import android.os.Bundle;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import java.util.Iterator;
 import org.json.JSONArray;
 import org.json.JSONException;

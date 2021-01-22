@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inapp;
 
 import android.annotation.SuppressLint;
 import android.graphics.Bitmap;
@@ -17,6 +17,7 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import com.clevertap.android.sdk.R;
 import java.util.ArrayList;
 
 public class CTInAppNativeFooterFragment extends CTInAppBasePartialNativeFragment {

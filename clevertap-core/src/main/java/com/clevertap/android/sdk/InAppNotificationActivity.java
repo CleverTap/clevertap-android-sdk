@@ -9,12 +9,25 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.WindowManager;
 import androidx.fragment.app.FragmentActivity;
+import com.clevertap.android.sdk.inapp.CTInAppBaseFragment;
+import com.clevertap.android.sdk.inapp.CTInAppBaseFullFragment;
+import com.clevertap.android.sdk.inapp.CTInAppHtmlCoverFragment;
+import com.clevertap.android.sdk.inapp.CTInAppHtmlHalfInterstitialFragment;
+import com.clevertap.android.sdk.inapp.CTInAppHtmlInterstitialFragment;
+import com.clevertap.android.sdk.inapp.CTInAppNativeCoverFragment;
+import com.clevertap.android.sdk.inapp.CTInAppNativeCoverImageFragment;
+import com.clevertap.android.sdk.inapp.CTInAppNativeHalfInterstitialFragment;
+import com.clevertap.android.sdk.inapp.CTInAppNativeHalfInterstitialImageFragment;
+import com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialFragment;
+import com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialImageFragment;
+import com.clevertap.android.sdk.inapp.CTInAppNotification;
+import com.clevertap.android.sdk.inapp.CTInAppType;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 
 public final class InAppNotificationActivity extends FragmentActivity implements CTInAppBaseFragment.InAppListener {
 
-    interface InAppActivityListener {
+    public interface InAppActivityListener {
 
         void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData,
                 HashMap<String, String> keyValuePayload);
@@ -48,6 +61,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             if (configBundle != null) {
                 config = configBundle.getParcelable("config");
             }
+            //TODO
             setListener(CleverTapAPI.instanceWithConfig(getApplicationContext(), config));
         } catch (Throwable t) {
             Logger.v("Cannot find a valid notification bundle to show!", t);
@@ -347,7 +361,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                 });
                     }
                 }
-                //noinspection ConstantConditions
+                //noinspection Constant Conditions
                 alertDialog.show();
                 isAlertVisible = true;
                 didShow(null);

@@ -1,15 +1,18 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inapp;
 
 
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
+import com.clevertap.android.sdk.Constants;
 import java.util.HashMap;
 import java.util.Iterator;
 import org.json.JSONException;
 import org.json.JSONObject;
-
-class CTInAppNotificationButton implements Parcelable {
+@RestrictTo(Scope.LIBRARY)
+public class CTInAppNotificationButton implements Parcelable {
 
     @SuppressWarnings("unused")
     public static final Parcelable.Creator<CTInAppNotificationButton> CREATOR
@@ -92,7 +95,7 @@ class CTInAppNotificationButton implements Parcelable {
         dest.writeMap(keyValues);
     }
 
-    String getActionUrl() {
+    public String getActionUrl() {
         return actionUrl;
     }
 
@@ -145,7 +148,7 @@ class CTInAppNotificationButton implements Parcelable {
         this.jsonDescription = jsonDescription;
     }
 
-    String getText() {
+    public String getText() {
         return text;
     }
 

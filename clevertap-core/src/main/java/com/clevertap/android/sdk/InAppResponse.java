@@ -2,6 +2,7 @@ package com.clevertap.android.sdk;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import com.clevertap.android.sdk.inapp.InAppController;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -18,6 +19,8 @@ class InAppResponse extends CleverTapResponseDecorator {
 
     private final PostAsyncSafelyHandler mPostAsyncSafelyHandler;
 
+    private final InAppController mInAppController;
+
     InAppResponse(CleverTapResponse cleverTapResponse) {
         mCleverTapResponse = cleverTapResponse;
         CoreState coreState = getCoreState();
@@ -26,6 +29,7 @@ class InAppResponse extends CleverTapResponseDecorator {
         mInAppFCManager = coreState.getInAppFCManager();
         mPostAsyncSafelyHandler = coreState.getPostAsyncSafelyHandler();
 
+        mInAppController = coreState.getInAppController();
     }
 
     @Override
@@ -104,7 +108,7 @@ class InAppResponse extends CleverTapResponseDecorator {
             mPostAsyncSafelyHandler.runOnNotificationQueue(new Runnable() {
                 @Override
                 public void run() {
-                    _showNotificationIfAvailable(context);
+                    mInAppController.showNotificationIfAvailable(context);
                 }
             });
         } catch (Throwable t) {

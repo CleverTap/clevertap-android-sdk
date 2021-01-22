@@ -4,6 +4,7 @@ import android.content.Context;
 import android.os.Handler;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
+import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.login.LoginController;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
@@ -44,6 +45,8 @@ public class CoreState extends CleverTapState {
     private CTLockManager mCTLockManager;
 
     private CallbackManager mCallbackManager;
+
+    private InAppController mInAppController;
 
     private LoginController mLoginController;
 
@@ -167,6 +170,14 @@ public class CoreState extends CleverTapState {
         this.deviceInfo = deviceInfo;
     }
 
+    public InAppController getInAppController() {
+        return mInAppController;
+    }
+
+    public void setInAppController(final InAppController inAppController) {
+        mInAppController = inAppController;
+    }
+
     public InAppFCManager getInAppFCManager() {
         return inAppFCManager;
     }
@@ -189,6 +200,16 @@ public class CoreState extends CleverTapState {
 
     public void setLoginController(final LoginController loginController) {
         mLoginController = loginController;
+    }
+
+    @Override
+    public BaseNetworkManager getNetworkManager() {
+        return networkManager;
+    }
+
+    @Override
+    void setNetworkManager(final BaseNetworkManager networkManager) {
+        this.networkManager = networkManager;
     }
 
     @Override
@@ -233,6 +254,20 @@ public class CoreState extends CleverTapState {
         mValidator = validator;
     }
 
+    public void initializeInbox() {
+        if (getConfig().isAnalyticsOnly()) {
+            config.getLogger()
+                    .debug(config.getAccountId(), "Instance is analytics only, not initializing Notification Inbox");
+            return;
+        }
+        postAsyncSafelyHandler.postAsyncSafely("initializeInbox", new Runnable() {
+            @Override
+            public void run() {
+                _initializeInbox();
+            }
+        });
+    }
+
     EventMediator getEventMediator() {
         return eventMediator;
     }
@@ -267,36 +302,12 @@ public class CoreState extends CleverTapState {
      * @see Handler
      */
 
-    MainLooperHandler getMainLooperHandler() {
+    public MainLooperHandler getMainLooperHandler() {
         return mainLooperHandler;
     }
 
     void setMainLooperHandler(final MainLooperHandler mainLooperHandler) {
         this.mainLooperHandler = mainLooperHandler;
-    }
-
-    @Override
-    public BaseNetworkManager getNetworkManager() {
-        return networkManager;
-    }
-
-    @Override
-    void setNetworkManager(final BaseNetworkManager networkManager) {
-        this.networkManager = networkManager;
-    }
-
-    public void initializeInbox() {
-        if (getConfig().isAnalyticsOnly()) {
-            config.getLogger()
-                    .debug(config.getAccountId(), "Instance is analytics only, not initializing Notification Inbox");
-            return;
-        }
-        postAsyncSafelyHandler.postAsyncSafely("initializeInbox", new Runnable() {
-            @Override
-            public void run() {
-                _initializeInbox();
-            }
-        });
     }
 
     // always call async

@@ -1,10 +1,15 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inapp;
 
 import android.os.Handler;
 import android.view.Gravity;
 import android.widget.FrameLayout;
 import android.widget.FrameLayout.LayoutParams;
 import android.widget.RelativeLayout;
+import com.clevertap.android.sdk.CloseImageView;
+import com.clevertap.android.sdk.InAppNotificationActivity;
+import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.R;
+import com.clevertap.android.sdk.Utils;
 
 public abstract class CTInAppBaseFullFragment extends CTInAppBaseFragment {
 
