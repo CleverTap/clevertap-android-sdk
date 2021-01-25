@@ -63,7 +63,7 @@ public class AnalyticsManager {
             LocalDataStore localDataStore,
             DeviceInfo deviceInfo,
             MainLooperHandler mainLooperHandler,
-            CallbackManager callbackManager) {
+            CallbackManager callbackManager, ControllerManager controllerManager) {
         mContext = context;
         mConfig = config;
         mBaseEventQueueManager = baseEventQueueManager;
@@ -77,7 +77,7 @@ public class AnalyticsManager {
         mCallbackManager = callbackManager;
         //TODO set display unit using observer pattern once it's created lazily, check for it's usage in
         // pushDisplayUnitClickedEventForID & pushDisplayUnitViewedEventForID
-//        mCTDisplayUnitController = ctDisplayUnitController;
+        mCTDisplayUnitController = controllerManager.getCTDisplayUnitController();
     }
 
     public void addMultiValuesForKey(final String key, final ArrayList<String> values) {

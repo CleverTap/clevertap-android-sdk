@@ -34,15 +34,14 @@ class PushAmpResponse extends CleverTapResponseDecorator {
             CTLockManager ctLockManager,
             BaseDatabaseManager dbManager,
             CallbackManager callbackManager,
-            final PushProviders pushProviders) {
+            ControllerManager controllerManager) {
         mCleverTapResponse = cleverTapResponse;
         mContext = context;
         mConfig = config;
-        mPushProviders = pushProviders;
+        mPushProviders = controllerManager.getPushProviders();
         mLogger = mConfig.getLogger();
         inboxControllerLock = ctLockManager.getInboxControllerLock();
         mDBAdapter = dbManager.loadDBAdapter(context);
-
         mCallbackManager = callbackManager;
     }
 

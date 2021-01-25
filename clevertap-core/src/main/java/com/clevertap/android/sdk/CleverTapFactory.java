@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
+import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.login.LoginController;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
@@ -26,6 +27,9 @@ class CleverTapFactory {
 
         MainLooperHandler mainLooperHandler = new MainLooperHandler();
         coreState.setMainLooperHandler(mainLooperHandler);
+
+        ControllerManager controllerManager = new ControllerManager();
+        coreState.setControllerManager(controllerManager);
 
         CleverTapInstanceConfig config = new CleverTapInstanceConfig(cleverTapInstanceConfig);
         coreState.setConfig(config);
@@ -62,11 +66,11 @@ class CleverTapFactory {
         //config
 
         // initializing feature flag so that feature flag will automatically gets initialized
-        coreState.getCtFeatureFlagsController();
+        coreState.getControllerManager().getCTFeatureFlagsController();
 
         NetworkManager networkManager = new NetworkManager(context, config, deviceInfo, coreMetaData,
-                validationResultStack, pushProviders, inAppFCManager, baseDatabaseManager, ctLockManager,
-                postAsyncSafelyHandler, validator);
+                validationResultStack, controllerManager, inAppFCManager, baseDatabaseManager,
+                postAsyncSafelyHandler,callbackManager,ctLockManager,validator);
         coreState.setNetworkManager(networkManager);
 
         EventQueueManager baseEventQueueManager = new EventQueueManager(baseDatabaseManager, context, config,
@@ -78,20 +82,22 @@ class CleverTapFactory {
 
         AnalyticsManager analyticsManager = new AnalyticsManager(context, config, baseEventQueueManager, validator,
                 validationResultStack, coreMetaData, postAsyncSafelyHandler, localDataStore, deviceInfo,
-                mainLooperHandler, callbackManager);
+                mainLooperHandler, callbackManager,controllerManager);
         coreState.setAnalyticsManager(analyticsManager);
 
         InAppController inAppController = new InAppController(context, config, mainLooperHandler,
                 postAsyncSafelyHandler, inAppFCManager, callbackManager, analyticsManager, coreMetaData);
         coreState.setInAppController(inAppController);
+        coreState.getControllerManager().setInAppController(inAppController);
 
+        initFeatureFlags(context,coreState,config,deviceInfo,callbackManager,analyticsManager);
 
         LocationManager locationManager = new LocationManager(context, config, coreMetaData, baseEventQueueManager);
         coreState.setLocationManager(locationManager);
 
         PushProviders pushProviders = PushProviders
                 .load(context, config, baseDatabaseManager,  postAsyncSafelyHandler, validationResultStack,
-                        analyticsManager);
+                        analyticsManager,controllerManager);
         coreState.setPushProviders(pushProviders);
 
 
@@ -103,5 +109,19 @@ class CleverTapFactory {
         LoginController loginController = new LoginController(coreState);
         coreState.setLoginController(loginController);
         return coreState;
+    }
+
+    static void initFeatureFlags(Context context, CoreState coreState, CleverTapInstanceConfig config, DeviceInfo deviceInfo, CallbackManager callbackManager, AnalyticsManager analyticsManager){
+        Logger.v("Initializing Feature Flags with device Id = " + deviceInfo.getDeviceID());
+        if (config.isAnalyticsOnly()) {
+            config.getLogger().debug(config.getAccountId(), "Feature Flag is not enabled for this instance");
+        }else {
+            CTFeatureFlagsController ctFeatureFlagsController = new CTFeatureFlagsController(context,
+                    deviceInfo.getDeviceID(),
+                    config, callbackManager, analyticsManager);
+            config.getLogger().verbose(config.getAccountId(), "Feature Flags initialized");
+            coreState.getControllerManager().setCTFeatureFlagsController(ctFeatureFlagsController);
+
+        }
     }
 }

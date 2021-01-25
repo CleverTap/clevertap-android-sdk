@@ -22,12 +22,13 @@ class InAppResponse extends CleverTapResponseDecorator {
     private final PostAsyncSafelyHandler mPostAsyncSafelyHandler;
 
     InAppResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config, InAppFCManager inAppFCManager,
-            PostAsyncSafelyHandler postAsyncSafelyHandler) {
+            PostAsyncSafelyHandler postAsyncSafelyHandler, ControllerManager controllerManager) {
         mCleverTapResponse = cleverTapResponse;
         mConfig = config;
         mLogger = mConfig.getLogger();
         mInAppFCManager = inAppFCManager;
         mPostAsyncSafelyHandler = postAsyncSafelyHandler;
+        mInAppController = controllerManager.getInAppController();
     }
 
     @Override

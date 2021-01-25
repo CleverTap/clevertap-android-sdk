@@ -18,10 +18,11 @@ class FeatureFlagResponse extends CleverTapResponseDecorator {
     private final Logger mLogger;
 
     FeatureFlagResponse(CleverTapResponse cleverTapResponse,
-            CleverTapInstanceConfig config) {
+            CleverTapInstanceConfig config, ControllerManager controllerManager) {
         mCleverTapResponse = cleverTapResponse;
         mConfig = config;
         mLogger = mConfig.getLogger();
+        mCTFeatureFlagsController = controllerManager.getCTFeatureFlagsController();
     }
 
     @Override

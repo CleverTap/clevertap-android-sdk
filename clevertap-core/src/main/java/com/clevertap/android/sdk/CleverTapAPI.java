@@ -1090,7 +1090,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * Handler to get the feature flag values
      */
     public CTFeatureFlagsController featureFlag() {
-        return mCoreState.getCtFeatureFlagsController();
+        return mCoreState.getControllerManager().getCTFeatureFlagsController();
     }
 
     /**
@@ -1113,8 +1113,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
     @Nullable
     public ArrayList<CleverTapDisplayUnit> getAllDisplayUnits() {
 
-        if (mCoreState.getCTDisplayUnitController() != null) {
-            return mCoreState.getCTDisplayUnitController().getAllDisplayUnits();
+        if (mCoreState.getControllerManager().getCTDisplayUnitController() != null) {
+            return mCoreState.getControllerManager().getCTDisplayUnitController().getAllDisplayUnits();
         } else {
             getConfigLogger()
                     .verbose(getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "Failed to get all Display Units");
@@ -1314,8 +1314,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @Nullable
     public CleverTapDisplayUnit getDisplayUnitForId(String unitID) {
-        if (mCoreState.getCTDisplayUnitController() != null) {
-            return mCoreState.getCTDisplayUnitController().getDisplayUnitForID(unitID);
+        if (mCoreState.getControllerManager().getCTDisplayUnitController() != null) {
+            return mCoreState.getControllerManager().getCTDisplayUnitController().getDisplayUnitForID(unitID);
         } else {
             getConfigLogger().verbose(getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "Failed to get Display Unit for id: " + unitID);
@@ -2287,8 +2287,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
            Reinitialising product config & Feature Flag controllers with google ad id.
         */
 
-        mCoreState.getCtFeatureFlagsController().setGuidAndInit(deviceId);
-        mCoreState.getCtProductConfigController().setGuidAndInit(deviceId);
+        mCoreState.getControllerManager().getCTFeatureFlagsController().setGuidAndInit(deviceId);
+        mCoreState.getControllerManager().getCTProductConfigController().setGuidAndInit(deviceId);
         getConfigLogger()
                 .verbose("Got device id from DeviceInfo, notifying user profile initialized to SyncListener");
         mCoreState.getCallbackManager().notifyUserProfileInitialized(deviceId);

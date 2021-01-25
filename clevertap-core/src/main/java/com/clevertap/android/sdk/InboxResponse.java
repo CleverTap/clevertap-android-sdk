@@ -19,11 +19,10 @@ class InboxResponse extends CleverTapResponseDecorator {
     private final Logger mLogger;
 
     InboxResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config, CTLockManager ctLockManager,
-            final CTInboxController ctInboxController,
-            final CallbackManager callbackManager) {
+            final CallbackManager callbackManager, ControllerManager controllerManager) {
         mCleverTapResponse = cleverTapResponse;
         mConfig = config;
-        mCTInboxController = ctInboxController;
+        mCTInboxController = controllerManager.getCTInboxController();
         mCallbackManager = callbackManager;
         mLogger = mConfig.getLogger();
         inboxControllerLock = ctLockManager.getInboxControllerLock();
@@ -32,7 +31,6 @@ class InboxResponse extends CleverTapResponseDecorator {
     //NotificationInbox
     @Override
     void processResponse(final JSONObject response, final String stringBody, final Context context) {
-        // TODO Implementation
 
         if (mConfig.isAnalyticsOnly()) {
             mLogger.verbose(mConfig.getAccountId(),
@@ -66,7 +64,8 @@ class InboxResponse extends CleverTapResponseDecorator {
     private void _processInboxMessages(JSONArray messages) {
         synchronized (inboxControllerLock) {
             if (mCTInboxController == null) {
-                mCTInboxController.initializeInbox();
+                //mCTInboxController.initializeInbox();
+                //TODO logging
             }
             if (mCTInboxController != null) {
                 boolean update = mCTInboxController.updateMessages(messages);

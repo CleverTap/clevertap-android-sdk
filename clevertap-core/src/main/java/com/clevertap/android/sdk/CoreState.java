@@ -12,6 +12,8 @@ import com.clevertap.android.sdk.pushnotification.PushProviders;
 //TODO move this to builder pattern & add sanity check for dependencies at the time of creation
 public class CoreState extends CleverTapState {
 
+    private ControllerManager mControllerManager;
+
     private BaseLocationManager baseLocationManager;
 
     private CleverTapInstanceConfig config;
@@ -72,6 +74,10 @@ public class CoreState extends CleverTapState {
         return mActivityLifeCycleManager;
     }
 
+    public ControllerManager getControllerManager() {
+        return mControllerManager;
+    }
+
     public void setActivityLifeCycleManager(final ActivityLifeCycleManager activityLifeCycleManager) {
         mActivityLifeCycleManager = activityLifeCycleManager;
     }
@@ -88,17 +94,12 @@ public class CoreState extends CleverTapState {
         return mBaseEventQueueManager;
     }
 
+    public void setControllerManager(final ControllerManager controllerManager) {
+        mControllerManager = controllerManager;
+    }
+
     void setBaseEventQueueManager(final BaseEventQueueManager baseEventQueueManager) {
         this.mBaseEventQueueManager = baseEventQueueManager;
-    }
-
-    public CTDisplayUnitController getCTDisplayUnitController() {
-        return mCTDisplayUnitController;
-    }
-
-    public void setCTDisplayUnitController(
-            final CTDisplayUnitController CTDisplayUnitController) {
-        mCTDisplayUnitController = CTDisplayUnitController;
     }
 
     public CTLockManager getCTLockManager() {
@@ -133,19 +134,9 @@ public class CoreState extends CleverTapState {
         this.coreMetaData = coreMetaData;
     }
 
-    public CTFeatureFlagsController getCtFeatureFlagsController() {
-        initFeatureFlags();
-        return ctFeatureFlagsController;
-    }
-
-    public void setCtFeatureFlagsController(
-            final CTFeatureFlagsController ctFeatureFlagsController) {
-        this.ctFeatureFlagsController = ctFeatureFlagsController;
-    }
-
     public CTInboxController getCtInboxController() {
         return ctInboxController;
-    }
+    } //TODO move to Controller Manager
 
     public void setCtInboxController(final CTInboxController ctInboxController) {
         this.ctInboxController = ctInboxController;
@@ -335,14 +326,15 @@ public class CoreState extends CleverTapState {
     // always call async
     private void _initializeInbox() {
         synchronized (mCTLockManager.getInboxControllerLock()) {
-            if (this.ctInboxController != null) {
+            if (getControllerManager().getInAppController() != null) {
                 mCallbackManager._notifyInboxInitialized();
                 return;
             }
             if (deviceInfo.getDeviceID() != null) {
-                this.ctInboxController = new CTInboxController(deviceInfo.getDeviceID(),
+                ctInboxController = new CTInboxController(deviceInfo.getDeviceID(),
                         databaseManager.loadDBAdapter(context),
                         Utils.haveVideoPlayerSupport);
+                getControllerManager().setCTInboxController(ctInboxController);
                 mCallbackManager._notifyInboxInitialized();
             } else {
                 config.getLogger().info("CRITICAL : No device ID found!");
@@ -358,23 +350,9 @@ public class CoreState extends CleverTapState {
             return;
         }
         if (ctProductConfigController == null) {
-            setCtProductConfigController(new CTProductConfigController(context, getDeviceInfo().getDeviceID(),
-                    getConfig(), mBaseEventQueueManager, coreMetaData, mCallbackManager));
-        }
-    }
-
-    private void initFeatureFlags() {
-        Logger.v("Initializing Feature Flags with device Id = " + getDeviceInfo().getDeviceID());
-
-        if (getConfig().isAnalyticsOnly()) {
-            getConfig().getLogger().debug(getConfig().getAccountId(), "Feature Flag is not enabled for this instance");
-            return;
-        }
-
-        if (getCtFeatureFlagsController() == null) {
-            CTFeatureFlagsController ctFeatureFlagsController = new CTFeatureFlagsController(context, getDeviceInfo().getDeviceID(),
-                    getConfig(), mCallbackManager, mAnalyticsManager);
-            getConfig().getLogger().verbose(getConfig().getAccountId(), "Feature Flags initialized");
+            CTProductConfigController ctProductConfigController = new CTProductConfigController(context, getDeviceInfo().getDeviceID(),
+                    getConfig(), mBaseEventQueueManager, coreMetaData, mCallbackManager);
+            getControllerManager().setCTProductConfigController(ctProductConfigController);
         }
     }
 }

@@ -254,8 +254,8 @@ public class LoginController {
      * Resets the Display Units in the cache
      */
     private void resetDisplayUnits() {
-        if (mCoreState.getCTDisplayUnitController() != null) {
-            mCoreState.getCTDisplayUnitController().reset();
+        if (mCoreState.getControllerManager().getCTDisplayUnitController() != null) {
+            mCoreState.getControllerManager().getCTDisplayUnitController().reset();
         } else {
             mConfig.getLogger().verbose(mConfig.getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "Can't reset Display Units, DisplayUnitcontroller is null");
@@ -263,17 +263,17 @@ public class LoginController {
     }
 
     private void resetFeatureFlags() {
-        if (mCoreState.getCtFeatureFlagsController() != null && mCoreState.getCtFeatureFlagsController()
+        if (mCoreState.getControllerManager().getCTFeatureFlagsController() != null && mCoreState.getControllerManager().getCTFeatureFlagsController()
                 .isInitialized()) {
-            mCoreState.getCtFeatureFlagsController().resetWithGuid(mDeviceInfo.getDeviceID());
-            mCoreState.getCtFeatureFlagsController().fetchFeatureFlags();
+            mCoreState.getControllerManager().getCTFeatureFlagsController().resetWithGuid(mDeviceInfo.getDeviceID());
+            mCoreState.getControllerManager().getCTFeatureFlagsController().fetchFeatureFlags();
         }
     }
 
     // always call async
     private void resetInbox() {
         synchronized (mCoreState.getCTLockManager().getInboxControllerLock()) {
-            mCoreState.setCtInboxController(null);
+            mCoreState.getControllerManager().setCTInboxController(null);
         }
         mCoreState.initializeInbox();
     }
@@ -284,12 +284,13 @@ public class LoginController {
             mConfig.getLogger().debug(mConfig.getAccountId(), "Product Config is not enabled for this instance");
             return;
         }
-        if (mCoreState.getCtProductConfigController() != null) {
-            mCoreState.getCtProductConfigController().resetSettings();
+        if (mCoreState.getControllerManager().getCTProductConfigController() != null) {
+            mCoreState.getControllerManager().getCTProductConfigController().resetSettings();
         }
-        mCoreState.setCtProductConfigController(new CTProductConfigController(mContext, mDeviceInfo.getDeviceID(),
+        CTProductConfigController ctProductConfigController = new CTProductConfigController(mContext, mDeviceInfo.getDeviceID(),
                 mConfig, mCoreState.getBaseEventQueueManager(), mCoreState.getCoreMetaData(),
-                mCoreState.getCallbackManager()));
+                mCoreState.getCallbackManager());
+        mCoreState.getControllerManager().setCTProductConfigController(ctProductConfigController);
         mConfig.getLogger().verbose(mConfig.getAccountId(), "Product Config reset");
     }
 }

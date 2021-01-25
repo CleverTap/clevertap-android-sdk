@@ -24,10 +24,10 @@ class ARPResponse extends CleverTapResponseDecorator {
     private final Validator mValidator;
 
     ARPResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config, NetworkManager networkManager,
-            final CTProductConfigController ctProductConfigController, Validator validator) {
+            Validator validator, ControllerManager controllerManager) {
         mCleverTapResponse = cleverTapResponse;
         mConfig = config;
-        mCTProductConfigController = ctProductConfigController;
+        mCTProductConfigController = controllerManager.getCTProductConfigController();
         mLogger = mConfig.getLogger();
         mNetworkManager = networkManager;
         mValidator = validator;

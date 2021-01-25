@@ -40,6 +40,7 @@ import com.clevertap.android.sdk.CTExecutors;
 import com.clevertap.android.sdk.CleverTapAPI.DevicePushTokenRefreshListener;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.DBAdapter;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.Logger;
@@ -104,10 +105,11 @@ public class PushProviders {
             BaseDatabaseManager baseDatabaseManager,
             PostAsyncSafelyHandler postAsyncSafelyHandler,
             ValidationResultStack validationResultStack,
-            AnalyticsManager analyticsManager) {
+            AnalyticsManager analyticsManager, ControllerManager controllerManager) {
         PushProviders providers = new PushProviders(context, config, baseDatabaseManager,
                 postAsyncSafelyHandler, validationResultStack, analyticsManager);
         providers.init();
+        controllerManager.setPushProviders(providers);
         return providers;
     }
 

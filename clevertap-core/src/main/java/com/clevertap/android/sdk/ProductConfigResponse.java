@@ -21,13 +21,12 @@ class ProductConfigResponse extends CleverTapResponseDecorator {
 
     ProductConfigResponse(CleverTapResponse cleverTapResponse,
             CleverTapInstanceConfig config,
-            CoreMetaData coreMetaData) {
+            CoreMetaData coreMetaData, ControllerManager controllerManager) {
         mCleverTapResponse = cleverTapResponse;
         mConfig = config;
         mLogger = mConfig.getLogger();
-
         mCoreMetaData = coreMetaData;
-        mCTProductConfigController = ctProductConfigController;
+        mCTProductConfigController = controllerManager.getCTProductConfigController();
     }
 
     @Override

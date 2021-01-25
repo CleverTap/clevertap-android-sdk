@@ -9,13 +9,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
-import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
-import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
-import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
-import com.clevertap.android.sdk.login.LoginInfoProvider;
-import com.clevertap.android.sdk.product_config.CTProductConfigController;
-import com.clevertap.android.sdk.pushnotification.PushProviders;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -33,6 +27,8 @@ import org.json.JSONObject;
 @RestrictTo(Scope.LIBRARY)
 public class NetworkManager extends BaseNetworkManager {
 
+    private final ControllerManager mControllerManager;
+
     private static SSLSocketFactory sslSocketFactory;
 
     private static SSLContext sslContext;
@@ -47,8 +43,6 @@ public class NetworkManager extends BaseNetworkManager {
 
     private final CoreMetaData mCoreMetaData;
 
-    private final CTLockManager mCtLockManager;
-
     private int mCurrentRequestTimestamp = 0;
 
     private final BaseDatabaseManager mDatabaseManager;
@@ -61,13 +55,9 @@ public class NetworkManager extends BaseNetworkManager {
 
     private final PostAsyncSafelyHandler mPostAsyncSafelyHandler;
 
-    private final PushProviders mPushProvider;
-
     private int mResponseFailureCount = 0;// TODO encapsulate into NetworkState class
 
     private final ValidationResultStack mValidationResultStack;
-
-    private final Validator mValidator;
 
     private int networkRetryCount = 0;// TODO encapsulate into NetworkState class
 
@@ -77,44 +67,42 @@ public class NetworkManager extends BaseNetworkManager {
             DeviceInfo deviceInfo,
             CoreMetaData coreMetaData,
             ValidationResultStack validationResultStack,
-            PushProviders pushProviders,
+            ControllerManager controllerManager,
             InAppFCManager inAppFCManager,
             BaseDatabaseManager baseDatabaseManager,
-            CTLockManager ctLockManager,
             PostAsyncSafelyHandler postAsyncSafelyHandler,
-            final Validator validator,
-            final CallbackManager callbackManager) {
+            final CallbackManager callbackManager,
+            CTLockManager ctLockManager,
+            Validator validator) {
         mContext = context;
         mConfig = config;
         mDeviceInfo = deviceInfo;
-        mValidator = validator;
         mCallbackManager = callbackManager;
         mLogger = mConfig.getLogger();
 
         mCoreMetaData = coreMetaData;
         mValidationResultStack = validationResultStack;
-        mPushProvider = pushProviders;
+        mControllerManager = controllerManager;
         mInAppFCManager = inAppFCManager;
         mDatabaseManager = baseDatabaseManager;
-        mCtLockManager = ctLockManager;
         mPostAsyncSafelyHandler = postAsyncSafelyHandler;
         // maintain order
         CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
 
         cleverTapResponse = new GeofenceResponse(cleverTapResponse, config, callbackManager);
-        cleverTapResponse = new ProductConfigResponse(cleverTapResponse, config, coreMetaData);
-        cleverTapResponse = new FeatureFlagResponse(cleverTapResponse, config);
+        cleverTapResponse = new ProductConfigResponse(cleverTapResponse, config, coreMetaData, controllerManager);
+        cleverTapResponse = new FeatureFlagResponse(cleverTapResponse, config,controllerManager);
         cleverTapResponse = new DisplayUnitResponse(cleverTapResponse, config,
-                callbackManager);
+                callbackManager,controllerManager);
         cleverTapResponse = new PushAmpResponse(cleverTapResponse, context, config, ctLockManager,
-                baseDatabaseManager, callbackManager, pushProviders);
+                baseDatabaseManager, callbackManager, controllerManager);
         cleverTapResponse = new InboxResponse(cleverTapResponse, config, ctLockManager,
-                callbackManager);
+                callbackManager,controllerManager);
 
         cleverTapResponse = new ConsoleResponse(cleverTapResponse, config);
-        cleverTapResponse = new ARPResponse(cleverTapResponse, config, this, validator);
+        cleverTapResponse = new ARPResponse(cleverTapResponse, config, this, validator,controllerManager);
         cleverTapResponse = new MetadataResponse(cleverTapResponse, config, deviceInfo, this);
-        cleverTapResponse = new InAppResponse(cleverTapResponse, config, inAppFCManager, postAsyncSafelyHandler);
+        cleverTapResponse = new InAppResponse(cleverTapResponse, config, inAppFCManager, postAsyncSafelyHandler,controllerManager);
 
         cleverTapResponse = new BaseResponse(cleverTapResponse);
 
@@ -389,7 +377,7 @@ public class NetworkManager extends BaseNetworkManager {
                     .getRepo(mContext, mConfig, mDeviceInfo,
                             mValidationResultStack).getIdentitySet().toString());
             header.put("ddnd",
-                    !(mDeviceInfo.getNotificationsEnabledForUser() && (mPushProvider.isNotificationSupported())));
+                    !(mDeviceInfo.getNotificationsEnabledForUser() && (mControllerManager.getPushProviders().isNotificationSupported())));
             if (mCoreMetaData.isBgPing()) {
                 header.put("bk", 1);
                 mCoreMetaData.setBgPing(false);
