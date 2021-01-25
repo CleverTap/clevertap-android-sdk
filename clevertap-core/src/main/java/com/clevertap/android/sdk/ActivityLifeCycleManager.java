@@ -106,9 +106,7 @@ class ActivityLifeCycleManager {
                 mConfig.getLogger().verbose(mConfig.getAccountId(), "Failed to trigger location");
             }
         }
-        if (!mCoreMetaData.inCurrentSession()) {
-            mBaseEventQueueManager.pushInitialEventsAsync();
-        }
+        mBaseEventQueueManager.pushInitialEventsAsync();
         mInAppController.checkExistingInAppNotifications(activity);
         mInAppController.checkPendingInAppNotifications(activity);
     }

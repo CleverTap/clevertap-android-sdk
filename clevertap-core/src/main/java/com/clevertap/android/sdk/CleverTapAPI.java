@@ -957,7 +957,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
             @Override
             public void run() {
                 mCoreState.getDeviceInfo().setDeviceNetworkInfoReportingFromStorage();
-                mCoreState.setCurrentUserOptOutStateFromStorage();
+                mCoreState.getDeviceInfo().setCurrentUserOptOutStateFromStorage();
             }
         });
 
@@ -2218,7 +2218,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
                     pushProfile(optOutMap);
                 }
                 // persist the new optOut state
-                String key = mCoreState.optOutKey();
+                String key = mCoreState.getDeviceInfo().optOutKey();
                 if (key == null) {
                     getConfigLogger()
                             .verbose(getAccountId(), "Unable to persist user OptOut state, storage key is null");
@@ -2358,7 +2358,8 @@ public class CleverTapAPI implements CleverTapAPIListener {
             r.put(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY, displayUnits);
             JSONObject testPushObject = new JSONObject(pushJsonPayload);
             displayUnits.put(testPushObject);
-            processDisplayUnitsResponse(r);
+            //TODO Refactoring
+            //processDisplayUnitsResponse(r);
         } catch (Throwable t) {
             Logger.v("Failed to process Display Unit from push notification payload", t);
         }

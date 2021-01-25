@@ -446,8 +446,8 @@ public class AnalyticsManager {
                         JSONArray inappNotifs = new JSONArray();
                         r.put(Constants.INAPP_JSON_RESPONSE_KEY, inappNotifs);
                         inappNotifs.put(new JSONObject(extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)));
-
-                        processInAppResponse(r, mContext);
+                        //TODO Refactoring
+                        //processInAppResponse(r, mContext);
                     } catch (Throwable t) {
                         Logger.v("Failed to display inapp notification from push notification payload", t);
                     }
@@ -472,7 +472,8 @@ public class AnalyticsManager {
                                 extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
                         testPushObject.put("_id", String.valueOf(System.currentTimeMillis() / 1000));
                         inappNotifs.put(testPushObject);
-                        processInboxResponse(r);
+                        //TODO Refactoring
+                        //processInboxResponse(r);
                     } catch (Throwable t) {
                         Logger.v("Failed to process inbox message from push notification payload", t);
                     }
@@ -483,7 +484,8 @@ public class AnalyticsManager {
         }
 
         if (extras.containsKey(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            handleSendTestForDisplayUnits(extras);
+            //TODO Refactoring
+            //handleSendTestForDisplayUnits(extras);
             return;
         }
 

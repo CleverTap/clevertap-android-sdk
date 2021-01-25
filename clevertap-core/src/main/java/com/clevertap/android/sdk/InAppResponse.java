@@ -13,11 +13,10 @@ class InAppResponse extends CleverTapResponseDecorator {
 
     private final CleverTapInstanceConfig mConfig;
 
-    private InAppController mInAppController;
-
     private final InAppFCManager mInAppFCManager;
 
     private final Logger mLogger;
+    private final ControllerManager mControllerManager;
 
     private final PostAsyncSafelyHandler mPostAsyncSafelyHandler;
 
@@ -28,7 +27,7 @@ class InAppResponse extends CleverTapResponseDecorator {
         mLogger = mConfig.getLogger();
         mInAppFCManager = inAppFCManager;
         mPostAsyncSafelyHandler = postAsyncSafelyHandler;
-        mInAppController = controllerManager.getInAppController();
+        mControllerManager = controllerManager;
     }
 
     @Override
@@ -107,7 +106,7 @@ class InAppResponse extends CleverTapResponseDecorator {
             mPostAsyncSafelyHandler.runOnNotificationQueue(new Runnable() {
                 @Override
                 public void run() {
-                    mInAppController.showNotificationIfAvailable(context);
+                    mControllerManager.getInAppController().showNotificationIfAvailable(context);
                 }
             });
         } catch (Throwable t) {

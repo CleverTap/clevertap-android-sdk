@@ -8,9 +8,6 @@ import org.json.JSONObject;
 
 class ProductConfigResponse extends CleverTapResponseDecorator {
 
-
-    private final CTProductConfigController mCTProductConfigController;
-
     private final CleverTapResponse mCleverTapResponse;
 
     private final CleverTapInstanceConfig mConfig;
@@ -18,6 +15,7 @@ class ProductConfigResponse extends CleverTapResponseDecorator {
     private final CoreMetaData mCoreMetaData;
 
     private final Logger mLogger;
+    private final ControllerManager mControllerManager;
 
     ProductConfigResponse(CleverTapResponse cleverTapResponse,
             CleverTapInstanceConfig config,
@@ -26,7 +24,7 @@ class ProductConfigResponse extends CleverTapResponseDecorator {
         mConfig = config;
         mLogger = mConfig.getLogger();
         mCoreMetaData = coreMetaData;
-        mCTProductConfigController = controllerManager.getCTProductConfigController();
+        mControllerManager = controllerManager;
     }
 
     @Override
@@ -72,8 +70,8 @@ class ProductConfigResponse extends CleverTapResponseDecorator {
 
     private void onProductConfigFailed() {
         if (mCoreMetaData.isProductConfigRequested()) {
-            if (mCTProductConfigController != null) {
-                mCTProductConfigController.onFetchFailed();
+            if (mControllerManager.getCTProductConfigController() != null) {
+                mControllerManager.getCTProductConfigController().onFetchFailed();
             }
             mCoreMetaData.setProductConfigRequested(false);
         }
@@ -82,8 +80,8 @@ class ProductConfigResponse extends CleverTapResponseDecorator {
     private void parseProductConfigs(JSONObject responseKV) throws JSONException {
         JSONArray kvArray = responseKV.getJSONArray(Constants.KEY_KV);
 
-        if (kvArray != null && mCTProductConfigController != null) {
-            mCTProductConfigController.onFetchSuccess(responseKV);
+        if (kvArray != null && mControllerManager.getCTProductConfigController() != null) {
+            mControllerManager.getCTProductConfigController().onFetchSuccess(responseKV);
         } else {
             onProductConfigFailed();
         }

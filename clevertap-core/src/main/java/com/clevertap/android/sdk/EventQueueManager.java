@@ -20,8 +20,6 @@ class EventQueueManager extends BaseEventQueueManager implements FailureFlushLis
 
     private final BaseDatabaseManager mBaseDatabaseManager;
 
-    private final CallbackManager mCallbackManager;
-
     private final CoreMetaData mCleverTapMetaData;
 
     private final CleverTapInstanceConfig mConfig;
@@ -29,8 +27,6 @@ class EventQueueManager extends BaseEventQueueManager implements FailureFlushLis
     private final Context mContext;
 
     private CTLockManager mCtLockManager;
-
-    private final BaseDatabaseManager mDatabaseManager;
 
     private final DeviceInfo mDeviceInfo;
 
@@ -63,7 +59,6 @@ class EventQueueManager extends BaseEventQueueManager implements FailureFlushLis
             DeviceInfo deviceInfo,
             ValidationResultStack validationResultStack,
             NetworkManager networkManager,
-            DBManager dbManager,
             CoreMetaData coreMetaData,
             CTLockManager ctLockManager,
             final LocalDataStore localDataStore) {
@@ -72,13 +67,11 @@ class EventQueueManager extends BaseEventQueueManager implements FailureFlushLis
         mConfig = config;
         mEventMediator = eventMediator;
         mSessionManager = sessionManager;
-        mCallbackManager = callbackManager;
         mMainLooperHandler = mainLooperHandler;
         mPostAsyncSafelyHandler = postAsyncSafelyHandler;
         mDeviceInfo = deviceInfo;
         mValidationResultStack = validationResultStack;
         mNetworkManager = networkManager;
-        mDatabaseManager = dbManager;
         mLocalDataStore = localDataStore;
         mLogger = mConfig.getLogger();
         mCleverTapMetaData = coreMetaData;
@@ -268,18 +261,19 @@ class EventQueueManager extends BaseEventQueueManager implements FailureFlushLis
 
     @Override
     void pushInitialEventsAsync() {
-
-        mPostAsyncSafelyHandler.postAsyncSafely("CleverTapAPI#pushInitialEventsAsync", new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    mConfig.getLogger().verbose(mConfig.getAccountId(), "Queuing daily events");
-                    pushBasicProfile(null);
-                } catch (Throwable t) {
-                    mConfig.getLogger().verbose(mConfig.getAccountId(), "Daily profile sync failed", t);
+        if(!mCleverTapMetaData.inCurrentSession()){
+            mPostAsyncSafelyHandler.postAsyncSafely("CleverTapAPI#pushInitialEventsAsync", new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        mConfig.getLogger().verbose(mConfig.getAccountId(), "Queuing daily events");
+                        pushBasicProfile(null);
+                    } catch (Throwable t) {
+                        mConfig.getLogger().verbose(mConfig.getAccountId(), "Daily profile sync failed", t);
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 
     @Override

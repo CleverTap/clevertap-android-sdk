@@ -8,8 +8,6 @@ class InboxResponse extends CleverTapResponseDecorator {
 
     private final Object inboxControllerLock;
 
-    private final CTInboxController mCTInboxController;
-
     private final CallbackManager mCallbackManager;
 
     private final CleverTapResponse mCleverTapResponse;
@@ -17,15 +15,16 @@ class InboxResponse extends CleverTapResponseDecorator {
     private final CleverTapInstanceConfig mConfig;
 
     private final Logger mLogger;
+    private final ControllerManager mControllerManager;
 
     InboxResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config, CTLockManager ctLockManager,
             final CallbackManager callbackManager, ControllerManager controllerManager) {
         mCleverTapResponse = cleverTapResponse;
         mConfig = config;
-        mCTInboxController = controllerManager.getCTInboxController();
         mCallbackManager = callbackManager;
         mLogger = mConfig.getLogger();
         inboxControllerLock = ctLockManager.getInboxControllerLock();
+        mControllerManager = controllerManager;
     }
 
     //NotificationInbox
@@ -63,12 +62,12 @@ class InboxResponse extends CleverTapResponseDecorator {
     // always call async
     private void _processInboxMessages(JSONArray messages) {
         synchronized (inboxControllerLock) {
-            if (mCTInboxController == null) {
+            if (mControllerManager.getCTInboxController() == null) {
                 //mCTInboxController.initializeInbox();
                 //TODO logging
             }
-            if (mCTInboxController != null) {
-                boolean update = mCTInboxController.updateMessages(messages);
+            if (mControllerManager.getCTInboxController() != null) {
+                boolean update = mControllerManager.getCTInboxController().updateMessages(messages);
                 if (update) {
                     mCallbackManager._notifyInboxMessagesDidUpdate();
                 }

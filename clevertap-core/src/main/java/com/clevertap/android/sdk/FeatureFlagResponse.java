@@ -9,20 +9,19 @@ import org.json.JSONObject;
 
 class FeatureFlagResponse extends CleverTapResponseDecorator {
 
-    private CTFeatureFlagsController mCTFeatureFlagsController;
-
     private final CleverTapResponse mCleverTapResponse;
 
     private final CleverTapInstanceConfig mConfig;
 
     private final Logger mLogger;
+    private final ControllerManager mControllerManager;
 
     FeatureFlagResponse(CleverTapResponse cleverTapResponse,
             CleverTapInstanceConfig config, ControllerManager controllerManager) {
         mCleverTapResponse = cleverTapResponse;
         mConfig = config;
         mLogger = mConfig.getLogger();
-        mCTFeatureFlagsController = controllerManager.getCTFeatureFlagsController();
+        mControllerManager = controllerManager;
     }
 
     @Override
@@ -65,8 +64,8 @@ class FeatureFlagResponse extends CleverTapResponseDecorator {
     private void parseFeatureFlags(JSONObject responseKV) throws JSONException {
         JSONArray kvArray = responseKV.getJSONArray(Constants.KEY_KV);
 
-        if (kvArray != null && mCTFeatureFlagsController != null) {
-            mCTFeatureFlagsController.updateFeatureFlags(responseKV);
+        if (kvArray != null && mControllerManager.getCTFeatureFlagsController() != null) {
+            mControllerManager.getCTFeatureFlagsController().updateFeatureFlags(responseKV);
         }
     }
 }

@@ -73,7 +73,8 @@ public class NetworkManager extends BaseNetworkManager {
             PostAsyncSafelyHandler postAsyncSafelyHandler,
             final CallbackManager callbackManager,
             CTLockManager ctLockManager,
-            Validator validator) {
+            Validator validator,
+            LocalDataStore localDataStore) {
         mContext = context;
         mConfig = config;
         mDeviceInfo = deviceInfo;
@@ -104,7 +105,7 @@ public class NetworkManager extends BaseNetworkManager {
         cleverTapResponse = new MetadataResponse(cleverTapResponse, config, deviceInfo, this);
         cleverTapResponse = new InAppResponse(cleverTapResponse, config, inAppFCManager, postAsyncSafelyHandler,controllerManager);
 
-        cleverTapResponse = new BaseResponse(cleverTapResponse);
+        cleverTapResponse = new BaseResponse(context,config,deviceInfo,this,localDataStore,cleverTapResponse);
 
         setCleverTapResponse(cleverTapResponse);
 

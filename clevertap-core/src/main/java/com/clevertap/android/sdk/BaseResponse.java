@@ -19,18 +19,17 @@ class BaseResponse extends CleverTapResponseDecorator {
 
     private final NetworkManager mNetworkManager;
 
-    BaseResponse(CleverTapResponse cleverTapResponse) {
+    BaseResponse(Context context, CleverTapInstanceConfig config,
+            DeviceInfo deviceInfo, NetworkManager networkManager, LocalDataStore localDataStore, CleverTapResponse cleverTapResponse) {
         mCleverTapResponse = cleverTapResponse;
 
-        //CoreState coreState = getCoreState();
-
-        mContext = coreState.getContext();
-        mConfig = coreState.getConfig();
-        mDeviceInfo = coreState.getDeviceInfo();
+        mContext = context;
+        mConfig = config;
+        mDeviceInfo = deviceInfo;
         mLogger = mConfig.getLogger();
 
-        mNetworkManager = (NetworkManager) coreState.getNetworkManager();
-        mLocalDataStore = coreState.getLocalDataStore();
+        mNetworkManager = networkManager;
+        mLocalDataStore = localDataStore;
 
     }
 

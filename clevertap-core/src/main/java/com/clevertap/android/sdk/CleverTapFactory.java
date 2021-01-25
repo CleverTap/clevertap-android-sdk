@@ -69,19 +69,19 @@ class CleverTapFactory {
 
         NetworkManager networkManager = new NetworkManager(context, config, deviceInfo, coreMetaData,
                 validationResultStack, controllerManager, inAppFCManager, baseDatabaseManager,
-                postAsyncSafelyHandler,callbackManager,ctLockManager,validator);
+                postAsyncSafelyHandler, callbackManager, ctLockManager, validator, localDataStore);
         coreState.setNetworkManager(networkManager);
 
         EventQueueManager baseEventQueueManager = new EventQueueManager(baseDatabaseManager, context, config,
                 eventMediator,
                 sessionManager, callbackManager,
                 mainLooperHandler, postAsyncSafelyHandler, deviceInfo, validationResultStack,
-                networkManager, baseDatabaseManager, coreMetaData, ctLockManager, localDataStore);
+                networkManager, coreMetaData, ctLockManager, localDataStore);
         coreState.setBaseEventQueueManager(baseEventQueueManager);
 
         AnalyticsManager analyticsManager = new AnalyticsManager(context, config, baseEventQueueManager, validator,
                 validationResultStack, coreMetaData, postAsyncSafelyHandler, localDataStore, deviceInfo,
-                mainLooperHandler, callbackManager,controllerManager);
+                mainLooperHandler, callbackManager, controllerManager);
         coreState.setAnalyticsManager(analyticsManager);
 
         InAppController inAppController = new InAppController(context, config, mainLooperHandler,
@@ -89,16 +89,15 @@ class CleverTapFactory {
         coreState.setInAppController(inAppController);
         coreState.getControllerManager().setInAppController(inAppController);
 
-        initFeatureFlags(context,coreState,config,deviceInfo,callbackManager,analyticsManager);
+        initFeatureFlags(context, coreState, config, deviceInfo, callbackManager, analyticsManager);
 
         LocationManager locationManager = new LocationManager(context, config, coreMetaData, baseEventQueueManager);
         coreState.setLocationManager(locationManager);
 
         PushProviders pushProviders = PushProviders
-                .load(context, config, baseDatabaseManager,  postAsyncSafelyHandler, validationResultStack,
-                        analyticsManager,controllerManager);
+                .load(context, config, baseDatabaseManager, postAsyncSafelyHandler, validationResultStack,
+                        analyticsManager, controllerManager);
         coreState.setPushProviders(pushProviders);
-
 
         ActivityLifeCycleManager activityLifeCycleManager = new ActivityLifeCycleManager(context, config,
                 analyticsManager, coreMetaData, sessionManager, pushProviders, callbackManager, inAppController,
@@ -113,11 +112,12 @@ class CleverTapFactory {
         return coreState;
     }
 
-    static void initFeatureFlags(Context context, CoreState coreState, CleverTapInstanceConfig config, DeviceInfo deviceInfo, CallbackManager callbackManager, AnalyticsManager analyticsManager){
+    static void initFeatureFlags(Context context, CoreState coreState, CleverTapInstanceConfig config,
+            DeviceInfo deviceInfo, CallbackManager callbackManager, AnalyticsManager analyticsManager) {
         Logger.v("Initializing Feature Flags with device Id = " + deviceInfo.getDeviceID());
         if (config.isAnalyticsOnly()) {
             config.getLogger().debug(config.getAccountId(), "Feature Flag is not enabled for this instance");
-        }else {
+        } else {
             coreState.getControllerManager().setCTFeatureFlagsController(new CTFeatureFlagsController(context,
                     deviceInfo.getDeviceID(),
                     config, callbackManager, analyticsManager));
