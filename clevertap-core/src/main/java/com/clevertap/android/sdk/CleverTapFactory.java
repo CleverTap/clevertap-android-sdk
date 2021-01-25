@@ -28,9 +28,6 @@ class CleverTapFactory {
         MainLooperHandler mainLooperHandler = new MainLooperHandler();
         coreState.setMainLooperHandler(mainLooperHandler);
 
-        ControllerManager controllerManager = new ControllerManager();
-        coreState.setControllerManager(controllerManager);
-
         CleverTapInstanceConfig config = new CleverTapInstanceConfig(cleverTapInstanceConfig);
         coreState.setConfig(config);
 
@@ -63,7 +60,9 @@ class CleverTapFactory {
         DBManager baseDatabaseManager = new DBManager(config, ctLockManager);
         coreState.setDatabaseManager(baseDatabaseManager);
 
-        //config
+        ControllerManager controllerManager = new ControllerManager(context,config,postAsyncSafelyHandler,
+                ctLockManager,callbackManager,deviceInfo,baseDatabaseManager);
+        coreState.setControllerManager(controllerManager);
 
         // initializing feature flag so that feature flag will automatically gets initialized
         coreState.getControllerManager().getCTFeatureFlagsController();
@@ -106,7 +105,10 @@ class CleverTapFactory {
                 baseEventQueueManager, postAsyncSafelyHandler);
         coreState.setActivityLifeCycleManager(activityLifeCycleManager);
 
-        LoginController loginController = new LoginController(coreState);
+        LoginController loginController = new LoginController(context,config,deviceInfo,
+                validationResultStack,baseEventQueueManager,analyticsManager,inAppFCManager,
+                postAsyncSafelyHandler,coreMetaData,controllerManager,sessionManager,
+                localDataStore,callbackManager,baseDatabaseManager,ctLockManager);
         coreState.setLoginController(loginController);
         return coreState;
     }
@@ -116,12 +118,10 @@ class CleverTapFactory {
         if (config.isAnalyticsOnly()) {
             config.getLogger().debug(config.getAccountId(), "Feature Flag is not enabled for this instance");
         }else {
-            CTFeatureFlagsController ctFeatureFlagsController = new CTFeatureFlagsController(context,
+            coreState.getControllerManager().setCTFeatureFlagsController(new CTFeatureFlagsController(context,
                     deviceInfo.getDeviceID(),
-                    config, callbackManager, analyticsManager);
+                    config, callbackManager, analyticsManager));
             config.getLogger().verbose(config.getAccountId(), "Feature Flags initialized");
-            coreState.getControllerManager().setCTFeatureFlagsController(ctFeatureFlagsController);
-
         }
     }
 }

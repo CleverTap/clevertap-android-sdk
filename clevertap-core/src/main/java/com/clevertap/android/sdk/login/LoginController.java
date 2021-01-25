@@ -1,12 +1,15 @@
 package com.clevertap.android.sdk.login;
 
 import android.content.Context;
+import android.telecom.Call;
 import com.clevertap.android.sdk.AnalyticsManager;
 import com.clevertap.android.sdk.BaseDatabaseManager;
 import com.clevertap.android.sdk.BaseEventQueueManager;
+import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.CoreState;
 import com.clevertap.android.sdk.DBManager;
@@ -39,8 +42,6 @@ public class LoginController {
 
     private final CoreMetaData mCoreMetaData;
 
-    private final CoreState mCoreState;
-
     private final DeviceInfo mDeviceInfo;
 
     private final InAppFCManager mInAppFCManager;
@@ -61,22 +62,41 @@ public class LoginController {
 
     private final Boolean processingUserLoginLock = true;
 
-    public LoginController(CoreState coreState) {
-        mConfig = coreState.getConfig();
-        mContext = coreState.getContext();
-        mDeviceInfo = coreState.getDeviceInfo();
-        mValidationResultStack = coreState.getValidationResultStack();
-        mBaseEventQueueManager = coreState.getBaseEventQueueManager();
-        mAnalyticsManager = coreState.getAnalyticsManager();
-        mInAppFCManager = coreState.getInAppFCManager();
-        mPostAsyncSafelyHandler = coreState.getPostAsyncSafelyHandler();
-        mCoreMetaData = coreState.getCoreMetaData();
-        mPushProviders = coreState.getPushProviders();
-        mSessionManager = coreState.getSessionManager();
-        mLocalDataStore = coreState.getLocalDataStore();
-        mCallbackManager = coreState.getCallbackManager();
-        mCoreState = coreState;
-        mDBManager = coreState.getDatabaseManager();
+    private final ControllerManager mControllerManager;
+
+    private final CTLockManager mCTLockManager;
+
+    public LoginController(Context context,
+            CleverTapInstanceConfig config,
+            DeviceInfo deviceInfo,
+            ValidationResultStack validationResultStack,
+            BaseEventQueueManager eventQueueManager,
+            AnalyticsManager analyticsManager,
+            InAppFCManager inAppFCManager,
+            PostAsyncSafelyHandler postAsyncSafelyHandler,
+            CoreMetaData coreMetaData,
+            ControllerManager controllerManager,
+            SessionManager sessionManager,
+            LocalDataStore localDataStore,
+            CallbackManager callbackManager,
+            DBManager dbManager,
+            CTLockManager ctLockManager){
+        mConfig = config;
+        mContext = context;
+        mDeviceInfo = deviceInfo;
+        mValidationResultStack = validationResultStack;
+        mBaseEventQueueManager = eventQueueManager;
+        mAnalyticsManager = analyticsManager;
+        mInAppFCManager = inAppFCManager;
+        mPostAsyncSafelyHandler = postAsyncSafelyHandler;
+        mCoreMetaData = coreMetaData;
+        mPushProviders = controllerManager.getPushProviders();
+        mSessionManager = sessionManager;
+        mLocalDataStore = localDataStore;
+        mCallbackManager = callbackManager;
+        mDBManager = dbManager;
+        mControllerManager = controllerManager;
+        mCTLockManager = ctLockManager;
     }
 
     @SuppressWarnings({"unused", "WeakerAccess"})
@@ -216,7 +236,7 @@ public class LoginController {
                         mDeviceInfo.forceNewDeviceID();
                     }
                     mCallbackManager.notifyUserProfileInitialized(mDeviceInfo.getDeviceID());
-                    mCoreState.setCurrentUserOptOutStateFromStorage(); // be sure to call this after the guid is updated
+                    mDeviceInfo.setCurrentUserOptOutStateFromStorage(); // be sure to call this after the guid is updated
                     mAnalyticsManager.forcePushAppLaunchedEvent();
                     if (profile != null) {
                         mAnalyticsManager.pushProfile(profile);
@@ -245,8 +265,8 @@ public class LoginController {
     }
 
     public void recordDeviceIDErrors() {
-        for (ValidationResult validationResult : mCoreState.getDeviceInfo().getValidationResults()) {
-            mCoreState.getValidationResultStack().pushValidationResult(validationResult);
+        for (ValidationResult validationResult : mDeviceInfo.getValidationResults()) {
+            mValidationResultStack.pushValidationResult(validationResult);
         }
     }
 
@@ -254,8 +274,8 @@ public class LoginController {
      * Resets the Display Units in the cache
      */
     private void resetDisplayUnits() {
-        if (mCoreState.getControllerManager().getCTDisplayUnitController() != null) {
-            mCoreState.getControllerManager().getCTDisplayUnitController().reset();
+        if (mControllerManager.getCTDisplayUnitController() != null) {
+            mControllerManager.getCTDisplayUnitController().reset();
         } else {
             mConfig.getLogger().verbose(mConfig.getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "Can't reset Display Units, DisplayUnitcontroller is null");
@@ -263,19 +283,19 @@ public class LoginController {
     }
 
     private void resetFeatureFlags() {
-        if (mCoreState.getControllerManager().getCTFeatureFlagsController() != null && mCoreState.getControllerManager().getCTFeatureFlagsController()
+        if (mControllerManager.getCTFeatureFlagsController() != null && mControllerManager.getCTFeatureFlagsController()
                 .isInitialized()) {
-            mCoreState.getControllerManager().getCTFeatureFlagsController().resetWithGuid(mDeviceInfo.getDeviceID());
-            mCoreState.getControllerManager().getCTFeatureFlagsController().fetchFeatureFlags();
+            mControllerManager.getCTFeatureFlagsController().resetWithGuid(mDeviceInfo.getDeviceID());
+            mControllerManager.getCTFeatureFlagsController().fetchFeatureFlags();
         }
     }
 
     // always call async
     private void resetInbox() {
-        synchronized (mCoreState.getCTLockManager().getInboxControllerLock()) {
-            mCoreState.getControllerManager().setCTInboxController(null);
+        synchronized (mCTLockManager.getInboxControllerLock()) {
+            mControllerManager.setCTInboxController(null);
         }
-        mCoreState.initializeInbox();
+        mControllerManager.initializeInbox();
     }
 //Session
 
@@ -284,13 +304,13 @@ public class LoginController {
             mConfig.getLogger().debug(mConfig.getAccountId(), "Product Config is not enabled for this instance");
             return;
         }
-        if (mCoreState.getControllerManager().getCTProductConfigController() != null) {
-            mCoreState.getControllerManager().getCTProductConfigController().resetSettings();
+        if (mControllerManager.getCTProductConfigController() != null) {
+            mControllerManager.getCTProductConfigController().resetSettings();
         }
         CTProductConfigController ctProductConfigController = new CTProductConfigController(mContext, mDeviceInfo.getDeviceID(),
-                mConfig, mCoreState.getBaseEventQueueManager(), mCoreState.getCoreMetaData(),
-                mCoreState.getCallbackManager());
-        mCoreState.getControllerManager().setCTProductConfigController(ctProductConfigController);
+                mConfig, mAnalyticsManager, mCoreMetaData,
+                mCallbackManager);
+        mControllerManager.setCTProductConfigController(ctProductConfigController);
         mConfig.getLogger().verbose(mConfig.getAccountId(), "Product Config reset");
     }
 }

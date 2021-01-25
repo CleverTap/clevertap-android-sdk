@@ -270,32 +270,7 @@ public class CoreState extends CleverTapState {
         mValidator = validator;
     }
 
-    public void initializeInbox() {
-        if (getConfig().isAnalyticsOnly()) {
-            config.getLogger()
-                    .debug(config.getAccountId(), "Instance is analytics only, not initializing Notification Inbox");
-            return;
-        }
-        postAsyncSafelyHandler.postAsyncSafely("initializeInbox", new Runnable() {
-            @Override
-            public void run() {
-                _initializeInbox();
-            }
-        });
-    }
 
-    public void setCurrentUserOptOutStateFromStorage() {
-        String key = optOutKey();
-        if (key == null) {
-            getConfig().getLogger().verbose(getConfig().getAccountId(),
-                    "Unable to set current user OptOut state from storage: storage key is null");
-            return;
-        }
-        boolean storedOptOut = StorageHelper.getBooleanFromPrefs(context, getConfig(), key);
-        getCoreMetaData().setCurrentUserOptedOut(storedOptOut);
-        getConfig().getLogger().verbose(getConfig().getAccountId(),
-                "Set current user OptOut state from storage to: " + storedOptOut + " for key: " + key);
-    }
 
     EventMediator getEventMediator() {
         return eventMediator;
@@ -315,32 +290,7 @@ public class CoreState extends CleverTapState {
         this.baseLocationManager = baseLocationManager;
     }
 
-    String optOutKey() {
-        String guid = getDeviceInfo().getDeviceID();
-        if (guid == null) {
-            return null;
-        }
-        return "OptOut:" + guid;
-    }
 
-    // always call async
-    private void _initializeInbox() {
-        synchronized (mCTLockManager.getInboxControllerLock()) {
-            if (getControllerManager().getInAppController() != null) {
-                mCallbackManager._notifyInboxInitialized();
-                return;
-            }
-            if (deviceInfo.getDeviceID() != null) {
-                ctInboxController = new CTInboxController(deviceInfo.getDeviceID(),
-                        databaseManager.loadDBAdapter(context),
-                        Utils.haveVideoPlayerSupport);
-                getControllerManager().setCTInboxController(ctInboxController);
-                mCallbackManager._notifyInboxInitialized();
-            } else {
-                config.getLogger().info("CRITICAL : No device ID found!");
-            }
-        }
-    }
 
     private void initProductConfig() {
         Logger.v("Initializing Product Config with device Id = " + getDeviceInfo().getDeviceID());
@@ -351,7 +301,7 @@ public class CoreState extends CleverTapState {
         }
         if (ctProductConfigController == null) {
             CTProductConfigController ctProductConfigController = new CTProductConfigController(context, getDeviceInfo().getDeviceID(),
-                    getConfig(), mBaseEventQueueManager, coreMetaData, mCallbackManager);
+                    getConfig(), mAnalyticsManager, coreMetaData, mCallbackManager);
             getControllerManager().setCTProductConfigController(ctProductConfigController);
         }
     }

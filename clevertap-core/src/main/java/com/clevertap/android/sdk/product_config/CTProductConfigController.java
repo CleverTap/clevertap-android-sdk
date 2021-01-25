@@ -9,6 +9,7 @@ import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.
 
 import android.content.Context;
 import android.text.TextUtils;
+import com.clevertap.android.sdk.AnalyticsManager;
 import com.clevertap.android.sdk.BaseEventQueueManager;
 import com.clevertap.android.sdk.CallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -48,8 +49,6 @@ public class CTProductConfigController {
 
     private boolean isInitialized = false;
 
-    private final BaseEventQueueManager mBaseEventQueueManager;
-
     private final CallbackManager mCallbackManager;
 
     private final CoreMetaData mCoreMetaData;
@@ -58,19 +57,21 @@ public class CTProductConfigController {
 
     private final HashMap<String, String> waitingTobeActivatedConfig = new HashMap<>();
 
+    private final AnalyticsManager mAnalyticsManager;
+
     // -----------------------------------------------------------------------//
     // ********                        Public API                        *****//
     // -----------------------------------------------------------------------//
 
     public CTProductConfigController(Context context, String guid, CleverTapInstanceConfig config,
-            final BaseEventQueueManager baseEventQueueManager, final CoreMetaData coreMetaData,
+            final AnalyticsManager analyticsManager, final CoreMetaData coreMetaData,
             final CallbackManager callbackManager) {
         this.context = context;
         this.guid = guid;
         this.config = config;
-        this.mBaseEventQueueManager = baseEventQueueManager;
         mCoreMetaData = coreMetaData;
         mCallbackManager = callbackManager;
+        mAnalyticsManager = analyticsManager;
         this.settings = new ProductConfigSettings(context, guid, config);
         initAsync();
     }
@@ -164,8 +165,7 @@ public class CTProductConfigController {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
-        mBaseEventQueueManager.queueEvent(context, event, Constants.FETCH_EVENT);
+        mAnalyticsManager.sendFetchEvent(event);
         mCoreMetaData.setProductConfigRequested(true);
         config.getLogger()
                 .verbose(config.getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Fetching product config");

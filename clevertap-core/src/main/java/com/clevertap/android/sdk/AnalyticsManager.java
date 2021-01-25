@@ -108,8 +108,7 @@ public class AnalyticsManager {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-
-        mBaseEventQueueManager.queueEvent(mContext, event, Constants.FETCH_EVENT);
+        sendFetchEvent(event);
     }
 
     //Event
@@ -1187,5 +1186,10 @@ public class AnalyticsManager {
     public void sendPingEvent(final JSONObject eventObject){
         mBaseEventQueueManager
                 .queueEvent(mContext, eventObject, Constants.PING_EVENT);
+    }
+
+    public void sendFetchEvent(final JSONObject eventObject){
+        mBaseEventQueueManager
+                .queueEvent(mContext, eventObject, Constants.FETCH_EVENT);
     }
 }

@@ -750,4 +750,25 @@ public class DeviceInfo {
             return new JSONObject();
         }
     }
+
+    public void setCurrentUserOptOutStateFromStorage() {
+        String key = optOutKey();
+        if (key == null) {
+            config.getLogger().verbose(config.getAccountId(),
+                    "Unable to set current user OptOut state from storage: storage key is null");
+            return;
+        }
+        boolean storedOptOut = StorageHelper.getBooleanFromPrefs(context, config, key);
+        mCoreMetaData.setCurrentUserOptedOut(storedOptOut);
+        config.getLogger().verbose(config.getAccountId(),
+                "Set current user OptOut state from storage to: " + storedOptOut + " for key: " + key);
+    }
+
+    String optOutKey() {
+        String guid = getDeviceID();
+        if (guid == null) {
+            return null;
+        }
+        return "OptOut:" + guid;
+    }
 }

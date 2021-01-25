@@ -1623,7 +1623,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings({"unused"})
     public void initializeInbox() {
-        mCoreState.initializeInbox();
+        mCoreState.getControllerManager().initializeInbox();
     }
 
     /**
