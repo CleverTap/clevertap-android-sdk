@@ -1,7 +1,11 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inbox;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
+import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.Logger;
 import java.util.ArrayList;
 import java.util.List;
 import org.json.JSONArray;
@@ -13,6 +17,7 @@ import org.json.JSONObject;
  * Public facing model class for type of InboxMessage
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
+@RestrictTo(Scope.LIBRARY)
 public class CTInboxMessage implements Parcelable {
 
     @SuppressWarnings("unused")
@@ -66,7 +71,7 @@ public class CTInboxMessage implements Parcelable {
         return CREATOR;
     }
 
-    CTInboxMessage(JSONObject jsonObject) {
+    public CTInboxMessage(JSONObject jsonObject) {
         this.data = jsonObject;
         try {
             this.messageId = jsonObject.has(Constants.KEY_ID) ? jsonObject.getString(Constants.KEY_ID) : "0";

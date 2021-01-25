@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inbox;
 
 import android.content.Context;
 import android.view.LayoutInflater;
@@ -7,31 +7,38 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import androidx.viewpager.widget.PagerAdapter;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
+import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.R;
+import com.clevertap.android.sdk.Utils;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 /**
  * Custom ViewPager Adapter to add views to the Carousel
  */
-@SuppressWarnings({"FieldCanBeLocal", "unused"})
+@SuppressWarnings({"FieldCanBeLocal"})
+@RestrictTo(Scope.LIBRARY)
 public class CTCarouselViewPagerAdapter extends PagerAdapter {
 
-    private ArrayList<String> carouselImages;
+    private final ArrayList<String> carouselImages;
 
-    private Context context;
+    private final Context context;
 
-    private CTInboxMessage inboxMessage;
+    private final CTInboxMessage inboxMessage;
 
     private LayoutInflater layoutInflater;
 
-    private LinearLayout.LayoutParams layoutParams;
+    private final LinearLayout.LayoutParams layoutParams;
 
-    private WeakReference<CTInboxListViewFragment> parentWeakReference;
+    private final WeakReference<CTInboxListViewFragment> parentWeakReference;
 
-    private int row;
+    private final int row;
 
     private View view;
 
@@ -60,7 +67,7 @@ public class CTCarouselViewPagerAdapter extends PagerAdapter {
     @Override
     public Object instantiateItem(@NonNull final ViewGroup container, final int position) {
         layoutInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
-        //noinspection ConstantConditions
+        //noinspection Constant Conditions
         view = layoutInflater.inflate(R.layout.inbox_carousel_image_layout, container, false);
         try {
             if (inboxMessage.getOrientation().equalsIgnoreCase("l")) {

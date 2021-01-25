@@ -3,6 +3,7 @@ package com.clevertap.android.sdk;
 import android.content.Context;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.InAppController;
+import com.clevertap.android.sdk.inbox.CTInboxController;
 import com.clevertap.android.sdk.login.LoginController;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 
@@ -63,9 +64,6 @@ class CleverTapFactory {
         ControllerManager controllerManager = new ControllerManager(context,config,postAsyncSafelyHandler,
                 ctLockManager,callbackManager,deviceInfo,baseDatabaseManager);
         coreState.setControllerManager(controllerManager);
-
-        // initializing feature flag so that feature flag will automatically gets initialized
-        coreState.getControllerManager().getCTFeatureFlagsController();
 
         NetworkManager networkManager = new NetworkManager(context, config, deviceInfo, coreMetaData,
                 validationResultStack, controllerManager, inAppFCManager, baseDatabaseManager,

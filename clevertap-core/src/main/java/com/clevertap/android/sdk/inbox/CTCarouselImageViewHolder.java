@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inbox;
 
 import android.app.Activity;
 import android.content.Context;
@@ -12,26 +12,25 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.viewpager.widget.ViewPager;
+import com.clevertap.android.sdk.R;
 
-/**
- * Viewholder class for Carousels
- */
-class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
+class CTCarouselImageViewHolder extends CTInboxBaseMessageViewHolder {
 
     /**
      * Custom PageChangeListener for Carousel
      */
+    @SuppressWarnings("InnerClassMayBeStatic")
     class CarouselPageChangeListener implements ViewPager.OnPageChangeListener {
 
-        private Context context;
+        private final Context context;
 
-        private ImageView[] dots;
+        private final ImageView[] dots;
 
-        private CTInboxMessage inboxMessage;
+        private final CTInboxMessage inboxMessage;
 
-        private CTCarouselMessageViewHolder viewHolder;
+        private final CTCarouselImageViewHolder viewHolder;
 
-        CarouselPageChangeListener(Context context, CTCarouselMessageViewHolder viewHolder, ImageView[] dots,
+        CarouselPageChangeListener(Context context, CTCarouselImageViewHolder viewHolder, ImageView[] dots,
                 CTInboxMessage inboxMessage) {
             this.context = context;
             this.viewHolder = viewHolder;
@@ -58,33 +57,25 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
             }
             dots[position].setImageDrawable(
                     ResourcesCompat.getDrawable(context.getResources(), R.drawable.ct_selected_dot, null));
-            viewHolder.title.setText(inboxMessage.getInboxMessageContents().get(position).getTitle());
-            viewHolder.title.setTextColor(
-                    Color.parseColor(inboxMessage.getInboxMessageContents().get(position).getTitleColor()));
-            viewHolder.message.setText(inboxMessage.getInboxMessageContents().get(position).getMessage());
-            viewHolder.message.setTextColor(
-                    Color.parseColor(inboxMessage.getInboxMessageContents().get(position).getMessageColor()));
         }
     }
 
-    private RelativeLayout clickLayout;
+    private final ImageView carouselReadDot;
 
-    private CTCarouselViewPager imageViewPager;
+    private final TextView carouselTimestamp;
 
-    private ImageView readDot, carouselReadDot;
+    private final RelativeLayout clickLayout;
 
-    private LinearLayout sliderDots;
+    private final CTCarouselViewPager imageViewPager;
 
-    private TextView title, message, timestamp, carouselTimestamp;
+    private final LinearLayout sliderDots;
 
-    CTCarouselMessageViewHolder(@NonNull View itemView) {
+    CTCarouselImageViewHolder(@NonNull View itemView) {
         super(itemView);
         imageViewPager = itemView.findViewById(R.id.image_carousel_viewpager);
         sliderDots = itemView.findViewById(R.id.sliderDots);
-        title = itemView.findViewById(R.id.messageTitle);
-        message = itemView.findViewById(R.id.messageText);
-        timestamp = itemView.findViewById(R.id.timestamp);
-        readDot = itemView.findViewById(R.id.read_circle);
+        carouselTimestamp = itemView.findViewById(R.id.carousel_timestamp);
+        carouselReadDot = itemView.findViewById(R.id.carousel_read_circle);
         clickLayout = itemView.findViewById(R.id.body_linear_layout);
     }
 
@@ -96,21 +87,16 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
         // noinspection ConstantConditions
         final Context appContext = parent.getActivity().getApplicationContext();
         CTInboxMessageContent content = inboxMessage.getInboxMessageContents().get(0);
-        this.title.setVisibility(View.VISIBLE);
-        this.message.setVisibility(View.VISIBLE);
-        this.title.setText(content.getTitle());
-        this.title.setTextColor(Color.parseColor(content.getTitleColor()));
-        this.message.setText(content.getMessage());
-        this.message.setTextColor(Color.parseColor(content.getMessageColor()));
+        this.carouselTimestamp.setVisibility(View.VISIBLE);
         if (inboxMessage.isRead()) {
-            this.readDot.setVisibility(View.GONE);
+            this.carouselReadDot.setVisibility(View.GONE);
         } else {
-            this.readDot.setVisibility(View.VISIBLE);
+            this.carouselReadDot.setVisibility(View.VISIBLE);
         }
-        this.timestamp.setVisibility(View.VISIBLE);
-        String carouselDisplayTimestamp = calculateDisplayTimestamp(inboxMessage.getDate());
-        this.timestamp.setText(carouselDisplayTimestamp);
-        this.timestamp.setTextColor(Color.parseColor(content.getTitleColor()));
+        String carouselImageDisplayTimestamp = calculateDisplayTimestamp(inboxMessage.getDate());
+        this.carouselTimestamp.setText(carouselImageDisplayTimestamp);
+        this.carouselTimestamp.setTextColor(Color.parseColor(content.getTitleColor()));
+
         this.clickLayout.setBackgroundColor(Color.parseColor(inboxMessage.getBgColor()));
 
         //Loads the viewpager
@@ -127,8 +113,8 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
         setDots(dots, dotsCount, appContext, this.sliderDots);
         dots[0].setImageDrawable(
                 ResourcesCompat.getDrawable(appContext.getResources(), R.drawable.ct_selected_dot, null));
-        CTCarouselMessageViewHolder.CarouselPageChangeListener carouselPageChangeListener
-                = new CTCarouselMessageViewHolder.CarouselPageChangeListener(
+        CTCarouselImageViewHolder.CarouselPageChangeListener carouselPageChangeListener
+                = new CTCarouselImageViewHolder.CarouselPageChangeListener(
                 parent.getActivity().getApplicationContext(), this, dots, inboxMessage);
         this.imageViewPager.addOnPageChangeListener(carouselPageChangeListener);
 
@@ -145,21 +131,12 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
                 activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if (inboxMessage.getType() == CTInboxMessageType.CarouselImageMessage) {
-                            if (carouselReadDot.getVisibility() == View.VISIBLE) {
-                                if (parentWeak != null) {
-                                    parentWeak.didShow(null, position);
-                                }
+                        if (carouselReadDot.getVisibility() == View.VISIBLE) {
+                            if (parentWeak != null) {
+                                parentWeak.didShow(null, position);
                             }
-                            carouselReadDot.setVisibility(View.GONE);
-                        } else {
-                            if (readDot.getVisibility() == View.VISIBLE) {
-                                if (parentWeak != null) {
-                                    parentWeak.didShow(null, position);
-                                }
-                            }
-                            readDot.setVisibility(View.GONE);
                         }
+                        carouselReadDot.setVisibility(View.GONE);
                     }
                 });
             }

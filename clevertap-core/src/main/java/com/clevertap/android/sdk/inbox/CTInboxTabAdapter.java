@@ -1,8 +1,10 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inbox;
 
 import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
@@ -13,6 +15,7 @@ import java.util.List;
  * Custom PagerAdapter for Notification Inbox tabs
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
+@RestrictTo(Scope.LIBRARY)
 public class CTInboxTabAdapter extends FragmentPagerAdapter {
 
     private final Fragment[] fragmentList;

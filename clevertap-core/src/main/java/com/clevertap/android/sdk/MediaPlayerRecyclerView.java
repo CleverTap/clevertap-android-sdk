@@ -10,9 +10,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
 import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.clevertap.android.sdk.inbox.CTInboxActivity;
+import com.clevertap.android.sdk.inbox.CTInboxBaseMessageViewHolder;
 import com.google.android.exoplayer2.ExoPlaybackException;
 import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
@@ -26,7 +30,7 @@ import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.PlayerView;
 
-@SuppressWarnings("unused")
+@RestrictTo(Scope.LIBRARY)
 public class MediaPlayerRecyclerView extends RecyclerView {
 
     SimpleExoPlayer player;
@@ -226,11 +230,11 @@ public class MediaPlayerRecyclerView extends RecyclerView {
             }
 
             @Override
-            public void onPlaybackParametersChanged(PlaybackParameters playbackParameters) {
+            public void onPlaybackParametersChanged(@NonNull PlaybackParameters playbackParameters) {
             }
 
             @Override
-            public void onPlayerError(ExoPlaybackException error) {
+            public void onPlayerError(@NonNull ExoPlaybackException error) {
             }
 
             @Override
@@ -278,7 +282,7 @@ public class MediaPlayerRecyclerView extends RecyclerView {
             }
 
             @Override
-            public void onTracksChanged(TrackGroupArray trackGroups, TrackSelectionArray trackSelections) {
+            public void onTracksChanged(@NonNull TrackGroupArray trackGroups, @NonNull TrackSelectionArray trackSelections) {
             }
         });
     }

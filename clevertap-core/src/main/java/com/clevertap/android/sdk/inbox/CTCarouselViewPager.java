@@ -1,13 +1,16 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inbox;
 
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.View;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import androidx.viewpager.widget.ViewPager;
 
 /**
  * Custom Viewpager class to handle orientation of images
  */
+@RestrictTo(Scope.LIBRARY)
 public class CTCarouselViewPager extends ViewPager {
 
     /**

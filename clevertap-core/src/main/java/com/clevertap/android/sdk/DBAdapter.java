@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import com.clevertap.android.sdk.inbox.CTMessageDAO;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -357,7 +358,7 @@ public class DBAdapter {
      * @return boolean value based on success of operation
      */
     @SuppressWarnings("UnusedReturnValue")
-    synchronized boolean deleteMessageForId(String messageId, String userId) {
+    public synchronized boolean deleteMessageForId(String messageId, String userId) {
         if (messageId == null || userId == null) {
             return false;
         }
@@ -524,7 +525,7 @@ public class DBAdapter {
      * @param userId String userid
      * @return ArrayList of {@link CTMessageDAO}
      */
-    synchronized ArrayList<CTMessageDAO> getMessages(String userId) {
+    public synchronized ArrayList<CTMessageDAO> getMessages(String userId) {
         final String tName = Table.INBOX_MESSAGES.getName();
         Cursor cursor;
         ArrayList<CTMessageDAO> messageDAOArrayList = new ArrayList<>();
@@ -567,7 +568,7 @@ public class DBAdapter {
      * @return boolean value depending on success of operation
      */
     @SuppressWarnings("UnusedReturnValue")
-    synchronized boolean markReadMessageForId(String messageId, String userId) {
+    public synchronized boolean markReadMessageForId(String messageId, String userId) {
         if (messageId == null || userId == null) {
             return false;
         }
@@ -794,7 +795,7 @@ public class DBAdapter {
      *
      * @param inboxMessages ArrayList of type {@link CTMessageDAO}
      */
-    synchronized void upsertMessages(ArrayList<CTMessageDAO> inboxMessages) {
+    public synchronized void upsertMessages(ArrayList<CTMessageDAO> inboxMessages) {
         if (!this.belowMemThreshold()) {
             Logger.v("There is not enough space left on the device to store data, data discarded");
             return;

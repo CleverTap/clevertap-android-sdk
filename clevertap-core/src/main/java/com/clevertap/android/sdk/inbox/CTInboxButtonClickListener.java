@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inbox;
 
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -6,6 +6,7 @@ import android.content.Context;
 import android.view.View;
 import android.widget.Toast;
 import androidx.viewpager.widget.ViewPager;
+import com.clevertap.android.sdk.Constants;
 import java.util.HashMap;
 import org.json.JSONObject;
 
@@ -16,13 +17,13 @@ class CTInboxButtonClickListener implements View.OnClickListener {
 
     private JSONObject buttonObject;
 
-    private String buttonText;
+    private final String buttonText;
 
-    private CTInboxListViewFragment fragment;
+    private final CTInboxListViewFragment fragment;
 
-    private CTInboxMessage inboxMessage;
+    private final CTInboxMessage inboxMessage;
 
-    private int position;
+    private final int position;
 
     private ViewPager viewPager;
 

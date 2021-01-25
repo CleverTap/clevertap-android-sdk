@@ -166,7 +166,7 @@ implementation "com.google.android.exoplayer:exoplayer-ui:2.11.5"
 Initializing the Inbox will provide a callback to two methods `inboxDidInitialize()` AND `inboxMessagesDidUpdate()`
 
 ```java
-import com.clevertap.android.sdk.CTInboxActivity;
+import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.CTInboxListener;
 import com.clevertap.android.sdk.CTInboxStyleConfig;
 import com.clevertap.android.sdk.CleverTapAPI;

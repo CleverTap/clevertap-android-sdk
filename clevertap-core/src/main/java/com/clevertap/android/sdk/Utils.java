@@ -365,7 +365,7 @@ public final class Utils {
         return (ic != null) ? ic : ((fallbackToAppIcon) ? getAppIcon(context) : null);
     }
 
-    static int getThumbnailImage(Context context, String image) {
+    public static int getThumbnailImage(Context context, String image) {
         if (context != null) {
             return context.getResources().getIdentifier(image, "drawable", context.getPackageName());
         } else {

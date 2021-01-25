@@ -5,6 +5,7 @@ import android.os.Bundle;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
+import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import java.util.Iterator;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -12,7 +13,6 @@ import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
 public class CTJsonConverter {
-
 
     public static JSONObject toJsonObject(String json, Logger logger, String accountId) {
         JSONObject cache = null;

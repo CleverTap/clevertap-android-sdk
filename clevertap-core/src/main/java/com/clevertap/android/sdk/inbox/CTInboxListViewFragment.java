@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inbox;
 
 import android.content.Context;
 import android.content.Intent;
@@ -15,16 +15,28 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import com.clevertap.android.sdk.CTInboxStyleConfig;
+import com.clevertap.android.sdk.CleverTapAPI;
+import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.MediaPlayerRecyclerView;
+import com.clevertap.android.sdk.R;
+import com.clevertap.android.sdk.Utils;
+import com.clevertap.android.sdk.VerticalSpaceItemDecoration;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import org.json.JSONObject;
 
+@RestrictTo(Scope.LIBRARY)
 public class CTInboxListViewFragment extends Fragment {
 
     interface InboxListener {

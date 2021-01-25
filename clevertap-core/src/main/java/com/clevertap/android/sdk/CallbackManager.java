@@ -6,7 +6,6 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
-import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
@@ -172,7 +171,7 @@ public class CallbackManager {
         }
     }
 
-    void _notifyInboxMessagesDidUpdate() {
+    public void _notifyInboxMessagesDidUpdate() {
         if (this.inboxListener != null) {
             Utils.runOnUiThread(new Runnable() {
                 @Override

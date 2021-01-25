@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inbox;
 
 import static com.google.android.exoplayer2.ui.PlayerView.SHOW_BUFFERING_NEVER;
 
@@ -19,8 +19,11 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.RecyclerView;
+import com.clevertap.android.sdk.R;
 import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.ui.PlayerView;
@@ -32,7 +35,8 @@ import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
+@RestrictTo(Scope.LIBRARY)
+public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
 
     Context context;
 
@@ -46,7 +50,6 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
 
     FrameLayout progressBarFrameLayout;
 
-    @SuppressWarnings({"unused"})
     RelativeLayout relativeLayout, clickLayout;
 
     private CTInboxMessageContent firstContentItem;
@@ -63,7 +66,7 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         super(itemView);
     }
 
-    boolean addMediaPlayer(PlayerView videoSurfaceView) {
+    public boolean addMediaPlayer(PlayerView videoSurfaceView) {
         if (!requiresMediaPlayer) {
             return false;
         }
@@ -242,17 +245,17 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         tertiaryButton.setLayoutParams(tertiaryLayoutParams);
     }
 
-    boolean needsMediaPlayer() {
+    public boolean needsMediaPlayer() {
         return requiresMediaPlayer;
     }
 
-    void playerBuffering() {
+    public void playerBuffering() {
         if (progressBarFrameLayout != null) {
             progressBarFrameLayout.setVisibility(View.VISIBLE);
         }
     }
 
-    void playerReady() {
+    public void playerReady() {
         FrameLayout frameLayout = getLayoutForMediaPlayer();
         frameLayout.setVisibility(View.VISIBLE);
         if (muteIcon != null) {
@@ -263,7 +266,7 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         }
     }
 
-    void playerRemoved() {
+    public void playerRemoved() {
         if (progressBarFrameLayout != null) {
             progressBarFrameLayout.setVisibility(View.GONE);
         }
@@ -292,7 +295,7 @@ class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
         }
     }
 
-    boolean shouldAutoPlay() {
+    public boolean shouldAutoPlay() {
         return firstContentItem.mediaIsVideo();
     }
 

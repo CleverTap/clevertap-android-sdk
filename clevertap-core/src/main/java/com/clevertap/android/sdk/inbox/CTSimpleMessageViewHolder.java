@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inbox;
 
 import android.app.Activity;
 import android.content.res.Configuration;
@@ -13,6 +13,10 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
+import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.R;
+import com.clevertap.android.sdk.Utils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -23,15 +27,19 @@ import org.json.JSONObject;
  */
 class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
 
-    private Button cta1, cta2, cta3;
+    private final Button cta1;
 
-    private TextView message;
+    private final Button cta2;
 
-    private ImageView readDot;
+    private final Button cta3;
 
-    private TextView timestamp;
+    private final TextView message;
 
-    private TextView title;
+    private final ImageView readDot;
+
+    private final TextView timestamp;
+
+    private final TextView title;
 
     CTSimpleMessageViewHolder(@NonNull View itemView) {
         super(itemView);

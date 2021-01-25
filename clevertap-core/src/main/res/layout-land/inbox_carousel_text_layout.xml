@@ -16,7 +16,7 @@
             android:baselineAligned="false"
             android:weightSum="2">
 
-            <com.clevertap.android.sdk.CTCarouselViewPager
+            <com.clevertap.android.sdk.inbox.CTCarouselViewPager
                 android:id="@+id/image_carousel_viewpager"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

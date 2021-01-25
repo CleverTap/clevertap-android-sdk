@@ -1,8 +1,12 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inbox;
 
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.text.TextUtils;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
+import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.Logger;
 import java.util.HashMap;
 import java.util.Iterator;
 import org.json.JSONArray;
@@ -13,6 +17,7 @@ import org.json.JSONObject;
  * Public model class for the "msg" object from notification inbox payload
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
+@RestrictTo(Scope.LIBRARY)
 public class CTInboxMessageContent implements Parcelable {
 
     @SuppressWarnings("unused")

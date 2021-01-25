@@ -5,6 +5,7 @@ import android.os.Handler;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.InAppController;
+import com.clevertap.android.sdk.inbox.CTInboxController;
 import com.clevertap.android.sdk.login.LoginController;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
@@ -41,8 +42,6 @@ public class CoreState extends CleverTapState {
     private AnalyticsManager mAnalyticsManager;
 
     private BaseEventQueueManager mBaseEventQueueManager;
-
-    private CTDisplayUnitController mCTDisplayUnitController;
 
     private CTLockManager mCTLockManager;
 
@@ -134,23 +133,11 @@ public class CoreState extends CleverTapState {
         this.coreMetaData = coreMetaData;
     }
 
-    public CTInboxController getCtInboxController() {
-        return ctInboxController;
-    } //TODO move to Controller Manager
-
-    public void setCtInboxController(final CTInboxController ctInboxController) {
-        this.ctInboxController = ctInboxController;
-    }
-
     public CTProductConfigController getCtProductConfigController() {
         initProductConfig();
         return ctProductConfigController;
     }
 
-    public void setCtProductConfigController(
-            final CTProductConfigController ctProductConfigController) {
-        this.ctProductConfigController = ctProductConfigController;
-    }
 
     @Override
     public BaseDatabaseManager getDatabaseManager() {
@@ -170,16 +157,8 @@ public class CoreState extends CleverTapState {
         this.deviceInfo = deviceInfo;
     }
 
-    public InAppController getInAppController() {
-        return mInAppController;
-    }
-
     public void setInAppController(final InAppController inAppController) {
         mInAppController = inAppController;
-    }
-
-    public InAppFCManager getInAppFCManager() {
-        return inAppFCManager;
     }
 
     public void setInAppFCManager(final InAppFCManager inAppFCManager) {
@@ -200,18 +179,6 @@ public class CoreState extends CleverTapState {
 
     public void setLoginController(final LoginController loginController) {
         mLoginController = loginController;
-    }
-
-    /**
-     * Returns the generic handler object which is used to post
-     * runnables. The returned value will never be null.
-     *
-     * @return The generic handler
-     * @see Handler
-     */
-
-    public MainLooperHandler getMainLooperHandler() {
-        return mainLooperHandler;
     }
 
     void setMainLooperHandler(final MainLooperHandler mainLooperHandler) {
@@ -262,18 +229,8 @@ public class CoreState extends CleverTapState {
         this.mValidationResultStack = validationResultStack;
     }
 
-    public Validator getValidator() {
-        return mValidator;
-    }
-
     public void setValidator(final Validator validator) {
         mValidator = validator;
-    }
-
-
-
-    EventMediator getEventMediator() {
-        return eventMediator;
     }
 
     void setEventMediator(final EventMediator eventMediator) {
@@ -289,8 +246,6 @@ public class CoreState extends CleverTapState {
     void setLocationManager(final BaseLocationManager baseLocationManager) {
         this.baseLocationManager = baseLocationManager;
     }
-
-
 
     private void initProductConfig() {
         Logger.v("Initializing Product Config with device Id = " + getDeviceInfo().getDeviceID());

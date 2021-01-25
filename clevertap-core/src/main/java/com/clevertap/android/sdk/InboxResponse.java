@@ -63,8 +63,7 @@ class InboxResponse extends CleverTapResponseDecorator {
     private void _processInboxMessages(JSONArray messages) {
         synchronized (inboxControllerLock) {
             if (mControllerManager.getCTInboxController() == null) {
-                //mCTInboxController.initializeInbox();
-                //TODO logging
+                mControllerManager.initializeInbox();
             }
             if (mControllerManager.getCTInboxController() != null) {
                 boolean update = mControllerManager.getCTInboxController().updateMessages(messages);

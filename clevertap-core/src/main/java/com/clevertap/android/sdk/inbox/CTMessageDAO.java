@@ -1,6 +1,10 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inbox;
 
 import android.text.TextUtils;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
+import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.Logger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -12,7 +16,8 @@ import org.json.JSONObject;
 /**
  * Message Data Access Object class interfacing with Database
  */
-class CTMessageDAO {
+@RestrictTo(Scope.LIBRARY)
+public class CTMessageDAO {
 
     private String campaignId;
 
@@ -32,7 +37,7 @@ class CTMessageDAO {
 
     private JSONObject wzrkParams;
 
-    CTMessageDAO() {
+    public CTMessageDAO() {
     }
 
     private CTMessageDAO(String id, JSONObject jsonData, boolean read, long date, long expires, String userId,
@@ -53,73 +58,73 @@ class CTMessageDAO {
         return (content.mediaIsVideo() || content.mediaIsAudio());
     }
 
-    String getCampaignId() {
+    public String getCampaignId() {
         return campaignId;
     }
 
-    void setCampaignId(String campaignId) {
+    public void setCampaignId(String campaignId) {
         this.campaignId = campaignId;
     }
 
-    long getDate() {
+    public long getDate() {
         return date;
     }
 
-    void setDate(long date) {
+    public void setDate(long date) {
         this.date = date;
     }
 
-    long getExpires() {
+    public long getExpires() {
         return expires;
     }
 
-    void setExpires(long expires) {
+    public void setExpires(long expires) {
         this.expires = expires;
     }
 
-    String getId() {
+    public String getId() {
         return id;
     }
 
-    void setId(String id) {
+    public void setId(String id) {
         this.id = id;
     }
 
-    JSONObject getJsonData() {
+    public JSONObject getJsonData() {
         return jsonData;
     }
 
-    void setJsonData(JSONObject jsonData) {
+    public void setJsonData(JSONObject jsonData) {
         this.jsonData = jsonData;
     }
 
-    String getTags() {
+    public String getTags() {
         return TextUtils.join(",", tags);
     }
 
-    void setTags(String tags) {
+    public void setTags(String tags) {
         String[] tagsArray = tags.split(",");
         this.tags.addAll(Arrays.asList(tagsArray));
 
     }
 
-    String getUserId() {
+    public String getUserId() {
         return userId;
     }
 
-    void setUserId(String userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 
-    JSONObject getWzrkParams() {
+    public JSONObject getWzrkParams() {
         return wzrkParams;
     }
 
-    void setWzrkParams(JSONObject wzrk_params) {
+    public void setWzrkParams(JSONObject wzrk_params) {
         this.wzrkParams = wzrk_params;
     }
 
-    int isRead() {
+    public int isRead() {
         if (read) {
             return 1;
         } else {
@@ -127,11 +132,11 @@ class CTMessageDAO {
         }
     }
 
-    void setRead(int read) {
+    public void setRead(int read) {
         this.read = read == 1;
     }
 
-    JSONObject toJSON() {
+    public JSONObject toJSON() {
         JSONObject jsonObject = new JSONObject();
         try {
             jsonObject.put("id", this.id);

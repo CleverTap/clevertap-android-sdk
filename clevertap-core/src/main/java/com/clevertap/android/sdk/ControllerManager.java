@@ -4,6 +4,7 @@ import android.content.Context;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.InAppController;
+import com.clevertap.android.sdk.inbox.CTInboxController;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 
@@ -121,6 +122,9 @@ public class ControllerManager {
             if (mDeviceInfo.getDeviceID() != null) {
                 setCTInboxController(new CTInboxController(mDeviceInfo.getDeviceID(),
                         mBaseDatabaseManager.loadDBAdapter(mContext),
+                        mCTLockManager,
+                        mPostAsyncSafelyHandler,
+                        mCallbackManager,
                         Utils.haveVideoPlayerSupport));
                 mCallbackManager._notifyInboxInitialized();
             } else {

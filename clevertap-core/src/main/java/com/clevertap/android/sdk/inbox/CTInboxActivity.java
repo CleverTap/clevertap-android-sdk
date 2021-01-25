@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk;
+package com.clevertap.android.sdk.inbox;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -9,11 +9,18 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager.widget.ViewPager;
+import com.clevertap.android.sdk.CTInboxStyleConfig;
+import com.clevertap.android.sdk.CleverTapAPI;
+import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.R;
 import com.google.android.material.tabs.TabLayout;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -23,9 +30,10 @@ import java.util.List;
 /**
  * This activity shows the {@link CTInboxMessage} objects as per {@link CTInboxStyleConfig} style parameters
  */
+@RestrictTo(Scope.LIBRARY)
 public class CTInboxActivity extends FragmentActivity implements CTInboxListViewFragment.InboxListener {
 
-    interface InboxActivityListener {
+    public interface InboxActivityListener {
 
         void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data,
                 HashMap<String, String> keyValue);
@@ -33,7 +41,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         void messageDidShow(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data);
     }
 
-    static int orientation;
+    public static int orientation;
 
     CTInboxTabAdapter inboxTabAdapter;
 
