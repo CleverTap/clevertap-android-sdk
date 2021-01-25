@@ -39,7 +39,7 @@ class CleverTapFactory {
         LocalDataStore localDataStore = new LocalDataStore(context, config);
         coreState.setLocalDataStore(localDataStore);
 
-        DeviceInfo deviceInfo = new DeviceInfo(context, config, cleverTapID);
+        DeviceInfo deviceInfo = new DeviceInfo(context, config, cleverTapID, coreMetaData);
         coreState.setDeviceInfo(deviceInfo);
 
         CallbackManager callbackManager = new CallbackManager(config, deviceInfo);
@@ -64,40 +64,35 @@ class CleverTapFactory {
         // initializing feature flag so that feature flag will automatically gets initialized
         coreState.getCtFeatureFlagsController();
 
-
-
-        LocationManager locationManager = new LocationManager(context, config, coreMetaData, baseEventQueueManager);
-        coreState.setLocationManager(locationManager);
-
-        InAppController inAppController = new InAppController(context, config, mainLooperHandler,
-                postAsyncSafelyHandler, inAppFCManager, callbackManager, analyticsManager, coreMetaData);
-        coreState.setInAppController(inAppController);
-
         NetworkManager networkManager = new NetworkManager(context, config, deviceInfo, coreMetaData,
-                validationResultStack, pushProviders, inAppFCManager, baseDatabaseManager, ctLockManager,baseEventQueueManager,
-                postAsyncSafelyHandler, inAppController,
-                coreState.getCtProductConfigController(), validator, coreState.getCtInboxController(),
-                coreState.getCTDisplayUnitController(), callbackManager, coreState.getCtFeatureFlagsController());
+                validationResultStack, pushProviders, inAppFCManager, baseDatabaseManager, ctLockManager,
+                postAsyncSafelyHandler, validator);
         coreState.setNetworkManager(networkManager);
 
-
-        EventQueueManager baseEventQueueManager = new EventQueueManager(baseDatabaseManager, context, config, eventMediator,
-                sessionManager,
+        EventQueueManager baseEventQueueManager = new EventQueueManager(baseDatabaseManager, context, config,
+                eventMediator,
+                sessionManager, callbackManager,
                 mainLooperHandler, postAsyncSafelyHandler, deviceInfo, validationResultStack,
                 networkManager, baseDatabaseManager, coreMetaData, ctLockManager, localDataStore);
         coreState.setBaseEventQueueManager(baseEventQueueManager);
 
         AnalyticsManager analyticsManager = new AnalyticsManager(context, config, baseEventQueueManager, validator,
                 validationResultStack, coreMetaData, postAsyncSafelyHandler, localDataStore, deviceInfo,
-                networkManager, mainLooperHandler, callbackManager);
+                mainLooperHandler, callbackManager);
         coreState.setAnalyticsManager(analyticsManager);
 
+        InAppController inAppController = new InAppController(context, config, mainLooperHandler,
+                postAsyncSafelyHandler, inAppFCManager, callbackManager, analyticsManager, coreMetaData);
+        coreState.setInAppController(inAppController);
+
+
+        LocationManager locationManager = new LocationManager(context, config, coreMetaData, baseEventQueueManager);
+        coreState.setLocationManager(locationManager);
 
         PushProviders pushProviders = PushProviders
                 .load(context, config, baseDatabaseManager,  postAsyncSafelyHandler, validationResultStack,
                         analyticsManager);
         coreState.setPushProviders(pushProviders);
-
 
 
         ActivityLifeCycleManager activityLifeCycleManager = new ActivityLifeCycleManager(context, config,

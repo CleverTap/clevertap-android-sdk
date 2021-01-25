@@ -372,8 +372,8 @@ public class CoreState extends CleverTapState {
         }
 
         if (getCtFeatureFlagsController() == null) {
-            setCtFeatureFlagsController(new CTFeatureFlagsController(context, getDeviceInfo().getDeviceID(),
-                    getConfig(), mCallbackManager, mAnalyticsManager));
+            CTFeatureFlagsController ctFeatureFlagsController = new CTFeatureFlagsController(context, getDeviceInfo().getDeviceID(),
+                    getConfig(), mCallbackManager, mAnalyticsManager);
             getConfig().getLogger().verbose(getConfig().getAccountId(), "Feature Flags initialized");
         }
     }

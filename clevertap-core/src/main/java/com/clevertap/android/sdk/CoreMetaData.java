@@ -279,21 +279,12 @@ public class CoreMetaData extends CleverTapMetaData {
         isLocationForGeofence = locationForGeofence;
     }
 
-    boolean isMuted() {
-        //TODO
-        return false;
-    }
-
     boolean isOffline() {
         return offline;
     }
 
     void setOffline(boolean value) {
         offline = value;
-    }
-
-    void setMuted(final Context context, boolean mute) {
-        //TODO
     }
 
     void setSessionId(int sessionId) {

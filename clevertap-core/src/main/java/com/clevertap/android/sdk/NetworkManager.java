@@ -37,19 +37,7 @@ public class NetworkManager extends BaseNetworkManager {
 
     private static SSLContext sslContext;
 
-    private boolean enableNetworkInfoReporting = false;
-
-    private final BaseEventQueueManager mBaseEventQueueManager;
-
-    private final CTFeatureFlagsController mCTFeatureFlagsController;
-
-    private final CTInboxController mCTInboxController;
-
-    private final CTProductConfigController mCTProductConfigController;
-
     private final CallbackManager mCallbackManager;
-
-    private final CoreMetaData mCleverTapMetaData;
 
     private CleverTapResponse mCleverTapResponse;
 
@@ -66,8 +54,6 @@ public class NetworkManager extends BaseNetworkManager {
     private final BaseDatabaseManager mDatabaseManager;
 
     private final DeviceInfo mDeviceInfo;
-
-    private final InAppController mInAppController;
 
     private final InAppFCManager mInAppFCManager;
 
@@ -95,25 +81,14 @@ public class NetworkManager extends BaseNetworkManager {
             InAppFCManager inAppFCManager,
             BaseDatabaseManager baseDatabaseManager,
             CTLockManager ctLockManager,
-            BaseEventQueueManager baseEventQueueManager,
             PostAsyncSafelyHandler postAsyncSafelyHandler,
-            final InAppController inAppController,
-            final CTProductConfigController ctProductConfigController,
             final Validator validator,
-            final CTInboxController ctInboxController,
-            final CTDisplayUnitController displayUnitController,
-            final CallbackManager callbackManager,
-            final CTFeatureFlagsController ctFeatureFlagsController) {
+            final CallbackManager callbackManager) {
         mContext = context;
         mConfig = config;
         mDeviceInfo = deviceInfo;
-        mInAppController = inAppController;
-        mCTProductConfigController = ctProductConfigController;
         mValidator = validator;
-        mCTInboxController = ctInboxController;
         mCallbackManager = callbackManager;
-        mCTFeatureFlagsController = ctFeatureFlagsController;
-        mCleverTapMetaData = cleverTapMetaData;
         mLogger = mConfig.getLogger();
 
         mCoreMetaData = coreMetaData;
@@ -122,27 +97,24 @@ public class NetworkManager extends BaseNetworkManager {
         mInAppFCManager = inAppFCManager;
         mDatabaseManager = baseDatabaseManager;
         mCtLockManager = ctLockManager;
-        mBaseEventQueueManager = baseEventQueueManager;
         mPostAsyncSafelyHandler = postAsyncSafelyHandler;
         // maintain order
         CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
 
         cleverTapResponse = new GeofenceResponse(cleverTapResponse, config, callbackManager);
-        cleverTapResponse = new ProductConfigResponse(cleverTapResponse, config, coreMetaData,
-                ctProductConfigController);
-        cleverTapResponse = new FeatureFlagResponse(cleverTapResponse, config, ctFeatureFlagsController);
-        cleverTapResponse = new DisplayUnitResponse(cleverTapResponse, config, displayUnitController,
+        cleverTapResponse = new ProductConfigResponse(cleverTapResponse, config, coreMetaData);
+        cleverTapResponse = new FeatureFlagResponse(cleverTapResponse, config);
+        cleverTapResponse = new DisplayUnitResponse(cleverTapResponse, config,
                 callbackManager);
         cleverTapResponse = new PushAmpResponse(cleverTapResponse, context, config, ctLockManager,
                 baseDatabaseManager, callbackManager, pushProviders);
-        cleverTapResponse = new InboxResponse(cleverTapResponse, config, ctLockManager, ctInboxController,
+        cleverTapResponse = new InboxResponse(cleverTapResponse, config, ctLockManager,
                 callbackManager);
 
         cleverTapResponse = new ConsoleResponse(cleverTapResponse, config);
-        cleverTapResponse = new ARPResponse(cleverTapResponse, config, this, ctProductConfigController, validator);
+        cleverTapResponse = new ARPResponse(cleverTapResponse, config, this, validator);
         cleverTapResponse = new MetadataResponse(cleverTapResponse, config, deviceInfo, this);
-        cleverTapResponse = new InAppResponse(cleverTapResponse, config, inAppFCManager, postAsyncSafelyHandler,
-                inAppController);
+        cleverTapResponse = new InAppResponse(cleverTapResponse, config, inAppFCManager, postAsyncSafelyHandler);
 
         cleverTapResponse = new BaseResponse(cleverTapResponse);
 
@@ -167,15 +139,6 @@ public class NetworkManager extends BaseNetworkManager {
             }
         }
         return conn;
-    }
-
-    void enableDeviceNetworkInfoReporting(boolean value) {
-        enableNetworkInfoReporting = value;
-        StorageHelper.putBoolean(mContext, StorageHelper.storageKeyWithSuffix(mConfig, Constants.NETWORK_INFO),
-                enableNetworkInfoReporting);
-        mLogger
-                .verbose(mConfig.getAccountId(),
-                        "Device Network Information reporting set to " + enableNetworkInfoReporting);
     }
 
     @Override
@@ -205,22 +168,6 @@ public class NetworkManager extends BaseNetworkManager {
             }
 
             loadMore = sendQueue(context, eventGroup, queue);
-        }
-    }
-
-    //Event
-    JSONObject getAppLaunchedFields() {
-
-        try {
-            boolean deviceIsMultiUser = false;
-            if (mDeviceInfo.getGoogleAdID() != null) {
-                deviceIsMultiUser = new LoginInfoProvider(mContext, mConfig, mDeviceInfo).deviceIsMultiUser();
-            }
-            return CTJsonConverter.from(mDeviceInfo, mCoreMetaData.getLocationFromUser(), enableNetworkInfoReporting,
-                    deviceIsMultiUser);
-        } catch (Throwable t) {
-            mLogger.verbose(mConfig.getAccountId(), "Failed to construct App Launched event", t);
-            return new JSONObject();
         }
     }
 
@@ -411,7 +358,7 @@ public class NetworkManager extends BaseNetworkManager {
 
             header.put("type", "meta");
 
-            JSONObject appFields = getAppLaunchedFields();
+            JSONObject appFields = mDeviceInfo.getAppLaunchedFields();
             header.put("af", appFields);
 
             long i = getI();
@@ -679,7 +626,7 @@ public class NetworkManager extends BaseNetworkManager {
                     "An exception occurred while sending the queue, will retry: " + e.getLocalizedMessage());
             mResponseFailureCount++;
             networkRetryCount++;
-            mBaseEventQueueManager.scheduleQueueFlush(context);
+            mCallbackManager.getFailureFlushListener().failureFlush(context);
             return false;
         } finally {
             if (conn != null) {
@@ -691,14 +638,6 @@ public class NetworkManager extends BaseNetworkManager {
                 }
             }
         }
-    }
-
-    void setDeviceNetworkInfoReportingFromStorage() {
-        boolean enabled = StorageHelper.getBooleanFromPrefs(mContext, mConfig, Constants.NETWORK_INFO);
-        mLogger
-                .verbose(mConfig.getAccountId(),
-                        "Setting device network info reporting state from storage to " + enabled);
-        enableNetworkInfoReporting = enabled;
     }
 
     void setDomain(final Context context, String domainName) {

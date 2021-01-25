@@ -19,11 +19,13 @@ import androidx.annotation.IntDef;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationManagerCompat;
+import com.clevertap.android.sdk.login.LoginInfoProvider;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.UUID;
+import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
 public class DeviceInfo {
@@ -304,11 +306,15 @@ public class DeviceInfo {
 
     private final ArrayList<ValidationResult> validationResults = new ArrayList<>();
 
+    private boolean enableNetworkInfoReporting = false;
 
-    DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID) {
+    private final CoreMetaData mCoreMetaData;
+
+    DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID, CoreMetaData coreMetaData) {
         this.context = context;
         this.config = config;
         this.library = null;
+        mCoreMetaData = coreMetaData;
         Thread deviceInfoCacheThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -710,5 +716,38 @@ public class DeviceInfo {
 
         }
         return sDeviceType;
+    }
+
+    void enableDeviceNetworkInfoReporting(boolean value) {
+        enableNetworkInfoReporting = value;
+        StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(config, Constants.NETWORK_INFO),
+                enableNetworkInfoReporting);
+        config.getLogger()
+                .verbose(config.getAccountId(),
+                        "Device Network Information reporting set to " + enableNetworkInfoReporting);
+    }
+
+    void setDeviceNetworkInfoReportingFromStorage() {
+        boolean enabled = StorageHelper.getBooleanFromPrefs(context, config, Constants.NETWORK_INFO);
+        config.getLogger()
+                .verbose(config.getAccountId(),
+                        "Setting device network info reporting state from storage to " + enabled);
+        enableNetworkInfoReporting = enabled;
+    }
+
+    //Event
+    JSONObject getAppLaunchedFields() {
+
+        try {
+            boolean deviceIsMultiUser = false;
+            if (getGoogleAdID() != null) {
+                deviceIsMultiUser = new LoginInfoProvider(context, config, this).deviceIsMultiUser();
+            }
+            return CTJsonConverter.from(this, mCoreMetaData.getLocationFromUser(), enableNetworkInfoReporting,
+                    deviceIsMultiUser);
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(), "Failed to construct App Launched event", t);
+            return new JSONObject();
+        }
     }
 }

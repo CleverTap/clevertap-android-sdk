@@ -956,7 +956,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
         coreState.getPostAsyncSafelyHandler().postAsyncSafely("setStatesAsync", new Runnable() {
             @Override
             public void run() {
-                ((NetworkManager) mCoreState.getNetworkManager()).setDeviceNetworkInfoReportingFromStorage();
+                mCoreState.getDeviceInfo().setDeviceNetworkInfoReportingFromStorage();
                 mCoreState.setCurrentUserOptOutStateFromStorage();
             }
         });
@@ -1073,7 +1073,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings({"unused"})
     public void enableDeviceNetworkInfoReporting(boolean value) {
-        ((NetworkManager) mCoreState.getNetworkManager()).enableDeviceNetworkInfoReporting(value);
+        mCoreState.getDeviceInfo().enableDeviceNetworkInfoReporting(value);
     }
 
     /**

@@ -41,8 +41,6 @@ public class AnalyticsManager {
 
     private final MainLooperHandler mMainLooperHandler;
 
-    private final NetworkManager mNetworkManager;
-
     private final PostAsyncSafelyHandler mPostAsyncSafelyHandler;
 
     private final ValidationResultStack mValidationResultStack;
@@ -64,7 +62,6 @@ public class AnalyticsManager {
             PostAsyncSafelyHandler postAsyncSafelyHandler,
             LocalDataStore localDataStore,
             DeviceInfo deviceInfo,
-            NetworkManager networkManager,
             MainLooperHandler mainLooperHandler,
             CallbackManager callbackManager) {
         mContext = context;
@@ -76,7 +73,6 @@ public class AnalyticsManager {
         mPostAsyncSafelyHandler = postAsyncSafelyHandler;
         mLocalDataStore = localDataStore;
         mDeviceInfo = deviceInfo;
-        mNetworkManager = networkManager;
         mMainLooperHandler = mainLooperHandler;
         mCallbackManager = callbackManager;
         //TODO set display unit using observer pattern once it's created lazily, check for it's usage in
@@ -141,8 +137,7 @@ public class AnalyticsManager {
         try {
             event.put("evtName", Constants.APP_LAUNCHED_EVENT);
 
-            event.put("evtData", mNetworkManager
-                    .getAppLaunchedFields());//TODO move this outside n/w mgr
+            event.put("evtData", mDeviceInfo.getAppLaunchedFields());
         } catch (Throwable t) {
             // We won't get here
         }

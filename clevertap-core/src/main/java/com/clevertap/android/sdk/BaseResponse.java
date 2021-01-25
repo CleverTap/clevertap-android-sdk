@@ -22,7 +22,7 @@ class BaseResponse extends CleverTapResponseDecorator {
     BaseResponse(CleverTapResponse cleverTapResponse) {
         mCleverTapResponse = cleverTapResponse;
 
-        CoreState coreState = getCoreState();
+        //CoreState coreState = getCoreState();
 
         mContext = coreState.getContext();
         mConfig = coreState.getConfig();

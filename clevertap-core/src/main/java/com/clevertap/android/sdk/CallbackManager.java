@@ -6,6 +6,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
+import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
@@ -14,6 +15,8 @@ import java.util.ArrayList;
 
 @RestrictTo(Scope.LIBRARY)
 public class CallbackManager {
+
+    private FailureFlushListener mFailureFlushListener;
 
     private WeakReference<DisplayUnitListener> displayUnitListenerWeakReference;
 
@@ -44,11 +47,19 @@ public class CallbackManager {
         mDeviceInfo = deviceInfo;
     }
 
+    public FailureFlushListener getFailureFlushListener() {
+        return mFailureFlushListener;
+    }
+
     public CTFeatureFlagsListener getFeatureFlagListener() {
         if (mFeatureFlagListenerWeakReference != null && mFeatureFlagListenerWeakReference.get() != null) {
             return mFeatureFlagListenerWeakReference.get();
         }
         return null;
+    }
+
+    public void setFailureFlushListener(final FailureFlushListener failureFlushListener) {
+        mFailureFlushListener = failureFlushListener;
     }
 
     public void setFeatureFlagListener(final CTFeatureFlagsListener listener) {

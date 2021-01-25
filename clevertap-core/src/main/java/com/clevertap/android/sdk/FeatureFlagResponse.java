@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
+import android.telecom.Call;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -8,7 +9,7 @@ import org.json.JSONObject;
 
 class FeatureFlagResponse extends CleverTapResponseDecorator {
 
-    private final CTFeatureFlagsController mCTFeatureFlagsController;
+    private CTFeatureFlagsController mCTFeatureFlagsController;
 
     private final CleverTapResponse mCleverTapResponse;
 
@@ -17,11 +18,9 @@ class FeatureFlagResponse extends CleverTapResponseDecorator {
     private final Logger mLogger;
 
     FeatureFlagResponse(CleverTapResponse cleverTapResponse,
-            CleverTapInstanceConfig config,
-            final CTFeatureFlagsController ctFeatureFlagsController) {
+            CleverTapInstanceConfig config) {
         mCleverTapResponse = cleverTapResponse;
         mConfig = config;
-        mCTFeatureFlagsController = ctFeatureFlagsController;
         mLogger = mConfig.getLogger();
     }
 

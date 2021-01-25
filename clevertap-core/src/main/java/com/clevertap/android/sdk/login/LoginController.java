@@ -2,12 +2,14 @@ package com.clevertap.android.sdk.login;
 
 import android.content.Context;
 import com.clevertap.android.sdk.AnalyticsManager;
+import com.clevertap.android.sdk.BaseDatabaseManager;
 import com.clevertap.android.sdk.BaseEventQueueManager;
 import com.clevertap.android.sdk.CallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.CoreState;
+import com.clevertap.android.sdk.DBManager;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.EventGroup;
 import com.clevertap.android.sdk.InAppFCManager;
@@ -53,6 +55,8 @@ public class LoginController {
 
     private final ValidationResultStack mValidationResultStack;
 
+    private final BaseDatabaseManager mDBManager;
+
     private String processingUserLoginIdentifier = null;
 
     private final Boolean processingUserLoginLock = true;
@@ -72,6 +76,7 @@ public class LoginController {
         mLocalDataStore = coreState.getLocalDataStore();
         mCallbackManager = coreState.getCallbackManager();
         mCoreState = coreState;
+        mDBManager = coreState.getDatabaseManager();
     }
 
     @SuppressWarnings({"unused", "WeakerAccess"})
@@ -194,7 +199,7 @@ public class LoginController {
                     // try and flush and then reset the queues
                     mBaseEventQueueManager.flushQueueSync(mContext, EventGroup.REGULAR);
                     mBaseEventQueueManager.flushQueueSync(mContext, EventGroup.PUSH_NOTIFICATION_VIEWED);
-                    mBaseEventQueueManager.clearQueues(mContext);
+                    mDBManager.clearQueues(mContext);
 
                     // clear out the old data
                     mLocalDataStore.changeUser();

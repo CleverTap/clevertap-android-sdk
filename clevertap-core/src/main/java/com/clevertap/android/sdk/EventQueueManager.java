@@ -4,6 +4,7 @@ import static com.clevertap.android.sdk.CTJsonConverter.getErrorObject;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.telecom.Call;
 import com.clevertap.android.sdk.login.IdentityRepo;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
@@ -13,11 +14,13 @@ import java.util.concurrent.Future;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-class EventQueueManager extends BaseEventQueueManager {
+class EventQueueManager extends BaseEventQueueManager implements FailureFlushListener {
 
     private Runnable commsRunnable = null;
 
     private final BaseDatabaseManager mBaseDatabaseManager;
+
+    private final CallbackManager mCallbackManager;
 
     private final CoreMetaData mCleverTapMetaData;
 
@@ -46,12 +49,15 @@ class EventQueueManager extends BaseEventQueueManager {
     private final SessionManager mSessionManager;
 
     private final ValidationResultStack mValidationResultStack;
+
     private Runnable pushNotificationViewedRunnable = null;
 
-    public EventQueueManager(final BaseDatabaseManager baseDatabaseManager, Context context,
+    public EventQueueManager(final BaseDatabaseManager baseDatabaseManager,
+            Context context,
             CleverTapInstanceConfig config,
             EventMediator eventMediator,
             SessionManager sessionManager,
+            CallbackManager callbackManager,
             MainLooperHandler mainLooperHandler,
             PostAsyncSafelyHandler postAsyncSafelyHandler,
             DeviceInfo deviceInfo,
@@ -59,12 +65,14 @@ class EventQueueManager extends BaseEventQueueManager {
             NetworkManager networkManager,
             DBManager dbManager,
             CoreMetaData coreMetaData,
-            CTLockManager ctLockManager, final LocalDataStore localDataStore) {
+            CTLockManager ctLockManager,
+            final LocalDataStore localDataStore) {
         mBaseDatabaseManager = baseDatabaseManager;
         mContext = context;
         mConfig = config;
         mEventMediator = eventMediator;
         mSessionManager = sessionManager;
+        mCallbackManager = callbackManager;
         mMainLooperHandler = mainLooperHandler;
         mPostAsyncSafelyHandler = postAsyncSafelyHandler;
         mDeviceInfo = deviceInfo;
@@ -75,6 +83,13 @@ class EventQueueManager extends BaseEventQueueManager {
         mLogger = mConfig.getLogger();
         mCleverTapMetaData = coreMetaData;
         mCtLockManager = ctLockManager;
+
+        callbackManager.setFailureFlushListener(this);
+    }
+
+    @Override
+    public void failureFlush(Context context) {
+        scheduleQueueFlush(context);
     }
 
 
@@ -268,7 +283,6 @@ class EventQueueManager extends BaseEventQueueManager {
     }
 
     @Override
-        //Event
     void scheduleQueueFlush(final Context context) {
         if (commsRunnable == null) {
             commsRunnable = new Runnable() {
