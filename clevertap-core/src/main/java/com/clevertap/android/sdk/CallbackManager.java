@@ -4,6 +4,7 @@ import static com.clevertap.android.sdk.Utils.runOnUiThread;
 
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import com.clevertap.android.sdk.InAppNotificationActivity.InAppActivityListener;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
@@ -14,6 +15,8 @@ import java.util.ArrayList;
 
 @RestrictTo(Scope.LIBRARY)
 public class CallbackManager {
+
+    private InAppActivityListener mInAppActivityListener;
 
     private FailureFlushListener mFailureFlushListener;
 
@@ -57,6 +60,10 @@ public class CallbackManager {
         return null;
     }
 
+    public InAppActivityListener getInAppActivityListener() {
+        return mInAppActivityListener;
+    }
+
     public void setFailureFlushListener(final FailureFlushListener failureFlushListener) {
         mFailureFlushListener = failureFlushListener;
     }
@@ -78,6 +85,11 @@ public class CallbackManager {
             return inAppNotificationButtonListener.get();
         }
         return null;
+    }
+
+    public void setInAppActivityListener(
+            final InAppActivityListener inAppActivityListener) {
+        mInAppActivityListener = inAppActivityListener;
     }
 
     public void setInAppNotificationButtonListener(

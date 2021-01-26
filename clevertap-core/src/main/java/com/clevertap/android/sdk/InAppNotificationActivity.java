@@ -22,6 +22,7 @@ import com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialFragment;
 import com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialImageFragment;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inapp.CTInAppType;
+import com.clevertap.android.sdk.inapp.InAppController;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 
@@ -32,7 +33,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData,
                 HashMap<String, String> keyValuePayload);
 
-        void inAppNotificationDidDismiss(Context context, CTInAppNotification inAppNotification, Bundle formData);
+        void inAppNotificationDidDismiss(Context context, CTInAppNotification inAppNotification, Bundle formData, InAppController inAppController);
 
         void inAppNotificationDidShow(CTInAppNotification inAppNotification, Bundle formData);
     }
@@ -44,6 +45,8 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     private CTInAppNotification inAppNotification;
 
     private WeakReference<InAppActivityListener> listenerWeakReference;
+
+    private InAppController mInAppController;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -61,8 +64,9 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             if (configBundle != null) {
                 config = configBundle.getParcelable("config");
             }
-            //TODO Refactoring
-            // setListener(CleverTapAPI.instanceWithConfig(getApplicationContext(), config));
+
+            mInAppController = (InAppController) notif.getSerializable("controller");
+            setListener(mInAppController);
         } catch (Throwable t) {
             Logger.v("Cannot find a valid notification bundle to show!", t);
             finish();
@@ -164,7 +168,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         finish();
         InAppActivityListener listener = getListener();
         if (listener != null && getBaseContext() != null) {
-            listener.inAppNotificationDidDismiss(getBaseContext(), inAppNotification, data);
+            listener.inAppNotificationDidDismiss(getBaseContext(), inAppNotification, data,mInAppController);
         }
     }
 
