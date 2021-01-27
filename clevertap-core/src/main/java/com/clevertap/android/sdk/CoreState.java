@@ -47,6 +47,10 @@ public class CoreState extends CleverTapState {
 
     private CallbackManager mCallbackManager;
 
+    public InAppController getInAppController() {
+        return mInAppController;
+    }
+
     private InAppController mInAppController;
 
     private LoginController mLoginController;
