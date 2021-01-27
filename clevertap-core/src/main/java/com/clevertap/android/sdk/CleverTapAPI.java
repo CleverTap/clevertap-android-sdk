@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
-import static com.clevertap.android.sdk.CTJsonConverter.getWzrkFields;
 
 import android.app.Activity;
 import android.app.NotificationChannel;
@@ -2283,27 +2282,6 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private Logger getConfigLogger() {
         return getConfig().getLogger();
-    }
-
-    /**
-     * This method handles send Test flow for Display Units
-     *
-     * @param extras - bundled data of notification payload
-     */
-    private void handleSendTestForDisplayUnits(Bundle extras) {
-        try {
-            String pushJsonPayload = extras.getString(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY);
-            Logger.v("Received Display Unit via push payload: " + pushJsonPayload);
-            JSONObject r = new JSONObject();
-            JSONArray displayUnits = new JSONArray();
-            r.put(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY, displayUnits);
-            JSONObject testPushObject = new JSONObject(pushJsonPayload);
-            displayUnits.put(testPushObject);
-            //TODO Refactoring
-            //processDisplayUnitsResponse(r);
-        } catch (Throwable t) {
-            Logger.v("Failed to process Display Unit from push notification payload", t);
-        }
     }
 
     private boolean isErrorDeviceId() {
