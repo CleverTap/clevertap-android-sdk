@@ -171,4 +171,17 @@ public class CTJsonConverter {
         return val;
     }
 
+    static JSONObject displayUnitFromExtras(Bundle extras) throws JSONException {
+        JSONObject r = new JSONObject();
+
+        String pushJsonPayload = extras.getString(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY);
+        Logger.v("Received Display Unit via push payload: " + pushJsonPayload);
+        JSONArray displayUnits = new JSONArray();
+        r.put(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY, displayUnits);
+        JSONObject testPushObject = new JSONObject(pushJsonPayload);
+        displayUnits.put(testPushObject);
+
+        return r;
+    }
+
 }

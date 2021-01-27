@@ -7,7 +7,6 @@ import android.content.Context;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
-import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
@@ -26,13 +25,13 @@ public class AnalyticsManager {
 
     private final BaseEventQueueManager mBaseEventQueueManager;
 
-    private final CTDisplayUnitController mCTDisplayUnitController;
-
     private final CallbackManager mCallbackManager;
 
     private final CleverTapInstanceConfig mConfig;
 
     private final Context mContext;
+
+    private final ControllerManager mControllerManager;
 
     private final CoreMetaData mCoreMetaData;
 
@@ -78,7 +77,7 @@ public class AnalyticsManager {
         mCallbackManager = callbackManager;
         //TODO set display unit using observer pattern once it's created lazily, check for it's usage in
         // pushDisplayUnitClickedEventForID & pushDisplayUnitViewedEventForID
-        mCTDisplayUnitController = controllerManager.getCTDisplayUnitController();
+        mControllerManager = controllerManager;
     }
 
     public void addMultiValuesForKey(final String key, final ArrayList<String> values) {
@@ -151,8 +150,8 @@ public class AnalyticsManager {
             event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
 
             //wzrk fields
-            if (mCTDisplayUnitController != null) {
-                CleverTapDisplayUnit displayUnit = mCTDisplayUnitController
+            if (mControllerManager.getCTDisplayUnitController() != null) {
+                CleverTapDisplayUnit displayUnit = mControllerManager.getCTDisplayUnitController()
                         .getDisplayUnitForID(unitID);
                 if (displayUnit != null) {
                     JSONObject eventExtraData = displayUnit.getWZRKFields();
@@ -182,8 +181,8 @@ public class AnalyticsManager {
             event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
 
             //wzrk fields
-            if (mCTDisplayUnitController != null) {
-                CleverTapDisplayUnit displayUnit = mCTDisplayUnitController
+            if (mControllerManager.getCTDisplayUnitController() != null) {
+                CleverTapDisplayUnit displayUnit = mControllerManager.getCTDisplayUnitController()
                         .getDisplayUnitForID(unitID);
                 if (displayUnit != null) {
                     JSONObject eventExtras = displayUnit.getWZRKFields();
@@ -485,8 +484,7 @@ public class AnalyticsManager {
         }
 
         if (extras.containsKey(Constants.DISPLAY_UNIT_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            //TODO Refactoring
-            //handleSendTestForDisplayUnits(extras);
+            handleSendTestForDisplayUnits(extras);
             return;
         }
 
@@ -1186,14 +1184,35 @@ public class AnalyticsManager {
         }
     }
 
-    public void sendPingEvent(final JSONObject eventObject){
+    public void sendPingEvent(final JSONObject eventObject) {
         mBaseEventQueueManager
                 .queueEvent(mContext, eventObject, Constants.PING_EVENT);
     }
 
-    public void sendFetchEvent(final JSONObject eventObject){
+    public void sendFetchEvent(final JSONObject eventObject) {
         mBaseEventQueueManager
                 .queueEvent(mContext, eventObject, Constants.FETCH_EVENT);
+    }
+
+    /**
+     * This method handles send Test flow for Display Units
+     *
+     * @param extras - bundled data of notification payload
+     */
+    private void handleSendTestForDisplayUnits(Bundle extras) {
+        try {
+            JSONObject r = CTJsonConverter.displayUnitFromExtras(extras);
+
+            CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
+
+            cleverTapResponse = new DisplayUnitResponse(cleverTapResponse, mConfig,
+                    mCallbackManager, mControllerManager);
+
+            cleverTapResponse.processResponse(r, null, mContext);
+
+        } catch (Throwable t) {
+            Logger.v("Failed to process Display Unit from push notification payload", t);
+        }
     }
 
     /**
