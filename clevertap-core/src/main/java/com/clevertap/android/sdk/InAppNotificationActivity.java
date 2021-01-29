@@ -65,7 +65,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                 config = configBundle.getParcelable("config");
             }
 
-            mInAppController = (InAppController) notif.getSerializable("controller");
+            mInAppController = CleverTapAPI.instanceWithConfig(this,config).getCoreState().getInAppController();
             setListener(mInAppController);
         } catch (Throwable t) {
             Logger.v("Cannot find a valid notification bundle to show!", t);

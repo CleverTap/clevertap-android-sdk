@@ -468,7 +468,6 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 intent.putExtra("inApp", inAppNotification);
                 Bundle configBundle = new Bundle();
                 configBundle.putParcelable("config", config);
-                configBundle.putSerializable("controller",inAppController);
                 intent.putExtra("configBundle", configBundle);
                 try {
                     Activity currentActivity = CoreMetaData.getCurrentActivity();

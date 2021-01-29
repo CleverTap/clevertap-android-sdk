@@ -115,7 +115,7 @@ public class ControllerManager {
     // always call async
     private void _initializeInbox() {
         synchronized (mCTLockManager.getInboxControllerLock()) {
-            if (getInAppController() != null) {
+            if (getCTInboxController() != null) {
                 mCallbackManager._notifyInboxInitialized();
                 return;
             }
