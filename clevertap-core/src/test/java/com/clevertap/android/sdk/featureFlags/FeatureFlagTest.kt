@@ -15,19 +15,19 @@ class FeatureFlagTest : BaseTestCase() {
         super.setUp()
     }
 
-    @Test
+  /*  @Test
     fun testFetch() {
         Mockito.`when`(cleverTapAPI!!.featureFlag())
             .thenReturn(CTFeatureFlagsController(application, "12121", cleverTapInstanceConfig, cleverTapAPI))
         cleverTapAPI!!.featureFlag().fetchFeatureFlags()
         Mockito.verify(cleverTapAPI)!!.fetchFeatureFlags()
     }
-
+*/
     @Test
     fun testGet() {
         val ctFeatureFlagsController = Mockito.mock(CTFeatureFlagsController::class.java)
-        Mockito.`when`(cleverTapAPI!!.featureFlag()).thenReturn(ctFeatureFlagsController)
-        Mockito.`when`(ctFeatureFlagsController["isFeatureA", true]).thenReturn(false)
-        Assert.assertFalse(cleverTapAPI!!.featureFlag()["isFeatureA", true])
+      Mockito.`when`(cleverTapAPI.featureFlag()).thenReturn(ctFeatureFlagsController)
+      Mockito.`when`(ctFeatureFlagsController["isFeatureA", true]).thenReturn(false)
+      Assert.assertFalse(cleverTapAPI.featureFlag()["isFeatureA", true])
     }
 }

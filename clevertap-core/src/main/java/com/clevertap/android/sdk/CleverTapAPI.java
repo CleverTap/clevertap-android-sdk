@@ -86,9 +86,15 @@ public class CleverTapAPI implements CleverTapAPIListener {
 
     private static CleverTapInstanceConfig defaultConfig;
 
-    private static HashMap<String, CleverTapAPI> instances;
+    public static HashMap<String, CleverTapAPI> getInstances() {
+        return instances;
+    }
 
-    private static int initialAppEnteredForegroundTime = 0;
+    public static void setInstances(final HashMap<String, CleverTapAPI> instances) {
+        CleverTapAPI.instances = instances;
+    }
+
+    private static HashMap<String, CleverTapAPI> instances;
 
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private static String sdkVersion;  // For Google Play Store/Android Studio analytics
@@ -825,8 +831,9 @@ public class CleverTapAPI implements CleverTapAPIListener {
             CoreMetaData.incrementActivityCount();
         }
 
-        if (initialAppEnteredForegroundTime <= 0) {
-            initialAppEnteredForegroundTime = (int) System.currentTimeMillis() / 1000;
+        if (CoreMetaData.getInitialAppEnteredForegroundTime() <= 0) {
+            int initialAppEnteredForegroundTime = (int) System.currentTimeMillis() / 1000;
+            CoreMetaData.setInitialAppEnteredForegroundTime(initialAppEnteredForegroundTime);
         }
 
         for (String accountId : CleverTapAPI.instances.keySet()) {
@@ -949,7 +956,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
         });
 
         int now = (int) System.currentTimeMillis() / 1000;
-        if (now - initialAppEnteredForegroundTime > 5) {
+        if (now - CoreMetaData.getInitialAppEnteredForegroundTime() > 5) {
             this.mCoreState.getConfig().setCreatedPostAppLaunch();
         }
 

@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk;
 
 import android.app.Activity;
-import android.content.Context;
 import android.location.Location;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
@@ -63,8 +62,14 @@ public class CoreMetaData extends CleverTapMetaData {
 
     private JSONObject wzrkParams = null;
 
+    private static int initialAppEnteredForegroundTime = 0;
+
     public static Activity getCurrentActivity() {
         return (currentActivity == null) ? null : currentActivity.get();
+    }
+
+    static int getInitialAppEnteredForegroundTime() {
+        return initialAppEnteredForegroundTime;
     }
 
     public static void setCurrentActivity(@Nullable Activity activity) {
@@ -88,6 +93,10 @@ public class CoreMetaData extends CleverTapMetaData {
 
     public static void setAppForeground(boolean isForeground) {
         appForeground = isForeground;
+    }
+
+    static void setInitialAppEnteredForegroundTime(final int initialAppEnteredForegroundTime) {
+        CoreMetaData.initialAppEnteredForegroundTime = initialAppEnteredForegroundTime;
     }
 
     public long getAppInstallTime() {
