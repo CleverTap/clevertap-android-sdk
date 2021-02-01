@@ -19,7 +19,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-public class AnalyticsManager {
+public class AnalyticsManager extends BaseAnalyticsManager {
 
     private final HashMap<String, Integer> installReferrerMap = new HashMap<>(8);
 
@@ -80,6 +80,7 @@ public class AnalyticsManager {
         mControllerManager = controllerManager;
     }
 
+    @Override
     public void addMultiValuesForKey(final String key, final ArrayList<String> values) {
         mPostAsyncSafelyHandler.postAsyncSafely("addMultiValuesForKey", new Runnable() {
             @Override
@@ -95,6 +96,7 @@ public class AnalyticsManager {
      * This method is internal to the CleverTap SDK.
      * Developers should not use this method manually
      */
+    @Override
     public void fetchFeatureFlags() {
         if (mConfig.isAnalyticsOnly()) {
             return;
@@ -112,11 +114,13 @@ public class AnalyticsManager {
     }
 
     //Event
+    @Override
     public void forcePushAppLaunchedEvent() {
         mCoreMetaData.setAppLaunchPushed(false);
         pushAppLaunchedEvent();
     }
 
+    @Override
     public void pushAppLaunchedEvent() {
         if (mConfig.isDisableAppLaunchedEvent()) {
             mCoreMetaData.setAppLaunchPushed(true);
@@ -143,6 +147,7 @@ public class AnalyticsManager {
         mBaseEventQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
     }
 
+    @Override
     public void pushDisplayUnitClickedEventForID(String unitID) {
         JSONObject event = new JSONObject();
 
@@ -174,6 +179,7 @@ public class AnalyticsManager {
         }
     }
 
+    @Override
     public void pushDisplayUnitViewedEventForID(String unitID) {
         JSONObject event = new JSONObject();
 
@@ -200,6 +206,7 @@ public class AnalyticsManager {
         }
     }
 
+    @Override
     @SuppressWarnings({"unused"})
     public void pushError(final String errorMessage, final int errorCode) {
         final HashMap<String, Object> props = new HashMap<>();
@@ -221,6 +228,7 @@ public class AnalyticsManager {
         pushEvent("Error Occurred", props);
     }
 
+    @Override
     public void pushEvent(String eventName, Map<String, Object> eventActions) {
 
         if (eventName == null || eventName.equals("")) {
@@ -300,6 +308,7 @@ public class AnalyticsManager {
      * @param data       The data to be attached as the event data
      * @param customData Additional data such as form input to to be added to the event data
      */
+    @Override
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void pushInAppNotificationStateEvent(boolean clicked, CTInAppNotification data, Bundle customData) {
         JSONObject event = new JSONObject();
@@ -334,6 +343,7 @@ public class AnalyticsManager {
         }
     }
 
+    @Override
     public void pushInstallReferrer(String url) {
         try {
             mConfig.getLogger().verbose(mConfig.getAccountId(), "Referrer received: " + url);
@@ -361,6 +371,7 @@ public class AnalyticsManager {
         }
     }
 
+    @Override
     public synchronized void pushInstallReferrer(String source, String medium, String campaign) {
         if (source == null && medium == null && campaign == null) {
             return;
@@ -402,6 +413,7 @@ public class AnalyticsManager {
         }
     }
 
+    @Override
     public void pushNotificationClickedEvent(final Bundle extras) {
 
         if (mConfig.isAnalyticsOnly()) {
@@ -543,6 +555,7 @@ public class AnalyticsManager {
      * @param extras The {@link Bundle} object that contains the
      *               notification details
      */
+    @Override
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void pushNotificationViewedEvent(Bundle extras) {
 
@@ -583,6 +596,7 @@ public class AnalyticsManager {
         mBaseEventQueueManager.queueEvent(mContext, event, Constants.NV_EVENT);
     }
 
+    @Override
     public void pushProfile(final Map<String, Object> profile) {
         if (profile == null || profile.isEmpty()) {
             return;
@@ -596,6 +610,7 @@ public class AnalyticsManager {
         });
     }
 
+    @Override
     public void removeMultiValuesForKey(final String key, final ArrayList<String> values) {
         mPostAsyncSafelyHandler.postAsyncSafely("removeMultiValuesForKey", new Runnable() {
             @Override
@@ -605,6 +620,7 @@ public class AnalyticsManager {
         });
     }
 
+    @Override
     public void removeValueForKey(final String key) {
         mPostAsyncSafelyHandler.postAsyncSafely("removeValueForKey", new Runnable() {
             @Override
@@ -614,7 +630,8 @@ public class AnalyticsManager {
         });
     }
 
-    public void senDataEvent(final JSONObject event) {
+    @Override
+    public void sendDataEvent(final JSONObject event) {
         mBaseEventQueueManager.queueEvent(mContext, event, Constants.DATA_EVENT);
     }
 

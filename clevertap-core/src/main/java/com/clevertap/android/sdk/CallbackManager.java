@@ -14,7 +14,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 @RestrictTo(Scope.LIBRARY)
-public class CallbackManager {
+public class CallbackManager extends BaseCallbackManager {
 
     private InAppActivityListener mInAppActivityListener;
 
@@ -49,10 +49,12 @@ public class CallbackManager {
         mDeviceInfo = deviceInfo;
     }
 
+    @Override
     public FailureFlushListener getFailureFlushListener() {
         return mFailureFlushListener;
     }
 
+    @Override
     public CTFeatureFlagsListener getFeatureFlagListener() {
         if (mFeatureFlagListenerWeakReference != null && mFeatureFlagListenerWeakReference.get() != null) {
             return mFeatureFlagListenerWeakReference.get();
@@ -60,26 +62,32 @@ public class CallbackManager {
         return null;
     }
 
+    @Override
     public InAppActivityListener getInAppActivityListener() {
         return mInAppActivityListener;
     }
 
+    @Override
     public void setFailureFlushListener(final FailureFlushListener failureFlushListener) {
         mFailureFlushListener = failureFlushListener;
     }
 
+    @Override
     public void setFeatureFlagListener(final CTFeatureFlagsListener listener) {
         this.mFeatureFlagListenerWeakReference = new WeakReference<>(listener);
     }
 
+    @Override
     public GeofenceCallback getGeofenceCallback() {
         return geofenceCallback;
     }
 
+    @Override
     public void setGeofenceCallback(final GeofenceCallback geofenceCallback) {
         this.geofenceCallback = geofenceCallback;
     }
 
+    @Override
     public InAppNotificationButtonListener getInAppNotificationButtonListener() {
         if (inAppNotificationButtonListener != null && inAppNotificationButtonListener.get() != null) {
             return inAppNotificationButtonListener.get();
@@ -87,36 +95,44 @@ public class CallbackManager {
         return null;
     }
 
+    @Override
     public void setInAppActivityListener(
             final InAppActivityListener inAppActivityListener) {
         mInAppActivityListener = inAppActivityListener;
     }
 
+    @Override
     public void setInAppNotificationButtonListener(
             InAppNotificationButtonListener inAppNotificationButtonListener) {
         this.inAppNotificationButtonListener = new WeakReference<>(inAppNotificationButtonListener);
     }
 
+    @Override
     public InAppNotificationListener getInAppNotificationListener() {
         return inAppNotificationListener;
     }
 
+    @Override
     public void setInAppNotificationListener(final InAppNotificationListener inAppNotificationListener) {
         this.inAppNotificationListener = inAppNotificationListener;
     }
 
+    @Override
     public CTInboxListener getInboxListener() {
         return inboxListener;
     }
 
+    @Override
     public void setInboxListener(final CTInboxListener inboxListener) {
         this.inboxListener = inboxListener;
     }
 
+    @Override
     public WeakReference<CTProductConfigListener> getProductConfigListener() {
         return productConfigListener;
     }
 
+    @Override
     public void setProductConfigListener(
             final CTProductConfigListener productConfigListener) {
         if (productConfigListener != null) {
@@ -124,32 +140,39 @@ public class CallbackManager {
         }
     }
 
+    @Override
     public CTPushAmpListener getPushAmpListener() {
         return pushAmpListener;
     }
 
+    @Override
     public void setPushAmpListener(final CTPushAmpListener pushAmpListener) {
         this.pushAmpListener = pushAmpListener;
     }
 
+    @Override
     public CTPushNotificationListener getPushNotificationListener() {
         return pushNotificationListener;
     }
 
+    @Override
     public void setPushNotificationListener(
             final CTPushNotificationListener pushNotificationListener) {
         this.pushNotificationListener = pushNotificationListener;
     }
 
+    @Override
     public SyncListener getSyncListener() {
         return syncListener;
     }
 
+    @Override
     public void setSyncListener(final SyncListener syncListener) {
         this.syncListener = syncListener;
     }
 
     //Profile
+    @Override
     public void notifyUserProfileInitialized(String deviceID) {
         deviceID = (deviceID != null) ? deviceID : mDeviceInfo.getDeviceID();
 
@@ -168,6 +191,7 @@ public class CallbackManager {
         }
     }
 
+    @Override
     public void setDisplayUnitListener(DisplayUnitListener listener) {
         if (listener != null) {
             displayUnitListenerWeakReference = new WeakReference<>(listener);
@@ -183,6 +207,7 @@ public class CallbackManager {
         }
     }
 
+    @Override
     public void _notifyInboxMessagesDidUpdate() {
         if (this.inboxListener != null) {
             Utils.runOnUiThread(new Runnable() {

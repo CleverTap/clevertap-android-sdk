@@ -315,6 +315,10 @@ public class DeviceInfo {
         this.config = config;
         this.library = null;
         mCoreMetaData = coreMetaData;
+        onInitDeviceInfo(cleverTapID);
+    }
+
+    void onInitDeviceInfo(final String cleverTapID) {
         Thread deviceInfoCacheThread = new Thread(new Runnable() {
             @Override
             public void run() {

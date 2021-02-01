@@ -9,9 +9,8 @@ import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.
 
 import android.content.Context;
 import android.text.TextUtils;
-import com.clevertap.android.sdk.AnalyticsManager;
-import com.clevertap.android.sdk.BaseEventQueueManager;
-import com.clevertap.android.sdk.CallbackManager;
+import com.clevertap.android.sdk.BaseAnalyticsManager;
+import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.CoreMetaData;
@@ -49,23 +48,27 @@ public class CTProductConfigController {
 
     private boolean isInitialized = false;
 
-    private final CallbackManager mCallbackManager;
+    private final BaseCallbackManager mCallbackManager;
 
     private final CoreMetaData mCoreMetaData;
+
+    void setDefaultConfig(final HashMap<String, String> defaultConfig) {
+        this.defaultConfig = defaultConfig;
+    }
 
     private final ProductConfigSettings settings;
 
     private final HashMap<String, String> waitingTobeActivatedConfig = new HashMap<>();
 
-    private final AnalyticsManager mAnalyticsManager;
+    private final BaseAnalyticsManager mAnalyticsManager;
 
     // -----------------------------------------------------------------------//
     // ********                        Public API                        *****//
     // -----------------------------------------------------------------------//
 
     public CTProductConfigController(Context context, String guid, CleverTapInstanceConfig config,
-            final AnalyticsManager analyticsManager, final CoreMetaData coreMetaData,
-            final CallbackManager callbackManager) {
+            final BaseAnalyticsManager analyticsManager, final CoreMetaData coreMetaData,
+            final BaseCallbackManager callbackManager) {
         this.context = context;
         this.guid = guid;
         this.config = config;
@@ -447,7 +450,7 @@ public class CTProductConfigController {
         settings.setMinimumFetchIntervalInSeconds(fetchIntervalInSeconds);
     }
 
-    private boolean canRequest(long minimumFetchIntervalInSeconds) {
+    boolean canRequest(long minimumFetchIntervalInSeconds) {
         boolean validGuid = !TextUtils.isEmpty(guid);
 
         if (!validGuid) {

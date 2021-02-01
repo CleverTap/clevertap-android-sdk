@@ -35,7 +35,6 @@ import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationCompat;
 import com.clevertap.android.sdk.AnalyticsManager;
 import com.clevertap.android.sdk.BaseDatabaseManager;
-import com.clevertap.android.sdk.BaseEventQueueManager;
 import com.clevertap.android.sdk.CTExecutors;
 import com.clevertap.android.sdk.CleverTapAPI.DevicePushTokenRefreshListener;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -821,7 +820,7 @@ public class PushProviders {
                 data.put("type", pushType.getType());
                 event.put("data", data);
                 mConfig.getLogger().verbose(mConfig.getAccountId(), pushType + action + " device token " + token);
-                mAnalyticsManager.senDataEvent(event);
+                mAnalyticsManager.sendDataEvent(event);
             } catch (Throwable t) {
                 // we won't get here
                 mConfig.getLogger().verbose(mConfig.getAccountId(), pushType + action + " device token failed", t);
