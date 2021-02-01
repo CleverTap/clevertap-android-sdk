@@ -68,14 +68,14 @@ public class CTProductConfigController {
 
     public CTProductConfigController(Context context, String guid, CleverTapInstanceConfig config,
             final BaseAnalyticsManager analyticsManager, final CoreMetaData coreMetaData,
-            final BaseCallbackManager callbackManager) {
+            final BaseCallbackManager callbackManager, ProductConfigSettings productConfigSettings) {
         this.context = context;
         this.guid = guid;
         this.config = config;
         mCoreMetaData = coreMetaData;
         mCallbackManager = callbackManager;
         mAnalyticsManager = analyticsManager;
-        this.settings = new ProductConfigSettings(context, guid, config);
+        this.settings = productConfigSettings;
         initAsync();
     }
 

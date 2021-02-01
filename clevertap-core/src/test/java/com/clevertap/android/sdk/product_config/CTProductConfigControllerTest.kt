@@ -33,15 +33,10 @@ class CTProductConfigControllerTest : BaseTestCase() {
         callbackManager = MockCallbackManager()
         productConfigSettings = mock(ProductConfigSettings::class.java)
         mProductConfigController = CTProductConfigController(
-            application,
-            guid,
-            cleverTapInstanceConfig,
-            analyticsManager,
-            coreMetaData,
-            callbackManager
+            application, guid, cleverTapInstanceConfig, analyticsManager,
+            coreMetaData, callbackManager, productConfigSettings
         )
     }
-
 
     @Test
     fun testFetch_Valid_Guid_Window_Expired() {
@@ -59,7 +54,7 @@ class CTProductConfigControllerTest : BaseTestCase() {
     fun testFetch_Valid_Guid_Window_Not_Expired() {
         val windowInSeconds = TimeUnit.MINUTES.toSeconds(12)
         `when`(productConfigSettings.nextFetchIntervalInSeconds).thenReturn(windowInSeconds)
-        val lastResponseTime = System.currentTimeMillis() - (2 * windowInSeconds * 1000)
+        val lastResponseTime = System.currentTimeMillis() - (windowInSeconds / 2 * 1000)
         `when`(productConfigSettings.lastFetchTimeStampInMillis).thenReturn(lastResponseTime)
 
         mProductConfigController.fetch()

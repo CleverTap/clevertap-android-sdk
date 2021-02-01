@@ -1,19 +1,16 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
-import android.os.Handler;
-import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.inbox.CTInboxController;
 import com.clevertap.android.sdk.login.LoginController;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
+import com.clevertap.android.sdk.product_config.CTProductConfigFactory;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 
 //TODO move this to builder pattern & add sanity check for dependencies at the time of creation
 public class CoreState extends CleverTapState {
-
-    private ControllerManager mControllerManager;
 
     private BaseLocationManager baseLocationManager;
 
@@ -47,9 +44,7 @@ public class CoreState extends CleverTapState {
 
     private BaseCallbackManager mCallbackManager;
 
-    public InAppController getInAppController() {
-        return mInAppController;
-    }
+    private ControllerManager mControllerManager;
 
     private InAppController mInAppController;
 
@@ -77,10 +72,6 @@ public class CoreState extends CleverTapState {
         return mActivityLifeCycleManager;
     }
 
-    public ControllerManager getControllerManager() {
-        return mControllerManager;
-    }
-
     public void setActivityLifeCycleManager(final ActivityLifeCycleManager activityLifeCycleManager) {
         mActivityLifeCycleManager = activityLifeCycleManager;
     }
@@ -95,10 +86,6 @@ public class CoreState extends CleverTapState {
 
     public BaseEventQueueManager getBaseEventQueueManager() {
         return mBaseEventQueueManager;
-    }
-
-    public void setControllerManager(final ControllerManager controllerManager) {
-        mControllerManager = controllerManager;
     }
 
     void setBaseEventQueueManager(final BaseEventQueueManager baseEventQueueManager) {
@@ -129,6 +116,14 @@ public class CoreState extends CleverTapState {
         this.config = config;
     }
 
+    public ControllerManager getControllerManager() {
+        return mControllerManager;
+    }
+
+    public void setControllerManager(final ControllerManager controllerManager) {
+        mControllerManager = controllerManager;
+    }
+
     public CoreMetaData getCoreMetaData() {
         return coreMetaData;
     }
@@ -141,7 +136,6 @@ public class CoreState extends CleverTapState {
         initProductConfig();
         return ctProductConfigController;
     }
-
 
     @Override
     public BaseDatabaseManager getDatabaseManager() {
@@ -161,12 +155,12 @@ public class CoreState extends CleverTapState {
         this.deviceInfo = deviceInfo;
     }
 
-    public void setInAppController(final InAppController inAppController) {
-        mInAppController = inAppController;
+    public InAppController getInAppController() {
+        return mInAppController;
     }
 
-    public void setInAppFCManager(final InAppFCManager inAppFCManager) {
-        this.inAppFCManager = inAppFCManager;
+    public void setInAppController(final InAppController inAppController) {
+        mInAppController = inAppController;
     }
 
     public LocalDataStore getLocalDataStore() {
@@ -183,10 +177,6 @@ public class CoreState extends CleverTapState {
 
     public void setLoginController(final LoginController loginController) {
         mLoginController = loginController;
-    }
-
-    void setMainLooperHandler(final MainLooperHandler mainLooperHandler) {
-        this.mainLooperHandler = mainLooperHandler;
     }
 
     @Override
@@ -233,12 +223,12 @@ public class CoreState extends CleverTapState {
         this.mValidationResultStack = validationResultStack;
     }
 
-    public void setValidator(final Validator validator) {
-        mValidator = validator;
+    public void setInAppFCManager(final InAppFCManager inAppFCManager) {
+        this.inAppFCManager = inAppFCManager;
     }
 
-    void setEventMediator(final EventMediator eventMediator) {
-        this.eventMediator = eventMediator;
+    public void setValidator(final Validator validator) {
+        mValidator = validator;
     }
 
     @Override
@@ -251,6 +241,14 @@ public class CoreState extends CleverTapState {
         this.baseLocationManager = baseLocationManager;
     }
 
+    void setEventMediator(final EventMediator eventMediator) {
+        this.eventMediator = eventMediator;
+    }
+
+    void setMainLooperHandler(final MainLooperHandler mainLooperHandler) {
+        this.mainLooperHandler = mainLooperHandler;
+    }
+
     private void initProductConfig() {
         Logger.v("Initializing Product Config with device Id = " + getDeviceInfo().getDeviceID());
         if (getConfig().isAnalyticsOnly()) {
@@ -259,8 +257,9 @@ public class CoreState extends CleverTapState {
             return;
         }
         if (ctProductConfigController == null) {
-            CTProductConfigController ctProductConfigController = new CTProductConfigController(context, getDeviceInfo().getDeviceID(),
-                    getConfig(), mAnalyticsManager, coreMetaData, mCallbackManager);
+            CTProductConfigController ctProductConfigController = CTProductConfigFactory
+                    .getInstance(context, getDeviceInfo(),
+                            getConfig(), mAnalyticsManager, coreMetaData, mCallbackManager);
             getControllerManager().setCTProductConfigController(ctProductConfigController);
         }
     }

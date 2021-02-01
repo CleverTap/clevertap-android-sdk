@@ -2,13 +2,19 @@ package com.clevertap.android.sdk
 
 import com.clevertap.android.sdk.InAppNotificationActivity.InAppActivityListener
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener
+import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import com.clevertap.android.sdk.product_config.CTProductConfigListener
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener
 import java.lang.ref.WeakReference
+import java.util.ArrayList
 
 class MockCallbackManager :
     BaseCallbackManager() {
+
+    override fun _notifyInboxInitialized() {
+        TODO("Not yet implemented")
+    }
 
     override fun _notifyInboxMessagesDidUpdate() {
         TODO("Not yet implemented")
@@ -58,7 +64,15 @@ class MockCallbackManager :
         TODO("Not yet implemented")
     }
 
+    override fun notifyDisplayUnitsLoaded(displayUnits: ArrayList<CleverTapDisplayUnit>?) {
+        TODO("Not yet implemented")
+    }
+
     override fun notifyUserProfileInitialized(deviceID: String?) {
+        TODO("Not yet implemented")
+    }
+
+    override fun notifyUserProfileInitialized() {
         TODO("Not yet implemented")
     }
 
