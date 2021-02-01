@@ -13,7 +13,7 @@ public class ControllerManager {
     private final CleverTapInstanceConfig mConfig;
     private final PostAsyncSafelyHandler mPostAsyncSafelyHandler;
     private final CTLockManager mCTLockManager;
-    private final CallbackManager mCallbackManager;
+    private final BaseCallbackManager mCallbackManager;
     private final DeviceInfo mDeviceInfo;
     private final Context mContext;
     private final BaseDatabaseManager mBaseDatabaseManager;
@@ -22,7 +22,7 @@ public class ControllerManager {
             CleverTapInstanceConfig config,
             PostAsyncSafelyHandler postAsyncSafelyHandler,
             CTLockManager ctLockManager,
-            CallbackManager callbackManager,
+            BaseCallbackManager callbackManager,
             DeviceInfo deviceInfo,
             BaseDatabaseManager databaseManager) {
         mConfig = config;

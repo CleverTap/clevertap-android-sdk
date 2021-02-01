@@ -10,7 +10,7 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
 import com.clevertap.android.sdk.AnalyticsManager;
-import com.clevertap.android.sdk.CallbackManager;
+import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.CoreMetaData;
@@ -76,7 +76,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     private final AnalyticsManager mAnalyticsManager;
 
-    private final CallbackManager mCallbackManager;
+    private final BaseCallbackManager mCallbackManager;
 
     private final CleverTapInstanceConfig mConfig;
 
@@ -98,7 +98,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             MainLooperHandler mainLooperHandler,
             PostAsyncSafelyHandler postAsyncSafelyHandler,
             InAppFCManager inAppFCManager,
-            CallbackManager callbackManager,
+            BaseCallbackManager callbackManager,
             AnalyticsManager analyticsManager,
             CoreMetaData coreMetaData) {
 

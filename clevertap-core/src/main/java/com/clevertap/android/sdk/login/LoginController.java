@@ -1,17 +1,15 @@
 package com.clevertap.android.sdk.login;
 
 import android.content.Context;
-import android.telecom.Call;
 import com.clevertap.android.sdk.AnalyticsManager;
+import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.BaseDatabaseManager;
 import com.clevertap.android.sdk.BaseEventQueueManager;
 import com.clevertap.android.sdk.CTLockManager;
-import com.clevertap.android.sdk.CallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
-import com.clevertap.android.sdk.CoreState;
 import com.clevertap.android.sdk.DBManager;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.EventGroup;
@@ -34,7 +32,7 @@ public class LoginController {
 
     private final BaseEventQueueManager mBaseEventQueueManager;
 
-    private final CallbackManager mCallbackManager;
+    private final BaseCallbackManager mCallbackManager;
 
     private final CleverTapInstanceConfig mConfig;
 
@@ -78,7 +76,7 @@ public class LoginController {
             ControllerManager controllerManager,
             SessionManager sessionManager,
             LocalDataStore localDataStore,
-            CallbackManager callbackManager,
+            BaseCallbackManager callbackManager,
             DBManager dbManager,
             CTLockManager ctLockManager){
         mConfig = config;

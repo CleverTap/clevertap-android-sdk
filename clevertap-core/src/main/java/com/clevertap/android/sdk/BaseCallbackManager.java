@@ -2,12 +2,16 @@ package com.clevertap.android.sdk;
 
 import com.clevertap.android.sdk.InAppNotificationActivity.InAppActivityListener;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
+import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
 
 public abstract class BaseCallbackManager {
+
+    abstract void _notifyInboxInitialized();
 
     public abstract void _notifyInboxMessagesDidUpdate();
 
@@ -33,8 +37,12 @@ public abstract class BaseCallbackManager {
 
     public abstract SyncListener getSyncListener();
 
+    abstract void notifyDisplayUnitsLoaded(final ArrayList<CleverTapDisplayUnit> displayUnits);
+
     //Profile
     public abstract void notifyUserProfileInitialized(String deviceID);
+
+    abstract void notifyUserProfileInitialized();
 
     public abstract void setDisplayUnitListener(DisplayUnitListener listener);
 

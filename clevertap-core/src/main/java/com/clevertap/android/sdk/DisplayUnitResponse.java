@@ -13,7 +13,7 @@ class DisplayUnitResponse extends CleverTapResponseDecorator {
 
     private CTDisplayUnitController mCTDisplayUnitController;
 
-    private final CallbackManager mCallbackManager;
+    private final BaseCallbackManager mCallbackManager;
 
     private final CleverTapResponse mCleverTapResponse;
 
@@ -25,7 +25,7 @@ class DisplayUnitResponse extends CleverTapResponseDecorator {
 
     DisplayUnitResponse(CleverTapResponse cleverTapResponse,
             CleverTapInstanceConfig config,
-            CallbackManager callbackManager, ControllerManager controllerManager) {
+            BaseCallbackManager callbackManager, ControllerManager controllerManager) {
         mCleverTapResponse = cleverTapResponse;
         mConfig = config;
         mLogger = mConfig.getLogger();

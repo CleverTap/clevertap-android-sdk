@@ -3,7 +3,6 @@ package com.clevertap.android.sdk;
 import android.content.Context;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.InAppController;
-import com.clevertap.android.sdk.inbox.CTInboxController;
 import com.clevertap.android.sdk.login.LoginController;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 
@@ -44,7 +43,7 @@ class CleverTapFactory {
         DeviceInfo deviceInfo = new DeviceInfo(context, config, cleverTapID, coreMetaData);
         coreState.setDeviceInfo(deviceInfo);
 
-        CallbackManager callbackManager = new CallbackManager(config, deviceInfo);
+        BaseCallbackManager callbackManager = new CallbackManager(config, deviceInfo);
         coreState.setCallbackManager(callbackManager);
 
         SessionManager sessionManager = new SessionManager(config, coreMetaData, validator, localDataStore);
@@ -111,7 +110,7 @@ class CleverTapFactory {
     }
 
     static void initFeatureFlags(Context context, CoreState coreState, CleverTapInstanceConfig config,
-            DeviceInfo deviceInfo, CallbackManager callbackManager, AnalyticsManager analyticsManager) {
+            DeviceInfo deviceInfo, BaseCallbackManager callbackManager, AnalyticsManager analyticsManager) {
         Logger.v("Initializing Feature Flags with device Id = " + deviceInfo.getDeviceID());
         if (config.isAnalyticsOnly()) {
             config.getLogger().debug(config.getAccountId(), "Feature Flag is not enabled for this instance");

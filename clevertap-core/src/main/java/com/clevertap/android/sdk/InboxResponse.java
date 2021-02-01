@@ -8,7 +8,7 @@ class InboxResponse extends CleverTapResponseDecorator {
 
     private final Object inboxControllerLock;
 
-    private final CallbackManager mCallbackManager;
+    private final BaseCallbackManager mCallbackManager;
 
     private final CleverTapResponse mCleverTapResponse;
 
@@ -18,7 +18,7 @@ class InboxResponse extends CleverTapResponseDecorator {
     private final ControllerManager mControllerManager;
 
     InboxResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config, CTLockManager ctLockManager,
-            final CallbackManager callbackManager, ControllerManager controllerManager) {
+            final BaseCallbackManager callbackManager, ControllerManager controllerManager) {
         mCleverTapResponse = cleverTapResponse;
         mConfig = config;
         mCallbackManager = callbackManager;

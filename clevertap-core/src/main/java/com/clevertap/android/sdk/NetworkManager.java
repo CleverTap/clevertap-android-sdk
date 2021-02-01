@@ -33,7 +33,7 @@ public class NetworkManager extends BaseNetworkManager {
 
     private static SSLContext sslContext;
 
-    private final CallbackManager mCallbackManager;
+    private final BaseCallbackManager mCallbackManager;
 
     private CleverTapResponse mCleverTapResponse;
 
@@ -71,7 +71,7 @@ public class NetworkManager extends BaseNetworkManager {
             InAppFCManager inAppFCManager,
             BaseDatabaseManager baseDatabaseManager,
             PostAsyncSafelyHandler postAsyncSafelyHandler,
-            final CallbackManager callbackManager,
+            final BaseCallbackManager callbackManager,
             CTLockManager ctLockManager,
             Validator validator,
             LocalDataStore localDataStore) {

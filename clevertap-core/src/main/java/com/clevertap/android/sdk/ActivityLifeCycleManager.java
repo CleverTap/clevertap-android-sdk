@@ -17,7 +17,7 @@ class ActivityLifeCycleManager {
 
     private final BaseEventQueueManager mBaseEventQueueManager;
 
-    private final CallbackManager mCallbackManager;
+    private final BaseCallbackManager mCallbackManager;
 
     private final CleverTapInstanceConfig mConfig;
 
@@ -39,7 +39,7 @@ class ActivityLifeCycleManager {
             CoreMetaData coreMetaData,
             SessionManager sessionManager,
             PushProviders pushProviders,
-            CallbackManager callbackManager,
+            BaseCallbackManager callbackManager,
             InAppController inAppController,
             BaseEventQueueManager baseEventQueueManager,
             PostAsyncSafelyHandler postAsyncSafelyHandler) {

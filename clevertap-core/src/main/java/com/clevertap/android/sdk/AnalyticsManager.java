@@ -25,7 +25,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     private final BaseEventQueueManager mBaseEventQueueManager;
 
-    private final CallbackManager mCallbackManager;
+    private final BaseCallbackManager mCallbackManager;
 
     private final CleverTapInstanceConfig mConfig;
 
@@ -63,7 +63,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             LocalDataStore localDataStore,
             DeviceInfo deviceInfo,
             MainLooperHandler mainLooperHandler,
-            CallbackManager callbackManager, ControllerManager controllerManager) {
+            BaseCallbackManager callbackManager, ControllerManager controllerManager) {
         mContext = context;
         mConfig = config;
         mBaseEventQueueManager = baseEventQueueManager;

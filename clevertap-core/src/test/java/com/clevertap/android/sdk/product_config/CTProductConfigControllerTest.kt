@@ -9,8 +9,9 @@ import com.clevertap.android.sdk.MockDeviceInfo
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.*
 import org.junit.runner.*
-import org.mockito.*
+import org.mockito.Mockito.*
 import org.robolectric.RobolectricTestRunner
+import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
 class CTProductConfigControllerTest : BaseTestCase() {
@@ -27,10 +28,10 @@ class CTProductConfigControllerTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         coreMetaData = CoreMetaData()
-        analyticsManager = Mockito.mock(BaseAnalyticsManager::class.java)
+        analyticsManager = mock(BaseAnalyticsManager::class.java)
         deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, guid, coreMetaData)
         callbackManager = MockCallbackManager()
-        productConfigSettings = Mockito.mock(ProductConfigSettings::class.java)
+        productConfigSettings = mock(ProductConfigSettings::class.java)
         mProductConfigController = CTProductConfigController(
             application,
             guid,
@@ -41,77 +42,28 @@ class CTProductConfigControllerTest : BaseTestCase() {
         )
     }
 
-    @Throws(Exception::class)
-    fun tearDown() {
-    }
 
     @Test
-    fun testSetDefaultConfig() {}
+    fun testFetch_Valid_Guid_Window_Expired() {
+        val windowInSeconds = TimeUnit.MINUTES.toSeconds(12)
+        `when`(productConfigSettings.nextFetchIntervalInSeconds).thenReturn(windowInSeconds)
+        val lastResponseTime = System.currentTimeMillis() - (windowInSeconds * 1000 * 2)
+        `when`(productConfigSettings.lastFetchTimeStampInMillis).thenReturn(lastResponseTime)
 
-    @Test
-    fun testActivate() {}
-    @Test
-    fun testFetch() {
         mProductConfigController.fetch()
-        Mockito.`when`(productConfigSettings.nextFetchIntervalInSeconds).thenReturn(0)
-        Mockito.verify(analyticsManager).sendFetchEvent(Mockito.any())
+        verify(analyticsManager).sendFetchEvent(any())
         Assert.assertTrue(coreMetaData.isProductConfigRequested)
     }
 
     @Test
-    fun testTestFetch() {}
+    fun testFetch_Valid_Guid_Window_Not_Expired() {
+        val windowInSeconds = TimeUnit.MINUTES.toSeconds(12)
+        `when`(productConfigSettings.nextFetchIntervalInSeconds).thenReturn(windowInSeconds)
+        val lastResponseTime = System.currentTimeMillis() - (2 * windowInSeconds * 1000)
+        `when`(productConfigSettings.lastFetchTimeStampInMillis).thenReturn(lastResponseTime)
 
-    @Test
-    fun testFetchAndActivate() {}
-
-    @Test
-    fun testFetchProductConfig() {}
-
-    @Test
-    fun testGetBoolean() {}
-
-    @Test
-    fun testGetDouble() {}
-
-    @Test
-    fun testGetLastFetchTimeStampInMillis() {}
-
-    @Test
-    fun testGetLong() {}
-
-    @Test
-    fun testGetString() {}
-
-    @Test
-    fun testIsInitialized() {}
-
-    @Test
-    fun testOnFetchFailed() {}
-
-    @Test
-    fun testOnFetchSuccess() {}
-
-    @Test
-    fun testReset() {}
-
-    @Test
-    fun testResetSettings() {}
-
-    @Test
-    fun testSetArpValue() {}
-
-    @Test
-    fun testSetDefaults() {}
-
-    @Test
-    fun testTestSetDefaults() {}
-
-    @Test
-    fun testSetGuidAndInit() {}
-
-    @Test
-    fun testSetMinimumFetchIntervalInSeconds() {}
-
-    @Test
-    fun testCanRequest() {}
+        mProductConfigController.fetch()
+        verify(analyticsManager, never()).sendFetchEvent(any())
+        Assert.assertFalse(coreMetaData.isProductConfigRequested)
+    }
 }

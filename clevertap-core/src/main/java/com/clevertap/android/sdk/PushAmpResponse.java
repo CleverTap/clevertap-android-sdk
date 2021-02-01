@@ -14,7 +14,7 @@ class PushAmpResponse extends CleverTapResponseDecorator {
 
     private final Object inboxControllerLock;
 
-    private final CallbackManager mCallbackManager;
+    private final BaseCallbackManager mCallbackManager;
 
     private final CleverTapResponse mCleverTapResponse;
 
@@ -33,7 +33,7 @@ class PushAmpResponse extends CleverTapResponseDecorator {
             CleverTapInstanceConfig config,
             CTLockManager ctLockManager,
             BaseDatabaseManager dbManager,
-            CallbackManager callbackManager,
+            BaseCallbackManager callbackManager,
             ControllerManager controllerManager) {
         mCleverTapResponse = cleverTapResponse;
         mContext = context;

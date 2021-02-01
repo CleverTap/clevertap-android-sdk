@@ -45,7 +45,7 @@ public class CoreState extends CleverTapState {
 
     private CTLockManager mCTLockManager;
 
-    private CallbackManager mCallbackManager;
+    private BaseCallbackManager mCallbackManager;
 
     public InAppController getInAppController() {
         return mInAppController;
@@ -113,11 +113,11 @@ public class CoreState extends CleverTapState {
         mCTLockManager = CTLockManager;
     }
 
-    public CallbackManager getCallbackManager() {
+    public BaseCallbackManager getCallbackManager() {
         return mCallbackManager;
     }
 
-    void setCallbackManager(final CallbackManager callbackManager) {
+    void setCallbackManager(final BaseCallbackManager callbackManager) {
         mCallbackManager = callbackManager;
     }
 

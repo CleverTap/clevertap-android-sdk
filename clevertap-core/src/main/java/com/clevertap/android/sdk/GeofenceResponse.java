@@ -5,7 +5,7 @@ import org.json.JSONObject;
 
 class GeofenceResponse extends CleverTapResponseDecorator {
 
-    private final CallbackManager mCallbackManager;
+    private final BaseCallbackManager mCallbackManager;
 
     private final CleverTapResponse mCleverTapResponse;
 
@@ -15,7 +15,7 @@ class GeofenceResponse extends CleverTapResponseDecorator {
 
     GeofenceResponse(final CleverTapResponse cleverTapResponse,
             CleverTapInstanceConfig config,
-            CallbackManager callbackManager) {
+            BaseCallbackManager callbackManager) {
         mCleverTapResponse = cleverTapResponse;
         mConfig = config;
         mLogger = mConfig.getLogger();

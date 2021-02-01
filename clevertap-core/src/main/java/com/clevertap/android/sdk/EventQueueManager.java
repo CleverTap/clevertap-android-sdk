@@ -53,7 +53,7 @@ class EventQueueManager extends BaseEventQueueManager implements FailureFlushLis
             CleverTapInstanceConfig config,
             EventMediator eventMediator,
             SessionManager sessionManager,
-            CallbackManager callbackManager,
+            BaseCallbackManager callbackManager,
             MainLooperHandler mainLooperHandler,
             PostAsyncSafelyHandler postAsyncSafelyHandler,
             DeviceInfo deviceInfo,

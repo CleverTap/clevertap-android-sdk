@@ -450,7 +450,7 @@ public class CTProductConfigController {
         settings.setMinimumFetchIntervalInSeconds(fetchIntervalInSeconds);
     }
 
-    boolean canRequest(long minimumFetchIntervalInSeconds) {
+    private boolean canRequest(long minimumFetchIntervalInSeconds) {
         boolean validGuid = !TextUtils.isEmpty(guid);
 
         if (!validGuid) {

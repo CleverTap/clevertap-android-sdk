@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inbox;
 
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CallbackManager;
 import com.clevertap.android.sdk.DBAdapter;
@@ -31,13 +32,13 @@ public class CTInboxController {
 
     private final CTLockManager mCTLockManager;
 
-    private final CallbackManager mCallbackManager;
+    private final BaseCallbackManager mCallbackManager;
 
     // always call async
     public CTInboxController(String guid, DBAdapter adapter,
             CTLockManager ctLockManager,
             PostAsyncSafelyHandler postAsyncSafelyHandler,
-            CallbackManager callbackManager,
+            BaseCallbackManager callbackManager,
             boolean videoSupported) {
         this.userId = guid;
         this.dbAdapter = adapter;
