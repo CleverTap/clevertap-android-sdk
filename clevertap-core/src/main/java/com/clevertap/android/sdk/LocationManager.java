@@ -89,14 +89,14 @@ class LocationManager extends BaseLocationManager {
 
         // Queue the ping event to transmit location update to server
         // min 10 second interval between location pings
-        final int now = (int) (System.currentTimeMillis() / 1000);
+        final int now = getNow();
         Future<?> future = null;
 
         if (mCoreMetaData.isLocationForGeofence() && now > (lastLocationPingTimeForGeofence
                 + Constants.LOCATION_PING_INTERVAL_IN_SECONDS)) {
 
             future = mBaseEventQueueManager.queueEvent(mContext, new JSONObject(), Constants.PING_EVENT);
-            lastLocationPingTimeForGeofence = now;
+            setLastLocationPingTimeForGeofence(now);
             mLogger.verbose(mConfig.getAccountId(),
                     "Queuing location ping event for geofence location (" + location.getLatitude() + ", " + location
                             .getLongitude() + ")");
@@ -105,13 +105,33 @@ class LocationManager extends BaseLocationManager {
                 + Constants.LOCATION_PING_INTERVAL_IN_SECONDS)) {
 
             future = mBaseEventQueueManager.queueEvent(mContext, new JSONObject(), Constants.PING_EVENT);
-            lastLocationPingTime = now;
+            setLastLocationPingTime(now);
             mLogger.verbose(mConfig.getAccountId(),
                     "Queuing location ping event for location (" + location.getLatitude() + ", " + location
                             .getLongitude() + ")");
         }
 
         return future;
+    }
+
+    int getLastLocationPingTime() {
+        return lastLocationPingTime;
+    }
+
+    void setLastLocationPingTime(final int lastLocationPingTime) {
+        this.lastLocationPingTime = lastLocationPingTime;
+    }
+
+    int getLastLocationPingTimeForGeofence() {
+        return lastLocationPingTimeForGeofence;
+    }
+
+    void setLastLocationPingTimeForGeofence(final int lastLocationPingTimeForGeofence) {
+        this.lastLocationPingTimeForGeofence = lastLocationPingTimeForGeofence;
+    }
+
+    int getNow() {
+        return (int) (System.currentTimeMillis() / 1000);
     }
 
 }
