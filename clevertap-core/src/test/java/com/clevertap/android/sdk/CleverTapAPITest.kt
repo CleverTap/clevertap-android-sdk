@@ -1,9 +1,12 @@
 package com.clevertap.android.sdk
 
+import android.location.Location
 import com.clevertap.android.shared.test.BaseTestCase
+import org.json.JSONObject
 import org.junit.*
 import org.junit.Assert.*
 import org.junit.runner.*
+import org.mockito.*
 import org.mockito.Mockito.*
 import org.robolectric.RobolectricTestRunner
 
@@ -76,6 +79,119 @@ class CleverTapAPITest : BaseTestCase() {
 
             val string = StorageHelper.getString(application, "instance:" + cleverTapInstanceConfig.accountId, "")
             assertEquals(cleverTapInstanceConfig.toJSONString(), string)
+        }
+    }
+
+    @Test
+    fun test_setLocationForGeofences() {
+        val location = Location("")
+        location.apply {
+            latitude = 17.4444
+            longitude = 4.444
+        }
+
+        mockStatic(CleverTapFactory::class.java).use {
+            // Arrange
+            `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
+                .thenReturn(corestate)
+            cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+            cleverTapAPI.setLocationForGeofences(location, 45)
+            assertTrue(corestate.coreMetaData.isLocationForGeofence)
+            assertEquals(corestate.coreMetaData.geofenceSDKVersion, 45)
+            verify(corestate.locationManager)._setLocation(location)
+        }
+    }
+
+    @Test
+    fun test_setGeofenceCallback() {
+        mockStatic(CleverTapFactory::class.java).use {
+            // Arrange
+            `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
+                .thenReturn(corestate)
+            cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+
+            val geofenceCallback = object : GeofenceCallback {
+                override fun handleGeoFences(jsonObject: JSONObject?) {
+                    TODO("Not yet implemented")
+                }
+
+                override fun triggerLocation() {
+                    TODO("Not yet implemented")
+                }
+            }
+
+            cleverTapAPI.geofenceCallback = geofenceCallback
+
+            assertEquals(geofenceCallback, cleverTapAPI.geofenceCallback)
+
+        }
+    }
+
+    @Test
+    fun test_pushGeoFenceError() {
+        mockStatic(CleverTapFactory::class.java).use {
+            `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
+                .thenReturn(corestate)
+            cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+
+            val expectedErrorCode = 234
+            val expectedErrorMessage = "error"
+
+            cleverTapAPI.pushGeoFenceError(expectedErrorCode, expectedErrorMessage)
+            val argumentCaptor =
+                ArgumentCaptor.forClass(
+                    ValidationResult::class.java
+                )
+
+            verify(corestate.validationResultStack).pushValidationResult(argumentCaptor.capture())
+            assertEquals(expectedErrorCode, argumentCaptor.allValues[0].errorCode)
+            assertEquals(expectedErrorMessage, argumentCaptor.allValues[0].errorDesc)
+        }
+    }
+
+    @Test
+    fun test_pushGeoFenceExitedEvent() {
+        mockStatic(CleverTapFactory::class.java).use {
+            `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
+                .thenReturn(corestate)
+            cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+
+            val expectedJson = JSONObject("{\"key\":\"value\"}")
+
+            cleverTapAPI.pushGeoFenceExitedEvent(expectedJson)
+            val argumentCaptor =
+                ArgumentCaptor.forClass(
+                    JSONObject::class.java
+                )
+
+            verify(corestate.analyticsManager).raiseEventForGeofences(
+                ArgumentMatchers.anyString(), argumentCaptor.capture()
+            )
+
+            assertEquals(expectedJson, argumentCaptor.value)
+        }
+    }
+
+    @Test
+    fun test_pushGeoFenceEnteredEvent() {
+        mockStatic(CleverTapFactory::class.java).use {
+            `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
+                .thenReturn(corestate)
+            cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+
+            val expectedJson = JSONObject("{\"key\":\"value\"}")
+
+            cleverTapAPI.pushGeofenceEnteredEvent(expectedJson)
+            val argumentCaptor =
+                ArgumentCaptor.forClass(
+                    JSONObject::class.java
+                )
+
+            verify(corestate.analyticsManager).raiseEventForGeofences(
+                ArgumentMatchers.anyString(), argumentCaptor.capture()
+            )
+
+            assertEquals(expectedJson, argumentCaptor.value)
         }
     }
 

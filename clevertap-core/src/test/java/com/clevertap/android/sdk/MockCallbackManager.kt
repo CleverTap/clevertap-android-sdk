@@ -12,10 +12,6 @@ import java.util.ArrayList
 class MockCallbackManager :
     BaseCallbackManager() {
 
-    override fun _notifyInboxInitialized() {
-        TODO("Not yet implemented")
-    }
-
     override fun _notifyInboxMessagesDidUpdate() {
         TODO("Not yet implemented")
     }
@@ -28,8 +24,8 @@ class MockCallbackManager :
         TODO("Not yet implemented")
     }
 
-    override fun getGeofenceCallback(): GeofenceCallback {
-        TODO("Not yet implemented")
+    override fun getGeofenceCallback(): GeofenceCallback? {
+        return null
     }
 
     override fun getInAppActivityListener(): InAppActivityListener {
@@ -57,6 +53,10 @@ class MockCallbackManager :
     }
 
     override fun getPushNotificationListener(): CTPushNotificationListener {
+        TODO("Not yet implemented")
+    }
+
+    override fun _notifyInboxInitialized() {
         TODO("Not yet implemented")
     }
 
