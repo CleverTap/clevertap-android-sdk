@@ -28,7 +28,10 @@ android {
 dependencies {
     api project(':clevertap-core')
     // Unit ing dependencies
-    api deps.junit
+    api deps.junitPlatform
+    api deps.junitApi
+    api deps.junitEngine
+
     def mockito_version = '3.5.11'
     api deps.mockitoCore
     api "org.mockito:mockito-inline:$mockito_version"

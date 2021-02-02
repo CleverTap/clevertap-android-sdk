@@ -42,35 +42,24 @@ public class CTProductConfigController {
 
     private HashMap<String, String> defaultConfig = new HashMap<>();
 
-    private String guid;
-
     private boolean isFetchAndActivating = false;
 
     private boolean isInitialized = false;
+
+    private final BaseAnalyticsManager mAnalyticsManager;
 
     private final BaseCallbackManager mCallbackManager;
 
     private final CoreMetaData mCoreMetaData;
 
-    void setDefaultConfig(final HashMap<String, String> defaultConfig) {
-        this.defaultConfig = defaultConfig;
-    }
-
     private final ProductConfigSettings settings;
 
     private final HashMap<String, String> waitingTobeActivatedConfig = new HashMap<>();
 
-    private final BaseAnalyticsManager mAnalyticsManager;
-
-    // -----------------------------------------------------------------------//
-    // ********                        Public API                        *****//
-    // -----------------------------------------------------------------------//
-
-    public CTProductConfigController(Context context, String guid, CleverTapInstanceConfig config,
+    public CTProductConfigController(Context context, CleverTapInstanceConfig config,
             final BaseAnalyticsManager analyticsManager, final CoreMetaData coreMetaData,
             final BaseCallbackManager callbackManager, ProductConfigSettings productConfigSettings) {
         this.context = context;
-        this.guid = guid;
         this.config = config;
         mCoreMetaData = coreMetaData;
         mCallbackManager = callbackManager;
@@ -79,12 +68,16 @@ public class CTProductConfigController {
         initAsync();
     }
 
+    // -----------------------------------------------------------------------//
+    // ********                        Public API                        *****//
+    // -----------------------------------------------------------------------//
+
     /**
      * Asynchronously activates the most recently fetched configs, so that the fetched key value pairs take effect.
      */
     @SuppressWarnings("WeakerAccess")
     public void activate() {
-        if (TextUtils.isEmpty(guid)) {
+        if (TextUtils.isEmpty(settings.getGuid())) {
             return;
         }
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
@@ -281,7 +274,7 @@ public class CTProductConfigController {
      * Developers should not use this method manually.
      */
     public void onFetchSuccess(JSONObject kvResponse) {
-        if (TextUtils.isEmpty(guid)) {
+        if (TextUtils.isEmpty(settings.getGuid())) {
             return;
         }
         synchronized (this) {
@@ -313,10 +306,6 @@ public class CTProductConfigController {
             }
         }
     }
-
-    // -----------------------------------------------------------------------//
-    // ********                        Internal API                      *****//
-    // -----------------------------------------------------------------------//
 
     /**
      * Deletes all activated, fetched and defaults configs as well as all Product Config settings.
@@ -352,6 +341,10 @@ public class CTProductConfigController {
             settings.initDefaults();
         }
     }
+
+    // -----------------------------------------------------------------------//
+    // ********                        Internal API                      *****//
+    // -----------------------------------------------------------------------//
 
     public void resetSettings() {
         settings.reset();
@@ -430,13 +423,10 @@ public class CTProductConfigController {
      * Developers should not use this method manually.
      */
     public void setGuidAndInit(String cleverTapID) {
-        if (isInitialized()) {
+        if (isInitialized() || TextUtils.isEmpty(cleverTapID) || cleverTapID.equalsIgnoreCase(settings.getGuid())) {
             return;
         }
-        if (TextUtils.isEmpty(guid)) {
-            return;
-        }
-        this.guid = cleverTapID;
+        settings.setGuid(cleverTapID);
         initAsync();
     }
 
@@ -451,7 +441,7 @@ public class CTProductConfigController {
     }
 
     private boolean canRequest(long minimumFetchIntervalInSeconds) {
-        boolean validGuid = !TextUtils.isEmpty(guid);
+        boolean validGuid = !TextUtils.isEmpty(settings.getGuid());
 
         if (!validGuid) {
             config.getLogger()
@@ -513,7 +503,7 @@ public class CTProductConfigController {
     }
 
     private String getProductConfigDirName() {
-        return CTProductConfigConstants.DIR_PRODUCT_CONFIG + "_" + config.getAccountId() + "_" + guid;
+        return CTProductConfigConstants.DIR_PRODUCT_CONFIG + "_" + config.getAccountId() + "_" + settings.getGuid();
     }
 
     private HashMap<String, String> getStoredValues(String fullFilePath) {
@@ -562,7 +552,7 @@ public class CTProductConfigController {
     }
 
     private void initAsync() {
-        if (TextUtils.isEmpty(guid)) {
+        if (TextUtils.isEmpty(settings.getGuid())) {
             return;
         }
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Boolean>() {

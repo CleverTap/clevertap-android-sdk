@@ -32,9 +32,14 @@ class CTProductConfigControllerTest : BaseTestCase() {
         deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, guid, coreMetaData)
         callbackManager = MockCallbackManager()
         productConfigSettings = mock(ProductConfigSettings::class.java)
+        `when`(productConfigSettings.guid).thenReturn(guid)
         mProductConfigController = CTProductConfigController(
-            application, guid, cleverTapInstanceConfig, analyticsManager,
-            coreMetaData, callbackManager, productConfigSettings
+            application,
+            cleverTapInstanceConfig,
+            analyticsManager,
+            coreMetaData,
+            callbackManager,
+            productConfigSettings
         )
     }
 
@@ -42,7 +47,7 @@ class CTProductConfigControllerTest : BaseTestCase() {
     fun testFetch_Valid_Guid_Window_Expired() {
         val windowInSeconds = TimeUnit.MINUTES.toSeconds(12)
         `when`(productConfigSettings.nextFetchIntervalInSeconds).thenReturn(windowInSeconds)
-        val lastResponseTime = System.currentTimeMillis() - (windowInSeconds * 1000 * 2)
+        val lastResponseTime = System.currentTimeMillis() - 2 * windowInSeconds * TimeUnit.SECONDS.toMillis(1)
         `when`(productConfigSettings.lastFetchTimeStampInMillis).thenReturn(lastResponseTime)
 
         mProductConfigController.fetch()
@@ -51,12 +56,24 @@ class CTProductConfigControllerTest : BaseTestCase() {
     }
 
     @Test
-    fun testFetch_Valid_Guid_Window_Not_Expired() {
+    fun testFetch_Valid_Guid_Window_Not_Expired_Request_Not_Sent() {
         val windowInSeconds = TimeUnit.MINUTES.toSeconds(12)
         `when`(productConfigSettings.nextFetchIntervalInSeconds).thenReturn(windowInSeconds)
-        val lastResponseTime = System.currentTimeMillis() - (windowInSeconds / 2 * 1000)
+        val lastResponseTime = System.currentTimeMillis() - windowInSeconds / 2 * TimeUnit.SECONDS.toMillis(1)
         `when`(productConfigSettings.lastFetchTimeStampInMillis).thenReturn(lastResponseTime)
 
+        mProductConfigController.fetch()
+        verify(analyticsManager, never()).sendFetchEvent(any())
+        Assert.assertFalse(coreMetaData.isProductConfigRequested)
+    }
+
+    @Test
+    fun testFetch_InValid_Guid_Request_Not_Sent() {
+        val windowInSeconds = TimeUnit.MINUTES.toSeconds(12)
+        `when`(productConfigSettings.nextFetchIntervalInSeconds).thenReturn(windowInSeconds)
+        val lastResponseTime = System.currentTimeMillis() - (windowInSeconds * 1000 * 2)
+        `when`(productConfigSettings.lastFetchTimeStampInMillis).thenReturn(lastResponseTime)
+        `when`(productConfigSettings.guid).thenReturn("")
         mProductConfigController.fetch()
         verify(analyticsManager, never()).sendFetchEvent(any())
         Assert.assertFalse(coreMetaData.isProductConfigRequested)

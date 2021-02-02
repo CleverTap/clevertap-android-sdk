@@ -25,7 +25,7 @@ class ProductConfigSettings {
 
     private final Context context;
 
-    private final String guid;
+    private String guid;
 
     private final HashMap<String, String> settingsMap = new HashMap<>();
 
@@ -36,7 +36,7 @@ class ProductConfigSettings {
         initDefaults();
     }
 
-    public void reset() {
+    void reset() {
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
             @Override
             public Void doInBackground(Void aVoid) {
@@ -59,6 +59,14 @@ class ProductConfigSettings {
             }
         });
         initDefaults();
+    }
+
+    String getGuid() {
+        return guid;
+    }
+
+    void setGuid(final String guid) {
+        this.guid = guid;
     }
 
     long getLastFetchTimeStampInMillis() {

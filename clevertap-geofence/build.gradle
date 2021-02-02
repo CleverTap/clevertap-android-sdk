@@ -21,7 +21,10 @@ dependencies {
     compileOnly deps.androidXConcurrentFutures
 
     // Unit testing dependencies
-    testImplementation deps.junit
+    testImplementation deps.junitPlatform
+    testImplementation deps.junitApi
+    testRuntimeOnly deps.junitEngine
+
     testImplementation deps.mockitoCore
     testImplementation deps.robolectric
 

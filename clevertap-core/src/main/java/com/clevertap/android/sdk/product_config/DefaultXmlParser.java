@@ -11,7 +11,7 @@ import java.util.HashMap;
 import org.xmlpull.v1.XmlPullParser;
 import org.xmlpull.v1.XmlPullParserException;
 
-public class DefaultXmlParser {
+class DefaultXmlParser {
 
     private static final String XML_TAG_ENTRY = "entry";
 
@@ -23,7 +23,7 @@ public class DefaultXmlParser {
 
     private static final int XML_TAG_TYPE_VALUE = 1;
 
-    public DefaultXmlParser() {
+    DefaultXmlParser() {
     }
 
     static HashMap<String, String> getDefaultsFromXml(Context context, int resourceId) {

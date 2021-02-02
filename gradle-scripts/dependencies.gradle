@@ -26,7 +26,11 @@ ext.deps = [
         'androidXConcurrentFutures' : "androidx.concurrent:concurrent-futures:$concurrentFuturesVersion",
         'workManagerTesting' : "androidx.work:work-testing:$workManagerVersion",
         'robolectric' : "org.robolectric:robolectric:$robolectricVersion",
-        'junit' : "junit:junit:$junitVersion",
+
+        'junitPlatform':"org.junit.platform:junit-platform-runner:$junitPlatformVersion",
+        'junitApi':"org.junit.jupiter:junit-jupiter-api:$junitApiVersion",
+        'junitEngine':"org.junit.jupiter:junit-jupiter-engine:$junitEngineVersion",
+
         'androidXTestCore' : "androidx.test:core:$androidxCoreVersion",
         'mockitoCore' : "org.mockito:mockito-core:$mockitoVersion",
         'androidXJunitExt' : "androidx.test.ext:junit:$junitExtVersion",
@@ -34,6 +38,4 @@ ext.deps = [
         'clevertapGeofence' : "com.clevertap.android:clevertap-geofence-sdk:$geofenceVersion",
         'clevertapXPS' : "com.clevertap.android:clevertap-xiaomi-sdk:$xpsVersion",
         'clevertapHMS' : "com.clevertap.android:clevertap-hms-sdk:$hmsVersion"
-
-
 ]

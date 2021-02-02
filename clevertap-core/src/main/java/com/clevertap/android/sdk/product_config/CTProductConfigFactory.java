@@ -14,8 +14,6 @@ public class CTProductConfigFactory {
             BaseCallbackManager callbackManager) {
         final String guid = deviceInfo.getDeviceID();
         ProductConfigSettings configSettings = new ProductConfigSettings(context, guid, config);
-        return new CTProductConfigController(context, guid,
-                config, baseAnalyticsManager, coreMetaData,
-                callbackManager, configSettings);
+        return new CTProductConfigController(context, config, baseAnalyticsManager, coreMetaData, callbackManager, configSettings);
     }
 }
