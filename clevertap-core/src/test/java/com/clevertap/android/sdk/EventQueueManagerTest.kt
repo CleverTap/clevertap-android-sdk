@@ -1,5 +1,8 @@
 package com.clevertap.android.sdk
 
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkInfo.DetailedState
 import com.clevertap.android.sdk.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.sdk.EventGroup.REGULAR
 import com.clevertap.android.shared.test.BaseTestCase
@@ -9,6 +12,8 @@ import org.junit.runner.*
 import org.mockito.*
 import org.mockito.Mockito.*
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
+import org.robolectric.shadows.ShadowNetworkInfo
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
 
@@ -222,5 +227,74 @@ class EventQueueManagerTest : BaseTestCase() {
 
         verify(eventQueueManager).flushQueueSync(application, REGULAR)
         verify(eventQueueManager).flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
+    }
+
+    @Test
+    fun test_flush() {
+        doNothing().`when`(eventQueueManager).flushQueueAsync(application, REGULAR)
+
+        eventQueueManager.flush()
+
+        verify(eventQueueManager).flushQueueAsync(application, REGULAR)
+    }
+
+    @Test
+    fun test_flushQueueSync_when_net_is_offline() {
+        val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val shadowOfCM = shadowOf(cm)
+        shadowOfCM.setActiveNetworkInfo(null) // make offline
+
+        eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
+
+        verify(corestate.networkManager, never()).needsHandshakeForDomain(PUSH_NOTIFICATION_VIEWED)
+    }
+
+    @Test
+    fun test_flushQueueSync_when_net_is_online_and_metadata_is_offline() {
+        corestate.coreMetaData.isOffline = true
+        val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val shadowOfCM = shadowOf(cm)
+        val netInfo =
+            ShadowNetworkInfo.newInstance(DetailedState.CONNECTED, ConnectivityManager.TYPE_WIFI, 1, true, true)
+        shadowOfCM.setActiveNetworkInfo(netInfo) // make offline
+
+        eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
+
+        verify(corestate.networkManager, never()).needsHandshakeForDomain(PUSH_NOTIFICATION_VIEWED)
+    }
+
+    @Test
+    fun test_flushQueueSync_when_HandshakeForDomain_not_needed() {
+        corestate.coreMetaData.isOffline = false
+        val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val shadowOfCM = shadowOf(cm)
+        val netInfo =
+            ShadowNetworkInfo.newInstance(DetailedState.CONNECTED, ConnectivityManager.TYPE_WIFI, 1, true, true)
+        shadowOfCM.setActiveNetworkInfo(netInfo) // make offline
+
+        eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
+
+        verify(corestate.networkManager, never()).initHandshake(ArgumentMatchers.any(), ArgumentMatchers.any())
+        verify(corestate.networkManager).flushDBQueue(application, PUSH_NOTIFICATION_VIEWED)
+    }
+
+    @Test
+    fun test_flushQueueSync_when_HandshakeForDomain_is_needed() {
+        val captor = ArgumentCaptor.forClass(Runnable::class.java)
+        corestate.coreMetaData.isOffline = false
+        val cm = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val shadowOfCM = shadowOf(cm)
+        val netInfo =
+            ShadowNetworkInfo.newInstance(DetailedState.CONNECTED, ConnectivityManager.TYPE_WIFI, 1, true, true)
+        shadowOfCM.setActiveNetworkInfo(netInfo) // make offline
+        `when`(corestate.networkManager.needsHandshakeForDomain(PUSH_NOTIFICATION_VIEWED)).thenReturn(true)
+
+        eventQueueManager.flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
+
+        verify(corestate.networkManager).initHandshake(ArgumentMatchers.any(), captor.capture())
+
+        captor.value.run()
+
+        verify(corestate.networkManager).flushDBQueue(application, PUSH_NOTIFICATION_VIEWED)
     }
 }
