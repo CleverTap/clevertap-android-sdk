@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk
 
 import com.clevertap.android.sdk.EventGroup.PUSH_NOTIFICATION_VIEWED
+import com.clevertap.android.sdk.EventGroup.REGULAR
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
 import org.junit.*
@@ -181,5 +182,45 @@ class EventQueueManagerTest : BaseTestCase() {
         captor.value.run()
 
         verify(eventQueueManager).flushQueueAsync(application, PUSH_NOTIFICATION_VIEWED)
+    }
+
+    @Test
+    fun test_pushInitialEventsAsync_does_not_pushBasicProfile_when_inCurrentSession() {
+        corestate.coreMetaData.currentSessionId = 10000
+        doNothing().`when`(eventQueueManager).pushBasicProfile(null)
+
+        eventQueueManager.pushInitialEventsAsync()
+
+        verify(eventQueueManager, never()).pushBasicProfile(null)
+    }
+
+    @Test
+    fun test_pushInitialEventsAsync_pushesBasicProfile_when_not_inCurrentSession() {
+        corestate.coreMetaData.currentSessionId = -1
+        doNothing().`when`(eventQueueManager).pushBasicProfile(null)
+
+        eventQueueManager.pushInitialEventsAsync()
+
+        verify(eventQueueManager).pushBasicProfile(null)
+    }
+
+    @Test
+    fun test_scheduleQueueFlush() {
+        // Arrange
+
+        val captor = ArgumentCaptor.forClass(Runnable::class.java)
+        doNothing().`when`(eventQueueManager).flushQueueSync(ArgumentMatchers.any(), ArgumentMatchers.any())
+
+        // Act
+        eventQueueManager.scheduleQueueFlush(application)
+
+        // Assert
+        verify(corestate.mainLooperHandler).removeCallbacks(captor.capture())
+        verify(corestate.mainLooperHandler).postDelayed(captor.capture(), ArgumentMatchers.anyLong())
+
+        captor.value.run()
+
+        verify(eventQueueManager).flushQueueSync(application, REGULAR)
+        verify(eventQueueManager).flushQueueSync(application, PUSH_NOTIFICATION_VIEWED)
     }
 }
