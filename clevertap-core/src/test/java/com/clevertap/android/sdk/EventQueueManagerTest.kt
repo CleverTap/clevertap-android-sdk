@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk
 
+import com.clevertap.android.sdk.EventGroup.PUSH_NOTIFICATION_VIEWED
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
 import org.junit.*
@@ -7,6 +8,8 @@ import org.junit.runner.*
 import org.mockito.*
 import org.mockito.Mockito.*
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 @RunWith(RobolectricTestRunner::class)
 class EventQueueManagerTest : BaseTestCase() {
@@ -42,6 +45,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 )
             )
         json = JSONObject()
+
     }
 
     @Test
@@ -121,5 +125,61 @@ class EventQueueManagerTest : BaseTestCase() {
 
         verify(eventQueueManager, never()).processPushNotificationViewedEvent(application, json)
         verify(eventQueueManager).processEvent(application, json, Constants.PROFILE_EVENT)
+    }
+
+    @Test
+    fun test_processPushNotificationViewedEvent_when_there_is_no_validation_error() {
+        val captor = ArgumentCaptor.forClass(Runnable::class.java)
+        corestate.coreMetaData.currentSessionId = 1000
+        `when`(eventQueueManager.now).thenReturn(7000)
+        doNothing().`when`(eventQueueManager).flushQueueAsync(application, PUSH_NOTIFICATION_VIEWED)
+
+        eventQueueManager.processPushNotificationViewedEvent(application, json)
+
+        assertNull(json.optJSONObject(Constants.ERROR_KEY))
+        assertEquals("event", json.getString("type"))
+        assertEquals(1000, json.getInt("s"))
+        assertEquals(7000, json.getInt("ep"))
+
+        verify(corestate.databaseManager).queuePushNotificationViewedEventToDB(application, json)
+        verify(corestate.mainLooperHandler).removeCallbacks(captor.capture())
+        verify(corestate.mainLooperHandler).post(captor.capture())
+
+        captor.value.run()
+
+        verify(eventQueueManager).flushQueueAsync(application, PUSH_NOTIFICATION_VIEWED)
+    }
+
+    @Test
+    fun test_processPushNotificationViewedEvent_when_there_is_validation_error() {
+        // Arrange
+        val validationResult = ValidationResult()
+        validationResult.errorDesc = "Fire in the hall"
+        validationResult.errorCode = 999
+
+        corestate.validationResultStack.pushValidationResult(validationResult)
+
+        val captor = ArgumentCaptor.forClass(Runnable::class.java)
+        corestate.coreMetaData.currentSessionId = 1000
+        `when`(eventQueueManager.now).thenReturn(7000)
+        doNothing().`when`(eventQueueManager).flushQueueAsync(application, PUSH_NOTIFICATION_VIEWED)
+
+        // Act
+        eventQueueManager.processPushNotificationViewedEvent(application, json)
+
+        // Assert
+        assertEquals(validationResult.errorCode, json.getJSONObject(Constants.ERROR_KEY)["c"])
+        assertEquals(validationResult.errorDesc, json.getJSONObject(Constants.ERROR_KEY)["d"])
+        assertEquals("event", json.getString("type"))
+        assertEquals(1000, json.getInt("s"))
+        assertEquals(7000, json.getInt("ep"))
+
+        verify(corestate.databaseManager).queuePushNotificationViewedEventToDB(application, json)
+        verify(corestate.mainLooperHandler).removeCallbacks(captor.capture())
+        verify(corestate.mainLooperHandler).post(captor.capture())
+
+        captor.value.run()
+
+        verify(eventQueueManager).flushQueueAsync(application, PUSH_NOTIFICATION_VIEWED)
     }
 }

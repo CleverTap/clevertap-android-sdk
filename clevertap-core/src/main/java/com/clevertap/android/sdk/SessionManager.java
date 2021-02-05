@@ -40,7 +40,7 @@ public class SessionManager extends BaseSessionManager {
 
     @Override
     public void destroySession() {
-        mCleverTapMetaData.setSessionId(0);
+        mCleverTapMetaData.setCurrentSessionId(0);
         mCleverTapMetaData.setAppLaunchPushed(false);
         if (mCleverTapMetaData.isFirstSession()) {
             mCleverTapMetaData.setFirstSession(false);
@@ -87,10 +87,10 @@ public class SessionManager extends BaseSessionManager {
 
     private void createSession(final Context context) {
         int sessionId = (int) (System.currentTimeMillis() / 1000);
-        mCleverTapMetaData.setSessionId(sessionId);
+        mCleverTapMetaData.setCurrentSessionId(sessionId);
 
         mConfig.getLogger().verbose(mConfig.getAccountId(),
-                "Session created with ID: " + mCleverTapMetaData.getCurrentSession());
+                "Session created with ID: " + mCleverTapMetaData.getCurrentSessionId());
 
         SharedPreferences prefs = StorageHelper.getPreferences(context);
 
@@ -109,7 +109,7 @@ public class SessionManager extends BaseSessionManager {
 
         final SharedPreferences.Editor editor = prefs.edit()
                 .putInt(StorageHelper.storageKeyWithSuffix(mConfig, Constants.SESSION_ID_LAST),
-                        mCleverTapMetaData.getCurrentSession());
+                        mCleverTapMetaData.getCurrentSessionId());
         StorageHelper.persist(editor);
     }
 

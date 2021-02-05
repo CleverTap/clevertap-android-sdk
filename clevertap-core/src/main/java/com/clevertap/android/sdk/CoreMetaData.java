@@ -153,7 +153,7 @@ public class CoreMetaData extends CleverTapMetaData {
         }
     }
 
-    int getCurrentSession() {
+    int getCurrentSessionId() {
         return currentSessionId;
     }
 
@@ -296,7 +296,7 @@ public class CoreMetaData extends CleverTapMetaData {
         offline = value;
     }
 
-    void setSessionId(int sessionId) {
+    void setCurrentSessionId(int sessionId) {
         this.currentSessionId = sessionId;
     }
 

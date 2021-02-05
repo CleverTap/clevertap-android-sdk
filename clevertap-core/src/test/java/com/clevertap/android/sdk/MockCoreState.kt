@@ -19,8 +19,9 @@ class MockCoreState(context: Context, cleverTapInstanceConfig: CleverTapInstance
         analyticsManager = Mockito.mock(AnalyticsManager::class.java)
         eventMediator = Mockito.mock(EventMediator::class.java)
         databaseManager = Mockito.mock(DBManager::class.java)
-        validationResultStack = Mockito.mock(ValidationResultStack::class.java)
+        validationResultStack = ValidationResultStack()
         mainLooperHandler = Mockito.mock(MainLooperHandler::class.java)
         networkManager = Mockito.mock(NetworkManager::class.java)
+        ctLockManager = CTLockManager()
     }
 }

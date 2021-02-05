@@ -1556,7 +1556,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      */
     @SuppressWarnings({"unused"})
     public int getTimeElapsed() {
-        int currentSession = mCoreState.getCoreMetaData().getCurrentSession();
+        int currentSession = mCoreState.getCoreMetaData().getCurrentSessionId();
         if (currentSession == 0) {
             return -1;
         }

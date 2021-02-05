@@ -297,6 +297,10 @@ class EventQueueManager extends BaseEventQueueManager implements FailureFlushLis
         return mDeviceInfo.getDeviceID();
     }
 
+    int getNow() {
+        return (int) (System.currentTimeMillis() / 1000);
+    }
+
     void processEvent(final Context context, final JSONObject event, final int eventType) {
         synchronized (mCtLockManager.getEventLock()) {
             try {
@@ -336,7 +340,7 @@ class EventQueueManager extends BaseEventQueueManager implements FailureFlushLis
                     event.put("n", currentActivityName);
                 }
 
-                int session = mCleverTapMetaData.getCurrentSession();
+                int session = mCleverTapMetaData.getCurrentSessionId();
                 event.put("s", session);
                 event.put("pg", CoreMetaData.getActivityCount());
                 event.put("type", type);
@@ -357,31 +361,6 @@ class EventQueueManager extends BaseEventQueueManager implements FailureFlushLis
 
             } catch (Throwable e) {
                 mConfig.getLogger().verbose(mConfig.getAccountId(), "Failed to queue event: " + event.toString(), e);
-            }
-        }
-    }
-
-    void processPushNotificationViewedEvent(final Context context, final JSONObject event) {
-        synchronized (mCtLockManager.getEventLock()) {
-            try {
-                int session = mCleverTapMetaData.getCurrentSession();
-                event.put("s", session);
-                event.put("type", "event");
-                event.put("ep", System.currentTimeMillis() / 1000);
-                // Report any pending validation error
-                ValidationResult vr = mValidationResultStack.popValidationResult();
-                if (vr != null) {
-                    event.put(Constants.ERROR_KEY, getErrorObject(vr));
-                }
-                mConfig.getLogger().verbose(mConfig.getAccountId(), "Pushing Notification Viewed event onto DB");
-                mBaseDatabaseManager.queuePushNotificationViewedEventToDB(context, event);
-                mConfig.getLogger()
-                        .verbose(mConfig.getAccountId(), "Pushing Notification Viewed event onto queue flush");
-                schedulePushNotificationViewedQueueFlush(context);
-            } catch (Throwable t) {
-                mConfig.getLogger()
-                        .verbose(mConfig.getAccountId(),
-                                "Failed to queue notification viewed event: " + event.toString(), t);
             }
         }
     }
@@ -440,6 +419,31 @@ class EventQueueManager extends BaseEventQueueManager implements FailureFlushLis
     private void updateLocalStore(final Context context, final JSONObject event, final int type) {
         if (type == Constants.RAISED_EVENT) {
             mLocalDataStore.persistEvent(context, event, type);
+        }
+    }
+
+    void processPushNotificationViewedEvent(final Context context, final JSONObject event) {
+        synchronized (mCtLockManager.getEventLock()) {
+            try {
+                int session = mCleverTapMetaData.getCurrentSessionId();
+                event.put("s", session);
+                event.put("type", "event");
+                event.put("ep", getNow());
+                // Report any pending validation error
+                ValidationResult vr = mValidationResultStack.popValidationResult();
+                if (vr != null) {
+                    event.put(Constants.ERROR_KEY, getErrorObject(vr));
+                }
+                mConfig.getLogger().verbose(mConfig.getAccountId(), "Pushing Notification Viewed event onto DB");
+                mBaseDatabaseManager.queuePushNotificationViewedEventToDB(context, event);
+                mConfig.getLogger()
+                        .verbose(mConfig.getAccountId(), "Pushing Notification Viewed event onto queue flush");
+                schedulePushNotificationViewedQueueFlush(context);
+            } catch (Throwable t) {
+                mConfig.getLogger()
+                        .verbose(mConfig.getAccountId(),
+                                "Failed to queue notification viewed event: " + event.toString(), t);
+            }
         }
     }
 

@@ -134,18 +134,14 @@ class CleverTapAPITest : BaseTestCase() {
                 .thenReturn(corestate)
             cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
 
-            val expectedErrorCode = 234
-            val expectedErrorMessage = "error"
+            val expectedErrorCode = 999
+            val expectedErrorMessage = "Fire in the hall"
 
             cleverTapAPI.pushGeoFenceError(expectedErrorCode, expectedErrorMessage)
-            val argumentCaptor =
-                ArgumentCaptor.forClass(
-                    ValidationResult::class.java
-                )
 
-            verify(corestate.validationResultStack).pushValidationResult(argumentCaptor.capture())
-            assertEquals(expectedErrorCode, argumentCaptor.allValues[0].errorCode)
-            assertEquals(expectedErrorMessage, argumentCaptor.allValues[0].errorDesc)
+            val actualValidationResult = corestate.validationResultStack.popValidationResult()
+            assertEquals(999, actualValidationResult.errorCode)
+            assertEquals("Fire in the hall", actualValidationResult.errorDesc)
         }
     }
 
