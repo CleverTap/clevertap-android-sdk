@@ -241,11 +241,19 @@ public class CoreState extends CleverTapState {
         this.baseLocationManager = baseLocationManager;
     }
 
-    void setEventMediator(final EventMediator eventMediator) {
+    public EventMediator getEventMediator() {
+        return eventMediator;
+    }
+
+    public void setEventMediator(final EventMediator eventMediator) {
         this.eventMediator = eventMediator;
     }
 
-    void setMainLooperHandler(final MainLooperHandler mainLooperHandler) {
+    public MainLooperHandler getMainLooperHandler() {
+        return mainLooperHandler;
+    }
+
+    public void setMainLooperHandler(final MainLooperHandler mainLooperHandler) {
         this.mainLooperHandler = mainLooperHandler;
     }
 

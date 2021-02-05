@@ -17,5 +17,10 @@ class MockCoreState(context: Context, cleverTapInstanceConfig: CleverTapInstance
         callbackManager = CallbackManager(cleverTapInstanceConfig, deviceInfo)
         validationResultStack = Mockito.mock(ValidationResultStack::class.java)
         analyticsManager = Mockito.mock(AnalyticsManager::class.java)
+        eventMediator = Mockito.mock(EventMediator::class.java)
+        databaseManager = Mockito.mock(DBManager::class.java)
+        validationResultStack = Mockito.mock(ValidationResultStack::class.java)
+        mainLooperHandler = Mockito.mock(MainLooperHandler::class.java)
+        networkManager = Mockito.mock(NetworkManager::class.java)
     }
 }
