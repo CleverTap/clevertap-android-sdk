@@ -23,7 +23,7 @@ class EventQueueManagerTest : BaseTestCase() {
         corestate.postAsyncSafelyHandler = MockPostAsyncSafelyHandler(cleverTapInstanceConfig)
 
         eventQueueManager =
-            Mockito.spy(
+            spy(
                 EventQueueManager(
                     corestate.databaseManager,
                     application,
@@ -101,5 +101,25 @@ class EventQueueManagerTest : BaseTestCase() {
         verify(corestate.sessionManager).lazyCreateSession(application)
         verify(eventQueueManager).pushInitialEventsAsync()
         verify(eventQueueManager).addToQueue(application, json, Constants.PROFILE_EVENT)
+    }
+
+    @Test
+    fun test_addToQueue_when_event_is_notification_viewed() {
+        doNothing().`when`(eventQueueManager).processPushNotificationViewedEvent(application, json)
+
+        eventQueueManager.addToQueue(application, json, Constants.NV_EVENT)
+
+        verify(eventQueueManager).processPushNotificationViewedEvent(application, json)
+        verify(eventQueueManager, never()).processEvent(application, json, Constants.NV_EVENT)
+    }
+
+    @Test
+    fun test_addToQueue_when_event_is_not_notification_viewed() {
+        doNothing().`when`(eventQueueManager).processEvent(application, json, Constants.PROFILE_EVENT)
+
+        eventQueueManager.addToQueue(application, json, Constants.PROFILE_EVENT)
+
+        verify(eventQueueManager, never()).processPushNotificationViewedEvent(application, json)
+        verify(eventQueueManager).processEvent(application, json, Constants.PROFILE_EVENT)
     }
 }

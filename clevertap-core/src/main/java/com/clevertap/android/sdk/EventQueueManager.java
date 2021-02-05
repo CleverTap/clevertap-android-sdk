@@ -3,8 +3,6 @@ package com.clevertap.android.sdk;
 import static com.clevertap.android.sdk.CTJsonConverter.getErrorObject;
 
 import android.content.Context;
-import android.content.SharedPreferences;
-import android.telecom.Call;
 import com.clevertap.android.sdk.login.IdentityRepo;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
@@ -26,7 +24,7 @@ class EventQueueManager extends BaseEventQueueManager implements FailureFlushLis
 
     private final Context mContext;
 
-    private CTLockManager mCtLockManager;
+    private final CTLockManager mCtLockManager;
 
     private final DeviceInfo mDeviceInfo;
 
@@ -299,7 +297,7 @@ class EventQueueManager extends BaseEventQueueManager implements FailureFlushLis
         return mDeviceInfo.getDeviceID();
     }
 
-    private void processEvent(final Context context, final JSONObject event, final int eventType) {
+    void processEvent(final Context context, final JSONObject event, final int eventType) {
         synchronized (mCtLockManager.getEventLock()) {
             try {
                 if (CoreMetaData.getActivityCount() == 0) {
