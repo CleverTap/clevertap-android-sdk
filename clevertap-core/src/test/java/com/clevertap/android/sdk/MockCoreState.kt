@@ -23,5 +23,6 @@ class MockCoreState(context: Context, cleverTapInstanceConfig: CleverTapInstance
         mainLooperHandler = Mockito.mock(MainLooperHandler::class.java)
         networkManager = Mockito.mock(NetworkManager::class.java)
         ctLockManager = CTLockManager()
+        localDataStore = Mockito.mock(LocalDataStore::class.java)
     }
 }

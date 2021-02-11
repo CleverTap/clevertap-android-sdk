@@ -46,6 +46,8 @@ class EventQueueManager extends BaseEventQueueManager implements FailureFlushLis
 
     private Runnable pushNotificationViewedRunnable = null;
 
+    private LoginInfoProvider mLoginInfoProvider;
+
     public EventQueueManager(final BaseDatabaseManager baseDatabaseManager,
             Context context,
             CleverTapInstanceConfig config,
@@ -110,6 +112,10 @@ class EventQueueManager extends BaseEventQueueManager implements FailureFlushLis
         }
     }
 
+    public LoginInfoProvider getLoginInfoProvider() {
+        return mLoginInfoProvider;
+    }
+
     /**
      * Adds a new event to the queue, to be sent later.
      *
@@ -154,6 +160,10 @@ class EventQueueManager extends BaseEventQueueManager implements FailureFlushLis
         });
     }
 
+    public void setLoginInfoProvider(final LoginInfoProvider loginInfoProvider) {
+        mLoginInfoProvider = loginInfoProvider;
+    }
+
 
     // only call async
     @Override
@@ -186,119 +196,6 @@ class EventQueueManager extends BaseEventQueueManager implements FailureFlushLis
                 flushQueueSync(context, eventGroup);
             }
         });
-    }
-
-    //Profile
-    @Override
-    void pushBasicProfile(JSONObject baseProfile) {
-        try {
-            String guid = getCleverTapID();
-
-            JSONObject profileEvent = new JSONObject();
-
-            if (baseProfile != null && baseProfile.length() > 0) {
-                Iterator<String> i = baseProfile.keys();
-                IdentityRepo iProfileHandler = IdentityRepoFactory
-                        .getRepo(mContext, mConfig, mDeviceInfo, mValidationResultStack);
-                LoginInfoProvider loginInfoProvider = new LoginInfoProvider(mContext, mConfig, mDeviceInfo);
-                while (i.hasNext()) {
-                    String next = i.next();
-
-                    // need to handle command-based JSONObject props here now
-                    Object value = null;
-                    try {
-                        value = baseProfile.getJSONObject(next);
-                    } catch (Throwable t) {
-                        try {
-                            value = baseProfile.get(next);
-                        } catch (JSONException e) {
-                            //no-op
-                        }
-                    }
-
-                    if (value != null) {
-                        profileEvent.put(next, value);
-
-                        // cache the valid identifier: guid pairs
-                        boolean isProfileKey = iProfileHandler.hasIdentity(next);
-                        if (isProfileKey) {
-                            try {
-                                loginInfoProvider.cacheGUIDForIdentifier(guid, next, value.toString());
-                            } catch (Throwable t) {
-                                // no-op
-                            }
-                        }
-                    }
-                }
-            }
-
-            try {
-                String carrier = mDeviceInfo.getCarrier();
-                if (carrier != null && !carrier.equals("")) {
-                    profileEvent.put("Carrier", carrier);
-                }
-
-                String cc = mDeviceInfo.getCountryCode();
-                if (cc != null && !cc.equals("")) {
-                    profileEvent.put("cc", cc);
-                }
-
-                profileEvent.put("tz", TimeZone.getDefault().getID());
-
-                JSONObject event = new JSONObject();
-                event.put("profile", profileEvent);
-                queueEvent(mContext, event, Constants.PROFILE_EVENT);
-            } catch (JSONException e) {
-                mConfig.getLogger()
-                        .verbose(mConfig.getAccountId(), "FATAL: Creating basic profile update event failed!");
-            }
-        } catch (Throwable t) {
-            mConfig.getLogger().verbose(mConfig.getAccountId(), "Basic profile sync", t);
-        }
-    }
-
-    @Override
-    void pushInitialEventsAsync() {
-        if(!mCleverTapMetaData.inCurrentSession()){
-            mPostAsyncSafelyHandler.postAsyncSafely("CleverTapAPI#pushInitialEventsAsync", new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        mConfig.getLogger().verbose(mConfig.getAccountId(), "Queuing daily events");
-                        pushBasicProfile(null);
-                    } catch (Throwable t) {
-                        mConfig.getLogger().verbose(mConfig.getAccountId(), "Daily profile sync failed", t);
-                    }
-                }
-            });
-        }
-    }
-
-    @Override
-    void scheduleQueueFlush(final Context context) {
-        if (commsRunnable == null) {
-            commsRunnable = new Runnable() {
-                @Override
-                public void run() {
-                    flushQueueAsync(context, EventGroup.REGULAR);
-                    flushQueueAsync(context, EventGroup.PUSH_NOTIFICATION_VIEWED);
-                }
-            };
-        }
-        // Cancel any outstanding send runnables, and issue a new delayed one
-        mMainLooperHandler.removeCallbacks(commsRunnable);
-
-        mMainLooperHandler.postDelayed(commsRunnable, mNetworkManager.getDelayFrequency());
-
-        mLogger.verbose(mConfig.getAccountId(), "Scheduling delayed queue flush on main event loop");
-    }
-
-    private String getCleverTapID() {
-        return mDeviceInfo.getDeviceID();
-    }
-
-    int getNow() {
-        return (int) (System.currentTimeMillis() / 1000);
     }
 
     void processEvent(final Context context, final JSONObject event, final int eventType) {
@@ -344,7 +241,7 @@ class EventQueueManager extends BaseEventQueueManager implements FailureFlushLis
                 event.put("s", session);
                 event.put("pg", CoreMetaData.getActivityCount());
                 event.put("type", type);
-                event.put("ep", System.currentTimeMillis() / 1000);
+                event.put("ep", getNow());
                 event.put("f", mCleverTapMetaData.isFirstSession());
                 event.put("lsl", mCleverTapMetaData.getLastSessionLength());
                 attachPackageNameIfRequired(context, event);
@@ -362,6 +259,124 @@ class EventQueueManager extends BaseEventQueueManager implements FailureFlushLis
             } catch (Throwable e) {
                 mConfig.getLogger().verbose(mConfig.getAccountId(), "Failed to queue event: " + event.toString(), e);
             }
+        }
+    }
+
+    @Override
+    void pushInitialEventsAsync() {
+        if (!mCleverTapMetaData.inCurrentSession()) {
+            mPostAsyncSafelyHandler.postAsyncSafely("CleverTapAPI#pushInitialEventsAsync", new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        mConfig.getLogger().verbose(mConfig.getAccountId(), "Queuing daily events");
+                        pushBasicProfile(null);
+                    } catch (Throwable t) {
+                        mConfig.getLogger().verbose(mConfig.getAccountId(), "Daily profile sync failed", t);
+                    }
+                }
+            });
+        }
+    }
+
+    @Override
+    void scheduleQueueFlush(final Context context) {
+        if (commsRunnable == null) {
+            commsRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    flushQueueAsync(context, EventGroup.REGULAR);
+                    flushQueueAsync(context, EventGroup.PUSH_NOTIFICATION_VIEWED);
+                }
+            };
+        }
+        // Cancel any outstanding send runnables, and issue a new delayed one
+        mMainLooperHandler.removeCallbacks(commsRunnable);
+
+        mMainLooperHandler.postDelayed(commsRunnable, mNetworkManager.getDelayFrequency());
+
+        mLogger.verbose(mConfig.getAccountId(), "Scheduling delayed queue flush on main event loop");
+    }
+
+    private String getCleverTapID() {
+        return mDeviceInfo.getDeviceID();
+    }
+
+    int getNow() {
+        return (int) (System.currentTimeMillis() / 1000);
+    }
+
+    //Profile
+    @Override
+    void pushBasicProfile(JSONObject baseProfile) {
+        try {
+            String guid = getCleverTapID();
+
+            JSONObject profileEvent = new JSONObject();
+
+            // TODO: move to CTJSONConverter which will clone input json using below method
+            if (baseProfile != null && baseProfile.length() > 0) {
+                Iterator<String> i = baseProfile.keys();
+                IdentityRepo iProfileHandler = IdentityRepoFactory
+                        .getRepo(mContext, mConfig, mDeviceInfo, mValidationResultStack);
+                setLoginInfoProvider(new LoginInfoProvider(mContext, mConfig, mDeviceInfo));
+                while (i.hasNext()) {
+                    String next = i.next();
+
+                    // need to handle command-based JSONObject props here now
+                    Object value = null;
+                    try {
+                        value = baseProfile.getJSONObject(next);
+                    } catch (Throwable t) {
+                        try {
+                            value = baseProfile.get(next);
+                        } catch (JSONException e) {
+                            //no-op
+                        }
+                    }
+
+                    if (value != null) {
+                        profileEvent.put(next, value);
+
+                        // TODO abstract out using IdentityIterator and IdentityIterable
+                        // cache the valid identifier: guid pairs
+                        boolean isProfileKey = iProfileHandler.hasIdentity(next);
+                        if (isProfileKey) {
+                            try {
+                                getLoginInfoProvider().cacheGUIDForIdentifier(guid, next, value.toString());
+                            } catch (Throwable t) {
+                                // no-op
+                            }
+                        }
+                    }
+                }
+            }
+
+            try {
+                //TODO can be replaced with mDeviceInfo.attachCarrier()
+                String carrier = mDeviceInfo.getCarrier();
+                if (carrier != null && !carrier.equals("")) {
+                    profileEvent.put("Carrier", carrier);
+                }
+
+                //TODO can be replaced with mDeviceInfo.attachCC()
+                String cc = mDeviceInfo.getCountryCode();
+                if (cc != null && !cc.equals("")) {
+                    profileEvent.put("cc", cc);
+                }
+
+                //TODO can be replaced with mDeviceInfo.attachTZ()
+                profileEvent.put("tz", TimeZone.getDefault().getID());
+
+                JSONObject event = new JSONObject();
+                event.put("profile", profileEvent);
+                queueEvent(mContext, event, Constants.PROFILE_EVENT);
+            } catch (JSONException e) {
+                mConfig.getLogger()
+                        .verbose(mConfig.getAccountId(), "FATAL: Creating basic profile update event failed!");
+            }
+        } catch (Throwable t) {
+            mConfig.getLogger().verbose(mConfig.getAccountId(), "Basic profile sync", t);
         }
     }
 

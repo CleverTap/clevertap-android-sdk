@@ -305,7 +305,7 @@ public class CoreMetaData extends CleverTapMetaData {
     }
 
     public static void setActivityCount(final int count) {
-        activityCount = activityCount;
+        activityCount = count;
     }
 
     static void incrementActivityCount() {
