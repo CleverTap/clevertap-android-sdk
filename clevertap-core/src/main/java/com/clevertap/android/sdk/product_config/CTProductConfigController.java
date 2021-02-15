@@ -15,13 +15,17 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.FileUtils;
-import com.clevertap.android.sdk.TaskManager;
 import com.clevertap.android.sdk.Utils;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.OnSuccessListener;
+import com.clevertap.android.sdk.task.Task;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -34,15 +38,17 @@ public class CTProductConfigController {
         ACTIVATED
     }
 
-    private final HashMap<String, String> activatedConfig = new HashMap<>();
+    //use lock for synchronization for read write
+    final HashMap<String, String> activatedConfig = new HashMap<>();
+
+    //use lock for synchronization for read write
+    final Map<String, String> defaultConfig = new HashMap<>();
 
     private final CleverTapInstanceConfig config;
 
     private final Context context;
 
-    private HashMap<String, String> defaultConfig = new HashMap<>();
-
-    private boolean isFetchAndActivating = false;
+    private AtomicBoolean isFetchAndActivating = new AtomicBoolean(false);
 
     private boolean isInitialized = false;
 
@@ -52,25 +58,26 @@ public class CTProductConfigController {
 
     private final CoreMetaData mCoreMetaData;
 
+    private final FileUtils mFileUtils;
+
     private final ProductConfigSettings settings;
 
+    //use lock for synchronization for read write
     private final HashMap<String, String> waitingTobeActivatedConfig = new HashMap<>();
 
-    public CTProductConfigController(Context context, CleverTapInstanceConfig config,
+    CTProductConfigController(Context context, CleverTapInstanceConfig config,
             final BaseAnalyticsManager analyticsManager, final CoreMetaData coreMetaData,
-            final BaseCallbackManager callbackManager, ProductConfigSettings productConfigSettings) {
+            final BaseCallbackManager callbackManager, ProductConfigSettings productConfigSettings,
+            FileUtils fileUtils) {
         this.context = context;
         this.config = config;
         mCoreMetaData = coreMetaData;
         mCallbackManager = callbackManager;
         mAnalyticsManager = analyticsManager;
-        this.settings = productConfigSettings;
+        settings = productConfigSettings;
+        mFileUtils = fileUtils;
         initAsync();
     }
-
-    // -----------------------------------------------------------------------//
-    // ********                        Public API                        *****//
-    // -----------------------------------------------------------------------//
 
     /**
      * Asynchronously activates the most recently fetched configs, so that the fetched key value pairs take effect.
@@ -80,9 +87,19 @@ public class CTProductConfigController {
         if (TextUtils.isEmpty(settings.getGuid())) {
             return;
         }
-        TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
+        Task<Void> task = CTExecutorFactory.getInstance(config).ioTask();
+        task.addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
-            public Void doInBackground(Void params) {
+            public void onSuccess(final Void result) {
+                synchronized (this) {
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                            "Activated successfully with configs: " + activatedConfig);
+                    sendCallback(PROCESSING_STATE.ACTIVATED);
+                }
+            }
+        }).call(new Callable<Void>() {
+            @Override
+            public Void call() {
                 synchronized (this) {
                     try {
                         //read fetched info
@@ -108,15 +125,8 @@ public class CTProductConfigController {
                     return null;
                 }
             }
-
-            @Override
-            public void onPostExecute(Void isSuccess) {
-                config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                        "Activated successfully with configs: " + activatedConfig);
-                sendCallback(PROCESSING_STATE.ACTIVATED);
-                isFetchAndActivating = false;
-            }
         });
+
     }
 
     /**
@@ -143,7 +153,7 @@ public class CTProductConfigController {
      */
     public void fetchAndActivate() {
         fetch();
-        isFetchAndActivating = true;
+        isFetchAndActivating.set(true);
     }
 
     /**
@@ -176,7 +186,10 @@ public class CTProductConfigController {
      */
     public Boolean getBoolean(String Key) {
         if (isInitialized && !TextUtils.isEmpty(Key)) {
-            String value = activatedConfig.get(Key);
+            String value;
+            synchronized (this) {
+                value = activatedConfig.get(Key);
+            }
             if (!TextUtils.isEmpty(value)) {
                 return Boolean.parseBoolean(value);
             }
@@ -194,7 +207,10 @@ public class CTProductConfigController {
     public Double getDouble(String Key) {
         if (isInitialized && !TextUtils.isEmpty(Key)) {
             try {
-                String value = activatedConfig.get(Key);
+                String value;
+                synchronized (this) {
+                    value = activatedConfig.get(Key);
+                }
                 if (!TextUtils.isEmpty(value)) {
                     return Double.parseDouble(value);
                 }
@@ -226,7 +242,10 @@ public class CTProductConfigController {
     public Long getLong(String Key) {
         if (isInitialized && !TextUtils.isEmpty(Key)) {
             try {
-                String value = activatedConfig.get(Key);
+                String value;
+                synchronized (this) {
+                    value = activatedConfig.get(Key);
+                }
                 if (!TextUtils.isEmpty(value)) {
                     return Long.parseLong(value);
                 }
@@ -239,6 +258,10 @@ public class CTProductConfigController {
         return DEFAULT_VALUE_FOR_LONG;
     }
 
+    // -----------------------------------------------------------------------//
+    // ********                        Public API                        *****//
+    // -----------------------------------------------------------------------//
+
     /**
      * Returns the parameter value for the given key as a String.
      *
@@ -248,7 +271,10 @@ public class CTProductConfigController {
      */
     public String getString(String Key) {
         if (isInitialized && !TextUtils.isEmpty(Key)) {
-            String value = activatedConfig.get(Key);
+            String value;
+            synchronized (this) {
+                value = activatedConfig.get(Key);
+            }
             if (!TextUtils.isEmpty(value)) {
                 return value;
             }
@@ -265,7 +291,13 @@ public class CTProductConfigController {
      * Developers should not use this method manually.
      */
     public void onFetchFailed() {
-        isFetchAndActivating = false;
+        if (isFetchAndActivating.get()) {
+            isFetchAndActivating.set(false);
+            // apply last loaded config if response fails.
+            if (activatedConfig.isEmpty()) {
+                activate();
+            }
+        }
         config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Fetch Failed");
     }
 
@@ -281,8 +313,9 @@ public class CTProductConfigController {
             if (kvResponse != null) {
                 try {
                     parseFetchedResponse(kvResponse);
-                    FileUtils.writeJsonToFile(context, config, getProductConfigDirName(),
-                            CTProductConfigConstants.FILE_NAME_ACTIVATED, new JSONObject(waitingTobeActivatedConfig));
+                    mFileUtils.writeJsonToFile(getProductConfigDirName(),
+                            CTProductConfigConstants.FILE_NAME_ACTIVATED,
+                            new JSONObject(waitingTobeActivatedConfig));
                     config.getLogger()
                             .verbose(ProductConfigUtil.getLogTag(config), "Fetch file-[" + getActivatedFullPath()
                                     + "] write success: " + waitingTobeActivatedConfig);
@@ -294,14 +327,17 @@ public class CTProductConfigController {
                             sendCallback(PROCESSING_STATE.FETCHED);
                         }
                     });
-                    if (isFetchAndActivating) {
+                    if (isFetchAndActivating.get()) {
                         activate();
+                        isFetchAndActivating.set(false);
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                     config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config: fetch Failed");
                     sendCallback(PROCESSING_STATE.FETCHED);
-                    isFetchAndActivating = false;// set fetchAndActivating flag to false if fetch fails.
+                    if (isFetchAndActivating.get()) {
+                        isFetchAndActivating.set(false);// set fetchAndActivating flag to false if fetch fails.
+                    }
                 }
             }
         }
@@ -312,42 +348,15 @@ public class CTProductConfigController {
      */
     public void reset() {
         synchronized (this) {
-            if (null != defaultConfig) {
-                defaultConfig.clear();
-            }
-
+            defaultConfig.clear();
             activatedConfig.clear();
-            TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
-                @Override
-                public Void doInBackground(Void aVoid) {
-                    try {
-                        String dirName = getProductConfigDirName();
-                        FileUtils.deleteDirectory(context, config, dirName);
-                        config.getLogger()
-                                .verbose(ProductConfigUtil.getLogTag(config), "Reset Deleted Dir: " + dirName);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                                "Reset failed: " + e.getLocalizedMessage());
-                    }
-                    return null;
-                }
-
-                @Override
-                public void onPostExecute(Void aVoid) {
-
-                }
-            });
+            eraseStoredConfigFiles();
             settings.initDefaults();
         }
     }
 
-    // -----------------------------------------------------------------------//
-    // ********                        Internal API                      *****//
-    // -----------------------------------------------------------------------//
-
     public void resetSettings() {
-        settings.reset();
+        settings.reset(mFileUtils);
     }
 
     /**
@@ -364,18 +373,23 @@ public class CTProductConfigController {
      * @param resourceID - resource Id of the XML.
      */
     public void setDefaults(final int resourceID) {
-        TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
+        Task<Void> task = CTExecutorFactory.getInstance(config).ioTask();
+        task.addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
-            public Void doInBackground(Void aVoid) {
-                defaultConfig.putAll(DefaultXmlParser.getDefaultsFromXml(context, resourceID));
-                return null;
-            }
-
-            @Override
-            public void onPostExecute(Void aVoid) {
-                config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                        "Product Config: setDefaults Completed with: " + defaultConfig);
+            public void onSuccess(final Void aVoid) {
+                synchronized (this) {
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                            "Product Config: setDefaults Completed with: " + defaultConfig);
+                }
                 initAsync();
+            }
+        }).call(new Callable<Void>() {
+            @Override
+            public Void call() {
+                synchronized (this) {
+                    defaultConfig.putAll(new DefaultXmlParser().getDefaultsFromXml(context, resourceID));
+                }
+                return null;
             }
         });
     }
@@ -386,9 +400,19 @@ public class CTProductConfigController {
      * @param map - HashMap of the default configs
      */
     public void setDefaults(final HashMap<String, Object> map) {
-        TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
+        Task<Void> task = CTExecutorFactory.getInstance(config).ioTask();
+        task.addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
-            public Void doInBackground(Void aVoid) {
+            public void onSuccess(final Void aVoid) {
+                synchronized (this) {
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                            "Product Config: setDefaults Completed with: " + defaultConfig);
+                }
+                initAsync();
+            }
+        }).call(new Callable<Void>() {
+            @Override
+            public Void call() {
                 if (map != null && !map.isEmpty()) {
                     for (Map.Entry<String, Object> entry : map.entrySet()) {
                         if (entry != null) {
@@ -396,7 +420,9 @@ public class CTProductConfigController {
                             Object value = entry.getValue();
                             try {
                                 if (!TextUtils.isEmpty(key) && ProductConfigUtil.isSupportedDataType(value)) {
-                                    defaultConfig.put(key, String.valueOf(value));
+                                    synchronized (this) {
+                                        defaultConfig.put(key, String.valueOf(value));
+                                    }
                                 }
                             } catch (Exception e) {
                                 config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
@@ -407,13 +433,6 @@ public class CTProductConfigController {
                     }
                 }
                 return null;
-            }
-
-            @Override
-            public void onPostExecute(Void aVoid) {
-                config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                        "Product Config: setDefaults Completed with: " + defaultConfig);
-                initAsync();
             }
         });
     }
@@ -438,6 +457,62 @@ public class CTProductConfigController {
 
     public void setMinimumFetchIntervalInSeconds(long fetchIntervalInSeconds) {
         settings.setMinimumFetchIntervalInSeconds(fetchIntervalInSeconds);
+    }
+
+    void eraseStoredConfigFiles() {
+        Task<Void> task = CTExecutorFactory.getInstance(config).ioTask();
+        task.call(new Callable<Void>() {
+            @Override
+            public Void call() {
+                try {
+                    String dirName = getProductConfigDirName();
+                    mFileUtils.deleteDirectory(dirName);
+                    config.getLogger()
+                            .verbose(ProductConfigUtil.getLogTag(config), "Reset Deleted Dir: " + dirName);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                            "Reset failed: " + e.getLocalizedMessage());
+                }
+                return null;
+            }
+        });
+    }
+
+    String getActivatedFullPath() {
+        return getProductConfigDirName() + "/" + CTProductConfigConstants.FILE_NAME_ACTIVATED;
+    }
+
+    BaseAnalyticsManager getAnalyticsManager() {
+        return mAnalyticsManager;
+    }
+
+    // -----------------------------------------------------------------------//
+    // ********                        Internal API                      *****//
+    // -----------------------------------------------------------------------//
+
+    BaseCallbackManager getCallbackManager() {
+        return mCallbackManager;
+    }
+
+    CleverTapInstanceConfig getConfig() {
+        return config;
+    }
+
+    CoreMetaData getCoreMetaData() {
+        return mCoreMetaData;
+    }
+
+    String getProductConfigDirName() {
+        return CTProductConfigConstants.DIR_PRODUCT_CONFIG + "_" + config.getAccountId() + "_" + settings.getGuid();
+    }
+
+    ProductConfigSettings getSettings() {
+        return settings;
+    }
+
+    boolean isFetchAndActivating() {
+        return isFetchAndActivating.get();
     }
 
     private boolean canRequest(long minimumFetchIntervalInSeconds) {
@@ -469,7 +544,7 @@ public class CTProductConfigController {
         JSONArray kvArray;
         try {
             kvArray = jsonObject.getJSONArray(Constants.KEY_KV);
-        } catch (Exception e) {
+        } catch (JSONException e) {
             e.printStackTrace();
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
                     "ConvertServerJsonToMap failed - " + e.getLocalizedMessage());
@@ -498,19 +573,11 @@ public class CTProductConfigController {
         return map;
     }
 
-    private String getActivatedFullPath() {
-        return getProductConfigDirName() + "/" + CTProductConfigConstants.FILE_NAME_ACTIVATED;
-    }
-
-    private String getProductConfigDirName() {
-        return CTProductConfigConstants.DIR_PRODUCT_CONFIG + "_" + config.getAccountId() + "_" + settings.getGuid();
-    }
-
     private HashMap<String, String> getStoredValues(String fullFilePath) {
         HashMap<String, String> map = new HashMap<>();
         String content;
         try {
-            content = FileUtils.readFromFile(context, config, fullFilePath);
+            content = mFileUtils.readFromFile(fullFilePath);
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
                     "GetStoredValues reading file success:[ " + fullFilePath + "]--[Content]" + content);
         } catch (Exception e) {
@@ -555,9 +622,15 @@ public class CTProductConfigController {
         if (TextUtils.isEmpty(settings.getGuid())) {
             return;
         }
-        TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Boolean>() {
+        Task<Boolean> task = CTExecutorFactory.getInstance(config).ioTask();
+        task.addOnSuccessListener(new OnSuccessListener<Boolean>() {
             @Override
-            public Boolean doInBackground(Void params) {
+            public void onSuccess(final Boolean aVoid) {
+                sendCallback(PROCESSING_STATE.INIT);
+            }
+        }).call(new Callable<Boolean>() {
+            @Override
+            public Boolean call() {
                 synchronized (this) {
                     try {
                         //apply defaults
@@ -570,7 +643,7 @@ public class CTProductConfigController {
                         }
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
                                 "Loaded configs ready to be applied: " + waitingTobeActivatedConfig);
-                        settings.loadSettings();
+                        settings.loadSettings(mFileUtils);
                         isInitialized = true;
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -581,42 +654,36 @@ public class CTProductConfigController {
                     return true;
                 }
             }
-
-            @Override
-            public void onPostExecute(Boolean isInitSuccess) {
-                sendCallback(PROCESSING_STATE.INIT);
-            }
         });
     }
 
     private void onActivated() {
-        if (mCallbackManager.getProductConfigListener() != null
-                && mCallbackManager.getProductConfigListener().get() != null) {
-            mCallbackManager.getProductConfigListener().get().onActivated();
+        if (mCallbackManager.getProductConfigListener() != null) {
+            mCallbackManager.getProductConfigListener().onActivated();
         }
     }
 
     //Event
 
     private void onFetched() {
-        if (mCallbackManager.getProductConfigListener() != null
-                && mCallbackManager.getProductConfigListener().get() != null) {
-            mCallbackManager.getProductConfigListener().get().onFetched();
+        if (mCallbackManager.getProductConfigListener() != null) {
+            mCallbackManager.getProductConfigListener().onFetched();
         }
     }
 
     private void onInit() {
-        if (mCallbackManager.getProductConfigListener() != null
-                && mCallbackManager.getProductConfigListener().get() != null) {
+        if (mCallbackManager.getProductConfigListener() != null) {
             config.getLogger().verbose(config.getAccountId(), "Product Config initialized");
-            mCallbackManager.getProductConfigListener().get().onInit();
+            mCallbackManager.getProductConfigListener().onInit();
         }
     }
 
     private void parseFetchedResponse(JSONObject jsonObject) {
         HashMap<String, String> map = convertServerJsonToMap(jsonObject);
-        waitingTobeActivatedConfig.clear();
-        waitingTobeActivatedConfig.putAll(map);
+        synchronized (this) {
+            waitingTobeActivatedConfig.clear();
+            waitingTobeActivatedConfig.putAll(map);
+        }
         config.getLogger()
                 .verbose(ProductConfigUtil.getLogTag(config), "Product Config: Fetched response:" + jsonObject);
         Integer timestamp = null;

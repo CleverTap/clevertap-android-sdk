@@ -16,10 +16,6 @@ import java.util.ArrayList;
 @RestrictTo(Scope.LIBRARY)
 public class CallbackManager extends BaseCallbackManager {
 
-    private InAppActivityListener mInAppActivityListener;
-
-    private FailureFlushListener mFailureFlushListener;
-
     private WeakReference<DisplayUnitListener> displayUnitListenerWeakReference;
 
     private GeofenceCallback geofenceCallback;
@@ -34,7 +30,11 @@ public class CallbackManager extends BaseCallbackManager {
 
     private final DeviceInfo mDeviceInfo;
 
+    private FailureFlushListener mFailureFlushListener;
+
     private WeakReference<CTFeatureFlagsListener> mFeatureFlagListenerWeakReference;
+
+    private InAppActivityListener mInAppActivityListener;
 
     private WeakReference<CTProductConfigListener> productConfigListener;
 
@@ -44,9 +44,23 @@ public class CallbackManager extends BaseCallbackManager {
 
     private SyncListener syncListener = null;
 
-    CallbackManager(CleverTapInstanceConfig config, DeviceInfo deviceInfo) {
+    public CallbackManager(CleverTapInstanceConfig config, DeviceInfo deviceInfo) {
         mConfig = config;
         mDeviceInfo = deviceInfo;
+    }
+
+    @Override
+    public void _notifyInboxMessagesDidUpdate() {
+        if (this.inboxListener != null) {
+            Utils.runOnUiThread(new Runnable() {
+                @Override
+                public void run() {
+                    if (inboxListener != null) {
+                        inboxListener.inboxMessagesDidUpdate();
+                    }
+                }
+            });
+        }
     }
 
     @Override
@@ -55,21 +69,16 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     @Override
+    public void setFailureFlushListener(final FailureFlushListener failureFlushListener) {
+        mFailureFlushListener = failureFlushListener;
+    }
+
+    @Override
     public CTFeatureFlagsListener getFeatureFlagListener() {
         if (mFeatureFlagListenerWeakReference != null && mFeatureFlagListenerWeakReference.get() != null) {
             return mFeatureFlagListenerWeakReference.get();
         }
         return null;
-    }
-
-    @Override
-    public InAppActivityListener getInAppActivityListener() {
-        return mInAppActivityListener;
-    }
-
-    @Override
-    public void setFailureFlushListener(final FailureFlushListener failureFlushListener) {
-        mFailureFlushListener = failureFlushListener;
     }
 
     @Override
@@ -88,17 +97,22 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     @Override
-    public InAppNotificationButtonListener getInAppNotificationButtonListener() {
-        if (inAppNotificationButtonListener != null && inAppNotificationButtonListener.get() != null) {
-            return inAppNotificationButtonListener.get();
-        }
-        return null;
+    public InAppActivityListener getInAppActivityListener() {
+        return mInAppActivityListener;
     }
 
     @Override
     public void setInAppActivityListener(
             final InAppActivityListener inAppActivityListener) {
         mInAppActivityListener = inAppActivityListener;
+    }
+
+    @Override
+    public InAppNotificationButtonListener getInAppNotificationButtonListener() {
+        if (inAppNotificationButtonListener != null && inAppNotificationButtonListener.get() != null) {
+            return inAppNotificationButtonListener.get();
+        }
+        return null;
     }
 
     @Override
@@ -128,13 +142,15 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     @Override
-    public WeakReference<CTProductConfigListener> getProductConfigListener() {
-        return productConfigListener;
+    public CTProductConfigListener getProductConfigListener() {
+        if (productConfigListener != null && productConfigListener.get() != null) {
+            return productConfigListener.get();
+        }
+        return null;
     }
 
     @Override
-    public void setProductConfigListener(
-            final CTProductConfigListener productConfigListener) {
+    public void setProductConfigListener(final CTProductConfigListener productConfigListener) {
         if (productConfigListener != null) {
             this.productConfigListener = new WeakReference<>(productConfigListener);
         }
@@ -204,20 +220,6 @@ public class CallbackManager extends BaseCallbackManager {
     void _notifyInboxInitialized() {
         if (this.inboxListener != null) {
             this.inboxListener.inboxDidInitialize();
-        }
-    }
-
-    @Override
-    public void _notifyInboxMessagesDidUpdate() {
-        if (this.inboxListener != null) {
-            Utils.runOnUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    if (inboxListener != null) {
-                        inboxListener.inboxMessagesDidUpdate();
-                    }
-                }
-            });
         }
     }
 

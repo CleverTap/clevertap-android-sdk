@@ -11,9 +11,11 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.FileUtils;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.TaskManager;
 import com.clevertap.android.sdk.Utils;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.Task;
 import java.util.HashMap;
+import java.util.concurrent.Callable;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -149,7 +151,7 @@ public class CTFeatureFlagsController {
 
         if (featureFlagRespObj != null) {
             try {
-                FileUtils.writeJsonToFile(mContext, config, getCachedDirName(), getCachedFileName(),
+                new FileUtils(mContext, config).writeJsonToFile(getCachedDirName(), getCachedFileName(),
                         featureFlagRespObj);
                 getConfigLogger()
                         .verbose(getLogTag(), "Feature flags saved into file-[" + getCachedFullPath() + "]" + store);
@@ -184,14 +186,15 @@ public class CTFeatureFlagsController {
         if (TextUtils.isEmpty(guid)) {
             return;
         }
-        TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Boolean>() {
+        Task<Boolean> task = CTExecutorFactory.getInstance(config).ioTask();
+        task.call(new Callable<Boolean>() {
             @Override
-            public Boolean doInBackground(Void aVoid) {
+            public Boolean call(){
                 getConfigLogger().verbose(getLogTag(), "Feature flags init is called");
                 String fileName = getCachedFullPath();
                 try {
                     store.clear();
-                    String content = FileUtils.readFromFile(mContext, config, fileName);
+                    String content = new FileUtils(mContext, config).readFromFile(fileName);
                     if (!TextUtils.isEmpty(content)) {
 
                         JSONObject jsonObject = new JSONObject(content);
@@ -224,13 +227,7 @@ public class CTFeatureFlagsController {
                 }
                 return true;
             }
-
-            @Override
-            public void onPostExecute(Boolean aBoolean) {
-
-            }
         });
-
     }
 
     private void notifyFeatureFlagUpdate() {

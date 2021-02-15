@@ -29,7 +29,7 @@ public abstract class BaseCallbackManager {
 
     public abstract CTInboxListener getInboxListener();
 
-    public abstract WeakReference<CTProductConfigListener> getProductConfigListener();
+    public abstract CTProductConfigListener getProductConfigListener();
 
     public abstract CTPushAmpListener getPushAmpListener();
 

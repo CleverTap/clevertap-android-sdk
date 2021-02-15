@@ -11,6 +11,16 @@ class MockDeviceInfo(
     cleverTapID, coreMetaData
 ) {
 
+    val ctId: String?
+
+    init {
+        ctId = cleverTapID
+    }
+
+    override fun getDeviceID(): String? {
+        return ctId
+    }
+
     override fun onInitDeviceInfo(cleverTapID: String?) {
     }
 

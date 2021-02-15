@@ -12,61 +12,71 @@ import org.json.JSONObject;
 
 public class FileUtils {
 
-    public static void deleteDirectory(Context context, CleverTapInstanceConfig config, String dirName) {
-        if (TextUtils.isEmpty(dirName) || context == null) {
+    private final CleverTapInstanceConfig mConfig;
+
+    private final Context mContext;
+
+    public FileUtils(final Context context, final CleverTapInstanceConfig config) {
+        mContext = context;
+        mConfig = config;
+    }
+
+    public void deleteDirectory(String dirName) {
+        if (TextUtils.isEmpty(dirName) || mContext == null) {
             return;
         }
         try {
-            File file = new File(context.getFilesDir(), dirName);
+            File file = new File(mContext.getFilesDir(), dirName);
             if (file.exists() && file.isDirectory()) {
                 String[] children = file.list();
                 for (String child : children) {
-                    new File(file, child).delete();
+                    boolean deleted = new File(file, child).delete();
+                    mConfig.getLogger().verbose(mConfig.getAccountId(),
+                            "File" + child + " isDeleted:" + deleted);
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            if (config != null) {
-                config.getLogger().verbose(config.getAccountId(),
+            if (mConfig != null) {
+                mConfig.getLogger().verbose(mConfig.getAccountId(),
                         "writeFileOnInternalStorage: failed" + dirName + " Error:" + e.getLocalizedMessage());
             }
         }
     }
 
-    public static void deleteFile(Context context, CleverTapInstanceConfig config, String fileName) throws Exception {
-        if (TextUtils.isEmpty(fileName) || context == null) {
+    public void deleteFile(String fileName) {
+        if (TextUtils.isEmpty(fileName) || mContext == null) {
             return;
         }
         try {
-            File file = new File(context.getFilesDir(), fileName);
+            File file = new File(mContext.getFilesDir(), fileName);
             if (file.exists()) {
                 if (file.delete()) {
-                    if (config != null) {
-                        config.getLogger().verbose(config.getAccountId(), "File Deleted:" + fileName);
+                    if (mConfig != null) {
+                        mConfig.getLogger().verbose(mConfig.getAccountId(), "File Deleted:" + fileName);
                     }
                 } else {
-                    if (config != null) {
-                        config.getLogger().verbose(config.getAccountId(), "Failed to delete file" + fileName);
+                    if (mConfig != null) {
+                        mConfig.getLogger().verbose(mConfig.getAccountId(), "Failed to delete file" + fileName);
                     }
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            if (config != null) {
-                config.getLogger().verbose(config.getAccountId(),
+            if (mConfig != null) {
+                mConfig.getLogger().verbose(mConfig.getAccountId(),
                         "writeFileOnInternalStorage: failed" + fileName + " Error:" + e.getLocalizedMessage());
             }
         }
     }
 
-    public static String readFromFile(Context context, CleverTapInstanceConfig config, String fileNameWithPath)
-            throws Exception {
+    public String readFromFile(String fileNameWithPath) {
 
         String content = "";
         //Make sure to use a try-catch statement to catch any errors
         try {
             //Make your FilePath and File
-            String yourFilePath = context.getFilesDir() + "/" + fileNameWithPath;
+            String yourFilePath = mContext.getFilesDir() + "/" + fileNameWithPath;
             File yourFile = new File(yourFilePath);
             //Make an InputStream with your File in the constructor
             InputStream inputStream = new FileInputStream(yourFile);
@@ -77,7 +87,7 @@ public class FileUtils {
             //Also create an empty String
             InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
             BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
-            String receiveString = "";
+            String receiveString;
             //Use a while loop to append the lines from the Buffered reader
             while ((receiveString = bufferedReader.readLine()) != null) {
                 stringBuilder.append(receiveString);
@@ -86,22 +96,22 @@ public class FileUtils {
             inputStream.close();
             content = stringBuilder.toString();
         } catch (Exception e) {
-            if (config != null) {
-                config.getLogger()
-                        .verbose(config.getAccountId(), "[Exception While Reading: " + e.getLocalizedMessage());
+            if (mConfig != null) {
+                mConfig.getLogger()
+                        .verbose(mConfig.getAccountId(), "[Exception While Reading: " + e.getLocalizedMessage());
             }
             //Log your error with Log.e
         }
         return content;
     }
 
-    public static void writeJsonToFile(Context context, CleverTapInstanceConfig config, String dirName,
+    public void writeJsonToFile(String dirName,
             String fileName, JSONObject jsonObject) {
         try {
             if (jsonObject == null || TextUtils.isEmpty(dirName) || TextUtils.isEmpty(fileName)) {
                 return;
             }
-            File file = new File(context.getFilesDir(), dirName);
+            File file = new File(mContext.getFilesDir(), dirName);
             if (!file.exists()) {
                 if (!file.mkdir()) {
                     return;// if directory is not created don't proceed and return
@@ -115,8 +125,8 @@ public class FileUtils {
             writer.close();
         } catch (Exception e) {
             e.printStackTrace();
-            if (config != null) {
-                config.getLogger().verbose(config.getAccountId(),
+            if (mConfig != null) {
+                mConfig.getLogger().verbose(mConfig.getAccountId(),
                         "writeFileOnInternalStorage: failed" + e.getLocalizedMessage());
             }
         }

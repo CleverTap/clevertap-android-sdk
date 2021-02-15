@@ -35,7 +35,6 @@ import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationCompat;
 import com.clevertap.android.sdk.AnalyticsManager;
 import com.clevertap.android.sdk.BaseDatabaseManager;
-import com.clevertap.android.sdk.CTExecutors;
 import com.clevertap.android.sdk.CleverTapAPI.DevicePushTokenRefreshListener;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
@@ -53,6 +52,8 @@ import com.clevertap.android.sdk.ValidationResultStack;
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundIntentService;
 import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundJobService;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.Task;
 import java.lang.reflect.Constructor;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -60,6 +61,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+import java.util.concurrent.Callable;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -211,21 +213,23 @@ public class PushProviders {
         if (TextUtils.isEmpty(token) || pushType == null) {
             return;
         }
-
+//
         try {
-            CTExecutors.getInstance().diskIO().execute(new Runnable() {
+            Task<Void> task = CTExecutorFactory.getInstance(mConfig).ioTask();
+            task.call(new Callable<Void>() {
                 @Override
-                public void run() {
+                public Void call() throws Exception {
                     if (alreadyHaveToken(token, pushType)) {
-                        return;
+                        return null;
                     }
                     @PushConstants.RegKeyType String key = pushType.getTokenPrefKey();
                     if (TextUtils.isEmpty(key)) {
-                        return;
+                        return null;
                     }
                     StorageHelper
                             .putStringImmediate(mContext, StorageHelper.storageKeyWithSuffix(mConfig, key), token);
                     mConfig.log(PushConstants.LOG_TAG, pushType + "Cached New Token successfully " + token);
+                    return null;
                 }
             });
 
@@ -832,14 +836,16 @@ public class PushProviders {
      * Fetches latest tokens from various providers and send to Clevertap's server
      */
     private void refreshAllTokens() {
-        CTExecutors.getInstance().diskIO().execute(new Runnable() {
+        Task<Void> task = CTExecutorFactory.getInstance(mConfig).ioTask();
+        task.call(new Callable<Void>() {
             @Override
-            public void run() {
+            public Void call() {
                 // refresh tokens of Push Providers
                 refreshCTProviderTokens();
 
                 // refresh tokens of custom Providers
                 refreshCustomProviderTokens();
+                return null;
             }
         });
     }
