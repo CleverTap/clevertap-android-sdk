@@ -11,9 +11,7 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
-import java.util.Collections;
 import com.clevertap.android.sdk.utils.FileUtils;
-import com.clevertap.android.sdk.utils.Utils;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -25,17 +23,17 @@ public class CTFeatureFlagsController {
 
     final CleverTapInstanceConfig config;
 
-    private String guid;
-
-    private boolean isInitialized = false;
-
     final BaseAnalyticsManager mAnalyticsManager;
 
     final BaseCallbackManager mCallbackManager;
 
     final FileUtils mFileUtils;
 
-    private final Map<String, Boolean> store = Collections.synchronizedMap(new HashMap<String, Boolean>());
+    private String guid;
+
+    private boolean isInitialized = false;
+
+    private final Map<String, Boolean> store = new HashMap<>();
 
     CTFeatureFlagsController(String guid, CleverTapInstanceConfig config,
             BaseCallbackManager callbackManager, BaseAnalyticsManager analyticsManager, FileUtils fileUtils) {
@@ -77,7 +75,7 @@ public class CTFeatureFlagsController {
      * @param defaultValue - default value of the Key, in case we don't find any Feature Flag with the Key.
      * @return boolean- Value of the Feature flag.
      */
-    public Boolean get(String key, boolean defaultValue) {
+    public synchronized Boolean get(String key, boolean defaultValue) {
         if (!isInitialized) {
             getConfigLogger()
                     .verbose(getLogTag(), "Controller not initialized, returning default value - " + defaultValue);
@@ -85,9 +83,10 @@ public class CTFeatureFlagsController {
         }
         getConfigLogger().verbose(getLogTag(),
                 "Getting feature flag with key - " + key + " and default value - " + defaultValue);
-        Boolean value = store.get(key);
+        Boolean value;
+        value = store.get(key);
         if (value != null) {
-            return store.get(key);
+            return value;
         } else {
             getConfigLogger()
                     .verbose(getLogTag(), "Feature flag not found, returning default value - " + defaultValue);
@@ -104,7 +103,7 @@ public class CTFeatureFlagsController {
      *
      * @return boolean- true if initialized, else false.
      */
-    public boolean isInitialized() {
+    public synchronized boolean isInitialized() {
         return isInitialized;
     }
 
@@ -133,7 +132,7 @@ public class CTFeatureFlagsController {
      * This method is internal to the CleverTap SDK.
      * Developers should not use this method
      */
-    public void updateFeatureFlags(JSONObject jsonObject) throws JSONException {
+    public synchronized void updateFeatureFlags(JSONObject jsonObject) throws JSONException {
 
         JSONArray featureFlagList = jsonObject.getJSONArray(Constants.KEY_KV);
         try {
@@ -192,42 +191,44 @@ public class CTFeatureFlagsController {
         task.call(new Callable<Boolean>() {
             @Override
             public Boolean call() {
-                getConfigLogger().verbose(getLogTag(), "Feature flags init is called");
-                String fileName = getCachedFullPath();
-                try {
-                    store.clear();
-                    String content = mFileUtils.readFromFile(fileName);
-                    if (!TextUtils.isEmpty(content)) {
+                synchronized (this) {
+                    getConfigLogger().verbose(getLogTag(), "Feature flags init is called");
+                    String fileName = getCachedFullPath();
+                    try {
+                        store.clear();
+                        String content = mFileUtils.readFromFile(fileName);
+                        if (!TextUtils.isEmpty(content)) {
 
-                        JSONObject jsonObject = new JSONObject(content);
-                        JSONArray kvArray = jsonObject.getJSONArray(Constants.KEY_KV);
+                            JSONObject jsonObject = new JSONObject(content);
+                            JSONArray kvArray = jsonObject.getJSONArray(Constants.KEY_KV);
 
-                        if (kvArray != null && kvArray.length() > 0) {
-                            for (int i = 0; i < kvArray.length(); i++) {
-                                JSONObject object = (JSONObject) kvArray.get(i);
-                                if (object != null) {
+                            if (kvArray != null && kvArray.length() > 0) {
+                                for (int i = 0; i < kvArray.length(); i++) {
+                                    JSONObject object = (JSONObject) kvArray.get(i);
+                                    if (object != null) {
 
-                                    String Key = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_KEY);
-                                    String Value = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_VALUE);
-                                    if (!TextUtils.isEmpty(Key)) {
-                                        store.put(Key, Boolean.parseBoolean(Value));
+                                        String Key = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_KEY);
+                                        String Value = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_VALUE);
+                                        if (!TextUtils.isEmpty(Key)) {
+                                            store.put(Key, Boolean.parseBoolean(Value));
+                                        }
                                     }
                                 }
                             }
+                            getConfigLogger().verbose(getLogTag(), "Feature flags initialized from file " + fileName +
+                                    " with configs  " + store);
+                            isInitialized = true;
+                        } else {
+                            getConfigLogger().verbose(getLogTag(), "Feature flags file is empty-" + fileName);
                         }
-                        getConfigLogger().verbose(getLogTag(), "Feature flags initialized from file " + fileName +
-                                " with configs  " + store);
-                        isInitialized = true;
-                    } else {
-                        getConfigLogger().verbose(getLogTag(), "Feature flags file is empty-" + fileName);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        getConfigLogger().verbose(getLogTag(),
+                                "UnArchiveData failed file- " + fileName + " " + e.getLocalizedMessage());
+                        return false;
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    getConfigLogger().verbose(getLogTag(),
-                            "UnArchiveData failed file- " + fileName + " " + e.getLocalizedMessage());
-                    return false;
+                    return true;
                 }
-                return true;
             }
         });
     }
