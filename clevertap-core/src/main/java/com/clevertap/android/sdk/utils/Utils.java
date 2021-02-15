@@ -58,6 +58,7 @@ public final class Utils {
         final HashMap<String, Object> map = new HashMap<>();
         for (String s : b.keySet()) {
             final Object o = b.get(s);
+
             if (o instanceof Bundle) {
                 map.putAll(convertBundleObjectToHashMap((Bundle) o));
             } else {
@@ -193,20 +194,6 @@ public final class Utils {
         }
     }
 
-    /**
-     * Checks whether a particular permission is available or not.
-     *
-     * @param context    The Android {@link Context}
-     * @param permission The fully qualified Android permission name
-     */
-    public static boolean hasPermission(final Context context, String permission) {
-        try {
-            return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permission);
-        } catch (Throwable t) {
-            return false;
-        }
-    }
-
     public static boolean isActivityDead(Activity activity) {
         if (activity == null) {
             return true;
@@ -279,19 +266,6 @@ public final class Utils {
         }
 
         return bundle;
-    }
-
-    public static HashMap<String, Object> convertBundleObjectToHashMap(Bundle b) {
-        final HashMap<String, Object> map = new HashMap<>();
-        for (String s : b.keySet()) {
-            final Object o = b.get(s);
-            if (o instanceof Bundle) {
-                map.putAll(convertBundleObjectToHashMap((Bundle) o));
-            } else {
-                map.put(s, b.get(s));
-            }
-        }
-        return map;
     }
 
     public static ArrayList<String> convertJSONArrayToArrayList(JSONArray array) {
@@ -399,28 +373,6 @@ public final class Utils {
         long free = Runtime.getRuntime().freeMemory();
         long total = Runtime.getRuntime().totalMemory();
         return total - free;
-    }
-
-    public static Bitmap getNotificationBitmap(String icoPath, boolean fallbackToAppIcon, final Context context)
-            throws NullPointerException {
-        // If the icon path is not specified
-        if (icoPath == null || icoPath.equals("")) {
-            return fallbackToAppIcon ? getAppIcon(context) : null;
-        }
-        // Simply stream the bitmap
-        if (!icoPath.startsWith("http")) {
-            icoPath = Constants.ICON_BASE_URL + "/" + icoPath;
-        }
-        Bitmap ic = getBitmapFromURL(icoPath);
-        return (ic != null) ? ic : ((fallbackToAppIcon) ? getAppIcon(context) : null);
-    }
-
-    public static int getThumbnailImage(Context context, String image) {
-        if (context != null) {
-            return context.getResources().getIdentifier(image, "drawable", context.getPackageName());
-        } else {
-            return -1;
-        }
     }
 
     /**

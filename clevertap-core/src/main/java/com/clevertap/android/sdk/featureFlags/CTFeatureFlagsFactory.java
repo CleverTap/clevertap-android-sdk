@@ -4,7 +4,7 @@ import android.content.Context;
 import com.clevertap.android.sdk.BaseAnalyticsManager;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.FileUtils;
+import com.clevertap.android.sdk.utils.FileUtils;
 
 /**
  * Factory class to get {@link CTFeatureFlagsController} instance for a particular configuration
