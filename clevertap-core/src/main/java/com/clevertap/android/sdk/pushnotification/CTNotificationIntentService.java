@@ -7,7 +7,7 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.Utils;
+import com.clevertap.android.sdk.utils.Utils;
 
 public class CTNotificationIntentService extends IntentService {
 

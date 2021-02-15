@@ -22,6 +22,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
+import com.clevertap.android.sdk.events.EventDetail;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
@@ -33,6 +34,10 @@ import com.clevertap.android.sdk.pushnotification.NotificationInfo;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
+import com.clevertap.android.sdk.utils.UriHelper;
+import com.clevertap.android.sdk.utils.Utils;
+import com.clevertap.android.sdk.validation.ManifestValidator;
+import com.clevertap.android.sdk.validation.ValidationResult;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -47,7 +52,7 @@ import org.json.JSONObject;
  * <h1>CleverTapAPI</h1>
  * This is the main CleverTapAPI class that manages the SDK instances
  */
-public class CleverTapAPI implements CleverTapAPIListener {
+public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     /**
      * Implement to get called back when the device push token is refreshed
@@ -2326,7 +2331,7 @@ public class CleverTapAPI implements CleverTapAPIListener {
      * @return The foreground status
      */
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-    static boolean isAppForeground() {
+    public static boolean isAppForeground() {
         return CoreMetaData.isAppForeground();
     }
 

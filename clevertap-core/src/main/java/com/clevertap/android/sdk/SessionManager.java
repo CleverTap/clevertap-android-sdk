@@ -2,6 +2,8 @@ package com.clevertap.android.sdk;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import com.clevertap.android.sdk.events.EventDetail;
+import com.clevertap.android.sdk.validation.Validator;
 
 public class SessionManager extends BaseSessionManager {
 
@@ -65,7 +67,7 @@ public class SessionManager extends BaseSessionManager {
     }
 
     @Override
-    void lazyCreateSession(Context context) {
+    public void lazyCreateSession(Context context) {
         if (!mCleverTapMetaData.inCurrentSession()) {
             mCleverTapMetaData.setFirstRequestInSession(true);
             if (mValidator != null) {

@@ -41,7 +41,7 @@ public class CTGeofenceAPI implements GeofenceCallback {
 
     private static CTGeofenceAPI ctGeofenceAPI;
 
-    private static Logger logger;
+    private static final Logger logger;
 
     private String accountId;
 
@@ -299,7 +299,7 @@ public class CTGeofenceAPI implements GeofenceCallback {
             public void onComplete() {
 
                 if (onGeofenceApiInitializedListener != null) {
-                    com.clevertap.android.sdk.Utils.runOnUiThread(new Runnable() {
+                    com.clevertap.android.sdk.utils.Utils.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             onGeofenceApiInitializedListener.OnGeofenceApiInitialized();

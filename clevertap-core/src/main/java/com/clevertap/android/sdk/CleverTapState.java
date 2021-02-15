@@ -1,6 +1,9 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
+import com.clevertap.android.sdk.db.BaseDatabaseManager;
+import com.clevertap.android.sdk.network.BaseNetworkManager;
+import com.clevertap.android.sdk.task.PostAsyncSafelyHandler;
 
 abstract class CleverTapState {
 

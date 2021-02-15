@@ -10,7 +10,7 @@ public class CTLockManager {
 
     private final Object inboxControllerLock = new Object();
 
-    Boolean getEventLock() {
+    public Boolean getEventLock() {
         return eventLock;
     }
 

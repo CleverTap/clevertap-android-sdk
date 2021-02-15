@@ -1,9 +1,9 @@
 package com.clevertap.android.sdk.product_config
 
-import com.clevertap.android.sdk.FileUtils
 import com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_MIN_FETCH_INTERVAL_SECONDS
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
+import com.clevertap.android.sdk.utils.FileUtils
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
 import org.junit.*
@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit
 internal class ProductConfigSettingsTest : BaseTestCase() {
 
     lateinit var settings: ProductConfigSettings
-    val guid = "1212121";
+    val guid = "1212121"
     lateinit var fileUtils: FileUtils
 
     @Before
@@ -35,8 +35,8 @@ internal class ProductConfigSettingsTest : BaseTestCase() {
 
     @Test
     fun testTimestamp() {
-        val timeMillis = System.currentTimeMillis();
-        settings.setLastFetchTimeStampInMillis(timeMillis)
+        val timeMillis = System.currentTimeMillis()
+        settings.lastFetchTimeStampInMillis = timeMillis
         Assert.assertEquals(timeMillis, settings.lastFetchTimeStampInMillis)
     }
 

@@ -8,8 +8,10 @@ import android.os.RemoteException;
 import com.android.installreferrer.api.InstallReferrerClient;
 import com.android.installreferrer.api.InstallReferrerStateListener;
 import com.android.installreferrer.api.ReferrerDetails;
+import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
+import com.clevertap.android.sdk.task.PostAsyncSafelyHandler;
 
 class ActivityLifeCycleManager {
 

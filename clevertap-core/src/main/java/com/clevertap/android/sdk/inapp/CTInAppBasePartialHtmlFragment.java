@@ -18,7 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.UriHelper;
+import com.clevertap.android.sdk.utils.UriHelper;
 import java.net.URLDecoder;
 
 public abstract class CTInAppBasePartialHtmlFragment extends CTInAppBasePartialFragment

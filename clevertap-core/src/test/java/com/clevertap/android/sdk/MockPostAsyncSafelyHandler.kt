@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk
 
+import com.clevertap.android.sdk.task.PostAsyncSafelyHandler
 import org.mockito.*
 import java.util.concurrent.Future
 

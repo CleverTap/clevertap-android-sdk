@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk;
 
-import static com.clevertap.android.sdk.Utils.runOnUiThread;
+import static com.clevertap.android.sdk.utils.Utils.runOnUiThread;
 
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
@@ -10,6 +10,7 @@ import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
+import com.clevertap.android.sdk.utils.Utils;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
@@ -228,7 +229,7 @@ public class CallbackManager extends BaseCallbackManager {
      *
      * @param displayUnits - Array of Display Units {@link CleverTapDisplayUnit}
      */
-    void notifyDisplayUnitsLoaded(final ArrayList<CleverTapDisplayUnit> displayUnits) {
+    public void notifyDisplayUnitsLoaded(final ArrayList<CleverTapDisplayUnit> displayUnits) {
         if (displayUnits != null && !displayUnits.isEmpty()) {
             if (displayUnitListenerWeakReference != null && displayUnitListenerWeakReference.get() != null) {
                 runOnUiThread(new Runnable() {

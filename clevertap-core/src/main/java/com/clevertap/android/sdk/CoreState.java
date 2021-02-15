@@ -1,13 +1,21 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
+import com.clevertap.android.sdk.db.BaseDatabaseManager;
+import com.clevertap.android.sdk.events.BaseEventQueueManager;
+import com.clevertap.android.sdk.events.EventMediator;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.inbox.CTInboxController;
 import com.clevertap.android.sdk.login.LoginController;
+import com.clevertap.android.sdk.network.BaseNetworkManager;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigFactory;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
+import com.clevertap.android.sdk.task.MainLooperHandler;
+import com.clevertap.android.sdk.task.PostAsyncSafelyHandler;
+import com.clevertap.android.sdk.validation.ValidationResultStack;
+import com.clevertap.android.sdk.validation.Validator;
 
 //TODO move this to builder pattern & add sanity check for dependencies at the time of creation
 public class CoreState extends CleverTapState {

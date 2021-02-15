@@ -1,13 +1,13 @@
 package com.clevertap.android.sdk.login;
 
-import static com.clevertap.android.sdk.LogConstants.LOG_TAG_ON_USER_LOGIN;
+import static com.clevertap.android.sdk.utils.LogConstants.LOG_TAG_ON_USER_LOGIN;
 
 import android.content.Context;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.DeviceInfo;
-import com.clevertap.android.sdk.ValidationResultStack;
+import com.clevertap.android.sdk.validation.ValidationResultStack;
 
 /**
  * Provides Repo instance for an account

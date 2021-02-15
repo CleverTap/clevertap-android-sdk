@@ -6,7 +6,6 @@ import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
-import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 
 public abstract class BaseCallbackManager {
@@ -37,7 +36,7 @@ public abstract class BaseCallbackManager {
 
     public abstract SyncListener getSyncListener();
 
-    abstract void notifyDisplayUnitsLoaded(final ArrayList<CleverTapDisplayUnit> displayUnits);
+    public abstract void notifyDisplayUnitsLoaded(final ArrayList<CleverTapDisplayUnit> displayUnits);
 
     //Profile
     public abstract void notifyUserProfileInitialized(String deviceID);

@@ -10,8 +10,8 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
 import androidx.annotation.Nullable;
-import com.clevertap.android.sdk.CloseImageView;
 import com.clevertap.android.sdk.R;
+import com.clevertap.android.sdk.customviews.CloseImageView;
 
 public class CTInAppNativeCoverImageFragment extends CTInAppBaseFullFragment {
 

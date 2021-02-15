@@ -4,12 +4,12 @@ import android.content.Context;
 import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
-import com.clevertap.android.sdk.CTJsonConverter;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.DeviceInfo;
-import com.clevertap.android.sdk.LogConstants;
 import com.clevertap.android.sdk.StorageHelper;
+import com.clevertap.android.sdk.utils.CTJsonConverter;
+import com.clevertap.android.sdk.utils.LogConstants;
 import org.json.JSONObject;
 
 /**

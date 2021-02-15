@@ -3,11 +3,15 @@ package com.clevertap.android.sdk
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.NetworkInfo.DetailedState
-import com.clevertap.android.sdk.EventGroup.PUSH_NOTIFICATION_VIEWED
-import com.clevertap.android.sdk.EventGroup.REGULAR
+import com.clevertap.android.sdk.events.EventGroup.PUSH_NOTIFICATION_VIEWED
+import com.clevertap.android.sdk.events.EventGroup.REGULAR
+import com.clevertap.android.sdk.events.EventQueueManager
 import com.clevertap.android.sdk.login.IdentityRepo
 import com.clevertap.android.sdk.login.IdentityRepoFactory
 import com.clevertap.android.sdk.login.LoginInfoProvider
+import com.clevertap.android.sdk.network.NetworkManager
+import com.clevertap.android.sdk.utils.Utils
+import com.clevertap.android.sdk.validation.ValidationResult
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
 import org.junit.*
