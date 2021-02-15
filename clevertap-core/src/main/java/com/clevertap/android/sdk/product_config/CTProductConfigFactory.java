@@ -8,6 +8,9 @@ import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.FileUtils;
 
+/**
+ * Factory class to get {@link CTProductConfigController} instance for a particular configuration
+ */
 public class CTProductConfigFactory {
 
     public static CTProductConfigController getInstance(Context context, DeviceInfo deviceInfo,

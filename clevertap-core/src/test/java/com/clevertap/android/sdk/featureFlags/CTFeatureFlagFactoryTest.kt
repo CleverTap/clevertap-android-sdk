@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.product_config
+package com.clevertap.android.sdk.featureFlags
 
 import com.clevertap.android.sdk.BaseAnalyticsManager
 import com.clevertap.android.sdk.BaseCallbackManager
@@ -13,7 +13,7 @@ import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-internal class CTProductConfigFactoryTest : BaseTestCase() {
+internal class CTFeatureFlagFactoryTest : BaseTestCase() {
 
     val guid = "1212212"
     lateinit var coreMetaData: CoreMetaData
@@ -31,33 +31,29 @@ internal class CTProductConfigFactoryTest : BaseTestCase() {
 
     @Test
     fun test_getInstance_not_null() {
-        val controller = CTProductConfigFactory.getInstance(
+        val controller = CTFeatureFlagsFactory.getInstance(
             application,
-            deviceInfo,
+            guid,
             cleverTapInstanceConfig,
-            analyticsManager,
-            coreMetaData,
-            callbackManager
+            callbackManager,
+            analyticsManager
         )
         Assert.assertNotNull(controller)
-        Assert.assertTrue(controller is CTProductConfigController)
+        Assert.assertTrue(controller is CTFeatureFlagsController)
     }
 
     @Test
     fun test_getInstance_config_correct() {
-        val controller = CTProductConfigFactory.getInstance(
+        val controller = CTFeatureFlagsFactory.getInstance(
             application,
-            deviceInfo,
+            guid,
             cleverTapInstanceConfig,
-            analyticsManager,
-            coreMetaData,
-            callbackManager
+            callbackManager,
+            analyticsManager
         )
         Assert.assertNotNull(controller.mFileUtils)
-        Assert.assertEquals(controller.settings.guid, guid)
         Assert.assertEquals(controller.config, cleverTapInstanceConfig)
-        Assert.assertEquals(controller.coreMetaData, coreMetaData)
-        Assert.assertEquals(controller.callbackManager, callbackManager)
-        Assert.assertEquals(controller.analyticsManager, analyticsManager)
+        Assert.assertEquals(controller.mCallbackManager, callbackManager)
+        Assert.assertEquals(controller.mAnalyticsManager, analyticsManager)
     }
 }

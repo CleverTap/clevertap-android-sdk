@@ -15,10 +15,10 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.FileUtils;
-import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.OnSuccessListener;
 import com.clevertap.android.sdk.task.Task;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -39,16 +39,16 @@ public class CTProductConfigController {
     }
 
     //use lock for synchronization for read write
-    final HashMap<String, String> activatedConfig = new HashMap<>();
-
-    //use lock for synchronization for read write
-    final Map<String, String> defaultConfig = new HashMap<>();
+    final Map<String, String> activatedConfig = Collections.synchronizedMap(new HashMap<String, String>());
 
     private final CleverTapInstanceConfig config;
 
     private final Context context;
 
-    private AtomicBoolean isFetchAndActivating = new AtomicBoolean(false);
+    //use lock for synchronization for read write
+    final Map<String, String> defaultConfig = Collections.synchronizedMap(new HashMap<String, String>());
+
+    private final AtomicBoolean isFetchAndActivating = new AtomicBoolean(false);
 
     private boolean isInitialized = false;
 
@@ -58,12 +58,13 @@ public class CTProductConfigController {
 
     private final CoreMetaData mCoreMetaData;
 
-    private final FileUtils mFileUtils;
+    final FileUtils mFileUtils;
 
     private final ProductConfigSettings settings;
 
     //use lock for synchronization for read write
-    private final HashMap<String, String> waitingTobeActivatedConfig = new HashMap<>();
+    private final Map<String, String> waitingTobeActivatedConfig = Collections
+            .synchronizedMap(new HashMap<String, String>());
 
     CTProductConfigController(Context context, CleverTapInstanceConfig config,
             final BaseAnalyticsManager analyticsManager, final CoreMetaData coreMetaData,
@@ -319,12 +320,14 @@ public class CTProductConfigController {
                     config.getLogger()
                             .verbose(ProductConfigUtil.getLogTag(config), "Fetch file-[" + getActivatedFullPath()
                                     + "] write success: " + waitingTobeActivatedConfig);
-                    Utils.runOnUiThread(new Runnable() {
+                    Task<Void> task = CTExecutorFactory.getInstance(config).mainTask();
+                    task.call(new Callable<Void>() {
                         @Override
-                        public void run() {
+                        public Void call() {
                             config.getLogger()
                                     .verbose(ProductConfigUtil.getLogTag(config), "Product Config: fetch Success");
                             sendCallback(PROCESSING_STATE.FETCHED);
+                            return null;
                         }
                     });
                     if (isFetchAndActivating.get()) {

@@ -43,4 +43,11 @@ public class CTExecutors {
         }
         return new Task<>(taskExecutor, callbackExecutor);
     }
+
+    public <TResult> Task<TResult> taskWithExecutor(Executor taskExecutor) {
+        if (taskExecutor == null) {
+            throw new IllegalArgumentException("Can't create task with null executors");
+        }
+        return new Task<>(taskExecutor, DEFAULT_CALLBACK_EXECUTOR);
+    }
 }

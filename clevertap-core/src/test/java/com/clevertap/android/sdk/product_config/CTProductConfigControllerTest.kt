@@ -1,18 +1,16 @@
 package com.clevertap.android.sdk.product_config
 
+import android.os.Looper.getMainLooper
 import com.clevertap.android.sdk.BaseAnalyticsManager
 import com.clevertap.android.sdk.BaseCallbackManager
 import com.clevertap.android.sdk.CallbackManager
-import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.sdk.FileUtils
 import com.clevertap.android.sdk.MockDeviceInfo
-import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.shared.test.BaseTestCase
-import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*
 import org.junit.Test
@@ -22,6 +20,7 @@ import org.junit.runner.*
 import org.mockito.*
 import org.mockito.Mockito.*
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.Shadows.shadowOf
 import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
@@ -29,7 +28,6 @@ import java.util.concurrent.TimeUnit
 class CTProductConfigControllerTest : BaseTestCase() {
 
     private lateinit var mProductConfigController: CTProductConfigController
-    private val guid = "1212121221"
     private lateinit var coreMetaData: CoreMetaData
     private lateinit var analyticsManager: BaseAnalyticsManager
     private lateinit var callbackManager: BaseCallbackManager
@@ -37,40 +35,26 @@ class CTProductConfigControllerTest : BaseTestCase() {
     private lateinit var deviceInfo: DeviceInfo
     private lateinit var fileUtils: FileUtils
     private lateinit var listener: CTProductConfigListener
-    private val defaultConfig: HashMap<String, Any> = HashMap()
-    private val fetchedConfig: HashMap<String, Any> = HashMap()
 
     @Throws(Exception::class)
+    @BeforeEach
     override fun setUp() {
         super.setUp()
-        coreMetaData = CoreMetaData()
-        analyticsManager = mock(BaseAnalyticsManager::class.java)
-        deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, guid, coreMetaData)
-        callbackManager = CallbackManager(cleverTapInstanceConfig, deviceInfo)
-        listener = mock(CTProductConfigListener::class.java)
-        callbackManager.productConfigListener = listener
-        productConfigSettings = mock(ProductConfigSettings::class.java)
-        `when`(productConfigSettings.guid).thenReturn(guid)
-        fileUtils = mock(FileUtils::class.java)
-        mProductConfigController = CTProductConfigController(
-            application,
-            cleverTapInstanceConfig,
-            analyticsManager,
-            coreMetaData,
-            callbackManager,
-            productConfigSettings, fileUtils
-        )
-        prepareDefaultConfig();
-        mProductConfigController.setDefaults(defaultConfig)
-        prepareFetchedConfig()
-    }
-
-    @Test
-    @Order(Int.MIN_VALUE)
-    fun test_init() {
         mockStatic(CTExecutorFactory::class.java).use {
             `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
-            val controller = CTProductConfigController(
+            val guid = "1212121221"
+            coreMetaData = CoreMetaData()
+            analyticsManager = mock(BaseAnalyticsManager::class.java)
+            deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, guid, coreMetaData)
+            callbackManager = CallbackManager(cleverTapInstanceConfig, deviceInfo)
+            listener = mock(CTProductConfigListener::class.java)
+            callbackManager.productConfigListener = listener
+            productConfigSettings = mock(ProductConfigSettings::class.java)
+            `when`(productConfigSettings.guid).thenReturn(guid)
+            fileUtils = mock(FileUtils::class.java)
+            fileUtils.setConfig(cleverTapInstanceConfig)
+            fileUtils.setContext(application)
+            mProductConfigController = CTProductConfigController(
                 application,
                 cleverTapInstanceConfig,
                 analyticsManager,
@@ -78,23 +62,14 @@ class CTProductConfigControllerTest : BaseTestCase() {
                 callbackManager,
                 productConfigSettings, fileUtils
             )
-            Assert.assertEquals(controller.isInitialized, true)
-
         }
+
+        mProductConfigController.setDefaults(MockPCResponse().getDefaultConfig())
     }
 
-    private fun prepareFetchedConfig() {
-        fetchedConfig.put("fetched_str", "This is fetched string")
-        fetchedConfig.put("fetched_long", 333333L)
-        fetchedConfig.put("fetched_double", 44444.4444)
-        fetchedConfig.put("fetched_bool", true)
-    }
-
-    private fun prepareDefaultConfig() {
-        defaultConfig.put("def_str", "This is def_string")
-        defaultConfig.put("def_long", 11111L)
-        defaultConfig.put("def_double", 2222.2222)
-        defaultConfig.put("def_bool", false)
+    @Test
+    fun testInit() {
+        Assert.assertEquals(mProductConfigController.isInitialized, true)
     }
 
     @Test
@@ -111,6 +86,7 @@ class CTProductConfigControllerTest : BaseTestCase() {
 
     @Test
     fun testFetch_Valid_Guid_Window_Not_Expired_Request_Not_Sent() {
+        shadowOf(getMainLooper()).idle()
         val windowInSeconds = TimeUnit.MINUTES.toSeconds(12)
         `when`(productConfigSettings.nextFetchIntervalInSeconds).thenReturn(windowInSeconds)
         val lastResponseTime = System.currentTimeMillis() - windowInSeconds / 2 * TimeUnit.SECONDS.toMillis(1)
@@ -176,11 +152,56 @@ class CTProductConfigControllerTest : BaseTestCase() {
 
     @Test
     fun test_activate() {
+
         mockStatic(CTExecutorFactory::class.java).use {
+            shadowOf(getMainLooper()).idle()
             `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
             `when`(fileUtils.readFromFile(mProductConfigController.activatedFullPath)).thenReturn(
                 JSONObject(
-                    fetchedConfig as Map<*, *>
+                    MockPCResponse().getFetchedConfig() as Map<*, *>
+                ).toString()
+            )
+            mProductConfigController.activate()
+            verify(listener).onActivated()
+            Assert.assertEquals(333333L, mProductConfigController.getLong("fetched_long"))
+            Assert.assertEquals("This is fetched string", mProductConfigController.getString("fetched_str"))
+            Assert.assertEquals(44444.4444, mProductConfigController.getDouble("fetched_double"), 0.1212)
+            Assert.assertEquals(true, mProductConfigController.getBoolean("fetched_bool"))
+            Assert.assertEquals("This is def_string", mProductConfigController.getString("def_str"))
+            Assert.assertEquals(11111L, mProductConfigController.getLong("def_long"))
+            Assert.assertEquals(2222.2222, mProductConfigController.getDouble("def_double"), 0.1212)
+            Assert.assertEquals(false, mProductConfigController.getBoolean("def_bool"))
+        }
+    }
+
+    @Test
+    fun test_activate_Fail() {
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(productConfigSettings.guid).thenReturn("")
+            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+            mProductConfigController.activate()
+            verify(listener, never()).onActivated()
+        }
+    }
+
+    @Test
+    fun test_fetch_activate() {
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+            val windowInSeconds = TimeUnit.MINUTES.toSeconds(12)
+            `when`(productConfigSettings.nextFetchIntervalInSeconds).thenReturn(windowInSeconds)
+            val lastResponseTime = System.currentTimeMillis() - 2 * windowInSeconds * TimeUnit.SECONDS.toMillis(1)
+            `when`(productConfigSettings.lastFetchTimeStampInMillis).thenReturn(lastResponseTime)
+
+            mProductConfigController.fetchAndActivate()
+            verify(analyticsManager).sendFetchEvent(any())
+            Assert.assertTrue(coreMetaData.isProductConfigRequested)
+
+            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+
+            `when`(fileUtils.readFromFile(mProductConfigController.activatedFullPath)).thenReturn(
+                JSONObject(
+                    MockPCResponse().getFetchedConfig() as Map<*, *>
                 ).toString()
             )
             mProductConfigController.activate()
@@ -197,29 +218,6 @@ class CTProductConfigControllerTest : BaseTestCase() {
     }
 
     @Test
-    fun test_activate_Fail() {
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(productConfigSettings.guid).thenReturn("")
-            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
-            mProductConfigController.activate()
-            verify(listener, never()).onActivated()
-        }
-    }
-
-    @Test
-    fun test_fetch_activate() {
-        val windowInSeconds = TimeUnit.MINUTES.toSeconds(12)
-        `when`(productConfigSettings.nextFetchIntervalInSeconds).thenReturn(windowInSeconds)
-        val lastResponseTime = System.currentTimeMillis() - 2 * windowInSeconds * TimeUnit.SECONDS.toMillis(1)
-        `when`(productConfigSettings.lastFetchTimeStampInMillis).thenReturn(lastResponseTime)
-
-        mProductConfigController.fetchAndActivate()
-        verify(analyticsManager).sendFetchEvent(any())
-        Assert.assertTrue(coreMetaData.isProductConfigRequested)
-        test_activate()
-    }
-
-    @Test
     fun test_getLastFetchTimeStampInMillis() {
         mProductConfigController.getLastFetchTimeStampInMillis()
         verify(productConfigSettings).lastFetchTimeStampInMillis
@@ -227,19 +225,14 @@ class CTProductConfigControllerTest : BaseTestCase() {
 
     @Test
     fun test_onFetchSuccess() {
-        mockStatic(Utils::class.java).use {
-            val captor = ArgumentCaptor.forClass(Runnable::class.java)
-            val response = JSONObject()
-            val arrayString = "["+ JSONObject(fetchedConfig as Map<*, *>).toString()+"]"
-            response.put(Constants.KEY_KV, JSONArray(arrayString))
-            mProductConfigController.onFetchSuccess(response)
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+            mProductConfigController.onFetchSuccess(MockPCResponse().getMockPCResponse())
             verify(fileUtils).writeJsonToFile(
                 ArgumentMatchers.eq(mProductConfigController.productConfigDirName),
                 ArgumentMatchers.eq(CTProductConfigConstants.FILE_NAME_ACTIVATED),
                 any(JSONObject::class.java)
             )
-            verify(Utils.runOnUiThread(captor.capture()))
-            captor.value.run()
             verify(listener).onFetched()
         }
     }

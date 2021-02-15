@@ -3,18 +3,18 @@ package com.clevertap.android.sdk.featureFlags;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_JSON_KEY_FOR_KEY;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_JSON_KEY_FOR_VALUE;
 
-import android.content.Context;
 import android.text.TextUtils;
-import com.clevertap.android.sdk.AnalyticsManager;
+import com.clevertap.android.sdk.BaseAnalyticsManager;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.FileUtils;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -22,28 +22,27 @@ import org.json.JSONObject;
 
 public class CTFeatureFlagsController {
 
-    private final CleverTapInstanceConfig config;
+    final CleverTapInstanceConfig config;
 
     private String guid;
 
     private boolean isInitialized = false;
 
-    private final AnalyticsManager mAnalyticsManager;
+    final BaseAnalyticsManager mAnalyticsManager;
 
-    private final BaseCallbackManager mCallbackManager;
+    final BaseCallbackManager mCallbackManager;
 
-    private final Context mContext;
+    final FileUtils mFileUtils;
 
-    private final HashMap<String, Boolean> store;
+    private final Map<String, Boolean> store = Collections.synchronizedMap(new HashMap<String, Boolean>());
 
-    public CTFeatureFlagsController(Context context, String guid, CleverTapInstanceConfig config,
-            BaseCallbackManager callbackManager, AnalyticsManager analyticsManager) {
+    CTFeatureFlagsController(String guid, CleverTapInstanceConfig config,
+            BaseCallbackManager callbackManager, BaseAnalyticsManager analyticsManager, FileUtils fileUtils) {
         this.guid = guid;
         this.config = config;
-        this.store = new HashMap<>();
-        this.mContext = context.getApplicationContext();
         mCallbackManager = callbackManager;
         mAnalyticsManager = analyticsManager;
+        mFileUtils = fileUtils;
         init();
     }
 
@@ -56,14 +55,16 @@ public class CTFeatureFlagsController {
      * Developers should not use this method
      */
     public void fetchFeatureFlags() {
-        Utils.runOnUiThread(new Runnable() {
+        Task<Void> task = CTExecutorFactory.getInstance(config).mainTask();
+        task.call(new Callable<Void>() {
             @Override
-            public void run() {
+            public Void call() {
                 try {
                     mAnalyticsManager.fetchFeatureFlags();
                 } catch (Exception e) {
                     getConfigLogger().verbose(getLogTag(), e.getLocalizedMessage());
                 }
+                return null;
             }
         });
     }
@@ -151,7 +152,7 @@ public class CTFeatureFlagsController {
 
         if (featureFlagRespObj != null) {
             try {
-                new FileUtils(mContext, config).writeJsonToFile(getCachedDirName(), getCachedFileName(),
+                mFileUtils.writeJsonToFile(getCachedDirName(), getCachedFileName(),
                         featureFlagRespObj);
                 getConfigLogger()
                         .verbose(getLogTag(), "Feature flags saved into file-[" + getCachedFullPath() + "]" + store);
@@ -189,12 +190,12 @@ public class CTFeatureFlagsController {
         Task<Boolean> task = CTExecutorFactory.getInstance(config).ioTask();
         task.call(new Callable<Boolean>() {
             @Override
-            public Boolean call(){
+            public Boolean call() {
                 getConfigLogger().verbose(getLogTag(), "Feature flags init is called");
                 String fileName = getCachedFullPath();
                 try {
                     store.clear();
-                    String content = new FileUtils(mContext, config).readFromFile(fileName);
+                    String content = mFileUtils.readFromFile(fileName);
                     if (!TextUtils.isEmpty(content)) {
 
                         JSONObject jsonObject = new JSONObject(content);
@@ -232,9 +233,10 @@ public class CTFeatureFlagsController {
 
     private void notifyFeatureFlagUpdate() {
         if (mCallbackManager.getFeatureFlagListener() != null) {
-            Utils.runOnUiThread(new Runnable() {
+            Task<Void> task = CTExecutorFactory.getInstance(config).mainTask();
+            task.call(new Callable<Void>() {
                 @Override
-                public void run() {
+                public Void call() {
                     try {
                         if (mCallbackManager.getFeatureFlagListener() != null) {
                             mCallbackManager.getFeatureFlagListener().featureFlagsUpdated();
@@ -242,6 +244,7 @@ public class CTFeatureFlagsController {
                     } catch (Exception e) {
                         getConfigLogger().verbose(getLogTag(), e.getLocalizedMessage());
                     }
+                    return null;
                 }
             });
         }

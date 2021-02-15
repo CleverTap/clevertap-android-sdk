@@ -54,6 +54,19 @@ class ProductConfigSettings {
         this.guid = guid;
     }
 
+    JSONObject getJsonObject(final String content) {
+        if (!TextUtils.isEmpty(content)) {
+            try {
+                return new JSONObject(content);
+            } catch (JSONException e) {
+                e.printStackTrace();
+                config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                        "LoadSettings failed: " + e.getLocalizedMessage());
+            }
+        }
+        return null;
+    }
+
     long getLastFetchTimeStampInMillis() {
         long lastFetchedTimeStamp = 0L;
         String value = settingsMap.get(KEY_LAST_FETCHED_TIMESTAMP);
@@ -101,47 +114,42 @@ class ProductConfigSettings {
         if (fileUtils == null) {
             throw new IllegalArgumentException("fileutils can't be null");
         }
-        String content;
         try {
-            content = fileUtils.readFromFile(getFullPath());
+            String content = fileUtils.readFromFile(getFullPath());
+            JSONObject jsonObject = getJsonObject(content);
+            populateMapWithJson(jsonObject);
         } catch (Exception e) {
             e.printStackTrace();
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
                     "LoadSettings failed while reading file: " + e.getLocalizedMessage());
+        }
+    }
+
+    void populateMapWithJson(final JSONObject jsonObject) {
+        if (jsonObject == null) {
             return;
         }
-        if (!TextUtils.isEmpty(content)) {
-            JSONObject jsonObject;
-            try {
-                jsonObject = new JSONObject(content);
-            } catch (JSONException e) {
-                e.printStackTrace();
-                config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                        "LoadSettings failed: " + e.getLocalizedMessage());
-                return;
-            }
-            Iterator<String> iterator = jsonObject.keys();
-            while (iterator.hasNext()) {
-                String key = iterator.next();
-                if (!TextUtils.isEmpty(key)) {
-                    String value;
-                    try {
-                        Object obj = jsonObject.get(key);
-                        value = String.valueOf(obj);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                                "Failed loading setting for key " + key + " Error: " + e.getLocalizedMessage());
-                        continue;
-                    }
-                    if (!TextUtils.isEmpty(value)) {
-                        settingsMap.put(key, value);
-                    }
+        Iterator<String> iterator = jsonObject.keys();
+        while (iterator.hasNext()) {
+            String key = iterator.next();
+            if (!TextUtils.isEmpty(key)) {
+                String value;
+                try {
+                    Object obj = jsonObject.get(key);
+                    value = String.valueOf(obj);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                            "Failed loading setting for key " + key + " Error: " + e.getLocalizedMessage());
+                    continue;
+                }
+                if (!TextUtils.isEmpty(value)) {
+                    settingsMap.put(key, value);
                 }
             }
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                    "LoadSettings completed with settings: " + settingsMap);
         }
+        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                "LoadSettings completed with settings: " + settingsMap);
     }
 
     void reset(final FileUtils fileUtils) {
@@ -285,7 +293,8 @@ class ProductConfigSettings {
                             "Product Config settings: writing Success " + settingsMap);
                 } else {
                     config.getLogger()
-                            .verbose(ProductConfigUtil.getLogTag(config), "Product Config settings: writing Failed");
+                            .verbose(ProductConfigUtil.getLogTag(config),
+                                    "Product Config settings: writing Failed");
                 }
             }
         }).call(new Callable<Boolean>() {

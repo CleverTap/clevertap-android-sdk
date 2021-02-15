@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
-import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
+import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsFactory;
 import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.login.LoginController;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
@@ -60,8 +60,8 @@ class CleverTapFactory {
         DBManager baseDatabaseManager = new DBManager(config, ctLockManager);
         coreState.setDatabaseManager(baseDatabaseManager);
 
-        ControllerManager controllerManager = new ControllerManager(context,config,postAsyncSafelyHandler,
-                ctLockManager,callbackManager,deviceInfo,baseDatabaseManager);
+        ControllerManager controllerManager = new ControllerManager(context, config, postAsyncSafelyHandler,
+                ctLockManager, callbackManager, deviceInfo, baseDatabaseManager);
         coreState.setControllerManager(controllerManager);
 
         NetworkManager networkManager = new NetworkManager(context, config, deviceInfo, coreMetaData,
@@ -101,10 +101,10 @@ class CleverTapFactory {
                 baseEventQueueManager, postAsyncSafelyHandler);
         coreState.setActivityLifeCycleManager(activityLifeCycleManager);
 
-        LoginController loginController = new LoginController(context,config,deviceInfo,
-                validationResultStack,baseEventQueueManager,analyticsManager,inAppFCManager,
-                postAsyncSafelyHandler,coreMetaData,controllerManager,sessionManager,
-                localDataStore,callbackManager,baseDatabaseManager,ctLockManager);
+        LoginController loginController = new LoginController(context, config, deviceInfo,
+                validationResultStack, baseEventQueueManager, analyticsManager, inAppFCManager,
+                postAsyncSafelyHandler, coreMetaData, controllerManager, sessionManager,
+                localDataStore, callbackManager, baseDatabaseManager, ctLockManager);
         coreState.setLoginController(loginController);
         return coreState;
     }
@@ -115,7 +115,7 @@ class CleverTapFactory {
         if (config.isAnalyticsOnly()) {
             config.getLogger().debug(config.getAccountId(), "Feature Flag is not enabled for this instance");
         } else {
-            coreState.getControllerManager().setCTFeatureFlagsController(new CTFeatureFlagsController(context,
+            coreState.getControllerManager().setCTFeatureFlagsController(CTFeatureFlagsFactory.getInstance(context,
                     deviceInfo.getDeviceID(),
                     config, callbackManager, analyticsManager));
             config.getLogger().verbose(config.getAccountId(), "Feature Flags initialized");

@@ -8,8 +8,9 @@ import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
 import org.junit.*
 import org.junit.runner.*
-import org.mockito.*
+import org.mockito.Mockito.*
 import org.robolectric.RobolectricTestRunner
+import java.lang.RuntimeException
 import java.util.concurrent.TimeUnit
 
 @RunWith(RobolectricTestRunner::class)
@@ -22,7 +23,7 @@ internal class ProductConfigSettingsTest : BaseTestCase() {
     @Before
     override fun setUp() {
         super.setUp()
-        fileUtils = Mockito.mock(FileUtils::class.java)
+        fileUtils = mock(FileUtils::class.java)
         settings = ProductConfigSettings(guid, cleverTapInstanceConfig, fileUtils)
     }
 
@@ -91,10 +92,10 @@ internal class ProductConfigSettingsTest : BaseTestCase() {
 
     @Test
     fun testReset() {
-        Mockito.mockStatic(CTExecutorFactory::class.java).use {
-            Mockito.`when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
             settings.reset(fileUtils)
-            Mockito.verify(fileUtils).deleteFile(settings.fullPath)
+            verify(fileUtils).deleteFile(settings.fullPath)
 
         }
         aInitTest()
@@ -103,9 +104,23 @@ internal class ProductConfigSettingsTest : BaseTestCase() {
     @Test
     fun testLoadSettings_Empty_String() {
         settings.loadSettings(fileUtils)
-        Mockito.`when`(fileUtils.readFromFile(Mockito.anyString())).thenReturn("")
-        Mockito.verify(fileUtils).readFromFile(settings.fullPath)
+        `when`(fileUtils.readFromFile(anyString())).thenReturn("")
+        verify(fileUtils).readFromFile(settings.fullPath)
         aInitTest()
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun when_Null_fileUtils_then_loadSetting_throws_Exception() {
+        settings.loadSettings(null)
+    }
+
+    @Test
+    fun when_fileUtils_Throws_Exception_loadSetting_throws_Exception() {
+        val spySettings = spy(settings)
+        `when`(fileUtils.readFromFile(settings.fullPath)).thenThrow(RuntimeException("Something went wrong"))
+        spySettings.loadSettings(fileUtils)
+        verify(spySettings, never()).getJsonObject(anyString())
+        verify(spySettings, never()).populateMapWithJson(any(JSONObject::class.java))
     }
 
     @Test
@@ -116,14 +131,17 @@ internal class ProductConfigSettingsTest : BaseTestCase() {
         map.put(CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS, "60")
         val timeStamp = System.currentTimeMillis()
         map.put(CTProductConfigConstants.KEY_LAST_FETCHED_TIMESTAMP, timeStamp.toString())
-        map.put(CTProductConfigConstants.PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS, TimeUnit.MINUTES.toSeconds(16).toString())
+        map.put(
+            CTProductConfigConstants.PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS,
+            TimeUnit.MINUTES.toSeconds(16).toString()
+        )
         val jsonString = JSONObject(map as Map<*, *>).toString()
-        Mockito.`when`(fileUtils.readFromFile(Mockito.anyString())).thenReturn(jsonString)
+        `when`(fileUtils.readFromFile(anyString())).thenReturn(jsonString)
 
         settings.loadSettings(fileUtils)
         settings.setMinimumFetchIntervalInSeconds(TimeUnit.MINUTES.toSeconds(45))
 
-        Mockito.verify(fileUtils).readFromFile(settings.fullPath)
+        verify(fileUtils).readFromFile(settings.fullPath)
         Assert.assertEquals(settings.lastFetchTimeStampInMillis, timeStamp)
         Assert.assertEquals(settings.nextFetchIntervalInSeconds, TimeUnit.MINUTES.toSeconds(45))
 

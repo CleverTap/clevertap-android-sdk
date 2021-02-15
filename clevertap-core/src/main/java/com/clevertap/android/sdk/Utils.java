@@ -20,7 +20,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
-import androidx.annotation.RestrictTo;
 import androidx.core.content.ContextCompat;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -53,6 +52,40 @@ public final class Utils {
         return false;
     }
 
+    public static HashMap<String, Object> convertBundleObjectToHashMap(Bundle b) {
+        final HashMap<String, Object> map = new HashMap<>();
+        for (String s : b.keySet()) {
+            final Object o = b.get(s);
+            if (o instanceof Bundle) {
+                map.putAll(convertBundleObjectToHashMap((Bundle) o));
+            } else {
+                map.put(s, b.get(s));
+            }
+        }
+        return map;
+    }
+
+    public static HashMap<String, Object> convertJSONObjectToHashMap(JSONObject b) {
+        final HashMap<String, Object> map = new HashMap<>();
+        final Iterator<String> keys = b.keys();
+
+        while (keys.hasNext()) {
+            try {
+                final String s = keys.next();
+                final Object o = b.get(s);
+                if (o instanceof JSONObject) {
+                    map.putAll(convertJSONObjectToHashMap((JSONObject) o));
+                } else {
+                    map.put(s, b.get(s));
+                }
+            } catch (Throwable ignored) {
+                // Ignore
+            }
+        }
+
+        return map;
+    }
+
     public static String convertToTitleCase(String text) {
         if (text == null || text.isEmpty()) {
             return text;
@@ -74,6 +107,102 @@ public final class Utils {
         }
 
         return converted.toString();
+    }
+
+    public static Bitmap getBitmapFromURL(String srcUrl) {
+        // Safe bet, won't have more than three /s
+        srcUrl = srcUrl.replace("///", "/");
+        srcUrl = srcUrl.replace("//", "/");
+        srcUrl = srcUrl.replace("http:/", "http://");
+        srcUrl = srcUrl.replace("https:/", "https://");
+        HttpURLConnection connection = null;
+        try {
+            URL url = new URL(srcUrl);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            InputStream input = connection.getInputStream();
+            return BitmapFactory.decodeStream(input);
+        } catch (IOException e) {
+
+            Logger.v("Couldn't download the notification icon. URL was: " + srcUrl);
+            return null;
+        } finally {
+            try {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            } catch (Throwable t) {
+                Logger.v("Couldn't close connection!", t);
+            }
+        }
+    }
+
+    public static byte[] getByteArrayFromImageURL(String srcUrl) {
+        srcUrl = srcUrl.replace("///", "/");
+        srcUrl = srcUrl.replace("//", "/");
+        srcUrl = srcUrl.replace("http:/", "http://");
+        srcUrl = srcUrl.replace("https:/", "https://");
+        HttpsURLConnection connection = null;
+        try {
+            URL url = new URL(srcUrl);
+            connection = (HttpsURLConnection) url.openConnection();
+            InputStream is = connection.getInputStream();
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            while ((bytesRead = is.read(buffer)) != -1) {
+                baos.write(buffer, 0, bytesRead);
+            }
+            return baos.toByteArray();
+        } catch (IOException e) {
+            Logger.v("Error processing image bytes from url: " + srcUrl);
+            return null;
+        } finally {
+            try {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            } catch (Throwable t) {
+                Logger.v("Couldn't close connection!", t);
+            }
+        }
+    }
+
+    public static Bitmap getNotificationBitmap(String icoPath, boolean fallbackToAppIcon, final Context context)
+            throws NullPointerException {
+        // If the icon path is not specified
+        if (icoPath == null || icoPath.equals("")) {
+            return fallbackToAppIcon ? getAppIcon(context) : null;
+        }
+        // Simply stream the bitmap
+        if (!icoPath.startsWith("http")) {
+            icoPath = Constants.ICON_BASE_URL + "/" + icoPath;
+        }
+        Bitmap ic = getBitmapFromURL(icoPath);
+        return (ic != null) ? ic : ((fallbackToAppIcon) ? getAppIcon(context) : null);
+    }
+
+    public static int getThumbnailImage(Context context, String image) {
+        if (context != null) {
+            return context.getResources().getIdentifier(image, "drawable", context.getPackageName());
+        } else {
+            return -1;
+        }
+    }
+
+    /**
+     * Checks whether a particular permission is available or not.
+     *
+     * @param context    The Android {@link Context}
+     * @param permission The fully qualified Android permission name
+     */
+    public static boolean hasPermission(final Context context, String permission) {
+        try {
+            return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permission);
+        } catch (Throwable t) {
+            return false;
+        }
     }
 
     public static boolean isActivityDead(Activity activity) {
@@ -150,19 +279,6 @@ public final class Utils {
         return bundle;
     }
 
-    public static HashMap<String, Object> convertBundleObjectToHashMap(Bundle b) {
-        final HashMap<String, Object> map = new HashMap<>();
-        for (String s : b.keySet()) {
-            final Object o = b.get(s);
-            if (o instanceof Bundle) {
-                map.putAll(convertBundleObjectToHashMap((Bundle) o));
-            } else {
-                map.put(s, b.get(s));
-            }
-        }
-        return map;
-    }
-
     static ArrayList<String> convertJSONArrayToArrayList(JSONArray array) {
         ArrayList<String> listdata = new ArrayList<>();
         if (array != null) {
@@ -175,27 +291,6 @@ public final class Utils {
             }
         }
         return listdata;
-    }
-
-    public static HashMap<String, Object> convertJSONObjectToHashMap(JSONObject b) {
-        final HashMap<String, Object> map = new HashMap<>();
-        final Iterator<String> keys = b.keys();
-
-        while (keys.hasNext()) {
-            try {
-                final String s = keys.next();
-                final Object o = b.get(s);
-                if (o instanceof JSONObject) {
-                    map.putAll(convertJSONObjectToHashMap((JSONObject) o));
-                } else {
-                    map.put(s, b.get(s));
-                }
-            } catch (Throwable ignored) {
-                // Ignore
-            }
-        }
-
-        return map;
     }
 
     static Bitmap drawableToBitmap(Drawable drawable)
@@ -211,66 +306,6 @@ public final class Utils {
         drawable.draw(canvas);
 
         return bitmap;
-    }
-
-    public static Bitmap getBitmapFromURL(String srcUrl) {
-        // Safe bet, won't have more than three /s
-        srcUrl = srcUrl.replace("///", "/");
-        srcUrl = srcUrl.replace("//", "/");
-        srcUrl = srcUrl.replace("http:/", "http://");
-        srcUrl = srcUrl.replace("https:/", "https://");
-        HttpURLConnection connection = null;
-        try {
-            URL url = new URL(srcUrl);
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setDoInput(true);
-            connection.connect();
-            InputStream input = connection.getInputStream();
-            return BitmapFactory.decodeStream(input);
-        } catch (IOException e) {
-
-            Logger.v("Couldn't download the notification icon. URL was: " + srcUrl);
-            return null;
-        } finally {
-            try {
-                if (connection != null) {
-                    connection.disconnect();
-                }
-            } catch (Throwable t) {
-                Logger.v("Couldn't close connection!", t);
-            }
-        }
-    }
-
-    public static byte[] getByteArrayFromImageURL(String srcUrl) {
-        srcUrl = srcUrl.replace("///", "/");
-        srcUrl = srcUrl.replace("//", "/");
-        srcUrl = srcUrl.replace("http:/", "http://");
-        srcUrl = srcUrl.replace("https:/", "https://");
-        HttpsURLConnection connection = null;
-        try {
-            URL url = new URL(srcUrl);
-            connection = (HttpsURLConnection) url.openConnection();
-            InputStream is = connection.getInputStream();
-            byte[] buffer = new byte[8192];
-            int bytesRead;
-            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            while ((bytesRead = is.read(buffer)) != -1) {
-                baos.write(buffer, 0, bytesRead);
-            }
-            return baos.toByteArray();
-        } catch (IOException e) {
-            Logger.v("Error processing image bytes from url: " + srcUrl);
-            return null;
-        } finally {
-            try {
-                if (connection != null) {
-                    connection.disconnect();
-                }
-            } catch (Throwable t) {
-                Logger.v("Couldn't close connection!", t);
-            }
-        }
     }
 
     @SuppressLint("MissingPermission")
@@ -349,42 +384,6 @@ public final class Utils {
         long free = Runtime.getRuntime().freeMemory();
         long total = Runtime.getRuntime().totalMemory();
         return total - free;
-    }
-
-    public static Bitmap getNotificationBitmap(String icoPath, boolean fallbackToAppIcon, final Context context)
-            throws NullPointerException {
-        // If the icon path is not specified
-        if (icoPath == null || icoPath.equals("")) {
-            return fallbackToAppIcon ? getAppIcon(context) : null;
-        }
-        // Simply stream the bitmap
-        if (!icoPath.startsWith("http")) {
-            icoPath = Constants.ICON_BASE_URL + "/" + icoPath;
-        }
-        Bitmap ic = getBitmapFromURL(icoPath);
-        return (ic != null) ? ic : ((fallbackToAppIcon) ? getAppIcon(context) : null);
-    }
-
-    public static int getThumbnailImage(Context context, String image) {
-        if (context != null) {
-            return context.getResources().getIdentifier(image, "drawable", context.getPackageName());
-        } else {
-            return -1;
-        }
-    }
-
-    /**
-     * Checks whether a particular permission is available or not.
-     *
-     * @param context    The Android {@link Context}
-     * @param permission The fully qualified Android permission name
-     */
-    public static boolean hasPermission(final Context context, String permission) {
-        try {
-            return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permission);
-        } catch (Throwable t) {
-            return false;
-        }
     }
 
     static boolean validateCTID(String cleverTapID) {
