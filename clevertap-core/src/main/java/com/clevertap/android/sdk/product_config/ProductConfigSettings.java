@@ -10,10 +10,10 @@ import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.
 
 import android.text.TextUtils;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.FileUtils;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.OnSuccessListener;
 import com.clevertap.android.sdk.task.Task;
+import com.clevertap.android.sdk.utils.FileUtils;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.Callable;

@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
+import com.clevertap.android.sdk.validation.ValidationResultStack;
 
 public interface BaseCTApiListener {
 

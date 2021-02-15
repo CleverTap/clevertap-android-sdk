@@ -6,6 +6,7 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
+import com.clevertap.android.sdk.utils.NullConstants;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ManifestInfo {

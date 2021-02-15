@@ -5,6 +5,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import com.clevertap.android.sdk.db.DBAdapter;
+import com.clevertap.android.sdk.events.EventDetail;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -31,13 +33,13 @@ public class LocalDataStore {
 
     private final HashMap<String, Object> PROFILE_FIELDS_IN_THIS_SESSION = new HashMap<>();
 
-    private CleverTapInstanceConfig config;
+    private final CleverTapInstanceConfig config;
 
-    private Context context;
+    private final Context context;
 
     private DBAdapter dbAdapter;
 
-    private ExecutorService es;
+    private final ExecutorService es;
 
     private final String eventNamespace = "local_events";
 
@@ -101,7 +103,7 @@ public class LocalDataStore {
         return _getProfileProperty(key);
     }
 
-    void persistEvent(Context context, JSONObject event, int type) {
+    public void persistEvent(Context context, JSONObject event, int type) {
 
         if (event == null) {
             return;
@@ -127,7 +129,7 @@ public class LocalDataStore {
         removeProfileFields(fields, false);
     }
 
-    void setDataSyncFlag(JSONObject event) {
+    public void setDataSyncFlag(JSONObject event) {
         try {
             // Check the personalisation flag
             boolean enablePersonalisation = this.config.isPersonalizationEnabled();
@@ -183,7 +185,7 @@ public class LocalDataStore {
     }
 
     @SuppressWarnings("rawtypes")
-    void syncWithUpstream(Context context, JSONObject response) {
+    public void syncWithUpstream(Context context, JSONObject response) {
         try {
             JSONObject eventUpdates = null;
             JSONObject profileUpdates = null;

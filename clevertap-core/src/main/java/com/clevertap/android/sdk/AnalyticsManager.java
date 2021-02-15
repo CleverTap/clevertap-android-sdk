@@ -1,15 +1,28 @@
 package com.clevertap.android.sdk;
 
-import static com.clevertap.android.sdk.CTJsonConverter.getErrorObject;
-import static com.clevertap.android.sdk.CTJsonConverter.getWzrkFields;
+import static com.clevertap.android.sdk.utils.CTJsonConverter.getErrorObject;
+import static com.clevertap.android.sdk.utils.CTJsonConverter.getWzrkFields;
 
 import android.content.Context;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
+import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
+import com.clevertap.android.sdk.response.CleverTapResponse;
+import com.clevertap.android.sdk.response.CleverTapResponseHelper;
+import com.clevertap.android.sdk.response.DisplayUnitResponse;
+import com.clevertap.android.sdk.task.MainLooperHandler;
+import com.clevertap.android.sdk.task.PostAsyncSafelyHandler;
+import com.clevertap.android.sdk.utils.CTJsonConverter;
+import com.clevertap.android.sdk.utils.UriHelper;
+import com.clevertap.android.sdk.utils.Utils;
+import com.clevertap.android.sdk.validation.ValidationResult;
+import com.clevertap.android.sdk.validation.ValidationResultFactory;
+import com.clevertap.android.sdk.validation.ValidationResultStack;
+import com.clevertap.android.sdk.validation.Validator;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -587,7 +600,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
         JSONObject event = new JSONObject();
         try {
-            JSONObject notif = CTJsonConverter.getWzrkFields(extras);
+            JSONObject notif = getWzrkFields(extras);
             event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
             event.put("evtData", notif);
         } catch (Throwable ignored) {

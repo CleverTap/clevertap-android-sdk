@@ -21,9 +21,9 @@ public class InAppFCManager {
 
     private static final SimpleDateFormat ddMMyyyy = new SimpleDateFormat("ddMMyyyy", Locale.US);
 
-    private CleverTapInstanceConfig config;
+    private final CleverTapInstanceConfig config;
 
-    private Context context;
+    private final Context context;
 
     private String deviceId;
 
@@ -107,7 +107,7 @@ public class InAppFCManager {
                         ++shownToday);
     }
 
-    void attachToHeader(final Context context, JSONObject header) {
+    public void attachToHeader(final Context context, JSONObject header) {
         try {
             // Trigger reset for dates
 
@@ -138,7 +138,7 @@ public class InAppFCManager {
         }
     }
 
-    void processResponse(final Context context, final JSONObject response) {
+    public void processResponse(final Context context, final JSONObject response) {
         try {
             if (!response.has("inapp_stale")) {
                 return;
@@ -167,7 +167,7 @@ public class InAppFCManager {
         }
     }
 
-    synchronized void updateLimits(final Context context, int perDay, int perSession) {
+    public synchronized void updateLimits(final Context context, int perDay, int perSession) {
         StorageHelper.putInt(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_MAX_PER_DAY, deviceId)),
                 perDay);
         StorageHelper

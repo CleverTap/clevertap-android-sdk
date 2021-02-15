@@ -2,6 +2,8 @@ package com.clevertap.android.sdk
 
 import android.content.Context
 import android.location.Location
+import com.clevertap.android.sdk.events.BaseEventQueueManager
+import com.clevertap.android.sdk.events.EventQueueManager
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.*
 import org.junit.runner.*

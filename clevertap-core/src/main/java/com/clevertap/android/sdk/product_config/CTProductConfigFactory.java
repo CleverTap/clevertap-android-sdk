@@ -6,7 +6,7 @@ import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DeviceInfo;
-import com.clevertap.android.sdk.FileUtils;
+import com.clevertap.android.sdk.utils.FileUtils;
 
 public class CTProductConfigFactory {
 

@@ -19,8 +19,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import com.clevertap.android.sdk.CloseImageView;
 import com.clevertap.android.sdk.R;
+import com.clevertap.android.sdk.customviews.CloseImageView;
 import java.util.ArrayList;
 
 public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNativeFragment {

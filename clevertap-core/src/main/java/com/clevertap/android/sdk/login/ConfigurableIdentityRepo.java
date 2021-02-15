@@ -1,14 +1,14 @@
 package com.clevertap.android.sdk.login;
 
-import static com.clevertap.android.sdk.LogConstants.LOG_TAG_ON_USER_LOGIN;
+import static com.clevertap.android.sdk.utils.LogConstants.LOG_TAG_ON_USER_LOGIN;
 
 import android.content.Context;
 import androidx.annotation.NonNull;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.DeviceInfo;
-import com.clevertap.android.sdk.ValidationResult;
-import com.clevertap.android.sdk.ValidationResultFactory;
-import com.clevertap.android.sdk.ValidationResultStack;
+import com.clevertap.android.sdk.validation.ValidationResult;
+import com.clevertap.android.sdk.validation.ValidationResultFactory;
+import com.clevertap.android.sdk.validation.ValidationResultStack;
 
 public class ConfigurableIdentityRepo implements IdentityRepo {
 

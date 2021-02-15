@@ -14,11 +14,11 @@ import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.CoreMetaData;
-import com.clevertap.android.sdk.FileUtils;
-import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.OnSuccessListener;
 import com.clevertap.android.sdk.task.Task;
+import com.clevertap.android.sdk.utils.FileUtils;
+import com.clevertap.android.sdk.utils.Utils;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -48,7 +48,7 @@ public class CTProductConfigController {
 
     private final Context context;
 
-    private AtomicBoolean isFetchAndActivating = new AtomicBoolean(false);
+    private final AtomicBoolean isFetchAndActivating = new AtomicBoolean(false);
 
     private boolean isInitialized = false;
 

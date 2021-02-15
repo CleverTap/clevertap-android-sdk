@@ -1,9 +1,9 @@
 package com.clevertap.android.sdk;
 
-import static com.clevertap.android.sdk.JsonUtil.toArray;
-import static com.clevertap.android.sdk.JsonUtil.toJsonArray;
-import static com.clevertap.android.sdk.JsonUtil.toList;
 import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getAll;
+import static com.clevertap.android.sdk.utils.CTJsonConverter.toArray;
+import static com.clevertap.android.sdk.utils.CTJsonConverter.toJsonArray;
+import static com.clevertap.android.sdk.utils.CTJsonConverter.toList;
 
 import android.content.Context;
 import android.os.Parcel;
@@ -13,6 +13,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants.IdentityType;
+import com.clevertap.android.sdk.utils.LogConstants;
+import com.clevertap.android.sdk.utils.NullConstants;
 import java.util.ArrayList;
 import java.util.Arrays;
 import org.json.JSONObject;
@@ -422,7 +424,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.backgroundSync = backgroundSync;
     }
 
-    boolean isCreatedPostAppLaunch() {
+    public boolean isCreatedPostAppLaunch() {
         return createdPostAppLaunch;
     }
 
@@ -439,7 +441,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         return personalization;
     }
 
-    boolean isSslPinningEnabled() {
+    public boolean isSslPinningEnabled() {
         return sslPinning;
     }
 

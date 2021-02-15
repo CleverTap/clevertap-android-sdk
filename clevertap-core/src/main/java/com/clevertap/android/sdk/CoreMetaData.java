@@ -143,8 +143,8 @@ public class CoreMetaData extends CleverTapMetaData {
         wzrkParams = null;
     }
 
-    synchronized String getCampaign() {
-        return campaign;
+    public static int getActivityCount() {
+        return activityCount;
     }
 
     synchronized void setCampaign(String campaign) {
@@ -153,29 +153,29 @@ public class CoreMetaData extends CleverTapMetaData {
         }
     }
 
-    int getCurrentSessionId() {
+    public synchronized String getCampaign() {
+        return campaign;
+    }
+
+    public int getCurrentSessionId() {
         return currentSessionId;
     }
 
-    int getGeofenceSDKVersion() {
+    public int getGeofenceSDKVersion() {
         return geofenceSDKVersion;
     }
 
-    void setGeofenceSDKVersion(int geofenceSDKVersion) {
+    public void setGeofenceSDKVersion(int geofenceSDKVersion) {
         this.geofenceSDKVersion = geofenceSDKVersion;
-    }
-
-    //Session
-    int getLastSessionLength() {
-        return lastSessionLength;
     }
 
     void setLastSessionLength(final int lastSessionLength) {
         this.lastSessionLength = lastSessionLength;
     }
 
-    synchronized String getMedium() {
-        return medium;
+    //Session
+    public int getLastSessionLength() {
+        return lastSessionLength;
     }
 
     // only set if not already set during the session
@@ -185,16 +185,16 @@ public class CoreMetaData extends CleverTapMetaData {
         }
     }
 
-    long getReferrerClickTime() {
-        return referrerClickTime;
+    public synchronized String getMedium() {
+        return medium;
     }
 
     void setReferrerClickTime(final long referrerClickTime) {
         this.referrerClickTime = referrerClickTime;
     }
 
-    String getScreenName() {
-        return currentScreenName.equals("") ? null : currentScreenName;
+    public long getReferrerClickTime() {
+        return referrerClickTime;
     }
 
     public synchronized String getSource() {
@@ -209,8 +209,8 @@ public class CoreMetaData extends CleverTapMetaData {
         }
     }
 
-    synchronized JSONObject getWzrkParams() {
-        return wzrkParams;
+    public String getScreenName() {
+        return currentScreenName.equals("") ? null : currentScreenName;
     }
 
     public synchronized void setWzrkParams(JSONObject wzrkParams) {
@@ -219,14 +219,12 @@ public class CoreMetaData extends CleverTapMetaData {
         }
     }
 
-    boolean inCurrentSession() {
-        return currentSessionId > 0;
+    public synchronized JSONObject getWzrkParams() {
+        return wzrkParams;
     }
 
-    boolean isAppLaunchPushed() {
-        synchronized (appLaunchPushedLock) {
-            return appLaunchPushed;
-        }
+    public boolean inCurrentSession() {
+        return currentSessionId > 0;
     }
 
     void setAppLaunchPushed(boolean pushed) {
@@ -235,18 +233,18 @@ public class CoreMetaData extends CleverTapMetaData {
         }
     }
 
-    boolean isBgPing() {
+    public boolean isAppLaunchPushed() {
+        synchronized (appLaunchPushedLock) {
+            return appLaunchPushed;
+        }
+    }
+
+    public boolean isBgPing() {
         return isBgPing;
     }
 
-    void setBgPing(final boolean bgPing) {
+    public void setBgPing(final boolean bgPing) {
         isBgPing = bgPing;
-    }
-
-    boolean isCurrentUserOptedOut() {
-        synchronized (optOutFlagLock) {
-            return currentUserOptedOut;
-        }
     }
 
     public void setCurrentUserOptedOut(boolean enable) {
@@ -255,41 +253,43 @@ public class CoreMetaData extends CleverTapMetaData {
         }
     }
 
-    boolean isFirstRequestInSession() {
+    public boolean isCurrentUserOptedOut() {
+        synchronized (optOutFlagLock) {
+            return currentUserOptedOut;
+        }
+    }
+
+    public boolean isFirstRequestInSession() {
         return firstRequestInSession;
     }
 
-    void setFirstRequestInSession(boolean firstRequestInSession) {
+    public void setFirstRequestInSession(boolean firstRequestInSession) {
         this.firstRequestInSession = firstRequestInSession;
-    }
-
-    //Session
-    boolean isFirstSession() {
-        return firstSession;
     }
 
     void setFirstSession(final boolean firstSession) {
         this.firstSession = firstSession;
     }
 
-    boolean isInstallReferrerDataSent() {
-        return installReferrerDataSent;
+    //Session
+    public boolean isFirstSession() {
+        return firstSession;
     }
 
     void setInstallReferrerDataSent(final boolean installReferrerDataSent) {
         this.installReferrerDataSent = installReferrerDataSent;
     }
 
-    boolean isLocationForGeofence() {
+    public boolean isInstallReferrerDataSent() {
+        return installReferrerDataSent;
+    }
+
+    public boolean isLocationForGeofence() {
         return isLocationForGeofence;
     }
 
-    void setLocationForGeofence(boolean locationForGeofence) {
+    public void setLocationForGeofence(boolean locationForGeofence) {
         isLocationForGeofence = locationForGeofence;
-    }
-
-    boolean isOffline() {
-        return offline;
     }
 
     void setOffline(boolean value) {
@@ -300,8 +300,8 @@ public class CoreMetaData extends CleverTapMetaData {
         this.currentSessionId = sessionId;
     }
 
-    static int getActivityCount() {
-        return activityCount;
+    public boolean isOffline() {
+        return offline;
     }
 
     public static void setActivityCount(final int count) {

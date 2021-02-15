@@ -6,11 +6,11 @@ import com.clevertap.android.sdk.CallbackManager
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.CoreMetaData
 import com.clevertap.android.sdk.DeviceInfo
-import com.clevertap.android.sdk.FileUtils
 import com.clevertap.android.sdk.MockDeviceInfo
-import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
+import com.clevertap.android.sdk.utils.FileUtils
+import com.clevertap.android.sdk.utils.Utils
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONArray
 import org.json.JSONObject
@@ -60,7 +60,7 @@ class CTProductConfigControllerTest : BaseTestCase() {
             callbackManager,
             productConfigSettings, fileUtils
         )
-        prepareDefaultConfig();
+        prepareDefaultConfig()
         mProductConfigController.setDefaults(defaultConfig)
         prepareFetchedConfig()
     }
@@ -221,7 +221,7 @@ class CTProductConfigControllerTest : BaseTestCase() {
 
     @Test
     fun test_getLastFetchTimeStampInMillis() {
-        mProductConfigController.getLastFetchTimeStampInMillis()
+        mProductConfigController.lastFetchTimeStampInMillis
         verify(productConfigSettings).lastFetchTimeStampInMillis
     }
 

@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk;
 
 import android.webkit.JavascriptInterface;
+import com.clevertap.android.sdk.utils.Utils;
 import java.lang.ref.WeakReference;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -12,7 +13,7 @@ import org.json.JSONObject;
 @SuppressWarnings("WeakerAccess")
 public class CTWebInterface {
 
-    private WeakReference<CleverTapAPI> weakReference;
+    private final WeakReference<CleverTapAPI> weakReference;
 
     public CTWebInterface(CleverTapAPI instance) {
         this.weakReference = new WeakReference<>(instance);

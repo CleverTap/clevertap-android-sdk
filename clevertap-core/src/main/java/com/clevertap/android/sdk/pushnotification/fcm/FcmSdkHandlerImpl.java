@@ -1,10 +1,10 @@
 package com.clevertap.android.sdk.pushnotification.fcm;
 
-import static com.clevertap.android.sdk.PackageUtils.isGooglePlayServicesAvailable;
-import static com.clevertap.android.sdk.PackageUtils.isGooglePlayStoreAvailable;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM_LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM;
+import static com.clevertap.android.sdk.utils.PackageUtils.isGooglePlayServicesAvailable;
+import static com.clevertap.android.sdk.utils.PackageUtils.isGooglePlayStoreAvailable;
 
 import android.text.TextUtils;
 import androidx.annotation.NonNull;

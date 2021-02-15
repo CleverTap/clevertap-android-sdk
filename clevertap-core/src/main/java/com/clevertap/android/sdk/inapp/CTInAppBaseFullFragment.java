@@ -5,11 +5,11 @@ import android.view.Gravity;
 import android.widget.FrameLayout;
 import android.widget.FrameLayout.LayoutParams;
 import android.widget.RelativeLayout;
-import com.clevertap.android.sdk.CloseImageView;
 import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.R;
-import com.clevertap.android.sdk.Utils;
+import com.clevertap.android.sdk.customviews.CloseImageView;
+import com.clevertap.android.sdk.utils.Utils;
 
 public abstract class CTInAppBaseFullFragment extends CTInAppBaseFragment {
 
