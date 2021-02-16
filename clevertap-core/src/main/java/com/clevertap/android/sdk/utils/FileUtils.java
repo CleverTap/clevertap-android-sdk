@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.utils;
 
 import android.content.Context;
 import android.text.TextUtils;
+import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -16,16 +17,16 @@ import org.json.JSONObject;
 @RestrictTo(Scope.LIBRARY_GROUP)
 public class FileUtils {
 
-    private CleverTapInstanceConfig mConfig;
+    private final CleverTapInstanceConfig mConfig;
 
-    private Context mContext;
+    private final Context mContext;
 
-    public FileUtils(final Context context, final CleverTapInstanceConfig config) {
+    public FileUtils(@NonNull final Context context, @NonNull final CleverTapInstanceConfig config) {
         mContext = context;
         mConfig = config;
     }
 
-    public void deleteDirectory(String dirName){
+    public void deleteDirectory(String dirName) {
         if (TextUtils.isEmpty(dirName)) {
             return;
         }
@@ -101,14 +102,6 @@ public class FileUtils {
             //Log your error with Log.e
         }
         return content;
-    }
-
-    public void setConfig(final CleverTapInstanceConfig config) {
-        mConfig = config;
-    }
-
-    public void setContext(final Context context) {
-        mContext = context;
     }
 
     public void writeJsonToFile(String dirName,

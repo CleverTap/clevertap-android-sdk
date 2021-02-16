@@ -10,6 +10,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.OnSuccessListener;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.FileUtils;
 import java.util.HashMap;
@@ -27,9 +28,9 @@ public class CTFeatureFlagsController {
 
     final BaseCallbackManager mCallbackManager;
 
-    final FileUtils mFileUtils;
+    FileUtils mFileUtils;
 
-    private String guid;
+    String guid;
 
     private boolean isInitialized = false;
 
@@ -163,15 +164,15 @@ public class CTFeatureFlagsController {
         }
     }
 
-    private String getCachedDirName() {
+    String getCachedDirName() {
         return CTFeatureFlagConstants.DIR_FEATURE_FLAG + "_" + config.getAccountId() + "_" + guid;
     }
 
-    private String getCachedFileName() {
+    String getCachedFileName() {
         return CTFeatureFlagConstants.CACHED_FILE_NAME;
     }
 
-    private String getCachedFullPath() {
+    String getCachedFullPath() {
         return getCachedDirName() + "/" + getCachedFileName();
     }
 
@@ -183,11 +184,17 @@ public class CTFeatureFlagsController {
         return config.getAccountId() + "[Feature Flag]";
     }
 
-    private synchronized void init() {
+    synchronized void init() {
         if (TextUtils.isEmpty(guid)) {
             return;
         }
         Task<Boolean> task = CTExecutorFactory.getInstance(config).ioTask();
+        task.addOnSuccessListener(new OnSuccessListener<Boolean>() {
+            @Override
+            public void onSuccess(final Boolean init) {
+                isInitialized = init;
+            }
+        });
         task.call(new Callable<Boolean>() {
             @Override
             public Boolean call() {
@@ -217,7 +224,6 @@ public class CTFeatureFlagsController {
                             }
                             getConfigLogger().verbose(getLogTag(), "Feature flags initialized from file " + fileName +
                                     " with configs  " + store);
-                            isInitialized = true;
                         } else {
                             getConfigLogger().verbose(getLogTag(), "Feature flags file is empty-" + fileName);
                         }
