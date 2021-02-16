@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk
 
 import android.location.Location
+import com.clevertap.android.sdk.utils.Utils
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
 import org.junit.*
@@ -19,8 +20,10 @@ class CleverTapAPITest : BaseTestCase() {
     @Throws(Exception::class)
     override fun setUp() {
         super.setUp()
-        corestate = MockCoreState(application, cleverTapInstanceConfig)
-        corestate.postAsyncSafelyHandler = MockPostAsyncSafelyHandler(cleverTapInstanceConfig)
+        mockStatic(CleverTapFactory::class.java).use {
+            corestate = MockCoreState(application, cleverTapInstanceConfig)
+            corestate.postAsyncSafelyHandler = MockPostAsyncSafelyHandler(cleverTapInstanceConfig)
+        }
     }
 
     /* @Test
@@ -36,49 +39,53 @@ class CleverTapAPITest : BaseTestCase() {
     fun testCleverTapAPI_constructor_when_InitialAppEnteredForegroundTime_greater_than_5_secs() {
 
         mockStatic(CleverTapFactory::class.java).use {
-            // Arrange
-            `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
-                .thenReturn(corestate)
+            mockStatic(Utils::class.java).use {
+                // Arrange
+                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
+                    .thenReturn(corestate)
+                `when`(Utils.getNow()).thenReturn(Int.MAX_VALUE)
 
+                CoreMetaData.setInitialAppEnteredForegroundTime(0)
 
-            CoreMetaData.setInitialAppEnteredForegroundTime(0)
+                // Act
+                CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
 
-            // Act
-            CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+                // Assert
+                assertTrue("isCreatedPostAppLaunch must be true", cleverTapInstanceConfig.isCreatedPostAppLaunch)
+                verify(corestate.sessionManager).setLastVisitTime()
+                verify(corestate.deviceInfo).setDeviceNetworkInfoReportingFromStorage()
+                verify(corestate.deviceInfo).setCurrentUserOptOutStateFromStorage()
 
-            // Assert
-            assertTrue("isCreatedPostAppLaunch must be true", cleverTapInstanceConfig.isCreatedPostAppLaunch)
-            verify(corestate.sessionManager).setLastVisitTime()
-            verify(corestate.deviceInfo).setDeviceNetworkInfoReportingFromStorage()
-            verify(corestate.deviceInfo).setCurrentUserOptOutStateFromStorage()
-
-            val actualConfig =
-                StorageHelper.getString(application, "instance:" + cleverTapInstanceConfig.accountId, "")
-            assertEquals(cleverTapInstanceConfig.toJSONString(), actualConfig)
+                val actualConfig =
+                    StorageHelper.getString(application, "instance:" + cleverTapInstanceConfig.accountId, "")
+                assertEquals(cleverTapInstanceConfig.toJSONString(), actualConfig)
+            }
         }
     }
 
     @Test
     fun testCleverTapAPI_constructor_when_InitialAppEnteredForegroundTime_less_than_5_secs() {
+        mockStatic(Utils::class.java).use {
+            mockStatic(CleverTapFactory::class.java).use {
+                // Arrange
+                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
+                    .thenReturn(corestate)
+                `when`(Utils.getNow()).thenReturn(0)
 
-        mockStatic(CleverTapFactory::class.java).use {
-            // Arrange
-            `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
-                .thenReturn(corestate)
+                CoreMetaData.setInitialAppEnteredForegroundTime(Int.MAX_VALUE)
 
-            CoreMetaData.setInitialAppEnteredForegroundTime(Int.MAX_VALUE)
+                // Act
+                CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
 
-            // Act
-            CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+                // Assert
+                assertFalse("isCreatedPostAppLaunch must be false", cleverTapInstanceConfig.isCreatedPostAppLaunch)
+                verify(corestate.sessionManager).setLastVisitTime()
+                verify(corestate.deviceInfo).setDeviceNetworkInfoReportingFromStorage()
+                verify(corestate.deviceInfo).setCurrentUserOptOutStateFromStorage()
 
-            // Assert
-            assertFalse("isCreatedPostAppLaunch must be false", cleverTapInstanceConfig.isCreatedPostAppLaunch)
-            verify(corestate.sessionManager).setLastVisitTime()
-            verify(corestate.deviceInfo).setDeviceNetworkInfoReportingFromStorage()
-            verify(corestate.deviceInfo).setCurrentUserOptOutStateFromStorage()
-
-            val string = StorageHelper.getString(application, "instance:" + cleverTapInstanceConfig.accountId, "")
-            assertEquals(cleverTapInstanceConfig.toJSONString(), string)
+                val string = StorageHelper.getString(application, "instance:" + cleverTapInstanceConfig.accountId, "")
+                assertEquals(cleverTapInstanceConfig.toJSONString(), string)
+            }
         }
     }
 
@@ -148,6 +155,11 @@ class CleverTapAPITest : BaseTestCase() {
     @Test
     fun test_pushGeoFenceExitedEvent() {
         mockStatic(CleverTapFactory::class.java).use {
+            val argumentCaptor =
+                ArgumentCaptor.forClass(
+                    JSONObject::class.java
+                )
+
             `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
                 .thenReturn(corestate)
             cleverTapAPI = CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
@@ -155,10 +167,6 @@ class CleverTapAPITest : BaseTestCase() {
             val expectedJson = JSONObject("{\"key\":\"value\"}")
 
             cleverTapAPI.pushGeoFenceExitedEvent(expectedJson)
-            val argumentCaptor =
-                ArgumentCaptor.forClass(
-                    JSONObject::class.java
-                )
 
             verify(corestate.analyticsManager).raiseEventForGeofences(
                 ArgumentMatchers.anyString(), argumentCaptor.capture()

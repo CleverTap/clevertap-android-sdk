@@ -411,6 +411,10 @@ public final class Utils {
         return true;
     }
 
+    public static int getNow() {
+        return (int) (System.currentTimeMillis() / 1000);
+    }
+
     /**
      * Method to check whether app has ExoPlayer dependencies
      *

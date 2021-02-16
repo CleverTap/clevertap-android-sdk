@@ -837,7 +837,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         if (CoreMetaData.getInitialAppEnteredForegroundTime() <= 0) {
-            int initialAppEnteredForegroundTime = (int) System.currentTimeMillis() / 1000;
+            int initialAppEnteredForegroundTime = Utils.getNow();
             CoreMetaData.setInitialAppEnteredForegroundTime(initialAppEnteredForegroundTime);
         }
 
@@ -960,7 +960,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             }
         });
 
-        int now = (int) System.currentTimeMillis() / 1000;
+        int now = Utils.getNow();
         if (now - CoreMetaData.getInitialAppEnteredForegroundTime() > 5) {
             this.mCoreState.getConfig().setCreatedPostAppLaunch();
         }
@@ -1566,7 +1566,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             return -1;
         }
 
-        int now = (int) (System.currentTimeMillis() / 1000);
+        int now = Utils.getNow();
         return now - currentSession;
     }
 
