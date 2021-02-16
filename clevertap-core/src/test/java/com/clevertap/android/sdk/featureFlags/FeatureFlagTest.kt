@@ -51,7 +51,7 @@ class FeatureFlagTest : BaseTestCase() {
     }
 
     @Test
-    fun when_Empty_Feature_Flag_Config_Then_Init_Return_True() {
+    fun test_constructor_whenNoSavedFF_returnInitTrue() {
         Mockito.mockStatic(CTExecutorFactory::class.java).use {
             Mockito.`when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
             val controller = Mockito.spy(mCTFeatureFlagsController)
@@ -92,7 +92,7 @@ class FeatureFlagTest : BaseTestCase() {
     }
 
     @Test
-    fun when_Feature_Flag_Response() {
+    fun when_Feature_Flag_Response_Success() {
         Mockito.mockStatic(CTExecutorFactory::class.java).use {
             Mockito.`when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
             Mockito.`when`(fileUtils.readFromFile(mCTFeatureFlagsController.getCachedFullPath()))
@@ -118,7 +118,7 @@ class FeatureFlagTest : BaseTestCase() {
     }
 
     @Test
-    fun test_Fetch_Ff() {
+    fun test_Fetch_FF_Success() {
         Mockito.mockStatic(CTExecutorFactory::class.java).use {
             Mockito.`when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
             mCTFeatureFlagsController.fetchFeatureFlags()
