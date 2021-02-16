@@ -10,7 +10,6 @@ import com.clevertap.android.sdk.MockDeviceInfo
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.utils.FileUtils
-import com.clevertap.android.sdk.utils.Utils
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
 import org.junit.*
@@ -52,9 +51,7 @@ class CTProductConfigControllerTest : BaseTestCase() {
             callbackManager.productConfigListener = listener
             productConfigSettings = mock(ProductConfigSettings::class.java)
             `when`(productConfigSettings.guid).thenReturn(guid)
-            fileUtils = mock(FileUtils::class.java)
-            fileUtils.setConfig(cleverTapInstanceConfig)
-            fileUtils.setContext(application)
+            fileUtils = spy(FileUtils(application,cleverTapInstanceConfig))
             mProductConfigController = CTProductConfigController(
                 application,
                 cleverTapInstanceConfig,
@@ -70,7 +67,7 @@ class CTProductConfigControllerTest : BaseTestCase() {
 
     @Test
     fun testInit() {
-        Assert.assertEquals(mProductConfigController.isInitialized, true)
+        Assert.assertTrue(mProductConfigController.isInitialized)
     }
 
     @Test
