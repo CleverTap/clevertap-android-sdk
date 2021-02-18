@@ -93,6 +93,8 @@ public class CTProductConfigController {
                             activatedConfigs.putAll(defaultConfigs);
                         }
                         activatedConfigs.putAll(toWriteValues);
+                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                                "Activated successfully with configs: " + activatedConfigs);
                     } catch (Exception e) {
                         e.printStackTrace();
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
@@ -104,11 +106,7 @@ public class CTProductConfigController {
 
             @Override
             public void onPostExecute(Void isSuccess) {
-                synchronized (this) {
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                            "Activated successfully with configs: " + activatedConfigs);
-                    sendCallback(PROCESSING_STATE.ACTIVATED);
-                }
+                sendCallback(PROCESSING_STATE.ACTIVATED);
             }
         });
     }
@@ -297,13 +295,12 @@ public class CTProductConfigController {
      * Deletes all activated, fetched and defaults configs as well as all Product Config settings.
      */
     public void reset() {
-        synchronized (this) {
-            defaultConfigs.clear();
-
-            activatedConfigs.clear();
-            TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
-                @Override
-                public Void doInBackground(Void aVoid) {
+        TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
+            @Override
+            public Void doInBackground(Void aVoid) {
+                synchronized (this) {
+                    defaultConfigs.clear();
+                    activatedConfigs.clear();
                     try {
                         String dirName = getProductConfigDirName();
                         FileUtils.deleteDirectory(context, config, dirName);
@@ -314,16 +311,16 @@ public class CTProductConfigController {
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
                                 "Reset failed: " + e.getLocalizedMessage());
                     }
+                    settings.initDefaults();
                     return null;
                 }
+            }
 
-                @Override
-                public void onPostExecute(Void aVoid) {
+            @Override
+            public void onPostExecute(Void aVoid) {
 
-                }
-            });
-            settings.initDefaults();
-        }
+            }
+        });
     }
 
     // -----------------------------------------------------------------------//
@@ -353,17 +350,15 @@ public class CTProductConfigController {
             public Void doInBackground(Void aVoid) {
                 synchronized (this) {
                     defaultConfigs.putAll(DefaultXmlParser.getDefaultsFromXml(context, resourceID));
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                            "Product Config: setDefaults Completed with: " + defaultConfigs);
                     return null;
                 }
             }
 
             @Override
             public void onPostExecute(Void aVoid) {
-                synchronized (this) {
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                            "Product Config: setDefaults Completed with: " + defaultConfigs);
-                    initAsync();
-                }
+                initAsync();
             }
         });
     }
@@ -395,17 +390,15 @@ public class CTProductConfigController {
                             }
                         }
                     }
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                            "Product Config: setDefaults Completed with: " + defaultConfigs);
                     return null;
                 }
             }
 
             @Override
             public void onPostExecute(Void aVoid) {
-                synchronized (this) {
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                            "Product Config: setDefaults Completed with: " + defaultConfigs);
-                    initAsync();
-                }
+                initAsync();
             }
         });
     }
