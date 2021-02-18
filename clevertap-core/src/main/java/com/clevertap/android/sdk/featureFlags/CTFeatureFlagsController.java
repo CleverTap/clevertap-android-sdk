@@ -12,7 +12,9 @@ import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.TaskManager;
 import com.clevertap.android.sdk.Utils;
 import java.lang.ref.WeakReference;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,7 +31,7 @@ public class CTFeatureFlagsController {
 
     private final Context mContext;
 
-    private final HashMap<String, Boolean> store = new HashMap<>();
+    private final Map<String, Boolean> store = Collections.synchronizedMap(new HashMap<String,Boolean>());
 
     public CTFeatureFlagsController(Context context, String guid, CleverTapInstanceConfig config,
             FeatureFlagListener listener) {
@@ -72,7 +74,7 @@ public class CTFeatureFlagsController {
      * @param defaultValue - default value of the Key, in case we don't find any Feature Flag with the Key.
      * @return boolean- Value of the Feature flag.
      */
-    public synchronized Boolean get(String key, boolean defaultValue) {
+    public Boolean get(String key, boolean defaultValue) {
         if (!isInitialized) {
             getConfigLogger()
                     .verbose(getLogTag(), "Controller not initialized, returning default value - " + defaultValue);
@@ -99,7 +101,7 @@ public class CTFeatureFlagsController {
      *
      * @return boolean- true if initialized, else false.
      */
-    public synchronized boolean isInitialized() {
+    public boolean isInitialized() {
         return isInitialized;
     }
 
@@ -184,7 +186,6 @@ public class CTFeatureFlagsController {
             @Override
             public Boolean doInBackground(Void aVoid) {
                 synchronized (this) {
-
                     getConfigLogger().verbose(getLogTag(), "Feature flags init is called");
                     String fileName = getCachedFullPath();
                     try {
