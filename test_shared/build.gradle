@@ -2,13 +2,12 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
 android {
-    compileSdkVersion 29
-    buildToolsVersion "30.0.2"
-    testOptions.unitTests.includeAndroidResources = true
+    compileSdkVersion compileSdkVersionVal
+    buildToolsVersion buildToolsVersionVal
 
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 29
+        minSdkVersion minSdkVersionVal
+        targetSdkVersion targetSdkVersionVal
         versionCode 1
         versionName "1.0"
 
@@ -22,13 +21,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-
-    testOptions {
-        unitTests {
-            includeAndroidResources = true
-            returnDefaultValues = true
-        }
-    }
 }
 
 dependencies {
@@ -37,7 +29,10 @@ dependencies {
     api deps.junitPlatform
     api deps.junitApi
     api deps.junitEngine
-
+    api deps.kotlinStdlib
+    api deps.jsonAssert
+    api deps.gson
+    api deps.json
     def mockito_version = '3.5.11'
     api deps.mockitoCore
     api "org.mockito:mockito-inline:$mockito_version"
@@ -51,6 +46,7 @@ dependencies {
     // AndroidJUnitRunner and JUnit Rules
     api deps.androidXTestRunner
     api deps.androidXTestRules
+    api deps.androidXCoreKTX
 
     api deps.espressoCore
 

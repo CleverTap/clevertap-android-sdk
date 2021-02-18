@@ -30,7 +30,7 @@ internal class CTFeatureFlagFactoryTest : BaseTestCase() {
     }
 
     @Test
-    fun test_getInstance_not_null() {
+    fun test_getInstance_shouldNotReturnNull() {
         val controller = CTFeatureFlagsFactory.getInstance(
             application,
             guid,
@@ -43,7 +43,7 @@ internal class CTFeatureFlagFactoryTest : BaseTestCase() {
     }
 
     @Test
-    fun test_getInstance_config_correct() {
+    fun test_getInstance_instanceInitializedProperly() {
         val controller = CTFeatureFlagsFactory.getInstance(
             application,
             guid,

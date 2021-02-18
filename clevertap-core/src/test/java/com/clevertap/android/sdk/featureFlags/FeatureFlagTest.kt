@@ -51,7 +51,7 @@ class FeatureFlagTest : BaseTestCase() {
     }
 
     @Test
-    fun test_constructor_whenNoSavedFF_returnInitTrue() {
+    fun test_constructor_whenFeatureFlagIsNotSave_InitShouldReturnTrue() {
         Mockito.mockStatic(CTExecutorFactory::class.java).use {
             Mockito.`when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
             val controller = Mockito.spy(mCTFeatureFlagsController)

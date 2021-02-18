@@ -35,8 +35,8 @@ android {
         versionName libraryVersion
 
         //AGP 4.1.0 change https://developer.android.com/studio/releases/gradle-plugin#version_properties_removed_from_buildconfig_class_in_library_projects
-        buildConfigField ("int", "VERSION_CODE", "$versionCode")
-        buildConfigField ("String", "VERSION_NAME", "\"$versionName\"")
+//        buildConfigField ("int", "VERSION_CODE", "$versionCode")
+//        buildConfigField ("String", "VERSION_NAME", "\"$versionName\"")
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'
@@ -75,9 +75,9 @@ android {
         unitTests {
             includeAndroidResources = true
             returnDefaultValues = true
-        }
-        unitTests.all {
-            jvmArgs '-noverify'
+            all {
+                jvmArgs '-noverify'
+            }
         }
     }
 }
@@ -101,11 +101,11 @@ task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'crea
     def debugTree = fileTree(dir: "$project.buildDir/intermediates/javac/debug", excludes: fileFilter)
     def mainSrc = "$project.projectDir/src/main/java"
 
-    sourceDirectories.from = files([mainSrc])
-    classDirectories.from = files([debugTree])
-    executionData.from = fileTree(dir: project.buildDir, includes: [
+    sourceDirectories.setFrom(files([mainSrc]))
+    classDirectories.setFrom(files([debugTree]))
+    executionData.setFrom(fileTree(dir: project.buildDir, includes: [
             'jacoco/testDebugUnitTest.exec', 'outputs/code_coverage/debugAndroidTest/connected/**/*.ec'
-    ])
+    ]))
 }
 
 Properties properties = new Properties()
