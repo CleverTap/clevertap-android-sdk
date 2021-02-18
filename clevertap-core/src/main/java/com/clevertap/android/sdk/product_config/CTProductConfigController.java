@@ -145,7 +145,7 @@ public class CTProductConfigController {
      * @return
      */
     public HashMap<String, String> getAll(){
-        return activatedConfig;
+        return activatedConfigs;
     }
 
     /**
