@@ -288,12 +288,15 @@ public class CTProductConfigController {
      * Deletes all activated, fetched and defaults configs as well as all Product Config settings.
      */
     public void reset() {
+        defaultConfigs.clear();
+        activatedConfigs.clear();
+        settings.initDefaults();
+
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
             @Override
             public Void doInBackground(Void aVoid) {
                 synchronized (this) {
-                    defaultConfigs.clear();
-                    activatedConfigs.clear();
+
                     try {
                         String dirName = getProductConfigDirName();
                         FileUtils.deleteDirectory(context, config, dirName);
@@ -304,7 +307,6 @@ public class CTProductConfigController {
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
                                 "Reset failed: " + e.getLocalizedMessage());
                     }
-                    settings.initDefaults();
                     return null;
                 }
             }

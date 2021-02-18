@@ -39,6 +39,7 @@ class ProductConfigSettings {
     }
 
     public void reset() {
+        initDefaults();
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
             @Override
             public Void doInBackground(Void aVoid) {
@@ -62,7 +63,6 @@ class ProductConfigSettings {
 
             }
         });
-        initDefaults();
     }
 
     long getLastFetchTimeStampInMillis() {
