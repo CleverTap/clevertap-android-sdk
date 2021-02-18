@@ -13,8 +13,10 @@ import android.text.TextUtils;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.FileUtils;
 import com.clevertap.android.sdk.TaskManager;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -27,7 +29,7 @@ class ProductConfigSettings {
 
     private final String guid;
 
-    private final HashMap<String, String> settingsMap = new HashMap<>();
+    private final Map<String, String> settingsMap = Collections.synchronizedMap(new HashMap<String, String>());
 
     ProductConfigSettings(Context context, String guid, CleverTapInstanceConfig config) {
         this.context = context.getApplicationContext();
@@ -40,17 +42,19 @@ class ProductConfigSettings {
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
             @Override
             public Void doInBackground(Void aVoid) {
-                try {
-                    String fileName = getFullPath();
-                    FileUtils.deleteFile(context, config, fileName);
-                    config.getLogger()
-                            .verbose(ProductConfigUtil.getLogTag(config), "Deleted settings file" + fileName);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                            "Error while resetting settings" + e.getLocalizedMessage());
+                synchronized (this) {
+                    try {
+                        String fileName = getFullPath();
+                        FileUtils.deleteFile(context, config, fileName);
+                        config.getLogger()
+                                .verbose(ProductConfigUtil.getLogTag(config), "Deleted settings file" + fileName);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                                "Error while resetting settings" + e.getLocalizedMessage());
+                    }
+                    return null;
                 }
-                return null;
             }
 
             @Override
@@ -264,24 +268,26 @@ class ProductConfigSettings {
         }
     }
 
-    private synchronized void updateConfigToFile() {
+    private void updateConfigToFile() {
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Boolean>() {
             @Override
             public Boolean doInBackground(Void aVoid) {
-                try {
-                    //Ensure that we are not saving min interval in seconds
-                    HashMap<String, String> toWriteMap = new HashMap<>(settingsMap);
-                    toWriteMap.remove(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS);
+                synchronized (this) {
+                    try {
+                        //Ensure that we are not saving min interval in seconds
+                        HashMap<String, String> toWriteMap = new HashMap<>(settingsMap);
+                        toWriteMap.remove(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS);
 
-                    FileUtils.writeJsonToFile(context, config, getDirName(),
-                            CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS, new JSONObject(toWriteMap));
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                            "UpdateConfigToFile failed: " + e.getLocalizedMessage());
-                    return false;
+                        FileUtils.writeJsonToFile(context, config, getDirName(),
+                                CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS, new JSONObject(toWriteMap));
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                                "UpdateConfigToFile failed: " + e.getLocalizedMessage());
+                        return false;
+                    }
+                    return true;
                 }
-                return true;
             }
 
             @Override
