@@ -13,9 +13,9 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
 
     private final BaseCTApiListener ctApiListener;
 
-    private final LoginInfoProvider infoProvider;
-
     private IdentitySet identitySet;
+
+    private final LoginInfoProvider infoProvider;
 
     public ConfigurableIdentityRepo(BaseCTApiListener ctApiListener) {
         this.ctApiListener = ctApiListener;
@@ -24,16 +24,16 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
     }
 
     @Override
-    public boolean isIdentity(@NonNull String Key) {
-        boolean isProfileKey = identitySet.contains(Key);
-        ctApiListener.config().log(LOG_TAG_ON_USER_LOGIN,
-                TAG + "isIdentity [Key: " + Key + " , Value: " + isProfileKey + "]");
-        return isProfileKey;
+    public IdentitySet getIdentitySet() {
+        return identitySet;
     }
 
     @Override
-    public IdentitySet identities() {
-        return identitySet;
+    public boolean hasIdentity(@NonNull String Key) {
+        boolean hasIdentity = identitySet.contains(Key);
+        ctApiListener.config().log(LOG_TAG_ON_USER_LOGIN,
+                TAG + "isIdentity [Key: " + Key + " , Value: " + hasIdentity + "]");
+        return hasIdentity;
     }
 
     /**
@@ -52,7 +52,7 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
          *   For Multi Instance - Get Identity Set configured via the setter
          * ---------------------------------------------------------------- */
         IdentitySet configKeySet = IdentitySet
-                .from(ctApiListener.config().getProfileKeys(ctApiListener.context()));
+                .from(ctApiListener.config().getIdentityKeys());
 
         ctApiListener.config().log(LOG_TAG_ON_USER_LOGIN,
                 TAG + "ConfigIdentitySet [" + configKeySet + "]");

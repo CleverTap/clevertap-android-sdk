@@ -116,12 +116,6 @@ public class ManifestInfo {
         return profileKeys;
     }
 
-    private String[] parseProfileKeys(final Bundle metaData) {
-        String profileKeyString = _getManifestStringValueForKey(metaData, Constants.CLEVERTAP_IDENTIFIER);
-        return !TextUtils.isEmpty(profileKeyString) ? profileKeyString.split(Constants.SEPARATOR_COMMA)
-                : NullConstants.NULL_STRING_ARRAY;
-    }
-
     public String getXiaomiAppID() {
         return xiaomiAppID;
     }
@@ -180,6 +174,12 @@ public class ManifestInfo {
 
     String getLC() {
         return LC;
+    }
+
+    private String[] parseProfileKeys(final Bundle metaData) {
+        String profileKeyString = _getManifestStringValueForKey(metaData, Constants.CLEVERTAP_IDENTIFIER);
+        return !TextUtils.isEmpty(profileKeyString) ? profileKeyString.split(Constants.SEPARATOR_COMMA)
+                : NullConstants.NULL_STRING_ARRAY;
     }
 
     static void changeCredentials(String id, String token, String region) {

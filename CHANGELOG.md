@@ -1,5 +1,13 @@
 ## CHANGE LOG
 
+### December 28, 2020
+
+* [CleverTap Android SDK v4.0.2](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md)
+
+### November 30, 2020
+
+* [CleverTap Android SDK v4.0.1](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md)
+
 ### October 1, 2020
 
 * [CleverTap Android SDK v4.0.0](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md)

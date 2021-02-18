@@ -15,9 +15,9 @@ import android.os.Build;
 import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
 import android.view.WindowManager;
+import androidx.annotation.IntDef;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
-import androidx.annotation.IntDef;
 import androidx.core.app.NotificationManagerCompat;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -30,39 +30,39 @@ public class DeviceInfo {
 
     private class DeviceCachedInfo {
 
-        private String bluetoothVersion;
+        private final String bluetoothVersion;
 
-        private int build;
+        private final int build;
 
-        private String carrier;
+        private final String carrier;
 
-        private String countryCode;
+        private final String countryCode;
 
-        private int dpi;
+        private final int dpi;
 
-        private double height;
+        private final double height;
 
-        private int heightPixels;
+        private final int heightPixels;
 
-        private String manufacturer;
+        private final String manufacturer;
 
-        private String model;
+        private final String model;
 
-        private String networkType;
+        private final String networkType;
 
-        private boolean notificationsEnabled;
+        private final boolean notificationsEnabled;
 
-        private String osName;
+        private final String osName;
 
-        private String osVersion;
+        private final String osVersion;
 
-        private int sdkVersion;
+        private final int sdkVersion;
 
-        private String versionName;
+        private final String versionName;
 
-        private double width;
+        private final double width;
 
-        private int widthPixels;
+        private final int widthPixels;
 
         DeviceCachedInfo() {
             versionName = getVersionName();
@@ -238,30 +238,6 @@ public class DeviceInfo {
         }
     }
 
-    private static final String GUID_PREFIX = "__";
-
-    private static final String OS_NAME = "Android";
-
-    private final Object adIDLock = new Object();
-
-    private boolean adIdRun = false;
-
-    private DeviceCachedInfo cachedInfo;
-
-    private CleverTapInstanceConfig config;
-
-    private Context context;
-
-    private final Object deviceIDLock = new Object();
-
-    private String googleAdID = null;
-
-    private String library;
-
-    private boolean limitAdTracking = false;
-
-    private ArrayList<ValidationResult> validationResults = new ArrayList<>();
-
     /**
      * Type of a device with below possible values<br>
      * <li>{@link DeviceInfo#SMART_PHONE}
@@ -275,6 +251,10 @@ public class DeviceInfo {
     @interface DeviceType {
 
     }
+
+    private static final String GUID_PREFIX = "__";
+
+    private static final String OS_NAME = "Android";
 
     /**
      * Device is a smart phone
@@ -304,6 +284,26 @@ public class DeviceInfo {
     @DeviceType
     static int sDeviceType = NULL;
 
+    private final Object adIDLock = new Object();
+
+    private boolean adIdRun = false;
+
+    private DeviceCachedInfo cachedInfo;
+
+    private final CleverTapInstanceConfig config;
+
+    private final Context context;
+
+    private final Object deviceIDLock = new Object();
+
+    private String googleAdID = null;
+
+    private String library;
+
+    private boolean limitAdTracking = false;
+
+    private final ArrayList<ValidationResult> validationResults = new ArrayList<>();
+
 
     DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID) {
         this.context = context;
@@ -317,6 +317,10 @@ public class DeviceInfo {
         });
         deviceInfoCacheThread.start();
         initDeviceID(cleverTapID);
+    }
+
+    public boolean isErrorDeviceId() {
+        return getDeviceID() != null && getDeviceID().startsWith(Constants.ERROR_PROFILE_PREFIX);
     }
 
     void forceNewDeviceID() {
@@ -367,6 +371,10 @@ public class DeviceInfo {
 
     String getCarrier() {
         return getDeviceCachedInfo().carrier;
+    }
+
+    Context getContext() {
+        return context;
     }
 
     String getCountryCode() {
@@ -467,10 +475,6 @@ public class DeviceInfo {
             // do nothing since we don't have permissions
         }
         return isBluetoothEnabled;
-    }
-
-    public boolean isErrorDeviceId() {
-        return getDeviceID() != null && getDeviceID().startsWith(Constants.ERROR_PROFILE_PREFIX);
     }
 
     boolean isLimitAdTrackingEnabled() {
@@ -661,10 +665,6 @@ public class DeviceInfo {
         StorageHelper.putString(context, getFallbackIdStorageKey(), fallbackId);
     }
 
-    Context getContext() {
-        return context;
-    }
-
     /**
      * Returns the integer identifier for the default app icon.
      *
@@ -691,6 +691,7 @@ public class DeviceInfo {
                 UiModeManager uiModeManager = (UiModeManager) context.getSystemService(Context.UI_MODE_SERVICE);
                 if (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
                     sDeviceType = TV;
+                    return sDeviceType;
                 }
             } catch (Exception e) {
                 //uiModeManager or context is null

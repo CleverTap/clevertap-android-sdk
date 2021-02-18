@@ -8,9 +8,24 @@ import java.util.Iterator;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+
 @RestrictTo(Scope.LIBRARY)
 public class CTJsonConverter {
 
+
+    public static JSONObject toJsonObject(String json, Logger logger, String accountId) {
+        JSONObject cache = null;
+        if (json != null) {
+            try {
+                cache = new JSONObject(json);
+            } catch (Throwable t) {
+                // no-op
+                logger.verbose(accountId, "Error reading guid cache: " + t.toString());
+            }
+        }
+
+        return (cache != null) ? cache : new JSONObject();
+    }
 
     static JSONObject from(DeviceInfo deviceInfo, Location locationFromUser, boolean enableNetworkInfoReporting
             , boolean deviceIsMultiUser) throws JSONException {
@@ -141,20 +156,6 @@ public class CTJsonConverter {
 
     static JSONObject getWzrkFields(CTInboxMessage root) {
         return root.getWzrkParams();
-    }
-
-    public static JSONObject toJsonObject(String json, Logger logger, String accountId) {
-        JSONObject cache = null;
-        if (json != null) {
-            try {
-                cache = new JSONObject(json);
-            } catch (Throwable t) {
-                // no-op
-                logger.verbose(accountId, "Error reading guid cache: " + t.toString());
-            }
-        }
-
-        return (cache != null) ? cache : new JSONObject();
     }
 
     static String toJsonString(Object value) {

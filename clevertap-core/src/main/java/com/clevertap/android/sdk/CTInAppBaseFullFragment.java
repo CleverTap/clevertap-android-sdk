@@ -33,7 +33,7 @@ public abstract class CTInAppBaseFullFragment extends CTInAppBaseFragment {
      * Checks if a devices is a tablet or a handset based on smallest width qualifier which specifies the smallest of
      * the screen's two sides, regardless of the device's current orientation.<br>
      * for example,<br> 600dp: a 7” tablet (600x1024 mdpi)
-     *             <br>480dp: a large phone screen ~5" (480x800 mdpi)
+     * <br>480dp: a large phone screen ~5" (480x800 mdpi)
      *
      * Adopting this method to determine if a device is tablet over manually calculating diagonal of device due to
      * some OEM issues. <a href="https://github.com/CleverTap/clevertap-android-sdk/issues/116">#116</a>
@@ -47,8 +47,7 @@ public abstract class CTInAppBaseFullFragment extends CTInAppBaseFragment {
 
         try {
             return getResources().getBoolean(R.bool.ctIsTablet);
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             // resource not found
             Logger.d("Failed to decide whether device is a smart phone or tablet!");
             e.printStackTrace();
