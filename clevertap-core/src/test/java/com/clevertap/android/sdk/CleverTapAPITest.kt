@@ -199,6 +199,36 @@ class CleverTapAPITest : BaseTestCase() {
         }
     }
 
+    @Test
+    fun test_changeCredentials_whenDefaultConfigNotNull_credentialsMustNotChange() {
+        mockStatic(CleverTapFactory::class.java).use {
+            `when`(
+                CleverTapFactory.getCoreState(
+                    ArgumentMatchers.any(),
+                    ArgumentMatchers.any(),
+                    ArgumentMatchers.any()
+                )
+            )
+                .thenReturn(corestate)
+            CleverTapAPI.getDefaultInstance(application)
+            CleverTapAPI.changeCredentials("acct123", "token123", "eu")
+            val instance = ManifestInfo.getInstance(application)
+            assertNotEquals("acct123", instance.accountId)
+            assertNotEquals("token123", instance.acountToken)
+            assertNotEquals("eu", instance.accountRegion)
+        }
+    }
+
+    @Test
+    fun test_changeCredentials_whenDefaultConfigNull_credentialsMustChange() {
+        CleverTapAPI.defaultConfig = null
+        CleverTapAPI.changeCredentials("acct123", "token123", "eu")
+        val instance = ManifestInfo.getInstance(application)
+        assertEquals("acct123", instance.accountId)
+        assertEquals("token123", instance.acountToken)
+        assertEquals("eu", instance.accountRegion)
+    }
+
     /* @Test
      fun testPushDeepLink(){
          // Arrange
