@@ -18,6 +18,7 @@ import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.OnSuccessListener;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.FileUtils;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -38,10 +39,10 @@ public class CTProductConfigController {
     }
 
     //use lock for synchronization for read write
-    final Map<String, String> activatedConfigs = new HashMap<>();
+    final Map<String, String> activatedConfigs = Collections.synchronizedMap(new HashMap<String, String>());
 
     //use lock for synchronization for read write
-    final Map<String, String> defaultConfigs = new HashMap<>();
+    final Map<String, String> defaultConfigs = Collections.synchronizedMap(new HashMap<String, String>());
 
     final FileUtils mFileUtils;
 
@@ -62,7 +63,8 @@ public class CTProductConfigController {
     private final ProductConfigSettings settings;
 
     //use lock for synchronization for read write
-    private final Map<String, String> waitingTobeActivatedConfig = new HashMap<>();
+    private final Map<String, String> waitingTobeActivatedConfig = Collections
+            .synchronizedMap(new HashMap<String, String>());
 
     CTProductConfigController(Context context, CleverTapInstanceConfig config,
             final BaseAnalyticsManager analyticsManager, final CoreMetaData coreMetaData,
@@ -182,7 +184,7 @@ public class CTProductConfigController {
      * @return Boolean - value of the product config,if key is not present return {@link
      * CTProductConfigConstants#DEFAULT_VALUE_FOR_BOOLEAN}
      */
-    public synchronized Boolean getBoolean(String Key) {
+    public Boolean getBoolean(String Key) {
         if (isInitialized && !TextUtils.isEmpty(Key)) {
             String value;
             value = activatedConfigs.get(Key);
@@ -200,7 +202,7 @@ public class CTProductConfigController {
      * @return Double - value of the product config,if key is not present return {@link
      * CTProductConfigConstants#DEFAULT_VALUE_FOR_DOUBLE}
      */
-    public synchronized Double getDouble(String Key) {
+    public Double getDouble(String Key) {
         if (isInitialized && !TextUtils.isEmpty(Key)) {
             try {
                 String value;
@@ -222,7 +224,7 @@ public class CTProductConfigController {
      *
      * @return - long value of timestamp in millis.
      */
-    public synchronized long getLastFetchTimeStampInMillis() {
+    public long getLastFetchTimeStampInMillis() {
         return settings.getLastFetchTimeStampInMillis();
     }
 
@@ -233,7 +235,7 @@ public class CTProductConfigController {
      * @return Long - value of the product config,if key is not present return {@link
      * CTProductConfigConstants#DEFAULT_VALUE_FOR_LONG}
      */
-    public synchronized Long getLong(String Key) {
+    public Long getLong(String Key) {
         if (isInitialized && !TextUtils.isEmpty(Key)) {
             try {
                 String value;
@@ -261,7 +263,7 @@ public class CTProductConfigController {
      * @return String - value of the product config,if key is not present return {@link
      * CTProductConfigConstants#DEFAULT_VALUE_FOR_STRING}
      */
-    public synchronized String getString(String Key) {
+    public String getString(String Key) {
         if (isInitialized && !TextUtils.isEmpty(Key)) {
             String value;
             value = activatedConfigs.get(Key);
@@ -272,7 +274,7 @@ public class CTProductConfigController {
         return DEFAULT_VALUE_FOR_STRING;
     }
 
-    public synchronized boolean isInitialized() {
+    public boolean isInitialized() {
         return isInitialized;
     }
 
@@ -316,8 +318,8 @@ public class CTProductConfigController {
                         }
                     });
                     if (isFetchAndActivating.get()) {
-                        activate();
                         isFetchAndActivating.set(false);
+                        activate();
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -335,12 +337,10 @@ public class CTProductConfigController {
      * Deletes all activated, fetched and defaults configs as well as all Product Config settings.
      */
     public void reset() {
-        synchronized (this) {
-            defaultConfigs.clear();
-            activatedConfigs.clear();
-            eraseStoredConfigFiles();
-            settings.initDefaults();
-        }
+        defaultConfigs.clear();
+        activatedConfigs.clear();
+        settings.initDefaults();
+        eraseStoredConfigFiles();
     }
 
     public void resetSettings() {
@@ -449,17 +449,20 @@ public class CTProductConfigController {
         task.call(new Callable<Void>() {
             @Override
             public Void call() {
-                try {
-                    String dirName = getProductConfigDirName();
-                    mFileUtils.deleteDirectory(dirName);
-                    config.getLogger()
-                            .verbose(ProductConfigUtil.getLogTag(config), "Reset Deleted Dir: " + dirName);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                            "Reset failed: " + e.getLocalizedMessage());
+                synchronized (this) {
+                    try {
+                        String dirName = getProductConfigDirName();
+                        mFileUtils.deleteDirectory(dirName);
+                        config.getLogger()
+                                .verbose(ProductConfigUtil.getLogTag(config), "Reset Deleted Dir: " + dirName);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                                "Reset failed: " + e.getLocalizedMessage());
+                    }
+
+                    return null;
                 }
-                return null;
             }
         });
     }
