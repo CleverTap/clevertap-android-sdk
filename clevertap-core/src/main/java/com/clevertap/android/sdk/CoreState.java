@@ -4,7 +4,6 @@ import android.content.Context;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.events.EventMediator;
-import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.inbox.CTInboxController;
 import com.clevertap.android.sdk.login.LoginController;
@@ -26,11 +25,7 @@ public class CoreState extends CleverTapState {
 
     private CoreMetaData coreMetaData;
 
-    private CTFeatureFlagsController ctFeatureFlagsController;
-
     private CTInboxController ctInboxController;
-
-    private CTProductConfigController ctProductConfigController;
 
     private BaseDatabaseManager databaseManager;
 
@@ -142,7 +137,7 @@ public class CoreState extends CleverTapState {
 
     public CTProductConfigController getCtProductConfigController() {
         initProductConfig();
-        return ctProductConfigController;
+        return getControllerManager().getCTProductConfigController();
     }
 
     @Override
@@ -272,7 +267,7 @@ public class CoreState extends CleverTapState {
                     .debug(getConfig().getAccountId(), "Product Config is not enabled for this instance");
             return;
         }
-        if (ctProductConfigController == null) {
+        if (getControllerManager().getCTProductConfigController() == null) {
             CTProductConfigController ctProductConfigController = CTProductConfigFactory
                     .getInstance(context, getDeviceInfo(),
                             getConfig(), mAnalyticsManager, coreMetaData, mCallbackManager);
