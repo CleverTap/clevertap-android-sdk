@@ -38,10 +38,10 @@ public class CTProductConfigController {
     }
 
     //use lock for synchronization for read write
-    final Map<String, String> activatedConfig = new HashMap<>();
+    final Map<String, String> activatedConfigs = new HashMap<>();
 
     //use lock for synchronization for read write
-    final Map<String, String> defaultConfig = new HashMap<>();
+    final Map<String, String> defaultConfigs = new HashMap<>();
 
     final FileUtils mFileUtils;
 
@@ -90,11 +90,7 @@ public class CTProductConfigController {
         task.addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(final Void result) {
-                synchronized (this) {
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                            "Activated successfully with configs: " + activatedConfig);
-                    sendCallback(PROCESSING_STATE.ACTIVATED);
-                }
+                sendCallback(PROCESSING_STATE.ACTIVATED);
             }
         }).call(new Callable<Void>() {
             @Override
@@ -111,13 +107,14 @@ public class CTProductConfigController {
                             toWriteValues = getStoredValues(getActivatedFullPath());
                         }
 
-                        activatedConfig.clear();
+                        activatedConfigs.clear();
                         //apply default config first
-                        if (defaultConfig != null && !defaultConfig.isEmpty()) {
-                            activatedConfig.putAll(defaultConfig);
+                        if (!defaultConfigs.isEmpty()) {
+                            activatedConfigs.putAll(defaultConfigs);
                         }
-                        activatedConfig.putAll(toWriteValues);
-
+                        activatedConfigs.putAll(toWriteValues);
+                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                                "Activated successfully with configs: " + activatedConfigs);
                     } catch (Exception e) {
                         e.printStackTrace();
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
@@ -188,7 +185,7 @@ public class CTProductConfigController {
     public synchronized Boolean getBoolean(String Key) {
         if (isInitialized && !TextUtils.isEmpty(Key)) {
             String value;
-            value = activatedConfig.get(Key);
+            value = activatedConfigs.get(Key);
             if (!TextUtils.isEmpty(value)) {
                 return Boolean.parseBoolean(value);
             }
@@ -207,7 +204,7 @@ public class CTProductConfigController {
         if (isInitialized && !TextUtils.isEmpty(Key)) {
             try {
                 String value;
-                value = activatedConfig.get(Key);
+                value = activatedConfigs.get(Key);
                 if (!TextUtils.isEmpty(value)) {
                     return Double.parseDouble(value);
                 }
@@ -240,7 +237,7 @@ public class CTProductConfigController {
         if (isInitialized && !TextUtils.isEmpty(Key)) {
             try {
                 String value;
-                value = activatedConfig.get(Key);
+                value = activatedConfigs.get(Key);
                 if (!TextUtils.isEmpty(value)) {
                     return Long.parseLong(value);
                 }
@@ -267,7 +264,7 @@ public class CTProductConfigController {
     public synchronized String getString(String Key) {
         if (isInitialized && !TextUtils.isEmpty(Key)) {
             String value;
-            value = activatedConfig.get(Key);
+            value = activatedConfigs.get(Key);
             if (!TextUtils.isEmpty(value)) {
                 return value;
             }
@@ -339,8 +336,8 @@ public class CTProductConfigController {
      */
     public void reset() {
         synchronized (this) {
-            defaultConfig.clear();
-            activatedConfig.clear();
+            defaultConfigs.clear();
+            activatedConfigs.clear();
             eraseStoredConfigFiles();
             settings.initDefaults();
         }
@@ -368,17 +365,15 @@ public class CTProductConfigController {
         task.addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(final Void aVoid) {
-                synchronized (this) {
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                            "Product Config: setDefaults Completed with: " + defaultConfig);
-                    initAsync();
-                }
+                initAsync();
             }
         }).call(new Callable<Void>() {
             @Override
             public Void call() {
                 synchronized (this) {
-                    defaultConfig.putAll(new DefaultXmlParser().getDefaultsFromXml(context, resourceID));
+                    defaultConfigs.putAll(new DefaultXmlParser().getDefaultsFromXml(context, resourceID));
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                            "Product Config: setDefaults Completed with: " + defaultConfigs);
                     return null;
                 }
             }
@@ -395,11 +390,7 @@ public class CTProductConfigController {
         task.addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(final Void aVoid) {
-                synchronized (this) {
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                            "Product Config: setDefaults Completed with: " + defaultConfig);
-                    initAsync();
-                }
+                initAsync();
             }
         }).call(new Callable<Void>() {
             @Override
@@ -413,7 +404,7 @@ public class CTProductConfigController {
                                 Object value = entry.getValue();
                                 try {
                                     if (!TextUtils.isEmpty(key) && ProductConfigUtil.isSupportedDataType(value)) {
-                                        defaultConfig.put(key, String.valueOf(value));
+                                        defaultConfigs.put(key, String.valueOf(value));
                                     }
                                 } catch (Exception e) {
                                     config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
@@ -423,6 +414,8 @@ public class CTProductConfigController {
                             }
                         }
                     }
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                            "Product Config: setDefaults Completed with: " + defaultConfigs);
                     return null;
                 }
             }
@@ -626,8 +619,8 @@ public class CTProductConfigController {
                 synchronized (this) {
                     try {
                         //apply defaults
-                        if (!defaultConfig.isEmpty()) {
-                            activatedConfig.putAll(defaultConfig);
+                        if (!defaultConfigs.isEmpty()) {
+                            activatedConfigs.putAll(defaultConfigs);
                         }
                         HashMap<String, String> storedConfig = getStoredValues(getActivatedFullPath());
                         if (!storedConfig.isEmpty()) {
