@@ -89,7 +89,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     private static int debugLevel = CleverTapAPI.LogLevel.INFO.intValue();
 
-    private static CleverTapInstanceConfig defaultConfig;
+    static CleverTapInstanceConfig defaultConfig;
 
     public static HashMap<String, CleverTapAPI> getInstances() {
         return instances;
