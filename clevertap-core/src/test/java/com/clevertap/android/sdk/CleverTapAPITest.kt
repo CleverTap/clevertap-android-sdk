@@ -330,6 +330,44 @@ class CleverTapAPITest : BaseTestCase() {
         assertTrue(notificationInfo.shouldRender)
     }
 
+    @Test
+    fun test_processPushNotification_whenInstancesNull__processCustomPushNotificationMustBeCalled() {
+        mockStatic(CleverTapFactory::class.java).use {
+            `when`(
+                CleverTapFactory.getCoreState(
+                    ArgumentMatchers.any(),
+                    ArgumentMatchers.any(),
+                    ArgumentMatchers.any()
+                )
+            )
+                .thenReturn(corestate)
+            val bundle = Bundle()
+            //CleverTapAPI.getDefaultInstance(application)
+            //CleverTapAPI.setInstances(null)
+            CleverTapAPI.processPushNotification(application, bundle)
+            verify(corestate.pushProviders).processCustomPushNotification(bundle)
+        }
+    }
+
+    @Test
+    fun test_processPushNotification_whenInstancesNotNull__processCustomPushNotificationMustBeCalled() {
+        mockStatic(CleverTapFactory::class.java).use {
+            `when`(
+                CleverTapFactory.getCoreState(
+                    ArgumentMatchers.any(),
+                    ArgumentMatchers.any(),
+                    ArgumentMatchers.any()
+                )
+            )
+                .thenReturn(corestate)
+            val bundle = Bundle()
+            bundle.putString(Constants.WZRK_ACCT_ID_KEY, Constant.ACC_ID)
+            CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+            CleverTapAPI.processPushNotification(application, bundle)
+            verify(corestate.pushProviders).processCustomPushNotification(bundle)
+        }
+    }
+
     /* @Test
      fun testPushDeepLink(){
          // Arrange
