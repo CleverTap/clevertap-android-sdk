@@ -95,7 +95,7 @@ class ProductConfigSettings {
         return Math.max(minFetchIntervalInSecondsServer, minFetchIntervalInSecondsSDK);
     }
 
-    void initDefaults() {
+    synchronized void initDefaults() {
         settingsMap.put(PRODUCT_CONFIG_NO_OF_CALLS, String.valueOf(DEFAULT_NO_OF_CALLS));
         settingsMap.put(PRODUCT_CONFIG_WINDOW_LENGTH_MINS, String.valueOf(DEFAULT_WINDOW_LENGTH_MINS));
         settingsMap.put(KEY_LAST_FETCHED_TIMESTAMP, String.valueOf(0));
