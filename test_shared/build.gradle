@@ -11,7 +11,7 @@ android {
         versionCode 1
         versionName "1.0"
 
-//        instrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+//        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
     }
 
@@ -32,7 +32,6 @@ dependencies {
     api deps.kotlinStdlib
     api deps.jsonAssert
     api deps.gson
-    api deps.json
     def mockito_version = '3.5.11'
     api deps.mockitoCore
     api "org.mockito:mockito-inline:$mockito_version"
