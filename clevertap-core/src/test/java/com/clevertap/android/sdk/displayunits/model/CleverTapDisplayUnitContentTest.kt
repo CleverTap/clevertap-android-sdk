@@ -8,7 +8,7 @@ import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class CleverTapDisplayUnitContentTest:BaseTestCase() {
+class CleverTapDisplayUnitContentTest : BaseTestCase() {
 
     @Test
     fun test_toContent_nullObject_ReturnInvalidObject() {
@@ -42,7 +42,8 @@ class CleverTapDisplayUnitContentTest:BaseTestCase() {
 
     @Test
     fun test_toString() {
-        val displayUnitContentString = CleverTapDisplayUnitContent.toContent(MockDisplayUnitContent().getContent()).toString()
+        val displayUnitContentString =
+            CleverTapDisplayUnitContent.toContent(MockDisplayUnitContent().getContent()).toString()
         Assert.assertTrue(displayUnitContentString.contains("title:"))
         Assert.assertTrue(displayUnitContentString.contains("titleColor:"))
         Assert.assertTrue(displayUnitContentString.contains("message:"))
@@ -61,15 +62,67 @@ class CleverTapDisplayUnitContentTest:BaseTestCase() {
         parcel.setDataPosition(0)
 
         val createdFromParcel = CleverTapDisplayUnitContent.CREATOR.createFromParcel(parcel)
-        Assert.assertEquals(displayUnitContent.message,createdFromParcel.message)
+        Assert.assertEquals(displayUnitContent.message, createdFromParcel.message)
         Assert.assertEquals(displayUnitContent.messageColor, createdFromParcel.messageColor)
-        Assert.assertEquals(displayUnitContent.media,createdFromParcel.media )
-        Assert.assertEquals(displayUnitContent.actionUrl,createdFromParcel.actionUrl)
-        Assert.assertEquals(displayUnitContent.contentType,createdFromParcel.contentType)
-        Assert.assertEquals(displayUnitContent.icon,createdFromParcel.icon)
-        Assert.assertEquals(displayUnitContent.posterUrl,createdFromParcel.posterUrl)
-        Assert.assertEquals(displayUnitContent.title,createdFromParcel.title)
-        Assert.assertEquals(displayUnitContent.titleColor,createdFromParcel.titleColor)
-        Assert.assertEquals(displayUnitContent.error,createdFromParcel.error)
+        Assert.assertEquals(displayUnitContent.media, createdFromParcel.media)
+        Assert.assertEquals(displayUnitContent.actionUrl, createdFromParcel.actionUrl)
+        Assert.assertEquals(displayUnitContent.contentType, createdFromParcel.contentType)
+        Assert.assertEquals(displayUnitContent.icon, createdFromParcel.icon)
+        Assert.assertEquals(displayUnitContent.posterUrl, createdFromParcel.posterUrl)
+        Assert.assertEquals(displayUnitContent.title, createdFromParcel.title)
+        Assert.assertEquals(displayUnitContent.titleColor, createdFromParcel.titleColor)
+        Assert.assertEquals(displayUnitContent.error, createdFromParcel.error)
+    }
+
+    @Test
+    fun test_mediaIsVideo() {
+        val displayUnitContent = CleverTapDisplayUnitContent.toContent(MockDisplayUnitContent().getContent())
+        displayUnitContent.contentType = null
+        Assert.assertFalse(displayUnitContent.mediaIsVideo())
+
+        displayUnitContent.contentType = "audio"
+        Assert.assertFalse(displayUnitContent.mediaIsVideo())
+
+        displayUnitContent.contentType = "videoabc"
+        Assert.assertTrue(displayUnitContent.mediaIsVideo())
+    }
+
+    @Test
+    fun test_mediaIsAudio() {
+        val displayUnitContent = CleverTapDisplayUnitContent.toContent(MockDisplayUnitContent().getContent())
+        displayUnitContent.contentType = null
+        Assert.assertFalse(displayUnitContent.mediaIsAudio())
+
+        displayUnitContent.contentType = "video"
+        Assert.assertFalse(displayUnitContent.mediaIsAudio())
+
+        displayUnitContent.contentType = "audioabc"
+        Assert.assertTrue(displayUnitContent.mediaIsAudio())
+    }
+
+    @Test
+    fun test_mediaIsGIF() {
+        val displayUnitContent = CleverTapDisplayUnitContent.toContent(MockDisplayUnitContent().getContent())
+        displayUnitContent.contentType = null
+        Assert.assertFalse(displayUnitContent.mediaIsGIF())
+
+        displayUnitContent.contentType = "image"
+        Assert.assertFalse(displayUnitContent.mediaIsGIF())
+
+        displayUnitContent.contentType = "image/gif"
+        Assert.assertTrue(displayUnitContent.mediaIsGIF())
+    }
+
+    @Test
+    fun test_mediaIsImage() {
+        val displayUnitContent = CleverTapDisplayUnitContent.toContent(MockDisplayUnitContent().getContent())
+        displayUnitContent.contentType = null
+        Assert.assertFalse(displayUnitContent.mediaIsImage())
+
+        displayUnitContent.contentType = "image/gif"
+        Assert.assertFalse(displayUnitContent.mediaIsImage())
+
+        displayUnitContent.contentType = "image"
+        Assert.assertTrue(displayUnitContent.mediaIsImage())
     }
 }
