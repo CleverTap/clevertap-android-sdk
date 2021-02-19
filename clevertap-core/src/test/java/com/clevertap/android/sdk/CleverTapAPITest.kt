@@ -245,8 +245,8 @@ class CleverTapAPITest : BaseTestCase() {
             val bundle = Bundle()
             //CleverTapAPI.getDefaultInstance(application)
             //CleverTapAPI.setInstances(null)
-            CleverTapAPI.createNotification(application, bundle, 12345)
-            verify(corestate.pushProviders)._createNotification(application, bundle, 12345)
+            CleverTapAPI.createNotification(application, bundle)
+            verify(corestate.pushProviders)._createNotification(application, bundle, Constants.EMPTY_NOTIFICATION_ID)
         }
     }
 
@@ -264,8 +264,8 @@ class CleverTapAPITest : BaseTestCase() {
             val bundle = Bundle()
             bundle.putString(Constants.WZRK_ACCT_ID_KEY, Constant.ACC_ID)
             CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
-            CleverTapAPI.createNotification(application, bundle, 12345)
-            verify(corestate.pushProviders)._createNotification(application, bundle, 12345)
+            CleverTapAPI.createNotification(application, bundle)
+            verify(corestate.pushProviders)._createNotification(application, bundle, Constants.EMPTY_NOTIFICATION_ID)
         }
     }
 
@@ -283,9 +283,51 @@ class CleverTapAPITest : BaseTestCase() {
             val bundle = Bundle()
             bundle.putString(Constants.WZRK_ACCT_ID_KEY, "acct123")
             CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
-            CleverTapAPI.createNotification(application, bundle, 12345)
-            verify(corestate.pushProviders, never())._createNotification(application, bundle, 12345)
+            CleverTapAPI.createNotification(application, bundle)
+            verify(corestate.pushProviders, never())._createNotification(
+                application,
+                bundle,
+                Constants.EMPTY_NOTIFICATION_ID
+            )
         }
+    }
+
+    @Test
+    fun test_getNotificationInfoWhenExtrasNull_fromCleverTapMustBeFalse() {
+
+        val notificationInfo = CleverTapAPI.getNotificationInfo(null)
+        assertFalse(notificationInfo.fromCleverTap)
+    }
+
+    @Test
+    fun test_getNotificationInfoWhenNotificationTagMissing_fromCleverTapAndShouldRenderMustBeFalse() {
+
+        val extras = Bundle()
+        //extras.putString(Constants.NOTIFICATION_TAG,"tag")
+        val notificationInfo = CleverTapAPI.getNotificationInfo(extras)
+        assertFalse(notificationInfo.fromCleverTap)
+        assertFalse(notificationInfo.shouldRender)
+    }
+
+    @Test
+    fun test_getNotificationInfoWhenNMTagMissing_fromCleverTapMustBeTrueAndShouldRenderMustBeFalse() {
+
+        val extras = Bundle()
+        extras.putString(Constants.NOTIFICATION_TAG, "tag")
+        val notificationInfo = CleverTapAPI.getNotificationInfo(extras)
+        assertTrue(notificationInfo.fromCleverTap)
+        assertFalse(notificationInfo.shouldRender)
+    }
+
+    @Test
+    fun test_getNotificationInfoWhenNotificationTagAndNMTagPresent_fromCleverTapAndshouldRenderMustBeTrue() {
+
+        val extras = Bundle()
+        extras.putString(Constants.NOTIFICATION_TAG, "tag")
+        extras.putString("nm", "nmTag")
+        val notificationInfo = CleverTapAPI.getNotificationInfo(extras)
+        assertTrue(notificationInfo.fromCleverTap)
+        assertTrue(notificationInfo.shouldRender)
     }
 
     /* @Test
