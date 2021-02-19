@@ -152,7 +152,6 @@ class CTProductConfigControllerTest : BaseTestCase() {
     fun test_activate() {
 
         mockStatic(CTExecutorFactory::class.java).use {
-            shadowOf(getMainLooper()).idle()
             `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
             `when`(fileUtils.readFromFile(mProductConfigController.activatedFullPath)).thenReturn(
                 JSONObject(
