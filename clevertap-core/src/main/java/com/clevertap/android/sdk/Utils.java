@@ -315,7 +315,11 @@ public final class Utils {
                 Logger.d("READ_PHONE_STATE permission not asked by the app or not granted by the user");
             }
         } else {
-            networkType = teleMan.getNetworkType();
+            try {
+                networkType = teleMan.getNetworkType();
+            } catch (SecurityException se) {
+                Logger.d("Security Exception caught while fetch network type" + se.getMessage());
+            }
         }
 
         switch (networkType) {
