@@ -14,8 +14,10 @@ import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.OnSuccessListener;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.FileUtils;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 import org.json.JSONException;
@@ -29,7 +31,7 @@ class ProductConfigSettings {
 
     private final FileUtils mFileUtils;
 
-    private final HashMap<String, String> settingsMap = new HashMap<>();
+    private final Map<String, String> settingsMap = Collections.synchronizedMap(new HashMap<String, String>());
 
     ProductConfigSettings(String guid, CleverTapInstanceConfig config, FileUtils fileUtils) {
         this.guid = guid;
@@ -153,6 +155,11 @@ class ProductConfigSettings {
     }
 
     void reset(final FileUtils fileUtils) {
+        initDefaults();
+        eraseStoredSettingsFile(fileUtils);
+    }
+
+    void eraseStoredSettingsFile(final FileUtils fileUtils) {
         if (fileUtils == null) {
             throw new IllegalArgumentException("FileUtils can't be null");
         }
@@ -160,20 +167,21 @@ class ProductConfigSettings {
         task.call(new Callable<Void>() {
             @Override
             public Void call() {
-                try {
-                    String fileName = getFullPath();
-                    fileUtils.deleteFile(fileName);
-                    config.getLogger()
-                            .verbose(ProductConfigUtil.getLogTag(config), "Deleted settings file" + fileName);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                            "Error while resetting settings" + e.getLocalizedMessage());
+                synchronized (this){
+                    try {
+                        String fileName = getFullPath();
+                        fileUtils.deleteFile(fileName);
+                        config.getLogger()
+                                .verbose(ProductConfigUtil.getLogTag(config), "Deleted settings file" + fileName);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                                "Error while resetting settings" + e.getLocalizedMessage());
+                    }
+                    return null;
                 }
-                return null;
             }
         });
-        initDefaults();
     }
 
     void setARPValue(JSONObject arp) {

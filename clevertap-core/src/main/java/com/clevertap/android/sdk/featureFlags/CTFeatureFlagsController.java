@@ -13,6 +13,7 @@ import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.OnSuccessListener;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.FileUtils;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -34,7 +35,7 @@ public class CTFeatureFlagsController {
 
     private boolean isInitialized = false;
 
-    private final Map<String, Boolean> store = new HashMap<>();
+    private final Map<String, Boolean> store = Collections.synchronizedMap(new HashMap<String, Boolean>());
 
     CTFeatureFlagsController(String guid, CleverTapInstanceConfig config,
             BaseCallbackManager callbackManager, BaseAnalyticsManager analyticsManager, FileUtils fileUtils) {
@@ -76,7 +77,7 @@ public class CTFeatureFlagsController {
      * @param defaultValue - default value of the Key, in case we don't find any Feature Flag with the Key.
      * @return boolean- Value of the Feature flag.
      */
-    public synchronized Boolean get(String key, boolean defaultValue) {
+    public Boolean get(String key, boolean defaultValue) {
         if (!isInitialized) {
             getConfigLogger()
                     .verbose(getLogTag(), "Controller not initialized, returning default value - " + defaultValue);
@@ -104,7 +105,7 @@ public class CTFeatureFlagsController {
      *
      * @return boolean- true if initialized, else false.
      */
-    public synchronized boolean isInitialized() {
+    public boolean isInitialized() {
         return isInitialized;
     }
 
@@ -184,7 +185,7 @@ public class CTFeatureFlagsController {
         return config.getAccountId() + "[Feature Flag]";
     }
 
-    synchronized void init() {
+    void init() {
         if (TextUtils.isEmpty(guid)) {
             return;
         }

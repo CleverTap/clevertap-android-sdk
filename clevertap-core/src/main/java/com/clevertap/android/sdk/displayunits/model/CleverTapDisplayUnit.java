@@ -290,7 +290,7 @@ public class CleverTapDisplayUnit implements Parcelable {
      *
      * @param kvObj- Custom Key Values
      */
-    private HashMap<String, String> getKeyValues(JSONObject kvObj) {
+    HashMap<String, String> getKeyValues(JSONObject kvObj) {
         try {
             if (kvObj != null) {
                 Iterator<String> keys = kvObj.keys();

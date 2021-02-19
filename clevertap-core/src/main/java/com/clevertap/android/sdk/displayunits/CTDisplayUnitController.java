@@ -15,7 +15,7 @@ import org.json.JSONObject;
  */
 public class CTDisplayUnitController {
 
-    private final HashMap<String, CleverTapDisplayUnit> items = new HashMap<>();
+    final HashMap<String, CleverTapDisplayUnit> items = new HashMap<>();
 
     /**
      * Getter for retrieving all the running Display Units in the cache.
@@ -23,7 +23,7 @@ public class CTDisplayUnitController {
      * @return ArrayList<CleverTapDisplayUnit> - Could be null in case no Display Units are there in the cache
      */
     @Nullable
-    public ArrayList<CleverTapDisplayUnit> getAllDisplayUnits() {
+    public synchronized ArrayList<CleverTapDisplayUnit> getAllDisplayUnits() {
         if (!items.isEmpty()) {
             return new ArrayList<>(items.values());
         } else {
@@ -39,7 +39,7 @@ public class CTDisplayUnitController {
      * @return CleverTapDisplayUnit - Could be null in case no Display Units with the ID is found
      */
     @Nullable
-    public CleverTapDisplayUnit getDisplayUnitForID(String unitId) {
+    public synchronized CleverTapDisplayUnit getDisplayUnitForID(String unitId) {
         if (!TextUtils.isEmpty(unitId)) {
             return items.get(unitId);
         } else {
@@ -51,7 +51,7 @@ public class CTDisplayUnitController {
     /**
      * clears the existing Display Units
      */
-    public void reset() {
+    public synchronized void reset() {
         items.clear();
         Logger.d(Constants.FEATURE_DISPLAY_UNIT, "Cleared Display Units Cache");
     }
@@ -63,7 +63,7 @@ public class CTDisplayUnitController {
      * @return ArrayList<CleverTapDisplayUnit> - could be null in case of null/empty/invalid json array
      */
     @Nullable
-    public ArrayList<CleverTapDisplayUnit> updateDisplayUnits(JSONArray messages) {
+    public synchronized ArrayList<CleverTapDisplayUnit> updateDisplayUnits(JSONArray messages) {
 
         //flush existing display units before updating with the new ones.
         reset();

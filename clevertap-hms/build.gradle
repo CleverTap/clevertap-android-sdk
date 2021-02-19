@@ -23,7 +23,4 @@ dependencies {
 
     testImplementation project(':test_shared')
     testImplementation deps.huaweiPush
-    testImplementation deps.kotlinStdlib
-    testImplementation deps.json
-    testImplementation deps.gson
 }

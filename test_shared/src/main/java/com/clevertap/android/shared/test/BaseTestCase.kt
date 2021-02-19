@@ -18,6 +18,7 @@ import org.robolectric.annotation.Config
  * Naming Convention for Testing
  * 1. Classes : <Name of Class to be Test> + Test.kt
  *      e.g CTProductConfigControllerTest.kt for CTProductConfigController.java
+ *
  * 2. Methods : test_<methodName>_<inputCondition>_<expectedBehavior>
  *     e.g test_constructor_whenFeatureFlagIsNotSave_InitShouldReturnTrue
  */

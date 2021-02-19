@@ -37,5 +37,6 @@ ext.deps = [
         'clevertapCore' : "com.clevertap.android:clevertap-android-sdk:$coreVersion",
         'clevertapGeofence' : "com.clevertap.android:clevertap-geofence-sdk:$geofenceVersion",
         'clevertapXPS' : "com.clevertap.android:clevertap-xiaomi-sdk:$xpsVersion",
-        'clevertapHMS' : "com.clevertap.android:clevertap-hms-sdk:$hmsVersion"
+        'clevertapHMS' : "com.clevertap.android:clevertap-hms-sdk:$hmsVersion",
+        'jsonAssert':"org.skyscreamer:jsonassert:$jsonAssertVersion"
 ]

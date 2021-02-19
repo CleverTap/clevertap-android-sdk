@@ -18,7 +18,7 @@ public enum CTDisplayUnitType {
     MESSAGE_WITH_ICON("message-icon"),
     CUSTOM_KEY_VALUE("custom-key-value");
 
-    private final String type;
+    public final String type;
 
     /**
      * Returns the display type instance using the string value

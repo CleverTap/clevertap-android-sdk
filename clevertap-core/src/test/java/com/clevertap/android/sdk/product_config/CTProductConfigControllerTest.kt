@@ -118,8 +118,8 @@ class CTProductConfigControllerTest : BaseTestCase() {
         mockStatic(CTExecutorFactory::class.java).use {
             `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
             mProductConfigController.reset()
-            Assert.assertEquals(mProductConfigController.defaultConfig.size, 0)
-            Assert.assertEquals(mProductConfigController.activatedConfig.size, 0)
+            Assert.assertEquals(mProductConfigController.defaultConfigs.size, 0)
+            Assert.assertEquals(mProductConfigController.activatedConfigs.size, 0)
             verify(productConfigSettings).initDefaults()
             verify(fileUtils).deleteDirectory(mProductConfigController.productConfigDirName)
         }
