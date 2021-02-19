@@ -1,8 +1,10 @@
 package com.clevertap.android.sdk
 
 import android.location.Location
+import android.os.Bundle
 import com.clevertap.android.sdk.utils.Utils
 import com.clevertap.android.shared.test.BaseTestCase
+import com.clevertap.android.shared.test.Constant
 import org.json.JSONObject
 import org.junit.*
 import org.junit.Assert.*
@@ -227,6 +229,63 @@ class CleverTapAPITest : BaseTestCase() {
         assertEquals("acct123", instance.accountId)
         assertEquals("token123", instance.acountToken)
         assertEquals("eu", instance.accountRegion)
+    }
+
+    @Test
+    fun test_createNotification_whenInstancesNull__createNotificationMustBeCalled() {
+        mockStatic(CleverTapFactory::class.java).use {
+            `when`(
+                CleverTapFactory.getCoreState(
+                    ArgumentMatchers.any(),
+                    ArgumentMatchers.any(),
+                    ArgumentMatchers.any()
+                )
+            )
+                .thenReturn(corestate)
+            val bundle = Bundle()
+            //CleverTapAPI.getDefaultInstance(application)
+            //CleverTapAPI.setInstances(null)
+            CleverTapAPI.createNotification(application, bundle, 12345)
+            verify(corestate.pushProviders)._createNotification(application, bundle, 12345)
+        }
+    }
+
+    @Test
+    fun test_createNotification_whenInstanceNotNullAndAcctIDMatches__createNotificationMustBeCalled() {
+        mockStatic(CleverTapFactory::class.java).use {
+            `when`(
+                CleverTapFactory.getCoreState(
+                    ArgumentMatchers.any(),
+                    ArgumentMatchers.any(),
+                    ArgumentMatchers.any()
+                )
+            )
+                .thenReturn(corestate)
+            val bundle = Bundle()
+            bundle.putString(Constants.WZRK_ACCT_ID_KEY, Constant.ACC_ID)
+            CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+            CleverTapAPI.createNotification(application, bundle, 12345)
+            verify(corestate.pushProviders)._createNotification(application, bundle, 12345)
+        }
+    }
+
+    @Test
+    fun test_createNotification_whenInstanceNotNullAndAcctIdDontMatch_createNotificationMustNotBeCalled() {
+        mockStatic(CleverTapFactory::class.java).use {
+            `when`(
+                CleverTapFactory.getCoreState(
+                    ArgumentMatchers.any(),
+                    ArgumentMatchers.any(),
+                    ArgumentMatchers.any()
+                )
+            )
+                .thenReturn(corestate)
+            val bundle = Bundle()
+            bundle.putString(Constants.WZRK_ACCT_ID_KEY, "acct123")
+            CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+            CleverTapAPI.createNotification(application, bundle, 12345)
+            verify(corestate.pushProviders, never())._createNotification(application, bundle, 12345)
+        }
     }
 
     /* @Test
