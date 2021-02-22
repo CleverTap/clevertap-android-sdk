@@ -12,7 +12,9 @@ import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.TaskManager;
 import com.clevertap.android.sdk.Utils;
 import java.lang.ref.WeakReference;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,13 +31,12 @@ public class CTFeatureFlagsController {
 
     private final Context mContext;
 
-    private HashMap<String, Boolean> store;
+    private final Map<String, Boolean> store = Collections.synchronizedMap(new HashMap<String,Boolean>());
 
     public CTFeatureFlagsController(Context context, String guid, CleverTapInstanceConfig config,
             FeatureFlagListener listener) {
         this.guid = guid;
         this.config = config;
-        this.store = new HashMap<>();
         listenerWeakReference = new WeakReference<>(listener);
         this.mContext = context.getApplicationContext();
         init();
@@ -126,7 +127,7 @@ public class CTFeatureFlagsController {
      * This method is internal to the CleverTap SDK.
      * Developers should not use this method
      */
-    public void updateFeatureFlags(JSONObject jsonObject) throws JSONException {
+    public synchronized void updateFeatureFlags(JSONObject jsonObject) throws JSONException {
 
         JSONArray featureFlagList = jsonObject.getJSONArray(Constants.KEY_KV);
         try {
@@ -177,54 +178,55 @@ public class CTFeatureFlagsController {
         return config.getAccountId() + "[Feature Flag]";
     }
 
-    private synchronized void init() {
+    private void init() {
         if (TextUtils.isEmpty(guid)) {
             return;
         }
         TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Boolean>() {
             @Override
             public Boolean doInBackground(Void aVoid) {
-                getConfigLogger().verbose(getLogTag(), "Feature flags init is called");
-                String fileName = getCachedFullPath();
-                try {
-                    store.clear();
-                    String content = FileUtils.readFromFile(mContext, config, fileName);
-                    if (!TextUtils.isEmpty(content)) {
+                synchronized (this) {
+                    getConfigLogger().verbose(getLogTag(), "Feature flags init is called");
+                    String fileName = getCachedFullPath();
+                    try {
+                        store.clear();
+                        String content = FileUtils.readFromFile(mContext, config, fileName);
+                        if (!TextUtils.isEmpty(content)) {
 
-                        JSONObject jsonObject = new JSONObject(content);
-                        JSONArray kvArray = jsonObject.getJSONArray(Constants.KEY_KV);
+                            JSONObject jsonObject = new JSONObject(content);
+                            JSONArray kvArray = jsonObject.getJSONArray(Constants.KEY_KV);
 
-                        if (kvArray != null && kvArray.length() > 0) {
-                            for (int i = 0; i < kvArray.length(); i++) {
-                                JSONObject object = (JSONObject) kvArray.get(i);
-                                if (object != null) {
+                            if (kvArray != null && kvArray.length() > 0) {
+                                for (int i = 0; i < kvArray.length(); i++) {
+                                    JSONObject object = (JSONObject) kvArray.get(i);
+                                    if (object != null) {
 
-                                    String Key = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_KEY);
-                                    String Value = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_VALUE);
-                                    if (!TextUtils.isEmpty(Key)) {
-                                        store.put(Key, Boolean.parseBoolean(Value));
+                                        String Key = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_KEY);
+                                        String Value = object.getString(PRODUCT_CONFIG_JSON_KEY_FOR_VALUE);
+                                        if (!TextUtils.isEmpty(Key)) {
+                                            store.put(Key, Boolean.parseBoolean(Value));
+                                        }
                                     }
                                 }
                             }
+                            getConfigLogger().verbose(getLogTag(), "Feature flags initialized from file " + fileName +
+                                    " with configs  " + store);
+                        } else {
+                            getConfigLogger().verbose(getLogTag(), "Feature flags file is empty-" + fileName);
                         }
-                        getConfigLogger().verbose(getLogTag(), "Feature flags initialized from file " + fileName +
-                                " with configs  " + store);
-                        isInitialized = true;
-                    } else {
-                        getConfigLogger().verbose(getLogTag(), "Feature flags file is empty-" + fileName);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        getConfigLogger().verbose(getLogTag(),
+                                "UnArchiveData failed file- " + fileName + " " + e.getLocalizedMessage());
+                        return false;
                     }
-                } catch (Exception e) {
-                    e.printStackTrace();
-                    getConfigLogger().verbose(getLogTag(),
-                            "UnArchiveData failed file- " + fileName + " " + e.getLocalizedMessage());
-                    return false;
+                    return true;
                 }
-                return true;
             }
 
             @Override
-            public void onPostExecute(Boolean aBoolean) {
-
+            public void onPostExecute(Boolean isInit) {
+                isInitialized = isInit;
             }
         });
 
