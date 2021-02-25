@@ -33,7 +33,7 @@ public class CTFeatureFlagsController {
 
     String guid;
 
-    private boolean isInitialized = false;
+    boolean isInitialized = false;
 
     private final Map<String, Boolean> store = Collections.synchronizedMap(new HashMap<String, Boolean>());
 
@@ -85,8 +85,7 @@ public class CTFeatureFlagsController {
         }
         getConfigLogger().verbose(getLogTag(),
                 "Getting feature flag with key - " + key + " and default value - " + defaultValue);
-        Boolean value;
-        value = store.get(key);
+        Boolean value = store.get(key);
         if (value != null) {
             return value;
         } else {

@@ -13,11 +13,11 @@ import com.clevertap.android.sdk.utils.FileUtils
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.*
 import org.junit.runner.*
-import org.mockito.*
+import org.mockito.Mockito.*
 import org.robolectric.RobolectricTestRunner
 
 @RunWith(RobolectricTestRunner::class)
-class FeatureFlagTest : BaseTestCase() {
+class CTFeatureFlagsControllerTest : BaseTestCase() {
 
     private lateinit var mCTFeatureFlagsController: CTFeatureFlagsController
     private lateinit var coreMetaData: CoreMetaData
@@ -32,14 +32,14 @@ class FeatureFlagTest : BaseTestCase() {
     @Throws(Exception::class)
     override fun setUp() {
         super.setUp()
-        Mockito.mockStatic(CTExecutorFactory::class.java).use {
-            Mockito.`when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
             coreMetaData = CoreMetaData()
-            analyticsManager = Mockito.mock(BaseAnalyticsManager::class.java)
+            analyticsManager = mock(BaseAnalyticsManager::class.java)
             deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, guid, coreMetaData)
             callbackManager = CallbackManager(cleverTapInstanceConfig, deviceInfo)
-            fileUtils = Mockito.spy(FileUtils(application, cleverTapInstanceConfig))
-            featureFlagsListener = Mockito.mock(CTFeatureFlagsListener::class.java)
+            fileUtils = spy(FileUtils(application, cleverTapInstanceConfig))
+            featureFlagsListener = mock(CTFeatureFlagsListener::class.java)
             callbackManager.featureFlagListener = featureFlagsListener
             mCTFeatureFlagsController = CTFeatureFlagsController(
                 guid,
@@ -52,18 +52,18 @@ class FeatureFlagTest : BaseTestCase() {
 
     @Test
     fun test_constructor_whenFeatureFlagIsNotSave_InitShouldReturnTrue() {
-        Mockito.mockStatic(CTExecutorFactory::class.java).use {
-            Mockito.`when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
-            val controller = Mockito.spy(mCTFeatureFlagsController)
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+            val controller = spy(mCTFeatureFlagsController)
             Assert.assertTrue(controller.isInitialized)
         }
     }
 
     @Test
     fun when_Non_Empty_Feature_Flag_Config_Then_Init_Return_True() {
-        Mockito.mockStatic(CTExecutorFactory::class.java).use {
-            Mockito.`when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
-            Mockito.`when`(fileUtils.readFromFile(mCTFeatureFlagsController.getCachedFullPath()))
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+            `when`(fileUtils.readFromFile(mCTFeatureFlagsController.getCachedFullPath()))
                 .thenReturn(MockFFResponse().getResponseJSON().toString())
             val controller = CTFeatureFlagsController(
                 guid,
@@ -77,9 +77,9 @@ class FeatureFlagTest : BaseTestCase() {
 
     @Test
     fun when_Non_Empty_Feature_Flag_Config_Read_Exception_Then_Init_Return_True() {
-        Mockito.mockStatic(CTExecutorFactory::class.java).use {
-            Mockito.`when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
-            Mockito.`when`(fileUtils.readFromFile(mCTFeatureFlagsController.getCachedFullPath()))
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+            `when`(fileUtils.readFromFile(mCTFeatureFlagsController.getCachedFullPath()))
                 .thenThrow(RuntimeException("Something Went Wrong"))
             val controller = CTFeatureFlagsController(
                 guid,
@@ -93,14 +93,14 @@ class FeatureFlagTest : BaseTestCase() {
 
     @Test
     fun when_Feature_Flag_Response_Success() {
-        Mockito.mockStatic(CTExecutorFactory::class.java).use {
-            Mockito.`when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
-            Mockito.`when`(fileUtils.readFromFile(mCTFeatureFlagsController.getCachedFullPath()))
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+            `when`(fileUtils.readFromFile(mCTFeatureFlagsController.getCachedFullPath()))
                 .thenThrow(RuntimeException("Something Went Wrong"))
             val jsonObject = MockFFResponse().getResponseJSON()
             mCTFeatureFlagsController.updateFeatureFlags(jsonObject)
-            Mockito.verify(featureFlagsListener).featureFlagsUpdated()
-            Mockito.verify(
+            verify(featureFlagsListener).featureFlagsUpdated()
+            verify(
                 fileUtils
             ).writeJsonToFile(
                 mCTFeatureFlagsController.cachedDirName,
@@ -118,23 +118,59 @@ class FeatureFlagTest : BaseTestCase() {
     }
 
     @Test
+    fun test_get_whenNotInitialized_shouldReturnDefaultValue() {
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+            val jsonObject = MockFFResponse().getResponseJSON()
+            mCTFeatureFlagsController.updateFeatureFlags(jsonObject)
+            mCTFeatureFlagsController.isInitialized = false
+            Assert.assertFalse(mCTFeatureFlagsController.get("feature_A", false))
+        }
+    }
+
+    @Test
     fun test_Fetch_FF_Success() {
-        Mockito.mockStatic(CTExecutorFactory::class.java).use {
-            Mockito.`when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
             mCTFeatureFlagsController.fetchFeatureFlags()
-            Mockito.verify(analyticsManager).fetchFeatureFlags()
+            verify(analyticsManager).fetchFeatureFlags()
         }
     }
 
     @Test
     fun test_resetWithGuid() {
-        Mockito.mockStatic(CTExecutorFactory::class.java).use {
-            Mockito.`when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
             val guid = "121u3203u129"
-            val controller = Mockito.spy(mCTFeatureFlagsController)
+            val controller = spy(mCTFeatureFlagsController)
             controller.resetWithGuid(guid)
             Assert.assertEquals(guid, controller.guid)
-            Mockito.verify(controller).init()
+            verify(controller).init()
+        }
+    }
+
+    @Test
+    fun test_setGuidAndInit_whenInitialised_initMethodShouldNotGetCalled() {
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+            val controller = spy(mCTFeatureFlagsController)
+            val newGuid = "131"
+            controller.setGuidAndInit(newGuid)
+            Assert.assertNotEquals(controller.guid, newGuid)
+            verify(controller, never()).init()
+        }
+    }
+
+    @Test
+    fun test_setGuidAndInit_whenNotInitialised_initMethodShouldGetCalled() {
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+            val controller = spy(mCTFeatureFlagsController)
+            val newGuid = "131"
+            controller.isInitialized = false
+            controller.setGuidAndInit(newGuid)
+            Assert.assertEquals(controller.guid, newGuid)
+            verify(controller).init()
         }
     }
 }

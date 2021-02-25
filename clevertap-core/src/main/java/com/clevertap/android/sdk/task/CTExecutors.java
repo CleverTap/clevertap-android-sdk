@@ -19,8 +19,7 @@ public class CTExecutors {
     public final MainThreadExecutor DEFAULT_CALLBACK_EXECUTOR = MAIN_EXECUTOR;
 
     // single executor acts like {@link PostAsyncSafelyHandler }
-    private final PostAsyncSafelyExecutor POST_ASYNC_SAFELY_EXECUTOR = new PostAsyncSafelyExecutor();
-
+    public final PostAsyncSafelyExecutor POST_ASYNC_SAFELY_EXECUTOR = new PostAsyncSafelyExecutor();
 
     CTExecutors() {
     }

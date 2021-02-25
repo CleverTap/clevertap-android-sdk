@@ -9,6 +9,7 @@ import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.
 
 import android.content.Context;
 import android.text.TextUtils;
+import androidx.annotation.NonNull;
 import com.clevertap.android.sdk.BaseAnalyticsManager;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -44,6 +45,8 @@ public class CTProductConfigController {
     //use lock for synchronization for read write
     final Map<String, String> defaultConfigs = Collections.synchronizedMap(new HashMap<String, String>());
 
+    AtomicBoolean isInitialized = new AtomicBoolean(false);
+
     final FileUtils mFileUtils;
 
     private final CleverTapInstanceConfig config;
@@ -51,8 +54,6 @@ public class CTProductConfigController {
     private final Context context;
 
     private final AtomicBoolean isFetchAndActivating = new AtomicBoolean(false);
-
-    private boolean isInitialized = false;
 
     private final BaseAnalyticsManager mAnalyticsManager;
 
@@ -185,7 +186,7 @@ public class CTProductConfigController {
      * CTProductConfigConstants#DEFAULT_VALUE_FOR_BOOLEAN}
      */
     public Boolean getBoolean(String Key) {
-        if (isInitialized && !TextUtils.isEmpty(Key)) {
+        if (isInitialized.get() && !TextUtils.isEmpty(Key)) {
             String value;
             value = activatedConfigs.get(Key);
             if (!TextUtils.isEmpty(value)) {
@@ -203,7 +204,7 @@ public class CTProductConfigController {
      * CTProductConfigConstants#DEFAULT_VALUE_FOR_DOUBLE}
      */
     public Double getDouble(String Key) {
-        if (isInitialized && !TextUtils.isEmpty(Key)) {
+        if (isInitialized.get() && !TextUtils.isEmpty(Key)) {
             try {
                 String value;
                 value = activatedConfigs.get(Key);
@@ -236,7 +237,7 @@ public class CTProductConfigController {
      * CTProductConfigConstants#DEFAULT_VALUE_FOR_LONG}
      */
     public Long getLong(String Key) {
-        if (isInitialized && !TextUtils.isEmpty(Key)) {
+        if (isInitialized.get() && !TextUtils.isEmpty(Key)) {
             try {
                 String value;
                 value = activatedConfigs.get(Key);
@@ -264,7 +265,7 @@ public class CTProductConfigController {
      * CTProductConfigConstants#DEFAULT_VALUE_FOR_STRING}
      */
     public String getString(String Key) {
-        if (isInitialized && !TextUtils.isEmpty(Key)) {
+        if (isInitialized.get() && !TextUtils.isEmpty(Key)) {
             String value;
             value = activatedConfigs.get(Key);
             if (!TextUtils.isEmpty(value)) {
@@ -275,7 +276,7 @@ public class CTProductConfigController {
     }
 
     public boolean isInitialized() {
-        return isInitialized;
+        return isInitialized.get();
     }
 
     /**
@@ -283,9 +284,7 @@ public class CTProductConfigController {
      * Developers should not use this method manually.
      */
     public void onFetchFailed() {
-        if (isFetchAndActivating.get()) {
-            isFetchAndActivating.set(false);
-        }
+        isFetchAndActivating.compareAndSet(true, false);
         config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Fetch Failed");
     }
 
@@ -317,17 +316,15 @@ public class CTProductConfigController {
                             return null;
                         }
                     });
-                    if (isFetchAndActivating.get()) {
-                        isFetchAndActivating.set(false);
+                    if (isFetchAndActivating.getAndSet(false)) {
                         activate();
                     }
                 } catch (Exception e) {
                     e.printStackTrace();
                     config.getLogger().verbose(ProductConfigUtil.getLogTag(config), "Product Config: fetch Failed");
                     sendCallback(PROCESSING_STATE.FETCHED);
-                    if (isFetchAndActivating.get()) {
-                        isFetchAndActivating.set(false);// set fetchAndActivating flag to false if fetch fails.
-                    }
+                    // set fetchAndActivating flag to false if fetch fails.
+                    isFetchAndActivating.compareAndSet(true, false);
                 }
             }
         }
@@ -361,23 +358,7 @@ public class CTProductConfigController {
      * @param resourceID - resource Id of the XML.
      */
     public void setDefaults(final int resourceID) {
-        Task<Void> task = CTExecutorFactory.getInstance(config).ioTask();
-        task.addOnSuccessListener(new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(final Void aVoid) {
-                initAsync();
-            }
-        }).call(new Callable<Void>() {
-            @Override
-            public Void call() {
-                synchronized (this) {
-                    defaultConfigs.putAll(new DefaultXmlParser().getDefaultsFromXml(context, resourceID));
-                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                            "Product Config: setDefaults Completed with: " + defaultConfigs);
-                    return null;
-                }
-            }
-        });
+        setDefaultsWithXmlParser(resourceID, new DefaultXmlParser());
     }
 
     /**
@@ -427,7 +408,7 @@ public class CTProductConfigController {
      * Developers should not use this method manually.
      */
     public void setGuidAndInit(String cleverTapID) {
-        if (isInitialized() || TextUtils.isEmpty(cleverTapID) || cleverTapID.equalsIgnoreCase(settings.getGuid())) {
+        if (isInitialized() || TextUtils.isEmpty(cleverTapID)) {
             return;
         }
         settings.setGuid(cleverTapID);
@@ -475,13 +456,13 @@ public class CTProductConfigController {
         return mAnalyticsManager;
     }
 
-    // -----------------------------------------------------------------------//
-    // ********                        Internal API                      *****//
-    // -----------------------------------------------------------------------//
-
     BaseCallbackManager getCallbackManager() {
         return mCallbackManager;
     }
+
+    // -----------------------------------------------------------------------//
+    // ********                        Internal API                      *****//
+    // -----------------------------------------------------------------------//
 
     CleverTapInstanceConfig getConfig() {
         return config;
@@ -499,8 +480,68 @@ public class CTProductConfigController {
         return settings;
     }
 
+    void initAsync() {
+        if (TextUtils.isEmpty(settings.getGuid())) {
+            return;
+        }
+        Task<Boolean> task = CTExecutorFactory.getInstance(config).ioTask();
+        task.addOnSuccessListener(new OnSuccessListener<Boolean>() {
+            @Override
+            public void onSuccess(final Boolean aVoid) {
+                sendCallback(PROCESSING_STATE.INIT);
+            }
+        }).call(new Callable<Boolean>() {
+            @Override
+            public Boolean call() {
+                synchronized (this) {
+                    try {
+                        //apply defaults
+                        if (!defaultConfigs.isEmpty()) {
+                            activatedConfigs.putAll(defaultConfigs);
+                        }
+                        HashMap<String, String> storedConfig = getStoredValues(getActivatedFullPath());
+                        if (!storedConfig.isEmpty()) {
+                            waitingTobeActivatedConfig.putAll(storedConfig);
+                        }
+                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                                "Loaded configs ready to be applied: " + waitingTobeActivatedConfig);
+                        settings.loadSettings(mFileUtils);
+                        isInitialized.set(true);
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                                "InitAsync failed - " + e.getLocalizedMessage());
+                        return false;
+                    }
+                    return true;
+                }
+            }
+        });
+    }
+
     boolean isFetchAndActivating() {
         return isFetchAndActivating.get();
+    }
+
+    void setDefaultsWithXmlParser(final int resourceID, @NonNull final DefaultXmlParser xmlParser) {
+        Task<Void> task = CTExecutorFactory.getInstance(config).ioTask();
+        task.addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(final Void aVoid) {
+                initAsync();
+            }
+        }).call(new Callable<Void>() {
+            @Override
+            public Void call() {
+                synchronized (this) {
+                    defaultConfigs.putAll(xmlParser.getDefaultsFromXml(context, resourceID));
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                            "Product Config: setDefaults Completed with: " + defaultConfigs);
+                    return null;
+                }
+            }
+        });
     }
 
     private boolean canRequest(long minimumFetchIntervalInSeconds) {
@@ -604,46 +645,6 @@ public class CTProductConfigController {
             }
         }
         return map;
-    }
-
-    private void initAsync() {
-        if (TextUtils.isEmpty(settings.getGuid())) {
-            return;
-        }
-        Task<Boolean> task = CTExecutorFactory.getInstance(config).ioTask();
-        task.addOnSuccessListener(new OnSuccessListener<Boolean>() {
-            @Override
-            public void onSuccess(final Boolean aVoid) {
-                sendCallback(PROCESSING_STATE.INIT);
-            }
-        }).call(new Callable<Boolean>() {
-            @Override
-            public Boolean call() {
-                synchronized (this) {
-                    try {
-                        //apply defaults
-                        if (!defaultConfigs.isEmpty()) {
-                            activatedConfigs.putAll(defaultConfigs);
-                        }
-                        HashMap<String, String> storedConfig = getStoredValues(getActivatedFullPath());
-                        if (!storedConfig.isEmpty()) {
-                            waitingTobeActivatedConfig.putAll(storedConfig);
-                        }
-                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                                "Loaded configs ready to be applied: " + waitingTobeActivatedConfig);
-                        settings.loadSettings(mFileUtils);
-                        isInitialized = true;
-
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                                "InitAsync failed - " + e.getLocalizedMessage());
-                        return false;
-                    }
-                    return true;
-                }
-            }
-        });
     }
 
     private void onActivated() {
