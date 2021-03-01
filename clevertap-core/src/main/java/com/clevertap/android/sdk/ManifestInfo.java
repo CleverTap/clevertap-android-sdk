@@ -11,6 +11,8 @@ import com.clevertap.android.sdk.utils.NullConstants;
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ManifestInfo {
 
+    private static String LC;
+
     private static String accountId;
 
     private static String accountToken;
@@ -95,7 +97,15 @@ public class ManifestInfo {
         xiaomiAppKey = _getManifestStringValueForKey(metaData, Constants.LABEL_XIAOMI_APP_KEY);
         xiaomiAppID = _getManifestStringValueForKey(metaData, Constants.LABEL_XIAOMI_APP_ID);
 
+        if (LC == null) {
+            LC = _getManifestStringValueForKey(metaData, Constants.LABEL_LC);
+        }
+
         profileKeys = parseProfileKeys(metaData);
+    }
+
+    String getLC() {
+        return LC;
     }
 
     public String getAccountId() {

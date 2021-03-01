@@ -34,6 +34,7 @@ public class CleverTapInstanceConfig implements Parcelable {
             return new CleverTapInstanceConfig[size];
         }
     };
+    private int staging;
 
     private String accountId;
 
@@ -122,6 +123,7 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.packageName = config.packageName;
         this.beta = config.beta;
         this.allowedPushTypes = config.allowedPushTypes;
+        this.staging = config.staging;
         this.identityKeys = config.identityKeys;
     }
 
@@ -156,6 +158,7 @@ public class CleverTapInstanceConfig implements Parcelable {
             log(LogConstants.LOG_TAG_ON_USER_LOGIN, "Setting Profile Keys from Manifest: " + Arrays
                     .toString(identityKeys));
         }
+        this.staging = manifest.getLC() != null ? Integer.parseInt(manifest.getLC()) : 0;
     }
 
     private CleverTapInstanceConfig(String jsonString) throws Throwable {
@@ -219,6 +222,9 @@ public class CleverTapInstanceConfig implements Parcelable {
             if (configJsonObject.has(Constants.KEY_ALLOWED_PUSH_TYPES)) {
                 this.allowedPushTypes = (ArrayList<String>) toList(
                         configJsonObject.getJSONArray(Constants.KEY_ALLOWED_PUSH_TYPES));
+            }
+            if (configJsonObject.has(Constants.KEY_STAGING)) {
+                this.staging = configJsonObject.getInt(Constants.KEY_STAGING);
             }
             if (configJsonObject.has(Constants.KEY_IDENTITY_TYPES)) {
                 this.identityKeys = (String[]) toArray(configJsonObject.getJSONArray(Constants.KEY_IDENTITY_TYPES));
@@ -402,7 +408,16 @@ public class CleverTapInstanceConfig implements Parcelable {
         dest.writeString(packageName);
         dest.writeByte((byte) (beta ? 0x01 : 0x00));
         dest.writeList(allowedPushTypes);
+        dest.writeInt(staging);
         dest.writeStringArray(identityKeys);
+    }
+
+    public int getStaging() {
+        return staging;
+    }
+
+    public void setStaging(int staging) {
+        this.staging = staging;
     }
 
     public boolean getEnableCustomCleverTapId() {
@@ -475,6 +490,7 @@ public class CleverTapInstanceConfig implements Parcelable {
             configJsonObject.put(Constants.KEY_ENABLE_UIEDITOR, isUIEditorEnabled());
             configJsonObject.put(Constants.KEY_ENABLE_ABTEST, isABTestingEnabled());
             configJsonObject.put(Constants.KEY_ALLOWED_PUSH_TYPES, toJsonArray(allowedPushTypes));
+            configJsonObject.put(Constants.KEY_STAGING, getStaging());
             return configJsonObject.toString();
         } catch (Throwable e) {
             Logger.v("Unable to convert config to JSON : ", e.getCause());

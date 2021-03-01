@@ -26,6 +26,8 @@ public interface Constants {
     @NonNull
     String TYPE_PHONE = "Phone";
 
+    String LABEL_LC = "CLEVERTAP_LC";
+    String KEY_STAGING = "staging";
 
     String LABEL_ACCOUNT_ID = "CLEVERTAP_ACCOUNT_ID";
     String LABEL_TOKEN = "CLEVERTAP_TOKEN";
