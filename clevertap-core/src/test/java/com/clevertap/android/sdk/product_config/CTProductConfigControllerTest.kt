@@ -119,7 +119,7 @@ class CTProductConfigControllerTest : BaseTestCase() {
     @Test
     fun test_Reset() {
         mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
             mProductConfigController.reset()
             Assert.assertEquals(mProductConfigController.defaultConfigs.size, 0)
             Assert.assertEquals(mProductConfigController.activatedConfigs.size, 0)
@@ -155,7 +155,7 @@ class CTProductConfigControllerTest : BaseTestCase() {
     fun test_activate() {
 
         mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
             `when`(fileUtils.readFromFile(mProductConfigController.activatedFullPath)).thenReturn(
                 JSONObject(
                     MockPCResponse().getFetchedConfig() as Map<*, *>

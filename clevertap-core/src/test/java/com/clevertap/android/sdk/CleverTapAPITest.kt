@@ -19,7 +19,6 @@ import org.robolectric.RobolectricTestRunner
 class CleverTapAPITest : BaseTestCase() {
 
     private lateinit var corestate: MockCoreState
-    private lateinit var mockeCTExecutorFactory: CTExecutorFactory
 
     @Before
     @Throws(Exception::class)
@@ -28,8 +27,13 @@ class CleverTapAPITest : BaseTestCase() {
         mockStatic(CleverTapFactory::class.java).use {
             corestate = MockCoreState(application, cleverTapInstanceConfig)
         }
-        mockeCTExecutorFactory = mockStatic(CTExecutorFactory::class.java)
-            `when`(mockeCTExecutorFactory.).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(
+                MockCTExecutors(
+                    cleverTapInstanceConfig
+                )
+            )
+        }
     }
 
     /* @Test
@@ -46,26 +50,24 @@ class CleverTapAPITest : BaseTestCase() {
 
         mockStatic(CleverTapFactory::class.java).use {
             mockStatic(Utils::class.java).use {
-                    // Arrange
-                    `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
-                        .thenReturn(corestate)
-                    `when`(Utils.getNow()).thenReturn(Int.MAX_VALUE)
+                // Arrange
+                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
+                    .thenReturn(corestate)
+                `when`(Utils.getNow()).thenReturn(Int.MAX_VALUE)
 
-                    CoreMetaData.setInitialAppEnteredForegroundTime(0)
+                CoreMetaData.setInitialAppEnteredForegroundTime(0)
 
-                    // Act
-                    CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+                // Act
+                CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
 
-                    // Assert
-                    assertTrue("isCreatedPostAppLaunch must be true", cleverTapInstanceConfig.isCreatedPostAppLaunch)
-                    verify(corestate.sessionManager).setLastVisitTime()
-                    verify(corestate.deviceInfo).setDeviceNetworkInfoReportingFromStorage()
-                    verify(corestate.deviceInfo).setCurrentUserOptOutStateFromStorage()
-
-                    val actualConfig =
-                        StorageHelper.getString(application, "instance:" + cleverTapInstanceConfig.accountId, "")
-                    assertEquals(cleverTapInstanceConfig.toJSONString(), actualConfig)
-                }
+                // Assert
+                assertTrue("isCreatedPostAppLaunch must be true", cleverTapInstanceConfig.isCreatedPostAppLaunch)
+                verify(corestate.sessionManager).setLastVisitTime()
+                verify(corestate.deviceInfo).setDeviceNetworkInfoReportingFromStorage()
+                verify(corestate.deviceInfo).setCurrentUserOptOutStateFromStorage()
+                val actualConfig =
+                    StorageHelper.getString(application, "instance:" + cleverTapInstanceConfig.accountId, "")
+                assertEquals(cleverTapInstanceConfig.toJSONString(), actualConfig)
             }
         }
     }
@@ -373,42 +375,42 @@ class CleverTapAPITest : BaseTestCase() {
         }
     }
 
-    /* @Test
-     fun testPushDeepLink(){
-         // Arrange
-         var cleverTapAPISpy : CleverTapAPI = Mockito.spy(cleverTapAPI)
-         val uri = Uri.parse("https://www.google.com/")
+/* @Test
+ fun testPushDeepLink(){
+     // Arrange
+     var cleverTapAPISpy : CleverTapAPI = Mockito.spy(cleverTapAPI)
+     val uri = Uri.parse("https://www.google.com/")
 
-         //Act
-         cleverTapAPISpy.pushDeepLink(uri)
+     //Act
+     cleverTapAPISpy.pushDeepLink(uri)
 
-         //Assert
-         verify(cleverTapAPISpy).pushDeepLink(uri,false)
-     }
+     //Assert
+     verify(cleverTapAPISpy).pushDeepLink(uri,false)
+ }
 
-     @Test
-     fun testPushDeviceTokenEvent(){
-         // Arrange
-         val ctAPI = CleverTapAPI.instanceWithConfig(application,cleverTapInstanceConfig)
-         var cleverTapAPISpy = Mockito.spy(ctAPI)
+ @Test
+ fun testPushDeviceTokenEvent(){
+     // Arrange
+     val ctAPI = CleverTapAPI.instanceWithConfig(application,cleverTapInstanceConfig)
+     var cleverTapAPISpy = Mockito.spy(ctAPI)
 
-         cleverTapAPISpy.pushDeviceTokenEvent("12345",true,FCM)
-         verify(cleverTapAPISpy).queueEvent(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyInt())
-     }
+     cleverTapAPISpy.pushDeviceTokenEvent("12345",true,FCM)
+     verify(cleverTapAPISpy).queueEvent(ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyInt())
+ }
 
-     @Test
-     fun testPushLink(){
-         var cleverTapAPISpy : CleverTapAPI = Mockito.spy(cleverTapAPI)
-         val uri = Uri.parse("https://www.google.com/")
+ @Test
+ fun testPushLink(){
+     var cleverTapAPISpy : CleverTapAPI = Mockito.spy(cleverTapAPI)
+     val uri = Uri.parse("https://www.google.com/")
 
-         val mockStatic = Mockito.mockStatic(StorageHelper::class.java)
-         `when`(StorageHelper.getInt(ArgumentMatchers.any(), ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(0)
+     val mockStatic = Mockito.mockStatic(StorageHelper::class.java)
+     `when`(StorageHelper.getInt(ArgumentMatchers.any(), ArgumentMatchers.anyString(), ArgumentMatchers.anyInt())).thenReturn(0)
 
-         //Act
-         cleverTapAPISpy.pushInstallReferrer("abc","def","ghi")
+     //Act
+     cleverTapAPISpy.pushInstallReferrer("abc","def","ghi")
 
-         verify(cleverTapAPISpy).pushDeepLink(ArgumentMatchers.any(), ArgumentMatchers.anyBoolean())
-     }*/
+     verify(cleverTapAPISpy).pushDeepLink(ArgumentMatchers.any(), ArgumentMatchers.anyBoolean())
+ }*/
 
     @After
     fun tearDown() {
