@@ -40,8 +40,6 @@ class EventQueueManagerTest : BaseTestCase() {
         super.setUp()
 
         corestate = MockCoreState(application, cleverTapInstanceConfig)
-        corestate.postAsyncSafelyHandler = MockPostAsyncSafelyHandler(cleverTapInstanceConfig)
-
         eventQueueManager =
             spy(
                 EventQueueManager(
@@ -52,7 +50,6 @@ class EventQueueManagerTest : BaseTestCase() {
                     corestate.sessionManager,
                     corestate.callbackManager,
                     corestate.mainLooperHandler,
-                    corestate.postAsyncSafelyHandler,
                     corestate.deviceInfo,
                     corestate.validationResultStack,
                     corestate.networkManager as NetworkManager,
