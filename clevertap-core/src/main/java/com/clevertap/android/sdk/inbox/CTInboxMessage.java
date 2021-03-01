@@ -17,7 +17,6 @@ import org.json.JSONObject;
  * Public facing model class for type of InboxMessage
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
-@RestrictTo(Scope.LIBRARY)
 public class CTInboxMessage implements Parcelable {
 
     @SuppressWarnings("unused")
