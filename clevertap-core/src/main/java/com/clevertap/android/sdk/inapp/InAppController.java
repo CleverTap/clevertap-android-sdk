@@ -21,8 +21,9 @@ import com.clevertap.android.sdk.InAppNotificationListener;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.StorageHelper;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
-import com.clevertap.android.sdk.task.PostAsyncSafelyHandler;
+import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.Utils;
 import java.io.Serializable;
 import java.lang.ref.WeakReference;
@@ -32,6 +33,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.Callable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -90,13 +92,9 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     private final MainLooperHandler mMainLooperHandler;
 
-    private final PostAsyncSafelyHandler mPostAsyncSafelyHandler;
-
-
     public InAppController(Context context,
             CleverTapInstanceConfig config,
             MainLooperHandler mainLooperHandler,
-            PostAsyncSafelyHandler postAsyncSafelyHandler,
             InAppFCManager inAppFCManager,
             BaseCallbackManager callbackManager,
             AnalyticsManager analyticsManager,
@@ -106,7 +104,6 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         mConfig = config;
         mLogger = mConfig.getLogger();
         mMainLooperHandler = mainLooperHandler;
-        mPostAsyncSafelyHandler = postAsyncSafelyHandler;
         mInAppFCManager = inAppFCManager;
         mCallbackManager = callbackManager;
         mAnalyticsManager = analyticsManager;
@@ -128,7 +125,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                     Bundle bundle = new Bundle();
                     bundle.putParcelable("inApp", currentlyDisplayingInApp);
                     bundle.putParcelable("config", mConfig);
-                    bundle.putSerializable("controller",this);
+                    bundle.putSerializable("controller", this);
                     inAppFragment.setArguments(bundle);
                     fragmentTransaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
                     fragmentTransaction.add(android.R.id.content, inAppFragment, currentlyDisplayingInApp.getType());
@@ -199,11 +196,13 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         }
 
         // Fire the next one, if any
-        mPostAsyncSafelyHandler.runOnNotificationQueue(new Runnable() {
+        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
+        task.execute("InappController#inAppNotificationDidDismiss", new Callable<Void>() {
             @Override
-            public void run() {
-                inAppDidDismiss(context, mConfig, inAppNotification,inAppController);
+            public Void call() {
+                inAppDidDismiss(context, mConfig, inAppNotification, inAppController);
                 _showNotificationIfAvailable(context);
+                return null;
             }
         });
     }
@@ -240,10 +239,12 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     //InApp
     public void showNotificationIfAvailable(final Context context) {
         if (!mConfig.isAnalyticsOnly()) {
-            mPostAsyncSafelyHandler.runOnNotificationQueue(new Runnable() {
+            Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
+            task.execute("InappController#showNotificationIfAvailable",new Callable<Void>() {
                 @Override
-                public void run() {
+                public Void call() {
                     _showNotificationIfAvailable(context);
+                    return null;
                 }
             });
         }
@@ -259,7 +260,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             }
 
             checkPendingNotifications(context,
-                    mConfig,this);  // see if we have any pending notifications
+                    mConfig, this);  // see if we have any pending notifications
 
             JSONArray inapps = new JSONArray(
                     StorageHelper.getStringFromPrefs(context, mConfig, Constants.INAPP_KEY, "[]"));
@@ -355,22 +356,31 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             showInAppNotificationIfAny();
             return;
         }
-        showInApp(mContext, inAppNotification, mConfig,this);
+        showInApp(mContext, inAppNotification, mConfig, this);
 
     }
 
     //InApp
     private void prepareNotificationForDisplay(final JSONObject jsonObject) {
         mLogger.debug(mConfig.getAccountId(), "Preparing In-App for display: " + jsonObject.toString());
-        mPostAsyncSafelyHandler.runOnNotificationQueue(new NotificationPrepareRunnable(this, jsonObject));
+        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
+        task.execute("InappController#prepareNotificationForDisplay",new Callable<Void>() {
+            @Override
+            public Void call() {
+                new NotificationPrepareRunnable(InAppController.this, jsonObject).run();
+                return null;
+            }
+        });
     }
 
     private void showInAppNotificationIfAny() {
         if (!mConfig.isAnalyticsOnly()) {
-            mPostAsyncSafelyHandler.runOnNotificationQueue(new Runnable() {
+            Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
+            task.execute("InAppController#showInAppNotificationIfAny",new Callable<Void>() {
                 @Override
-                public void run() {
+                public Void call() {
                     _showNotificationIfAvailable(mContext);
+                    return null;
                 }
             });
         }
@@ -395,7 +405,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         }
     }
 
-    private static void checkPendingNotifications(final Context context, final CleverTapInstanceConfig config, final InAppController inAppController) {
+    private static void checkPendingNotifications(final Context context, final CleverTapInstanceConfig config,
+            final InAppController inAppController) {
         Logger.v(config.getAccountId(), "checking Pending Notifications");
         if (pendingNotifications != null && !pendingNotifications.isEmpty()) {
             try {
@@ -405,7 +416,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 mainHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        showInApp(context, notification, config,inAppController);
+                        showInApp(context, notification, config, inAppController);
                     }
                 });
             } catch (Throwable t) {
@@ -421,7 +432,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         if (currentlyDisplayingInApp != null && (currentlyDisplayingInApp.getCampaignId()
                 .equals(inAppNotification.getCampaignId()))) {
             currentlyDisplayingInApp = null;
-            checkPendingNotifications(context, config,inAppController);
+            checkPendingNotifications(context, config, inAppController);
         }
     }
 
@@ -512,7 +523,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 Bundle bundle = new Bundle();
                 bundle.putParcelable("inApp", inAppNotification);
                 bundle.putParcelable("config", config);
-                bundle.putSerializable("controller",inAppController);
+                bundle.putSerializable("controller", inAppController);
                 inAppFragment.setArguments(bundle);
                 fragmentTransaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
                 fragmentTransaction.add(android.R.id.content, inAppFragment, inAppNotification.getType());

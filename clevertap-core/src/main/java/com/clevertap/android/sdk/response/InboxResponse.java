@@ -52,6 +52,8 @@ public class InboxResponse extends CleverTapResponseDecorator {
 
         if (!response.has("inbox_notifs")) {
             mLogger.verbose(mConfig.getAccountId(), "Inbox: Response JSON object doesn't contain the inbox key");
+            // process PushAmp response
+            mCleverTapResponse.processResponse(response, stringBody, context);
             return;
         }
         try {

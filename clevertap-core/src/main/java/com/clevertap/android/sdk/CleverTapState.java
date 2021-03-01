@@ -3,7 +3,6 @@ package com.clevertap.android.sdk;
 import android.content.Context;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.network.BaseNetworkManager;
-import com.clevertap.android.sdk.task.PostAsyncSafelyHandler;
 
 abstract class CleverTapState {
 
@@ -24,10 +23,6 @@ abstract class CleverTapState {
     abstract BaseNetworkManager getNetworkManager();
 
     abstract void setNetworkManager(final BaseNetworkManager networkManager);
-
-    abstract PostAsyncSafelyHandler getPostAsyncSafelyHandler();
-
-    abstract void setPostAsyncSafelyHandler(final PostAsyncSafelyHandler postAsyncSafelyHandler);
 
     abstract BaseLocationManager getLocationManager();
 

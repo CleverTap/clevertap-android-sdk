@@ -93,7 +93,7 @@ internal class ProductConfigSettingsTest : BaseTestCase() {
     @Test
     fun testReset() {
         mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
             settings.reset(fileUtils)
             verify(fileUtils).deleteFile(settings.fullPath)
 

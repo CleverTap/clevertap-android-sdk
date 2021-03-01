@@ -20,10 +20,12 @@ import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigFactory;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
-import com.clevertap.android.sdk.task.PostAsyncSafelyHandler;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 public class LoginController {
 
@@ -53,8 +55,6 @@ public class LoginController {
 
     private final LocalDataStore mLocalDataStore;
 
-    private final PostAsyncSafelyHandler mPostAsyncSafelyHandler;
-
     private final PushProviders mPushProviders;
 
     private final SessionManager mSessionManager;
@@ -72,7 +72,6 @@ public class LoginController {
             BaseEventQueueManager eventQueueManager,
             AnalyticsManager analyticsManager,
             InAppFCManager inAppFCManager,
-            PostAsyncSafelyHandler postAsyncSafelyHandler,
             CoreMetaData coreMetaData,
             ControllerManager controllerManager,
             SessionManager sessionManager,
@@ -87,7 +86,6 @@ public class LoginController {
         mBaseEventQueueManager = eventQueueManager;
         mAnalyticsManager = analyticsManager;
         mInAppFCManager = inAppFCManager;
-        mPostAsyncSafelyHandler = postAsyncSafelyHandler;
         mCoreMetaData = coreMetaData;
         mPushProviders = controllerManager.getPushProviders();
         mSessionManager = sessionManager;
@@ -100,9 +98,10 @@ public class LoginController {
 
     public void asyncProfileSwitchUser(final Map<String, Object> profile, final String cacheGuid,
             final String cleverTapID) {
-        mPostAsyncSafelyHandler.postAsyncSafely("resetProfile", new Runnable() {
+        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        task.execute("resetProfile", new Callable<Void>() {
             @Override
-            public void run() {
+            public Void call() {
                 try {
                     mConfig.getLogger().verbose(mConfig.getAccountId(), "asyncProfileSwitchUser:[profile " + profile
                             + " with Cached GUID " + ((cacheGuid != null) ? cachedGUID
@@ -151,6 +150,7 @@ public class LoginController {
                 } catch (Throwable t) {
                     mConfig.getLogger().verbose(mConfig.getAccountId(), "Reset Profile error", t);
                 }
+                return null;
             }
         });
     }

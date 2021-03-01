@@ -2,6 +2,8 @@ package com.clevertap.android.sdk
 
 import android.location.Location
 import android.os.Bundle
+import com.clevertap.android.sdk.task.CTExecutorFactory
+import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.sdk.utils.Utils
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.Constant
@@ -17,6 +19,7 @@ import org.robolectric.RobolectricTestRunner
 class CleverTapAPITest : BaseTestCase() {
 
     private lateinit var corestate: MockCoreState
+    private lateinit var mockeCTExecutorFactory: CTExecutorFactory
 
     @Before
     @Throws(Exception::class)
@@ -24,8 +27,9 @@ class CleverTapAPITest : BaseTestCase() {
         super.setUp()
         mockStatic(CleverTapFactory::class.java).use {
             corestate = MockCoreState(application, cleverTapInstanceConfig)
-            corestate.postAsyncSafelyHandler = MockPostAsyncSafelyHandler(cleverTapInstanceConfig)
         }
+        mockeCTExecutorFactory = mockStatic(CTExecutorFactory::class.java)
+            `when`(mockeCTExecutorFactory.).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
     }
 
     /* @Test
@@ -42,25 +46,26 @@ class CleverTapAPITest : BaseTestCase() {
 
         mockStatic(CleverTapFactory::class.java).use {
             mockStatic(Utils::class.java).use {
-                // Arrange
-                `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
-                    .thenReturn(corestate)
-                `when`(Utils.getNow()).thenReturn(Int.MAX_VALUE)
+                    // Arrange
+                    `when`(CleverTapFactory.getCoreState(application, cleverTapInstanceConfig, null))
+                        .thenReturn(corestate)
+                    `when`(Utils.getNow()).thenReturn(Int.MAX_VALUE)
 
-                CoreMetaData.setInitialAppEnteredForegroundTime(0)
+                    CoreMetaData.setInitialAppEnteredForegroundTime(0)
 
-                // Act
-                CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+                    // Act
+                    CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
 
-                // Assert
-                assertTrue("isCreatedPostAppLaunch must be true", cleverTapInstanceConfig.isCreatedPostAppLaunch)
-                verify(corestate.sessionManager).setLastVisitTime()
-                verify(corestate.deviceInfo).setDeviceNetworkInfoReportingFromStorage()
-                verify(corestate.deviceInfo).setCurrentUserOptOutStateFromStorage()
+                    // Assert
+                    assertTrue("isCreatedPostAppLaunch must be true", cleverTapInstanceConfig.isCreatedPostAppLaunch)
+                    verify(corestate.sessionManager).setLastVisitTime()
+                    verify(corestate.deviceInfo).setDeviceNetworkInfoReportingFromStorage()
+                    verify(corestate.deviceInfo).setCurrentUserOptOutStateFromStorage()
 
-                val actualConfig =
-                    StorageHelper.getString(application, "instance:" + cleverTapInstanceConfig.accountId, "")
-                assertEquals(cleverTapInstanceConfig.toJSONString(), actualConfig)
+                    val actualConfig =
+                        StorageHelper.getString(application, "instance:" + cleverTapInstanceConfig.accountId, "")
+                    assertEquals(cleverTapInstanceConfig.toJSONString(), actualConfig)
+                }
             }
         }
     }

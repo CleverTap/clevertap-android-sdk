@@ -37,7 +37,8 @@ import com.clevertap.android.sdk.response.InboxResponse;
 import com.clevertap.android.sdk.response.MetadataResponse;
 import com.clevertap.android.sdk.response.ProductConfigResponse;
 import com.clevertap.android.sdk.response.PushAmpResponse;
-import com.clevertap.android.sdk.task.PostAsyncSafelyHandler;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import com.clevertap.android.sdk.validation.Validator;
 import java.io.BufferedReader;
@@ -48,6 +49,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Random;
+import java.util.concurrent.Callable;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
@@ -83,8 +85,6 @@ public class NetworkManager extends BaseNetworkManager {
 
     private final Logger mLogger;
 
-    private final PostAsyncSafelyHandler mPostAsyncSafelyHandler;
-
     private int mResponseFailureCount = 0;// TODO encapsulate into NetworkState class
 
     private final ValidationResultStack mValidationResultStack;
@@ -117,7 +117,6 @@ public class NetworkManager extends BaseNetworkManager {
             ControllerManager controllerManager,
             InAppFCManager inAppFCManager,
             BaseDatabaseManager baseDatabaseManager,
-            PostAsyncSafelyHandler postAsyncSafelyHandler,
             final BaseCallbackManager callbackManager,
             CTLockManager ctLockManager,
             Validator validator,
@@ -133,7 +132,6 @@ public class NetworkManager extends BaseNetworkManager {
         mControllerManager = controllerManager;
         mInAppFCManager = inAppFCManager;
         mDatabaseManager = baseDatabaseManager;
-        mPostAsyncSafelyHandler = postAsyncSafelyHandler;
         // maintain order
         CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
 
@@ -150,7 +148,7 @@ public class NetworkManager extends BaseNetworkManager {
         cleverTapResponse = new ConsoleResponse(cleverTapResponse, config);
         cleverTapResponse = new ARPResponse(cleverTapResponse, config, this, validator, controllerManager);
         cleverTapResponse = new MetadataResponse(cleverTapResponse, config, deviceInfo, this);
-        cleverTapResponse = new InAppResponse(cleverTapResponse, config, inAppFCManager, postAsyncSafelyHandler,
+        cleverTapResponse = new InAppResponse(cleverTapResponse, config, inAppFCManager,
                 controllerManager);
 
         cleverTapResponse = new BaseResponse(context, config, deviceInfo, this, localDataStore, cleverTapResponse);
@@ -664,7 +662,7 @@ public class NetworkManager extends BaseNetworkManager {
             return true;
         } catch (Throwable e) {
             mLogger.debug(mConfig.getAccountId(),
-                    "An exception occurred while sending the queue, will retry: " + e.getLocalizedMessage());
+                    "An exception occurred while sending the queue, will retry: " , e);
             mResponseFailureCount++;
             networkRetryCount++;
             mCallbackManager.getFailureFlushListener().failureFlush(context);
@@ -813,10 +811,12 @@ public class NetworkManager extends BaseNetworkManager {
             setDomain(context, null);
 
             // Clear all the queues
-            mPostAsyncSafelyHandler.postAsyncSafely("CommsManager#setMuted", new Runnable() {
+            Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+            task.execute("CommsManager#setMuted", new Callable<Void>() {
                 @Override
-                public void run() {
+                public Void call() {
                     mDatabaseManager.clearQueues(context);
+                    return null;
                 }
             });
         } else {

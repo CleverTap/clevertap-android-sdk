@@ -8,7 +8,9 @@ import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.InAppFCManager;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
-import com.clevertap.android.sdk.task.PostAsyncSafelyHandler;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.Task;
+import java.util.concurrent.Callable;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -19,22 +21,19 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
     private final CleverTapInstanceConfig mConfig;
 
+    private final ControllerManager mControllerManager;
+
     private final InAppFCManager mInAppFCManager;
 
     private final Logger mLogger;
 
-    private final ControllerManager mControllerManager;
-
-    private final PostAsyncSafelyHandler mPostAsyncSafelyHandler;
 
     public InAppResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config,
-            InAppFCManager inAppFCManager,
-            PostAsyncSafelyHandler postAsyncSafelyHandler, ControllerManager controllerManager) {
+            InAppFCManager inAppFCManager, ControllerManager controllerManager) {
         mCleverTapResponse = cleverTapResponse;
         mConfig = config;
         mLogger = mConfig.getLogger();
         mInAppFCManager = inAppFCManager;
-        mPostAsyncSafelyHandler = postAsyncSafelyHandler;
         mControllerManager = controllerManager;
     }
 
@@ -55,6 +54,8 @@ public class InAppResponse extends CleverTapResponseDecorator {
             if (!response.has("inapp_notifs")) {
                 mLogger.verbose(mConfig.getAccountId(),
                         "InApp: Response JSON object doesn't contain the inapp key, failing");
+                // process metadata response
+                mCleverTapResponse.processResponse(response, stringBody, context);
                 return;
             }
 
@@ -80,6 +81,8 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 inappNotifs = response.getJSONArray(Constants.INAPP_JSON_RESPONSE_KEY);
             } catch (JSONException e) {
                 mLogger.debug(mConfig.getAccountId(), "InApp: In-app key didn't contain a valid JSON array");
+                // process metadata response
+                mCleverTapResponse.processResponse(response, stringBody, context);
                 return;
             }
 
@@ -111,10 +114,13 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 mLogger.verbose(mConfig.getAccountId(), "InAppManager: Reason: " + e.getMessage(), e);
             }
             // Fire the first notification, if any
-            mPostAsyncSafelyHandler.runOnNotificationQueue(new Runnable() {
+            Task<Void> task = CTExecutorFactory.executors(mConfig)
+                    .postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
+            task.execute("InAppResponse#processResponse", new Callable<Void>() {
                 @Override
-                public void run() {
+                public Void call() {
                     mControllerManager.getInAppController().showNotificationIfAvailable(context);
+                    return null;
                 }
             });
         } catch (Throwable t) {

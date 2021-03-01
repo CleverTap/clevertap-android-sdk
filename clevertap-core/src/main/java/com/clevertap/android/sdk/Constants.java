@@ -18,7 +18,7 @@ public interface Constants {
     @interface IdentityType {
 
     }
-
+    String TAG_FEATURE_IN_APPS = "TAG_FEATURE_IN_APPS";
     @NonNull
     String TYPE_IDENTITY = "Identity";
     @NonNull

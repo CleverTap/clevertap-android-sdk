@@ -89,13 +89,13 @@ public class CTProductConfigController {
         if (TextUtils.isEmpty(settings.getGuid())) {
             return;
         }
-        Task<Void> task = CTExecutorFactory.getInstance(config).ioTask();
+        Task<Void> task = CTExecutorFactory.executors(config).ioTask();
         task.addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(final Void result) {
                 sendCallback(PROCESSING_STATE.ACTIVATED);
             }
-        }).call(new Callable<Void>() {
+        }).execute("activateProductConfigs", new Callable<Void>() {
             @Override
             public Void call() {
                 synchronized (this) {
@@ -306,8 +306,8 @@ public class CTProductConfigController {
                     config.getLogger()
                             .verbose(ProductConfigUtil.getLogTag(config), "Fetch file-[" + getActivatedFullPath()
                                     + "] write success: " + waitingTobeActivatedConfig);
-                    Task<Void> task = CTExecutorFactory.getInstance(config).mainTask();
-                    task.call(new Callable<Void>() {
+                    Task<Void> task = CTExecutorFactory.executors(config).mainTask();
+                    task.execute("sendPCFetchSuccessCallback", new Callable<Void>() {
                         @Override
                         public Void call() {
                             config.getLogger()
@@ -367,13 +367,13 @@ public class CTProductConfigController {
      * @param map - HashMap of the default configs
      */
     public void setDefaults(final HashMap<String, Object> map) {
-        Task<Void> task = CTExecutorFactory.getInstance(config).ioTask();
+        Task<Void> task = CTExecutorFactory.executors(config).ioTask();
         task.addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(final Void aVoid) {
                 initAsync();
             }
-        }).call(new Callable<Void>() {
+        }).execute("ProductConfig#setDefaultsUsingHashMap", new Callable<Void>() {
             @Override
             public Void call() {
                 synchronized (this) {
@@ -426,8 +426,8 @@ public class CTProductConfigController {
     }
 
     void eraseStoredConfigFiles() {
-        Task<Void> task = CTExecutorFactory.getInstance(config).ioTask();
-        task.call(new Callable<Void>() {
+        Task<Void> task = CTExecutorFactory.executors(config).ioTask();
+        task.execute("eraseStoredConfigs", new Callable<Void>() {
             @Override
             public Void call() {
                 synchronized (this) {
@@ -484,13 +484,13 @@ public class CTProductConfigController {
         if (TextUtils.isEmpty(settings.getGuid())) {
             return;
         }
-        Task<Boolean> task = CTExecutorFactory.getInstance(config).ioTask();
+        Task<Boolean> task = CTExecutorFactory.executors(config).ioTask();
         task.addOnSuccessListener(new OnSuccessListener<Boolean>() {
             @Override
             public void onSuccess(final Boolean aVoid) {
                 sendCallback(PROCESSING_STATE.INIT);
             }
-        }).call(new Callable<Boolean>() {
+        }).execute("ProductConfig#initAsync", new Callable<Boolean>() {
             @Override
             public Boolean call() {
                 synchronized (this) {
@@ -525,13 +525,13 @@ public class CTProductConfigController {
     }
 
     void setDefaultsWithXmlParser(final int resourceID, @NonNull final DefaultXmlParser xmlParser) {
-        Task<Void> task = CTExecutorFactory.getInstance(config).ioTask();
+        Task<Void> task = CTExecutorFactory.executors(config).ioTask();
         task.addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
             public void onSuccess(final Void aVoid) {
                 initAsync();
             }
-        }).call(new Callable<Void>() {
+        }).execute("PCController#setDefaultsWithXmlParser", new Callable<Void>() {
             @Override
             public Void call() {
                 synchronized (this) {

@@ -4,10 +4,13 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
+import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.db.DBAdapter;
-import com.clevertap.android.sdk.task.PostAsyncSafelyHandler;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.Task;
 import java.util.ArrayList;
+import java.util.concurrent.Callable;
 import org.json.JSONArray;
 import org.json.JSONException;
 
@@ -27,25 +30,24 @@ public class CTInboxController {
 
     private final boolean videoSupported;
 
-    private final PostAsyncSafelyHandler mPostAsyncSafelyHandler;
-
     private final CTLockManager mCTLockManager;
 
     private final BaseCallbackManager mCallbackManager;
 
+    private final CleverTapInstanceConfig mConfig;
+
     // always call async
-    public CTInboxController(String guid, DBAdapter adapter,
+    public CTInboxController(CleverTapInstanceConfig config, String guid, DBAdapter adapter,
             CTLockManager ctLockManager,
-            PostAsyncSafelyHandler postAsyncSafelyHandler,
             BaseCallbackManager callbackManager,
             boolean videoSupported) {
         this.userId = guid;
         this.dbAdapter = adapter;
         this.messages = this.dbAdapter.getMessages(this.userId);
         this.videoSupported = videoSupported;
-        mPostAsyncSafelyHandler = postAsyncSafelyHandler;
         mCTLockManager = ctLockManager;
         mCallbackManager = callbackManager;
+        mConfig = config;
     }
 
     public int count() {
@@ -53,15 +55,17 @@ public class CTInboxController {
     }
 
     public void deleteInboxMessage(final CTInboxMessage message) {
-        mPostAsyncSafelyHandler.postAsyncSafely("deleteInboxMessage", new Runnable() {
+        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        task.execute("deleteInboxMessage", new Callable<Void>() {
             @Override
-            public void run() {
+            public Void call() {
                 synchronized (mCTLockManager.getInboxControllerLock()) {
                     boolean update = _deleteMessageWithId(message.getMessageId());
                     if (update) {
                         mCallbackManager._notifyInboxMessagesDidUpdate();
                     }
                 }
+                return null;
             }
         });
     }
@@ -74,10 +78,13 @@ public class CTInboxController {
         synchronized (messagesLock) {
             this.messages.remove(messageDAO);
         }
-        mPostAsyncSafelyHandler.postAsyncSafely("RunDeleteMessage", new Runnable() {
+
+        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        task.execute("RunDeleteMessage",new Callable<Void>() {
             @Override
-            public void run() {
+            public Void call() {
                 dbAdapter.deleteMessageForId(messageId, userId);
+                return null;
             }
         });
         return true;
@@ -108,15 +115,17 @@ public class CTInboxController {
     }
 
     public void markReadInboxMessage(final CTInboxMessage message) {
-        mPostAsyncSafelyHandler.postAsyncSafely("markReadInboxMessage", new Runnable() {
+        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        task.execute("markReadInboxMessage", new Callable<Void>() {
             @Override
-            public void run() {
+            public Void call() {
                 synchronized (mCTLockManager.getInboxControllerLock()) {
                     boolean read = _markReadForMessageWithId(message.getMessageId());
                     if (read) {
                         mCallbackManager._notifyInboxMessagesDidUpdate();
                     }
                 }
+                return null;
             }
         });
     }
@@ -130,11 +139,12 @@ public class CTInboxController {
         synchronized (messagesLock) {
             messageDAO.setRead(1);
         }
-
-        mPostAsyncSafelyHandler.postAsyncSafely("RunMarkMessageRead", new Runnable() {
+        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        task.execute("RunMarkMessageRead", new Callable<Void>() {
             @Override
-            public void run() {
+            public Void call() {
                 dbAdapter.markReadMessageForId(messageId, userId);
+                return null;
             }
         });
         return true;

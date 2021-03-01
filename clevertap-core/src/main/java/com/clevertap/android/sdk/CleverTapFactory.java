@@ -1,16 +1,15 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
-import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsFactory;
 import com.clevertap.android.sdk.db.DBManager;
 import com.clevertap.android.sdk.events.EventMediator;
 import com.clevertap.android.sdk.events.EventQueueManager;
+import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsFactory;
 import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.login.LoginController;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.task.MainLooperHandler;
-import com.clevertap.android.sdk.task.PostAsyncSafelyHandler;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import com.clevertap.android.sdk.validation.Validator;
 
@@ -42,9 +41,6 @@ class CleverTapFactory {
         EventMediator eventMediator = new EventMediator(context, config, coreMetaData);
         coreState.setEventMediator(eventMediator);
 
-        PostAsyncSafelyHandler postAsyncSafelyHandler = new PostAsyncSafelyHandler(config);
-        coreState.setPostAsyncSafelyHandler(postAsyncSafelyHandler);
-
         LocalDataStore localDataStore = new LocalDataStore(context, config);
         coreState.setLocalDataStore(localDataStore);
 
@@ -68,29 +64,29 @@ class CleverTapFactory {
         DBManager baseDatabaseManager = new DBManager(config, ctLockManager);
         coreState.setDatabaseManager(baseDatabaseManager);
 
-        ControllerManager controllerManager = new ControllerManager(context, config, postAsyncSafelyHandler,
+        ControllerManager controllerManager = new ControllerManager(context, config,
                 ctLockManager, callbackManager, deviceInfo, baseDatabaseManager);
         coreState.setControllerManager(controllerManager);
 
         NetworkManager networkManager = new NetworkManager(context, config, deviceInfo, coreMetaData,
                 validationResultStack, controllerManager, inAppFCManager, baseDatabaseManager,
-                postAsyncSafelyHandler, callbackManager, ctLockManager, validator, localDataStore);
+                callbackManager, ctLockManager, validator, localDataStore);
         coreState.setNetworkManager(networkManager);
 
         EventQueueManager baseEventQueueManager = new EventQueueManager(baseDatabaseManager, context, config,
                 eventMediator,
                 sessionManager, callbackManager,
-                mainLooperHandler, postAsyncSafelyHandler, deviceInfo, validationResultStack,
+                mainLooperHandler, deviceInfo, validationResultStack,
                 networkManager, coreMetaData, ctLockManager, localDataStore);
         coreState.setBaseEventQueueManager(baseEventQueueManager);
 
         AnalyticsManager analyticsManager = new AnalyticsManager(context, config, baseEventQueueManager, validator,
-                validationResultStack, coreMetaData, postAsyncSafelyHandler, localDataStore, deviceInfo,
+                validationResultStack, coreMetaData, localDataStore, deviceInfo,
                 mainLooperHandler, callbackManager, controllerManager);
         coreState.setAnalyticsManager(analyticsManager);
 
         InAppController inAppController = new InAppController(context, config, mainLooperHandler,
-                postAsyncSafelyHandler, inAppFCManager, callbackManager, analyticsManager, coreMetaData);
+                inAppFCManager, callbackManager, analyticsManager, coreMetaData);
         coreState.setInAppController(inAppController);
         coreState.getControllerManager().setInAppController(inAppController);
 
@@ -100,18 +96,18 @@ class CleverTapFactory {
         coreState.setLocationManager(locationManager);
 
         PushProviders pushProviders = PushProviders
-                .load(context, config, baseDatabaseManager, postAsyncSafelyHandler, validationResultStack,
+                .load(context, config, baseDatabaseManager, validationResultStack,
                         analyticsManager, controllerManager);
         coreState.setPushProviders(pushProviders);
 
         ActivityLifeCycleManager activityLifeCycleManager = new ActivityLifeCycleManager(context, config,
                 analyticsManager, coreMetaData, sessionManager, pushProviders, callbackManager, inAppController,
-                baseEventQueueManager, postAsyncSafelyHandler);
+                baseEventQueueManager);
         coreState.setActivityLifeCycleManager(activityLifeCycleManager);
 
         LoginController loginController = new LoginController(context, config, deviceInfo,
                 validationResultStack, baseEventQueueManager, analyticsManager, inAppFCManager,
-                postAsyncSafelyHandler, coreMetaData, controllerManager, sessionManager,
+                coreMetaData, controllerManager, sessionManager,
                 localDataStore, callbackManager, baseDatabaseManager, ctLockManager);
         coreState.setLoginController(loginController);
         return coreState;

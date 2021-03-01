@@ -44,8 +44,8 @@ class ProductConfigSettings {
         if (fileUtils == null) {
             throw new IllegalArgumentException("FileUtils can't be null");
         }
-        Task<Void> task = CTExecutorFactory.getInstance(config).ioTask();
-        task.call(new Callable<Void>() {
+        Task<Void> task = CTExecutorFactory.executors(config).ioTask();
+        task.execute("ProductConfigSettings#eraseStoredSettingsFile", new Callable<Void>() {
             @Override
             public Void call() {
                 synchronized (this) {
@@ -130,11 +130,11 @@ class ProductConfigSettings {
         settingsMap.put(KEY_LAST_FETCHED_TIMESTAMP, String.valueOf(0));
         settingsMap.put(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS, String.valueOf(DEFAULT_MIN_FETCH_INTERVAL_SECONDS));
 
-        Task<Void> task = CTExecutorFactory.getInstance(config).ioTask();
-        task.call(new Callable<Void>() {
+        Task<Void> task = CTExecutorFactory.executors(config).ioTask();
+        task.execute("ProductConfigSettings#initDefaults", new Callable<Void>() {
             @Override
             public Void call() {
-                synchronized (this){
+                synchronized (this) {
                     config.getLogger()
                             .verbose(ProductConfigUtil.getLogTag(config),
                                     "Settings loaded with default values: " + settingsMap);
@@ -302,7 +302,7 @@ class ProductConfigSettings {
     }
 
     private synchronized void updateConfigToFile() {
-        Task<Boolean> task = CTExecutorFactory.getInstance(config).ioTask();
+        Task<Boolean> task = CTExecutorFactory.executors(config).ioTask();
         task.addOnSuccessListener(new OnSuccessListener<Boolean>() {
             @Override
             public void onSuccess(final Boolean isSuccess) {
@@ -315,7 +315,7 @@ class ProductConfigSettings {
                                     "Product Config settings: writing Failed");
                 }
             }
-        }).call(new Callable<Boolean>() {
+        }).execute("ProductConfigSettings#updateConfigToFile", new Callable<Boolean>() {
             @Override
             public Boolean call() {
                 try {
