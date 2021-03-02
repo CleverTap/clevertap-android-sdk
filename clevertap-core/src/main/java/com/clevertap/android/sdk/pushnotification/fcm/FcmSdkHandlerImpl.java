@@ -71,20 +71,22 @@ public class FcmSdkHandlerImpl implements IFcmSdkHandler {
                 listener.config().log(LOG_TAG, FCM_LOG_TAG + "FCM token - " + tokenUsingManifestMetaEntry);
                 listener.onNewToken(tokenUsingManifestMetaEntry, getPushType());
             } else {
+                listener.config()
+                        .log(LOG_TAG, FCM_LOG_TAG + "Requesting FCM token using googleservices.json");
                 FirebaseInstanceId.getInstance().getInstanceId()
                         .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
                             @Override
                             public void onComplete(@NonNull Task<InstanceIdResult> task) {
                                 if (!task.isSuccessful()) {
                                     listener.config()
-                                            .log(LOG_TAG, FCM_LOG_TAG + "getInstanceId failed", task.getException());
+                                            .log(LOG_TAG, FCM_LOG_TAG + "FCM token using googleservices.json failed", task.getException());
                                     listener.onNewToken(null, getPushType());
                                     return;
                                 }
 
                                 // Get new Instance ID token
                                 String token = task.getResult() != null ? task.getResult().getToken() : null;
-                                listener.config().log(LOG_TAG, FCM_LOG_TAG + "FCM token - " + token);
+                                listener.config().log(LOG_TAG, FCM_LOG_TAG + "FCM token using googleservices.json - " + token);
                                 listener.onNewToken(token, getPushType());
                             }
                         });

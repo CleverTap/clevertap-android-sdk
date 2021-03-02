@@ -437,12 +437,12 @@ public final class Utils {
             String senderID = ManifestInfo.getInstance(context).getFCMSenderId();
             if (senderID != null) {
                 config.getLogger().verbose(config.getAccountId(),
-                        "FcmManager: Requesting a FCM token with Sender Id - " + senderID);
+                        "Requesting an FCM token with Manifest SenderId - " + senderID);
                 token = FirebaseInstanceId.getInstance().getToken(senderID, FirebaseMessaging.INSTANCE_ID_SCOPE);
             }
-            config.getLogger().info(config.getAccountId(), "FCM token: " + token);
+            config.getLogger().info(config.getAccountId(), "FCM token using Manifest SenderId: " + token);
         } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "FcmManager: Error requesting FCM token", t);
+            config.getLogger().verbose(config.getAccountId(), "Error requesting FCM token with Manifest SenderId", t);
         }
         return token;
     }
