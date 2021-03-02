@@ -21,7 +21,10 @@ import android.os.Looper;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import androidx.core.content.ContextCompat;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.messaging.FirebaseMessaging;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -425,5 +428,22 @@ public final class Utils {
             // No error handling here - handle upstream
             return drawableToBitmap(context.getPackageManager().getApplicationIcon(context.getApplicationInfo()));
         }
+    }
+
+    @RestrictTo(Scope.LIBRARY)
+    public static String getFcmTokenUsingManifestMetaEntry(Context context, CleverTapInstanceConfig config) {
+        String token = null;
+        try {
+            String senderID = ManifestInfo.getInstance(context).getFCMSenderId();
+            if (senderID != null) {
+                config.getLogger().verbose(config.getAccountId(),
+                        "FcmManager: Requesting a FCM token with Sender Id - " + senderID);
+                token = FirebaseInstanceId.getInstance().getToken(senderID, FirebaseMessaging.INSTANCE_ID_SCOPE);
+            }
+            config.getLogger().info(config.getAccountId(), "FCM token: " + token);
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(), "FcmManager: Error requesting FCM token", t);
+        }
+        return token;
     }
 }
