@@ -15,7 +15,11 @@ class IOExecutor implements ExecutorService {
 
     private final int numCores = Runtime.getRuntime().availableProcessors();
 
-    private final ExecutorService mExecutorService = new ThreadPoolExecutor(numCores * 2, numCores * 2,
+    public void setExecutorService(final ExecutorService executorService) {
+        mExecutorService = executorService;
+    }
+
+    ExecutorService mExecutorService = new ThreadPoolExecutor(numCores * 2, numCores * 2,
             60L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 
     @Override
