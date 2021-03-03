@@ -9,9 +9,9 @@ import static com.clevertap.android.sdk.utils.PackageUtils.isGooglePlayStoreAvai
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import com.clevertap.android.sdk.ManifestInfo;
-import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
+import com.clevertap.android.sdk.utils.Utils;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;

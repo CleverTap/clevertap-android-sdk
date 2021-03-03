@@ -15,6 +15,7 @@ import android.media.AudioAttributes;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -2454,6 +2455,24 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             }
         } catch (Throwable t) {
             return null;
+        }
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static void fcmTokenRefresh(Context context, String token) {
+
+        for (CleverTapAPI instance : getAvailableInstances(context)) {
+            if (instance == null || instance.getCoreState().getConfig().isAnalyticsOnly()) {
+                Logger.d(instance.getAccountId(),
+                        "Instance is Analytics Only not processing device token");
+                continue;
+            }
+            //get token from Manifest
+            String tokenUsingManifestMetaEntry = Utils.getFcmTokenUsingManifestMetaEntry(context, instance.getCoreState().getConfig());
+            if (!TextUtils.isEmpty(tokenUsingManifestMetaEntry)) {
+                token = tokenUsingManifestMetaEntry;
+            }
+            instance.getCoreState().getPushProviders().doTokenRefresh(token, PushType.FCM);
         }
     }
 
