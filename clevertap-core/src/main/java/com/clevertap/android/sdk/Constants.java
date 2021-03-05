@@ -24,6 +24,7 @@ public interface Constants {
     String LABEL_PACKAGE_NAME = "CLEVERTAP_APP_PACKAGE";
     String LABEL_BETA = "CLEVERTAP_BETA";
     String LABEL_INTENT_SERVICE = "CLEVERTAP_INTENT_SERVICE";
+    String LABEL_LC = "CLEVERTAP_LC";
     String LABEL_XIAOMI_APP_KEY = "CLEVERTAP_XIAOMI_APP_KEY";
     String LABEL_XIAOMI_APP_ID = "CLEVERTAP_XIAOMI_APP_ID";
     String CLEVERTAP_OPTOUT = "ct_optout";
@@ -174,6 +175,8 @@ public interface Constants {
     String KEY_ENABLE_UIEDITOR = "enableUIEditor";
     String KEY_ENABLE_ABTEST = "enableABTesting";
     String KEY_ALLOWED_PUSH_TYPES = "allowedPushTypes";
+    String KEY_STAGING = "staging";
+    String KEY_IDENTITY_TYPES = "identityTypes";
     String WZRK_PUSH_ID = "wzrk_pid";
     String NOTIF_MSG = "nm";
     String NOTIF_TITLE = "nt";

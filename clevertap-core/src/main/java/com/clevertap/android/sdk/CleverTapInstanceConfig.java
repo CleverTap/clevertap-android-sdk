@@ -38,6 +38,8 @@ public class CleverTapInstanceConfig implements Parcelable {
     @NonNull
     private ArrayList<String> allowedPushTypes = getAll();
 
+    private int staging;
+
     CleverTapInstanceConfig(CleverTapInstanceConfig config) {
         this.accountId = config.accountId;
         this.accountToken = config.accountToken;
@@ -202,6 +204,9 @@ public class CleverTapInstanceConfig implements Parcelable {
                 this.allowedPushTypes = (ArrayList<String>) toList(
                         configJsonObject.getJSONArray(Constants.KEY_ALLOWED_PUSH_TYPES));
             }
+            if (configJsonObject.has(Constants.KEY_STAGING)) {
+                this.staging = configJsonObject.getInt(Constants.KEY_STAGING);
+            }
         } catch (Throwable t) {
             Logger.v("Error constructing CleverTapInstanceConfig from JSON: " + jsonString + ": ", t.getCause());
             throw (t);
@@ -362,6 +367,10 @@ public class CleverTapInstanceConfig implements Parcelable {
         dest.writeString(packageName);
         dest.writeByte((byte) (beta ? 0x01 : 0x00));
         dest.writeList(allowedPushTypes);
+        dest.writeInt(staging);
+    }
+    public int getStaging() {
+        return staging;
     }
 
     boolean getEnableCustomCleverTapId() {
@@ -415,6 +424,10 @@ public class CleverTapInstanceConfig implements Parcelable {
         this.createdPostAppLaunch = true;
     }
 
+    public void setStaging(int staging) {
+        this.staging = staging;
+    }
+
     String toJSONString() {
         JSONObject configJsonObject = new JSONObject();
         try {
@@ -437,6 +450,7 @@ public class CleverTapInstanceConfig implements Parcelable {
             configJsonObject.put(Constants.KEY_ENABLE_UIEDITOR, isUIEditorEnabled());
             configJsonObject.put(Constants.KEY_ENABLE_ABTEST, isABTestingEnabled());
             configJsonObject.put(Constants.KEY_ALLOWED_PUSH_TYPES, toJsonArray(allowedPushTypes));
+            configJsonObject.put(Constants.KEY_STAGING, getStaging());
             return configJsonObject.toString();
         } catch (Throwable e) {
             Logger.v("Unable to convert config to JSON : ", e.getCause());

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
@@ -36,6 +37,8 @@ public class ManifestInfo {
     private static String packageName;
 
     private static boolean beta;
+
+    private static String LC;
 
     private static String intentServiceName;
 
@@ -84,6 +87,11 @@ public class ManifestInfo {
         }
         packageName = _getManifestStringValueForKey(metaData, Constants.LABEL_PACKAGE_NAME);
         beta = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_BETA));
+
+        if (LC == null) {
+            LC = _getManifestStringValueForKey(metaData, Constants.LABEL_LC);
+        }
+
         if (intentServiceName == null) {
             intentServiceName = _getManifestStringValueForKey(metaData, Constants.LABEL_INTENT_SERVICE);
         }
@@ -115,7 +123,9 @@ public class ManifestInfo {
     String getAccountRegion() {
         return accountRegion;
     }
-
+    String getLC() {
+        return LC;
+    }
     String getAcountToken() {
         return accountToken;
     }
