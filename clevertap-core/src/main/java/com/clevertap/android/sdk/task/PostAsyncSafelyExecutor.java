@@ -17,7 +17,11 @@ class PostAsyncSafelyExecutor implements ExecutorService {
 
     private long EXECUTOR_THREAD_ID = 0;
 
-    private final ExecutorService mExecutor = Executors.newSingleThreadExecutor();
+    void setExecutor(final ExecutorService executor) {
+        mExecutor = executor;
+    }
+
+    ExecutorService mExecutor = Executors.newSingleThreadExecutor();
 
     @Override
     public boolean awaitTermination(final long timeout, final TimeUnit unit) throws InterruptedException {
