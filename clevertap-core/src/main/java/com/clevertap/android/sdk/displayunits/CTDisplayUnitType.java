@@ -27,7 +27,7 @@ public enum CTDisplayUnitType {
      * @return CTDisplayUnitType
      */
     @Nullable
-    public static CTDisplayUnitType type(String type) {
+    public static CTDisplayUnitType type(@NonNull String type) {
 
         if (!TextUtils.isEmpty(type)) {
             switch (type) {

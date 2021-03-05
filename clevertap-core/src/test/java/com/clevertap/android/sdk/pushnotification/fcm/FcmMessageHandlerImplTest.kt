@@ -66,7 +66,7 @@ class FcmMessageHandlerImplTest : BaseTestCase() {
     @Test
     fun testOnNewToken_Failure() {
         Mockito.mockStatic(CleverTapAPI::class.java).use {
-            Mockito.`when`(CleverTapAPI.tokenRefresh(any(Context::class.java), eq(FCM_TOKEN), eq(FCM)))
+            Mockito.`when`(CleverTapAPI.fcmTokenRefresh(any(Context::class.java), eq(FCM_TOKEN)))
                 .thenThrow(RuntimeException("Something Went Wrong"))
             Assert.assertFalse(handler.onNewToken(application, FCM_TOKEN))
         }

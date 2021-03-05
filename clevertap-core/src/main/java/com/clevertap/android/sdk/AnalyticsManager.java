@@ -14,8 +14,9 @@ import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.response.CleverTapResponse;
 import com.clevertap.android.sdk.response.CleverTapResponseHelper;
 import com.clevertap.android.sdk.response.DisplayUnitResponse;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
-import com.clevertap.android.sdk.task.PostAsyncSafelyHandler;
+import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.utils.Utils;
@@ -27,6 +28,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -54,8 +56,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     private final MainLooperHandler mMainLooperHandler;
 
-    private final PostAsyncSafelyHandler mPostAsyncSafelyHandler;
-
     private final ValidationResultStack mValidationResultStack;
 
     private final Validator mValidator;
@@ -72,7 +72,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             Validator validator,
             ValidationResultStack validationResultStack,
             CoreMetaData coreMetaData,
-            PostAsyncSafelyHandler postAsyncSafelyHandler,
             LocalDataStore localDataStore,
             DeviceInfo deviceInfo,
             MainLooperHandler mainLooperHandler,
@@ -83,7 +82,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         mValidator = validator;
         mValidationResultStack = validationResultStack;
         mCoreMetaData = coreMetaData;
-        mPostAsyncSafelyHandler = postAsyncSafelyHandler;
         mLocalDataStore = localDataStore;
         mDeviceInfo = deviceInfo;
         mMainLooperHandler = mainLooperHandler;
@@ -95,12 +93,14 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     @Override
     public void addMultiValuesForKey(final String key, final ArrayList<String> values) {
-        mPostAsyncSafelyHandler.postAsyncSafely("addMultiValuesForKey", new Runnable() {
+        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        task.execute("addMultiValuesForKey", new Callable<Void>() {
             @Override
-            public void run() {
+            public Void call() {
                 final String command = (mLocalDataStore.getProfileValueForKey(key) != null)
                         ? Constants.COMMAND_ADD : Constants.COMMAND_SET;
                 _handleMultiValues(values, key, command);
+                return null;
             }
         });
     }
@@ -614,31 +614,36 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         if (profile == null || profile.isEmpty()) {
             return;
         }
-
-        mPostAsyncSafelyHandler.postAsyncSafely("profilePush", new Runnable() {
+        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        task.execute("profilePush",new Callable<Void>() {
             @Override
-            public void run() {
+            public Void call() {
                 _push(profile);
+                return null;
             }
         });
     }
 
     @Override
     public void removeMultiValuesForKey(final String key, final ArrayList<String> values) {
-        mPostAsyncSafelyHandler.postAsyncSafely("removeMultiValuesForKey", new Runnable() {
+        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        task.execute("removeMultiValuesForKey", new Callable<Void>() {
             @Override
-            public void run() {
+            public Void call() {
                 _handleMultiValues(values, key, Constants.COMMAND_REMOVE);
+                return null;
             }
         });
     }
 
     @Override
     public void removeValueForKey(final String key) {
-        mPostAsyncSafelyHandler.postAsyncSafely("removeValueForKey", new Runnable() {
+        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        task.execute("removeValueForKey", new Callable<Void>() {
             @Override
-            public void run() {
+            public Void call() {
                 _removeValueForKey(key);
+                return null;
             }
         });
     }
@@ -823,10 +828,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     void setMultiValuesForKey(final String key, final ArrayList<String> values) {
-        mPostAsyncSafelyHandler.postAsyncSafely("setMultiValuesForKey", new Runnable() {
+        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        task.execute("setMultiValuesForKey", new Callable<Void>() {
             @Override
-            public void run() {
+            public Void call() {
                 _handleMultiValues(values, key, Constants.COMMAND_SET);
+                return null;
             }
         });
     }

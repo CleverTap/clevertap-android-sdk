@@ -62,6 +62,8 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
         if (!response.has(Constants.DISPLAY_UNIT_JSON_RESPONSE_KEY)) {
             mLogger.verbose(mConfig.getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "JSON object doesn't contain the Display Units key");
+            // process feature flag response
+            mCleverTapResponse.processResponse(response, stringBody, context);
             return;
         }
         try {

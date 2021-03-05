@@ -48,7 +48,6 @@ import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundIntentService;
 import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundJobService;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
-import com.clevertap.android.sdk.task.PostAsyncSafelyHandler;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.Utils;
 import com.clevertap.android.sdk.validation.ValidationResult;
@@ -71,7 +70,7 @@ import org.json.JSONObject;
  */
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class PushProviders {
+public class PushProviders implements CTPushProviderListener {
 
     private final ArrayList<PushConstants.PushType> allEnabledPushTypes = new ArrayList<>();
 
@@ -86,8 +85,6 @@ public class PushProviders {
     private final CleverTapInstanceConfig mConfig;
 
     private final Context mContext;
-
-    private final PostAsyncSafelyHandler mPostAsyncSafelyHandler;
 
     private final ValidationResultStack mValidationResultStack;
 
@@ -104,11 +101,10 @@ public class PushProviders {
     public static PushProviders load(Context context,
             CleverTapInstanceConfig config,
             BaseDatabaseManager baseDatabaseManager,
-            PostAsyncSafelyHandler postAsyncSafelyHandler,
             ValidationResultStack validationResultStack,
             AnalyticsManager analyticsManager, ControllerManager controllerManager) {
-        PushProviders providers = new PushProviders(context, config, baseDatabaseManager,
-                postAsyncSafelyHandler, validationResultStack, analyticsManager);
+        PushProviders providers = new PushProviders(context, config, baseDatabaseManager, validationResultStack,
+                analyticsManager);
         providers.init();
         controllerManager.setPushProviders(providers);
         return providers;
@@ -118,13 +114,11 @@ public class PushProviders {
             Context context,
             CleverTapInstanceConfig config,
             BaseDatabaseManager baseDatabaseManager,
-            PostAsyncSafelyHandler postAsyncSafelyHandler,
             ValidationResultStack validationResultStack,
             AnalyticsManager analyticsManager) {
         this.mContext = context;
         this.mConfig = config;
         mBaseDatabaseManager = baseDatabaseManager;
-        mPostAsyncSafelyHandler = postAsyncSafelyHandler;
         mValidationResultStack = validationResultStack;
         mAnalyticsManager = analyticsManager;
         initPushAmp();
@@ -156,48 +150,49 @@ public class PushProviders {
         }
 
         try {
-            mPostAsyncSafelyHandler
-                    .postAsyncSafely("CleverTapAPI#_createNotification", new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                mConfig.getLogger()
-                                        .debug(mConfig.getAccountId(), "Handling notification: " + extras.toString());
-                                if (extras.getString(Constants.WZRK_PUSH_ID) != null) {
-                                    if (mBaseDatabaseManager.loadDBAdapter(context)
-                                            .doesPushNotificationIdExist(extras.getString(Constants.WZRK_PUSH_ID))) {
-                                        mConfig.getLogger().debug(mConfig.getAccountId(),
-                                                "Push Notification already rendered, not showing again");
-                                        return;
-                                    }
-                                }
-                                String notifMessage = extras.getString(Constants.NOTIF_MSG);
-                                notifMessage = (notifMessage != null) ? notifMessage : "";
-                                if (notifMessage.isEmpty()) {
-                                    //silent notification
-                                    mConfig.getLogger()
-                                            .verbose(mConfig.getAccountId(),
-                                                    "Push notification message is empty, not rendering");
-                                    mBaseDatabaseManager.loadDBAdapter(context)
-                                            .storeUninstallTimestamp();
-                                    String pingFreq = extras.getString("pf", "");
-                                    if (!TextUtils.isEmpty(pingFreq)) {
-                                        updatePingFrequencyIfNeeded(context, Integer.parseInt(pingFreq));
-                                    }
-                                    return;
-                                }
-                                String notifTitle = extras.getString(Constants.NOTIF_TITLE, "");
-                                notifTitle = notifTitle.isEmpty() ? context.getApplicationInfo().name : notifTitle;
-                                triggerNotification(context, extras, notifMessage, notifTitle, notificationId);
-                            } catch (Throwable t) {
-                                // Occurs if the notification image was null
-                                // Let's return, as we couldn't get a handle on the app's icon
-                                // Some devices throw a PackageManager* exception too
-                                mConfig.getLogger()
-                                        .debug(mConfig.getAccountId(), "Couldn't render notification: ", t);
+            Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+            task.execute("CleverTapAPI#_createNotification", new Callable<Void>() {
+                @Override
+                public Void call() {
+                    try {
+                        mConfig.getLogger()
+                                .debug(mConfig.getAccountId(), "Handling notification: " + extras.toString());
+                        if (extras.getString(Constants.WZRK_PUSH_ID) != null) {
+                            if (mBaseDatabaseManager.loadDBAdapter(context)
+                                    .doesPushNotificationIdExist(extras.getString(Constants.WZRK_PUSH_ID))) {
+                                mConfig.getLogger().debug(mConfig.getAccountId(),
+                                        "Push Notification already rendered, not showing again");
+                                return null;
                             }
                         }
-                    });
+                        String notifMessage = extras.getString(Constants.NOTIF_MSG);
+                        notifMessage = (notifMessage != null) ? notifMessage : "";
+                        if (notifMessage.isEmpty()) {
+                            //silent notification
+                            mConfig.getLogger()
+                                    .verbose(mConfig.getAccountId(),
+                                            "Push notification message is empty, not rendering");
+                            mBaseDatabaseManager.loadDBAdapter(context)
+                                    .storeUninstallTimestamp();
+                            String pingFreq = extras.getString("pf", "");
+                            if (!TextUtils.isEmpty(pingFreq)) {
+                                updatePingFrequencyIfNeeded(context, Integer.parseInt(pingFreq));
+                            }
+                            return null;
+                        }
+                        String notifTitle = extras.getString(Constants.NOTIF_TITLE, "");
+                        notifTitle = notifTitle.isEmpty() ? context.getApplicationInfo().name : notifTitle;
+                        triggerNotification(context, extras, notifMessage, notifTitle, notificationId);
+                    } catch (Throwable t) {
+                        // Occurs if the notification image was null
+                        // Let's return, as we couldn't get a handle on the app's icon
+                        // Some devices throw a PackageManager* exception too
+                        mConfig.getLogger()
+                                .debug(mConfig.getAccountId(), "Couldn't render notification: ", t);
+                    }
+                    return null;
+                }
+            });
         } catch (Throwable t) {
             mConfig.getLogger().debug(mConfig.getAccountId(), "Failed to process push notification", t);
         }
@@ -215,10 +210,10 @@ public class PushProviders {
         }
 //
         try {
-            Task<Void> task = CTExecutorFactory.getInstance(mConfig).ioTask();
-            task.call(new Callable<Void>() {
+            Task<Void> task = CTExecutorFactory.executors(mConfig).ioTask();
+            task.execute("PushProviders#cacheToken", new Callable<Void>() {
                 @Override
-                public Void call() throws Exception {
+                public Void call() {
                     if (alreadyHaveToken(token, pushType)) {
                         return null;
                     }
@@ -341,6 +336,7 @@ public class PushProviders {
         return false;
     }
 
+    @Override
     public void onNewToken(String freshToken, PushConstants.PushType pushType) {
         if (!TextUtils.isEmpty(freshToken)) {
             doTokenRefresh(freshToken, pushType);
@@ -361,9 +357,10 @@ public class PushProviders {
      * @param extras - Bundle
      */
     public void processCustomPushNotification(final Bundle extras) {
-        mPostAsyncSafelyHandler.postAsyncSafely("customHandlePushAmplification", new Runnable() {
+        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        task.execute("customHandlePushAmplification", new Callable<Void>() {
             @Override
-            public void run() {
+            public Void call() {
                 String notifMessage = extras.getString(Constants.NOTIF_MSG);
                 notifMessage = (notifMessage != null) ? notifMessage : "";
                 if (notifMessage.isEmpty()) {
@@ -384,17 +381,19 @@ public class PushProviders {
                     mConfig.getLogger().verbose("Storing Push Notification..." + wzrk_pid + " - with ttl - " + ttl);
                     dbAdapter.storePushNotificationId(wzrk_pid, wzrk_ttl);
                 }
+                return null;
             }
         });
     }
 
     public void runInstanceJobWork(final Context context, final JobParameters parameters) {
-        mPostAsyncSafelyHandler.postAsyncSafely("runningJobService", new Runnable() {
+        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        task.execute("runningJobService", new Callable<Void>() {
             @Override
-            public void run() {
+            public Void call() {
                 if (isNotificationSupported()) {
                     Logger.v(mConfig.getAccountId(), "Token is not present, not running the Job");
-                    return;
+                    return null;
                 }
 
                 Calendar now = Calendar.getInstance();
@@ -408,7 +407,7 @@ public class PushProviders {
 
                 if (isTimeBetweenDNDTime(startTime, endTime, currentTime)) {
                     Logger.v(mConfig.getAccountId(), "Job Service won't run in default DND hours");
-                    return;
+                    return null;
                 }
 
                 long lastTS = mBaseDatabaseManager.loadDBAdapter(context).getLastUninstallTimestamp();
@@ -450,6 +449,7 @@ public class PushProviders {
                     }
 
                 }
+                return null;
             }
         });
     }
@@ -474,19 +474,20 @@ public class PushProviders {
         if (frequency != getPingFrequency(context)) {
             setPingFrequency(context, frequency);
             if (mConfig.isBackgroundSync() && !mConfig.isAnalyticsOnly()) {
-                mPostAsyncSafelyHandler
-                        .postAsyncSafely("createOrResetJobScheduler", new Runnable() {
-                            @Override
-                            public void run() {
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                                    mConfig.getLogger().verbose("Creating job");
-                                    createOrResetJobScheduler(context);
-                                } else {
-                                    mConfig.getLogger().verbose("Resetting alarm");
-                                    resetAlarmScheduler(context);
-                                }
-                            }
-                        });
+                Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+                task.execute("createOrResetJobScheduler", new Callable<Void>() {
+                    @Override
+                    public Void call() {
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                            mConfig.getLogger().verbose("Creating job");
+                            createOrResetJobScheduler(context);
+                        } else {
+                            mConfig.getLogger().verbose("Resetting alarm");
+                            resetAlarmScheduler(context);
+                        }
+                        return null;
+                    }
+                });
             }
         }
     }
@@ -600,8 +601,9 @@ public class PushProviders {
             CTPushProvider pushProvider = null;
             try {
                 Class<?> providerClass = Class.forName(className);
-                Constructor<?> constructor = providerClass.getConstructor(CTPushProviderListener.class);
-                pushProvider = (CTPushProvider) constructor.newInstance(this);
+                Constructor<?> constructor = providerClass
+                        .getConstructor(CTPushProviderListener.class, Context.class, CleverTapInstanceConfig.class);
+                pushProvider = (CTPushProvider) constructor.newInstance(this, mContext, mConfig);
                 mConfig.log(PushConstants.LOG_TAG, "Found provider:" + className);
             } catch (InstantiationException e) {
                 mConfig.log(PushConstants.LOG_TAG, "Unable to create provider InstantiationException" + className);
@@ -705,14 +707,16 @@ public class PushProviders {
     private void initPushAmp() {
         if (mConfig.isBackgroundSync() && !mConfig
                 .isAnalyticsOnly()) {
-            mPostAsyncSafelyHandler.postAsyncSafely("createOrResetJobScheduler", new Runnable() {
+            Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+            task.execute("createOrResetJobScheduler", new Callable<Void>() {
                 @Override
-                public void run() {
+                public Void call() {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                         createOrResetJobScheduler(mContext);
                     } else {
                         createAlarmScheduler(mContext);
                     }
+                    return null;
                 }
             });
         }
@@ -836,8 +840,8 @@ public class PushProviders {
      * Fetches latest tokens from various providers and send to Clevertap's server
      */
     private void refreshAllTokens() {
-        Task<Void> task = CTExecutorFactory.getInstance(mConfig).ioTask();
-        task.call(new Callable<Void>() {
+        Task<Void> task = CTExecutorFactory.executors(mConfig).ioTask();
+        task.execute("PushProviders#refreshAllTokens", new Callable<Void>() {
             @Override
             public Void call() {
                 // refresh tokens of Push Providers

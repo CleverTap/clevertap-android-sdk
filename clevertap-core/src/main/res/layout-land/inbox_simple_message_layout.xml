@@ -22,14 +22,14 @@
                 android:layout_weight="1"
                 android:visibility="visible">
 
-                <com.clevertap.android.sdk.RectangleImageView
+                <com.clevertap.android.sdk.customviews.RectangleImageView
                     android:id="@+id/media_image"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:scaleType="fitCenter"
                     android:visibility="gone" />
 
-                <com.clevertap.android.sdk.HorizontalSquareImageView
+                <com.clevertap.android.sdk.customviews.HorizontalSquareImageView
                     android:id="@+id/square_media_image"
                     android:layout_width="wrap_content"
                     android:layout_height="200dp"

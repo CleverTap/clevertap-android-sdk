@@ -44,7 +44,6 @@ public class CleverTapDisplayUnitContent implements Parcelable {
 
     private String titleColor;
 
-
     private CleverTapDisplayUnitContent(String title, String titleColor, String message, String messageColor,
             String icon, String media, String contentType, String posterUrl,
             String actionUrl, String error) {
@@ -59,6 +58,7 @@ public class CleverTapDisplayUnitContent implements Parcelable {
         this.actionUrl = actionUrl;
         this.error = error;
     }
+
 
     private CleverTapDisplayUnitContent(Parcel in) {
         title = in.readString();
@@ -99,6 +99,10 @@ public class CleverTapDisplayUnitContent implements Parcelable {
     @SuppressWarnings("unused")
     public String getContentType() {
         return contentType;
+    }
+
+    void setContentType(final String contentType) {
+        this.contentType = contentType;
     }
 
     public String getError() {

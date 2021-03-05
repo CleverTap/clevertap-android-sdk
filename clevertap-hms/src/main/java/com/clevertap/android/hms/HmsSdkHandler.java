@@ -5,8 +5,9 @@ import static com.clevertap.android.hms.HmsConstants.HCM_SCOPE;
 import static com.clevertap.android.hms.HmsConstants.HMS_LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
 
+import android.content.Context;
 import android.text.TextUtils;
-import com.clevertap.android.sdk.BaseCTApiListener;
+import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.huawei.agconnect.config.AGConnectServicesConfig;
 import com.huawei.hms.aaid.HmsInstanceId;
 import com.huawei.hms.api.HuaweiApiAvailability;
@@ -16,19 +17,22 @@ import com.huawei.hms.api.HuaweiApiAvailability;
  */
 class HmsSdkHandler implements IHmsSdkHandler {
 
-    private final BaseCTApiListener mListener;
+    private final Context context;
 
-    HmsSdkHandler(BaseCTApiListener ctPushListener) {
-        this.mListener = ctPushListener;
+    private final CleverTapInstanceConfig mConfig;
+
+    HmsSdkHandler(final Context context, final CleverTapInstanceConfig config) {
+        this.context = context.getApplicationContext();
+        mConfig = config;
     }
 
     @Override
     public String appId() {
         String appId = null;
         try {
-            appId = AGConnectServicesConfig.fromContext(mListener.context()).getString(APP_ID_KEY);
+            appId = AGConnectServicesConfig.fromContext(context).getString(APP_ID_KEY);
         } catch (Throwable t) {
-            mListener.config().log(LOG_TAG, HMS_LOG_TAG + "HMS availability check failed.");
+            mConfig.log(LOG_TAG, HMS_LOG_TAG + "HMS availability check failed.");
         }
         return appId;
     }
@@ -41,9 +45,9 @@ class HmsSdkHandler implements IHmsSdkHandler {
     @Override
     public boolean isSupported() {
         try {
-            return HuaweiApiAvailability.getInstance().isHuaweiMobileNoticeAvailable(mListener.context()) == 0;
+            return HuaweiApiAvailability.getInstance().isHuaweiMobileNoticeAvailable(context) == 0;
         } catch (Throwable e) {
-            mListener.config().log(LOG_TAG, HMS_LOG_TAG + "HMS is supported check failed.");
+            mConfig.log(LOG_TAG, HMS_LOG_TAG + "HMS is supported check failed.");
             return false;
         }
     }
@@ -54,10 +58,10 @@ class HmsSdkHandler implements IHmsSdkHandler {
         try {
             String appId = appId();
             if (!TextUtils.isEmpty(appId)) {
-                token = HmsInstanceId.getInstance(mListener.context()).getToken(appId, HCM_SCOPE);
+                token = HmsInstanceId.getInstance(context).getToken(appId, HCM_SCOPE);
             }
         } catch (Throwable t) {
-            mListener.config().log(LOG_TAG, HMS_LOG_TAG + "Error requesting HMS token", t);
+            mConfig.log(LOG_TAG, HMS_LOG_TAG + "Error requesting HMS token", t);
         }
         return token;
     }

@@ -25,15 +25,15 @@ public class CTFeatureFlagsController {
 
     final CleverTapInstanceConfig config;
 
+    String guid;
+
+    boolean isInitialized = false;
+
     final BaseAnalyticsManager mAnalyticsManager;
 
     final BaseCallbackManager mCallbackManager;
 
     FileUtils mFileUtils;
-
-    String guid;
-
-    private boolean isInitialized = false;
 
     private final Map<String, Boolean> store = Collections.synchronizedMap(new HashMap<String, Boolean>());
 
@@ -56,8 +56,8 @@ public class CTFeatureFlagsController {
      * Developers should not use this method
      */
     public void fetchFeatureFlags() {
-        Task<Void> task = CTExecutorFactory.getInstance(config).mainTask();
-        task.call(new Callable<Void>() {
+        Task<Void> task = CTExecutorFactory.executors(config).mainTask();
+        task.execute("fetchFeatureFlags", new Callable<Void>() {
             @Override
             public Void call() {
                 try {
@@ -85,8 +85,7 @@ public class CTFeatureFlagsController {
         }
         getConfigLogger().verbose(getLogTag(),
                 "Getting feature flag with key - " + key + " and default value - " + defaultValue);
-        Boolean value;
-        value = store.get(key);
+        Boolean value = store.get(key);
         if (value != null) {
             return value;
         } else {
@@ -150,21 +149,6 @@ public class CTFeatureFlagsController {
         notifyFeatureFlagUpdate();
     }
 
-    private synchronized void archiveData(JSONObject featureFlagRespObj) {
-
-        if (featureFlagRespObj != null) {
-            try {
-                mFileUtils.writeJsonToFile(getCachedDirName(), getCachedFileName(),
-                        featureFlagRespObj);
-                getConfigLogger()
-                        .verbose(getLogTag(), "Feature flags saved into file-[" + getCachedFullPath() + "]" + store);
-            } catch (Exception e) {
-                e.printStackTrace();
-                getConfigLogger().verbose(getLogTag(), "ArchiveData failed - " + e.getLocalizedMessage());
-            }
-        }
-    }
-
     String getCachedDirName() {
         return CTFeatureFlagConstants.DIR_FEATURE_FLAG + "_" + config.getAccountId() + "_" + guid;
     }
@@ -177,26 +161,18 @@ public class CTFeatureFlagsController {
         return getCachedDirName() + "/" + getCachedFileName();
     }
 
-    private Logger getConfigLogger() {
-        return config.getLogger();
-    }
-
-    private String getLogTag() {
-        return config.getAccountId() + "[Feature Flag]";
-    }
-
     void init() {
         if (TextUtils.isEmpty(guid)) {
             return;
         }
-        Task<Boolean> task = CTExecutorFactory.getInstance(config).ioTask();
+        Task<Boolean> task = CTExecutorFactory.executors(config).ioTask();
         task.addOnSuccessListener(new OnSuccessListener<Boolean>() {
             @Override
             public void onSuccess(final Boolean init) {
                 isInitialized = init;
             }
         });
-        task.call(new Callable<Boolean>() {
+        task.execute("initFeatureFlags", new Callable<Boolean>() {
             @Override
             public Boolean call() {
                 synchronized (this) {
@@ -240,10 +216,33 @@ public class CTFeatureFlagsController {
         });
     }
 
+    private synchronized void archiveData(JSONObject featureFlagRespObj) {
+
+        if (featureFlagRespObj != null) {
+            try {
+                mFileUtils.writeJsonToFile(getCachedDirName(), getCachedFileName(),
+                        featureFlagRespObj);
+                getConfigLogger()
+                        .verbose(getLogTag(), "Feature flags saved into file-[" + getCachedFullPath() + "]" + store);
+            } catch (Exception e) {
+                e.printStackTrace();
+                getConfigLogger().verbose(getLogTag(), "ArchiveData failed - " + e.getLocalizedMessage());
+            }
+        }
+    }
+
+    private Logger getConfigLogger() {
+        return config.getLogger();
+    }
+
+    private String getLogTag() {
+        return config.getAccountId() + "[Feature Flag]";
+    }
+
     private void notifyFeatureFlagUpdate() {
         if (mCallbackManager.getFeatureFlagListener() != null) {
-            Task<Void> task = CTExecutorFactory.getInstance(config).mainTask();
-            task.call(new Callable<Void>() {
+            Task<Void> task = CTExecutorFactory.executors(config).mainTask();
+            task.execute("notifyFeatureFlagUpdate", new Callable<Void>() {
                 @Override
                 public Void call() {
                     try {

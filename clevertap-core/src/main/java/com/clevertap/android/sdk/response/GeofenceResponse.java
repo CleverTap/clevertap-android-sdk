@@ -48,6 +48,8 @@ public class GeofenceResponse extends CleverTapResponseDecorator {
         if (!response.has(Constants.GEOFENCES_JSON_RESPONSE_KEY)) {
             mLogger.verbose(mConfig.getAccountId(),
                     Constants.LOG_TAG_GEOFENCES + "JSON object doesn't contain the Geofences key");
+            // process further response
+            mCleverTapResponse.processResponse(response, stringBody, context);
             return;
         }
         try {

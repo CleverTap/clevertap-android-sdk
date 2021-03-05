@@ -2,7 +2,6 @@ package com.clevertap.android.shared.test
 
 import android.os.Build.VERSION_CODES
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.clevertap.android.sdk.BaseCTApiListener
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import org.junit.*

@@ -21,7 +21,9 @@ import org.mockito.*
 import org.mockito.Mockito.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows.shadowOf
+import java.util.HashMap
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 @RunWith(RobolectricTestRunner::class)
 @TestMethodOrder(OrderAnnotation::class)
@@ -35,14 +37,15 @@ class CTProductConfigControllerTest : BaseTestCase() {
     private lateinit var deviceInfo: DeviceInfo
     private lateinit var fileUtils: FileUtils
     private lateinit var listener: CTProductConfigListener
+    private lateinit var guid: String
 
     @Throws(Exception::class)
     @BeforeEach
     override fun setUp() {
         super.setUp()
         mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
-            val guid = "1212121221"
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
+            guid = "1212121221"
             coreMetaData = CoreMetaData()
             analyticsManager = mock(BaseAnalyticsManager::class.java)
             deviceInfo = MockDeviceInfo(application, cleverTapInstanceConfig, guid, coreMetaData)
@@ -51,7 +54,7 @@ class CTProductConfigControllerTest : BaseTestCase() {
             callbackManager.productConfigListener = listener
             productConfigSettings = mock(ProductConfigSettings::class.java)
             `when`(productConfigSettings.guid).thenReturn(guid)
-            fileUtils = spy(FileUtils(application,cleverTapInstanceConfig))
+            fileUtils = spy(FileUtils(application, cleverTapInstanceConfig))
             mProductConfigController = CTProductConfigController(
                 application,
                 cleverTapInstanceConfig,
@@ -67,7 +70,7 @@ class CTProductConfigControllerTest : BaseTestCase() {
 
     @Test
     fun testInit() {
-        Assert.assertTrue(mProductConfigController.isInitialized)
+        Assert.assertTrue(mProductConfigController.isInitialized.get())
     }
 
     @Test
@@ -116,7 +119,7 @@ class CTProductConfigControllerTest : BaseTestCase() {
     @Test
     fun test_Reset() {
         mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
             mProductConfigController.reset()
             Assert.assertEquals(mProductConfigController.defaultConfigs.size, 0)
             Assert.assertEquals(mProductConfigController.activatedConfigs.size, 0)
@@ -152,8 +155,7 @@ class CTProductConfigControllerTest : BaseTestCase() {
     fun test_activate() {
 
         mockStatic(CTExecutorFactory::class.java).use {
-            shadowOf(getMainLooper()).idle()
-            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
             `when`(fileUtils.readFromFile(mProductConfigController.activatedFullPath)).thenReturn(
                 JSONObject(
                     MockPCResponse().getFetchedConfig() as Map<*, *>
@@ -176,7 +178,7 @@ class CTProductConfigControllerTest : BaseTestCase() {
     fun test_activate_Fail() {
         mockStatic(CTExecutorFactory::class.java).use {
             `when`(productConfigSettings.guid).thenReturn("")
-            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
             mProductConfigController.activate()
             verify(listener, never()).onActivated()
         }
@@ -185,7 +187,7 @@ class CTProductConfigControllerTest : BaseTestCase() {
     @Test
     fun test_fetch_activate() {
         mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
             val windowInSeconds = TimeUnit.MINUTES.toSeconds(12)
             `when`(productConfigSettings.nextFetchIntervalInSeconds).thenReturn(windowInSeconds)
             val lastResponseTime = System.currentTimeMillis() - 2 * windowInSeconds * TimeUnit.SECONDS.toMillis(1)
@@ -195,7 +197,7 @@ class CTProductConfigControllerTest : BaseTestCase() {
             verify(analyticsManager).sendFetchEvent(any())
             Assert.assertTrue(coreMetaData.isProductConfigRequested)
 
-            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
 
             `when`(fileUtils.readFromFile(mProductConfigController.activatedFullPath)).thenReturn(
                 JSONObject(
@@ -224,7 +226,7 @@ class CTProductConfigControllerTest : BaseTestCase() {
     @Test
     fun test_onFetchSuccess() {
         mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.getInstance(cleverTapInstanceConfig)).thenReturn(MockCTExecutors())
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
             mProductConfigController.onFetchSuccess(MockPCResponse().getMockPCResponse())
             verify(fileUtils).writeJsonToFile(
                 ArgumentMatchers.eq(mProductConfigController.productConfigDirName),
@@ -239,5 +241,85 @@ class CTProductConfigControllerTest : BaseTestCase() {
     fun test_onFetchFailed() {
         mProductConfigController.onFetchFailed()
         Assert.assertEquals(mProductConfigController.isFetchAndActivating, false)
+    }
+
+    @Test
+    fun test_setGuidAndInit_whenCleverTapIDNull_GuidNotSet() {
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
+            val controller = spy(mProductConfigController)
+            val newGuid = ""
+            controller.setGuidAndInit(newGuid)
+            Assert.assertEquals(controller.settings.guid, guid)
+            verify(productConfigSettings, never()).setGuid(newGuid)
+            verify(controller, never()).initAsync()
+        }
+    }
+
+    @Test
+    fun test_setGuidAndInit_tryingToSetGuidWhenAlreadyInitialised_ShouldNotUpdateGuid() {
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
+            val controller = spy(mProductConfigController)
+            controller.isInitialized = AtomicBoolean(true)
+            val newGuid = "333333333"
+            controller.setGuidAndInit(newGuid)
+            Assert.assertEquals(controller.settings.guid, guid)
+            verify(productConfigSettings, never()).setGuid(newGuid)
+            verify(controller, never()).initAsync()
+        }
+    }
+
+    @Test
+    fun test_setGuidAndInit_tryingToSetGuidWhenNotInitialised_GuidIsUpdatedWithInitialisation() {
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
+            val settings = ProductConfigSettings(guid, cleverTapInstanceConfig, fileUtils)
+            val controller = spy(
+                CTProductConfigController(
+                    application,
+                    cleverTapInstanceConfig,
+                    analyticsManager,
+                    coreMetaData,
+                    callbackManager,
+                    settings, fileUtils
+                )
+            )
+            controller.isInitialized.set(false)
+            val newGuid = "333333333"
+            controller.setGuidAndInit(newGuid)
+            Assert.assertEquals(controller.settings.guid, newGuid)
+            verify(controller).initAsync()
+            Assert.assertTrue(controller.isInitialized.get())
+        }
+    }
+
+    @Test
+    fun test_setDefaultsWithXmlParser() {
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
+            val resId = 12212
+            val xmlParser = mock(DefaultXmlParser::class.java)
+            val mockPCResponse = MockPCResponse()
+            `when`(xmlParser.getDefaultsFromXml(application, resId)).thenReturn(mockPCResponse.getDefaultConfig() as HashMap<String, String>)
+            val controller = spy(mProductConfigController)
+            controller.setDefaultsWithXmlParser(resId, xmlParser)
+            verify(controller).initAsync()
+            Assert.assertEquals(controller.getString("def_str"),"This is def_string" )
+            Assert.assertEquals(controller.getString("def_long"),"11111" )
+            Assert.assertEquals(controller.getString("def_double"),"2222.2222" )
+            Assert.assertEquals(controller.getString("def_bool"),"false" )
+        }
+    }
+
+    @Test
+    fun test_setDefaultUsingXML() {
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
+            val controller = spy(mProductConfigController)
+            val resId = 12212
+            controller.setDefaults(resId)
+            verify(controller).setDefaultsWithXmlParser(eq(resId), any(DefaultXmlParser::class.java))
+        }
     }
 }

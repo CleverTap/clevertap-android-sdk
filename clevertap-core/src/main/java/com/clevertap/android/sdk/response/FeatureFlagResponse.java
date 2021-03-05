@@ -48,6 +48,8 @@ public class FeatureFlagResponse extends CleverTapResponseDecorator {
         if (!response.has(Constants.FEATURE_FLAG_JSON_RESPONSE_KEY)) {
             mLogger.verbose(mConfig.getAccountId(),
                     Constants.FEATURE_FLAG_UNIT + "JSON object doesn't contain the Feature Flags key");
+            // process product config response
+            mCleverTapResponse.processResponse(response, stringBody, context);
             return;
         }
         try {

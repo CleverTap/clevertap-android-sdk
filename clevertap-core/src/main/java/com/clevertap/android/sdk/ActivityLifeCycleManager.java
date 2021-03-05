@@ -11,7 +11,9 @@ import com.android.installreferrer.api.ReferrerDetails;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
-import com.clevertap.android.sdk.task.PostAsyncSafelyHandler;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.Task;
+import java.util.concurrent.Callable;
 
 class ActivityLifeCycleManager {
 
@@ -29,8 +31,6 @@ class ActivityLifeCycleManager {
 
     private final InAppController mInAppController;
 
-    private final PostAsyncSafelyHandler mPostAsyncSafelyHandler;
-
     private final PushProviders mPushProviders;
 
     private final SessionManager mSessionManager;
@@ -43,8 +43,7 @@ class ActivityLifeCycleManager {
             PushProviders pushProviders,
             BaseCallbackManager callbackManager,
             InAppController inAppController,
-            BaseEventQueueManager baseEventQueueManager,
-            PostAsyncSafelyHandler postAsyncSafelyHandler) {
+            BaseEventQueueManager baseEventQueueManager) {
         mContext = context;
         mConfig = config;
         mAnalyticsManager = analyticsManager;
@@ -54,7 +53,6 @@ class ActivityLifeCycleManager {
         mCallbackManager = callbackManager;
         mInAppController = inAppController;
         mBaseEventQueueManager = baseEventQueueManager;
-        mPostAsyncSafelyHandler = postAsyncSafelyHandler;
     }
 
     //Lifecycle
@@ -88,13 +86,15 @@ class ActivityLifeCycleManager {
             mAnalyticsManager.pushAppLaunchedEvent();
             mAnalyticsManager.fetchFeatureFlags();
             mPushProviders.onTokenRefresh();
-            mPostAsyncSafelyHandler.postAsyncSafely("HandlingInstallReferrer", new Runnable() {
+            Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+            task.execute("HandlingInstallReferrer",new Callable<Void>() {
                 @Override
-                public void run() {
+                public Void call() {
                     if (!mCoreMetaData.isInstallReferrerDataSent() && mCoreMetaData
                             .isFirstSession()) {
                         handleInstallReferrerOnFirstInstall();
                     }
+                    return null;
                 }
             });
 

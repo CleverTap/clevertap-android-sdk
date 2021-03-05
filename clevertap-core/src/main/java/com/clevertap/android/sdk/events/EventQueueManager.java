@@ -19,13 +19,15 @@ import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
 import com.clevertap.android.sdk.network.BaseNetworkManager;
 import com.clevertap.android.sdk.network.NetworkManager;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
-import com.clevertap.android.sdk.task.PostAsyncSafelyHandler;
+import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.Utils;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import java.util.Iterator;
 import java.util.TimeZone;
+import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -52,19 +54,17 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
     private final Logger mLogger;
 
+    private LoginInfoProvider mLoginInfoProvider;
+
     private final MainLooperHandler mMainLooperHandler;
 
     private final BaseNetworkManager mNetworkManager;
-
-    private final PostAsyncSafelyHandler mPostAsyncSafelyHandler;
 
     private final SessionManager mSessionManager;
 
     private final ValidationResultStack mValidationResultStack;
 
     private Runnable pushNotificationViewedRunnable = null;
-
-    private LoginInfoProvider mLoginInfoProvider;
 
     public EventQueueManager(final BaseDatabaseManager baseDatabaseManager,
             Context context,
@@ -73,7 +73,6 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             SessionManager sessionManager,
             BaseCallbackManager callbackManager,
             MainLooperHandler mainLooperHandler,
-            PostAsyncSafelyHandler postAsyncSafelyHandler,
             DeviceInfo deviceInfo,
             ValidationResultStack validationResultStack,
             NetworkManager networkManager,
@@ -86,7 +85,6 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         mEventMediator = eventMediator;
         mSessionManager = sessionManager;
         mMainLooperHandler = mainLooperHandler;
-        mPostAsyncSafelyHandler = postAsyncSafelyHandler;
         mDeviceInfo = deviceInfo;
         mValidationResultStack = validationResultStack;
         mNetworkManager = networkManager;
@@ -98,11 +96,45 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         callbackManager.setFailureFlushListener(this);
     }
 
+    // only call async
+    @Override
+    public void addToQueue(final Context context, final JSONObject event, final int eventType) {
+        if (eventType == Constants.NV_EVENT) {
+            mConfig.getLogger()
+                    .verbose(mConfig.getAccountId(), "Pushing Notification Viewed event onto separate queue");
+            processPushNotificationViewedEvent(context, event);
+        } else {
+            processEvent(context, event, eventType);
+        }
+    }
+
     @Override
     public void failureFlush(Context context) {
         scheduleQueueFlush(context);
     }
 
+    @Override
+    public void flush() {
+        flushQueueAsync(mContext, EventGroup.REGULAR);
+    }
+
+    @Override
+    public void flushQueueAsync(final Context context, final EventGroup eventGroup) {
+        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        task.execute("CommsManager#flushQueueAsync", new Callable<Void>() {
+            @Override
+            public Void call() {
+                if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
+                    mLogger.verbose(mConfig.getAccountId(),
+                            "Pushing Notification Viewed event onto queue flush sync");
+                } else {
+                    mLogger.verbose(mConfig.getAccountId(), "Pushing event onto queue flush sync");
+                }
+                flushQueueSync(context, eventGroup);
+                return null;
+            }
+        });
+    }
 
     @Override
     public void flushQueueSync(final Context context, final EventGroup eventGroup) {
@@ -134,86 +166,8 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         return mLoginInfoProvider;
     }
 
-    /**
-     * Adds a new event to the queue, to be sent later.
-     *
-     * @param context   The Android context
-     * @param event     The event to be queued
-     * @param eventType The type of event to be queued
-     */
-    @Override
-    public Future<?> queueEvent(final Context context, final JSONObject event, final int eventType) {
-        return mPostAsyncSafelyHandler.postAsyncSafely("queueEvent", new Runnable() {
-            @Override
-            public void run() {
-                if (mEventMediator.shouldDropEvent(event, eventType)) {
-                    return;
-                }
-                if (mEventMediator.shouldDeferProcessingEvent(event, eventType)) {
-                    mConfig.getLogger().debug(mConfig.getAccountId(),
-                            "App Launched not yet processed, re-queuing event " + event + "after 2s");
-                    mMainLooperHandler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            mPostAsyncSafelyHandler.postAsyncSafely("queueEventWithDelay", new Runnable() {
-                                @Override
-                                public void run() {
-                                    mSessionManager.lazyCreateSession(context);
-                                    pushInitialEventsAsync();
-                                    addToQueue(context, event, eventType);
-                                }
-                            });
-                        }
-                    }, 2000);
-                } else {
-                    if (eventType == Constants.FETCH_EVENT) {
-                        addToQueue(context, event, eventType);
-                    } else {
-                        mSessionManager.lazyCreateSession(context);
-                        pushInitialEventsAsync();
-                        addToQueue(context, event, eventType);
-                    }
-                }
-            }
-        });
-    }
-
     public void setLoginInfoProvider(final LoginInfoProvider loginInfoProvider) {
         mLoginInfoProvider = loginInfoProvider;
-    }
-
-
-    // only call async
-    @Override
-    public void addToQueue(final Context context, final JSONObject event, final int eventType) {
-        if (eventType == Constants.NV_EVENT) {
-            mConfig.getLogger()
-                    .verbose(mConfig.getAccountId(), "Pushing Notification Viewed event onto separate queue");
-            processPushNotificationViewedEvent(context, event);
-        } else {
-            processEvent(context, event, eventType);
-        }
-    }
-
-    @Override
-    public void flush() {
-        flushQueueAsync(mContext, EventGroup.REGULAR);
-    }
-
-    @Override
-    public void flushQueueAsync(final Context context, final EventGroup eventGroup) {
-        mPostAsyncSafelyHandler.postAsyncSafely("CommsManager#flushQueueAsync", new Runnable() {
-            @Override
-            public void run() {
-                if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
-                    mLogger.verbose(mConfig.getAccountId(),
-                            "Pushing Notification Viewed event onto queue flush sync");
-                } else {
-                    mLogger.verbose(mConfig.getAccountId(), "Pushing event onto queue flush sync");
-                }
-                flushQueueSync(context, eventGroup);
-            }
-        });
     }
 
     public int getNow() {
@@ -386,18 +340,68 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     @Override
     public void pushInitialEventsAsync() {
         if (!mCleverTapMetaData.inCurrentSession()) {
-            mPostAsyncSafelyHandler.postAsyncSafely("CleverTapAPI#pushInitialEventsAsync", new Runnable() {
+            Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+            task.execute("CleverTapAPI#pushInitialEventsAsync", new Callable<Void>() {
                 @Override
-                public void run() {
+                public Void call() {
                     try {
                         mConfig.getLogger().verbose(mConfig.getAccountId(), "Queuing daily events");
                         pushBasicProfile(null);
                     } catch (Throwable t) {
                         mConfig.getLogger().verbose(mConfig.getAccountId(), "Daily profile sync failed", t);
                     }
+                    return null;
                 }
             });
         }
+    }
+
+    /**
+     * Adds a new event to the queue, to be sent later.
+     *
+     * @param context   The Android context
+     * @param event     The event to be queued
+     * @param eventType The type of event to be queued
+     */
+    @Override
+    public Future<?> queueEvent(final Context context, final JSONObject event, final int eventType) {
+        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        return task.submit("queueEvent", new Callable<Void>() {
+            @Override
+            public Void call() {
+                if (mEventMediator.shouldDropEvent(event, eventType)) {
+                    return null;
+                }
+                if (mEventMediator.shouldDeferProcessingEvent(event, eventType)) {
+                    mConfig.getLogger().debug(mConfig.getAccountId(),
+                            "App Launched not yet processed, re-queuing event " + event + "after 2s");
+                    mMainLooperHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+                            task.execute("queueEventWithDelay", new Callable<Void>() {
+                                @Override
+                                public Void call() {
+                                    mSessionManager.lazyCreateSession(context);
+                                    pushInitialEventsAsync();
+                                    addToQueue(context, event, eventType);
+                                    return null;
+                                }
+                            });
+                        }
+                    }, 2000);
+                } else {
+                    if (eventType == Constants.FETCH_EVENT) {
+                        addToQueue(context, event, eventType);
+                    } else {
+                        mSessionManager.lazyCreateSession(context);
+                        pushInitialEventsAsync();
+                        addToQueue(context, event, eventType);
+                    }
+                }
+                return null;
+            }
+        });
     }
 
     @Override
@@ -452,6 +456,10 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         }
     }
 
+    private String getCleverTapID() {
+        return mDeviceInfo.getDeviceID();
+    }
+
     private void schedulePushNotificationViewedQueueFlush(final Context context) {
         if (pushNotificationViewedRunnable == null) {
             pushNotificationViewedRunnable = new Runnable() {
@@ -474,10 +482,6 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         if (type == Constants.RAISED_EVENT) {
             mLocalDataStore.persistEvent(context, event, type);
         }
-    }
-
-    private String getCleverTapID() {
-        return mDeviceInfo.getDeviceID();
     }
 
 }

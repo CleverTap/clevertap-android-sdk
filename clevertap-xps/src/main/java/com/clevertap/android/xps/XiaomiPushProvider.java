@@ -6,8 +6,10 @@ import static com.clevertap.android.xps.XpsConstants.MIN_CT_ANDROID_SDK_VERSION;
 import static java.lang.Boolean.TRUE;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
+import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.pushnotification.CTPushProvider;
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
@@ -25,9 +27,10 @@ public class XiaomiPushProvider implements CTPushProvider {
     IMiSdkHandler miSdkHandler;
 
     @SuppressLint(value = "unused")
-    public XiaomiPushProvider(@NonNull CTPushProviderListener ctPushListener) {
+    public XiaomiPushProvider(@NonNull CTPushProviderListener ctPushListener, Context context,
+            CleverTapInstanceConfig config) {
         this.ctPushListener = ctPushListener;
-        this.miSdkHandler = new XiaomiSdkHandler(ctPushListener);
+        this.miSdkHandler = new XiaomiSdkHandler(context, config);
     }
 
     @Override

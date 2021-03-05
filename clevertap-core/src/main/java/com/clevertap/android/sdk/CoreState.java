@@ -12,7 +12,6 @@ import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigFactory;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.task.MainLooperHandler;
-import com.clevertap.android.sdk.task.PostAsyncSafelyHandler;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import com.clevertap.android.sdk.validation.Validator;
 
@@ -62,8 +61,6 @@ public class CoreState extends CleverTapState {
     private MainLooperHandler mainLooperHandler;
 
     private BaseNetworkManager networkManager;
-
-    private PostAsyncSafelyHandler postAsyncSafelyHandler;
 
     private PushProviders pushProviders;
 
@@ -190,16 +187,6 @@ public class CoreState extends CleverTapState {
     @Override
     void setNetworkManager(final BaseNetworkManager networkManager) {
         this.networkManager = networkManager;
-    }
-
-    @Override
-    public PostAsyncSafelyHandler getPostAsyncSafelyHandler() {
-        return postAsyncSafelyHandler;
-    }
-
-    @Override
-    void setPostAsyncSafelyHandler(final PostAsyncSafelyHandler postAsyncSafelyHandler) {
-        this.postAsyncSafelyHandler = postAsyncSafelyHandler;
     }
 
     public PushProviders getPushProviders() {

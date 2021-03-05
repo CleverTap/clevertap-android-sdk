@@ -41,11 +41,11 @@ class DefaultXmlParser {
                     "Could not find the resources of the current context while trying to set defaults from an XML.");
             return;
         }
-        XmlResourceParser xmlParser = resources.getXml(resourceId);
         try {
+            XmlResourceParser xmlParser = resources.getXml(resourceId);
             getDefaultsFromXmlParser(xmlParser, hashMap);
-        } catch (IOException | XmlPullParserException var11) {
-            Log.e("ProductConfig", "Encountered an error while parsing the defaults XML file.", var11);
+        } catch (Exception e) {
+            Log.e("ProductConfig", "Encountered an error while parsing the defaults XML file.", e);
         }
     }
 

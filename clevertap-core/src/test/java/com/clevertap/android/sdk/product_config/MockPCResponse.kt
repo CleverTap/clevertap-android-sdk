@@ -18,9 +18,9 @@ class MockPCResponse {
     fun getDefaultConfig(): HashMap<String, Any> {
         val defaultConfig: HashMap<String, Any> = HashMap()
         defaultConfig.put("def_str", "This is def_string")
-        defaultConfig.put("def_long", 11111L)
-        defaultConfig.put("def_double", 2222.2222)
-        defaultConfig.put("def_bool", false)
+        defaultConfig.put("def_long", "11111")
+        defaultConfig.put("def_double", "2222.2222")
+        defaultConfig.put("def_bool", "false")
         return defaultConfig
     }
 

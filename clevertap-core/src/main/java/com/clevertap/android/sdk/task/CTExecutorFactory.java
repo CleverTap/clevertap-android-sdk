@@ -1,13 +1,16 @@
 package com.clevertap.android.sdk.task;
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map;
 
-public class CTExecutorFactory {
+public class CTExecutorFactory{
 
-    private static volatile HashMap<String, CTExecutors> executorMap = new HashMap<>();
+    private static final Map<String, CTExecutors> executorMap = Collections
+            .synchronizedMap(new HashMap<String, CTExecutors>());
 
-    public static CTExecutors getInstance(CleverTapInstanceConfig config) {
+    public static CTExecutors executors(CleverTapInstanceConfig config) {
         if (config == null) {
             throw new IllegalArgumentException("Can't create task for null config");
         }
@@ -16,12 +19,11 @@ public class CTExecutorFactory {
             synchronized (CTExecutorFactory.class) {
                 executorForAccount = executorMap.get(config.getAccountId());
                 if (executorForAccount == null) {
-                    executorForAccount = new CTExecutors();
+                    executorForAccount = new CTExecutors(config);
                     executorMap.put(config.getAccountId(), executorForAccount);
                 }
             }
         }
         return executorForAccount;
     }
-
 }

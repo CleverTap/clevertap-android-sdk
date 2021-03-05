@@ -1,6 +1,8 @@
 package com.clevertap.android.sdk.task;
 
 import androidx.annotation.RestrictTo;
+import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import java.util.HashMap;
 import java.util.concurrent.Executor;
 
 /**
@@ -18,36 +20,49 @@ public class CTExecutors {
 
     public final MainThreadExecutor DEFAULT_CALLBACK_EXECUTOR = MAIN_EXECUTOR;
 
-    // single executor acts like {@link PostAsyncSafelyHandler }
-    private final PostAsyncSafelyExecutor POST_ASYNC_SAFELY_EXECUTOR = new PostAsyncSafelyExecutor();
+    protected final CleverTapInstanceConfig mConfig;
 
+    private final HashMap<String, PostAsyncSafelyExecutor> postAsyncSafelyTasks = new HashMap<>();
 
-    CTExecutors() {
+    CTExecutors(CleverTapInstanceConfig config) {
+        mConfig = config;
     }
 
     public <TResult> Task<TResult> ioTask() {
-        return taskWithExecutor(IO_EXECUTOR, DEFAULT_CALLBACK_EXECUTOR);
+        return taskOnExecutorWithName(IO_EXECUTOR, DEFAULT_CALLBACK_EXECUTOR, "ioTask");
     }
 
     public <TResult> Task<TResult> mainTask() {
-        return taskWithExecutor(MAIN_EXECUTOR, DEFAULT_CALLBACK_EXECUTOR);
+        return taskOnExecutorWithName(MAIN_EXECUTOR, DEFAULT_CALLBACK_EXECUTOR, "Main");
+    }
+
+    public <TResult> Task<TResult> postAsyncSafelyTask(String featureTag) {
+        if (featureTag == null) {
+            throw new IllegalArgumentException("Tag can't be null");
+        }
+        PostAsyncSafelyExecutor postAsyncSafelyExecutor = postAsyncSafelyTasks.get(featureTag);
+
+        if (postAsyncSafelyExecutor == null) {
+            postAsyncSafelyExecutor = new PostAsyncSafelyExecutor();
+            postAsyncSafelyTasks.put(featureTag, postAsyncSafelyExecutor);
+        }
+        return taskOnExecutorWithName(postAsyncSafelyExecutor, DEFAULT_CALLBACK_EXECUTOR, "PostAsyncSafely");
     }
 
     public <TResult> Task<TResult> postAsyncSafelyTask() {
-        return taskWithExecutor(POST_ASYNC_SAFELY_EXECUTOR, DEFAULT_CALLBACK_EXECUTOR);
+        return postAsyncSafelyTask(mConfig.getAccountId());
     }
 
-    public <TResult> Task<TResult> taskWithExecutor(Executor taskExecutor, Executor callbackExecutor) {
+    public <TResult> Task<TResult> taskOnExecutor(Executor taskExecutor, String taskName) {
+        return taskOnExecutorWithName(taskExecutor, DEFAULT_CALLBACK_EXECUTOR, taskName);
+    }
+
+    public <TResult> Task<TResult> taskOnExecutorWithName(Executor taskExecutor,
+            Executor callbackExecutor, String taskName) {
         if (taskExecutor == null || callbackExecutor == null) {
-            throw new IllegalArgumentException("Can't create task with null executors");
+            throw new IllegalArgumentException("Can't create task "
+                    + taskName + " with null executors");
         }
-        return new Task<>(taskExecutor, callbackExecutor);
-    }
-
-    public <TResult> Task<TResult> taskWithExecutor(Executor taskExecutor) {
-        if (taskExecutor == null) {
-            throw new IllegalArgumentException("Can't create task with null executors");
-        }
-        return new Task<>(taskExecutor, DEFAULT_CALLBACK_EXECUTOR);
+        return new Task<>(mConfig, taskExecutor, callbackExecutor, taskName);
     }
 }

@@ -18,7 +18,7 @@ public interface Constants {
     @interface IdentityType {
 
     }
-
+    String TAG_FEATURE_IN_APPS = "TAG_FEATURE_IN_APPS";
     @NonNull
     String TYPE_IDENTITY = "Identity";
     @NonNull
@@ -187,8 +187,6 @@ public interface Constants {
     String KEY_ENABLE_CUSTOM_CT_ID = "getEnableCustomCleverTapId";
     String KEY_BETA = "beta";
     String KEY_PACKAGE_NAME = "packageName";
-    String KEY_ENABLE_UIEDITOR = "enableUIEditor";
-    String KEY_ENABLE_ABTEST = "enableABTesting";
     String KEY_ALLOWED_PUSH_TYPES = "allowedPushTypes";
     String KEY_IDENTITY_TYPES = "identityTypes";
     String WZRK_PUSH_ID = "wzrk_pid";

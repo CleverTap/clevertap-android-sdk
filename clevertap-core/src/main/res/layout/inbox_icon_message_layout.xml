@@ -69,13 +69,13 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/body_linear_layout">
 
-            <com.clevertap.android.sdk.RectangleImageView
+            <com.clevertap.android.sdk.customviews.RectangleImageView
                 android:id="@+id/media_image"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:visibility="gone" />
 
-            <com.clevertap.android.sdk.SquareImageView
+            <com.clevertap.android.sdk.customviews.SquareImageView
                 android:id="@+id/square_media_image"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"

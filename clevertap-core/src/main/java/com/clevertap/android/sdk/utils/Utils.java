@@ -20,9 +20,15 @@ import android.os.Handler;
 import android.os.Looper;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import androidx.core.content.ContextCompat;
+import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.ManifestInfo;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.messaging.FirebaseMessaging;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -459,5 +465,22 @@ public final class Utils {
 
     static {
         haveVideoPlayerSupport = checkForExoPlayer();
+    }
+
+    @RestrictTo(Scope.LIBRARY)
+    public static String getFcmTokenUsingManifestMetaEntry(Context context, CleverTapInstanceConfig config) {
+        String token = null;
+        try {
+            String senderID = ManifestInfo.getInstance(context).getFCMSenderId();
+            if (senderID != null) {
+                config.getLogger().verbose(config.getAccountId(),
+                        "Requesting an FCM token with Manifest SenderId - " + senderID);
+                token = FirebaseInstanceId.getInstance().getToken(senderID, FirebaseMessaging.INSTANCE_ID_SCOPE);
+            }
+            config.getLogger().info(config.getAccountId(), "FCM token using Manifest SenderId: " + token);
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(), "Error requesting FCM token with Manifest SenderId", t);
+        }
+        return token;
     }
 }

@@ -40,6 +40,31 @@ class ProductConfigSettings {
         initDefaults();
     }
 
+    void eraseStoredSettingsFile(final FileUtils fileUtils) {
+        if (fileUtils == null) {
+            throw new IllegalArgumentException("FileUtils can't be null");
+        }
+        Task<Void> task = CTExecutorFactory.executors(config).ioTask();
+        task.execute("ProductConfigSettings#eraseStoredSettingsFile", new Callable<Void>() {
+            @Override
+            public Void call() {
+                synchronized (this) {
+                    try {
+                        String fileName = getFullPath();
+                        fileUtils.deleteFile(fileName);
+                        config.getLogger()
+                                .verbose(ProductConfigUtil.getLogTag(config), "Deleted settings file" + fileName);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                                "Error while resetting settings" + e.getLocalizedMessage());
+                    }
+                    return null;
+                }
+            }
+        });
+    }
+
     String getDirName() {
         return CTProductConfigConstants.DIR_PRODUCT_CONFIG + "_" + config.getAccountId() + "_" + guid;
     }
@@ -104,8 +129,19 @@ class ProductConfigSettings {
         settingsMap.put(PRODUCT_CONFIG_WINDOW_LENGTH_MINS, String.valueOf(DEFAULT_WINDOW_LENGTH_MINS));
         settingsMap.put(KEY_LAST_FETCHED_TIMESTAMP, String.valueOf(0));
         settingsMap.put(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS, String.valueOf(DEFAULT_MIN_FETCH_INTERVAL_SECONDS));
-        config.getLogger()
-                .verbose(ProductConfigUtil.getLogTag(config), "Settings loaded with default values: " + settingsMap);
+
+        Task<Void> task = CTExecutorFactory.executors(config).ioTask();
+        task.execute("ProductConfigSettings#initDefaults", new Callable<Void>() {
+            @Override
+            public Void call() {
+                synchronized (this) {
+                    config.getLogger()
+                            .verbose(ProductConfigUtil.getLogTag(config),
+                                    "Settings loaded with default values: " + settingsMap);
+                }
+                return null;
+            }
+        });
     }
 
     /**
@@ -127,7 +163,7 @@ class ProductConfigSettings {
         }
     }
 
-    void populateMapWithJson(final JSONObject jsonObject) {
+    synchronized void populateMapWithJson(final JSONObject jsonObject) {
         if (jsonObject == null) {
             return;
         }
@@ -157,31 +193,6 @@ class ProductConfigSettings {
     void reset(final FileUtils fileUtils) {
         initDefaults();
         eraseStoredSettingsFile(fileUtils);
-    }
-
-    void eraseStoredSettingsFile(final FileUtils fileUtils) {
-        if (fileUtils == null) {
-            throw new IllegalArgumentException("FileUtils can't be null");
-        }
-        Task<Void> task = CTExecutorFactory.getInstance(config).ioTask();
-        task.call(new Callable<Void>() {
-            @Override
-            public Void call() {
-                synchronized (this){
-                    try {
-                        String fileName = getFullPath();
-                        fileUtils.deleteFile(fileName);
-                        config.getLogger()
-                                .verbose(ProductConfigUtil.getLogTag(config), "Deleted settings file" + fileName);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                                "Error while resetting settings" + e.getLocalizedMessage());
-                    }
-                    return null;
-                }
-            }
-        });
     }
 
     void setARPValue(JSONObject arp) {
@@ -291,8 +302,7 @@ class ProductConfigSettings {
     }
 
     private synchronized void updateConfigToFile() {
-
-        Task<Boolean> task = CTExecutorFactory.getInstance(config).ioTask();
+        Task<Boolean> task = CTExecutorFactory.executors(config).ioTask();
         task.addOnSuccessListener(new OnSuccessListener<Boolean>() {
             @Override
             public void onSuccess(final Boolean isSuccess) {
@@ -305,7 +315,7 @@ class ProductConfigSettings {
                                     "Product Config settings: writing Failed");
                 }
             }
-        }).call(new Callable<Boolean>() {
+        }).execute("ProductConfigSettings#updateConfigToFile", new Callable<Boolean>() {
             @Override
             public Boolean call() {
                 try {
