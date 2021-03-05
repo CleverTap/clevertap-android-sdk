@@ -4,7 +4,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <com.clevertap.android.sdk.RectangleImageView
+    <com.clevertap.android.sdk.customviews.RectangleImageView
         android:id="@+id/imageView"
         android:layout_width="510dp"
         android:layout_height="300dp"
@@ -14,7 +14,7 @@
         android:src="@drawable/ct_audio"
         android:visibility="gone" />
 
-    <com.clevertap.android.sdk.SquareImageView
+    <com.clevertap.android.sdk.customviews.SquareImageView
         android:id="@+id/squareImageView"
         android:layout_width="300dp"
         android:layout_height="300dp"
