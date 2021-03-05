@@ -28,7 +28,7 @@ class FcmSdkHandlerImplTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         listener = mock(CTPushProviderListener::class.java)
-        handler = FcmSdkHandlerImpl(listener)
+        handler = FcmSdkHandlerImpl(listener, context, config)
         `when`(listener.context()).thenReturn(application)
         `when`(listener.config()).thenReturn(cleverTapInstanceConfig)
         manifestInfo = mock(ManifestInfo::class.java)

@@ -3,8 +3,10 @@ package com.clevertap.android.sdk.pushnotification.fcm;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.ANDROID_PLATFORM;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
+import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.pushnotification.CTPushProvider;
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
@@ -19,8 +21,8 @@ public class FcmPushProvider implements CTPushProvider {
     private IFcmSdkHandler mHandler;
 
     @SuppressLint(value = "unused")
-    public FcmPushProvider(CTPushProviderListener ctPushListener) {
-        mHandler = new FcmSdkHandlerImpl(ctPushListener);
+    public FcmPushProvider(CTPushProviderListener ctPushListener, Context context, CleverTapInstanceConfig config) {
+        mHandler = new FcmSdkHandlerImpl(ctPushListener, context, config);
     }
 
     @Override
