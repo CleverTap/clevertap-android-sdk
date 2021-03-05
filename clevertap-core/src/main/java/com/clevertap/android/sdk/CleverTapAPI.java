@@ -24,6 +24,7 @@ import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.EventDetail;
+import com.clevertap.android.sdk.exceptions.FeatureNotSupportedException;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
@@ -596,6 +597,25 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static void fcmTokenRefresh(Context context, String token) {
+
+        for (CleverTapAPI instance : getAvailableInstances(context)) {
+            if (instance == null || instance.getCoreState().getConfig().isAnalyticsOnly()) {
+                Logger.d(instance.getAccountId(),
+                        "Instance is Analytics Only not processing device token");
+                continue;
+            }
+            //get token from Manifest
+            String tokenUsingManifestMetaEntry = Utils
+                    .getFcmTokenUsingManifestMetaEntry(context, instance.getCoreState().getConfig());
+            if (!TextUtils.isEmpty(tokenUsingManifestMetaEntry)) {
+                token = tokenUsingManifestMetaEntry;
+            }
+            instance.getCoreState().getPushProviders().doTokenRefresh(token, PushType.FCM);
+        }
+    }
+
     /**
      * Returns the log level set for CleverTapAPI
      *
@@ -1119,6 +1139,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Handler to get the feature flag values
      */
     public CTFeatureFlagsController featureFlag() {
+        if (mCoreState.getConfig().isAnalyticsOnly()) {
+            throw new FeatureNotSupportedException("Feature flag is not supported with analytics only configuration");
+        }
         return mCoreState.getControllerManager().getCTFeatureFlagsController();
     }
 
@@ -1175,6 +1198,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
+    //Debug
+
     /**
      * Returns the CTInboxListener object
      *
@@ -1184,8 +1209,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public CTInboxListener getCTNotificationInboxListener() {
         return mCoreState.getCallbackManager().getInboxListener();
     }
-
-    //Debug
 
     /**
      * This method sets the CTInboxListener
@@ -1237,6 +1260,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         mCoreState.getCallbackManager().setPushNotificationListener(pushNotificationListener);
     }
 
+    //Network Info handling
+
     /**
      * Returns a unique CleverTap identifier suitable for use with install attribution providers.
      *
@@ -1246,8 +1271,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public String getCleverTapAttributionIdentifier() {
         return mCoreState.getDeviceInfo().getAttributionID();
     }
-
-    //Network Info handling
 
     /**
      * Returns a unique identifier by which CleverTap identifies this user.
@@ -1315,6 +1338,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return mCoreState.getPushProviders().getCachedToken(type);
     }
 
+    //Util
+
     /**
      * Returns the DevicePushTokenRefreshListener
      *
@@ -1324,8 +1349,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public DevicePushTokenRefreshListener getDevicePushTokenRefreshListener() {
         return mCoreState.getPushProviders().getDevicePushTokenRefreshListener();
     }
-
-    //Util
 
     /**
      * This method is used to set the DevicePushTokenRefreshListener object
@@ -1381,6 +1404,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return mCoreState.getCallbackManager().getGeofenceCallback();
     }
 
+    //DeepLink
+
     /**
      * This method is used to set the geofence callback
      * Register to handle geofence responses from CleverTap
@@ -1393,8 +1418,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public void setGeofenceCallback(GeofenceCallback geofenceCallback) {
         mCoreState.getCallbackManager().setGeofenceCallback(geofenceCallback);
     }
-
-    //DeepLink
 
     /**
      * Returns a Map of event names and corresponding event details of all the events raised
@@ -1673,6 +1696,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
+    //Session
+
     /**
      * Marks the given messageId of {@link CTInboxMessage} object as read
      *
@@ -1683,8 +1708,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         CTInboxMessage message = getInboxMessageForId(messageId);
         markReadInboxMessage(message);
     }
-
-    //Session
 
     @Override
     public void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data,
@@ -1790,6 +1813,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("WeakerAccess")
     public CTProductConfigController productConfig() {
+        if (mCoreState.getConfig().isAnalyticsOnly()) {
+            throw new FeatureNotSupportedException(
+                    "Product config is not supported with analytics only configuration");
+        }
         return mCoreState.getCtProductConfigController();
     }
 
@@ -2008,6 +2035,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         mCoreState.getAnalyticsManager().pushNotificationClickedEvent(extras);
     }
 
+    //Session
+
     /**
      * Pushes the Notification Viewed event to CleverTap.
      *
@@ -2018,8 +2047,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public void pushNotificationViewedEvent(Bundle extras) {
         mCoreState.getAnalyticsManager().pushNotificationViewedEvent(extras);
     }
-
-    //Session
 
     /**
      * Push a profile update.
@@ -2131,6 +2158,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         mCoreState.getCallbackManager().setProductConfigListener(listener);
     }
 
+    //Listener
+
     /**
      * Sets the listener to get the list of currently running Display Campaigns via callback
      *
@@ -2139,8 +2168,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public void setDisplayUnitListener(DisplayUnitListener listener) {
         mCoreState.getCallbackManager().setDisplayUnitListener(listener);
     }
-
-    //Listener
 
     @SuppressWarnings("unused")
     public void setInAppNotificationButtonListener(InAppNotificationButtonListener listener) {
@@ -2311,9 +2338,12 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         /*
            Reinitialising product config & Feature Flag controllers with google ad id.
         */
-
-        mCoreState.getControllerManager().getCTFeatureFlagsController().setGuidAndInit(deviceId);
-        mCoreState.getControllerManager().getCTProductConfigController().setGuidAndInit(deviceId);
+        if (mCoreState.getControllerManager().getCTFeatureFlagsController() != null) {
+            mCoreState.getControllerManager().getCTFeatureFlagsController().setGuidAndInit(deviceId);
+        }
+        if (mCoreState.getControllerManager().getCTProductConfigController() != null) {
+            mCoreState.getControllerManager().getCTProductConfigController().setGuidAndInit(deviceId);
+        }
         getConfigLogger()
                 .verbose("Got device id from DeviceInfo, notifying user profile initialized to SyncListener");
         mCoreState.getCallbackManager().notifyUserProfileInitialized(deviceId);
@@ -2455,24 +2485,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             }
         } catch (Throwable t) {
             return null;
-        }
-    }
-
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public static void fcmTokenRefresh(Context context, String token) {
-
-        for (CleverTapAPI instance : getAvailableInstances(context)) {
-            if (instance == null || instance.getCoreState().getConfig().isAnalyticsOnly()) {
-                Logger.d(instance.getAccountId(),
-                        "Instance is Analytics Only not processing device token");
-                continue;
-            }
-            //get token from Manifest
-            String tokenUsingManifestMetaEntry = Utils.getFcmTokenUsingManifestMetaEntry(context, instance.getCoreState().getConfig());
-            if (!TextUtils.isEmpty(tokenUsingManifestMetaEntry)) {
-                token = tokenUsingManifestMetaEntry;
-            }
-            instance.getCoreState().getPushProviders().doTokenRefresh(token, PushType.FCM);
         }
     }
 
