@@ -39,9 +39,30 @@ class PostAsyncSafelyExecutorTest : BaseTestCase() {
 
     @Test
     fun test_execute() {
-        val runnable = Runnable { }
-        executor.execute(runnable)
-        Mockito.verify(mExecutorService).execute(runnable)
+        executor.execute({
+            println("Do something")
+        })
+        Mockito.verify(mExecutorService).execute(Mockito.any(Runnable::class.java))
+    }
+
+    @Test
+    fun test_execute_whenExecuteCalledFromAsyncThread() {
+        var threadID1 = -1L
+        var threadID2 = -2L
+        executor.execute({
+            threadID1 = Thread.currentThread().id
+            executor.execute({
+                threadID2 = Thread.currentThread().id
+            })
+        })
+        Mockito.verify(mExecutorService).execute(Mockito.any(Runnable::class.java))
+        Thread.sleep(1000)
+        Assert.assertEquals(threadID1, threadID2)
+    }
+
+    @Test(expected = NullPointerException::class)
+    fun test_execute_WhenNullRunnable_ThrowsNPE() {
+        executor.execute(null)
     }
 
     @Test(expected = UnsupportedOperationException::class)
@@ -96,11 +117,16 @@ class PostAsyncSafelyExecutorTest : BaseTestCase() {
         Mockito.verify(mExecutorService).shutdownNow()
     }
 
+    @Test(expected = NullPointerException::class)
+    fun test_submit_WhenNullCallable_ThrowsNPE() {
+        executor.submit(null)
+    }
+
     @Test
     fun test_submit_Callable() {
         val callable = Callable { }
         executor.submit(callable)
-        Mockito.verify(mExecutorService).submit(callable)
+        Mockito.verify(mExecutorService).submit(Mockito.any(Callable::class.java))
     }
 
     @Test
@@ -108,13 +134,24 @@ class PostAsyncSafelyExecutorTest : BaseTestCase() {
         val callable = Runnable { }
         val result = "121"
         executor.submit(callable, result)
-        Mockito.verify(mExecutorService).submit(callable, result)
+        Mockito.verify(mExecutorService).execute(Mockito.any(Runnable::class.java))
+    }
+
+    @Test(expected = NullPointerException::class)
+    fun test_submitWithResult_WhenNullRunnable_ThrowNPE() {
+        val result = "121"
+        executor.submit(null, result)
     }
 
     @Test
     fun test_submit_RunnableOnly() {
         val callable = Runnable { }
         executor.submit(callable)
-        Mockito.verify(mExecutorService).submit(callable)
+        Mockito.verify(mExecutorService).execute(Mockito.any(Runnable::class.java))
+    }
+
+    @Test(expected = NullPointerException::class)
+    fun test_submitRunnableOnly_WhenNullRunnable_ThrowsNPE() {
+        executor.submit(null)
     }
 }

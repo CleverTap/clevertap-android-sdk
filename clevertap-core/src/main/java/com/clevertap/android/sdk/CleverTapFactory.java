@@ -90,7 +90,7 @@ class CleverTapFactory {
         coreState.setInAppController(inAppController);
         coreState.getControllerManager().setInAppController(inAppController);
 
-        initFeatureFlags(context, coreState, config, deviceInfo, callbackManager, analyticsManager);
+        initFeatureFlags(context, controllerManager, config, deviceInfo, callbackManager, analyticsManager);
 
         LocationManager locationManager = new LocationManager(context, config, coreMetaData, baseEventQueueManager);
         coreState.setLocationManager(locationManager);
@@ -113,13 +113,13 @@ class CleverTapFactory {
         return coreState;
     }
 
-    static void initFeatureFlags(Context context, CoreState coreState, CleverTapInstanceConfig config,
+    static void initFeatureFlags(Context context, ControllerManager controllerManager, CleverTapInstanceConfig config,
             DeviceInfo deviceInfo, BaseCallbackManager callbackManager, AnalyticsManager analyticsManager) {
         Logger.v("Initializing Feature Flags with device Id = " + deviceInfo.getDeviceID());
         if (config.isAnalyticsOnly()) {
             config.getLogger().debug(config.getAccountId(), "Feature Flag is not enabled for this instance");
         } else {
-            coreState.getControllerManager().setCTFeatureFlagsController(CTFeatureFlagsFactory.getInstance(context,
+            controllerManager.setCTFeatureFlagsController(CTFeatureFlagsFactory.getInstance(context,
                     deviceInfo.getDeviceID(),
                     config, callbackManager, analyticsManager));
             config.getLogger().verbose(config.getAccountId(), "Feature Flags initialized");
