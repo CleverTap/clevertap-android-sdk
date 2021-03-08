@@ -24,7 +24,6 @@ import org.robolectric.annotation.Config
 abstract class BaseTestCase {
 
     protected lateinit var application: TestApplication
-    protected lateinit var baseCTApiListener: BaseCTApiListener
     protected lateinit var cleverTapAPI: CleverTapAPI
     protected lateinit var cleverTapInstanceConfig: CleverTapInstanceConfig
 
@@ -34,8 +33,5 @@ abstract class BaseTestCase {
         cleverTapAPI = Mockito.mock(CleverTapAPI::class.java)
         cleverTapInstanceConfig =
             CleverTapInstanceConfig.createInstance(application, Constant.ACC_ID, Constant.ACC_TOKEN)
-        baseCTApiListener = Mockito.mock(BaseCTApiListener::class.java)
-        Mockito.`when`(baseCTApiListener.context()).thenReturn(application)
-        Mockito.`when`(baseCTApiListener.config()).thenReturn(cleverTapInstanceConfig)
     }
 }
