@@ -178,6 +178,13 @@ public class ManifestInfo {
         accountRegion = region;
     }
 
+    /**
+     * This returns string representation of int,boolean,string,float value of given key
+     *
+     * @param manifest bundle to retrieve values from
+     * @param name     key of bundle
+     * @return string representation of int,boolean,string,float
+     */
     private static String _getManifestStringValueForKey(Bundle manifest, String name) {
         try {
             Object o = manifest.get(name);
