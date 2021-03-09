@@ -2,7 +2,6 @@ package com.clevertap.android.shared.test
 
 import android.os.Build.VERSION_CODES
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.clevertap.android.sdk.BaseCTApiListener
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import org.junit.*
@@ -25,7 +24,6 @@ import org.robolectric.annotation.Config
 abstract class BaseTestCase {
 
     protected lateinit var application: TestApplication
-    protected lateinit var baseCTApiListener: BaseCTApiListener
     protected lateinit var cleverTapAPI: CleverTapAPI
     protected lateinit var cleverTapInstanceConfig: CleverTapInstanceConfig
 
@@ -35,8 +33,5 @@ abstract class BaseTestCase {
         cleverTapAPI = Mockito.mock(CleverTapAPI::class.java)
         cleverTapInstanceConfig =
             CleverTapInstanceConfig.createInstance(application, Constant.ACC_ID, Constant.ACC_TOKEN)
-        baseCTApiListener = Mockito.mock(BaseCTApiListener::class.java)
-        Mockito.`when`(baseCTApiListener.context()).thenReturn(application)
-        Mockito.`when`(baseCTApiListener.config()).thenReturn(cleverTapInstanceConfig)
     }
 }

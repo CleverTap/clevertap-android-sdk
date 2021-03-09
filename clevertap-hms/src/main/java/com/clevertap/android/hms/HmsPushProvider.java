@@ -5,8 +5,10 @@ import static com.clevertap.android.sdk.pushnotification.PushConstants.ANDROID_P
 import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.HPS;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
+import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.pushnotification.CTPushProvider;
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
@@ -23,21 +25,22 @@ public class HmsPushProvider implements CTPushProvider {
     private @NonNull
     IHmsSdkHandler hmsSdkHandler;
 
-    @NonNull
-    @Override
-    public PushConstants.PushType getPushType() {
-        return HPS;
-    }
-
     @SuppressLint(value = "unused")
-    public HmsPushProvider(@NonNull CTPushProviderListener ctPushListener) {
+    public HmsPushProvider(@NonNull CTPushProviderListener ctPushListener, Context context,
+            CleverTapInstanceConfig config) {
         this.ctPushListener = ctPushListener;
-        this.hmsSdkHandler = new HmsSdkHandler(ctPushListener);
+        this.hmsSdkHandler = new HmsSdkHandler(context, config);
     }
 
     @Override
     public int getPlatform() {
         return ANDROID_PLATFORM;
+    }
+
+    @NonNull
+    @Override
+    public PushConstants.PushType getPushType() {
+        return HPS;
     }
 
     @Override

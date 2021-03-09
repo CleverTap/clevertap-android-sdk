@@ -70,7 +70,7 @@ import org.json.JSONObject;
  */
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-public class PushProviders {
+public class PushProviders implements CTPushProviderListener {
 
     private final ArrayList<PushConstants.PushType> allEnabledPushTypes = new ArrayList<>();
 
@@ -336,6 +336,7 @@ public class PushProviders {
         return false;
     }
 
+    @Override
     public void onNewToken(String freshToken, PushConstants.PushType pushType) {
         if (!TextUtils.isEmpty(freshToken)) {
             doTokenRefresh(freshToken, pushType);
@@ -600,8 +601,9 @@ public class PushProviders {
             CTPushProvider pushProvider = null;
             try {
                 Class<?> providerClass = Class.forName(className);
-                Constructor<?> constructor = providerClass.getConstructor(CTPushProviderListener.class);
-                pushProvider = (CTPushProvider) constructor.newInstance(this);
+                Constructor<?> constructor = providerClass
+                        .getConstructor(CTPushProviderListener.class, Context.class, CleverTapInstanceConfig.class);
+                pushProvider = (CTPushProvider) constructor.newInstance(this, mContext, mConfig);
                 mConfig.log(PushConstants.LOG_TAG, "Found provider:" + className);
             } catch (InstantiationException e) {
                 mConfig.log(PushConstants.LOG_TAG, "Unable to create provider InstantiationException" + className);

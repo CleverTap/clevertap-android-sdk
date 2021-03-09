@@ -42,7 +42,7 @@ public class HmsHandlerTest extends BaseTestCase {
                 .createInstance(TestApplication.Companion.getApplication(), Constant.ACC_ID, Constant.ACC_TOKEN);
 
         final CTPushProviderListener ctPushProviderListener = Mockito.mock(CTPushProviderListener.class);
-        sdkHandler = new HmsSdkHandler(ctPushProviderListener);
+        sdkHandler = new HmsSdkHandler(context, config);
         Mockito.when(ctPushProviderListener.context()).thenReturn(TestApplication.Companion.getApplication());
         Mockito.when(ctPushProviderListener.config()).thenReturn(mCleverTapInstanceConfig);
 
