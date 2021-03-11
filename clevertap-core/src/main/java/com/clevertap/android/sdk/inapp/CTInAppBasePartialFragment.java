@@ -48,9 +48,7 @@ public abstract class CTInAppBasePartialFragment extends CTInAppBaseFragment {
     @Override
     void generateListener() {
         if (config != null) {
-            CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(this.context, config);
-            //TODO Refactoring
-            //setListener(cleverTapAPI.getCoreState().getInAppController());
+            setListener(CleverTapAPI.instanceWithConfig(this.context, config).getCoreState().getInAppController());
         }
     }
 }

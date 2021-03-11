@@ -27,17 +27,6 @@ public abstract class CTInAppBaseFragment extends Fragment {
         }
     }
 
-    public interface InAppListener {
-
-        void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData,
-                HashMap<String, String> keyValueMap);
-
-        void inAppNotificationDidDismiss(Context context, CTInAppNotification inAppNotification, Bundle formData);
-
-        void inAppNotificationDidShow(CTInAppNotification inAppNotification, Bundle formData);
-
-    }
-
     CloseImageView closeImageView = null;
 
     CleverTapInstanceConfig config;
@@ -50,7 +39,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
 
     AtomicBoolean isCleanedUp = new AtomicBoolean();
 
-    private WeakReference<CTInAppBaseFragment.InAppListener> listenerWeakReference;
+    private WeakReference<InAppListener> listenerWeakReference;
 
     @Override
     public void onAttach(Context context) {

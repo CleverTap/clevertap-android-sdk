@@ -13,10 +13,9 @@ import com.clevertap.android.sdk.AnalyticsManager;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
-import com.clevertap.android.sdk.InAppFCManager;
 import com.clevertap.android.sdk.InAppNotificationActivity;
-import com.clevertap.android.sdk.InAppNotificationActivity.InAppActivityListener;
 import com.clevertap.android.sdk.InAppNotificationListener;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
@@ -25,7 +24,6 @@ import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.Utils;
-import java.io.Serializable;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -37,8 +35,7 @@ import java.util.concurrent.Callable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class InAppController implements CTInAppNotification.CTInAppNotificationListener, InAppActivityListener,
-        Serializable {
+public class InAppController implements CTInAppNotification.CTInAppNotificationListener, InAppListener {
 
     //InApp
     private final class NotificationPrepareRunnable implements Runnable {
@@ -84,9 +81,9 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     private final Context mContext;
 
-    private final CoreMetaData mCoreMetaData;
+    private final ControllerManager mControllerManager;
 
-    private final InAppFCManager mInAppFCManager;
+    private final CoreMetaData mCoreMetaData;
 
     private final Logger mLogger;
 
@@ -95,7 +92,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     public InAppController(Context context,
             CleverTapInstanceConfig config,
             MainLooperHandler mainLooperHandler,
-            InAppFCManager inAppFCManager,
+            ControllerManager controllerManager,
             BaseCallbackManager callbackManager,
             AnalyticsManager analyticsManager,
             CoreMetaData coreMetaData) {
@@ -104,11 +101,10 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         mConfig = config;
         mLogger = mConfig.getLogger();
         mMainLooperHandler = mainLooperHandler;
-        mInAppFCManager = inAppFCManager;
+        mControllerManager = controllerManager;
         mCallbackManager = callbackManager;
         mAnalyticsManager = analyticsManager;
         mCoreMetaData = coreMetaData;
-        mCallbackManager.setInAppActivityListener(this);
     }
 
     public void checkExistingInAppNotifications(Activity activity) {
@@ -125,7 +121,6 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                     Bundle bundle = new Bundle();
                     bundle.putParcelable("inApp", currentlyDisplayingInApp);
                     bundle.putParcelable("config", mConfig);
-                    bundle.putSerializable("controller", this);
                     inAppFragment.setArguments(bundle);
                     fragmentTransaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
                     fragmentTransaction.add(android.R.id.content, inAppFragment, currentlyDisplayingInApp.getType());
@@ -166,10 +161,10 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     @Override
     public void inAppNotificationDidDismiss(final Context context, final CTInAppNotification inAppNotification,
-            Bundle formData, final InAppController inAppController) {
+            final Bundle formData) {
         inAppNotification.didDismiss();
-        if (mInAppFCManager != null) {
-            mInAppFCManager.didDismiss(inAppNotification);
+        if (mControllerManager.getInAppFCManager() != null) {
+            mControllerManager.getInAppFCManager().didDismiss(inAppNotification);
             mLogger.verbose(mConfig.getAccountId(), "InApp Dismissed: " + inAppNotification.getCampaignId());
         }
         try {
@@ -200,7 +195,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         task.execute("InappController#inAppNotificationDidDismiss", new Callable<Void>() {
             @Override
             public Void call() {
-                inAppDidDismiss(context, mConfig, inAppNotification, inAppController);
+                inAppDidDismiss(context, mConfig, inAppNotification, InAppController.this);
                 _showNotificationIfAvailable(context);
                 return null;
             }
@@ -240,7 +235,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     public void showNotificationIfAvailable(final Context context) {
         if (!mConfig.isAnalyticsOnly()) {
             Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
-            task.execute("InappController#showNotificationIfAvailable",new Callable<Void>() {
+            task.execute("InappController#showNotificationIfAvailable", new Callable<Void>() {
                 @Override
                 public Void call() {
                     _showNotificationIfAvailable(context);
@@ -316,15 +311,15 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             return;
         }
 
-        if (mInAppFCManager != null) {
-            if (!mInAppFCManager.canShow(inAppNotification)) {
+        if (mControllerManager.getInAppFCManager() != null) {
+            if (!mControllerManager.getInAppFCManager().canShow(inAppNotification)) {
                 mLogger.verbose(mConfig.getAccountId(),
                         "InApp has been rejected by FC, not showing " + inAppNotification.getCampaignId());
                 showInAppNotificationIfAny();
                 return;
             }
 
-            mInAppFCManager.didShow(mContext, inAppNotification);
+            mControllerManager.getInAppFCManager().didShow(mContext, inAppNotification);
         } else {
             mLogger.verbose(mConfig.getAccountId(),
                     "getCoreState().getInAppFCManager() is NULL, not showing " + inAppNotification.getCampaignId());
@@ -364,7 +359,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     private void prepareNotificationForDisplay(final JSONObject jsonObject) {
         mLogger.debug(mConfig.getAccountId(), "Preparing In-App for display: " + jsonObject.toString());
         Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
-        task.execute("InappController#prepareNotificationForDisplay",new Callable<Void>() {
+        task.execute("InappController#prepareNotificationForDisplay", new Callable<Void>() {
             @Override
             public Void call() {
                 new NotificationPrepareRunnable(InAppController.this, jsonObject).run();
@@ -376,7 +371,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     private void showInAppNotificationIfAny() {
         if (!mConfig.isAnalyticsOnly()) {
             Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
-            task.execute("InAppController#showInAppNotificationIfAny",new Callable<Void>() {
+            task.execute("InAppController#showInAppNotificationIfAny", new Callable<Void>() {
                 @Override
                 public Void call() {
                     _showNotificationIfAvailable(mContext);
@@ -523,7 +518,6 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 Bundle bundle = new Bundle();
                 bundle.putParcelable("inApp", inAppNotification);
                 bundle.putParcelable("config", config);
-                bundle.putSerializable("controller", inAppController);
                 inAppFragment.setArguments(bundle);
                 fragmentTransaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
                 fragmentTransaction.add(android.R.id.content, inAppFragment, inAppNotification.getType());

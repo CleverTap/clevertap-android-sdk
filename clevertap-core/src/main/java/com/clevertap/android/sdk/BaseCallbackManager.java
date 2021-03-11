@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk;
 
-import com.clevertap.android.sdk.InAppNotificationActivity.InAppActivityListener;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
@@ -19,8 +18,6 @@ public abstract class BaseCallbackManager {
     public abstract CTFeatureFlagsListener getFeatureFlagListener();
 
     public abstract GeofenceCallback getGeofenceCallback();
-
-    public abstract InAppActivityListener getInAppActivityListener();
 
     public abstract InAppNotificationButtonListener getInAppNotificationButtonListener();
 
@@ -50,9 +47,6 @@ public abstract class BaseCallbackManager {
     public abstract void setFeatureFlagListener(CTFeatureFlagsListener listener);
 
     public abstract void setGeofenceCallback(GeofenceCallback geofenceCallback);
-
-    public abstract void setInAppActivityListener(
-            InAppActivityListener inAppActivityListener);
 
     public abstract void setInAppNotificationButtonListener(
             InAppNotificationButtonListener inAppNotificationButtonListener);

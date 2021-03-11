@@ -51,8 +51,6 @@ public class LoginController {
 
     private final DeviceInfo mDeviceInfo;
 
-    private final InAppFCManager mInAppFCManager;
-
     private final LocalDataStore mLocalDataStore;
 
     private final PushProviders mPushProviders;
@@ -71,7 +69,6 @@ public class LoginController {
             ValidationResultStack validationResultStack,
             BaseEventQueueManager eventQueueManager,
             AnalyticsManager analyticsManager,
-            InAppFCManager inAppFCManager,
             CoreMetaData coreMetaData,
             ControllerManager controllerManager,
             SessionManager sessionManager,
@@ -85,7 +82,6 @@ public class LoginController {
         mValidationResultStack = validationResultStack;
         mBaseEventQueueManager = eventQueueManager;
         mAnalyticsManager = analyticsManager;
-        mInAppFCManager = inAppFCManager;
         mCoreMetaData = coreMetaData;
         mPushProviders = controllerManager.getPushProviders();
         mSessionManager = sessionManager;
@@ -146,7 +142,7 @@ public class LoginController {
                     resetProductConfigs();
                     recordDeviceIDErrors();
                     resetDisplayUnits();
-                    mInAppFCManager.changeUser(mDeviceInfo.getDeviceID());
+                    mControllerManager.getInAppFCManager().changeUser(mDeviceInfo.getDeviceID());
                 } catch (Throwable t) {
                     mConfig.getLogger().verbose(mConfig.getAccountId(), "Reset Profile error", t);
                 }

@@ -4,7 +4,6 @@ import static com.clevertap.android.sdk.utils.Utils.runOnUiThread;
 
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
-import com.clevertap.android.sdk.InAppNotificationActivity.InAppActivityListener;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
@@ -34,8 +33,6 @@ public class CallbackManager extends BaseCallbackManager {
     private FailureFlushListener mFailureFlushListener;
 
     private WeakReference<CTFeatureFlagsListener> mFeatureFlagListenerWeakReference;
-
-    private InAppActivityListener mInAppActivityListener;
 
     private WeakReference<CTProductConfigListener> productConfigListener;
 
@@ -95,17 +92,6 @@ public class CallbackManager extends BaseCallbackManager {
     @Override
     public void setGeofenceCallback(final GeofenceCallback geofenceCallback) {
         this.geofenceCallback = geofenceCallback;
-    }
-
-    @Override
-    public InAppActivityListener getInAppActivityListener() {
-        return mInAppActivityListener;
-    }
-
-    @Override
-    public void setInAppActivityListener(
-            final InAppActivityListener inAppActivityListener) {
-        mInAppActivityListener = inAppActivityListener;
     }
 
     @Override
