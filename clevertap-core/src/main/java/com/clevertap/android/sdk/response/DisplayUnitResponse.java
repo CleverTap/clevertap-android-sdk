@@ -24,9 +24,9 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
 
     private final CleverTapInstanceConfig mConfig;
 
-    private final Logger mLogger;
-
     private final ControllerManager mControllerManager;
+
+    private final Logger mLogger;
 
     public DisplayUnitResponse(CleverTapResponse cleverTapResponse,
             CleverTapInstanceConfig config,
@@ -94,12 +94,11 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
         synchronized (displayUnitControllerLock) {// lock to avoid multiple instance creation for controller
             if (mCTDisplayUnitController == null) {
                 mCTDisplayUnitController = new CTDisplayUnitController();
-                //TODO add a mechanism to transfer display unit lazily without using corestate instance
-                //getCoreState().setCTDisplayUnitController(mCTDisplayUnitController);//TODO
                 mControllerManager.setCTDisplayUnitController(mCTDisplayUnitController);
             }
         }
-        ArrayList<CleverTapDisplayUnit> displayUnits = mControllerManager.getCTDisplayUnitController().updateDisplayUnits(messages);
+        ArrayList<CleverTapDisplayUnit> displayUnits = mControllerManager.getCTDisplayUnitController()
+                .updateDisplayUnits(messages);
 
         mCallbackManager.notifyDisplayUnitsLoaded(displayUnits);
     }
