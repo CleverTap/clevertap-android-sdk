@@ -5,7 +5,6 @@ import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.events.EventMediator;
 import com.clevertap.android.sdk.inapp.InAppController;
-import com.clevertap.android.sdk.inbox.CTInboxController;
 import com.clevertap.android.sdk.login.LoginController;
 import com.clevertap.android.sdk.network.BaseNetworkManager;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
@@ -24,15 +23,11 @@ public class CoreState extends CleverTapState {
 
     private CoreMetaData coreMetaData;
 
-    private CTInboxController ctInboxController;
-
     private BaseDatabaseManager databaseManager;
 
     private DeviceInfo deviceInfo;
 
     private EventMediator eventMediator;
-
-    private InAppFCManager inAppFCManager;
 
     private LocalDataStore localDataStore;
 
@@ -55,8 +50,6 @@ public class CoreState extends CleverTapState {
     private SessionManager mSessionManager;
 
     private ValidationResultStack mValidationResultStack;
-
-    private Validator mValidator;
 
     private MainLooperHandler mainLooperHandler;
 
@@ -211,14 +204,6 @@ public class CoreState extends CleverTapState {
 
     public void setValidationResultStack(final ValidationResultStack validationResultStack) {
         this.mValidationResultStack = validationResultStack;
-    }
-
-    public void setInAppFCManager(final InAppFCManager inAppFCManager) {
-        this.inAppFCManager = inAppFCManager;
-    }
-
-    public void setValidator(final Validator validator) {
-        mValidator = validator;
     }
 
     @Override

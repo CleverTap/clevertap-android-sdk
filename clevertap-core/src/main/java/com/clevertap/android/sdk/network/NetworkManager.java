@@ -59,8 +59,6 @@ import org.json.JSONObject;
 @RestrictTo(Scope.LIBRARY)
 public class NetworkManager extends BaseNetworkManager {
 
-    private final ControllerManager mControllerManager;
-
     private static SSLSocketFactory sslSocketFactory;
 
     private static SSLContext sslContext;
@@ -73,6 +71,8 @@ public class NetworkManager extends BaseNetworkManager {
 
     private final Context mContext;
 
+    private final ControllerManager mControllerManager;
+
     private final CoreMetaData mCoreMetaData;
 
     private int mCurrentRequestTimestamp = 0;
@@ -80,8 +80,6 @@ public class NetworkManager extends BaseNetworkManager {
     private final BaseDatabaseManager mDatabaseManager;
 
     private final DeviceInfo mDeviceInfo;
-
-    private final InAppFCManager mInAppFCManager;
 
     private final Logger mLogger;
 
@@ -115,7 +113,6 @@ public class NetworkManager extends BaseNetworkManager {
             CoreMetaData coreMetaData,
             ValidationResultStack validationResultStack,
             ControllerManager controllerManager,
-            InAppFCManager inAppFCManager,
             BaseDatabaseManager baseDatabaseManager,
             final BaseCallbackManager callbackManager,
             CTLockManager ctLockManager,
@@ -130,14 +127,13 @@ public class NetworkManager extends BaseNetworkManager {
         mCoreMetaData = coreMetaData;
         mValidationResultStack = validationResultStack;
         mControllerManager = controllerManager;
-        mInAppFCManager = inAppFCManager;
         mDatabaseManager = baseDatabaseManager;
         // maintain order
         CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
 
         cleverTapResponse = new GeofenceResponse(cleverTapResponse, config, callbackManager);
         cleverTapResponse = new ProductConfigResponse(cleverTapResponse, config, coreMetaData, controllerManager);
-        cleverTapResponse = new FeatureFlagResponse(cleverTapResponse, config,controllerManager);
+        cleverTapResponse = new FeatureFlagResponse(cleverTapResponse, config, controllerManager);
         cleverTapResponse = new DisplayUnitResponse(cleverTapResponse, config,
                 callbackManager, controllerManager);
         cleverTapResponse = new PushAmpResponse(cleverTapResponse, context, config, ctLockManager,
@@ -148,8 +144,7 @@ public class NetworkManager extends BaseNetworkManager {
         cleverTapResponse = new ConsoleResponse(cleverTapResponse, config);
         cleverTapResponse = new ARPResponse(cleverTapResponse, config, this, validator, controllerManager);
         cleverTapResponse = new MetadataResponse(cleverTapResponse, config, deviceInfo, this);
-        cleverTapResponse = new InAppResponse(cleverTapResponse, config, inAppFCManager,
-                controllerManager);
+        cleverTapResponse = new InAppResponse(cleverTapResponse, config, controllerManager);
 
         cleverTapResponse = new BaseResponse(context, config, deviceInfo, this, localDataStore, cleverTapResponse);
 
@@ -253,6 +248,57 @@ public class NetworkManager extends BaseNetworkManager {
         return domain == null || mResponseFailureCount > 5;
     }
 
+    @SuppressLint("CommitPrefEdits")
+    public void setI(Context context, long i) {
+        final SharedPreferences prefs = StorageHelper.getPreferences(context, Constants.NAMESPACE_IJ);
+        final SharedPreferences.Editor editor = prefs.edit();
+        editor.putLong(StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_I), i);
+        StorageHelper.persist(editor);
+    }
+
+    @SuppressLint("CommitPrefEdits")
+    public void setJ(Context context, long j) {
+        final SharedPreferences prefs = StorageHelper.getPreferences(context, Constants.NAMESPACE_IJ);
+        final SharedPreferences.Editor editor = prefs.edit();
+        editor.putLong(StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_J), j);
+        StorageHelper.persist(editor);
+    }
+
+    HttpsURLConnection buildHttpsURLConnection(final String endpoint)
+            throws IOException {
+        URL url = new URL(endpoint);
+        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
+        conn.setConnectTimeout(10000);
+        conn.setReadTimeout(10000);
+        conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
+        conn.setRequestProperty("X-CleverTap-Account-ID", mConfig.getAccountId());
+        conn.setRequestProperty("X-CleverTap-Token", mConfig.getAccountToken());
+        conn.setInstanceFollowRedirects(false);
+        if (mConfig.isSslPinningEnabled()) {
+            SSLContext _sslContext = getSSLContext();
+            if (_sslContext != null) {
+                conn.setSSLSocketFactory(getPinnedCertsSslSocketfactory(_sslContext));
+            }
+        }
+        return conn;
+    }
+
+    CleverTapResponse getCleverTapResponse() {
+        return mCleverTapResponse;
+    }
+
+    void setCleverTapResponse(final CleverTapResponse cleverTapResponse) {
+        mCleverTapResponse = cleverTapResponse;
+    }
+
+    int getCurrentRequestTimestamp() {
+        return mCurrentRequestTimestamp;
+    }
+
+    void setCurrentRequestTimestamp(final int currentRequestTimestamp) {
+        mCurrentRequestTimestamp = currentRequestTimestamp;
+    }
+
     String getDomain(boolean defaultToHandshakeURL, final EventGroup eventGroup) {
         String domain = getDomainFromPrefsOrMetadata(eventGroup);
 
@@ -335,14 +381,6 @@ public class NetworkManager extends BaseNetworkManager {
         StorageHelper.putInt(mContext, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_LAST_TS), ts);
     }
 
-    @SuppressLint("CommitPrefEdits")
-    public void setI(Context context, long i) {
-        final SharedPreferences prefs = StorageHelper.getPreferences(context, Constants.NAMESPACE_IJ);
-        final SharedPreferences.Editor editor = prefs.edit();
-        editor.putLong(StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_I), i);
-        StorageHelper.persist(editor);
-    }
-
     // TODO encapsulate into NetworkState class
     int getResponseFailureCount() {
         return mResponseFailureCount;
@@ -353,36 +391,12 @@ public class NetworkManager extends BaseNetworkManager {
         mResponseFailureCount = responseFailureCount;
     }
 
+    //gives delay frequency based on region
+    //randomly adds delay to 1s delay in case of non-EU regions
+
     boolean hasDomainChanged(final String newDomain) {
         final String oldDomain = StorageHelper.getStringFromPrefs(mContext, mConfig, Constants.KEY_DOMAIN_NAME, null);
         return !newDomain.equals(oldDomain);
-    }
-
-    @SuppressLint("CommitPrefEdits")
-    public void setJ(Context context, long j) {
-        final SharedPreferences prefs = StorageHelper.getPreferences(context, Constants.NAMESPACE_IJ);
-        final SharedPreferences.Editor editor = prefs.edit();
-        editor.putLong(StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_J), j);
-        StorageHelper.persist(editor);
-    }
-
-    HttpsURLConnection buildHttpsURLConnection(final String endpoint)
-            throws IOException {
-        URL url = new URL(endpoint);
-        HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-        conn.setConnectTimeout(10000);
-        conn.setReadTimeout(10000);
-        conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-        conn.setRequestProperty("X-CleverTap-Account-ID", mConfig.getAccountId());
-        conn.setRequestProperty("X-CleverTap-Token", mConfig.getAccountToken());
-        conn.setInstanceFollowRedirects(false);
-        if (mConfig.isSslPinningEnabled()) {
-            SSLContext _sslContext = getSSLContext();
-            if (_sslContext != null) {
-                conn.setSSLSocketFactory(getPinnedCertsSslSocketfactory(_sslContext));
-            }
-        }
-        return conn;
     }
 
     String insertHeader(Context context, JSONArray arr) {
@@ -430,7 +444,8 @@ public class NetworkManager extends BaseNetworkManager {
                     .getRepo(mContext, mConfig, mDeviceInfo,
                             mValidationResultStack).getIdentitySet().toString());
             header.put("ddnd",
-                    !(mDeviceInfo.getNotificationsEnabledForUser() && (mControllerManager.getPushProviders().isNotificationSupported())));
+                    !(mDeviceInfo.getNotificationsEnabledForUser() && (mControllerManager.getPushProviders()
+                            .isNotificationSupported())));
             if (mCoreMetaData.isBgPing()) {
                 header.put("bk", 1);
                 mCoreMetaData.setBgPing(false);
@@ -484,9 +499,9 @@ public class NetworkManager extends BaseNetworkManager {
                 header.put("wzrk_ref", wzrkParams);
             }
 
-            if (mInAppFCManager != null) {
+            if (mControllerManager.getInAppFCManager() != null) {
                 Logger.v("Attaching InAppFC to Header");
-                mInAppFCManager.attachToHeader(context, header);
+                mControllerManager.getInAppFCManager().attachToHeader(context, header);
             }
 
             // Resort to string concat for backward compatibility
@@ -495,10 +510,6 @@ public class NetworkManager extends BaseNetworkManager {
             mLogger.verbose(mConfig.getAccountId(), "CommsManager: Failed to attach header", t);
             return arr.toString();
         }
-    }
-
-    CleverTapResponse getCleverTapResponse() {
-        return mCleverTapResponse;
     }
 
     void performHandshakeForDomain(final Context context, final EventGroup eventGroup,
@@ -540,9 +551,6 @@ public class NetworkManager extends BaseNetworkManager {
             }
         }
     }
-
-    //gives delay frequency based on region
-    //randomly adds delay to 1s delay in case of non-EU regions
 
     /**
      * Processes the incoming response headers for a change in domain and/or mute.
@@ -662,7 +670,7 @@ public class NetworkManager extends BaseNetworkManager {
             return true;
         } catch (Throwable e) {
             mLogger.debug(mConfig.getAccountId(),
-                    "An exception occurred while sending the queue, will retry: " , e);
+                    "An exception occurred while sending the queue, will retry: ", e);
             mResponseFailureCount++;
             networkRetryCount++;
             mCallbackManager.getFailureFlushListener().failureFlush(context);
@@ -690,14 +698,6 @@ public class NetworkManager extends BaseNetworkManager {
             return;
         }
         StorageHelper.putInt(mContext, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_FIRST_TS), ts);
-    }
-
-    void setCleverTapResponse(final CleverTapResponse cleverTapResponse) {
-        mCleverTapResponse = cleverTapResponse;
-    }
-
-    int getCurrentRequestTimestamp() {
-        return mCurrentRequestTimestamp;
     }
 
     void setSpikyDomain(final Context context, String spikyDomainName) {
@@ -822,10 +822,6 @@ public class NetworkManager extends BaseNetworkManager {
         } else {
             StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_MUTED), 0);
         }
-    }
-
-    void setCurrentRequestTimestamp(final int currentRequestTimestamp) {
-        mCurrentRequestTimestamp = currentRequestTimestamp;
     }
 
     private static SSLSocketFactory getPinnedCertsSslSocketfactory(SSLContext sslContext) {
