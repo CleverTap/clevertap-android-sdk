@@ -16,7 +16,6 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.InAppFCManager;
 import com.clevertap.android.sdk.InAppNotificationActivity;
-import com.clevertap.android.sdk.InAppNotificationActivity.InAppActivityListener;
 import com.clevertap.android.sdk.InAppNotificationListener;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
@@ -37,8 +36,7 @@ import java.util.concurrent.Callable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class InAppController implements CTInAppNotification.CTInAppNotificationListener, InAppActivityListener,
-        Serializable {
+public class InAppController implements CTInAppNotification.CTInAppNotificationListener, InAppListener {
 
     //InApp
     private final class NotificationPrepareRunnable implements Runnable {
@@ -108,7 +106,6 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         mCallbackManager = callbackManager;
         mAnalyticsManager = analyticsManager;
         mCoreMetaData = coreMetaData;
-        mCallbackManager.setInAppActivityListener(this);
     }
 
     public void checkExistingInAppNotifications(Activity activity) {
@@ -125,7 +122,6 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                     Bundle bundle = new Bundle();
                     bundle.putParcelable("inApp", currentlyDisplayingInApp);
                     bundle.putParcelable("config", mConfig);
-                    bundle.putSerializable("controller", this);
                     inAppFragment.setArguments(bundle);
                     fragmentTransaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
                     fragmentTransaction.add(android.R.id.content, inAppFragment, currentlyDisplayingInApp.getType());
@@ -166,7 +162,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     @Override
     public void inAppNotificationDidDismiss(final Context context, final CTInAppNotification inAppNotification,
-            Bundle formData, final InAppController inAppController) {
+            final Bundle formData) {
         inAppNotification.didDismiss();
         if (mInAppFCManager != null) {
             mInAppFCManager.didDismiss(inAppNotification);
@@ -200,7 +196,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         task.execute("InappController#inAppNotificationDidDismiss", new Callable<Void>() {
             @Override
             public Void call() {
-                inAppDidDismiss(context, mConfig, inAppNotification, inAppController);
+                inAppDidDismiss(context, mConfig, inAppNotification, InAppController.this);
                 _showNotificationIfAvailable(context);
                 return null;
             }
@@ -523,7 +519,6 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 Bundle bundle = new Bundle();
                 bundle.putParcelable("inApp", inAppNotification);
                 bundle.putParcelable("config", config);
-                bundle.putSerializable("controller", inAppController);
                 inAppFragment.setArguments(bundle);
                 fragmentTransaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
                 fragmentTransaction.add(android.R.id.content, inAppFragment, inAppNotification.getType());

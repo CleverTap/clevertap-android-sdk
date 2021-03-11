@@ -30,7 +30,7 @@ public abstract class CTInAppBaseFullFragment extends CTInAppBaseFragment {
     @Override
     void generateListener() {
         if (context instanceof InAppNotificationActivity) {
-            setListener((CTInAppBaseFragment.InAppListener) context);
+            setListener((InAppListener) context);
         }
     }
 
