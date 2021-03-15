@@ -299,7 +299,7 @@ public class CTGeofenceAPI implements GeofenceCallback {
             public void onComplete() {
 
                 if (onGeofenceApiInitializedListener != null) {
-                    com.clevertap.android.sdk.utils.Utils.runOnUiThread(new Runnable() {
+                    com.clevertap.android.sdk.Utils.runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             onGeofenceApiInitializedListener.OnGeofenceApiInitialized();

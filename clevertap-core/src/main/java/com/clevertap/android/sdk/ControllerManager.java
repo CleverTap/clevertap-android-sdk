@@ -10,7 +10,6 @@ import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
-import com.clevertap.android.sdk.utils.Utils;
 import java.util.concurrent.Callable;
 
 public class ControllerManager {

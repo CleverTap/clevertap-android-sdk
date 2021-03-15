@@ -3,7 +3,7 @@ package com.clevertap.android.sdk.inapp;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 import com.clevertap.android.sdk.CleverTapAPI;
-import com.clevertap.android.sdk.utils.Utils;
+import com.clevertap.android.sdk.Utils;
 
 
 public abstract class CTInAppBasePartialFragment extends CTInAppBaseFragment {

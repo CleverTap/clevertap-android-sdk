@@ -45,7 +45,7 @@ import org.skyscreamer.jsonassert.JSONAssert;
 )
 @PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*", "androidx.*", "org.json.*"})
 @PrepareForTest({FileUtils.class, CTGeofenceAPI.class, CleverTapAPI.class,
-        com.clevertap.android.sdk.utils.Utils.class})
+        com.clevertap.android.sdk.Utils.class})
 public class UtilsTest extends BaseTestCase {
 
     @Rule
@@ -193,7 +193,7 @@ public class UtilsTest extends BaseTestCase {
 
     @Test
     public void testNotifyLocationUpdates() {
-        mockStatic(com.clevertap.android.sdk.utils.Utils.class);
+        mockStatic(com.clevertap.android.sdk.Utils.class);
 
         CTLocationUpdatesListener locationUpdatesListener = Mockito.mock(CTLocationUpdatesListener.class);
 
@@ -203,8 +203,8 @@ public class UtilsTest extends BaseTestCase {
 
         ArgumentCaptor<Runnable> runnableArgumentCaptor = ArgumentCaptor.forClass(Runnable.class);
 
-        verifyStatic(com.clevertap.android.sdk.utils.Utils.class);
-        com.clevertap.android.sdk.utils.Utils.runOnUiThread(runnableArgumentCaptor.capture());
+        verifyStatic(com.clevertap.android.sdk.Utils.class);
+        com.clevertap.android.sdk.Utils.runOnUiThread(runnableArgumentCaptor.capture());
 
         runnableArgumentCaptor.getValue().run();
         Mockito.verify(locationUpdatesListener).onLocationUpdates(any(Location.class));

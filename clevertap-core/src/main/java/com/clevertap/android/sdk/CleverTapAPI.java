@@ -39,7 +39,6 @@ import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.UriHelper;
-import com.clevertap.android.sdk.utils.Utils;
 import com.clevertap.android.sdk.validation.ManifestValidator;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import java.lang.ref.WeakReference;

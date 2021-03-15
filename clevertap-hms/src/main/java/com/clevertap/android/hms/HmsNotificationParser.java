@@ -6,8 +6,8 @@ import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
 import android.os.Bundle;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
-import com.clevertap.android.sdk.utils.Utils;
 import com.huawei.hms.push.RemoteMessage;
 
 /**

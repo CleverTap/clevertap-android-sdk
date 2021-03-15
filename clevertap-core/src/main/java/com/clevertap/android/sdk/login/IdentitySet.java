@@ -3,7 +3,7 @@ package com.clevertap.android.sdk.login;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.utils.Utils;
+import com.clevertap.android.sdk.Utils;
 import java.util.HashSet;
 import java.util.Iterator;
 

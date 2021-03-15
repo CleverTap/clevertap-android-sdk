@@ -176,7 +176,7 @@ class Utils {
                 .getCtLocationUpdatesListener();
 
         if (ctLocationUpdatesListener != null) {
-            com.clevertap.android.sdk.utils.Utils.runOnUiThread(new Runnable() {
+            com.clevertap.android.sdk.Utils.runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
                     ctLocationUpdatesListener.onLocationUpdates(location);
