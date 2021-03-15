@@ -2332,7 +2332,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     //To be called from DeviceInfo AdID GUID generation
     void deviceIDCreated(String deviceId) {
         Logger.v("Initializing InAppFC after Device ID Created = " + deviceId);
-        mCoreState.setInAppFCManager(new InAppFCManager(context, mCoreState.getConfig(), deviceId));
+        mCoreState.getControllerManager()
+                .setInAppFCManager(new InAppFCManager(context, mCoreState.getConfig(), deviceId));
         Logger.v("Initializing ABTesting after Device ID Created = " + deviceId);
 
         /*

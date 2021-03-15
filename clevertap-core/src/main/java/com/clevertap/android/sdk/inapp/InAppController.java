@@ -13,8 +13,8 @@ import com.clevertap.android.sdk.AnalyticsManager;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
-import com.clevertap.android.sdk.InAppFCManager;
 import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.InAppNotificationListener;
 import com.clevertap.android.sdk.Logger;
@@ -81,9 +81,9 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     private final Context mContext;
 
-    private final CoreMetaData mCoreMetaData;
+    private final ControllerManager mControllerManager;
 
-    private final InAppFCManager mInAppFCManager;
+    private final CoreMetaData mCoreMetaData;
 
     private final Logger mLogger;
 
@@ -92,7 +92,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     public InAppController(Context context,
             CleverTapInstanceConfig config,
             MainLooperHandler mainLooperHandler,
-            InAppFCManager inAppFCManager,
+            ControllerManager controllerManager,
             BaseCallbackManager callbackManager,
             AnalyticsManager analyticsManager,
             CoreMetaData coreMetaData) {
@@ -101,7 +101,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         mConfig = config;
         mLogger = mConfig.getLogger();
         mMainLooperHandler = mainLooperHandler;
-        mInAppFCManager = inAppFCManager;
+        mControllerManager = controllerManager;
         mCallbackManager = callbackManager;
         mAnalyticsManager = analyticsManager;
         mCoreMetaData = coreMetaData;
@@ -163,8 +163,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     public void inAppNotificationDidDismiss(final Context context, final CTInAppNotification inAppNotification,
             final Bundle formData) {
         inAppNotification.didDismiss();
-        if (mInAppFCManager != null) {
-            mInAppFCManager.didDismiss(inAppNotification);
+        if (mControllerManager.getInAppFCManager() != null) {
+            mControllerManager.getInAppFCManager().didDismiss(inAppNotification);
             mLogger.verbose(mConfig.getAccountId(), "InApp Dismissed: " + inAppNotification.getCampaignId());
         }
         try {
@@ -235,7 +235,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     public void showNotificationIfAvailable(final Context context) {
         if (!mConfig.isAnalyticsOnly()) {
             Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
-            task.execute("InappController#showNotificationIfAvailable",new Callable<Void>() {
+            task.execute("InappController#showNotificationIfAvailable", new Callable<Void>() {
                 @Override
                 public Void call() {
                     _showNotificationIfAvailable(context);
@@ -311,15 +311,15 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             return;
         }
 
-        if (mInAppFCManager != null) {
-            if (!mInAppFCManager.canShow(inAppNotification)) {
+        if (mControllerManager.getInAppFCManager() != null) {
+            if (!mControllerManager.getInAppFCManager().canShow(inAppNotification)) {
                 mLogger.verbose(mConfig.getAccountId(),
                         "InApp has been rejected by FC, not showing " + inAppNotification.getCampaignId());
                 showInAppNotificationIfAny();
                 return;
             }
 
-            mInAppFCManager.didShow(mContext, inAppNotification);
+            mControllerManager.getInAppFCManager().didShow(mContext, inAppNotification);
         } else {
             mLogger.verbose(mConfig.getAccountId(),
                     "getCoreState().getInAppFCManager() is NULL, not showing " + inAppNotification.getCampaignId());
@@ -359,7 +359,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     private void prepareNotificationForDisplay(final JSONObject jsonObject) {
         mLogger.debug(mConfig.getAccountId(), "Preparing In-App for display: " + jsonObject.toString());
         Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
-        task.execute("InappController#prepareNotificationForDisplay",new Callable<Void>() {
+        task.execute("InappController#prepareNotificationForDisplay", new Callable<Void>() {
             @Override
             public Void call() {
                 new NotificationPrepareRunnable(InAppController.this, jsonObject).run();
@@ -371,7 +371,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     private void showInAppNotificationIfAny() {
         if (!mConfig.isAnalyticsOnly()) {
             Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
-            task.execute("InAppController#showInAppNotificationIfAny",new Callable<Void>() {
+            task.execute("InAppController#showInAppNotificationIfAny", new Callable<Void>() {
                 @Override
                 public Void call() {
                     _showNotificationIfAvailable(mContext);

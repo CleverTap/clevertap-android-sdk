@@ -15,6 +15,8 @@ import java.util.concurrent.Callable;
 
 public class ControllerManager {
 
+    private InAppFCManager inAppFCManager;
+
     private final BaseDatabaseManager mBaseDatabaseManager;
 
     private CTDisplayUnitController mCTDisplayUnitController;
@@ -89,12 +91,24 @@ public class ControllerManager {
         mCTProductConfigController = CTProductConfigController;
     }
 
+    public CleverTapInstanceConfig getConfig() {
+        return mConfig;
+    }
+
     public InAppController getInAppController() {
         return mInAppController;
     }
 
     public void setInAppController(final InAppController inAppController) {
         mInAppController = inAppController;
+    }
+
+    public InAppFCManager getInAppFCManager() {
+        return inAppFCManager;
+    }
+
+    public void setInAppFCManager(final InAppFCManager inAppFCManager) {
+        this.inAppFCManager = inAppFCManager;
     }
 
     public PushProviders getPushProviders() {

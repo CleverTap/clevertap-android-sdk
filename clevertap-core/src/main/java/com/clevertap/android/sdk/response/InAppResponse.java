@@ -23,17 +23,13 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
     private final ControllerManager mControllerManager;
 
-    private final InAppFCManager mInAppFCManager;
-
     private final Logger mLogger;
 
-
     public InAppResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config,
-            InAppFCManager inAppFCManager, ControllerManager controllerManager) {
+            ControllerManager controllerManager) {
         mCleverTapResponse = cleverTapResponse;
         mConfig = config;
         mLogger = mConfig.getLogger();
-        mInAppFCManager = inAppFCManager;
         mControllerManager = controllerManager;
     }
 
@@ -70,10 +66,10 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 perDay = response.getInt("imp");
             }
 
-            if (mInAppFCManager != null) {
+            if (mControllerManager.getInAppFCManager() != null) {
                 Logger.v("Updating InAppFC Limits");
-                mInAppFCManager.updateLimits(context, perDay, perSession);
-                mInAppFCManager.processResponse(context, response);// Handle stale_inapp
+                mControllerManager.getInAppFCManager().updateLimits(context, perDay, perSession);
+                mControllerManager.getInAppFCManager().processResponse(context, response);// Handle stale_inapp
             }
 
             JSONArray inappNotifs;

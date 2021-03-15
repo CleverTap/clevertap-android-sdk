@@ -24,7 +24,6 @@ class CleverTapFactory {
         coreState.setCoreMetaData(coreMetaData);
 
         Validator validator = new Validator();
-        coreState.setValidator(validator);
 
         ValidationResultStack validationResultStack = new ValidationResultStack();
         coreState.setValidationResultStack(validationResultStack);
@@ -53,14 +52,6 @@ class CleverTapFactory {
         SessionManager sessionManager = new SessionManager(config, coreMetaData, validator, localDataStore);
         coreState.setSessionManager(sessionManager);
 
-        InAppFCManager inAppFCManager = null;
-        if (coreState.getDeviceInfo() != null && coreState.getDeviceInfo().getDeviceID() != null) {
-            inAppFCManager = new InAppFCManager(context, config, coreState.getDeviceInfo().getDeviceID());
-            coreState.getConfig().getLogger()
-                    .verbose("Initializing InAppFC with device Id = " + coreState.getDeviceInfo().getDeviceID());
-            coreState.setInAppFCManager(inAppFCManager);
-        }
-
         DBManager baseDatabaseManager = new DBManager(config, ctLockManager);
         coreState.setDatabaseManager(baseDatabaseManager);
 
@@ -68,8 +59,15 @@ class CleverTapFactory {
                 ctLockManager, callbackManager, deviceInfo, baseDatabaseManager);
         coreState.setControllerManager(controllerManager);
 
+        if (coreState.getDeviceInfo() != null && coreState.getDeviceInfo().getDeviceID() != null) {
+            coreState.getConfig().getLogger()
+                    .verbose("Initializing InAppFC with device Id = " + coreState.getDeviceInfo().getDeviceID());
+            controllerManager
+                    .setInAppFCManager(new InAppFCManager(context, config, coreState.getDeviceInfo().getDeviceID()));
+        }
+
         NetworkManager networkManager = new NetworkManager(context, config, deviceInfo, coreMetaData,
-                validationResultStack, controllerManager, inAppFCManager, baseDatabaseManager,
+                validationResultStack, controllerManager,baseDatabaseManager,
                 callbackManager, ctLockManager, validator, localDataStore);
         coreState.setNetworkManager(networkManager);
 
@@ -86,7 +84,7 @@ class CleverTapFactory {
         coreState.setAnalyticsManager(analyticsManager);
 
         InAppController inAppController = new InAppController(context, config, mainLooperHandler,
-                inAppFCManager, callbackManager, analyticsManager, coreMetaData);
+                controllerManager, callbackManager, analyticsManager, coreMetaData);
         coreState.setInAppController(inAppController);
         coreState.getControllerManager().setInAppController(inAppController);
 
@@ -106,7 +104,7 @@ class CleverTapFactory {
         coreState.setActivityLifeCycleManager(activityLifeCycleManager);
 
         LoginController loginController = new LoginController(context, config, deviceInfo,
-                validationResultStack, baseEventQueueManager, analyticsManager, inAppFCManager,
+                validationResultStack, baseEventQueueManager, analyticsManager,
                 coreMetaData, controllerManager, sessionManager,
                 localDataStore, callbackManager, baseDatabaseManager, ctLockManager);
         coreState.setLoginController(loginController);
