@@ -24,7 +24,6 @@ import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.Utils;
-import java.io.Serializable;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -41,14 +40,14 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     //InApp
     private final class NotificationPrepareRunnable implements Runnable {
 
-        private final WeakReference<InAppController> cleverTapAPIWeakReference;
+        private final WeakReference<InAppController> inAppControllerWeakReference;
 
         private final JSONObject jsonObject;
 
         private final boolean videoSupport = Utils.haveVideoPlayerSupport;
 
-        NotificationPrepareRunnable(InAppController cleverTapAPI, JSONObject jsonObject) {
-            this.cleverTapAPIWeakReference = new WeakReference<>(cleverTapAPI);
+        NotificationPrepareRunnable(InAppController inAppController, JSONObject jsonObject) {
+            this.inAppControllerWeakReference = new WeakReference<>(inAppController);
             this.jsonObject = jsonObject;
         }
 
@@ -62,7 +61,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                                 "Unable to parse inapp notification " + inAppNotification.getError());
                 return;
             }
-            inAppNotification.listener = cleverTapAPIWeakReference.get();
+            inAppNotification.listener = inAppControllerWeakReference.get();
             inAppNotification.prepareForDisplay();
         }
     }
