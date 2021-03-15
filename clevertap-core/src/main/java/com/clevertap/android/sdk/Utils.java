@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.utils;
+package com.clevertap.android.sdk;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -23,10 +23,6 @@ import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.core.content.ContextCompat;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.ManifestInfo;
 import com.google.firebase.iid.FirebaseInstanceId;
 import com.google.firebase.messaging.FirebaseMessaging;
 import java.io.ByteArrayOutputStream;

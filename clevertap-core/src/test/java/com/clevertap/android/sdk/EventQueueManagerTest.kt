@@ -12,7 +12,6 @@ import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
-import com.clevertap.android.sdk.utils.Utils
 import com.clevertap.android.sdk.validation.ValidationResult
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject

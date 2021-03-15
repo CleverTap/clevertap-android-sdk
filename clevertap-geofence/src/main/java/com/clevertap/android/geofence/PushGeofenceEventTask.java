@@ -189,7 +189,7 @@ class PushGeofenceEventTask implements CTGeofenceTask {
 
                                 // send event to Listener on main thread
                                 if (ctGeofenceEventsListener != null) {
-                                    com.clevertap.android.sdk.utils.Utils.runOnUiThread(new Runnable() {
+                                    com.clevertap.android.sdk.Utils.runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
                                             ctGeofenceEventsListener.onGeofenceEnteredEvent(geofence);
@@ -204,7 +204,7 @@ class PushGeofenceEventTask implements CTGeofenceTask {
 
                                 // send event to Listener on main thread
                                 if (ctGeofenceEventsListener != null) {
-                                    com.clevertap.android.sdk.utils.Utils.runOnUiThread(new Runnable() {
+                                    com.clevertap.android.sdk.Utils.runOnUiThread(new Runnable() {
                                         @Override
                                         public void run() {
                                             ctGeofenceEventsListener.onGeofenceExitedEvent(geofence);

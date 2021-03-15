@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk;
 
-import static com.clevertap.android.sdk.utils.Utils.runOnUiThread;
+import static com.clevertap.android.sdk.Utils.runOnUiThread;
 
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
@@ -9,7 +9,6 @@ import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
-import com.clevertap.android.sdk.utils.Utils;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 

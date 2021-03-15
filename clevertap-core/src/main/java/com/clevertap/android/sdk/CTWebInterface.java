@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk;
 
 import android.webkit.JavascriptInterface;
-import com.clevertap.android.sdk.utils.Utils;
 import java.lang.ref.WeakReference;
 import org.json.JSONArray;
 import org.json.JSONException;

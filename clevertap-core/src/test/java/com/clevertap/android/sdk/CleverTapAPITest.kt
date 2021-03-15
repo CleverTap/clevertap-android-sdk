@@ -4,7 +4,6 @@ import android.location.Location
 import android.os.Bundle
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
-import com.clevertap.android.sdk.utils.Utils
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.Constant
 import org.json.JSONObject

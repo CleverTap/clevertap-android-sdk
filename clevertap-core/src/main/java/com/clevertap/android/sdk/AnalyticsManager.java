@@ -19,7 +19,6 @@ import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 import com.clevertap.android.sdk.utils.UriHelper;
-import com.clevertap.android.sdk.utils.Utils;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
 import com.clevertap.android.sdk.validation.ValidationResultStack;

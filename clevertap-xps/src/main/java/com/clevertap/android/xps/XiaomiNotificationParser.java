@@ -6,8 +6,8 @@ import static com.clevertap.android.xps.XpsConstants.XIAOMI_LOG_TAG;
 import android.os.Bundle;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
-import com.clevertap.android.sdk.utils.Utils;
 import com.xiaomi.mipush.sdk.MiPushMessage;
 
 /**

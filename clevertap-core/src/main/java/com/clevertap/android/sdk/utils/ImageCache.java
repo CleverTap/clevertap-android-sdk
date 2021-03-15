@@ -6,6 +6,7 @@ import android.graphics.BitmapFactory;
 import android.util.Base64;
 import android.util.LruCache;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.Utils;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;

@@ -15,7 +15,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.R;
-import com.clevertap.android.sdk.utils.Utils;
+import com.clevertap.android.sdk.Utils;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 

@@ -11,13 +11,13 @@ import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationReceiver;
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundIntentService;
 import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundJobService;
-import com.clevertap.android.sdk.utils.Utils;
 import java.util.ArrayList;
 
 

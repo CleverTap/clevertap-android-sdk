@@ -21,7 +21,6 @@ import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationManagerCompat;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
-import com.clevertap.android.sdk.utils.Utils;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
 import java.lang.annotation.Retention;

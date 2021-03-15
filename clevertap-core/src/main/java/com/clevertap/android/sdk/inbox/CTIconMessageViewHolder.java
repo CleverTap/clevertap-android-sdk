@@ -17,7 +17,7 @@ import com.bumptech.glide.request.RequestOptions;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.R;
-import com.clevertap.android.sdk.utils.Utils;
+import com.clevertap.android.sdk.Utils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
