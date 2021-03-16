@@ -17,23 +17,23 @@ import java.util.concurrent.Callable;
 
 class ActivityLifeCycleManager {
 
-    private final AnalyticsManager mAnalyticsManager;
+    private final AnalyticsManager analyticsManager;
 
-    private final BaseEventQueueManager mBaseEventQueueManager;
+    private final BaseEventQueueManager baseEventQueueManager;
 
-    private final BaseCallbackManager mCallbackManager;
+    private final BaseCallbackManager callbackManager;
 
-    private final CleverTapInstanceConfig mConfig;
+    private final CleverTapInstanceConfig config;
 
-    private final Context mContext;
+    private final Context context;
 
-    private final CoreMetaData mCoreMetaData;
+    private final CoreMetaData coreMetaData;
 
-    private final InAppController mInAppController;
+    private final InAppController inAppController;
 
-    private final PushProviders mPushProviders;
+    private final PushProviders pushProviders;
 
-    private final SessionManager mSessionManager;
+    private final SessionManager sessionManager;
 
     ActivityLifeCycleManager(Context context,
             CleverTapInstanceConfig config,
@@ -44,53 +44,53 @@ class ActivityLifeCycleManager {
             BaseCallbackManager callbackManager,
             InAppController inAppController,
             BaseEventQueueManager baseEventQueueManager) {
-        mContext = context;
-        mConfig = config;
-        mAnalyticsManager = analyticsManager;
-        mCoreMetaData = coreMetaData;
-        mSessionManager = sessionManager;
-        mPushProviders = pushProviders;
-        mCallbackManager = callbackManager;
-        mInAppController = inAppController;
-        mBaseEventQueueManager = baseEventQueueManager;
+        this.context = context;
+        this.config = config;
+        this.analyticsManager = analyticsManager;
+        this.coreMetaData = coreMetaData;
+        this.sessionManager = sessionManager;
+        this.pushProviders = pushProviders;
+        this.callbackManager = callbackManager;
+        this.inAppController = inAppController;
+        this.baseEventQueueManager = baseEventQueueManager;
     }
 
     //Lifecycle
     public void activityPaused() {
         CoreMetaData.setAppForeground(false);
-        mSessionManager.setAppLastSeen(System.currentTimeMillis());
-        mConfig.getLogger().verbose(mConfig.getAccountId(), "App in background");
+        sessionManager.setAppLastSeen(System.currentTimeMillis());
+        config.getLogger().verbose(config.getAccountId(), "App in background");
         final int now = (int) (System.currentTimeMillis() / 1000);
-        if (mCoreMetaData.inCurrentSession()) {
+        if (coreMetaData.inCurrentSession()) {
             try {
                 StorageHelper
-                        .putInt(mContext,
-                                StorageHelper.storageKeyWithSuffix(mConfig, Constants.LAST_SESSION_EPOCH),
+                        .putInt(context,
+                                StorageHelper.storageKeyWithSuffix(config, Constants.LAST_SESSION_EPOCH),
                                 now);
-                mConfig.getLogger().verbose(mConfig.getAccountId(), "Updated session time: " + now);
+                config.getLogger().verbose(config.getAccountId(), "Updated session time: " + now);
             } catch (Throwable t) {
-                mConfig.getLogger()
-                        .verbose(mConfig.getAccountId(), "Failed to update session time time: " + t.getMessage());
+                config.getLogger()
+                        .verbose(config.getAccountId(), "Failed to update session time time: " + t.getMessage());
             }
         }
     }
 
     //Lifecycle
     public void activityResumed(Activity activity) {
-        mConfig.getLogger().verbose(mConfig.getAccountId(), "App in foreground");
-        mSessionManager.checkTimeoutSession();
+        config.getLogger().verbose(config.getAccountId(), "App in foreground");
+        sessionManager.checkTimeoutSession();
         //Anything in this If block will run once per App Launch.
         //Will not run for Apps which disable App Launched event
-        if (!mCoreMetaData.isAppLaunchPushed()) {
+        if (!coreMetaData.isAppLaunchPushed()) {
 
-            mAnalyticsManager.pushAppLaunchedEvent();
-            mAnalyticsManager.fetchFeatureFlags();
-            mPushProviders.onTokenRefresh();
-            Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+            analyticsManager.pushAppLaunchedEvent();
+            analyticsManager.fetchFeatureFlags();
+            pushProviders.onTokenRefresh();
+            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
             task.execute("HandlingInstallReferrer",new Callable<Void>() {
                 @Override
                 public Void call() {
-                    if (!mCoreMetaData.isInstallReferrerDataSent() && mCoreMetaData
+                    if (!coreMetaData.isInstallReferrerDataSent() && coreMetaData
                             .isFirstSession()) {
                         handleInstallReferrerOnFirstInstall();
                     }
@@ -99,33 +99,33 @@ class ActivityLifeCycleManager {
             });
 
             try {
-                if (mCallbackManager.getGeofenceCallback() != null) {
-                    mCallbackManager.getGeofenceCallback().triggerLocation();
+                if (callbackManager.getGeofenceCallback() != null) {
+                    callbackManager.getGeofenceCallback().triggerLocation();
                 }
             } catch (IllegalStateException e) {
-                mConfig.getLogger().verbose(mConfig.getAccountId(), e.getLocalizedMessage());
+                config.getLogger().verbose(config.getAccountId(), e.getLocalizedMessage());
             } catch (Exception e) {
-                mConfig.getLogger().verbose(mConfig.getAccountId(), "Failed to trigger location");
+                config.getLogger().verbose(config.getAccountId(), "Failed to trigger location");
             }
         }
-        mBaseEventQueueManager.pushInitialEventsAsync();
-        mInAppController.checkExistingInAppNotifications(activity);
-        mInAppController.checkPendingInAppNotifications(activity);
+        baseEventQueueManager.pushInitialEventsAsync();
+        inAppController.checkExistingInAppNotifications(activity);
+        inAppController.checkPendingInAppNotifications(activity);
     }
 
     public void onActivityCreated(final Bundle notification, final Uri deepLink) {
         try {
-            boolean shouldProcess = mConfig.isDefaultInstance();
+            boolean shouldProcess = config.isDefaultInstance();
 
             if (shouldProcess) {
                 if (notification != null && !notification.isEmpty() && notification
                         .containsKey(Constants.NOTIFICATION_TAG)) {
-                    mAnalyticsManager.pushNotificationClickedEvent(notification);
+                    analyticsManager.pushNotificationClickedEvent(notification);
                 }
 
                 if (deepLink != null) {
                     try {
-                        mAnalyticsManager.pushDeepLink(deepLink, false);
+                        analyticsManager.pushDeepLink(deepLink, false);
                     } catch (Throwable t) {
                         // no-op
                     }
@@ -137,13 +137,13 @@ class ActivityLifeCycleManager {
     }
 
     private void handleInstallReferrerOnFirstInstall() {
-        mConfig.getLogger().verbose(mConfig.getAccountId(), "Starting to handle install referrer");
+        config.getLogger().verbose(config.getAccountId(), "Starting to handle install referrer");
         try {
-            final InstallReferrerClient referrerClient = InstallReferrerClient.newBuilder(mContext).build();
+            final InstallReferrerClient referrerClient = InstallReferrerClient.newBuilder(context).build();
             referrerClient.startConnection(new InstallReferrerStateListener() {
                 @Override
                 public void onInstallReferrerServiceDisconnected() {
-                    if (!mCoreMetaData.isInstallReferrerDataSent()) {
+                    if (!coreMetaData.isInstallReferrerDataSent()) {
                         handleInstallReferrerOnFirstInstall();
                     }
                 }
@@ -157,38 +157,38 @@ class ActivityLifeCycleManager {
                             try {
                                 response = referrerClient.getInstallReferrer();
                                 String referrerUrl = response.getInstallReferrer();
-                                mCoreMetaData
+                                coreMetaData
                                         .setReferrerClickTime(response.getReferrerClickTimestampSeconds());
-                                mCoreMetaData
+                                coreMetaData
                                         .setAppInstallTime(response.getInstallBeginTimestampSeconds());
-                                mAnalyticsManager.pushInstallReferrer(referrerUrl);
-                                mCoreMetaData.setInstallReferrerDataSent(true);
-                                mConfig.getLogger().debug(mConfig.getAccountId(),
+                                analyticsManager.pushInstallReferrer(referrerUrl);
+                                coreMetaData.setInstallReferrerDataSent(true);
+                                config.getLogger().debug(config.getAccountId(),
                                         "Install Referrer data set [Referrer URL-" + referrerUrl + "]");
                             } catch (RemoteException e) {
-                                mConfig.getLogger().debug(mConfig.getAccountId(),
+                                config.getLogger().debug(config.getAccountId(),
                                         "Remote exception caused by Google Play Install Referrer library - " + e
                                                 .getMessage());
                                 referrerClient.endConnection();
-                                mCoreMetaData.setInstallReferrerDataSent(false);
+                                coreMetaData.setInstallReferrerDataSent(false);
                             }
                             referrerClient.endConnection();
                             break;
                         case InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED:
                             // API not available on the current Play Store app.
-                            mConfig.getLogger().debug(mConfig.getAccountId(),
+                            config.getLogger().debug(config.getAccountId(),
                                     "Install Referrer data not set, API not supported by Play Store on device");
                             break;
                         case InstallReferrerClient.InstallReferrerResponse.SERVICE_UNAVAILABLE:
                             // Connection couldn't be established.
-                            mConfig.getLogger().debug(mConfig.getAccountId(),
+                            config.getLogger().debug(config.getAccountId(),
                                     "Install Referrer data not set, connection to Play Store unavailable");
                             break;
                     }
                 }
             });
         } catch (Throwable t) {
-            mConfig.getLogger().verbose(mConfig.getAccountId(),
+            config.getLogger().verbose(config.getAccountId(),
                     "Google Play Install Referrer's InstallReferrerClient Class not found - " + t
                             .getLocalizedMessage()
                             + " \n Please add implementation 'com.android.installreferrer:installreferrer:2.1' to your build.gradle");

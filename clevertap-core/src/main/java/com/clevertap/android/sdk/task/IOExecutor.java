@@ -16,78 +16,78 @@ class IOExecutor implements ExecutorService {
     private final int numCores = Runtime.getRuntime().availableProcessors();
 
     public void setExecutorService(final ExecutorService executorService) {
-        mExecutorService = executorService;
+        this.executorService = executorService;
     }
 
-    ExecutorService mExecutorService = new ThreadPoolExecutor(numCores * 2, numCores * 2,
+    ExecutorService executorService = new ThreadPoolExecutor(numCores * 2, numCores * 2,
             60L, TimeUnit.SECONDS, new LinkedBlockingQueue<Runnable>());
 
     @Override
     public boolean awaitTermination(final long timeout, final TimeUnit unit) throws InterruptedException {
-        return mExecutorService.awaitTermination(timeout, unit);
+        return executorService.awaitTermination(timeout, unit);
     }
 
     @Override
     public void execute(final Runnable command) {
-        mExecutorService.execute(command);
+        executorService.execute(command);
     }
 
     @Override
     public <T> List<Future<T>> invokeAll(final Collection<? extends Callable<T>> tasks) throws InterruptedException {
-        return mExecutorService.invokeAll(tasks);
+        return executorService.invokeAll(tasks);
     }
 
     @Override
     public <T> List<Future<T>> invokeAll(final Collection<? extends Callable<T>> tasks, final long timeout,
             final TimeUnit unit)
             throws InterruptedException {
-        return mExecutorService.invokeAll(tasks, timeout, unit);
+        return executorService.invokeAll(tasks, timeout, unit);
     }
 
     @Override
     public <T> T invokeAny(final Collection<? extends Callable<T>> tasks)
             throws ExecutionException, InterruptedException {
-        return mExecutorService.invokeAny(tasks);
+        return executorService.invokeAny(tasks);
     }
 
     @Override
     public <T> T invokeAny(final Collection<? extends Callable<T>> tasks, final long timeout, final TimeUnit unit)
             throws ExecutionException, InterruptedException, TimeoutException {
-        return mExecutorService.invokeAny(tasks, timeout, unit);
+        return executorService.invokeAny(tasks, timeout, unit);
     }
 
     @Override
     public boolean isShutdown() {
-        return mExecutorService.isShutdown();
+        return executorService.isShutdown();
     }
 
     @Override
     public boolean isTerminated() {
-        return mExecutorService.isTerminated();
+        return executorService.isTerminated();
     }
 
     @Override
     public void shutdown() {
-        mExecutorService.shutdown();
+        executorService.shutdown();
     }
 
     @Override
     public List<Runnable> shutdownNow() {
-        return mExecutorService.shutdownNow();
+        return executorService.shutdownNow();
     }
 
     @Override
     public <T> Future<T> submit(final Callable<T> task) {
-        return mExecutorService.submit(task);
+        return executorService.submit(task);
     }
 
     @Override
     public <T> Future<T> submit(final Runnable task, final T result) {
-        return mExecutorService.submit(task, result);
+        return executorService.submit(task, result);
     }
 
     @Override
     public Future<?> submit(final Runnable task) {
-        return mExecutorService.submit(task);
+        return executorService.submit(task);
     }
 }

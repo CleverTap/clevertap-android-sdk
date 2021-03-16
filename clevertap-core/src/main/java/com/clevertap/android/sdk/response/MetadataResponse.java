@@ -10,24 +10,24 @@ import org.json.JSONObject;
 public class MetadataResponse extends CleverTapResponseDecorator {
 
 
-    private final CleverTapResponse mCleverTapResponse;
+    private final CleverTapResponse cleverTapResponse;
 
-    private final CleverTapInstanceConfig mConfig;
+    private final CleverTapInstanceConfig config;
 
-    private final DeviceInfo mDeviceInfo;
+    private final DeviceInfo deviceInfo;
 
-    private final Logger mLogger;
+    private final Logger logger;
 
-    private final NetworkManager mNetworkManager;
+    private final NetworkManager networkManager;
 
     public MetadataResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config,
             DeviceInfo deviceInfo,
             NetworkManager networkManager) {
-        mCleverTapResponse = cleverTapResponse;
-        mConfig = config;
-        mLogger = mConfig.getLogger();
-        mDeviceInfo = deviceInfo;
-        mNetworkManager = networkManager;
+        this.cleverTapResponse = cleverTapResponse;
+        this.config = config;
+        logger = this.config.getLogger();
+        this.deviceInfo = deviceInfo;
+        this.networkManager = networkManager;
     }
 
 
@@ -37,18 +37,18 @@ public class MetadataResponse extends CleverTapResponseDecorator {
         try {
             if (response.has("g")) {
                 final String deviceID = response.getString("g");
-                mDeviceInfo.forceUpdateDeviceId(deviceID);
-                mLogger.verbose(mConfig.getAccountId(), "Got a new device ID: " + deviceID);
+                deviceInfo.forceUpdateDeviceId(deviceID);
+                logger.verbose(config.getAccountId(), "Got a new device ID: " + deviceID);
             }
         } catch (Throwable t) {
-            mLogger.verbose(mConfig.getAccountId(), "Failed to update device ID!", t);
+            logger.verbose(config.getAccountId(), "Failed to update device ID!", t);
         }
 
         // Handle i
         try {
             if (response.has("_i")) {
                 final long i = response.getLong("_i");
-                mNetworkManager.setI(context, i);
+                networkManager.setI(context, i);
             }
         } catch (Throwable t) {
             // Ignore
@@ -58,13 +58,13 @@ public class MetadataResponse extends CleverTapResponseDecorator {
         try {
             if (response.has("_j")) {
                 final long j = response.getLong("_j");
-                mNetworkManager.setJ(context, j);
+                networkManager.setJ(context, j);
             }
         } catch (Throwable t) {
             // Ignore
         }
 
         // process ARP response
-        mCleverTapResponse.processResponse(response, stringBody, context);
+        cleverTapResponse.processResponse(response, stringBody, context);
     }
 }

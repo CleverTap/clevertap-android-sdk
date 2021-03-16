@@ -22,12 +22,12 @@ public class LoginInfoProvider {
 
     private final Context context;
 
-    private final DeviceInfo mDeviceInfo;
+    private final DeviceInfo deviceInfo;
 
     public LoginInfoProvider(Context context, CleverTapInstanceConfig config, DeviceInfo deviceInfo) {
         this.context = context;
         this.config = config;
-        this.mDeviceInfo = deviceInfo;
+        this.deviceInfo = deviceInfo;
     }
 
     //Profile
@@ -162,7 +162,7 @@ public class LoginInfoProvider {
     }
 
     private boolean isErrorDeviceId() {
-        boolean isErrorDeviceId = mDeviceInfo.isErrorDeviceId();
+        boolean isErrorDeviceId = deviceInfo.isErrorDeviceId();
         config.log(LogConstants.LOG_TAG_ON_USER_LOGIN,
                 "isErrorDeviceId:[" + isErrorDeviceId + "]");
         return isErrorDeviceId;

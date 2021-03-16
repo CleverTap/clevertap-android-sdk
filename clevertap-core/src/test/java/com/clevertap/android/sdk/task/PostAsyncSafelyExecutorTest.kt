@@ -26,7 +26,7 @@ class PostAsyncSafelyExecutorTest : BaseTestCase() {
     @Test
     fun test_executorServiceConfigs() {
         val executor = PostAsyncSafelyExecutor()
-        Assert.assertTrue(executor.mExecutor is ExecutorService)
+        Assert.assertTrue(executor.executor is ExecutorService)
     }
 
     @Test

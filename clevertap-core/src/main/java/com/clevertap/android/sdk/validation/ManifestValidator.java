@@ -69,6 +69,7 @@ public final class ManifestValidator {
         if (enabledPushTypes == null) {
             return;
         }
+        //TODO do we check for other PUSH TYPES?
         for (PushType pushType : enabledPushTypes) {
             //no-op
             if (pushType == PushType.FCM) {
@@ -76,8 +77,6 @@ public final class ManifestValidator {
                     // use class name string directly here to avoid class not found issues on class import, because we only use FCM
                     validateServiceInManifest((Application) context.getApplicationContext(),
                             "com.clevertap.android.sdk.pushnotification.fcm.FcmMessageListenerService");
-                    validateServiceInManifest((Application) context.getApplicationContext(),
-                            "com.clevertap.android.sdk.FcmTokenListenerService");
                 } catch (Exception e) {
                     Logger.v("Receiver/Service issue : " + e.toString());
 

@@ -29,7 +29,7 @@ public class ImageCache {
 
     private static final String FILE_PREFIX = "CT_IMAGE_";
 
-    private static LruCache<String, Bitmap> mMemoryCache;
+    private static LruCache<String, Bitmap> memoryCache;
 
     private static File imageFileDirectory;
 
@@ -38,7 +38,7 @@ public class ImageCache {
     @SuppressWarnings("WeakerAccess")
     // only adds to mem cache, use getForFetchBitmap for disk cache support
     public static boolean addBitmap(String key, Bitmap bitmap) {
-        if (mMemoryCache == null) {
+        if (memoryCache == null) {
             return false;
         }
         if (getBitmapFromMemCache(key) == null) {
@@ -51,7 +51,7 @@ public class ImageCache {
                     Logger.v("CleverTap.ImageCache: insufficient memory to add image: " + key);
                     return false;
                 }
-                mMemoryCache.put(key, bitmap);
+                memoryCache.put(key, bitmap);
                 Logger.v("CleverTap.ImageCache: added image for key: " + key);
             }
         }
@@ -63,7 +63,7 @@ public class ImageCache {
     public static Bitmap getBitmap(String key) {
         synchronized (ImageCache.class) {
             if (key != null) {
-                return mMemoryCache == null ? null : mMemoryCache.get(key);
+                return memoryCache == null ? null : memoryCache.get(key);
             } else {
                 return null;
             }
@@ -87,11 +87,11 @@ public class ImageCache {
 
     public static void init() {
         synchronized (ImageCache.class) {
-            if (mMemoryCache == null) {
+            if (memoryCache == null) {
                 Logger.v("CleverTap.ImageCache: init with max device memory: " + maxMemory
                         + "KB and allocated cache size: " + cacheSize + "KB");
                 try {
-                    mMemoryCache = new LruCache<String, Bitmap>(cacheSize) {
+                    memoryCache = new LruCache<String, Bitmap>(cacheSize) {
                         @Override
                         protected int sizeOf(String key, Bitmap bitmap) {
                             // The cache size will be measured in kilobytes rather than
@@ -130,10 +130,10 @@ public class ImageCache {
             if (isPersisted) {
                 removeFromFileSystem(key);
             }
-            if (mMemoryCache == null) {
+            if (memoryCache == null) {
                 return;
             }
-            mMemoryCache.remove(key);
+            memoryCache.remove(key);
             Logger.v("CleverTap.ImageCache: removed image for key: " + key);
             cleanup();
         }
@@ -143,7 +143,7 @@ public class ImageCache {
         synchronized (ImageCache.class) {
             if (isEmpty()) {
                 Logger.v("CTInAppNotification.ImageCache: cache is empty, removing it");
-                mMemoryCache = null;
+                memoryCache = null;
             }
         }
     }
@@ -168,13 +168,13 @@ public class ImageCache {
 
     private static int getAvailableMemory() {
         synchronized (ImageCache.class) {
-            return mMemoryCache == null ? 0 : cacheSize - mMemoryCache.size();
+            return memoryCache == null ? 0 : cacheSize - memoryCache.size();
         }
     }
 
     private static Bitmap getBitmapFromMemCache(String key) {
         if (key != null) {
-            return mMemoryCache == null ? null : mMemoryCache.get(key);
+            return memoryCache == null ? null : memoryCache.get(key);
         }
         return null;
     }
@@ -227,7 +227,7 @@ public class ImageCache {
 
     private static boolean isEmpty() {
         synchronized (ImageCache.class) {
-            return mMemoryCache.size() <= 0;
+            return memoryCache.size() <= 0;
         }
     }
 

@@ -37,27 +37,27 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     private final HashMap<String, Integer> installReferrerMap = new HashMap<>(8);
 
-    private final BaseEventQueueManager mBaseEventQueueManager;
+    private final BaseEventQueueManager baseEventQueueManager;
 
-    private final BaseCallbackManager mCallbackManager;
+    private final BaseCallbackManager callbackManager;
 
-    private final CleverTapInstanceConfig mConfig;
+    private final CleverTapInstanceConfig config;
 
-    private final Context mContext;
+    private final Context context;
 
-    private final ControllerManager mControllerManager;
+    private final ControllerManager controllerManager;
 
-    private final CoreMetaData mCoreMetaData;
+    private final CoreMetaData coreMetaData;
 
-    private final DeviceInfo mDeviceInfo;
+    private final DeviceInfo deviceInfo;
 
-    private final LocalDataStore mLocalDataStore;
+    private final LocalDataStore localDataStore;
 
-    private final MainLooperHandler mMainLooperHandler;
+    private final MainLooperHandler mainLooperHandler;
 
-    private final ValidationResultStack mValidationResultStack;
+    private final ValidationResultStack validationResultStack;
 
-    private final Validator mValidator;
+    private final Validator validator;
 
     private final HashMap<String, Object> notificationIdTagMap = new HashMap<>();
 
@@ -75,28 +75,28 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             DeviceInfo deviceInfo,
             MainLooperHandler mainLooperHandler,
             BaseCallbackManager callbackManager, ControllerManager controllerManager) {
-        mContext = context;
-        mConfig = config;
-        mBaseEventQueueManager = baseEventQueueManager;
-        mValidator = validator;
-        mValidationResultStack = validationResultStack;
-        mCoreMetaData = coreMetaData;
-        mLocalDataStore = localDataStore;
-        mDeviceInfo = deviceInfo;
-        mMainLooperHandler = mainLooperHandler;
-        mCallbackManager = callbackManager;
+        this.context = context;
+        this.config = config;
+        this.baseEventQueueManager = baseEventQueueManager;
+        this.validator = validator;
+        this.validationResultStack = validationResultStack;
+        this.coreMetaData = coreMetaData;
+        this.localDataStore = localDataStore;
+        this.deviceInfo = deviceInfo;
+        this.mainLooperHandler = mainLooperHandler;
+        this.callbackManager = callbackManager;
         //TODO set display unit using observer pattern once it's created lazily, check for it's usage in
         // pushDisplayUnitClickedEventForID & pushDisplayUnitViewedEventForID
-        mControllerManager = controllerManager;
+        this.controllerManager = controllerManager;
     }
 
     @Override
     public void addMultiValuesForKey(final String key, final ArrayList<String> values) {
-        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("addMultiValuesForKey", new Callable<Void>() {
             @Override
             public Void call() {
-                final String command = (mLocalDataStore.getProfileValueForKey(key) != null)
+                final String command = (localDataStore.getProfileValueForKey(key) != null)
                         ? Constants.COMMAND_ADD : Constants.COMMAND_SET;
                 _handleMultiValues(values, key, command);
                 return null;
@@ -110,7 +110,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
      */
     @Override
     public void fetchFeatureFlags() {
-        if (mConfig.isAnalyticsOnly()) {
+        if (config.isAnalyticsOnly()) {
             return;
         }
         JSONObject event = new JSONObject();
@@ -128,35 +128,35 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     //Event
     @Override
     public void forcePushAppLaunchedEvent() {
-        mCoreMetaData.setAppLaunchPushed(false);
+        coreMetaData.setAppLaunchPushed(false);
         pushAppLaunchedEvent();
     }
 
     @Override
     public void pushAppLaunchedEvent() {
-        if (mConfig.isDisableAppLaunchedEvent()) {
-            mCoreMetaData.setAppLaunchPushed(true);
-            mConfig.getLogger()
-                    .debug(mConfig.getAccountId(), "App Launched Events disabled in the Android Manifest file");
+        if (config.isDisableAppLaunchedEvent()) {
+            coreMetaData.setAppLaunchPushed(true);
+            config.getLogger()
+                    .debug(config.getAccountId(), "App Launched Events disabled in the Android Manifest file");
             return;
         }
-        if (mCoreMetaData.isAppLaunchPushed()) {
-            mConfig.getLogger()
-                    .verbose(mConfig.getAccountId(), "App Launched has already been triggered. Will not trigger it ");
+        if (coreMetaData.isAppLaunchPushed()) {
+            config.getLogger()
+                    .verbose(config.getAccountId(), "App Launched has already been triggered. Will not trigger it ");
             return;
         } else {
-            mConfig.getLogger().verbose(mConfig.getAccountId(), "Firing App Launched event");
+            config.getLogger().verbose(config.getAccountId(), "Firing App Launched event");
         }
-        mCoreMetaData.setAppLaunchPushed(true);
+        coreMetaData.setAppLaunchPushed(true);
         JSONObject event = new JSONObject();
         try {
             event.put("evtName", Constants.APP_LAUNCHED_EVENT);
 
-            event.put("evtData", mDeviceInfo.getAppLaunchedFields());
+            event.put("evtData", deviceInfo.getAppLaunchedFields());
         } catch (Throwable t) {
             // We won't get here
         }
-        mBaseEventQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
+        baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
     }
 
     @Override
@@ -167,15 +167,15 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
 
             //wzrk fields
-            if (mControllerManager.getCTDisplayUnitController() != null) {
-                CleverTapDisplayUnit displayUnit = mControllerManager.getCTDisplayUnitController()
+            if (controllerManager.getCTDisplayUnitController() != null) {
+                CleverTapDisplayUnit displayUnit = controllerManager.getCTDisplayUnitController()
                         .getDisplayUnitForID(unitID);
                 if (displayUnit != null) {
                     JSONObject eventExtraData = displayUnit.getWZRKFields();
                     if (eventExtraData != null) {
                         event.put("evtData", eventExtraData);
                         try {
-                            mCoreMetaData.setWzrkParams(eventExtraData);
+                            coreMetaData.setWzrkParams(eventExtraData);
                         } catch (Throwable t) {
                             // no-op
                         }
@@ -183,10 +183,10 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                 }
             }
 
-            mBaseEventQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (Throwable t) {
             // We won't get here
-            mConfig.getLogger().verbose(mConfig.getAccountId(),
+            config.getLogger().verbose(config.getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "Failed to push Display Unit clicked event" + t);
         }
     }
@@ -199,8 +199,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             event.put("evtName", Constants.NOTIFICATION_VIEWED_EVENT_NAME);
 
             //wzrk fields
-            if (mControllerManager.getCTDisplayUnitController() != null) {
-                CleverTapDisplayUnit displayUnit = mControllerManager.getCTDisplayUnitController()
+            if (controllerManager.getCTDisplayUnitController() != null) {
+                CleverTapDisplayUnit displayUnit = controllerManager.getCTDisplayUnitController()
                         .getDisplayUnitForID(unitID);
                 if (displayUnit != null) {
                     JSONObject eventExtras = displayUnit.getWZRKFields();
@@ -210,10 +210,10 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                 }
             }
 
-            mBaseEventQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (Throwable t) {
             // We won't get here
-            mConfig.getLogger().verbose(mConfig.getAccountId(),
+            config.getLogger().verbose(config.getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "Failed to push Display Unit viewed event" + t);
         }
     }
@@ -247,17 +247,17 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             return;
         }
 
-        ValidationResult validationResult = mValidator.isRestrictedEventName(eventName);
+        ValidationResult validationResult = validator.isRestrictedEventName(eventName);
         // Check for a restricted event name
         if (validationResult.getErrorCode() > 0) {
-            mValidationResultStack.pushValidationResult(validationResult);
+            validationResultStack.pushValidationResult(validationResult);
             return;
         }
 
-        ValidationResult discardedResult = mValidator.isEventDiscarded(eventName);
+        ValidationResult discardedResult = validator.isEventDiscarded(eventName);
         // Check for a discarded event name
         if (discardedResult.getErrorCode() > 0) {
-            mValidationResultStack.pushValidationResult(discardedResult);
+            validationResultStack.pushValidationResult(discardedResult);
             return;
         }
 
@@ -268,7 +268,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         JSONObject event = new JSONObject();
         try {
             // Validate
-            ValidationResult vr = mValidator.cleanEventName(eventName);
+            ValidationResult vr = validator.cleanEventName(eventName);
 
             // Check for an error
             if (vr.getErrorCode() != 0) {
@@ -279,21 +279,21 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             JSONObject actions = new JSONObject();
             for (String key : eventActions.keySet()) {
                 Object value = eventActions.get(key);
-                vr = mValidator.cleanObjectKey(key);
+                vr = validator.cleanObjectKey(key);
                 key = vr.getObject().toString();
                 // Check for an error
                 if (vr.getErrorCode() != 0) {
                     event.put(Constants.ERROR_KEY, getErrorObject(vr));
                 }
                 try {
-                    vr = mValidator.cleanObjectValue(value, Validator.ValidationContext.Event);
+                    vr = validator.cleanObjectValue(value, Validator.ValidationContext.Event);
                 } catch (IllegalArgumentException e) {
                     // The object was neither a String, Boolean, or any number primitives
                     ValidationResult error = ValidationResultFactory
                             .create(512, Constants.PROP_VALUE_NOT_PRIMITIVE, eventName, key,
                                     value != null ? value.toString() : "");
-                    mConfig.getLogger().debug(mConfig.getAccountId(), error.getErrorDesc());
-                    mValidationResultStack.pushValidationResult(error);
+                    config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
+                    validationResultStack.pushValidationResult(error);
                     // Skip this record
                     continue;
                 }
@@ -306,7 +306,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             }
             event.put("evtName", eventName);
             event.put("evtData", actions);
-            mBaseEventQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (Throwable t) {
             // We won't get here
         }
@@ -339,7 +339,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
             if (clicked) {
                 try {
-                    mCoreMetaData.setWzrkParams(notif);
+                    coreMetaData.setWzrkParams(notif);
                 } catch (Throwable t) {
                     // no-op
                 }
@@ -349,7 +349,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             }
 
             event.put("evtData", notif);
-            mBaseEventQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (Throwable ignored) {
             // We won't get here
         }
@@ -358,7 +358,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     @Override
     public void pushInstallReferrer(String url) {
         try {
-            mConfig.getLogger().verbose(mConfig.getAccountId(), "Referrer received: " + url);
+            config.getLogger().verbose(config.getAccountId(), "Referrer received: " + url);
 
             if (url == null) {
                 return;
@@ -367,8 +367,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
             //noinspection Constant Conditions
             if (installReferrerMap.containsKey(url) && now - installReferrerMap.get(url) < 10) {
-                mConfig.getLogger()
-                        .verbose(mConfig.getAccountId(),
+                config.getLogger()
+                        .verbose(config.getAccountId(),
                                 "Skipping install referrer due to duplicate within 10 seconds");
                 return;
             }
@@ -390,12 +390,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
         try {
             // If already pushed, don't send it again
-            int status = StorageHelper.getInt(mContext, "app_install_status", 0);
+            int status = StorageHelper.getInt(context, "app_install_status", 0);
             if (status != 0) {
                 Logger.d("Install referrer has already been set. Will not override it");
                 return;
             }
-            StorageHelper.putInt(mContext, "app_install_status", 1);
+            StorageHelper.putInt(context, "app_install_status", 1);
 
             if (source != null) {
                 source = Uri.encode(source);
@@ -428,15 +428,15 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     @Override
     public void pushNotificationClickedEvent(final Bundle extras) {
 
-        if (mConfig.isAnalyticsOnly()) {
-            mConfig.getLogger()
-                    .debug(mConfig.getAccountId(),
+        if (config.isAnalyticsOnly()) {
+            config.getLogger()
+                    .debug(config.getAccountId(),
                             "is Analytics Only - will not process Notification Clicked event.");
             return;
         }
 
         if (extras == null || extras.isEmpty() || extras.get(Constants.NOTIFICATION_TAG) == null) {
-            mConfig.getLogger().debug(mConfig.getAccountId(),
+            config.getLogger().debug(config.getAccountId(),
                     "Push notification: " + (extras == null ? "NULL" : extras.toString())
                             + " not from CleverTap - will not process Notification Clicked event.");
             return;
@@ -449,12 +449,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             // no-op
         }
 
-        boolean shouldProcess = (accountId == null && mConfig.isDefaultInstance())
-                || mConfig.getAccountId()
+        boolean shouldProcess = (accountId == null && config.isDefaultInstance())
+                || config.getAccountId()
                 .equals(accountId);
 
         if (!shouldProcess) {
-            mConfig.getLogger().debug(mConfig.getAccountId(),
+            config.getLogger().debug(config.getAccountId(),
                     "Push notification not targeted at this instance, not processing Notification Clicked Event");
             return;
         }
@@ -478,7 +478,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                 }
             };
 
-            mMainLooperHandler.setPendingRunnable(pendingInappRunnable);
+            mainLooperHandler.setPendingRunnable(pendingInappRunnable);
             return;
         }
 
@@ -503,7 +503,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                     }
                 }
             };
-            mMainLooperHandler.setPendingRunnable(pendingInboxRunnable);
+            mainLooperHandler.setPendingRunnable(pendingInboxRunnable);
             return;
         }
 
@@ -514,7 +514,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
         if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG) || (extras.getString(Constants.NOTIFICATION_ID_TAG)
                 == null)) {
-            mConfig.getLogger().debug(mConfig.getAccountId(),
+            config.getLogger().debug(config.getAccountId(),
                     "Push notification ID Tag is null, not processing Notification Clicked event for:  " + extras
                             .toString());
             return;
@@ -524,7 +524,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         boolean isDuplicate = checkDuplicateNotificationIds(extras, notificationIdTagMap,
                 Constants.NOTIFICATION_ID_TAG_INTERVAL);
         if (isDuplicate) {
-            mConfig.getLogger().debug(mConfig.getAccountId(),
+            config.getLogger().debug(config.getAccountId(),
                     "Already processed Notification Clicked event for " + extras.toString()
                             + ", dropping duplicate.");
             return;
@@ -543,18 +543,18 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
             event.put("evtName", Constants.NOTIFICATION_CLICKED_EVENT_NAME);
             event.put("evtData", notif);
-            mBaseEventQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
 
             try {
-                mCoreMetaData.setWzrkParams(getWzrkFields(extras));
+                coreMetaData.setWzrkParams(getWzrkFields(extras));
             } catch (Throwable t) {
                 // no-op
             }
         } catch (Throwable t) {
             // We won't get here
         }
-        if (mCallbackManager.getPushNotificationListener() != null) {
-            mCallbackManager.getPushNotificationListener()
+        if (callbackManager.getPushNotificationListener() != null) {
+            callbackManager.getPushNotificationListener()
                     .onNotificationClickedPayloadReceived(Utils.convertBundleObjectToHashMap(extras));
         } else {
             Logger.d("CTPushNotificationListener is not set");
@@ -572,7 +572,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     public void pushNotificationViewedEvent(Bundle extras) {
 
         if (extras == null || extras.isEmpty() || extras.get(Constants.NOTIFICATION_TAG) == null) {
-            mConfig.getLogger().debug(mConfig.getAccountId(),
+            config.getLogger().debug(config.getAccountId(),
                     "Push notification: " + (extras == null ? "NULL" : extras.toString())
                             + " not from CleverTap - will not process Notification Viewed event.");
             return;
@@ -580,7 +580,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
         if (!extras.containsKey(Constants.NOTIFICATION_ID_TAG) || (extras.getString(Constants.NOTIFICATION_ID_TAG)
                 == null)) {
-            mConfig.getLogger().debug(mConfig.getAccountId(),
+            config.getLogger().debug(config.getAccountId(),
                     "Push notification ID Tag is null, not processing Notification Viewed event for:  " + extras
                             .toString());
             return;
@@ -590,12 +590,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         boolean isDuplicate = checkDuplicateNotificationIds(extras, notificationViewedIdTagMap,
                 Constants.NOTIFICATION_VIEWED_ID_TAG_INTERVAL);
         if (isDuplicate) {
-            mConfig.getLogger().debug(mConfig.getAccountId(),
+            config.getLogger().debug(config.getAccountId(),
                     "Already processed Notification Viewed event for " + extras.toString() + ", dropping duplicate.");
             return;
         }
 
-        mConfig.getLogger().debug("Recording Notification Viewed event for notification:  " + extras.toString());
+        config.getLogger().debug("Recording Notification Viewed event for notification:  " + extras.toString());
 
         JSONObject event = new JSONObject();
         try {
@@ -605,7 +605,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         } catch (Throwable ignored) {
             //no-op
         }
-        mBaseEventQueueManager.queueEvent(mContext, event, Constants.NV_EVENT);
+        baseEventQueueManager.queueEvent(context, event, Constants.NV_EVENT);
     }
 
     @Override
@@ -613,7 +613,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         if (profile == null || profile.isEmpty()) {
             return;
         }
-        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("profilePush",new Callable<Void>() {
             @Override
             public Void call() {
@@ -625,7 +625,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     @Override
     public void removeMultiValuesForKey(final String key, final ArrayList<String> values) {
-        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("removeMultiValuesForKey", new Callable<Void>() {
             @Override
             public Void call() {
@@ -637,7 +637,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     @Override
     public void removeValueForKey(final String key) {
-        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("removeValueForKey", new Callable<Void>() {
             @Override
             public Void call() {
@@ -649,27 +649,27 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     @Override
     public void sendDataEvent(final JSONObject event) {
-        mBaseEventQueueManager.queueEvent(mContext, event, Constants.DATA_EVENT);
+        baseEventQueueManager.queueEvent(context, event, Constants.DATA_EVENT);
     }
 
     void _generateEmptyMultiValueError(String key) {
         ValidationResult error = ValidationResultFactory.create(512, Constants.INVALID_MULTI_VALUE, key);
-        mValidationResultStack.pushValidationResult(error);
-        mConfig.getLogger().debug(mConfig.getAccountId(), error.getErrorDesc());
+        validationResultStack.pushValidationResult(error);
+        config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
     }
 
     void pushChargedEvent(HashMap<String, Object> chargeDetails,
             ArrayList<HashMap<String, Object>> items) {
 
         if (chargeDetails == null || items == null) {
-            mConfig.getLogger().debug(mConfig.getAccountId(), "Invalid Charged event: details and or items is null");
+            config.getLogger().debug(config.getAccountId(), "Invalid Charged event: details and or items is null");
             return;
         }
 
         if (items.size() > 50) {
             ValidationResult error = ValidationResultFactory.create(522);
-            mConfig.getLogger().debug(mConfig.getAccountId(), error.getErrorDesc());
-            mValidationResultStack.pushValidationResult(error);
+            config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
+            validationResultStack.pushValidationResult(error);
         }
 
         JSONObject evtData = new JSONObject();
@@ -678,7 +678,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         try {
             for (String key : chargeDetails.keySet()) {
                 Object value = chargeDetails.get(key);
-                vr = mValidator.cleanObjectKey(key);
+                vr = validator.cleanObjectKey(key);
                 key = vr.getObject().toString();
                 // Check for an error
                 if (vr.getErrorCode() != 0) {
@@ -686,14 +686,14 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                 }
 
                 try {
-                    vr = mValidator.cleanObjectValue(value, Validator.ValidationContext.Event);
+                    vr = validator.cleanObjectValue(value, Validator.ValidationContext.Event);
                 } catch (IllegalArgumentException e) {
                     // The object was neither a String, Boolean, or any number primitives
                     ValidationResult error = ValidationResultFactory.create(511,
                             Constants.PROP_VALUE_NOT_PRIMITIVE, "Charged", key,
                             value != null ? value.toString() : "");
-                    mValidationResultStack.pushValidationResult(error);
-                    mConfig.getLogger().debug(mConfig.getAccountId(), error.getErrorDesc());
+                    validationResultStack.pushValidationResult(error);
+                    config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
                     // Skip this property
                     continue;
                 }
@@ -711,7 +711,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                 JSONObject itemDetails = new JSONObject();
                 for (String key : map.keySet()) {
                     Object value = map.get(key);
-                    vr = mValidator.cleanObjectKey(key);
+                    vr = validator.cleanObjectKey(key);
                     key = vr.getObject().toString();
                     // Check for an error
                     if (vr.getErrorCode() != 0) {
@@ -719,14 +719,14 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                     }
 
                     try {
-                        vr = mValidator.cleanObjectValue(value, Validator.ValidationContext.Event);
+                        vr = validator.cleanObjectValue(value, Validator.ValidationContext.Event);
                     } catch (IllegalArgumentException e) {
                         // The object was neither a String, Boolean, or any number primitives
                         ValidationResult error = ValidationResultFactory
                                 .create(511, Constants.OBJECT_VALUE_NOT_PRIMITIVE, key,
                                         value != null ? value.toString() : "");
-                        mConfig.getLogger().debug(mConfig.getAccountId(), error.getErrorDesc());
-                        mValidationResultStack.pushValidationResult(error);
+                        config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
+                        validationResultStack.pushValidationResult(error);
                         // Skip this property
                         continue;
                     }
@@ -743,7 +743,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
             chargedEvent.put("evtName", Constants.CHARGED_EVENT);
             chargedEvent.put("evtData", evtData);
-            mBaseEventQueueManager.queueEvent(mContext, chargedEvent, Constants.RAISED_EVENT);
+            baseEventQueueManager.queueEvent(context, chargedEvent, Constants.RAISED_EVENT);
         } catch (Throwable t) {
             // We won't get here
         }
@@ -757,13 +757,13 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         try {
             JSONObject referrer = UriHelper.getUrchinFromUri(uri);
             if (referrer.has("us")) {
-                mCoreMetaData.setSource(referrer.get("us").toString());
+                coreMetaData.setSource(referrer.get("us").toString());
             }
             if (referrer.has("um")) {
-                mCoreMetaData.setMedium(referrer.get("um").toString());
+                coreMetaData.setMedium(referrer.get("um").toString());
             }
             if (referrer.has("uc")) {
-                mCoreMetaData.setCampaign(referrer.get("uc").toString());
+                coreMetaData.setCampaign(referrer.get("uc").toString());
             }
 
             referrer.put("referrer", uri.toString());
@@ -773,7 +773,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             recordPageEventWithExtras(referrer);
 
         } catch (Throwable t) {
-            mConfig.getLogger().verbose(mConfig.getAccountId(), "Failed to push deep link", t);
+            config.getLogger().verbose(config.getAccountId(), "Failed to push deep link", t);
         }
     }
 
@@ -793,11 +793,11 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             geofenceProperties.remove("triggered_lat");
             geofenceProperties.remove("triggered_lng");
 
-            mCoreMetaData.setLocationFromUser(location);
+            coreMetaData.setLocationFromUser(location);
 
-            future = mBaseEventQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
+            future = baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (JSONException e) {
-            mConfig.getLogger().debug(mConfig.getAccountId(), Constants.LOG_TAG_GEOFENCES +
+            config.getLogger().debug(config.getAccountId(), Constants.LOG_TAG_GEOFENCES +
                     "JSON Exception when raising GeoFence event "
                     + eventName + " - " + e.getLocalizedMessage());
         }
@@ -820,14 +820,14 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                     }
                 }
             }
-            mBaseEventQueueManager.queueEvent(mContext, jsonObject, Constants.PAGE_EVENT);
+            baseEventQueueManager.queueEvent(context, jsonObject, Constants.PAGE_EVENT);
         } catch (Throwable t) {
             // We won't get here
         }
     }
 
     void setMultiValuesForKey(final String key, final ArrayList<String> values) {
-        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("setMultiValuesForKey", new Callable<Void>() {
             @Override
             public Void call() {
@@ -852,11 +852,11 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                 value = (value == null) ? "" : value;  // so we will generate a validation error later on
 
                 // validate value
-                vr = mValidator.cleanMultiValuePropertyValue(value);
+                vr = validator.cleanMultiValuePropertyValue(value);
 
                 // Check for an error
                 if (vr.getErrorCode() != 0) {
-                    mValidationResultStack.pushValidationResult(vr);
+                    validationResultStack.pushValidationResult(vr);
                 }
 
                 // reset the value
@@ -876,7 +876,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             return cleanedValues;
 
         } catch (Throwable t) {
-            mConfig.getLogger().verbose(mConfig.getAccountId(), "Error cleaning multi values for key " + key, t);
+            config.getLogger().verbose(config.getAccountId(), "Error cleaning multi values for key " + key, t);
             _generateEmptyMultiValueError(key);
             return null;
         }
@@ -942,14 +942,14 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     private void _generateInvalidMultiValueKeyError(String key) {
         ValidationResult error = ValidationResultFactory.create(523, Constants.INVALID_MULTI_VALUE_KEY, key);
-        mValidationResultStack.pushValidationResult(error);
-        mConfig.getLogger().debug(mConfig.getAccountId(),
+        validationResultStack.pushValidationResult(error);
+        config.getLogger().debug(config.getAccountId(),
                 "Invalid multi-value property key " + key + " profile multi value operation aborted");
     }
 
     // use for internal profile getter doesn't do the personalization check
     private Object _getProfilePropertyIgnorePersonalizationFlag(String key) {
-        return mLocalDataStore.getProfileValueForKey(key);
+        return localDataStore.getProfileValueForKey(key);
     }
 
     private void _handleMultiValues(ArrayList<String> values, String key, String command) {
@@ -965,11 +965,11 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         ValidationResult vr;
 
         // validate the key
-        vr = mValidator.cleanMultiValuePropertyKey(key);
+        vr = validator.cleanMultiValuePropertyKey(key);
 
         // Check for an error
         if (vr.getErrorCode() != 0) {
-            mValidationResultStack.pushValidationResult(vr);
+            validationResultStack.pushValidationResult(vr);
         }
 
         // reset the key
@@ -990,8 +990,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             _validateAndPushMultiValue(currentValues, newValues, values, key, command);
 
         } catch (Throwable t) {
-            mConfig.getLogger()
-                    .verbose(mConfig.getAccountId(), "Error handling multi value operation for key " + key, t);
+            config.getLogger()
+                    .verbose(config.getAccountId(), "Error handling multi value operation for key " + key, t);
         }
     }
 
@@ -1007,61 +1007,61 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             for (String key : profile.keySet()) {
                 Object value = profile.get(key);
 
-                vr = mValidator.cleanObjectKey(key);
+                vr = validator.cleanObjectKey(key);
                 key = vr.getObject().toString();
                 // Check for an error
                 if (vr.getErrorCode() != 0) {
-                    mValidationResultStack.pushValidationResult(vr);
+                    validationResultStack.pushValidationResult(vr);
                 }
 
                 if (key.isEmpty()) {
                     ValidationResult keyError = ValidationResultFactory.create(512, Constants.PUSH_KEY_EMPTY);
-                    mValidationResultStack.pushValidationResult(keyError);
-                    mConfig.getLogger().debug(mConfig.getAccountId(), keyError.getErrorDesc());
+                    validationResultStack.pushValidationResult(keyError);
+                    config.getLogger().debug(config.getAccountId(), keyError.getErrorDesc());
                     // Skip this property
                     continue;
                 }
 
                 try {
-                    vr = mValidator.cleanObjectValue(value, Validator.ValidationContext.Profile);
+                    vr = validator.cleanObjectValue(value, Validator.ValidationContext.Profile);
                 } catch (Throwable e) {
                     // The object was neither a String, Boolean, or any number primitives
                     ValidationResult error = ValidationResultFactory.create(512,
                             Constants.OBJECT_VALUE_NOT_PRIMITIVE_PROFILE,
                             value != null ? value.toString() : "", key);
-                    mValidationResultStack.pushValidationResult(error);
-                    mConfig.getLogger().debug(mConfig.getAccountId(), error.getErrorDesc());
+                    validationResultStack.pushValidationResult(error);
+                    config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
                     // Skip this property
                     continue;
                 }
                 value = vr.getObject();
                 // Check for an error
                 if (vr.getErrorCode() != 0) {
-                    mValidationResultStack.pushValidationResult(vr);
+                    validationResultStack.pushValidationResult(vr);
                 }
 
                 // test Phone:  if no device country code, test if phone starts with +, log but always send
                 if (key.equalsIgnoreCase("Phone")) {
                     try {
                         value = value.toString();
-                        String countryCode = mDeviceInfo.getCountryCode();
+                        String countryCode = deviceInfo.getCountryCode();
                         if (countryCode == null || countryCode.isEmpty()) {
                             String _value = (String) value;
                             if (!_value.startsWith("+")) {
                                 ValidationResult error = ValidationResultFactory
                                         .create(512, Constants.INVALID_COUNTRY_CODE, _value);
-                                mValidationResultStack.pushValidationResult(error);
-                                mConfig.getLogger().debug(mConfig.getAccountId(), error.getErrorDesc());
+                                validationResultStack.pushValidationResult(error);
+                                config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
                             }
                         }
-                        mConfig.getLogger().verbose(mConfig.getAccountId(),
+                        config.getLogger().verbose(config.getAccountId(),
                                 "Profile phone is: " + value + " device country code is: " + ((countryCode != null)
                                         ? countryCode : "null"));
                     } catch (Exception e) {
-                        mValidationResultStack
+                        validationResultStack
                                 .pushValidationResult(ValidationResultFactory.create(512, Constants.INVALID_PHONE));
-                        mConfig.getLogger()
-                                .debug(mConfig.getAccountId(), "Invalid phone number: " + e.getLocalizedMessage());
+                        config.getLogger()
+                                .debug(config.getAccountId(), "Invalid phone number: " + e.getLocalizedMessage());
                         continue;
                     }
                 }
@@ -1071,19 +1071,19 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                 customProfile.put(key, value);
             }
 
-            mConfig.getLogger()
-                    .verbose(mConfig.getAccountId(), "Constructed custom profile: " + customProfile.toString());
+            config.getLogger()
+                    .verbose(config.getAccountId(), "Constructed custom profile: " + customProfile.toString());
 
             // update local profile values
             if (fieldsToUpdateLocally.length() > 0) {
-                mLocalDataStore.setProfileFields(fieldsToUpdateLocally);
+                localDataStore.setProfileFields(fieldsToUpdateLocally);
             }
 
-            mBaseEventQueueManager.pushBasicProfile(customProfile);
+            baseEventQueueManager.pushBasicProfile(customProfile);
 
         } catch (Throwable t) {
             // Will not happen
-            mConfig.getLogger().verbose(mConfig.getAccountId(), "Failed to push profile", t);
+            config.getLogger().verbose(config.getAccountId(), "Failed to push profile", t);
         }
     }
 
@@ -1094,34 +1094,34 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             // validate the key
             ValidationResult vr;
 
-            vr = mValidator.cleanObjectKey(key);
+            vr = validator.cleanObjectKey(key);
             key = vr.getObject().toString();
 
             if (key.isEmpty()) {
                 ValidationResult error = ValidationResultFactory.create(512, Constants.KEY_EMPTY);
-                mValidationResultStack.pushValidationResult(error);
-                mConfig.getLogger().debug(mConfig.getAccountId(), error.getErrorDesc());
+                validationResultStack.pushValidationResult(error);
+                config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
                 // Abort
                 return;
             }
             // Check for an error
             if (vr.getErrorCode() != 0) {
-                mValidationResultStack.pushValidationResult(vr);
+                validationResultStack.pushValidationResult(vr);
             }
 
             // remove from the local profile
-            mLocalDataStore.removeProfileField(key);
+            localDataStore.removeProfileField(key);
 
             // send the delete command
             JSONObject command = new JSONObject().put(Constants.COMMAND_DELETE, true);
             JSONObject update = new JSONObject().put(key, command);
-            mBaseEventQueueManager.pushBasicProfile(update);
+            baseEventQueueManager.pushBasicProfile(update);
 
-            mConfig.getLogger()
-                    .verbose(mConfig.getAccountId(), "removing value for key " + key + " from user profile");
+            config.getLogger()
+                    .verbose(config.getAccountId(), "removing value for key " + key + " from user profile");
 
         } catch (Throwable t) {
-            mConfig.getLogger().verbose(mConfig.getAccountId(), "Failed to remove profile value for key " + key, t);
+            config.getLogger().verbose(config.getAccountId(), "Failed to remove profile value for key " + key, t);
         }
     }
 
@@ -1129,11 +1129,11 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         String val = CTJsonConverter.toJsonString(value);
 
         if (val != null) {
-            ValidationResult vr = mValidator.cleanMultiValuePropertyValue(val);
+            ValidationResult vr = validator.cleanMultiValuePropertyValue(val);
 
             // Check for an error
             if (vr.getErrorCode() != 0) {
-                mValidationResultStack.pushValidationResult(vr);
+                validationResultStack.pushValidationResult(vr);
             }
 
             Object _value = vr.getObject();
@@ -1158,12 +1158,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                     : Validator.ADD_VALUES_OPERATION;
 
             // merge currentValues and newValues
-            ValidationResult vr = mValidator
+            ValidationResult vr = validator
                     .mergeMultiValuePropertyForKey(currentValues, newValues, mergeOperation, key);
 
             // Check for an error
             if (vr.getErrorCode() != 0) {
-                mValidationResultStack.pushValidationResult(vr);
+                validationResultStack.pushValidationResult(vr);
             }
 
             // set the merged local values array
@@ -1172,10 +1172,10 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             // update local profile
             // remove an empty array
             if (localValues == null || localValues.length() <= 0) {
-                mLocalDataStore.removeProfileField(key);
+                localDataStore.removeProfileField(key);
             } else {
                 // not empty so save to local profile
-                mLocalDataStore.setProfileField(key, localValues);
+                localDataStore.setProfileField(key, localValues);
             }
 
             // push to server
@@ -1185,13 +1185,13 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             JSONObject fields = new JSONObject();
             fields.put(key, commandObj);
 
-            mBaseEventQueueManager.pushBasicProfile(fields);
+            baseEventQueueManager.pushBasicProfile(fields);
 
-            mConfig.getLogger()
-                    .verbose(mConfig.getAccountId(), "Constructed multi-value profile push: " + fields.toString());
+            config.getLogger()
+                    .verbose(config.getAccountId(), "Constructed multi-value profile push: " + fields.toString());
 
         } catch (Throwable t) {
-            mConfig.getLogger().verbose(mConfig.getAccountId(), "Error pushing multiValue for key " + key, t);
+            config.getLogger().verbose(config.getAccountId(), "Error pushing multiValue for key " + key, t);
         }
     }
 
@@ -1221,13 +1221,13 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     }
 
     public void sendPingEvent(final JSONObject eventObject) {
-        mBaseEventQueueManager
-                .queueEvent(mContext, eventObject, Constants.PING_EVENT);
+        baseEventQueueManager
+                .queueEvent(context, eventObject, Constants.PING_EVENT);
     }
 
     public void sendFetchEvent(final JSONObject eventObject) {
-        mBaseEventQueueManager
-                .queueEvent(mContext, eventObject, Constants.FETCH_EVENT);
+        baseEventQueueManager
+                .queueEvent(context, eventObject, Constants.FETCH_EVENT);
     }
 
     /**
@@ -1241,10 +1241,10 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
             CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
 
-            cleverTapResponse = new DisplayUnitResponse(cleverTapResponse, mConfig,
-                    mCallbackManager, mControllerManager);
+            cleverTapResponse = new DisplayUnitResponse(cleverTapResponse, config,
+                    callbackManager, controllerManager);
 
-            cleverTapResponse.processResponse(r, null, mContext);
+            cleverTapResponse.processResponse(r, null, context);
 
         } catch (Throwable t) {
             Logger.v("Failed to process Display Unit from push notification payload", t);
@@ -1277,7 +1277,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
             if (clicked) {
                 try {
-                    mCoreMetaData.setWzrkParams(notif);
+                    coreMetaData.setWzrkParams(notif);
                 } catch (Throwable t) {
                     // no-op
                 }
@@ -1287,7 +1287,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             }
 
             event.put("evtData", notif);
-            mBaseEventQueueManager.queueEvent(mContext, event, Constants.RAISED_EVENT);
+            baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (Throwable ignored) {
             // We won't get here
         }

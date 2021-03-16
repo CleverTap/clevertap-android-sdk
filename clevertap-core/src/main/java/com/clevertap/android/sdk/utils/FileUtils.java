@@ -17,13 +17,13 @@ import org.json.JSONObject;
 @RestrictTo(Scope.LIBRARY_GROUP)
 public class FileUtils {
 
-    private final CleverTapInstanceConfig mConfig;
+    private final CleverTapInstanceConfig config;
 
-    private final Context mContext;
+    private final Context context;
 
     public FileUtils(@NonNull final Context context, @NonNull final CleverTapInstanceConfig config) {
-        mContext = context;
-        mConfig = config;
+        this.context = context;
+        this.config = config;
     }
 
     public void deleteDirectory(String dirName) {
@@ -32,19 +32,19 @@ public class FileUtils {
         }
         try {
             synchronized (FileUtils.class) {
-                File file = new File(mContext.getFilesDir(), dirName);
+                File file = new File(context.getFilesDir(), dirName);
                 if (file.exists() && file.isDirectory()) {
                     String[] children = file.list();
                     for (String child : children) {
                         boolean deleted = new File(file, child).delete();
-                        mConfig.getLogger().verbose(mConfig.getAccountId(),
+                        config.getLogger().verbose(config.getAccountId(),
                                 "File" + child + " isDeleted:" + deleted);
                     }
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            mConfig.getLogger().verbose(mConfig.getAccountId(),
+            config.getLogger().verbose(config.getAccountId(),
                     "writeFileOnInternalStorage: failed" + dirName + " Error:" + e.getLocalizedMessage());
         }
     }
@@ -55,18 +55,18 @@ public class FileUtils {
         }
         try {
             synchronized (FileUtils.class) {
-                File file = new File(mContext.getFilesDir(), fileName);
+                File file = new File(context.getFilesDir(), fileName);
                 if (file.exists()) {
                     if (file.delete()) {
-                        mConfig.getLogger().verbose(mConfig.getAccountId(), "File Deleted:" + fileName);
+                        config.getLogger().verbose(config.getAccountId(), "File Deleted:" + fileName);
                     } else {
-                        mConfig.getLogger().verbose(mConfig.getAccountId(), "Failed to delete file" + fileName);
+                        config.getLogger().verbose(config.getAccountId(), "Failed to delete file" + fileName);
                     }
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            mConfig.getLogger().verbose(mConfig.getAccountId(),
+            config.getLogger().verbose(config.getAccountId(),
                     "writeFileOnInternalStorage: failed" + fileName + " Error:" + e.getLocalizedMessage());
         }
     }
@@ -77,7 +77,7 @@ public class FileUtils {
         //Make sure to use a try-catch statement to catch any errors
         try {
             //Make your FilePath and File
-            String yourFilePath = mContext.getFilesDir() + "/" + fileNameWithPath;
+            String yourFilePath = context.getFilesDir() + "/" + fileNameWithPath;
             File yourFile = new File(yourFilePath);
             //Make an InputStream with your File in the constructor
             InputStream inputStream = new FileInputStream(yourFile);
@@ -97,8 +97,8 @@ public class FileUtils {
             inputStream.close();
             content = stringBuilder.toString();
         } catch (Exception e) {
-            mConfig.getLogger()
-                    .verbose(mConfig.getAccountId(), "[Exception While Reading: " + e.getLocalizedMessage());
+            config.getLogger()
+                    .verbose(config.getAccountId(), "[Exception While Reading: " + e.getLocalizedMessage());
             //Log your error with Log.e
         }
         return content;
@@ -111,7 +111,7 @@ public class FileUtils {
                 return;
             }
             synchronized (FileUtils.class) {
-                File file = new File(mContext.getFilesDir(), dirName);
+                File file = new File(context.getFilesDir(), dirName);
                 if (!file.exists()) {
                     if (!file.mkdir()) {
                         return;// if directory is not created don't proceed and return
@@ -126,7 +126,7 @@ public class FileUtils {
             }
         } catch (Exception e) {
             e.printStackTrace();
-            mConfig.getLogger().verbose(mConfig.getAccountId(),
+            config.getLogger().verbose(config.getAccountId(),
                     "writeFileOnInternalStorage: failed" + e.getLocalizedMessage());
         }
     }

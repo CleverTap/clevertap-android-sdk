@@ -47,7 +47,7 @@ public class CTProductConfigController {
 
     AtomicBoolean isInitialized = new AtomicBoolean(false);
 
-    final FileUtils mFileUtils;
+    final FileUtils fileUtils;
 
     private final CleverTapInstanceConfig config;
 
@@ -55,11 +55,11 @@ public class CTProductConfigController {
 
     private final AtomicBoolean isFetchAndActivating = new AtomicBoolean(false);
 
-    private final BaseAnalyticsManager mAnalyticsManager;
+    private final BaseAnalyticsManager analyticsManager;
 
-    private final BaseCallbackManager mCallbackManager;
+    private final BaseCallbackManager callbackManager;
 
-    private final CoreMetaData mCoreMetaData;
+    private final CoreMetaData coreMetaData;
 
     private final ProductConfigSettings settings;
 
@@ -73,11 +73,11 @@ public class CTProductConfigController {
             FileUtils fileUtils) {
         this.context = context;
         this.config = config;
-        mCoreMetaData = coreMetaData;
-        mCallbackManager = callbackManager;
-        mAnalyticsManager = analyticsManager;
+        this.coreMetaData = coreMetaData;
+        this.callbackManager = callbackManager;
+        this.analyticsManager = analyticsManager;
         settings = productConfigSettings;
-        mFileUtils = fileUtils;
+        this.fileUtils = fileUtils;
         initAsync();
     }
 
@@ -172,8 +172,8 @@ public class CTProductConfigController {
         } catch (JSONException e) {
             e.printStackTrace();
         }
-        mAnalyticsManager.sendFetchEvent(event);
-        mCoreMetaData.setProductConfigRequested(true);
+        analyticsManager.sendFetchEvent(event);
+        coreMetaData.setProductConfigRequested(true);
         config.getLogger()
                 .verbose(config.getAccountId(), Constants.LOG_TAG_PRODUCT_CONFIG + "Fetching product config");
     }
@@ -300,7 +300,7 @@ public class CTProductConfigController {
             if (kvResponse != null) {
                 try {
                     parseFetchedResponse(kvResponse);
-                    mFileUtils.writeJsonToFile(getProductConfigDirName(),
+                    fileUtils.writeJsonToFile(getProductConfigDirName(),
                             CTProductConfigConstants.FILE_NAME_ACTIVATED,
                             new JSONObject(waitingTobeActivatedConfig));
                     config.getLogger()
@@ -341,7 +341,7 @@ public class CTProductConfigController {
     }
 
     public void resetSettings() {
-        settings.reset(mFileUtils);
+        settings.reset(fileUtils);
     }
 
     /**
@@ -433,7 +433,7 @@ public class CTProductConfigController {
                 synchronized (this) {
                     try {
                         String dirName = getProductConfigDirName();
-                        mFileUtils.deleteDirectory(dirName);
+                        fileUtils.deleteDirectory(dirName);
                         config.getLogger()
                                 .verbose(ProductConfigUtil.getLogTag(config), "Reset Deleted Dir: " + dirName);
                     } catch (Exception e) {
@@ -453,11 +453,11 @@ public class CTProductConfigController {
     }
 
     BaseAnalyticsManager getAnalyticsManager() {
-        return mAnalyticsManager;
+        return analyticsManager;
     }
 
     BaseCallbackManager getCallbackManager() {
-        return mCallbackManager;
+        return callbackManager;
     }
 
     // -----------------------------------------------------------------------//
@@ -469,7 +469,7 @@ public class CTProductConfigController {
     }
 
     CoreMetaData getCoreMetaData() {
-        return mCoreMetaData;
+        return coreMetaData;
     }
 
     String getProductConfigDirName() {
@@ -505,7 +505,7 @@ public class CTProductConfigController {
                         }
                         config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
                                 "Loaded configs ready to be applied: " + waitingTobeActivatedConfig);
-                        settings.loadSettings(mFileUtils);
+                        settings.loadSettings(fileUtils);
                         isInitialized.set(true);
 
                     } catch (Exception e) {
@@ -606,7 +606,7 @@ public class CTProductConfigController {
         HashMap<String, String> map = new HashMap<>();
         String content;
         try {
-            content = mFileUtils.readFromFile(fullFilePath);
+            content = fileUtils.readFromFile(fullFilePath);
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
                     "GetStoredValues reading file success:[ " + fullFilePath + "]--[Content]" + content);
         } catch (Exception e) {
@@ -648,23 +648,23 @@ public class CTProductConfigController {
     }
 
     private void onActivated() {
-        if (mCallbackManager.getProductConfigListener() != null) {
-            mCallbackManager.getProductConfigListener().onActivated();
+        if (callbackManager.getProductConfigListener() != null) {
+            callbackManager.getProductConfigListener().onActivated();
         }
     }
 
     //Event
 
     private void onFetched() {
-        if (mCallbackManager.getProductConfigListener() != null) {
-            mCallbackManager.getProductConfigListener().onFetched();
+        if (callbackManager.getProductConfigListener() != null) {
+            callbackManager.getProductConfigListener().onFetched();
         }
     }
 
     private void onInit() {
-        if (mCallbackManager.getProductConfigListener() != null) {
+        if (callbackManager.getProductConfigListener() != null) {
             config.getLogger().verbose(config.getAccountId(), "Product Config initialized");
-            mCallbackManager.getProductConfigListener().onInit();
+            callbackManager.getProductConfigListener().onInit();
         }
     }
 

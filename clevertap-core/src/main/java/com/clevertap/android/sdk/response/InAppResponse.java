@@ -5,7 +5,6 @@ import android.content.SharedPreferences;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
-import com.clevertap.android.sdk.InAppFCManager;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
@@ -17,41 +16,41 @@ import org.json.JSONObject;
 
 public class InAppResponse extends CleverTapResponseDecorator {
 
-    private final CleverTapResponse mCleverTapResponse;
+    private final CleverTapResponse cleverTapResponse;
 
-    private final CleverTapInstanceConfig mConfig;
+    private final CleverTapInstanceConfig config;
 
-    private final ControllerManager mControllerManager;
+    private final ControllerManager controllerManager;
 
-    private final Logger mLogger;
+    private final Logger logger;
 
     public InAppResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config,
             ControllerManager controllerManager) {
-        mCleverTapResponse = cleverTapResponse;
-        mConfig = config;
-        mLogger = mConfig.getLogger();
-        mControllerManager = controllerManager;
+        this.cleverTapResponse = cleverTapResponse;
+        this.config = config;
+        logger = this.config.getLogger();
+        this.controllerManager = controllerManager;
     }
 
     @Override
     public void processResponse(final JSONObject response, final String stringBody, final Context context) {
         try {
 
-            if (mConfig.isAnalyticsOnly()) {
-                mLogger.verbose(mConfig.getAccountId(),
+            if (config.isAnalyticsOnly()) {
+                logger.verbose(config.getAccountId(),
                         "CleverTap instance is configured to analytics only, not processing inapp messages");
                 // process metadata response
-                mCleverTapResponse.processResponse(response, stringBody, context);
+                cleverTapResponse.processResponse(response, stringBody, context);
                 return;
             }
 
-            mLogger.verbose(mConfig.getAccountId(), "InApp: Processing response");
+            logger.verbose(config.getAccountId(), "InApp: Processing response");
 
             if (!response.has("inapp_notifs")) {
-                mLogger.verbose(mConfig.getAccountId(),
+                logger.verbose(config.getAccountId(),
                         "InApp: Response JSON object doesn't contain the inapp key, failing");
                 // process metadata response
-                mCleverTapResponse.processResponse(response, stringBody, context);
+                cleverTapResponse.processResponse(response, stringBody, context);
                 return;
             }
 
@@ -66,19 +65,19 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 perDay = response.getInt("imp");
             }
 
-            if (mControllerManager.getInAppFCManager() != null) {
+            if (controllerManager.getInAppFCManager() != null) {
                 Logger.v("Updating InAppFC Limits");
-                mControllerManager.getInAppFCManager().updateLimits(context, perDay, perSession);
-                mControllerManager.getInAppFCManager().processResponse(context, response);// Handle stale_inapp
+                controllerManager.getInAppFCManager().updateLimits(context, perDay, perSession);
+                controllerManager.getInAppFCManager().processResponse(context, response);// Handle stale_inapp
             }
 
             JSONArray inappNotifs;
             try {
                 inappNotifs = response.getJSONArray(Constants.INAPP_JSON_RESPONSE_KEY);
             } catch (JSONException e) {
-                mLogger.debug(mConfig.getAccountId(), "InApp: In-app key didn't contain a valid JSON array");
+                logger.debug(config.getAccountId(), "InApp: In-app key didn't contain a valid JSON array");
                 // process metadata response
-                mCleverTapResponse.processResponse(response, stringBody, context);
+                cleverTapResponse.processResponse(response, stringBody, context);
                 return;
             }
 
@@ -87,7 +86,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
             SharedPreferences.Editor editor = prefs.edit();
             try {
                 JSONArray inappsFromPrefs = new JSONArray(
-                        StorageHelper.getStringFromPrefs(context, mConfig, Constants.INAPP_KEY, "[]"));
+                        StorageHelper.getStringFromPrefs(context, config, Constants.INAPP_KEY, "[]"));
 
                 // Now add the rest of them :)
                 if (inappNotifs != null && inappNotifs.length() > 0) {
@@ -102,20 +101,20 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 }
 
                 // Commit all the changes
-                editor.putString(StorageHelper.storageKeyWithSuffix(mConfig, Constants.INAPP_KEY),
+                editor.putString(StorageHelper.storageKeyWithSuffix(config, Constants.INAPP_KEY),
                         inappsFromPrefs.toString());
                 StorageHelper.persist(editor);
             } catch (Throwable e) {
-                mLogger.verbose(mConfig.getAccountId(), "InApp: Failed to parse the in-app notifications properly");
-                mLogger.verbose(mConfig.getAccountId(), "InAppManager: Reason: " + e.getMessage(), e);
+                logger.verbose(config.getAccountId(), "InApp: Failed to parse the in-app notifications properly");
+                logger.verbose(config.getAccountId(), "InAppManager: Reason: " + e.getMessage(), e);
             }
             // Fire the first notification, if any
-            Task<Void> task = CTExecutorFactory.executors(mConfig)
+            Task<Void> task = CTExecutorFactory.executors(config)
                     .postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
             task.execute("InAppResponse#processResponse", new Callable<Void>() {
                 @Override
                 public Void call() {
-                    mControllerManager.getInAppController().showNotificationIfAvailable(context);
+                    controllerManager.getInAppController().showNotificationIfAvailable(context);
                     return null;
                 }
             });
@@ -124,7 +123,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
         }
 
         // process metadata response
-        mCleverTapResponse.processResponse(response, stringBody, context);
+        cleverTapResponse.processResponse(response, stringBody, context);
 
     }
 }

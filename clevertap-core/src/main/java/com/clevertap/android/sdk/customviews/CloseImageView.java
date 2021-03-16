@@ -56,7 +56,6 @@ public final class CloseImageView extends AppCompatImageView {
             }
         } catch (Throwable t) {
             Logger.v("Error displaying the inapp notif close button image:", t);
-
         }
     }
 

@@ -20,21 +20,21 @@ import org.json.JSONObject;
 
 public class PushAmpResponse extends CleverTapResponseDecorator {
 
-    private final Object inboxControllerLock;
+    private final Object inboxControllerLock; //TODO remove?
 
-    private final BaseCallbackManager mCallbackManager;
+    private final BaseCallbackManager callbackManager;
 
-    private final CleverTapResponse mCleverTapResponse;
+    private final CleverTapResponse cleverTapResponse;
 
-    private final CleverTapInstanceConfig mConfig;
+    private final CleverTapInstanceConfig config;
 
-    private final Context mContext;
+    private final Context context;
 
-    private final DBAdapter mDBAdapter;
+    private final DBAdapter dbAdapter;
 
-    private final Logger mLogger;
+    private final Logger logger;
 
-    private final PushProviders mPushProviders;
+    private final PushProviders pushProviders;
 
     public PushAmpResponse(CleverTapResponse cleverTapResponse,
             Context context,
@@ -43,52 +43,52 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
             BaseDatabaseManager dbManager,
             BaseCallbackManager callbackManager,
             ControllerManager controllerManager) {
-        mCleverTapResponse = cleverTapResponse;
-        mContext = context;
-        mConfig = config;
-        mPushProviders = controllerManager.getPushProviders();
-        mLogger = mConfig.getLogger();
+        this.cleverTapResponse = cleverTapResponse;
+        this.context = context;
+        this.config = config;
+        pushProviders = controllerManager.getPushProviders();
+        logger = this.config.getLogger();
         inboxControllerLock = ctLockManager.getInboxControllerLock();
-        mDBAdapter = dbManager.loadDBAdapter(context);
-        mCallbackManager = callbackManager;
+        dbAdapter = dbManager.loadDBAdapter(context);
+        this.callbackManager = callbackManager;
     }
 
     @Override
     public void processResponse(final JSONObject response, final String stringBody, final Context context) {
         //Handle Push Amplification response
-        if (mConfig.isAnalyticsOnly()) {
-            mLogger.verbose(mConfig.getAccountId(),
+        if (config.isAnalyticsOnly()) {
+            logger.verbose(config.getAccountId(),
                     "CleverTap instance is configured to analytics only, not processing push amp response");
 
             // process Display Unit response
-            mCleverTapResponse.processResponse(response, stringBody, context);
+            cleverTapResponse.processResponse(response, stringBody, context);
 
             return;
         }
         try {
             if (response.has("pushamp_notifs")) {
-                mLogger.verbose(mConfig.getAccountId(), "Processing pushamp messages...");
+                logger.verbose(config.getAccountId(), "Processing pushamp messages...");
                 JSONObject pushAmpObject = response.getJSONObject("pushamp_notifs");
                 final JSONArray pushNotifications = pushAmpObject.getJSONArray("list");
                 if (pushNotifications.length() > 0) {
-                    mLogger.verbose(mConfig.getAccountId(), "Handling Push payload locally");
+                    logger.verbose(config.getAccountId(), "Handling Push payload locally");
                     handlePushNotificationsInResponse(pushNotifications);
                 }
                 if (pushAmpObject.has("pf")) {
                     try {
                         int frequency = pushAmpObject.getInt("pf");
-                        mPushProviders.updatePingFrequencyIfNeeded(context, frequency);
+                        pushProviders.updatePingFrequencyIfNeeded(context, frequency);
                     } catch (Throwable t) {
-                        mLogger
+                        logger
                                 .verbose("Error handling ping frequency in response : " + t.getMessage());
                     }
 
                 }
                 if (pushAmpObject.has("ack")) {
                     boolean ack = pushAmpObject.getBoolean("ack");
-                    mLogger.verbose("Received ACK -" + ack);
+                    logger.verbose("Received ACK -" + ack);
                     if (ack) {
-                        JSONArray rtlArray = getRenderedTargetList(mDBAdapter);
+                        JSONArray rtlArray = getRenderedTargetList(dbAdapter);
                         String[] rtlStringArray = new String[0];
                         if (rtlArray != null) {
                             rtlStringArray = new String[rtlArray.length()];
@@ -96,8 +96,8 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
                         for (int i = 0; i < rtlStringArray.length; i++) {
                             rtlStringArray[i] = rtlArray.getString(i);
                         }
-                        mLogger.verbose("Updating RTL values...");
-                        mDBAdapter.updatePushNotificationIds(rtlStringArray);
+                        logger.verbose("Updating RTL values...");
+                        dbAdapter.updatePushNotificationIds(rtlStringArray);
                     }
                 }
             }
@@ -106,10 +106,11 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
         }
 
         // process Display Unit response
-        mCleverTapResponse.processResponse(response, stringBody, context);
+        cleverTapResponse.processResponse(response, stringBody, context);
     }
 
     //PN
+    @SuppressWarnings("rawtypes")
     private void handlePushNotificationsInResponse(JSONArray pushNotifications) {
         try {
             for (int i = 0; i < pushNotifications.length(); i++) {
@@ -124,23 +125,23 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
                     String key = iterator.next().toString();
                     pushBundle.putString(key, pushObject.getString(key));
                 }
-                if (!pushBundle.isEmpty() && !mDBAdapter
+                if (!pushBundle.isEmpty() && !dbAdapter
                         .doesPushNotificationIdExist(pushObject.getString("wzrk_pid"))) {
-                    mLogger.verbose("Creating Push Notification locally");
-                    if (mCallbackManager.getPushAmpListener() != null) {
-                        mCallbackManager.getPushAmpListener().onPushAmpPayloadReceived(pushBundle);
+                    logger.verbose("Creating Push Notification locally");
+                    if (callbackManager.getPushAmpListener() != null) {
+                        callbackManager.getPushAmpListener().onPushAmpPayloadReceived(pushBundle);
                     } else {
-                        mPushProviders
-                                ._createNotification(mContext, pushBundle, Constants.EMPTY_NOTIFICATION_ID);
+                        pushProviders
+                                ._createNotification(context, pushBundle, Constants.EMPTY_NOTIFICATION_ID);
                     }
                 } else {
-                    mLogger.verbose(mConfig.getAccountId(),
+                    logger.verbose(config.getAccountId(),
                             "Push Notification already shown, ignoring local notification :" + pushObject
                                     .getString("wzrk_pid"));
                 }
             }
         } catch (JSONException e) {
-            mLogger.verbose(mConfig.getAccountId(), "Error parsing push notification JSON");
+            logger.verbose(config.getAccountId(), "Error parsing push notification JSON");
         }
     }
 

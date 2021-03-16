@@ -25,13 +25,13 @@ public class CallbackManager extends BaseCallbackManager {
 
     private CTInboxListener inboxListener;
 
-    private final CleverTapInstanceConfig mConfig;
+    private final CleverTapInstanceConfig config;
 
-    private final DeviceInfo mDeviceInfo;
+    private final DeviceInfo deviceInfo;
 
-    private FailureFlushListener mFailureFlushListener;
+    private FailureFlushListener failureFlushListener;
 
-    private WeakReference<CTFeatureFlagsListener> mFeatureFlagListenerWeakReference;
+    private WeakReference<CTFeatureFlagsListener> featureFlagListenerWeakReference;
 
     private WeakReference<CTProductConfigListener> productConfigListener;
 
@@ -42,8 +42,8 @@ public class CallbackManager extends BaseCallbackManager {
     private SyncListener syncListener = null;
 
     public CallbackManager(CleverTapInstanceConfig config, DeviceInfo deviceInfo) {
-        mConfig = config;
-        mDeviceInfo = deviceInfo;
+        this.config = config;
+        this.deviceInfo = deviceInfo;
     }
 
     @Override
@@ -62,25 +62,25 @@ public class CallbackManager extends BaseCallbackManager {
 
     @Override
     public FailureFlushListener getFailureFlushListener() {
-        return mFailureFlushListener;
+        return failureFlushListener;
     }
 
     @Override
     public void setFailureFlushListener(final FailureFlushListener failureFlushListener) {
-        mFailureFlushListener = failureFlushListener;
+        this.failureFlushListener = failureFlushListener;
     }
 
     @Override
     public CTFeatureFlagsListener getFeatureFlagListener() {
-        if (mFeatureFlagListenerWeakReference != null && mFeatureFlagListenerWeakReference.get() != null) {
-            return mFeatureFlagListenerWeakReference.get();
+        if (featureFlagListenerWeakReference != null && featureFlagListenerWeakReference.get() != null) {
+            return featureFlagListenerWeakReference.get();
         }
         return null;
     }
 
     @Override
     public void setFeatureFlagListener(final CTFeatureFlagsListener listener) {
-        this.mFeatureFlagListenerWeakReference = new WeakReference<>(listener);
+        this.featureFlagListenerWeakReference = new WeakReference<>(listener);
     }
 
     @Override
@@ -176,7 +176,7 @@ public class CallbackManager extends BaseCallbackManager {
     //Profile
     @Override
     public void notifyUserProfileInitialized(String deviceID) {
-        deviceID = (deviceID != null) ? deviceID : mDeviceInfo.getDeviceID();
+        deviceID = (deviceID != null) ? deviceID : deviceInfo.getDeviceID();
 
         if (deviceID == null) {
             return;
@@ -198,7 +198,7 @@ public class CallbackManager extends BaseCallbackManager {
         if (listener != null) {
             displayUnitListenerWeakReference = new WeakReference<>(listener);
         } else {
-            mConfig.getLogger().verbose(mConfig.getAccountId(),
+            config.getLogger().verbose(config.getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "Failed to set - DisplayUnitListener can't be null");
         }
     }
@@ -228,17 +228,17 @@ public class CallbackManager extends BaseCallbackManager {
                     }
                 });
             } else {
-                mConfig.getLogger().verbose(mConfig.getAccountId(),
+                config.getLogger().verbose(config.getAccountId(),
                         Constants.FEATURE_DISPLAY_UNIT + "No registered listener, failed to notify");
             }
         } else {
-            mConfig.getLogger()
-                    .verbose(mConfig.getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "No Display Units found");
+            config.getLogger()
+                    .verbose(config.getAccountId(), Constants.FEATURE_DISPLAY_UNIT + "No Display Units found");
         }
     }
 
     void notifyUserProfileInitialized() {
-        notifyUserProfileInitialized(mDeviceInfo.getDeviceID());
+        notifyUserProfileInitialized(deviceInfo.getDeviceID());
     }
 
 }

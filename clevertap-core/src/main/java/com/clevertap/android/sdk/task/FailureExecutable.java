@@ -5,22 +5,22 @@ import java.util.concurrent.Executor;
 class FailureExecutable<TResult> extends Executable<TResult> {
 
     public OnFailureListener<TResult> getFailureListener() {
-        return mFailureListener;
+        return failureListener;
     }
 
-    private final OnFailureListener<TResult> mFailureListener;
+    private final OnFailureListener<TResult> failureListener;
 
     public FailureExecutable(final Executor executor, final OnFailureListener<TResult> listener) {
         super(executor);
-        mFailureListener = listener;
+        failureListener = listener;
     }
 
     @Override
     void execute(final TResult input) {
-        mExecutor.execute(new Runnable() {
+        executor.execute(new Runnable() {
             @Override
             public void run() {
-                mFailureListener.onFailure(input);
+                failureListener.onFailure(input);
             }
         });
     }

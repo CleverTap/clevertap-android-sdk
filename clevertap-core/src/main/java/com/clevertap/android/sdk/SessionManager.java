@@ -11,20 +11,20 @@ public class SessionManager extends BaseSessionManager {
 
     private int lastVisitTime;
 
-    private final CoreMetaData mCleverTapMetaData;
+    private final CoreMetaData cleverTapMetaData;
 
-    private final CleverTapInstanceConfig mConfig;
+    private final CleverTapInstanceConfig config;
 
-    private final LocalDataStore mLocalDataStore;
+    private final LocalDataStore localDataStore;
 
-    private final Validator mValidator;
+    private final Validator validator;
 
     public SessionManager(CleverTapInstanceConfig config, CoreMetaData coreMetaData, Validator validator,
             LocalDataStore localDataStore) {
-        mConfig = config;
-        mCleverTapMetaData = coreMetaData;
-        mValidator = validator;
-        mLocalDataStore = localDataStore;
+        this.config = config;
+        cleverTapMetaData = coreMetaData;
+        this.validator = validator;
+        this.localDataStore = localDataStore;
     }
 
     // SessionManager/session management
@@ -34,7 +34,7 @@ public class SessionManager extends BaseSessionManager {
         }
         long now = System.currentTimeMillis();
         if ((now - appLastSeen) > Constants.SESSION_LENGTH_MINS * 60 * 1000) {
-            mConfig.getLogger().verbose(mConfig.getAccountId(), "Session Timed Out");
+            config.getLogger().verbose(config.getAccountId(), "Session Timed Out");
             destroySession();
             CoreMetaData.setCurrentActivity(null);
         }
@@ -42,16 +42,16 @@ public class SessionManager extends BaseSessionManager {
 
     @Override
     public void destroySession() {
-        mCleverTapMetaData.setCurrentSessionId(0);
-        mCleverTapMetaData.setAppLaunchPushed(false);
-        if (mCleverTapMetaData.isFirstSession()) {
-            mCleverTapMetaData.setFirstSession(false);
+        cleverTapMetaData.setCurrentSessionId(0);
+        cleverTapMetaData.setAppLaunchPushed(false);
+        if (cleverTapMetaData.isFirstSession()) {
+            cleverTapMetaData.setFirstSession(false);
         }
-        mConfig.getLogger().verbose(mConfig.getAccountId(), "Session destroyed; Session ID is now 0");
-        mCleverTapMetaData.clearSource();
-        mCleverTapMetaData.clearMedium();
-        mCleverTapMetaData.clearCampaign();
-        mCleverTapMetaData.clearWzrkParams();
+        config.getLogger().verbose(config.getAccountId(), "Session destroyed; Session ID is now 0");
+        cleverTapMetaData.clearSource();
+        cleverTapMetaData.clearMedium();
+        cleverTapMetaData.clearCampaign();
+        cleverTapMetaData.clearWzrkParams();
     }
 
     public long getAppLastSeen() {
@@ -68,10 +68,10 @@ public class SessionManager extends BaseSessionManager {
 
     @Override
     public void lazyCreateSession(Context context) {
-        if (!mCleverTapMetaData.inCurrentSession()) {
-            mCleverTapMetaData.setFirstRequestInSession(true);
-            if (mValidator != null) {
-                mValidator.setDiscardedEvents(null);
+        if (!cleverTapMetaData.inCurrentSession()) {
+            cleverTapMetaData.setFirstRequestInSession(true);
+            if (validator != null) {
+                validator.setDiscardedEvents(null);
             }
             createSession(context);
         }
@@ -79,7 +79,7 @@ public class SessionManager extends BaseSessionManager {
 
     //Session
     void setLastVisitTime() {
-        EventDetail ed = mLocalDataStore.getEventDetail(Constants.APP_LAUNCHED_EVENT);
+        EventDetail ed = localDataStore.getEventDetail(Constants.APP_LAUNCHED_EVENT);
         if (ed == null) {
             lastVisitTime = -1;
         } else {
@@ -89,29 +89,29 @@ public class SessionManager extends BaseSessionManager {
 
     private void createSession(final Context context) {
         int sessionId = (int) (System.currentTimeMillis() / 1000);
-        mCleverTapMetaData.setCurrentSessionId(sessionId);
+        cleverTapMetaData.setCurrentSessionId(sessionId);
 
-        mConfig.getLogger().verbose(mConfig.getAccountId(),
-                "Session created with ID: " + mCleverTapMetaData.getCurrentSessionId());
+        config.getLogger().verbose(config.getAccountId(),
+                "Session created with ID: " + cleverTapMetaData.getCurrentSessionId());
 
         SharedPreferences prefs = StorageHelper.getPreferences(context);
 
-        final int lastSessionID = StorageHelper.getIntFromPrefs(context, mConfig, Constants.SESSION_ID_LAST, 0);
-        final int lastSessionTime = StorageHelper.getIntFromPrefs(context, mConfig, Constants.LAST_SESSION_EPOCH, 0);
+        final int lastSessionID = StorageHelper.getIntFromPrefs(context, config, Constants.SESSION_ID_LAST, 0);
+        final int lastSessionTime = StorageHelper.getIntFromPrefs(context, config, Constants.LAST_SESSION_EPOCH, 0);
         if (lastSessionTime > 0) {
-            mCleverTapMetaData.setLastSessionLength(lastSessionTime - lastSessionID);
+            cleverTapMetaData.setLastSessionLength(lastSessionTime - lastSessionID);
         }
 
-        mConfig.getLogger().verbose(mConfig.getAccountId(),
-                "Last session length: " + mCleverTapMetaData.getLastSessionLength() + " seconds");
+        config.getLogger().verbose(config.getAccountId(),
+                "Last session length: " + cleverTapMetaData.getLastSessionLength() + " seconds");
 
         if (lastSessionID == 0) {
-            mCleverTapMetaData.setFirstSession(true);
+            cleverTapMetaData.setFirstSession(true);
         }
 
         final SharedPreferences.Editor editor = prefs.edit()
-                .putInt(StorageHelper.storageKeyWithSuffix(mConfig, Constants.SESSION_ID_LAST),
-                        mCleverTapMetaData.getCurrentSessionId());
+                .putInt(StorageHelper.storageKeyWithSuffix(config, Constants.SESSION_ID_LAST),
+                        cleverTapMetaData.getCurrentSessionId());
         StorageHelper.persist(editor);
     }
 

@@ -9,7 +9,6 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DeviceInfo;
-import com.clevertap.android.sdk.InAppFCManager;
 import com.clevertap.android.sdk.LocalDataStore;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.SessionManager;
@@ -31,33 +30,33 @@ public class LoginController {
 
     private String cachedGUID = null;
 
-    private final AnalyticsManager mAnalyticsManager;
+    private final AnalyticsManager analyticsManager;
 
-    private final BaseEventQueueManager mBaseEventQueueManager;
+    private final BaseEventQueueManager baseEventQueueManager;
 
-    private final CTLockManager mCTLockManager;
+    private final CTLockManager ctLockManager;
 
-    private final BaseCallbackManager mCallbackManager;
+    private final BaseCallbackManager callbackManager;
 
-    private final CleverTapInstanceConfig mConfig;
+    private final CleverTapInstanceConfig config;
 
-    private final Context mContext;
+    private final Context context;
 
-    private final ControllerManager mControllerManager;
+    private final ControllerManager controllerManager;
 
-    private final CoreMetaData mCoreMetaData;
+    private final CoreMetaData coreMetaData;
 
-    private final BaseDatabaseManager mDBManager;
+    private final BaseDatabaseManager dbManager;
 
-    private final DeviceInfo mDeviceInfo;
+    private final DeviceInfo deviceInfo;
 
-    private final LocalDataStore mLocalDataStore;
+    private final LocalDataStore localDataStore;
 
-    private final PushProviders mPushProviders;
+    private final PushProviders pushProviders;
 
-    private final SessionManager mSessionManager;
+    private final SessionManager sessionManager;
 
-    private final ValidationResultStack mValidationResultStack;
+    private final ValidationResultStack validationResultStack;
 
     private String processingUserLoginIdentifier = null;
 
@@ -76,64 +75,64 @@ public class LoginController {
             BaseCallbackManager callbackManager,
             DBManager dbManager,
             CTLockManager ctLockManager) {
-        mConfig = config;
-        mContext = context;
-        mDeviceInfo = deviceInfo;
-        mValidationResultStack = validationResultStack;
-        mBaseEventQueueManager = eventQueueManager;
-        mAnalyticsManager = analyticsManager;
-        mCoreMetaData = coreMetaData;
-        mPushProviders = controllerManager.getPushProviders();
-        mSessionManager = sessionManager;
-        mLocalDataStore = localDataStore;
-        mCallbackManager = callbackManager;
-        mDBManager = dbManager;
-        mControllerManager = controllerManager;
-        mCTLockManager = ctLockManager;
+        this.config = config;
+        this.context = context;
+        this.deviceInfo = deviceInfo;
+        this.validationResultStack = validationResultStack;
+        baseEventQueueManager = eventQueueManager;
+        this.analyticsManager = analyticsManager;
+        this.coreMetaData = coreMetaData;
+        pushProviders = controllerManager.getPushProviders();
+        this.sessionManager = sessionManager;
+        this.localDataStore = localDataStore;
+        this.callbackManager = callbackManager;
+        this.dbManager = dbManager;
+        this.controllerManager = controllerManager;
+        this.ctLockManager = ctLockManager;
     }
 
     public void asyncProfileSwitchUser(final Map<String, Object> profile, final String cacheGuid,
             final String cleverTapID) {
-        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("resetProfile", new Callable<Void>() {
             @Override
             public Void call() {
                 try {
-                    mConfig.getLogger().verbose(mConfig.getAccountId(), "asyncProfileSwitchUser:[profile " + profile
+                    config.getLogger().verbose(config.getAccountId(), "asyncProfileSwitchUser:[profile " + profile
                             + " with Cached GUID " + ((cacheGuid != null) ? cachedGUID
                             : "NULL" + " and cleverTapID " + cleverTapID));
                     //set optOut to false on the current user to unregister the device token
-                    mCoreMetaData.setCurrentUserOptedOut(false);
+                    coreMetaData.setCurrentUserOptedOut(false);
                     // unregister the device token on the current user
-                    mPushProviders.forcePushDeviceToken(false);
+                    pushProviders.forcePushDeviceToken(false);
 
                     // try and flush and then reset the queues
-                    mBaseEventQueueManager.flushQueueSync(mContext, EventGroup.REGULAR);
-                    mBaseEventQueueManager.flushQueueSync(mContext, EventGroup.PUSH_NOTIFICATION_VIEWED);
-                    mDBManager.clearQueues(mContext);
+                    baseEventQueueManager.flushQueueSync(context, EventGroup.REGULAR);
+                    baseEventQueueManager.flushQueueSync(context, EventGroup.PUSH_NOTIFICATION_VIEWED);
+                    dbManager.clearQueues(context);
 
                     // clear out the old data
-                    mLocalDataStore.changeUser();
+                    localDataStore.changeUser();
                     CoreMetaData.setActivityCount(1);
-                    mSessionManager.destroySession();
+                    sessionManager.destroySession();
 
                     // either force restore the cached GUID or generate a new one
                     if (cacheGuid != null) {
-                        mDeviceInfo.forceUpdateDeviceId(cacheGuid);
-                        mCallbackManager.notifyUserProfileInitialized(cacheGuid);
-                    } else if (mConfig.getEnableCustomCleverTapId()) {
-                        mDeviceInfo.forceUpdateCustomCleverTapID(cleverTapID);
+                        deviceInfo.forceUpdateDeviceId(cacheGuid);
+                        callbackManager.notifyUserProfileInitialized(cacheGuid);
+                    } else if (config.getEnableCustomCleverTapId()) {
+                        deviceInfo.forceUpdateCustomCleverTapID(cleverTapID);
                     } else {
-                        mDeviceInfo.forceNewDeviceID();
+                        deviceInfo.forceNewDeviceID();
                     }
-                    mCallbackManager.notifyUserProfileInitialized(mDeviceInfo.getDeviceID());
-                    mDeviceInfo
+                    callbackManager.notifyUserProfileInitialized(deviceInfo.getDeviceID());
+                    deviceInfo
                             .setCurrentUserOptOutStateFromStorage(); // be sure to call this after the guid is updated
-                    mAnalyticsManager.forcePushAppLaunchedEvent();
+                    analyticsManager.forcePushAppLaunchedEvent();
                     if (profile != null) {
-                        mAnalyticsManager.pushProfile(profile);
+                        analyticsManager.pushProfile(profile);
                     }
-                    mPushProviders.forcePushDeviceToken(true);
+                    pushProviders.forcePushDeviceToken(true);
                     synchronized (processingUserLoginLock) {
                         processingUserLoginIdentifier = null;
                     }
@@ -142,9 +141,9 @@ public class LoginController {
                     resetProductConfigs();
                     recordDeviceIDErrors();
                     resetDisplayUnits();
-                    mControllerManager.getInAppFCManager().changeUser(mDeviceInfo.getDeviceID());
+                    controllerManager.getInAppFCManager().changeUser(deviceInfo.getDeviceID());
                 } catch (Throwable t) {
-                    mConfig.getLogger().verbose(mConfig.getAccountId(), "Reset Profile error", t);
+                    config.getLogger().verbose(config.getAccountId(), "Reset Profile error", t);
                 }
                 return null;
             }
@@ -153,7 +152,7 @@ public class LoginController {
 
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void onUserLogin(final Map<String, Object> profile, final String cleverTapID) {
-        if (mConfig.getEnableCustomCleverTapId()) {
+        if (config.getEnableCustomCleverTapId()) {
             if (cleverTapID == null) {
                 Logger.i(
                         "CLEVERTAP_USE_CUSTOM_ID has been specified in the AndroidManifest.xml Please call onUserlogin() and pass a custom CleverTap ID");
@@ -168,8 +167,8 @@ public class LoginController {
     }
 
     public void recordDeviceIDErrors() {
-        for (ValidationResult validationResult : mDeviceInfo.getValidationResults()) {
-            mValidationResultStack.pushValidationResult(validationResult);
+        for (ValidationResult validationResult : deviceInfo.getValidationResults()) {
+            validationResultStack.pushValidationResult(validationResult);
         }
     }
 
@@ -179,19 +178,19 @@ public class LoginController {
         }
 
         try {
-            final String currentGUID = mDeviceInfo.getDeviceID();
+            final String currentGUID = deviceInfo.getDeviceID();
             if (currentGUID == null) {
                 return;
             }
 
             boolean haveIdentifier = false;
-            LoginInfoProvider loginInfoProvider = new LoginInfoProvider(mContext,
-                    mConfig, mDeviceInfo);
+            LoginInfoProvider loginInfoProvider = new LoginInfoProvider(context,
+                    config, deviceInfo);
             // check for valid identifier keys
             // use the first one we find
             IdentityRepo iProfileHandler = IdentityRepoFactory
-                    .getRepo(mContext, mConfig, mDeviceInfo,
-                            mValidationResultStack);
+                    .getRepo(context, config, deviceInfo,
+                            validationResultStack);
             for (String key : profile.keySet()) {
                 Object value = profile.get(key);
                 boolean isProfileKey = iProfileHandler.hasIdentity(key);
@@ -215,21 +214,21 @@ public class LoginController {
             }
 
             // if no valid identifier provided or there are no identified users on the device; just push on the current profile
-            if (!mDeviceInfo.isErrorDeviceId()) {
+            if (!deviceInfo.isErrorDeviceId()) {
                 if (!haveIdentifier || loginInfoProvider.isAnonymousDevice()) {
-                    mConfig.getLogger().debug(mConfig.getAccountId(),
+                    config.getLogger().debug(config.getAccountId(),
                             "onUserLogin: no identifier provided or device is anonymous, pushing on current user profile");
-                    mAnalyticsManager.pushProfile(profile);
+                    analyticsManager.pushProfile(profile);
                     return;
                 }
             }
 
             // if identifier maps to current guid, push on current profile
             if (cachedGUID != null && cachedGUID.equals(currentGUID)) {
-                mConfig.getLogger().debug(mConfig.getAccountId(),
+                config.getLogger().debug(config.getAccountId(),
                         "onUserLogin: " + profile.toString() + " maps to current device id " + currentGUID
                                 + " pushing on current profile");
-                mAnalyticsManager.pushProfile(profile);
+                analyticsManager.pushProfile(profile);
                 return;
             }
 
@@ -238,8 +237,8 @@ public class LoginController {
 
             // as processing happens async block concurrent onUserLogin requests with the same profile, as our cache is set async
             if (isProcessUserLoginWithIdentifier(profileToString)) {
-                mConfig.getLogger()
-                        .debug(mConfig.getAccountId(), "Already processing onUserLogin for " + profileToString);
+                config.getLogger()
+                        .debug(config.getAccountId(), "Already processing onUserLogin for " + profileToString);
                 return;
             }
 
@@ -249,14 +248,14 @@ public class LoginController {
                 processingUserLoginIdentifier = profileToString;
             }
 
-            mConfig.getLogger()
-                    .verbose(mConfig.getAccountId(), "onUserLogin: queuing reset profile for " + profileToString
+            config.getLogger()
+                    .verbose(config.getAccountId(), "onUserLogin: queuing reset profile for " + profileToString
                             + " with Cached GUID " + ((cachedGUID != null) ? cachedGUID : "NULL"));
 
             asyncProfileSwitchUser(profile, cachedGUID, cleverTapID);
 
         } catch (Throwable t) {
-            mConfig.getLogger().verbose(mConfig.getAccountId(), "onUserLogin failed", t);
+            config.getLogger().verbose(config.getAccountId(), "onUserLogin failed", t);
         }
     }
 
@@ -270,44 +269,44 @@ public class LoginController {
      * Resets the Display Units in the cache
      */
     private void resetDisplayUnits() {
-        if (mControllerManager.getCTDisplayUnitController() != null) {
-            mControllerManager.getCTDisplayUnitController().reset();
+        if (controllerManager.getCTDisplayUnitController() != null) {
+            controllerManager.getCTDisplayUnitController().reset();
         } else {
-            mConfig.getLogger().verbose(mConfig.getAccountId(),
+            config.getLogger().verbose(config.getAccountId(),
                     Constants.FEATURE_DISPLAY_UNIT + "Can't reset Display Units, DisplayUnitcontroller is null");
         }
     }
 
     private void resetFeatureFlags() {
-        if (mControllerManager.getCTFeatureFlagsController() != null && mControllerManager
+        if (controllerManager.getCTFeatureFlagsController() != null && controllerManager
                 .getCTFeatureFlagsController()
                 .isInitialized()) {
-            mControllerManager.getCTFeatureFlagsController().resetWithGuid(mDeviceInfo.getDeviceID());
-            mControllerManager.getCTFeatureFlagsController().fetchFeatureFlags();
+            controllerManager.getCTFeatureFlagsController().resetWithGuid(deviceInfo.getDeviceID());
+            controllerManager.getCTFeatureFlagsController().fetchFeatureFlags();
         }
     }
 
     // always call async
     private void resetInbox() {
-        synchronized (mCTLockManager.getInboxControllerLock()) {
-            mControllerManager.setCTInboxController(null);
+        synchronized (ctLockManager.getInboxControllerLock()) {
+            controllerManager.setCTInboxController(null);
         }
-        mControllerManager.initializeInbox();
+        controllerManager.initializeInbox();
     }
 //Session
 
     private void resetProductConfigs() {
-        if (mConfig.isAnalyticsOnly()) {
-            mConfig.getLogger().debug(mConfig.getAccountId(), "Product Config is not enabled for this instance");
+        if (config.isAnalyticsOnly()) {
+            config.getLogger().debug(config.getAccountId(), "Product Config is not enabled for this instance");
             return;
         }
-        if (mControllerManager.getCTProductConfigController() != null) {
-            mControllerManager.getCTProductConfigController().resetSettings();
+        if (controllerManager.getCTProductConfigController() != null) {
+            controllerManager.getCTProductConfigController().resetSettings();
         }
         CTProductConfigController ctProductConfigController =
-                CTProductConfigFactory.getInstance(mContext, mDeviceInfo, mConfig, mAnalyticsManager, mCoreMetaData,
-                        mCallbackManager);
-        mControllerManager.setCTProductConfigController(ctProductConfigController);
-        mConfig.getLogger().verbose(mConfig.getAccountId(), "Product Config reset");
+                CTProductConfigFactory.getInstance(context, deviceInfo, config, analyticsManager, coreMetaData,
+                        callbackManager);
+        controllerManager.setCTProductConfigController(ctProductConfigController);
+        config.getLogger().verbose(config.getAccountId(), "Product Config reset");
     }
 }

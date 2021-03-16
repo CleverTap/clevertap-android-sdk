@@ -16,7 +16,6 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DeviceInfo;
-import com.clevertap.android.sdk.InAppFCManager;
 import com.clevertap.android.sdk.LocalDataStore;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
@@ -63,29 +62,29 @@ public class NetworkManager extends BaseNetworkManager {
 
     private static SSLContext sslContext;
 
-    private final BaseCallbackManager mCallbackManager;
+    private final BaseCallbackManager callbackManager;
 
-    private CleverTapResponse mCleverTapResponse;
+    private CleverTapResponse cleverTapResponse;
 
-    private final CleverTapInstanceConfig mConfig;
+    private final CleverTapInstanceConfig config;
 
-    private final Context mContext;
+    private final Context context;
 
-    private final ControllerManager mControllerManager;
+    private final ControllerManager controllerManager;
 
-    private final CoreMetaData mCoreMetaData;
+    private final CoreMetaData coreMetaData;
 
-    private int mCurrentRequestTimestamp = 0;
+    private int currentRequestTimestamp = 0;
 
-    private final BaseDatabaseManager mDatabaseManager;
+    private final BaseDatabaseManager databaseManager;
 
-    private final DeviceInfo mDeviceInfo;
+    private final DeviceInfo deviceInfo;
 
-    private final Logger mLogger;
+    private final Logger logger;
 
-    private int mResponseFailureCount = 0;// TODO encapsulate into NetworkState class
+    private int responseFailureCount = 0;// TODO encapsulate into NetworkState class
 
-    private final ValidationResultStack mValidationResultStack;
+    private final ValidationResultStack validationResultStack;
 
     private int networkRetryCount = 0;// TODO encapsulate into NetworkState class
 
@@ -118,16 +117,16 @@ public class NetworkManager extends BaseNetworkManager {
             CTLockManager ctLockManager,
             Validator validator,
             LocalDataStore localDataStore) {
-        mContext = context;
-        mConfig = config;
-        mDeviceInfo = deviceInfo;
-        mCallbackManager = callbackManager;
-        mLogger = mConfig.getLogger();
+        this.context = context;
+        this.config = config;
+        this.deviceInfo = deviceInfo;
+        this.callbackManager = callbackManager;
+        logger = this.config.getLogger();
 
-        mCoreMetaData = coreMetaData;
-        mValidationResultStack = validationResultStack;
-        mControllerManager = controllerManager;
-        mDatabaseManager = baseDatabaseManager;
+        this.coreMetaData = coreMetaData;
+        this.validationResultStack = validationResultStack;
+        this.controllerManager = controllerManager;
+        databaseManager = baseDatabaseManager;
         // maintain order
         CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
 
@@ -154,8 +153,8 @@ public class NetworkManager extends BaseNetworkManager {
 
     @Override
     public void flushDBQueue(final Context context, final EventGroup eventGroup) {
-        mConfig.getLogger()
-                .verbose(mConfig.getAccountId(), "Somebody has invoked me to send the queue to CleverTap servers");
+        config.getLogger()
+                .verbose(config.getAccountId(), "Somebody has invoked me to send the queue to CleverTap servers");
 
         QueueCursor cursor;
         QueueCursor previousCursor = null;
@@ -163,10 +162,10 @@ public class NetworkManager extends BaseNetworkManager {
 
         while (loadMore) {
 
-            cursor = mDatabaseManager.getQueuedEvents(context, 50, previousCursor, eventGroup);
+            cursor = databaseManager.getQueuedEvents(context, 50, previousCursor, eventGroup);
 
             if (cursor == null || cursor.isEmpty()) {
-                mConfig.getLogger().verbose(mConfig.getAccountId(), "No events in the queue, failing");
+                config.getLogger().verbose(config.getAccountId(), "No events in the queue, failing");
                 break;
             }
 
@@ -174,7 +173,7 @@ public class NetworkManager extends BaseNetworkManager {
             JSONArray queue = cursor.getData();
 
             if (queue == null || queue.length() <= 0) {
-                mConfig.getLogger().verbose(mConfig.getAccountId(), "No events in the queue, failing");
+                config.getLogger().verbose(config.getAccountId(), "No events in the queue, failing");
                 break;
             }
 
@@ -189,19 +188,19 @@ public class NetworkManager extends BaseNetworkManager {
 
         int minDelayFrequency = 0;
 
-        mLogger.debug(mConfig.getAccountId(), "Network retry #" + networkRetryCount);
+        logger.debug(config.getAccountId(), "Network retry #" + networkRetryCount);
 
         //Retry with delay as 1s for first 10 retries
         if (networkRetryCount < 10) {
-            mLogger.debug(mConfig.getAccountId(),
+            logger.debug(config.getAccountId(),
                     "Failure count is " + networkRetryCount + ". Setting delay frequency to 1s");
             minDelayFrequency = Constants.PUSH_DELAY_MS; //reset minimum delay to 1s
             return minDelayFrequency;
         }
 
-        if (mConfig.getAccountRegion() == null) {
+        if (config.getAccountRegion() == null) {
             //Retry with delay as 1s if region is null in case of eu1
-            mLogger.debug(mConfig.getAccountId(), "Setting delay frequency to 1s");
+            logger.debug(config.getAccountId(), "Setting delay frequency to 1s");
             return Constants.PUSH_DELAY_MS;
         } else {
             //Retry with delay as minimum delay frequency and add random number of seconds to scatter traffic
@@ -209,12 +208,12 @@ public class NetworkManager extends BaseNetworkManager {
             int randomDelay = (randomGen.nextInt(10) + 1) * 1000;
             minDelayFrequency += randomDelay;
             if (minDelayFrequency < Constants.MAX_DELAY_FREQUENCY) {
-                mLogger.debug(mConfig.getAccountId(), "Setting delay frequency to " + minDelayFrequency);
+                logger.debug(config.getAccountId(), "Setting delay frequency to " + minDelayFrequency);
                 return minDelayFrequency;
             } else {
                 minDelayFrequency = Constants.PUSH_DELAY_MS;
             }
-            mLogger.debug(mConfig.getAccountId(), "Setting delay frequency to " + minDelayFrequency);
+            logger.debug(config.getAccountId(), "Setting delay frequency to " + minDelayFrequency);
             return minDelayFrequency;
         }
     }
@@ -222,37 +221,37 @@ public class NetworkManager extends BaseNetworkManager {
     //New namespace for ARP Shared Prefs
     public String getNewNamespaceARPKey() {
 
-        final String accountId = mConfig.getAccountId();
+        final String accountId = config.getAccountId();
         if (accountId == null) {
             return null;
         }
 
-        mLogger.verbose(mConfig.getAccountId(), "New ARP Key = ARP:" + accountId + ":" + mDeviceInfo.getDeviceID());
-        return "ARP:" + accountId + ":" + mDeviceInfo.getDeviceID();
+        logger.verbose(config.getAccountId(), "New ARP Key = ARP:" + accountId + ":" + deviceInfo.getDeviceID());
+        return "ARP:" + accountId + ":" + deviceInfo.getDeviceID();
     }
 
     public void incrementResponseFailureCount() {
-        mResponseFailureCount++;
+        responseFailureCount++;
     }
 
     @Override
     public void initHandshake(final EventGroup eventGroup, final Runnable handshakeSuccessCallback) {
-        mResponseFailureCount = 0;
-        setDomain(mContext, null);
-        performHandshakeForDomain(mContext, eventGroup, handshakeSuccessCallback);
+        responseFailureCount = 0;
+        setDomain(context, null);
+        performHandshakeForDomain(context, eventGroup, handshakeSuccessCallback);
     }
 
     @Override
     public boolean needsHandshakeForDomain(final EventGroup eventGroup) {
         final String domain = getDomainFromPrefsOrMetadata(eventGroup);
-        return domain == null || mResponseFailureCount > 5;
+        return domain == null || responseFailureCount > 5;
     }
 
     @SuppressLint("CommitPrefEdits")
     public void setI(Context context, long i) {
         final SharedPreferences prefs = StorageHelper.getPreferences(context, Constants.NAMESPACE_IJ);
         final SharedPreferences.Editor editor = prefs.edit();
-        editor.putLong(StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_I), i);
+        editor.putLong(StorageHelper.storageKeyWithSuffix(config, Constants.KEY_I), i);
         StorageHelper.persist(editor);
     }
 
@@ -260,7 +259,7 @@ public class NetworkManager extends BaseNetworkManager {
     public void setJ(Context context, long j) {
         final SharedPreferences prefs = StorageHelper.getPreferences(context, Constants.NAMESPACE_IJ);
         final SharedPreferences.Editor editor = prefs.edit();
-        editor.putLong(StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_J), j);
+        editor.putLong(StorageHelper.storageKeyWithSuffix(config, Constants.KEY_J), j);
         StorageHelper.persist(editor);
     }
 
@@ -271,10 +270,10 @@ public class NetworkManager extends BaseNetworkManager {
         conn.setConnectTimeout(10000);
         conn.setReadTimeout(10000);
         conn.setRequestProperty("Content-Type", "application/json; charset=utf-8");
-        conn.setRequestProperty("X-CleverTap-Account-ID", mConfig.getAccountId());
-        conn.setRequestProperty("X-CleverTap-Token", mConfig.getAccountToken());
+        conn.setRequestProperty("X-CleverTap-Account-ID", config.getAccountId());
+        conn.setRequestProperty("X-CleverTap-Token", config.getAccountToken());
         conn.setInstanceFollowRedirects(false);
-        if (mConfig.isSslPinningEnabled()) {
+        if (config.isSslPinningEnabled()) {
             SSLContext _sslContext = getSSLContext();
             if (_sslContext != null) {
                 conn.setSSLSocketFactory(getPinnedCertsSslSocketfactory(_sslContext));
@@ -284,19 +283,19 @@ public class NetworkManager extends BaseNetworkManager {
     }
 
     CleverTapResponse getCleverTapResponse() {
-        return mCleverTapResponse;
+        return cleverTapResponse;
     }
 
     void setCleverTapResponse(final CleverTapResponse cleverTapResponse) {
-        mCleverTapResponse = cleverTapResponse;
+        this.cleverTapResponse = cleverTapResponse;
     }
 
     int getCurrentRequestTimestamp() {
-        return mCurrentRequestTimestamp;
+        return currentRequestTimestamp;
     }
 
     void setCurrentRequestTimestamp(final int currentRequestTimestamp) {
-        mCurrentRequestTimestamp = currentRequestTimestamp;
+        this.currentRequestTimestamp = currentRequestTimestamp;
     }
 
     String getDomain(boolean defaultToHandshakeURL, final EventGroup eventGroup) {
@@ -319,7 +318,7 @@ public class NetworkManager extends BaseNetworkManager {
     String getDomainFromPrefsOrMetadata(final EventGroup eventGroup) {
 
         try {
-            final String region = mConfig.getAccountRegion();
+            final String region = config.getAccountRegion();
             if (region != null && region.trim().length() > 0) {
                 // Always set this to 0 so that the handshake is not performed during a HTTP failure
                 setResponseFailureCount(0);
@@ -333,9 +332,9 @@ public class NetworkManager extends BaseNetworkManager {
             // Ignore
         }
         if (eventGroup.equals(EventGroup.PUSH_NOTIFICATION_VIEWED)) {
-            return StorageHelper.getStringFromPrefs(mContext, mConfig, Constants.SPIKY_KEY_DOMAIN_NAME, null);
+            return StorageHelper.getStringFromPrefs(context, config, Constants.SPIKY_KEY_DOMAIN_NAME, null);
         } else {
-            return StorageHelper.getStringFromPrefs(mContext, mConfig, Constants.KEY_DOMAIN_NAME, null);
+            return StorageHelper.getStringFromPrefs(context, config, Constants.KEY_DOMAIN_NAME, null);
         }
 
     }
@@ -343,18 +342,18 @@ public class NetworkManager extends BaseNetworkManager {
     String getEndpoint(final boolean defaultToHandshakeURL, final EventGroup eventGroup) {
         String domain = getDomain(defaultToHandshakeURL, eventGroup);
         if (domain == null) {
-            mLogger.verbose(mConfig.getAccountId(), "Unable to configure endpoint, domain is null");
+            logger.verbose(config.getAccountId(), "Unable to configure endpoint, domain is null");
             return null;
         }
 
-        final String accountId = mConfig.getAccountId();
+        final String accountId = config.getAccountId();
 
         if (accountId == null) {
-            mLogger.verbose(mConfig.getAccountId(), "Unable to configure endpoint, accountID is null");
+            logger.verbose(config.getAccountId(), "Unable to configure endpoint, accountID is null");
             return null;
         }
 
-        String endpoint = "https://" + domain + "?os=Android&t=" + mDeviceInfo.getSdkVersion();
+        String endpoint = "https://" + domain + "?os=Android&t=" + deviceInfo.getSdkVersion();
         endpoint += "&z=" + accountId;
 
         final boolean needsHandshake = needsHandshakeForDomain(eventGroup);
@@ -363,39 +362,39 @@ public class NetworkManager extends BaseNetworkManager {
             return endpoint;
         }
 
-        mCurrentRequestTimestamp = (int) (System.currentTimeMillis() / 1000);
+        currentRequestTimestamp = (int) (System.currentTimeMillis() / 1000);
         endpoint += "&ts=" + getCurrentRequestTimestamp();
 
         return endpoint;
     }
 
     int getFirstRequestTimestamp() {
-        return StorageHelper.getIntFromPrefs(mContext, mConfig, Constants.KEY_FIRST_TS, 0);
+        return StorageHelper.getIntFromPrefs(context, config, Constants.KEY_FIRST_TS, 0);
     }
 
     int getLastRequestTimestamp() {
-        return StorageHelper.getIntFromPrefs(mContext, mConfig, Constants.KEY_LAST_TS, 0);
+        return StorageHelper.getIntFromPrefs(context, config, Constants.KEY_LAST_TS, 0);
     }
 
     void setLastRequestTimestamp(int ts) {
-        StorageHelper.putInt(mContext, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_LAST_TS), ts);
+        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_LAST_TS), ts);
     }
 
     // TODO encapsulate into NetworkState class
     int getResponseFailureCount() {
-        return mResponseFailureCount;
+        return responseFailureCount;
     }
 
     // TODO encapsulate into NetworkState class
     void setResponseFailureCount(final int responseFailureCount) {
-        mResponseFailureCount = responseFailureCount;
+        this.responseFailureCount = responseFailureCount;
     }
 
     //gives delay frequency based on region
     //randomly adds delay to 1s delay in case of non-EU regions
 
     boolean hasDomainChanged(final String newDomain) {
-        final String oldDomain = StorageHelper.getStringFromPrefs(mContext, mConfig, Constants.KEY_DOMAIN_NAME, null);
+        final String oldDomain = StorageHelper.getStringFromPrefs(context, config, Constants.KEY_DOMAIN_NAME, null);
         return !newDomain.equals(oldDomain);
     }
 
@@ -403,17 +402,17 @@ public class NetworkManager extends BaseNetworkManager {
         try {
             final JSONObject header = new JSONObject();
 
-            String deviceId = mDeviceInfo.getDeviceID();
+            String deviceId = deviceInfo.getDeviceID();
             if (deviceId != null && !deviceId.equals("")) {
                 header.put("g", deviceId);
             } else {
-                mLogger.verbose(mConfig.getAccountId(),
+                logger.verbose(config.getAccountId(),
                         "CRITICAL: Couldn't finalise on a device ID! Using error device ID instead!");
             }
 
             header.put("type", "meta");
 
-            JSONObject appFields = mDeviceInfo.getAppLaunchedFields();
+            JSONObject appFields = deviceInfo.getAppLaunchedFields();
             header.put("af", appFields);
 
             long i = getI();
@@ -426,12 +425,12 @@ public class NetworkManager extends BaseNetworkManager {
                 header.put("_j", j);
             }
 
-            String accountId = mConfig.getAccountId();
-            String token = mConfig.getAccountToken();
+            String accountId = config.getAccountId();
+            String token = config.getAccountToken();
 
             if (accountId == null || token == null) {
-                mLogger
-                        .debug(mConfig.getAccountId(),
+                logger
+                        .debug(config.getAccountId(),
                                 "Account ID/token not found, unable to configure queue request");
                 return null;
             }
@@ -441,22 +440,22 @@ public class NetworkManager extends BaseNetworkManager {
             header.put("l_ts", getLastRequestTimestamp());
             header.put("f_ts", getFirstRequestTimestamp());
             header.put("ct_pi", IdentityRepoFactory
-                    .getRepo(mContext, mConfig, mDeviceInfo,
-                            mValidationResultStack).getIdentitySet().toString());
+                    .getRepo(this.context, config, deviceInfo,
+                            validationResultStack).getIdentitySet().toString());
             header.put("ddnd",
-                    !(mDeviceInfo.getNotificationsEnabledForUser() && (mControllerManager.getPushProviders()
+                    !(deviceInfo.getNotificationsEnabledForUser() && (controllerManager.getPushProviders()
                             .isNotificationSupported())));
-            if (mCoreMetaData.isBgPing()) {
+            if (coreMetaData.isBgPing()) {
                 header.put("bk", 1);
-                mCoreMetaData.setBgPing(false);
+                coreMetaData.setBgPing(false);
             }
-            header.put("rtl", getRenderedTargetList(mDatabaseManager.loadDBAdapter(mContext)));
-            if (!mCoreMetaData.isInstallReferrerDataSent()) {
-                header.put("rct", mCoreMetaData.getReferrerClickTime());
-                header.put("ait", mCoreMetaData.getAppInstallTime());
+            header.put("rtl", getRenderedTargetList(databaseManager.loadDBAdapter(this.context)));
+            if (!coreMetaData.isInstallReferrerDataSent()) {
+                header.put("rct", coreMetaData.getReferrerClickTime());
+                header.put("ait", coreMetaData.getAppInstallTime());
             }
-            header.put("frs", mCoreMetaData.isFirstRequestInSession());
-            mCoreMetaData.setFirstRequestInSession(false);
+            header.put("frs", coreMetaData.isFirstRequestInSession());
+            coreMetaData.setFirstRequestInSession(false);
 
             // Attach ARP
             try {
@@ -465,23 +464,23 @@ public class NetworkManager extends BaseNetworkManager {
                     header.put("arp", arp);
                 }
             } catch (Throwable t) {
-                mLogger.verbose(mConfig.getAccountId(), "Failed to attach ARP", t);
+                logger.verbose(config.getAccountId(), "Failed to attach ARP", t);
             }
 
             JSONObject ref = new JSONObject();
             try {
 
-                String utmSource = mCoreMetaData.getSource();
+                String utmSource = coreMetaData.getSource();
                 if (utmSource != null) {
                     ref.put("us", utmSource);
                 }
 
-                String utmMedium = mCoreMetaData.getMedium();
+                String utmMedium = coreMetaData.getMedium();
                 if (utmMedium != null) {
                     ref.put("um", utmMedium);
                 }
 
-                String utmCampaign = mCoreMetaData.getCampaign();
+                String utmCampaign = coreMetaData.getCampaign();
                 if (utmCampaign != null) {
                     ref.put("uc", utmCampaign);
                 }
@@ -491,23 +490,23 @@ public class NetworkManager extends BaseNetworkManager {
                 }
 
             } catch (Throwable t) {
-                mLogger.verbose(mConfig.getAccountId(), "Failed to attach ref", t);
+                logger.verbose(config.getAccountId(), "Failed to attach ref", t);
             }
 
-            JSONObject wzrkParams = mCoreMetaData.getWzrkParams();
+            JSONObject wzrkParams = coreMetaData.getWzrkParams();
             if (wzrkParams != null && wzrkParams.length() > 0) {
                 header.put("wzrk_ref", wzrkParams);
             }
 
-            if (mControllerManager.getInAppFCManager() != null) {
+            if (controllerManager.getInAppFCManager() != null) {
                 Logger.v("Attaching InAppFC to Header");
-                mControllerManager.getInAppFCManager().attachToHeader(context, header);
+                controllerManager.getInAppFCManager().attachToHeader(context, header);
             }
 
             // Resort to string concat for backward compatibility
             return "[" + header.toString() + ", " + arr.toString().substring(1);
         } catch (Throwable t) {
-            mLogger.verbose(mConfig.getAccountId(), "CommsManager: Failed to attach header", t);
+            logger.verbose(config.getAccountId(), "CommsManager: Failed to attach header", t);
             return arr.toString();
         }
     }
@@ -516,30 +515,30 @@ public class NetworkManager extends BaseNetworkManager {
             final Runnable handshakeSuccessCallback) {
         final String endpoint = getEndpoint(true, eventGroup);
         if (endpoint == null) {
-            mLogger.verbose(mConfig.getAccountId(), "Unable to perform handshake, endpoint is null");
+            logger.verbose(config.getAccountId(), "Unable to perform handshake, endpoint is null");
         }
-        mLogger.verbose(mConfig.getAccountId(), "Performing handshake with " + endpoint);
+        logger.verbose(config.getAccountId(), "Performing handshake with " + endpoint);
 
         HttpsURLConnection conn = null;
         try {
             conn = buildHttpsURLConnection(endpoint);
             final int responseCode = conn.getResponseCode();
             if (responseCode != 200) {
-                mLogger
-                        .verbose(mConfig.getAccountId(),
+                logger
+                        .verbose(config.getAccountId(),
                                 "Invalid HTTP status code received for handshake - " + responseCode);
                 return;
             }
 
-            mLogger.verbose(mConfig.getAccountId(), "Received success from handshake :)");
+            logger.verbose(config.getAccountId(), "Received success from handshake :)");
 
             if (processIncomingHeaders(context, conn)) {
-                mLogger.verbose(mConfig.getAccountId(), "We are not muted");
+                logger.verbose(config.getAccountId(), "We are not muted");
                 // We have a new domain, run the callback
                 handshakeSuccessCallback.run();
             }
         } catch (Throwable t) {
-            mLogger.verbose(mConfig.getAccountId(), "Failed to perform handshake!", t);
+            logger.verbose(config.getAccountId(), "Failed to perform handshake!", t);
         } finally {
             if (conn != null) {
                 try {
@@ -597,8 +596,8 @@ public class NetworkManager extends BaseNetworkManager {
             return false;
         }
 
-        if (mDeviceInfo.getDeviceID() == null) {
-            mLogger.debug(mConfig.getAccountId(), "CleverTap Id not finalized, unable to send queue");
+        if (deviceInfo.getDeviceID() == null) {
+            logger.debug(config.getAccountId(), "CleverTap Id not finalized, unable to send queue");
             return false;
         }
 
@@ -609,7 +608,7 @@ public class NetworkManager extends BaseNetworkManager {
             // This is just a safety check, which would only arise
             // if upstream didn't adhere to the protocol (sent nothing during the initial handshake)
             if (endpoint == null) {
-                mLogger.debug(mConfig.getAccountId(), "Problem configuring queue endpoint, unable to send queue");
+                logger.debug(config.getAccountId(), "Problem configuring queue endpoint, unable to send queue");
                 return false;
             }
 
@@ -618,12 +617,12 @@ public class NetworkManager extends BaseNetworkManager {
             final String body;
             final String req = insertHeader(context, queue);
             if (req == null) {
-                mLogger.debug(mConfig.getAccountId(), "Problem configuring queue request, unable to send queue");
+                logger.debug(config.getAccountId(), "Problem configuring queue request, unable to send queue");
                 return false;
             }
 
-            mLogger.debug(mConfig.getAccountId(), "Send queue contains " + queue.length() + " items: " + req);
-            mLogger.debug(mConfig.getAccountId(), "Sending queue to: " + endpoint);
+            logger.debug(config.getAccountId(), "Send queue contains " + queue.length() + " items: " + req);
+            logger.debug(config.getAccountId(), "Sending queue to: " + endpoint);
             conn.setDoOutput(true);
             // noinspection all
             conn.getOutputStream().write(req.getBytes("UTF-8"));
@@ -641,7 +640,7 @@ public class NetworkManager extends BaseNetworkManager {
                 if (hasDomainChanged(newDomain)) {
                     // The domain has changed. Return a status of -1 so that the caller retries
                     setDomain(context, newDomain);
-                    mLogger.debug(mConfig.getAccountId(),
+                    logger.debug(config.getAccountId(),
                             "The domain has changed to " + newDomain + ". The request will be retried shortly.");
                     return false;
                 }
@@ -657,23 +656,23 @@ public class NetworkManager extends BaseNetworkManager {
                     sb.append(line);
                 }
                 body = sb.toString();
-                getCleverTapResponse().processResponse(null, body, mContext);
+                getCleverTapResponse().processResponse(null, body, this.context);
             }
 
             setLastRequestTimestamp(getCurrentRequestTimestamp());
             setFirstRequestTimestampIfNeeded(getCurrentRequestTimestamp());
 
-            mLogger.debug(mConfig.getAccountId(), "Queue sent successfully");
+            logger.debug(config.getAccountId(), "Queue sent successfully");
 
-            mResponseFailureCount = 0;
+            responseFailureCount = 0;
             networkRetryCount = 0; //reset retry count when queue is sent successfully
             return true;
         } catch (Throwable e) {
-            mLogger.debug(mConfig.getAccountId(),
+            logger.debug(config.getAccountId(),
                     "An exception occurred while sending the queue, will retry: ", e);
-            mResponseFailureCount++;
+            responseFailureCount++;
             networkRetryCount++;
-            mCallbackManager.getFailureFlushListener().failureFlush(context);
+            callbackManager.getFailureFlushListener().failureFlush(context);
             return false;
         } finally {
             if (conn != null) {
@@ -688,8 +687,8 @@ public class NetworkManager extends BaseNetworkManager {
     }
 
     void setDomain(final Context context, String domainName) {
-        mLogger.verbose(mConfig.getAccountId(), "Setting domain to " + domainName);
-        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_DOMAIN_NAME),
+        logger.verbose(config.getAccountId(), "Setting domain to " + domainName);
+        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_DOMAIN_NAME),
                 domainName);
     }
 
@@ -697,12 +696,12 @@ public class NetworkManager extends BaseNetworkManager {
         if (getFirstRequestTimestamp() > 0) {
             return;
         }
-        StorageHelper.putInt(mContext, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_FIRST_TS), ts);
+        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_FIRST_TS), ts);
     }
 
     void setSpikyDomain(final Context context, String spikyDomainName) {
-        mLogger.verbose(mConfig.getAccountId(), "Setting spiky domain to " + spikyDomainName);
-        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.SPIKY_KEY_DOMAIN_NAME),
+        logger.verbose(config.getAccountId(), "Setting spiky domain to " + spikyDomainName);
+        StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.SPIKY_KEY_DOMAIN_NAME),
                 spikyDomainName);
     }
 
@@ -724,9 +723,9 @@ public class NetworkManager extends BaseNetworkManager {
             //checking whether new namespace is empty or not
             //if not empty, using prefs of new namespace to send ARP
             //if empty, checking for old prefs
-            if (!StorageHelper.getPreferences(mContext, nameSpaceKey).getAll().isEmpty()) {
+            if (!StorageHelper.getPreferences(context, nameSpaceKey).getAll().isEmpty()) {
                 //prefs point to new namespace
-                prefs = StorageHelper.getPreferences(mContext, nameSpaceKey);
+                prefs = StorageHelper.getPreferences(context, nameSpaceKey);
             } else {
                 //prefs point to new namespace migrated from old namespace
                 prefs = migrateARPToNewNameSpace(nameSpaceKey, getNamespaceARPKey());
@@ -743,39 +742,39 @@ public class NetworkManager extends BaseNetworkManager {
                 }
             }
             final JSONObject ret = new JSONObject(all);
-            mLogger.verbose(mConfig.getAccountId(),
+            logger.verbose(config.getAccountId(),
                     "Fetched ARP for namespace key: " + nameSpaceKey + " values: " + all.toString());
             return ret;
         } catch (Throwable t) {
-            mLogger.verbose(mConfig.getAccountId(), "Failed to construct ARP object", t);
+            logger.verbose(config.getAccountId(), "Failed to construct ARP object", t);
             return null;
         }
     }
 
     private long getI() {
-        return StorageHelper.getLongFromPrefs(mContext, mConfig, Constants.KEY_I, 0, Constants.NAMESPACE_IJ);
+        return StorageHelper.getLongFromPrefs(context, config, Constants.KEY_I, 0, Constants.NAMESPACE_IJ);
     }
 
     private long getJ() {
-        return StorageHelper.getLongFromPrefs(mContext, mConfig, Constants.KEY_J, 0, Constants.NAMESPACE_IJ);
+        return StorageHelper.getLongFromPrefs(context, config, Constants.KEY_J, 0, Constants.NAMESPACE_IJ);
     }
 
     //Session
     //Old namespace for ARP Shared Prefs
     private String getNamespaceARPKey() {
 
-        final String accountId = mConfig.getAccountId();
+        final String accountId = config.getAccountId();
         if (accountId == null) {
             return null;
         }
 
-        mLogger.verbose(mConfig.getAccountId(), "Old ARP Key = ARP:" + accountId);
+        logger.verbose(config.getAccountId(), "Old ARP Key = ARP:" + accountId);
         return "ARP:" + accountId;
     }
 
     private SharedPreferences migrateARPToNewNameSpace(String newKey, String oldKey) {
-        SharedPreferences oldPrefs = StorageHelper.getPreferences(mContext, oldKey);
-        SharedPreferences newPrefs = StorageHelper.getPreferences(mContext, newKey);
+        SharedPreferences oldPrefs = StorageHelper.getPreferences(context, oldKey);
+        SharedPreferences newPrefs = StorageHelper.getPreferences(context, newKey);
         SharedPreferences.Editor editor = newPrefs.edit();
         Map<String, ?> all = oldPrefs.getAll();
 
@@ -788,17 +787,17 @@ public class NetworkManager extends BaseNetworkManager {
                 if (((String) o).length() < 100) {
                     editor.putString(kv.getKey(), (String) o);
                 } else {
-                    mLogger.verbose(mConfig.getAccountId(),
+                    logger.verbose(config.getAccountId(),
                             "ARP update for key " + kv.getKey() + " rejected (string value too long)");
                 }
             } else if (o instanceof Boolean) {
                 editor.putBoolean(kv.getKey(), (Boolean) o);
             } else {
-                mLogger.verbose(mConfig.getAccountId(),
+                logger.verbose(config.getAccountId(),
                         "ARP update for key " + kv.getKey() + " rejected (invalid data type)");
             }
         }
-        mLogger.verbose(mConfig.getAccountId(), "Completed ARP update for namespace key: " + newKey + "");
+        logger.verbose(config.getAccountId(), "Completed ARP update for namespace key: " + newKey + "");
         StorageHelper.persist(editor);
         oldPrefs.edit().clear().apply();
         return newPrefs;
@@ -807,20 +806,20 @@ public class NetworkManager extends BaseNetworkManager {
     private void setMuted(final Context context, boolean mute) {
         if (mute) {
             final int now = (int) (System.currentTimeMillis() / 1000);
-            StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_MUTED), now);
+            StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_MUTED), now);
             setDomain(context, null);
 
             // Clear all the queues
-            Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
             task.execute("CommsManager#setMuted", new Callable<Void>() {
                 @Override
                 public Void call() {
-                    mDatabaseManager.clearQueues(context);
+                    databaseManager.clearQueues(context);
                     return null;
                 }
             });
         } else {
-            StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_MUTED), 0);
+            StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_MUTED), 0);
         }
     }
 

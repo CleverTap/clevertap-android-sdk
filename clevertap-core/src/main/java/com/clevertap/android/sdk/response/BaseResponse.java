@@ -10,32 +10,33 @@ import org.json.JSONObject;
 
 public class BaseResponse extends CleverTapResponseDecorator {
 
-    private final CleverTapResponse mCleverTapResponse;
+    private final CleverTapResponse cleverTapResponse;
 
-    private final CleverTapInstanceConfig mConfig;
+    private final CleverTapInstanceConfig config;
 
-    private final Context mContext;
+    //TODO do we need context and deviceInfo in the constructor??
+    private final Context context;
 
-    private final DeviceInfo mDeviceInfo;
+    private final DeviceInfo deviceInfo;
 
-    private final LocalDataStore mLocalDataStore;
+    private final LocalDataStore localDataStore;
 
-    private final Logger mLogger;
+    private final Logger logger;
 
-    private final NetworkManager mNetworkManager;
+    private final NetworkManager networkManager;
 
     public BaseResponse(Context context, CleverTapInstanceConfig config,
             DeviceInfo deviceInfo, NetworkManager networkManager, LocalDataStore localDataStore,
             CleverTapResponse cleverTapResponse) {
-        mCleverTapResponse = cleverTapResponse;
+        this.cleverTapResponse = cleverTapResponse;
 
-        mContext = context;
-        mConfig = config;
-        mDeviceInfo = deviceInfo;
-        mLogger = mConfig.getLogger();
+        this.context = context;
+        this.config = config;
+        this.deviceInfo = deviceInfo;
+        logger = this.config.getLogger();
 
-        mNetworkManager = networkManager;
-        mLocalDataStore = localDataStore;
+        this.networkManager = networkManager;
+        this.localDataStore = localDataStore;
 
     }
 
@@ -43,25 +44,25 @@ public class BaseResponse extends CleverTapResponseDecorator {
     public void processResponse(final JSONObject jsonBody, final String responseStr, final Context context) {
 
         if (responseStr == null) {
-            mLogger.verbose(mConfig.getAccountId(), "Problem processing queue response, response is null");
+            logger.verbose(config.getAccountId(), "Problem processing queue response, response is null");
             return;
         }
         try {
-            mLogger.verbose(mConfig.getAccountId(), "Trying to process response: " + responseStr);
+            logger.verbose(config.getAccountId(), "Trying to process response: " + responseStr);
 
             JSONObject response = new JSONObject(responseStr);
             // in app
-            mCleverTapResponse.processResponse(response, responseStr, context);
+            cleverTapResponse.processResponse(response, responseStr, context);
 
             try {
-                mLocalDataStore.syncWithUpstream(context, response);
+                localDataStore.syncWithUpstream(context, response);
             } catch (Throwable t) {
-                mLogger.verbose(mConfig.getAccountId(), "Failed to sync local cache with upstream", t);
+                logger.verbose(config.getAccountId(), "Failed to sync local cache with upstream", t);
             }
 
         } catch (Throwable t) {
-            mNetworkManager.incrementResponseFailureCount();
-            mLogger.verbose(mConfig.getAccountId(), "Problem process send queue response", t);
+            networkManager.incrementResponseFailureCount();
+            logger.verbose(config.getAccountId(), "Problem process send queue response", t);
         }
     }
 }

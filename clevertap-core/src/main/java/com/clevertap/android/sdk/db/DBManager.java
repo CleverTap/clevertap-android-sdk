@@ -16,20 +16,20 @@ public class DBManager extends BaseDatabaseManager {
 
     private DBAdapter dbAdapter;
 
-    private final CTLockManager mCTLockManager;
+    private final CTLockManager ctLockManager;
 
-    private final CleverTapInstanceConfig mConfig;
+    private final CleverTapInstanceConfig config;
 
     public DBManager(CleverTapInstanceConfig config,
             CTLockManager ctLockManager) {
-        mConfig = config;
-        mCTLockManager = ctLockManager;
+        this.config = config;
+        this.ctLockManager = ctLockManager;
     }
 
     @Override
     public DBAdapter loadDBAdapter(final Context context) {
         if (dbAdapter == null) {
-            dbAdapter = new DBAdapter(context, mConfig);
+            dbAdapter = new DBAdapter(context, config);
             dbAdapter.cleanupStaleEvents(DBAdapter.Table.EVENTS);
             dbAdapter.cleanupStaleEvents(DBAdapter.Table.PROFILE_EVENTS);
             dbAdapter.cleanupStaleEvents(DBAdapter.Table.PUSH_NOTIFICATION_VIEWED);
@@ -43,7 +43,7 @@ public class DBManager extends BaseDatabaseManager {
      */
     @Override
     public void clearQueues(final Context context) {
-        synchronized (mCTLockManager.getEventLock()) {
+        synchronized (ctLockManager.getEventLock()) {
 
             DBAdapter adapter = loadDBAdapter(context);
             DBAdapter.Table tableName = DBAdapter.Table.EVENTS;
@@ -66,7 +66,7 @@ public class DBManager extends BaseDatabaseManager {
 
     //Session
     private void clearLastRequestTimestamp(Context context) {
-        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_LAST_TS), 0);
+        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_LAST_TS), 0);
     }
 
     //Session
@@ -77,7 +77,7 @@ public class DBManager extends BaseDatabaseManager {
     }
     //Session
     private void clearFirstRequestTimestampIfNeeded(Context context) {
-        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(mConfig, Constants.KEY_FIRST_TS), 0);
+        StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_FIRST_TS), 0);
     }
 
     // helper extracts the cursor data from the db object
@@ -91,7 +91,7 @@ public class DBManager extends BaseDatabaseManager {
     @Override
     QueueCursor getQueueCursor(final Context context, final Table table, final int batchSize,
             final QueueCursor previousCursor) {
-        synchronized (mCTLockManager.getEventLock()) {
+        synchronized (ctLockManager.getEventLock()) {
             DBAdapter adapter = loadDBAdapter(context);
             DBAdapter.Table tableName = (previousCursor != null) ? previousCursor.getTableName() : table;
 
@@ -113,7 +113,7 @@ public class DBManager extends BaseDatabaseManager {
     @Override
     QueueCursor getQueuedDBEvents(final Context context, final int batchSize, final QueueCursor previousCursor) {
 
-        synchronized (mCTLockManager.getEventLock()) {
+        synchronized (ctLockManager.getEventLock()) {
             QueueCursor newCursor = getQueueCursor(context, DBAdapter.Table.EVENTS, batchSize, previousCursor);
 
             if (newCursor.isEmpty() && newCursor.getTableName().equals(DBAdapter.Table.EVENTS)) {
@@ -128,10 +128,10 @@ public class DBManager extends BaseDatabaseManager {
     public QueueCursor getQueuedEvents(final Context context, final int batchSize, final QueueCursor previousCursor,
             final EventGroup eventGroup) {
         if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
-            mConfig.getLogger().verbose(mConfig.getAccountId(), "Returning Queued Notification Viewed events");
+            config.getLogger().verbose(config.getAccountId(), "Returning Queued Notification Viewed events");
             return getPushNotificationViewedQueuedEvents(context, batchSize, previousCursor);
         } else {
-            mConfig.getLogger().verbose(mConfig.getAccountId(), "Returning Queued events");
+            config.getLogger().verbose(config.getAccountId(), "Returning Queued events");
             return getQueuedDBEvents(context, batchSize, previousCursor);
         }
     }
@@ -171,14 +171,14 @@ public class DBManager extends BaseDatabaseManager {
     }
 
     private void queueEventInternal(final Context context, final JSONObject event, DBAdapter.Table table) {
-        synchronized (mCTLockManager.getEventLock()) {
+        synchronized (ctLockManager.getEventLock()) {
             DBAdapter adapter = loadDBAdapter(context);
             int returnCode = adapter.storeObject(event, table);
 
             if (returnCode > 0) {
-                mConfig.getLogger().debug(mConfig.getAccountId(), "Queued event: " + event.toString());
-                mConfig.getLogger()
-                        .verbose(mConfig.getAccountId(),
+                config.getLogger().debug(config.getAccountId(), "Queued event: " + event.toString());
+                config.getLogger()
+                        .verbose(config.getAccountId(),
                                 "Queued event to DB table " + table + ": " + event.toString());
             }
         }

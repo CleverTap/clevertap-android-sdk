@@ -56,8 +56,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             final CTInAppNotification inAppNotification = new CTInAppNotification()
                     .initWithJSON(jsonObject, videoSupport);
             if (inAppNotification.getError() != null) {
-                mLogger
-                        .debug(mConfig.getAccountId(),
+                logger
+                        .debug(config.getAccountId(),
                                 "Unable to parse inapp notification " + inAppNotification.getError());
                 return;
             }
@@ -73,21 +73,21 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     private HashSet<String> inappActivityExclude = null;
 
-    private final AnalyticsManager mAnalyticsManager;
+    private final AnalyticsManager analyticsManager;
 
-    private final BaseCallbackManager mCallbackManager;
+    private final BaseCallbackManager callbackManager;
 
-    private final CleverTapInstanceConfig mConfig;
+    private final CleverTapInstanceConfig config;
 
-    private final Context mContext;
+    private final Context context;
 
-    private final ControllerManager mControllerManager;
+    private final ControllerManager controllerManager;
 
-    private final CoreMetaData mCoreMetaData;
+    private final CoreMetaData coreMetaData;
 
-    private final Logger mLogger;
+    private final Logger logger;
 
-    private final MainLooperHandler mMainLooperHandler;
+    private final MainLooperHandler mainLooperHandler;
 
     public InAppController(Context context,
             CleverTapInstanceConfig config,
@@ -97,14 +97,14 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             AnalyticsManager analyticsManager,
             CoreMetaData coreMetaData) {
 
-        mContext = context;
-        mConfig = config;
-        mLogger = mConfig.getLogger();
-        mMainLooperHandler = mainLooperHandler;
-        mControllerManager = controllerManager;
-        mCallbackManager = callbackManager;
-        mAnalyticsManager = analyticsManager;
-        mCoreMetaData = coreMetaData;
+        this.context = context;
+        this.config = config;
+        logger = this.config.getLogger();
+        this.mainLooperHandler = mainLooperHandler;
+        this.controllerManager = controllerManager;
+        this.callbackManager = callbackManager;
+        this.analyticsManager = analyticsManager;
+        this.coreMetaData = coreMetaData;
     }
 
     public void checkExistingInAppNotifications(Activity activity) {
@@ -120,11 +120,11 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                             .beginTransaction();
                     Bundle bundle = new Bundle();
                     bundle.putParcelable("inApp", currentlyDisplayingInApp);
-                    bundle.putParcelable("config", mConfig);
+                    bundle.putParcelable("config", config);
                     inAppFragment.setArguments(bundle);
                     fragmentTransaction.setCustomAnimations(android.R.animator.fade_in, android.R.animator.fade_out);
                     fragmentTransaction.add(android.R.id.content, inAppFragment, currentlyDisplayingInApp.getType());
-                    Logger.v(mConfig.getAccountId(),
+                    Logger.v(config.getAccountId(),
                             "calling InAppFragment " + currentlyDisplayingInApp.getCampaignId());
                     fragmentTransaction.commit();
                 }
@@ -135,12 +135,12 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     public void checkPendingInAppNotifications(Activity activity) {
         final boolean canShow = canShowInAppOnActivity();
         if (canShow) {
-            if (mMainLooperHandler.getPendingRunnable() != null) {
-                mLogger.verbose(mConfig.getAccountId(), "Found a pending inapp runnable. Scheduling it");
-                mMainLooperHandler.postDelayed(mMainLooperHandler.getPendingRunnable(), 200);
-                mMainLooperHandler.setPendingRunnable(null);
+            if (mainLooperHandler.getPendingRunnable() != null) {
+                logger.verbose(config.getAccountId(), "Found a pending inapp runnable. Scheduling it");
+                mainLooperHandler.postDelayed(mainLooperHandler.getPendingRunnable(), 200);
+                mainLooperHandler.setPendingRunnable(null);
             } else {
-                showNotificationIfAvailable(mContext);
+                showNotificationIfAvailable(context);
             }
         } else {
             Logger.d("In-app notifications will not be shown for this activity ("
@@ -151,10 +151,10 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     @Override
     public void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData,
             HashMap<String, String> keyValueMap) {
-        mAnalyticsManager.pushInAppNotificationStateEvent(true, inAppNotification, formData);
+        analyticsManager.pushInAppNotificationStateEvent(true, inAppNotification, formData);
         if (keyValueMap != null && !keyValueMap.isEmpty()) {
-            if (mCallbackManager.getInAppNotificationButtonListener() != null) {
-                mCallbackManager.getInAppNotificationButtonListener().onInAppButtonClick(keyValueMap);
+            if (callbackManager.getInAppNotificationButtonListener() != null) {
+                callbackManager.getInAppNotificationButtonListener().onInAppButtonClick(keyValueMap);
             }
         }
     }
@@ -163,12 +163,12 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     public void inAppNotificationDidDismiss(final Context context, final CTInAppNotification inAppNotification,
             final Bundle formData) {
         inAppNotification.didDismiss();
-        if (mControllerManager.getInAppFCManager() != null) {
-            mControllerManager.getInAppFCManager().didDismiss(inAppNotification);
-            mLogger.verbose(mConfig.getAccountId(), "InApp Dismissed: " + inAppNotification.getCampaignId());
+        if (controllerManager.getInAppFCManager() != null) {
+            controllerManager.getInAppFCManager().didDismiss(inAppNotification);
+            logger.verbose(config.getAccountId(), "InApp Dismissed: " + inAppNotification.getCampaignId());
         }
         try {
-            final InAppNotificationListener listener = mCallbackManager.getInAppNotificationListener();
+            final InAppNotificationListener listener = callbackManager.getInAppNotificationListener();
             if (listener != null) {
                 final HashMap<String, Object> notifKVS;
 
@@ -178,7 +178,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                     notifKVS = new HashMap<>();
                 }
 
-                Logger.v("Calling the in-app listener on behalf of " + mCoreMetaData.getSource());
+                Logger.v("Calling the in-app listener on behalf of " + coreMetaData.getSource());
 
                 if (formData != null) {
                     listener.onDismissed(notifKVS, Utils.convertBundleObjectToHashMap(formData));
@@ -187,15 +187,15 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 }
             }
         } catch (Throwable t) {
-            mLogger.verbose(mConfig.getAccountId(), "Failed to call the in-app notification listener", t);
+            logger.verbose(config.getAccountId(), "Failed to call the in-app notification listener", t);
         }
 
         // Fire the next one, if any
-        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
         task.execute("InappController#inAppNotificationDidDismiss", new Callable<Void>() {
             @Override
             public Void call() {
-                inAppDidDismiss(context, mConfig, inAppNotification, InAppController.this);
+                inAppDidDismiss(context, config, inAppNotification, InAppController.this);
                 _showNotificationIfAvailable(context);
                 return null;
             }
@@ -205,14 +205,14 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     //InApp
     @Override
     public void inAppNotificationDidShow(CTInAppNotification inAppNotification, Bundle formData) {
-        mAnalyticsManager.pushInAppNotificationStateEvent(false, inAppNotification, formData);
+        analyticsManager.pushInAppNotificationStateEvent(false, inAppNotification, formData);
     }
 
     //InApp
     @Override
     public void notificationReady(final CTInAppNotification inAppNotification) {
         if (Looper.myLooper() != Looper.getMainLooper()) {
-            mMainLooperHandler.post(new Runnable() {
+            mainLooperHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     notificationReady(inAppNotification);
@@ -222,19 +222,19 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         }
 
         if (inAppNotification.getError() != null) {
-            mLogger
-                    .debug(mConfig.getAccountId(),
+            logger
+                    .debug(config.getAccountId(),
                             "Unable to process inapp notification " + inAppNotification.getError());
             return;
         }
-        mLogger.debug(mConfig.getAccountId(), "Notification ready: " + inAppNotification.getJsonDescription());
+        logger.debug(config.getAccountId(), "Notification ready: " + inAppNotification.getJsonDescription());
         displayNotification(inAppNotification);
     }
 
     //InApp
     public void showNotificationIfAvailable(final Context context) {
-        if (!mConfig.isAnalyticsOnly()) {
-            Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
+        if (!config.isAnalyticsOnly()) {
+            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
             task.execute("InappController#showNotificationIfAvailable", new Callable<Void>() {
                 @Override
                 public Void call() {
@@ -255,10 +255,10 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             }
 
             checkPendingNotifications(context,
-                    mConfig, this);  // see if we have any pending notifications
+                    config, this);  // see if we have any pending notifications
 
             JSONArray inapps = new JSONArray(
-                    StorageHelper.getStringFromPrefs(context, mConfig, Constants.INAPP_KEY, "[]"));
+                    StorageHelper.getStringFromPrefs(context, config, Constants.INAPP_KEY, "[]"));
             if (inapps.length() < 1) {
                 return;
             }
@@ -276,12 +276,12 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 inappsUpdated.put(inapps.get(i));
             }
             SharedPreferences.Editor editor = prefs.edit()
-                    .putString(StorageHelper.storageKeyWithSuffix(mConfig, Constants.INAPP_KEY),
+                    .putString(StorageHelper.storageKeyWithSuffix(config, Constants.INAPP_KEY),
                             inappsUpdated.toString());
             StorageHelper.persist(editor);
         } catch (Throwable t) {
             // We won't get here
-            mLogger.verbose(mConfig.getAccountId(), "InApp: Couldn't parse JSON array string from prefs", t);
+            logger.verbose(config.getAccountId(), "InApp: Couldn't parse JSON array string from prefs", t);
         }
     }
 
@@ -302,7 +302,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     private void displayNotification(final CTInAppNotification inAppNotification) {
 
         if (Looper.myLooper() != Looper.getMainLooper()) {
-            mMainLooperHandler.post(new Runnable() {
+            mainLooperHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     displayNotification(inAppNotification);
@@ -311,22 +311,22 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             return;
         }
 
-        if (mControllerManager.getInAppFCManager() != null) {
-            if (!mControllerManager.getInAppFCManager().canShow(inAppNotification)) {
-                mLogger.verbose(mConfig.getAccountId(),
+        if (controllerManager.getInAppFCManager() != null) {
+            if (!controllerManager.getInAppFCManager().canShow(inAppNotification)) {
+                logger.verbose(config.getAccountId(),
                         "InApp has been rejected by FC, not showing " + inAppNotification.getCampaignId());
                 showInAppNotificationIfAny();
                 return;
             }
 
-            mControllerManager.getInAppFCManager().didShow(mContext, inAppNotification);
+            controllerManager.getInAppFCManager().didShow(context, inAppNotification);
         } else {
-            mLogger.verbose(mConfig.getAccountId(),
+            logger.verbose(config.getAccountId(),
                     "getCoreState().getInAppFCManager() is NULL, not showing " + inAppNotification.getCampaignId());
             return;
         }
 
-        final InAppNotificationListener listener = mCallbackManager.getInAppNotificationListener();
+        final InAppNotificationListener listener = callbackManager.getInAppNotificationListener();
 
         final boolean goFromListener;
 
@@ -345,20 +345,20 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         }
 
         if (!goFromListener) {
-            mLogger.verbose(mConfig.getAccountId(),
+            logger.verbose(config.getAccountId(),
                     "Application has decided to not show this in-app notification: " + inAppNotification
                             .getCampaignId());
             showInAppNotificationIfAny();
             return;
         }
-        showInApp(mContext, inAppNotification, mConfig, this);
+        showInApp(context, inAppNotification, config, this);
 
     }
 
     //InApp
     private void prepareNotificationForDisplay(final JSONObject jsonObject) {
-        mLogger.debug(mConfig.getAccountId(), "Preparing In-App for display: " + jsonObject.toString());
-        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
+        logger.debug(config.getAccountId(), "Preparing In-App for display: " + jsonObject.toString());
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
         task.execute("InappController#prepareNotificationForDisplay", new Callable<Void>() {
             @Override
             public Void call() {
@@ -369,12 +369,12 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     private void showInAppNotificationIfAny() {
-        if (!mConfig.isAnalyticsOnly()) {
-            Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
+        if (!config.isAnalyticsOnly()) {
+            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
             task.execute("InAppController#showInAppNotificationIfAny", new Callable<Void>() {
                 @Override
                 public Void call() {
-                    _showNotificationIfAvailable(mContext);
+                    _showNotificationIfAvailable(context);
                     return null;
                 }
             });
@@ -385,7 +385,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         if (inappActivityExclude == null) {
             inappActivityExclude = new HashSet<>();
             try {
-                String activities = ManifestInfo.getInstance(mContext).getExcludedActivities();
+                String activities = ManifestInfo.getInstance(context).getExcludedActivities();
                 if (activities != null) {
                     String[] split = activities.split(",");
                     for (String a : split) {
@@ -395,7 +395,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             } catch (Throwable t) {
                 // Ignore
             }
-            mLogger.debug(mConfig.getAccountId(),
+            logger.debug(config.getAccountId(),
                     "In-app notifications will not be shown on " + Arrays.toString(inappActivityExclude.toArray()));
         }
     }

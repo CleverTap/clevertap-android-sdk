@@ -18,15 +18,15 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
 
     private final LoginInfoProvider infoProvider;
 
-    private final CleverTapInstanceConfig mConfig;
+    private final CleverTapInstanceConfig config;
 
-    private final ValidationResultStack mValidationResultStack;
+    private final ValidationResultStack validationResultStack;
 
     public ConfigurableIdentityRepo(Context context, CleverTapInstanceConfig config, DeviceInfo deviceInfo,
             ValidationResultStack mValidationResultStack) {
-        this.mConfig = config;
+        this.config = config;
         this.infoProvider = new LoginInfoProvider(context, config, deviceInfo);
-        this.mValidationResultStack = mValidationResultStack;
+        this.validationResultStack = mValidationResultStack;
         loadIdentitySet();
     }
 
@@ -38,7 +38,7 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
     @Override
     public boolean hasIdentity(@NonNull String Key) {
         boolean hasIdentity = identitySet.contains(Key);
-        mConfig.log(LOG_TAG_ON_USER_LOGIN,
+        config.log(LOG_TAG_ON_USER_LOGIN,
                 TAG + "isIdentity [Key: " + Key + " , Value: " + hasIdentity + "]");
         return hasIdentity;
     }
@@ -51,7 +51,7 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
         // Read from Pref
         IdentitySet prefKeySet = IdentitySet.from(infoProvider.getCachedIdentityKeysForAccount());
 
-        mConfig.log(LOG_TAG_ON_USER_LOGIN,
+        config.log(LOG_TAG_ON_USER_LOGIN,
                 TAG + "PrefIdentitySet [" + prefKeySet + "]");
 
         /* ----------------------------------------------------------------
@@ -59,9 +59,9 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
          *   For Multi Instance - Get Identity Set configured via the setter
          * ---------------------------------------------------------------- */
         IdentitySet configKeySet = IdentitySet
-                .from(mConfig.getIdentityKeys());
+                .from(config.getIdentityKeys());
 
-        mConfig.log(LOG_TAG_ON_USER_LOGIN,
+        config.log(LOG_TAG_ON_USER_LOGIN,
                 TAG + "ConfigIdentitySet [" + configKeySet + "]");
 
         /* ---------------------------------------------------
@@ -77,15 +77,15 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
          * --------------------------------------------------- */
         if (prefKeySet.isValid()) {
             identitySet = prefKeySet;
-            mConfig.log(LOG_TAG_ON_USER_LOGIN,
+            config.log(LOG_TAG_ON_USER_LOGIN,
                     TAG + "Identity Set activated from Pref[" + identitySet + "]");
         } else if (configKeySet.isValid()) {
             identitySet = configKeySet;
-            mConfig.log(LOG_TAG_ON_USER_LOGIN,
+            config.log(LOG_TAG_ON_USER_LOGIN,
                     TAG + "Identity Set activated from Config[" + identitySet + "]");
         } else {
             identitySet = IdentitySet.getDefault();
-            mConfig.log(LOG_TAG_ON_USER_LOGIN,
+            config.log(LOG_TAG_ON_USER_LOGIN,
                     TAG + "Identity Set activated from Default[" + identitySet + "]");
         }
         boolean isSavedInPref = prefKeySet.isValid();
@@ -95,7 +95,7 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
              * ------------------------------------------------------------------------ */
             String storedValue = identitySet.toString();
             infoProvider.saveIdentityKeysForAccount(storedValue);
-            mConfig.log(LOG_TAG_ON_USER_LOGIN,
+            config.log(LOG_TAG_ON_USER_LOGIN,
                     TAG + "Saving Identity Keys in Pref[" + storedValue + "]");
         }
     }
@@ -110,11 +110,11 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
     private void handleError(final IdentitySet prefKeySet, final IdentitySet configKeySet) {
         if (prefKeySet.isValid() && configKeySet.isValid() && !prefKeySet.equals(configKeySet)) {
             ValidationResult error = ValidationResultFactory.create(531);
-            mValidationResultStack.pushValidationResult(error);
-            mConfig.log(LOG_TAG_ON_USER_LOGIN,
+            validationResultStack.pushValidationResult(error);
+            config.log(LOG_TAG_ON_USER_LOGIN,
                     TAG + "pushing error due to mismatch [Pref:" + prefKeySet + "], [Config:" + configKeySet + "]");
         } else {
-            mConfig.log(LOG_TAG_ON_USER_LOGIN,
+            config.log(LOG_TAG_ON_USER_LOGIN,
                     TAG + "No error found while comparing [Pref:" + prefKeySet + "], [Config:" + configKeySet + "]");
         }
     }

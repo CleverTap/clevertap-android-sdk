@@ -20,12 +20,12 @@ public class CTExecutors {
 
     public final MainThreadExecutor DEFAULT_CALLBACK_EXECUTOR = MAIN_EXECUTOR;
 
-    protected final CleverTapInstanceConfig mConfig;
+    protected final CleverTapInstanceConfig config;
 
     private final HashMap<String, PostAsyncSafelyExecutor> postAsyncSafelyTasks = new HashMap<>();
 
     CTExecutors(CleverTapInstanceConfig config) {
-        mConfig = config;
+        this.config = config;
     }
 
     public <TResult> Task<TResult> ioTask() {
@@ -50,7 +50,7 @@ public class CTExecutors {
     }
 
     public <TResult> Task<TResult> postAsyncSafelyTask() {
-        return postAsyncSafelyTask(mConfig.getAccountId());
+        return postAsyncSafelyTask(config.getAccountId());
     }
 
     public <TResult> Task<TResult> taskOnExecutor(Executor taskExecutor, String taskName) {
@@ -63,6 +63,6 @@ public class CTExecutors {
             throw new IllegalArgumentException("Can't create task "
                     + taskName + " with null executors");
         }
-        return new Task<>(mConfig, taskExecutor, callbackExecutor, taskName);
+        return new Task<>(config, taskExecutor, callbackExecutor, taskName);
     }
 }

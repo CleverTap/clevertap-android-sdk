@@ -30,11 +30,11 @@ public class CTInboxController {
 
     private final boolean videoSupported;
 
-    private final CTLockManager mCTLockManager;
+    private final CTLockManager ctLockManager;
 
-    private final BaseCallbackManager mCallbackManager;
+    private final BaseCallbackManager callbackManager;
 
-    private final CleverTapInstanceConfig mConfig;
+    private final CleverTapInstanceConfig config;
 
     // always call async
     public CTInboxController(CleverTapInstanceConfig config, String guid, DBAdapter adapter,
@@ -45,9 +45,9 @@ public class CTInboxController {
         this.dbAdapter = adapter;
         this.messages = this.dbAdapter.getMessages(this.userId);
         this.videoSupported = videoSupported;
-        mCTLockManager = ctLockManager;
-        mCallbackManager = callbackManager;
-        mConfig = config;
+        this.ctLockManager = ctLockManager;
+        this.callbackManager = callbackManager;
+        this.config = config;
     }
 
     public int count() {
@@ -55,14 +55,14 @@ public class CTInboxController {
     }
 
     public void deleteInboxMessage(final CTInboxMessage message) {
-        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("deleteInboxMessage", new Callable<Void>() {
             @Override
             public Void call() {
-                synchronized (mCTLockManager.getInboxControllerLock()) {
+                synchronized (ctLockManager.getInboxControllerLock()) {
                     boolean update = _deleteMessageWithId(message.getMessageId());
                     if (update) {
-                        mCallbackManager._notifyInboxMessagesDidUpdate();
+                        callbackManager._notifyInboxMessagesDidUpdate();
                     }
                 }
                 return null;
@@ -79,7 +79,7 @@ public class CTInboxController {
             this.messages.remove(messageDAO);
         }
 
-        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("RunDeleteMessage",new Callable<Void>() {
             @Override
             public Void call() {
@@ -115,14 +115,14 @@ public class CTInboxController {
     }
 
     public void markReadInboxMessage(final CTInboxMessage message) {
-        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("markReadInboxMessage", new Callable<Void>() {
             @Override
             public Void call() {
-                synchronized (mCTLockManager.getInboxControllerLock()) {
+                synchronized (ctLockManager.getInboxControllerLock()) {
                     boolean read = _markReadForMessageWithId(message.getMessageId());
                     if (read) {
-                        mCallbackManager._notifyInboxMessagesDidUpdate();
+                        callbackManager._notifyInboxMessagesDidUpdate();
                     }
                 }
                 return null;
@@ -139,7 +139,7 @@ public class CTInboxController {
         synchronized (messagesLock) {
             messageDAO.setRead(1);
         }
-        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("RunMarkMessageRead", new Callable<Void>() {
             @Override
             public Void call() {

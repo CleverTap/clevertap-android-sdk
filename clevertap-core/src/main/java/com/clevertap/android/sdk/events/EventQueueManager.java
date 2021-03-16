@@ -36,33 +36,33 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
     private Runnable commsRunnable = null;
 
-    private final BaseDatabaseManager mBaseDatabaseManager;
+    private final BaseDatabaseManager baseDatabaseManager;
 
-    private final CoreMetaData mCleverTapMetaData;
+    private final CoreMetaData cleverTapMetaData;
 
-    private final CleverTapInstanceConfig mConfig;
+    private final CleverTapInstanceConfig config;
 
-    private final Context mContext;
+    private final Context context;
 
-    private final CTLockManager mCtLockManager;
+    private final CTLockManager ctLockManager;
 
-    private final DeviceInfo mDeviceInfo;
+    private final DeviceInfo deviceInfo;
 
-    private final EventMediator mEventMediator;
+    private final EventMediator eventMediator;
 
-    private final LocalDataStore mLocalDataStore;
+    private final LocalDataStore localDataStore;
 
-    private final Logger mLogger;
+    private final Logger logger;
 
-    private LoginInfoProvider mLoginInfoProvider;
+    private LoginInfoProvider loginInfoProvider;
 
-    private final MainLooperHandler mMainLooperHandler;
+    private final MainLooperHandler mainLooperHandler;
 
-    private final BaseNetworkManager mNetworkManager;
+    private final BaseNetworkManager networkManager;
 
-    private final SessionManager mSessionManager;
+    private final SessionManager sessionManager;
 
-    private final ValidationResultStack mValidationResultStack;
+    private final ValidationResultStack validationResultStack;
 
     private Runnable pushNotificationViewedRunnable = null;
 
@@ -79,19 +79,19 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             CoreMetaData coreMetaData,
             CTLockManager ctLockManager,
             final LocalDataStore localDataStore) {
-        mBaseDatabaseManager = baseDatabaseManager;
-        mContext = context;
-        mConfig = config;
-        mEventMediator = eventMediator;
-        mSessionManager = sessionManager;
-        mMainLooperHandler = mainLooperHandler;
-        mDeviceInfo = deviceInfo;
-        mValidationResultStack = validationResultStack;
-        mNetworkManager = networkManager;
-        mLocalDataStore = localDataStore;
-        mLogger = mConfig.getLogger();
-        mCleverTapMetaData = coreMetaData;
-        mCtLockManager = ctLockManager;
+        this.baseDatabaseManager = baseDatabaseManager;
+        this.context = context;
+        this.config = config;
+        this.eventMediator = eventMediator;
+        this.sessionManager = sessionManager;
+        this.mainLooperHandler = mainLooperHandler;
+        this.deviceInfo = deviceInfo;
+        this.validationResultStack = validationResultStack;
+        this.networkManager = networkManager;
+        this.localDataStore = localDataStore;
+        logger = this.config.getLogger();
+        cleverTapMetaData = coreMetaData;
+        this.ctLockManager = ctLockManager;
 
         callbackManager.setFailureFlushListener(this);
     }
@@ -100,8 +100,8 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     @Override
     public void addToQueue(final Context context, final JSONObject event, final int eventType) {
         if (eventType == Constants.NV_EVENT) {
-            mConfig.getLogger()
-                    .verbose(mConfig.getAccountId(), "Pushing Notification Viewed event onto separate queue");
+            config.getLogger()
+                    .verbose(config.getAccountId(), "Pushing Notification Viewed event onto separate queue");
             processPushNotificationViewedEvent(context, event);
         } else {
             processEvent(context, event, eventType);
@@ -115,20 +115,20 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
     @Override
     public void flush() {
-        flushQueueAsync(mContext, EventGroup.REGULAR);
+        flushQueueAsync(context, EventGroup.REGULAR);
     }
 
     @Override
     public void flushQueueAsync(final Context context, final EventGroup eventGroup) {
-        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("CommsManager#flushQueueAsync", new Callable<Void>() {
             @Override
             public Void call() {
                 if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
-                    mLogger.verbose(mConfig.getAccountId(),
+                    logger.verbose(config.getAccountId(),
                             "Pushing Notification Viewed event onto queue flush sync");
                 } else {
-                    mLogger.verbose(mConfig.getAccountId(), "Pushing event onto queue flush sync");
+                    logger.verbose(config.getAccountId(), "Pushing event onto queue flush sync");
                 }
                 flushQueueSync(context, eventGroup);
                 return null;
@@ -139,35 +139,35 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     @Override
     public void flushQueueSync(final Context context, final EventGroup eventGroup) {
         if (!NetworkManager.isNetworkOnline(context)) {
-            mLogger.verbose(mConfig.getAccountId(), "Network connectivity unavailable. Will retry later");
+            logger.verbose(config.getAccountId(), "Network connectivity unavailable. Will retry later");
             return;
         }
 
-        if (mCleverTapMetaData.isOffline()) {
-            mLogger.debug(mConfig.getAccountId(),
+        if (cleverTapMetaData.isOffline()) {
+            logger.debug(config.getAccountId(),
                     "CleverTap Instance has been set to offline, won't send events queue");
             return;
         }
 
-        if (mNetworkManager.needsHandshakeForDomain(eventGroup)) {
-            mNetworkManager.initHandshake(eventGroup, new Runnable() {
+        if (networkManager.needsHandshakeForDomain(eventGroup)) {
+            networkManager.initHandshake(eventGroup, new Runnable() {
                 @Override
                 public void run() {
-                    mNetworkManager.flushDBQueue(context, eventGroup);
+                    networkManager.flushDBQueue(context, eventGroup);
                 }
             });
         } else {
-            mLogger.verbose(mConfig.getAccountId(), "Pushing Notification Viewed event onto queue DB flush");
-            mNetworkManager.flushDBQueue(context, eventGroup);
+            logger.verbose(config.getAccountId(), "Pushing Notification Viewed event onto queue DB flush");
+            networkManager.flushDBQueue(context, eventGroup);
         }
     }
 
     public LoginInfoProvider getLoginInfoProvider() {
-        return mLoginInfoProvider;
+        return loginInfoProvider;
     }
 
     public void setLoginInfoProvider(final LoginInfoProvider loginInfoProvider) {
-        mLoginInfoProvider = loginInfoProvider;
+        this.loginInfoProvider = loginInfoProvider;
     }
 
     public int getNow() {
@@ -175,7 +175,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     }
 
     public void processEvent(final Context context, final JSONObject event, final int eventType) {
-        synchronized (mCtLockManager.getEventLock()) {
+        synchronized (ctLockManager.getEventLock()) {
             try {
                 if (CoreMetaData.getActivityCount() == 0) {
                     CoreMetaData.setActivityCount(1);
@@ -187,16 +187,16 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                     type = "ping";
                     attachMeta(event, context);
                     if (event.has("bk")) {
-                        mCleverTapMetaData.setBgPing(true);
+                        cleverTapMetaData.setBgPing(true);
                         event.remove("bk");
                     }
 
                     //Add a flag to denote, PING event is for geofences
-                    if (mCleverTapMetaData.isLocationForGeofence()) {
+                    if (cleverTapMetaData.isLocationForGeofence()) {
                         event.put("gf", true);
-                        mCleverTapMetaData.setLocationForGeofence(false);
-                        event.put("gfSDKVersion", mCleverTapMetaData.getGeofenceSDKVersion());
-                        mCleverTapMetaData.setGeofenceSDKVersion(0);
+                        cleverTapMetaData.setLocationForGeofence(false);
+                        event.put("gfSDKVersion", cleverTapMetaData.getGeofenceSDKVersion());
+                        cleverTapMetaData.setGeofenceSDKVersion(0);
                     }
                 } else if (eventType == Constants.PROFILE_EVENT) {
                     type = "profile";
@@ -208,56 +208,56 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
                 // Complete the received event with the other params
 
-                String currentActivityName = mCleverTapMetaData.getScreenName();
+                String currentActivityName = cleverTapMetaData.getScreenName();
                 if (currentActivityName != null) {
                     event.put("n", currentActivityName);
                 }
 
-                int session = mCleverTapMetaData.getCurrentSessionId();
+                int session = cleverTapMetaData.getCurrentSessionId();
                 event.put("s", session);
                 event.put("pg", CoreMetaData.getActivityCount());
                 event.put("type", type);
                 event.put("ep", getNow());
-                event.put("f", mCleverTapMetaData.isFirstSession());
-                event.put("lsl", mCleverTapMetaData.getLastSessionLength());
+                event.put("f", cleverTapMetaData.isFirstSession());
+                event.put("lsl", cleverTapMetaData.getLastSessionLength());
                 attachPackageNameIfRequired(context, event);
 
                 // Report any pending validation error
-                ValidationResult vr = mValidationResultStack.popValidationResult();
+                ValidationResult vr = validationResultStack.popValidationResult();
                 if (vr != null) {
                     event.put(Constants.ERROR_KEY, getErrorObject(vr));
                 }
-                mLocalDataStore.setDataSyncFlag(event);
-                mBaseDatabaseManager.queueEventToDB(context, event, eventType);
+                localDataStore.setDataSyncFlag(event);
+                baseDatabaseManager.queueEventToDB(context, event, eventType);
                 updateLocalStore(context, event, eventType);
                 scheduleQueueFlush(context);
 
             } catch (Throwable e) {
-                mConfig.getLogger().verbose(mConfig.getAccountId(), "Failed to queue event: " + event.toString(), e);
+                config.getLogger().verbose(config.getAccountId(), "Failed to queue event: " + event.toString(), e);
             }
         }
     }
 
     public void processPushNotificationViewedEvent(final Context context, final JSONObject event) {
-        synchronized (mCtLockManager.getEventLock()) {
+        synchronized (ctLockManager.getEventLock()) {
             try {
-                int session = mCleverTapMetaData.getCurrentSessionId();
+                int session = cleverTapMetaData.getCurrentSessionId();
                 event.put("s", session);
                 event.put("type", "event");
                 event.put("ep", getNow());
                 // Report any pending validation error
-                ValidationResult vr = mValidationResultStack.popValidationResult();
+                ValidationResult vr = validationResultStack.popValidationResult();
                 if (vr != null) {
                     event.put(Constants.ERROR_KEY, getErrorObject(vr));
                 }
-                mConfig.getLogger().verbose(mConfig.getAccountId(), "Pushing Notification Viewed event onto DB");
-                mBaseDatabaseManager.queuePushNotificationViewedEventToDB(context, event);
-                mConfig.getLogger()
-                        .verbose(mConfig.getAccountId(), "Pushing Notification Viewed event onto queue flush");
+                config.getLogger().verbose(config.getAccountId(), "Pushing Notification Viewed event onto DB");
+                baseDatabaseManager.queuePushNotificationViewedEventToDB(context, event);
+                config.getLogger()
+                        .verbose(config.getAccountId(), "Pushing Notification Viewed event onto queue flush");
                 schedulePushNotificationViewedQueueFlush(context);
             } catch (Throwable t) {
-                mConfig.getLogger()
-                        .verbose(mConfig.getAccountId(),
+                config.getLogger()
+                        .verbose(config.getAccountId(),
                                 "Failed to queue notification viewed event: " + event.toString(), t);
             }
         }
@@ -275,8 +275,8 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             if (baseProfile != null && baseProfile.length() > 0) {
                 Iterator<String> i = baseProfile.keys();
                 IdentityRepo iProfileHandler = IdentityRepoFactory
-                        .getRepo(mContext, mConfig, mDeviceInfo, mValidationResultStack);
-                setLoginInfoProvider(new LoginInfoProvider(mContext, mConfig, mDeviceInfo));
+                        .getRepo(context, config, deviceInfo, validationResultStack);
+                setLoginInfoProvider(new LoginInfoProvider(context, config, deviceInfo));
                 while (i.hasNext()) {
                     String next = i.next();
 
@@ -311,13 +311,13 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
             try {
                 //TODO can be replaced with mDeviceInfo.attachCarrier()
-                String carrier = mDeviceInfo.getCarrier();
+                String carrier = deviceInfo.getCarrier();
                 if (carrier != null && !carrier.equals("")) {
                     profileEvent.put("Carrier", carrier);
                 }
 
                 //TODO can be replaced with mDeviceInfo.attachCC()
-                String cc = mDeviceInfo.getCountryCode();
+                String cc = deviceInfo.getCountryCode();
                 if (cc != null && !cc.equals("")) {
                     profileEvent.put("cc", cc);
                 }
@@ -327,28 +327,28 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
                 JSONObject event = new JSONObject();
                 event.put("profile", profileEvent);
-                queueEvent(mContext, event, Constants.PROFILE_EVENT);
+                queueEvent(context, event, Constants.PROFILE_EVENT);
             } catch (JSONException e) {
-                mConfig.getLogger()
-                        .verbose(mConfig.getAccountId(), "FATAL: Creating basic profile update event failed!");
+                config.getLogger()
+                        .verbose(config.getAccountId(), "FATAL: Creating basic profile update event failed!");
             }
         } catch (Throwable t) {
-            mConfig.getLogger().verbose(mConfig.getAccountId(), "Basic profile sync", t);
+            config.getLogger().verbose(config.getAccountId(), "Basic profile sync", t);
         }
     }
 
     @Override
     public void pushInitialEventsAsync() {
-        if (!mCleverTapMetaData.inCurrentSession()) {
-            Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        if (!cleverTapMetaData.inCurrentSession()) {
+            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
             task.execute("CleverTapAPI#pushInitialEventsAsync", new Callable<Void>() {
                 @Override
                 public Void call() {
                     try {
-                        mConfig.getLogger().verbose(mConfig.getAccountId(), "Queuing daily events");
+                        config.getLogger().verbose(config.getAccountId(), "Queuing daily events");
                         pushBasicProfile(null);
                     } catch (Throwable t) {
-                        mConfig.getLogger().verbose(mConfig.getAccountId(), "Daily profile sync failed", t);
+                        config.getLogger().verbose(config.getAccountId(), "Daily profile sync failed", t);
                     }
                     return null;
                 }
@@ -365,24 +365,24 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
      */
     @Override
     public Future<?> queueEvent(final Context context, final JSONObject event, final int eventType) {
-        Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         return task.submit("queueEvent", new Callable<Void>() {
             @Override
             public Void call() {
-                if (mEventMediator.shouldDropEvent(event, eventType)) {
+                if (eventMediator.shouldDropEvent(event, eventType)) {
                     return null;
                 }
-                if (mEventMediator.shouldDeferProcessingEvent(event, eventType)) {
-                    mConfig.getLogger().debug(mConfig.getAccountId(),
+                if (eventMediator.shouldDeferProcessingEvent(event, eventType)) {
+                    config.getLogger().debug(config.getAccountId(),
                             "App Launched not yet processed, re-queuing event " + event + "after 2s");
-                    mMainLooperHandler.postDelayed(new Runnable() {
+                    mainLooperHandler.postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            Task<Void> task = CTExecutorFactory.executors(mConfig).postAsyncSafelyTask();
+                            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
                             task.execute("queueEventWithDelay", new Callable<Void>() {
                                 @Override
                                 public Void call() {
-                                    mSessionManager.lazyCreateSession(context);
+                                    sessionManager.lazyCreateSession(context);
                                     pushInitialEventsAsync();
                                     addToQueue(context, event, eventType);
                                     return null;
@@ -394,7 +394,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                     if (eventType == Constants.FETCH_EVENT) {
                         addToQueue(context, event, eventType);
                     } else {
-                        mSessionManager.lazyCreateSession(context);
+                        sessionManager.lazyCreateSession(context);
                         pushInitialEventsAsync();
                         addToQueue(context, event, eventType);
                     }
@@ -416,11 +416,11 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             };
         }
         // Cancel any outstanding send runnables, and issue a new delayed one
-        mMainLooperHandler.removeCallbacks(commsRunnable);
+        mainLooperHandler.removeCallbacks(commsRunnable);
 
-        mMainLooperHandler.postDelayed(commsRunnable, mNetworkManager.getDelayFrequency());
+        mainLooperHandler.postDelayed(commsRunnable, networkManager.getDelayFrequency());
 
-        mLogger.verbose(mConfig.getAccountId(), "Scheduling delayed queue flush on main event loop");
+        logger.verbose(config.getAccountId(), "Scheduling delayed queue flush on main event loop");
     }
 
     /**
@@ -457,7 +457,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     }
 
     private String getCleverTapID() {
-        return mDeviceInfo.getDeviceID();
+        return deviceInfo.getDeviceID();
     }
 
     private void schedulePushNotificationViewedQueueFlush(final Context context) {
@@ -465,22 +465,22 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             pushNotificationViewedRunnable = new Runnable() {
                 @Override
                 public void run() {
-                    mConfig.getLogger()
-                            .verbose(mConfig.getAccountId(),
+                    config.getLogger()
+                            .verbose(config.getAccountId(),
                                     "Pushing Notification Viewed event onto queue flush async");
                     flushQueueAsync(context, EventGroup.PUSH_NOTIFICATION_VIEWED);
                 }
             };
         }
-        mMainLooperHandler.removeCallbacks(pushNotificationViewedRunnable);
-        mMainLooperHandler.post(pushNotificationViewedRunnable);
+        mainLooperHandler.removeCallbacks(pushNotificationViewedRunnable);
+        mainLooperHandler.post(pushNotificationViewedRunnable);
     }
 
     //Util
     // only call async
     private void updateLocalStore(final Context context, final JSONObject event, final int type) {
         if (type == Constants.RAISED_EVENT) {
-            mLocalDataStore.persistEvent(context, event, type);
+            localDataStore.persistEvent(context, event, type);
         }
     }
 

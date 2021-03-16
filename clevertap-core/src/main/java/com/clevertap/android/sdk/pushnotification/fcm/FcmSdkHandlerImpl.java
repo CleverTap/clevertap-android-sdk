@@ -27,18 +27,18 @@ public class FcmSdkHandlerImpl implements IFcmSdkHandler {
 
     private final CTPushProviderListener listener;
 
-    private final CleverTapInstanceConfig mConfig;
+    private final CleverTapInstanceConfig config;
 
-    private final Context mContext;
+    private final Context context;
 
-    private ManifestInfo mManifestInfo;
+    private ManifestInfo manifestInfo;
 
     public FcmSdkHandlerImpl(final CTPushProviderListener listener, final Context context,
             final CleverTapInstanceConfig config) {
-        mContext = context;
-        mConfig = config;
+        this.context = context;
+        this.config = config;
         this.listener = listener;
-        this.mManifestInfo = ManifestInfo.getInstance(context);
+        this.manifestInfo = ManifestInfo.getInstance(context);
     }
 
     public PushType getPushType() {
@@ -48,19 +48,19 @@ public class FcmSdkHandlerImpl implements IFcmSdkHandler {
     @Override
     public boolean isAvailable() {
         try {
-            if (!isGooglePlayServicesAvailable(mContext)) {
-                mConfig.log(LOG_TAG, FCM_LOG_TAG + "Google Play services is currently unavailable.");
+            if (!isGooglePlayServicesAvailable(context)) {
+                config.log(LOG_TAG, FCM_LOG_TAG + "Google Play services is currently unavailable.");
                 return false;
             }
 
             String senderId = getSenderId();
             if (TextUtils.isEmpty(senderId)) {
-                mConfig
+                config
                         .log(LOG_TAG, FCM_LOG_TAG + "The FCM sender ID is not set. Unable to register for FCM.");
                 return false;
             }
         } catch (Throwable t) {
-            mConfig.log(LOG_TAG, FCM_LOG_TAG + "Unable to register with FCM.", t);
+            config.log(LOG_TAG, FCM_LOG_TAG + "Unable to register with FCM.", t);
             return false;
         }
         return true;
@@ -68,26 +68,26 @@ public class FcmSdkHandlerImpl implements IFcmSdkHandler {
 
     @Override
     public boolean isSupported() {
-        return isGooglePlayStoreAvailable(mContext);
+        return isGooglePlayStoreAvailable(context);
     }
 
     @Override
     public void requestToken() {
         try {
             String tokenUsingManifestMetaEntry = Utils
-                    .getFcmTokenUsingManifestMetaEntry(mContext, mConfig);
+                    .getFcmTokenUsingManifestMetaEntry(context, config);
             if (!TextUtils.isEmpty(tokenUsingManifestMetaEntry)) {
-                mConfig.log(LOG_TAG, FCM_LOG_TAG + "FCM token - " + tokenUsingManifestMetaEntry);
+                config.log(LOG_TAG, FCM_LOG_TAG + "FCM token - " + tokenUsingManifestMetaEntry);
                 listener.onNewToken(tokenUsingManifestMetaEntry, getPushType());
             } else {
-                mConfig
+                config
                         .log(LOG_TAG, FCM_LOG_TAG + "Requesting FCM token using googleservices.json");
                 FirebaseInstanceId.getInstance().getInstanceId()
                         .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
                             @Override
                             public void onComplete(@NonNull Task<InstanceIdResult> task) {
                                 if (!task.isSuccessful()) {
-                                    mConfig
+                                    config
                                             .log(LOG_TAG, FCM_LOG_TAG + "FCM token using googleservices.json failed",
                                                     task.getException());
                                     listener.onNewToken(null, getPushType());
@@ -96,20 +96,20 @@ public class FcmSdkHandlerImpl implements IFcmSdkHandler {
 
                                 // Get new Instance ID token
                                 String token = task.getResult() != null ? task.getResult().getToken() : null;
-                                mConfig
+                                config
                                         .log(LOG_TAG, FCM_LOG_TAG + "FCM token using googleservices.json - " + token);
                                 listener.onNewToken(token, getPushType());
                             }
                         });
             }
         } catch (Throwable t) {
-            mConfig.log(LOG_TAG, FCM_LOG_TAG + "Error requesting FCM token", t);
+            config.log(LOG_TAG, FCM_LOG_TAG + "Error requesting FCM token", t);
             listener.onNewToken(null, getPushType());
         }
     }
 
     String getFCMSenderID() {
-        return mManifestInfo.getFCMSenderId();
+        return manifestInfo.getFCMSenderId();
     }
 
     String getSenderId() {
@@ -122,6 +122,6 @@ public class FcmSdkHandlerImpl implements IFcmSdkHandler {
     }
 
     void setManifestInfo(final ManifestInfo manifestInfo) {
-        mManifestInfo = manifestInfo;
+        this.manifestInfo = manifestInfo;
     }
 }

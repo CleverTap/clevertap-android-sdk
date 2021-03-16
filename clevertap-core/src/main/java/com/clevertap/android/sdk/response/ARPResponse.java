@@ -18,27 +18,27 @@ import org.json.JSONObject;
 
 public class ARPResponse extends CleverTapResponseDecorator {
 
-    private final CTProductConfigController mCTProductConfigController;
+    private final CTProductConfigController ctProductConfigController;
 
-    private final CleverTapResponse mCleverTapResponse;
+    private final CleverTapResponse cleverTapResponse;
 
-    private final CleverTapInstanceConfig mConfig;
+    private final CleverTapInstanceConfig config;
 
-    private final Logger mLogger;
+    private final Logger logger;
 
-    private final NetworkManager mNetworkManager;
+    private final NetworkManager networkManager;
 
-    private final Validator mValidator;
+    private final Validator validator;
 
     public ARPResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config,
             NetworkManager networkManager,
             Validator validator, ControllerManager controllerManager) {
-        mCleverTapResponse = cleverTapResponse;
-        mConfig = config;
-        mCTProductConfigController = controllerManager.getCTProductConfigController();
-        mLogger = mConfig.getLogger();
-        mNetworkManager = networkManager;
-        mValidator = validator;
+        this.cleverTapResponse = cleverTapResponse;
+        this.config = config;
+        ctProductConfigController = controllerManager.getCTProductConfigController();
+        logger = this.config.getLogger();
+        this.networkManager = networkManager;
+        this.validator = validator;
     }
 
     @Override
@@ -48,25 +48,25 @@ public class ARPResponse extends CleverTapResponseDecorator {
             if (response.has("arp")) {
                 final JSONObject arp = (JSONObject) response.get("arp");
                 if (arp.length() > 0) {
-                    if (mCTProductConfigController != null) {
-                        mCTProductConfigController.setArpValue(arp);
+                    if (ctProductConfigController != null) {
+                        ctProductConfigController.setArpValue(arp);
                     }
                     //Handle Discarded events in ARP
                     try {
                         processDiscardedEventsList(arp);
                     } catch (Throwable t) {
-                        mLogger
+                        logger
                                 .verbose("Error handling discarded events response: " + t.getLocalizedMessage());
                     }
                     handleARPUpdate(context, arp);
                 }
             }
         } catch (Throwable t) {
-            mLogger.verbose(mConfig.getAccountId(), "Failed to process ARP", t);
+            logger.verbose(config.getAccountId(), "Failed to process ARP", t);
         }
 
         // process Console response
-        mCleverTapResponse.processResponse(response, stringBody, context);
+        cleverTapResponse.processResponse(response, stringBody, context);
     }
 
     //Saves ARP directly to new namespace
@@ -75,7 +75,7 @@ public class ARPResponse extends CleverTapResponseDecorator {
             return;
         }
 
-        final String nameSpaceKey = mNetworkManager.getNewNamespaceARPKey();
+        final String nameSpaceKey = networkManager.getNewNamespaceARPKey();
         if (nameSpaceKey == null) {
             return;
         }
@@ -95,28 +95,28 @@ public class ARPResponse extends CleverTapResponseDecorator {
                     if (((String) o).length() < 100) {
                         editor.putString(key, (String) o);
                     } else {
-                        mLogger.verbose(mConfig.getAccountId(),
+                        logger.verbose(config.getAccountId(),
                                 "ARP update for key " + key + " rejected (string value too long)");
                     }
                 } else if (o instanceof Boolean) {
                     editor.putBoolean(key, (Boolean) o);
                 } else {
-                    mLogger
-                            .verbose(mConfig.getAccountId(),
+                    logger
+                            .verbose(config.getAccountId(),
                                     "ARP update for key " + key + " rejected (invalid data type)");
                 }
             } catch (JSONException e) {
                 // Ignore
             }
         }
-        mLogger.verbose(mConfig.getAccountId(),
+        logger.verbose(config.getAccountId(),
                 "Stored ARP for namespace key: " + nameSpaceKey + " values: " + arp.toString());
         StorageHelper.persist(editor);
     }
 
     private void processDiscardedEventsList(JSONObject response) {
         if (!response.has(Constants.DISCARDED_EVENT_JSON_KEY)) {
-            mLogger.verbose(mConfig.getAccountId(), "ARP doesn't contain the Discarded Events key");
+            logger.verbose(config.getAccountId(), "ARP doesn't contain the Discarded Events key");
             return;
         }
 
@@ -129,14 +129,14 @@ public class ARPResponse extends CleverTapResponseDecorator {
                     discardedEventsList.add(discardedEventsArray.getString(i));
                 }
             }
-            if (mValidator != null) {
-                mValidator.setDiscardedEvents(discardedEventsList);
+            if (validator != null) {
+                validator.setDiscardedEvents(discardedEventsList);
             } else {
-                mLogger.verbose(mConfig.getAccountId(), "Validator object is NULL");
+                logger.verbose(config.getAccountId(), "Validator object is NULL");
             }
         } catch (JSONException e) {
-            mLogger
-                    .verbose(mConfig.getAccountId(), "Error parsing discarded events list" + e.getLocalizedMessage());
+            logger
+                    .verbose(config.getAccountId(), "Error parsing discarded events list" + e.getLocalizedMessage());
         }
     }
 }

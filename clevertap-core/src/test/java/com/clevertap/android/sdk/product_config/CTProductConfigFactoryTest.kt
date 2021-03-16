@@ -53,7 +53,7 @@ internal class CTProductConfigFactoryTest : BaseTestCase() {
             coreMetaData,
             callbackManager
         )
-        Assert.assertNotNull(controller.mFileUtils)
+        Assert.assertNotNull(controller.fileUtils)
         Assert.assertEquals(controller.settings.guid, guid)
         Assert.assertEquals(controller.config, cleverTapInstanceConfig)
         Assert.assertEquals(controller.coreMetaData, coreMetaData)

@@ -28,8 +28,8 @@ class IOExecutorTest : BaseTestCase() {
     @Test
     fun test_executorServiceConfigs() {
         val executor = IOExecutor()
-        Assert.assertTrue(executor.mExecutorService is ThreadPoolExecutor)
-        val executorService = executor.mExecutorService as ThreadPoolExecutor
+        Assert.assertTrue(executor.executorService is ThreadPoolExecutor)
+        val executorService = executor.executorService as ThreadPoolExecutor
         val noProcessors = Runtime.getRuntime().availableProcessors()
         Assert.assertEquals(executorService.corePoolSize, 2 * noProcessors)
         Assert.assertEquals(executorService.maximumPoolSize, 2 * noProcessors)

@@ -13,57 +13,57 @@ public class InboxResponse extends CleverTapResponseDecorator {
 
     private final Object inboxControllerLock;
 
-    private final BaseCallbackManager mCallbackManager;
+    private final BaseCallbackManager callbackManager;
 
-    private final CleverTapResponse mCleverTapResponse;
+    private final CleverTapResponse cleverTapResponse;
 
-    private final CleverTapInstanceConfig mConfig;
+    private final CleverTapInstanceConfig config;
 
-    private final Logger mLogger;
+    private final Logger logger;
 
-    private final ControllerManager mControllerManager;
+    private final ControllerManager controllerManager;
 
     public InboxResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config,
             CTLockManager ctLockManager,
             final BaseCallbackManager callbackManager, ControllerManager controllerManager) {
-        mCleverTapResponse = cleverTapResponse;
-        mConfig = config;
-        mCallbackManager = callbackManager;
-        mLogger = mConfig.getLogger();
+        this.cleverTapResponse = cleverTapResponse;
+        this.config = config;
+        this.callbackManager = callbackManager;
+        logger = this.config.getLogger();
         inboxControllerLock = ctLockManager.getInboxControllerLock();
-        mControllerManager = controllerManager;
+        this.controllerManager = controllerManager;
     }
 
     //NotificationInbox
     @Override
     public void processResponse(final JSONObject response, final String stringBody, final Context context) {
 
-        if (mConfig.isAnalyticsOnly()) {
-            mLogger.verbose(mConfig.getAccountId(),
+        if (config.isAnalyticsOnly()) {
+            logger.verbose(config.getAccountId(),
                     "CleverTap instance is configured to analytics only, not processing inbox messages");
 
             // process PushAmp response
-            mCleverTapResponse.processResponse(response, stringBody, context);
+            cleverTapResponse.processResponse(response, stringBody, context);
 
             return;
         }
 
-        mLogger.verbose(mConfig.getAccountId(), "Inbox: Processing response");
+        logger.verbose(config.getAccountId(), "Inbox: Processing response");
 
         if (!response.has("inbox_notifs")) {
-            mLogger.verbose(mConfig.getAccountId(), "Inbox: Response JSON object doesn't contain the inbox key");
+            logger.verbose(config.getAccountId(), "Inbox: Response JSON object doesn't contain the inbox key");
             // process PushAmp response
-            mCleverTapResponse.processResponse(response, stringBody, context);
+            cleverTapResponse.processResponse(response, stringBody, context);
             return;
         }
         try {
             _processInboxMessages(response.getJSONArray("inbox_notifs"));
         } catch (Throwable t) {
-            mLogger.verbose(mConfig.getAccountId(), "InboxResponse: Failed to parse response", t);
+            logger.verbose(config.getAccountId(), "InboxResponse: Failed to parse response", t);
         }
 
         // process PushAmp response
-        mCleverTapResponse.processResponse(response, stringBody, context);
+        cleverTapResponse.processResponse(response, stringBody, context);
 
     }
 
@@ -71,13 +71,13 @@ public class InboxResponse extends CleverTapResponseDecorator {
     // always call async
     private void _processInboxMessages(JSONArray messages) {
         synchronized (inboxControllerLock) {
-            if (mControllerManager.getCTInboxController() == null) {
-                mControllerManager.initializeInbox();
+            if (controllerManager.getCTInboxController() == null) {
+                controllerManager.initializeInbox();
             }
-            if (mControllerManager.getCTInboxController() != null) {
-                boolean update = mControllerManager.getCTInboxController().updateMessages(messages);
+            if (controllerManager.getCTInboxController() != null) {
+                boolean update = controllerManager.getCTInboxController().updateMessages(messages);
                 if (update) {
-                    mCallbackManager._notifyInboxMessagesDidUpdate();
+                    callbackManager._notifyInboxMessagesDidUpdate();
                 }
             }
         }

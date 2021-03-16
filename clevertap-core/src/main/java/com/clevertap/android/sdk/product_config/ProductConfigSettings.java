@@ -29,14 +29,14 @@ class ProductConfigSettings {
 
     private String guid;
 
-    private final FileUtils mFileUtils;
+    private final FileUtils fileUtils;
 
     private final Map<String, String> settingsMap = Collections.synchronizedMap(new HashMap<String, String>());
 
     ProductConfigSettings(String guid, CleverTapInstanceConfig config, FileUtils fileUtils) {
         this.guid = guid;
         this.config = config;
-        mFileUtils = fileUtils;
+        this.fileUtils = fileUtils;
         initDefaults();
     }
 
@@ -323,7 +323,7 @@ class ProductConfigSettings {
                     HashMap<String, String> toWriteMap = new HashMap<>(settingsMap);
                     toWriteMap.remove(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS);
 
-                    mFileUtils.writeJsonToFile(getDirName(),
+                    fileUtils.writeJsonToFile(getDirName(),
                             CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS, new JSONObject(toWriteMap));
                 } catch (Exception e) {
                     e.printStackTrace();

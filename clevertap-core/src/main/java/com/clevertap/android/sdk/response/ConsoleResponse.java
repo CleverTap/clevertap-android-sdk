@@ -9,17 +9,17 @@ import org.json.JSONObject;
 
 public class ConsoleResponse extends CleverTapResponseDecorator {
 
-    private final CleverTapResponse mCleverTapResponse;
+    private final CleverTapResponse cleverTapResponse;
 
-    private final CleverTapInstanceConfig mConfig;
+    private final CleverTapInstanceConfig config;
 
 
-    private final Logger mLogger;
+    private final Logger logger;
 
     public ConsoleResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config) {
-        mCleverTapResponse = cleverTapResponse;
-        mConfig = config;
-        mLogger = mConfig.getLogger();
+        this.cleverTapResponse = cleverTapResponse;
+        this.config = config;
+        logger = this.config.getLogger();
     }
 
     @Override
@@ -30,7 +30,7 @@ public class ConsoleResponse extends CleverTapResponseDecorator {
                 final JSONArray console = (JSONArray) response.get("console");
                 if (console.length() > 0) {
                     for (int i = 0; i < console.length(); i++) {
-                        mLogger.debug(mConfig.getAccountId(), console.get(i).toString());
+                        logger.debug(config.getAccountId(), console.get(i).toString());
                     }
                 }
             }
@@ -44,7 +44,7 @@ public class ConsoleResponse extends CleverTapResponseDecorator {
                 final int debugLevel = response.getInt("dbg_lvl");
                 if (debugLevel >= 0) {
                     CleverTapAPI.setDebugLevel(debugLevel);
-                    mLogger.verbose(mConfig.getAccountId(),
+                    logger.verbose(config.getAccountId(),
                             "Set debug level to " + debugLevel + " for this session (set by upstream)");
                 }
             }
@@ -53,6 +53,6 @@ public class ConsoleResponse extends CleverTapResponseDecorator {
         }
 
         // process InBox Response
-        mCleverTapResponse.processResponse(response, stringBody, context);
+        cleverTapResponse.processResponse(response, stringBody, context);
     }
 }

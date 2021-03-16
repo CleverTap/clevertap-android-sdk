@@ -18,14 +18,14 @@ class PostAsyncSafelyExecutor implements ExecutorService {
     private long EXECUTOR_THREAD_ID = 0;
 
     void setExecutor(final ExecutorService executor) {
-        mExecutor = executor;
+        this.executor = executor;
     }
 
-    ExecutorService mExecutor = Executors.newSingleThreadExecutor();
+    ExecutorService executor = Executors.newSingleThreadExecutor();
 
     @Override
     public boolean awaitTermination(final long timeout, final TimeUnit unit) throws InterruptedException {
-        return mExecutor.awaitTermination(timeout, unit);
+        return executor.awaitTermination(timeout, unit);
     }
 
     @Override
@@ -37,7 +37,7 @@ class PostAsyncSafelyExecutor implements ExecutorService {
         if (executeSync) {
             task.run();
         } else {
-            mExecutor.execute(new Runnable() {
+            executor.execute(new Runnable() {
                 @Override
                 public void run() {
                     EXECUTOR_THREAD_ID = Thread.currentThread().getId();
@@ -73,22 +73,22 @@ class PostAsyncSafelyExecutor implements ExecutorService {
 
     @Override
     public boolean isShutdown() {
-        return mExecutor.isShutdown();
+        return executor.isShutdown();
     }
 
     @Override
     public boolean isTerminated() {
-        return mExecutor.isTerminated();
+        return executor.isTerminated();
     }
 
     @Override
     public void shutdown() {
-        mExecutor.shutdown();
+        executor.shutdown();
     }
 
     @Override
     public List<Runnable> shutdownNow() {
-        return mExecutor.shutdownNow();
+        return executor.shutdownNow();
     }
 
     @Override
@@ -105,7 +105,7 @@ class PostAsyncSafelyExecutor implements ExecutorService {
                 e.printStackTrace();
             }
         } else {
-            future = mExecutor.submit(new Callable<T>() {
+            future = executor.submit(new Callable<T>() {
                 @Override
                 public T call() throws Exception {
                     EXECUTOR_THREAD_ID = Thread.currentThread().getId();
