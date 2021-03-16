@@ -6,9 +6,9 @@ buildscript {
 
     repositories {
         google()// Google's Maven repository
-        jcenter()
         maven { url 'http://developer.huawei.com/repo/' }
         mavenCentral()
+        jcenter()
     }
     dependencies {
         classpath "com.android.tools.build:gradle:$gradlePluginVersion"
@@ -24,12 +24,12 @@ buildscript {
 
 allprojects {
     repositories {
-        jcenter()
         google()
         maven { url 'http://developer.huawei.com/repo/' }
         maven {
             url "https://plugins.gradle.org/m2/"
         }
+        jcenter()
         flatDir {
             dirs 'libs'
         }
