@@ -480,7 +480,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                         CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
 
                         cleverTapResponse = new InAppResponse(cleverTapResponse, config,
-                                controllerManager);
+                                controllerManager, true);
 
                         cleverTapResponse.processResponse(r, null, context);
                         //processInAppResponse(r, mContext);

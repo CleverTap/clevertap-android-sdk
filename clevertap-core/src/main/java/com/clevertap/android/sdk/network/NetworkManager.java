@@ -143,7 +143,7 @@ public class NetworkManager extends BaseNetworkManager {
         cleverTapResponse = new ConsoleResponse(cleverTapResponse, config);
         cleverTapResponse = new ARPResponse(cleverTapResponse, config, this, validator, controllerManager);
         cleverTapResponse = new MetadataResponse(cleverTapResponse, config, deviceInfo, this);
-        cleverTapResponse = new InAppResponse(cleverTapResponse, config, controllerManager);
+        cleverTapResponse = new InAppResponse(cleverTapResponse, config, controllerManager, false);
 
         cleverTapResponse = new BaseResponse(context, config, deviceInfo, this, localDataStore, cleverTapResponse);
 

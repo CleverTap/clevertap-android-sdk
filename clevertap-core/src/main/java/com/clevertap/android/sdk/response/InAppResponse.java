@@ -22,14 +22,17 @@ public class InAppResponse extends CleverTapResponseDecorator {
 
     private final ControllerManager controllerManager;
 
+    private final boolean isSendTest;
+
     private final Logger logger;
 
     public InAppResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config,
-            ControllerManager controllerManager) {
+            ControllerManager controllerManager, final boolean isSendTest) {
         this.cleverTapResponse = cleverTapResponse;
         this.config = config;
         logger = this.config.getLogger();
         this.controllerManager = controllerManager;
+        this.isSendTest = isSendTest;
     }
 
     @Override
@@ -65,7 +68,7 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 perDay = response.getInt("imp");
             }
 
-            if (controllerManager.getInAppFCManager() != null) {
+            if (!isSendTest && controllerManager.getInAppFCManager() != null) {
                 Logger.v("Updating InAppFC Limits");
                 controllerManager.getInAppFCManager().updateLimits(context, perDay, perSession);
                 controllerManager.getInAppFCManager().processResponse(context, response);// Handle stale_inapp
