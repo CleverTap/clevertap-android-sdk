@@ -271,7 +271,6 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
             JSONObject profileEvent = new JSONObject();
 
-            // TODO: move to CTJSONConverter which will clone input json using below method
             if (baseProfile != null && baseProfile.length() > 0) {
                 Iterator<String> i = baseProfile.keys();
                 IdentityRepo iProfileHandler = IdentityRepoFactory
@@ -295,7 +294,6 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                     if (value != null) {
                         profileEvent.put(next, value);
 
-                        // TODO abstract out using IdentityIterator and IdentityIterable
                         // cache the valid identifier: guid pairs
                         boolean isProfileKey = iProfileHandler.hasIdentity(next);
                         if (isProfileKey) {

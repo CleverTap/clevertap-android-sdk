@@ -82,11 +82,11 @@ public class NetworkManager extends BaseNetworkManager {
 
     private final Logger logger;
 
-    private int responseFailureCount = 0;// TODO encapsulate into NetworkState class
+    private int networkRetryCount = 0;
 
     private final ValidationResultStack validationResultStack;
 
-    private int networkRetryCount = 0;// TODO encapsulate into NetworkState class
+    private int responseFailureCount = 0;
 
     public static boolean isNetworkOnline(Context context) {
 
@@ -380,12 +380,10 @@ public class NetworkManager extends BaseNetworkManager {
         StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_LAST_TS), ts);
     }
 
-    // TODO encapsulate into NetworkState class
     int getResponseFailureCount() {
         return responseFailureCount;
     }
 
-    // TODO encapsulate into NetworkState class
     void setResponseFailureCount(final int responseFailureCount) {
         this.responseFailureCount = responseFailureCount;
     }

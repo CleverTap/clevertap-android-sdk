@@ -4,6 +4,9 @@ import android.content.Context;
 import android.util.Log;
 import org.json.JSONObject;
 
+/**
+ * Abstract Response that will be wrapped by {@link CleverTapResponseDecorator} objects
+ */
 public abstract class CleverTapResponse {
 
     public void processResponse(final JSONObject jsonBody, final String stringBody,

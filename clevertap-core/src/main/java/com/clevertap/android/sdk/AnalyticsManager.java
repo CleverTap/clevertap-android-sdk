@@ -14,6 +14,8 @@ import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.response.CleverTapResponse;
 import com.clevertap.android.sdk.response.CleverTapResponseHelper;
 import com.clevertap.android.sdk.response.DisplayUnitResponse;
+import com.clevertap.android.sdk.response.InAppResponse;
+import com.clevertap.android.sdk.response.InboxResponse;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
@@ -34,6 +36,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class AnalyticsManager extends BaseAnalyticsManager {
+
+    private final CTLockManager ctLockManager;
 
     private final HashMap<String, Integer> installReferrerMap = new HashMap<>(8);
 
@@ -74,7 +78,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             LocalDataStore localDataStore,
             DeviceInfo deviceInfo,
             MainLooperHandler mainLooperHandler,
-            BaseCallbackManager callbackManager, ControllerManager controllerManager) {
+            BaseCallbackManager callbackManager, ControllerManager controllerManager,
+            final CTLockManager ctLockManager) {
         this.context = context;
         this.config = config;
         this.baseEventQueueManager = baseEventQueueManager;
@@ -85,6 +90,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.deviceInfo = deviceInfo;
         this.mainLooperHandler = mainLooperHandler;
         this.callbackManager = callbackManager;
+        this.ctLockManager = ctLockManager;
         //TODO set display unit using observer pattern once it's created lazily, check for it's usage in
         // pushDisplayUnitClickedEventForID & pushDisplayUnitViewedEventForID - @atul
         this.controllerManager = controllerManager;
@@ -470,7 +476,13 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                         JSONArray inappNotifs = new JSONArray();
                         r.put(Constants.INAPP_JSON_RESPONSE_KEY, inappNotifs);
                         inappNotifs.put(new JSONObject(extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)));
-                        //TODO Refactoring @piyush - similar to display units
+                        //TODO Review @Darshan @atul - processInAppResponse logic
+                        CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
+
+                        cleverTapResponse = new InAppResponse(cleverTapResponse, config,
+                                controllerManager);
+
+                        cleverTapResponse.processResponse(r, null, context);
                         //processInAppResponse(r, mContext);
                     } catch (Throwable t) {
                         Logger.v("Failed to display inapp notification from push notification payload", t);
@@ -490,13 +502,18 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                         Logger.v("Received inbox via push payload: " + extras
                                 .getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
                         JSONObject r = new JSONObject();
-                        JSONArray inappNotifs = new JSONArray();
-                        r.put(Constants.INBOX_JSON_RESPONSE_KEY, inappNotifs);
+                        JSONArray inboxNotifs = new JSONArray();
+                        r.put(Constants.INBOX_JSON_RESPONSE_KEY, inboxNotifs);
                         JSONObject testPushObject = new JSONObject(
                                 extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
                         testPushObject.put("_id", String.valueOf(System.currentTimeMillis() / 1000));
-                        inappNotifs.put(testPushObject);
-                        //TODO Refactoring @piyush - similar to display units
+                        inboxNotifs.put(testPushObject);
+                        //TODO Review @Darshan @atul - processInboxResponse logic
+                        CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
+                        cleverTapResponse = new InboxResponse(cleverTapResponse, config,
+                                ctLockManager, callbackManager, controllerManager);
+
+                        cleverTapResponse.processResponse(r, null, context);
                         //processInboxResponse(r);
                     } catch (Throwable t) {
                         Logger.v("Failed to process inbox message from push notification payload", t);

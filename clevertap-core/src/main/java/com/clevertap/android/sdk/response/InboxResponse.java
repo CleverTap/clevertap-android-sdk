@@ -4,6 +4,7 @@ import android.content.Context;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
 import org.json.JSONArray;
@@ -50,14 +51,14 @@ public class InboxResponse extends CleverTapResponseDecorator {
 
         logger.verbose(config.getAccountId(), "Inbox: Processing response");
 
-        if (!response.has("inbox_notifs")) {
+        if (!response.has(Constants.INBOX_JSON_RESPONSE_KEY)) {
             logger.verbose(config.getAccountId(), "Inbox: Response JSON object doesn't contain the inbox key");
             // process PushAmp response
             cleverTapResponse.processResponse(response, stringBody, context);
             return;
         }
         try {
-            _processInboxMessages(response.getJSONArray("inbox_notifs"));
+            _processInboxMessages(response.getJSONArray(Constants.INBOX_JSON_RESPONSE_KEY));
         } catch (Throwable t) {
             logger.verbose(config.getAccountId(), "InboxResponse: Failed to parse response", t);
         }
