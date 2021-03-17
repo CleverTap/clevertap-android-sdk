@@ -131,6 +131,7 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
                     if (callbackManager.getPushAmpListener() != null) {
                         callbackManager.getPushAmpListener().onPushAmpPayloadReceived(pushBundle);
                     } else {
+                        //TODO: in pre-refactored code we are calling createNotification() in CTAPI
                         pushProviders
                                 ._createNotification(context, pushBundle, Constants.EMPTY_NOTIFICATION_ID);
                     }

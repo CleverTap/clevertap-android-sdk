@@ -114,6 +114,12 @@ public class ARPResponse extends CleverTapResponseDecorator {
         StorageHelper.persist(editor);
     }
 
+    /**
+     * Dashboard has a feature where marketers can discard event. We get that list in the ARP response,
+     * SDK then checks if the event is in the discarded list before sending it to LC
+     *
+     * @param response response from server
+     */
     private void processDiscardedEventsList(JSONObject response) {
         if (!response.has(Constants.DISCARDED_EVENT_JSON_KEY)) {
             logger.verbose(config.getAccountId(), "ARP doesn't contain the Discarded Events key");

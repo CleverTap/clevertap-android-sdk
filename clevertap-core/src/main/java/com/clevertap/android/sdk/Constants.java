@@ -136,7 +136,7 @@ public interface Constants {
     String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME,
             NOTIFICATION_VIEWED_EVENT_NAME, GEOFENCE_ENTERED_EVENT_NAME,
             GEOFENCE_EXITED_EVENT_NAME};
-    long DEFAULT_PUSH_TTL = 1000 * 60 * 60 * 24 * 4;
+    long DEFAULT_PUSH_TTL = 1000 * 60 * 60 * 24 * 4;// 4 days
     String PF_JOB_ID = "pfjobid";
     int PING_FREQUENCY_VALUE = 240;
     String PING_FREQUENCY = "pf";

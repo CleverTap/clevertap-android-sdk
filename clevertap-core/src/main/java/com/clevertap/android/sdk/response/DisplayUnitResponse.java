@@ -53,6 +53,7 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
             return;
         }
 
+        // Adding response null check because this will get processed first in case of analytics
         if (response == null) {
             logger.verbose(config.getAccountId(), Constants.FEATURE_DISPLAY_UNIT
                     + "Can't parse Display Unit Response, JSON response object is null");
@@ -91,6 +92,7 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
             return;
         }
 
+        //TODO : Two instances of this class will create two DUController
         synchronized (displayUnitControllerLock) {// lock to avoid multiple instance creation for controller
             if (ctDisplayUnitController == null) {
                 ctDisplayUnitController = new CTDisplayUnitController();

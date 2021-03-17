@@ -26,6 +26,10 @@ public class ConsoleResponse extends CleverTapResponseDecorator {
     public void processResponse(final JSONObject response, final String stringBody, final Context context) {
         // Handle "console" - print them as info to the console
         try {
+            /**
+             * Console info is no longer used
+             * But the feature was to enable logs from LCr
+             */
             if (response.has("console")) {
                 final JSONArray console = (JSONArray) response.get("console");
                 if (console.length() > 0) {
