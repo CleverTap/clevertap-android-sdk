@@ -20,8 +20,6 @@ import org.json.JSONObject;
 
 public class PushAmpResponse extends CleverTapResponseDecorator {
 
-    private final Object inboxControllerLock; //TODO remove?
-
     private final BaseCallbackManager callbackManager;
 
     private final CleverTapResponse cleverTapResponse;
@@ -48,7 +46,6 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
         this.config = config;
         pushProviders = controllerManager.getPushProviders();
         logger = this.config.getLogger();
-        inboxControllerLock = ctLockManager.getInboxControllerLock();
         dbAdapter = dbManager.loadDBAdapter(context);
         this.callbackManager = callbackManager;
     }
@@ -131,7 +128,7 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
                     if (callbackManager.getPushAmpListener() != null) {
                         callbackManager.getPushAmpListener().onPushAmpPayloadReceived(pushBundle);
                     } else {
-                        //TODO: in pre-refactored code we are calling createNotification() in CTAPI
+                        //TODO: have to dev test PUSH AMP code.
                         pushProviders
                                 ._createNotification(context, pushBundle, Constants.EMPTY_NOTIFICATION_ID);
                     }

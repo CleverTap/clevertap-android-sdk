@@ -2,7 +2,7 @@ package com.clevertap.android.sdk.exceptions;
 
 public class FeatureNotSupportedException extends RuntimeException {
 
-    //TODO revisit in code review
+    //TODO Remove this  - @darshan
     public FeatureNotSupportedException(final String message) {
         super(message);
     }

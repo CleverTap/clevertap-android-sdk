@@ -13,7 +13,6 @@ import com.clevertap.android.sdk.pushnotification.PushProviders;
 import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 
-//TODO move this to builder pattern & add sanity check for dependencies at the time of creation
 public class CoreState extends CleverTapState {
 
     private BaseLocationManager baseLocationManager;

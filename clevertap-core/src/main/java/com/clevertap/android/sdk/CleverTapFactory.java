@@ -15,7 +15,6 @@ import com.clevertap.android.sdk.validation.Validator;
 
 class CleverTapFactory {
 
-    //TODO piyush check it in builder
     static CoreState getCoreState(Context context, CleverTapInstanceConfig cleverTapInstanceConfig,
             String cleverTapID) {
         CoreState coreState = new CoreState(context);

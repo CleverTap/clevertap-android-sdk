@@ -1139,7 +1139,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     public CTFeatureFlagsController featureFlag() {
         if (coreState.getConfig().isAnalyticsOnly()) {
-            //TODO revisit in code review
+            //TODO replace with logging - @darshan
             throw new FeatureNotSupportedException("Feature flag is not supported with analytics only configuration");
         }
         return coreState.getControllerManager().getCTFeatureFlagsController();
@@ -1283,7 +1283,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * //TODO  Remove later
+     * //TODO  Remove this and make related changes - @atul
      */
     @RestrictTo(Scope.LIBRARY)
     public CoreState getCoreState() {

@@ -73,7 +73,7 @@ public class Task<TResult> {
         return taskState == STATE.SUCCESS;
     }
 
-    //TODO keep or remove?
+    @SuppressWarnings("unused")
     @NonNull
     public Task<TResult> removeOnFailureListener(@NonNull OnFailureListener<Exception> listener) {
         Iterator<FailureExecutable<Exception>> iterator = failureExecutables.iterator();
@@ -86,6 +86,7 @@ public class Task<TResult> {
         return this;
     }
 
+    @SuppressWarnings("unused")
     @NonNull
     public Task<TResult> removeOnSuccessListener(@NonNull OnSuccessListener<TResult> listener) {
         Iterator<SuccessExecutable<TResult>> iterator = successExecutables.iterator();

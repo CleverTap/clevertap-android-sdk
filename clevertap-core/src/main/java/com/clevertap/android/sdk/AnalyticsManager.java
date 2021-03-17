@@ -86,7 +86,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.mainLooperHandler = mainLooperHandler;
         this.callbackManager = callbackManager;
         //TODO set display unit using observer pattern once it's created lazily, check for it's usage in
-        // pushDisplayUnitClickedEventForID & pushDisplayUnitViewedEventForID
+        // pushDisplayUnitClickedEventForID & pushDisplayUnitViewedEventForID - @atul
         this.controllerManager = controllerManager;
     }
 
@@ -470,7 +470,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                         JSONArray inappNotifs = new JSONArray();
                         r.put(Constants.INAPP_JSON_RESPONSE_KEY, inappNotifs);
                         inappNotifs.put(new JSONObject(extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)));
-                        //TODO Refactoring
+                        //TODO Refactoring @piyush - similar to display units
                         //processInAppResponse(r, mContext);
                     } catch (Throwable t) {
                         Logger.v("Failed to display inapp notification from push notification payload", t);
@@ -496,7 +496,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                                 extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
                         testPushObject.put("_id", String.valueOf(System.currentTimeMillis() / 1000));
                         inappNotifs.put(testPushObject);
-                        //TODO Refactoring
+                        //TODO Refactoring @piyush - similar to display units
                         //processInboxResponse(r);
                     } catch (Throwable t) {
                         Logger.v("Failed to process inbox message from push notification payload", t);

@@ -8,8 +8,6 @@ import androidx.annotation.RestrictTo.Scope;
 import java.lang.ref.WeakReference;
 import org.json.JSONObject;
 
-//TODO make singleton
-
 /**
  * This class stores run time state of CleverTap's instance
  */

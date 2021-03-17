@@ -14,11 +14,6 @@ public class BaseResponse extends CleverTapResponseDecorator {
 
     private final CleverTapInstanceConfig config;
 
-    //TODO do we need context and deviceInfo in the constructor??
-    private final Context context;
-
-    private final DeviceInfo deviceInfo;
-
     private final LocalDataStore localDataStore;
 
     private final Logger logger;
@@ -29,15 +24,10 @@ public class BaseResponse extends CleverTapResponseDecorator {
             DeviceInfo deviceInfo, NetworkManager networkManager, LocalDataStore localDataStore,
             CleverTapResponse cleverTapResponse) {
         this.cleverTapResponse = cleverTapResponse;
-
-        this.context = context;
         this.config = config;
-        this.deviceInfo = deviceInfo;
         logger = this.config.getLogger();
-
         this.networkManager = networkManager;
         this.localDataStore = localDataStore;
-
     }
 
     @Override

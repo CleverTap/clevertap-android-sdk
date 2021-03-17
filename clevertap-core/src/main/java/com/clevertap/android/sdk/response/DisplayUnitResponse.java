@@ -16,8 +16,6 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
 
     private final Object displayUnitControllerLock = new Object();
 
-    private CTDisplayUnitController ctDisplayUnitController;
-
     private final BaseCallbackManager callbackManager;
 
     private final CleverTapResponse cleverTapResponse;
@@ -92,11 +90,9 @@ public class DisplayUnitResponse extends CleverTapResponseDecorator {
             return;
         }
 
-        //TODO : Two instances of this class will create two DUController
         synchronized (displayUnitControllerLock) {// lock to avoid multiple instance creation for controller
-            if (ctDisplayUnitController == null) {
-                ctDisplayUnitController = new CTDisplayUnitController();
-                controllerManager.setCTDisplayUnitController(ctDisplayUnitController);
+            if (controllerManager.getCTDisplayUnitController() == null) {
+                controllerManager.setCTDisplayUnitController(new CTDisplayUnitController());
             }
         }
         ArrayList<CleverTapDisplayUnit> displayUnits = controllerManager.getCTDisplayUnitController()

@@ -5,15 +5,12 @@ import java.util.concurrent.Executor;
 
 class SuccessExecutable<TResult> extends Executable<TResult> {
 
-    private final CleverTapInstanceConfig config;//TODO remove??
-
     private final OnSuccessListener<TResult> successListener;
 
     protected SuccessExecutable(final Executor executor, OnSuccessListener<TResult> listener,
             final CleverTapInstanceConfig config) {
         super(executor);
         successListener = listener;
-        this.config = config;
     }
 
     public OnSuccessListener<TResult> getSuccessListener() {

@@ -69,7 +69,7 @@ public final class ManifestValidator {
         if (enabledPushTypes == null) {
             return;
         }
-        //TODO do we check for other PUSH TYPES?
+        //TODO check for other PushTypes - @darshan
         for (PushType pushType : enabledPushTypes) {
             //no-op
             if (pushType == PushType.FCM) {

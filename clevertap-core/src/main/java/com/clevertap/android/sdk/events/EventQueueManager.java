@@ -310,19 +310,16 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             }
 
             try {
-                //TODO can be replaced with mDeviceInfo.attachCarrier()
                 String carrier = deviceInfo.getCarrier();
                 if (carrier != null && !carrier.equals("")) {
                     profileEvent.put("Carrier", carrier);
                 }
 
-                //TODO can be replaced with mDeviceInfo.attachCC()
                 String cc = deviceInfo.getCountryCode();
                 if (cc != null && !cc.equals("")) {
                     profileEvent.put("cc", cc);
                 }
 
-                //TODO can be replaced with mDeviceInfo.attachTZ()
                 profileEvent.put("tz", TimeZone.getDefault().getID());
 
                 JSONObject event = new JSONObject();
