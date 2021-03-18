@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.login;
 
-import static com.clevertap.android.sdk.utils.LogConstants.LOG_TAG_ON_USER_LOGIN;
+import static com.clevertap.android.sdk.login.LoginConstants.LOG_TAG_ON_USER_LOGIN;
 
 import android.content.Context;
 import androidx.annotation.RestrictTo;

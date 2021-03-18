@@ -6,7 +6,6 @@ import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
-import com.clevertap.android.sdk.utils.NullConstants;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public class ManifestInfo {
@@ -169,7 +168,7 @@ public class ManifestInfo {
     private String[] parseProfileKeys(final Bundle metaData) {
         String profileKeyString = _getManifestStringValueForKey(metaData, Constants.CLEVERTAP_IDENTIFIER);
         return !TextUtils.isEmpty(profileKeyString) ? profileKeyString.split(Constants.SEPARATOR_COMMA)
-                : NullConstants.NULL_STRING_ARRAY;
+                : Constants.NULL_STRING_ARRAY;
     }
 
     static void changeCredentials(String id, String token, String region) {
