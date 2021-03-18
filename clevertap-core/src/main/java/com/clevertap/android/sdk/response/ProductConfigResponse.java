@@ -55,6 +55,8 @@ public class ProductConfigResponse extends CleverTapResponseDecorator {
             logger.verbose(config.getAccountId(),
                     Constants.LOG_TAG_PRODUCT_CONFIG + "JSON object doesn't contain the Product Config key");
             onProductConfigFailed();
+            // process geofence response
+            cleverTapResponse.processResponse(response, stringBody, context);
             return;
         }
         try {
