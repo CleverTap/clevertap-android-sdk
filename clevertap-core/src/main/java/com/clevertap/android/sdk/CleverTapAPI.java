@@ -24,7 +24,6 @@ import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.EventDetail;
-import com.clevertap.android.sdk.exceptions.FeatureNotSupportedException;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
@@ -1138,9 +1137,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Handler to get the feature flag values
      */
     public CTFeatureFlagsController featureFlag() {
-        if (coreState.getConfig().isAnalyticsOnly()) {
-            //TODO replace with logging - @darshan
-            throw new FeatureNotSupportedException("Feature flag is not supported with analytics only configuration");
+        if (getConfig().isAnalyticsOnly()) {
+            getConfig().getLogger().debug(getAccountId(),"Feature flag is not supported with analytics only configuration");
         }
         return coreState.getControllerManager().getCTFeatureFlagsController();
     }
@@ -1813,8 +1811,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("WeakerAccess")
     public CTProductConfigController productConfig() {
-        if (coreState.getConfig().isAnalyticsOnly()) {
-            throw new FeatureNotSupportedException(
+        if (getConfig().isAnalyticsOnly()) {
+            getConfig().getLogger().debug(getAccountId(),
                     "Product config is not supported with analytics only configuration");
         }
         return coreState.getCtProductConfigController();
