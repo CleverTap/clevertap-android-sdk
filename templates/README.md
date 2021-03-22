@@ -33,7 +33,7 @@ To get started, sign up [here](https://clevertap.com/live-product-demo/)
 ## 🎉 Installation
 [(Back to top)](#-table-of-contents)
 
-We publish the SDK to `jcenter` and `mavenCentral` as an `AAR` file. Just declare it as dependency in your `build.gradle` file.
+We publish the SDK to `mavenCentral` as an `AAR` file. Just declare it as dependency in your `build.gradle` file.
 
 ```groovy
     dependencies {      
@@ -73,7 +73,7 @@ Also be sure to include the `google-services.json` classpath in your Project lev
     buildscript {       
          repositories {      
              google()
-             jcenter()       
+             mavenCentral()       
 
              // if you are including the aar file manually in your Module libs directory add this:
              flatDir {
@@ -104,7 +104,7 @@ Interstitial InApp Notification templates support Audio and Video with the help 
     implementation "${ext.deps.exoPlayerUi}"
 ```  
 
-Once you've updated your module `build.gradle` file, make sure you have specified `jcenter()` and `google()` as a repositories in your project `build.gradle` and then sync your project in File -> Sync Project with Gradle Files.
+Once you've updated your module `build.gradle` file, make sure you have specified `mavenCentral()` and `google()` as a repositories in your project `build.gradle` and then sync your project in File -> Sync Project with Gradle Files.
 
 ## 🎉 Integration
 [(Back to top)](#-table-of-contents)

@@ -33,11 +33,11 @@ To get started, sign up [here](https://clevertap.com/live-product-demo/)
 ## 🎉 Installation
 [(Back to top)](#-table-of-contents)
 
-We publish the SDK to `jcenter` and `mavenCentral` as an `AAR` file. Just declare it as dependency in your `build.gradle` file.
+We publish the SDK to `mavenCentral` as an `AAR` file. Just declare it as dependency in your `build.gradle` file.
 
 ```groovy
     dependencies {      
-         implementation "com.clevertap.android:clevertap-android-sdk:4.0.4"
+         implementation "com.clevertap.android:clevertap-android-sdk:4.1.0"
     }
 ```
 
@@ -45,7 +45,7 @@ Alternatively, you can download and add the AAR file included in this repo in yo
     
  ```groovy
     dependencies {      
-        implementation (name: "clevertap-android-sdk-4.0.4", ext: 'aar')
+        implementation (name: "clevertap-android-sdk-4.1.0", ext: 'aar')
     }
 ```
 
@@ -57,7 +57,7 @@ Add the Firebase Messaging library and Android Support Library v4 as dependencie
 
 ```groovy
      dependencies {      
-         implementation "com.clevertap.android:clevertap-android-sdk:4.0.4"
+         implementation "com.clevertap.android:clevertap-android-sdk:4.1.0"
          implementation "androidx.core:core:1.3.0"
          implementation "com.google.firebase:firebase-messaging:20.2.4"
          implementation "com.google.android.gms:play-services-ads:19.4.0" // Required only if you enable Google ADID collection in the SDK (turned off by default).
@@ -73,7 +73,7 @@ Also be sure to include the `google-services.json` classpath in your Project lev
     buildscript {       
          repositories {      
              google()
-             jcenter()       
+             mavenCentral()       
 
              // if you are including the aar file manually in your Module libs directory add this:
              flatDir {
@@ -104,7 +104,7 @@ Interstitial InApp Notification templates support Audio and Video with the help 
     implementation "com.google.android.exoplayer:exoplayer-ui:2.11.5"
 ```  
 
-Once you've updated your module `build.gradle` file, make sure you have specified `jcenter()` and `google()` as a repositories in your project `build.gradle` and then sync your project in File -> Sync Project with Gradle Files.
+Once you've updated your module `build.gradle` file, make sure you have specified `mavenCentral()` and `google()` as a repositories in your project `build.gradle` and then sync your project in File -> Sync Project with Gradle Files.
 
 ## 🎉 Integration
 [(Back to top)](#-table-of-contents)
