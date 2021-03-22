@@ -91,8 +91,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.mainLooperHandler = mainLooperHandler;
         this.callbackManager = callbackManager;
         this.ctLockManager = ctLockManager;
-        //TODO set display unit using observer pattern once it's created lazily, check for it's usage in
-        // pushDisplayUnitClickedEventForID & pushDisplayUnitViewedEventForID - @atul
         this.controllerManager = controllerManager;
     }
 

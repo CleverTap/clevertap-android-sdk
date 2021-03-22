@@ -1280,9 +1280,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return coreState.getDeviceInfo().getDeviceID();
     }
 
-    /**
-     * //TODO  Remove this and make related changes - @atul
-     */
     @RestrictTo(Scope.LIBRARY)
     public CoreState getCoreState() {
         return coreState;

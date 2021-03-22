@@ -5,7 +5,6 @@ import android.os.Looper;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 
-//ToDO move this a single Task manager
 @RestrictTo(Scope.LIBRARY)
 public class MainLooperHandler extends Handler {
 
