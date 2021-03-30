@@ -2,21 +2,6 @@
   <img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/clevertap-logo.png" width="300"/>
 </p>
 
-## ⍗ Table of contents
-
-* [Introduction](#-introduction)
-* [Installation](#-installation)
-* [Permissions](#-permissions)
-* [Initialization](#-initialization)
-* [Settings parameters](#-settings-parameters)
-* [Trigger Location](#-trigger-location)
-* [Callbacks/Listeners](#-callbackslisteners)
-* [Deactivation](#%EF%B8%8F-deactivation)
-* [ProGuard](#-proguard)
-* [Example Usage](#-example-usage)
-* [FAQ](#-faq)
-* [Questions](#-questions)
-
 ## 👋 Introduction
 [(Back to top)](#-table-of-contents)
 

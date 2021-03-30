@@ -1,5 +1,12 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 4.1.0 (April 13, 2021)
+* Refactored internal code to follow SOLID principles and Unit Test Cases
+* Reduces the SDK size and added performance improvements
+* Removes the deprecated Product Experiences (Screen AB/Dynamic Variables) related code
+* Removes support for JCenter
+* Fixed a bug where Xiaomi, Huawei, Baidu and other push service tokens were not switched using `onUserLogin`
+
 ### Version 4.0.4 (Mar 2, 2021)
 * Fixed FCM token refresh issue when multiple Firebase Projects are integrated in the application.
 If you're using multiple Firebase projects in your app, use this version instead of v4.0.0 ~ v4.0.3
