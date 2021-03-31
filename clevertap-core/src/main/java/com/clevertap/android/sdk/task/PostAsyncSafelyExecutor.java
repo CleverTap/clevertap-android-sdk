@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * Post async safely executor is nothing but a single thread pool executor
+ * It's a single pipeline to execute task sequentially
  */
 class PostAsyncSafelyExecutor implements ExecutorService {
 

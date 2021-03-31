@@ -5,6 +5,9 @@ import android.os.Looper;
 import androidx.annotation.NonNull;
 import java.util.concurrent.Executor;
 
+/**
+ * Executor service to delegate runnables to Main Thread.
+ */
 public class MainThreadExecutor implements Executor {
 
     void setMainThreadHandler(final Handler mainThreadHandler) {

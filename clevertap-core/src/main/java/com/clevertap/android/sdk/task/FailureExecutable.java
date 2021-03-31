@@ -2,6 +2,12 @@ package com.clevertap.android.sdk.task;
 
 import java.util.concurrent.Executor;
 
+/**
+ * Wrapper class to execute runnable after a task is failed.
+ * Ref{@link OnFailureListener}
+ *
+ * @param <TResult>
+ */
 class FailureExecutable<TResult> extends Executable<TResult> {
 
     public OnFailureListener<TResult> getFailureListener() {

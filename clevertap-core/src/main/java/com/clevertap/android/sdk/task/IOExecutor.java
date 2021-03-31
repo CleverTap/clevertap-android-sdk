@@ -12,7 +12,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * Executor service pool containing more threads to do offload the IO work.
+ * Executor service pool containing more threads to offload the IO tasks.
  */
 class IOExecutor implements ExecutorService {
 
