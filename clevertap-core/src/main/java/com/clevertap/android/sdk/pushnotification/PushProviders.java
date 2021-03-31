@@ -263,7 +263,7 @@ public class PushProviders implements CTPushProviderListener {
     @RestrictTo(Scope.LIBRARY)
     public void forcePushDeviceToken(final boolean register) {
 
-        for (PushType pushType : getAvailablePushTypes()) {
+        for (PushType pushType : allEnabledPushTypes) {
             pushDeviceTokenEvent(null, register, pushType);
         }
     }

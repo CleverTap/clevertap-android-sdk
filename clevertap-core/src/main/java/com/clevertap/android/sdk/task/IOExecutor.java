@@ -11,6 +11,9 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
+/**
+ * Executor service pool containing more threads to do offload the IO work.
+ */
 class IOExecutor implements ExecutorService {
 
     private final int numCores = Runtime.getRuntime().availableProcessors();

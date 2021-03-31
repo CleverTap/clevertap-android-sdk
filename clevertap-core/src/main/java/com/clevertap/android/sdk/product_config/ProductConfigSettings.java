@@ -1,5 +1,23 @@
 package com.clevertap.android.sdk.product_config;
 
+import android.text.TextUtils;
+
+import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.OnSuccessListener;
+import com.clevertap.android.sdk.task.Task;
+import com.clevertap.android.sdk.utils.FileUtils;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_MIN_FETCH_INTERVAL_SECONDS;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_NO_OF_CALLS;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_WINDOW_LENGTH_MINS;
@@ -7,21 +25,6 @@ import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS;
-
-import android.text.TextUtils;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.task.CTExecutorFactory;
-import com.clevertap.android.sdk.task.OnSuccessListener;
-import com.clevertap.android.sdk.task.Task;
-import com.clevertap.android.sdk.utils.FileUtils;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.TimeUnit;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 class ProductConfigSettings {
 
@@ -129,19 +132,9 @@ class ProductConfigSettings {
         settingsMap.put(PRODUCT_CONFIG_WINDOW_LENGTH_MINS, String.valueOf(DEFAULT_WINDOW_LENGTH_MINS));
         settingsMap.put(KEY_LAST_FETCHED_TIMESTAMP, String.valueOf(0));
         settingsMap.put(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS, String.valueOf(DEFAULT_MIN_FETCH_INTERVAL_SECONDS));
-
-        Task<Void> task = CTExecutorFactory.executors(config).ioTask();
-        task.execute("ProductConfigSettings#initDefaults", new Callable<Void>() {
-            @Override
-            public Void call() {
-                synchronized (this) {
-                    config.getLogger()
-                            .verbose(ProductConfigUtil.getLogTag(config),
-                                    "Settings loaded with default values: " + settingsMap);
-                }
-                return null;
-            }
-        });
+        config.getLogger()
+                .verbose(ProductConfigUtil.getLogTag(config),
+                        "Settings loaded with default values: " + settingsMap);
     }
 
     /**

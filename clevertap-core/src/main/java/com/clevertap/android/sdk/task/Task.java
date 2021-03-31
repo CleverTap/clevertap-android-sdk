@@ -10,6 +10,10 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
+/**
+ * Definition of task is to execute some work & return success or failure callbacks
+ * @param <TResult>
+ */
 public class Task<TResult> {
 
     protected enum STATE {FAILED, SUCCESS, READY_TO_RUN, RUNNING}

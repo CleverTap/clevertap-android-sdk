@@ -6,7 +6,7 @@ import java.util.HashMap;
 import java.util.concurrent.Executor;
 
 /**
- * Global executor pools for the whole application.
+ * Global executor pools per account.
  * <p>
  * Grouping tasks like this avoids the effects of task starvation (e.g. disk reads don't wait behind
  * webservice requests).
