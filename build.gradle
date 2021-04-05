@@ -1,3 +1,5 @@
+apply plugin: 'org.sonarqube'
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     // do not change order of apply
@@ -31,6 +33,14 @@ allprojects {
         flatDir {
             dirs 'libs'
         }
+    }
+}
+
+sonarqube {
+    properties {
+        property "sonar.projectKey", "CleverTap_clevertap-android-sdk"
+        property "sonar.organization", "clevertap"
+        property "sonar.host.url", "https://sonarcloud.io"
     }
 }
 

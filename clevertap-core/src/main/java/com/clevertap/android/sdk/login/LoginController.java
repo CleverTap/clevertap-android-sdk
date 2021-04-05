@@ -60,7 +60,7 @@ public class LoginController {
 
     private String processingUserLoginIdentifier = null;
 
-    private final Boolean processingUserLoginLock = true;
+    private static final Object processingUserLoginLock = new Object();
 
     public LoginController(Context context,
             CleverTapInstanceConfig config,

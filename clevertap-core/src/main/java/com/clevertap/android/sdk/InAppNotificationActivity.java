@@ -350,10 +350,13 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                 });
                     }
                 }
-                //noinspection Constant Conditions
-                alertDialog.show();
-                isAlertVisible = true;
-                didShow(null);
+                if(alertDialog != null){
+                    alertDialog.show();
+                    isAlertVisible = true;
+                    didShow(null);
+                }else{
+                    config.getLogger().debug("InAppNotificationActivity: Alert Dialog is null, not showing Alert InApp");
+                }
                 break;
             }
             default: {

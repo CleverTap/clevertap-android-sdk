@@ -205,7 +205,7 @@ public class DBAdapter {
 
     private static final String KEY_CREATED_AT = "created_at";
 
-    private static final long DATA_EXPIRATION = 1000 * 60 * 60 * 24 * 5;
+    private static final long DATA_EXPIRATION = 1000L * 60 * 60 * 24 * 5;
 
     //Notification Inbox Messages Table fields
     private static final String _ID = "_id";

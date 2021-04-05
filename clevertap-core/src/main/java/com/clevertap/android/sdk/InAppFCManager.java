@@ -19,7 +19,7 @@ import org.json.JSONObject;
 @RestrictTo(Scope.LIBRARY)
 public class InAppFCManager {
 
-    private static final SimpleDateFormat ddMMyyyy = new SimpleDateFormat("ddMMyyyy", Locale.US);
+    private final SimpleDateFormat ddMMyyyy = new SimpleDateFormat("ddMMyyyy", Locale.US);
 
     private final CleverTapInstanceConfig config;
 

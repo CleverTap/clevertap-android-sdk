@@ -2,10 +2,8 @@ apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'jacoco'
-apply plugin: 'org.sonarqube'
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
-
 
 ext {
     Repo = 'Maven'

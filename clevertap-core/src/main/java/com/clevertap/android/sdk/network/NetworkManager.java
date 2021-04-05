@@ -44,6 +44,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
+import java.security.SecureRandom;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -204,7 +205,7 @@ public class NetworkManager extends BaseNetworkManager {
             return Constants.PUSH_DELAY_MS;
         } else {
             //Retry with delay as minimum delay frequency and add random number of seconds to scatter traffic
-            Random randomGen = new Random();
+            SecureRandom randomGen = new SecureRandom();
             int randomDelay = (randomGen.nextInt(10) + 1) * 1000;
             minDelayFrequency += randomDelay;
             if (minDelayFrequency < Constants.MAX_DELAY_FREQUENCY) {

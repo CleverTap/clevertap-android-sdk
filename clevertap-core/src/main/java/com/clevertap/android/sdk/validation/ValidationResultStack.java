@@ -7,7 +7,7 @@ import java.util.ArrayList;
 @RestrictTo(Scope.LIBRARY)
 public class ValidationResultStack {
 
-    private static final Boolean pendingValidationResultsLock = true;
+    private static final Object pendingValidationResultsLock = new Object();
 
     private ArrayList<ValidationResult> pendingValidationResults = new ArrayList<>();
 

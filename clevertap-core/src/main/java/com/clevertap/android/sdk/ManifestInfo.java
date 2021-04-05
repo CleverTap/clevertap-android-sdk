@@ -165,6 +165,7 @@ public class ManifestInfo {
         return useADID;
     }
 
+    @SuppressWarnings("ConstantConditions")
     private String[] parseProfileKeys(final Bundle metaData) {
         String profileKeyString = _getManifestStringValueForKey(metaData, Constants.CLEVERTAP_IDENTIFIER);
         return !TextUtils.isEmpty(profileKeyString) ? profileKeyString.split(Constants.SEPARATOR_COMMA)

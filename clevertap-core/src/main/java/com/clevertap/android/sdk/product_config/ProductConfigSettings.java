@@ -97,7 +97,7 @@ class ProductConfigSettings {
         return null;
     }
 
-    long getLastFetchTimeStampInMillis() {
+    synchronized long getLastFetchTimeStampInMillis() {
         long lastFetchedTimeStamp = 0L;
         String value = settingsMap.get(KEY_LAST_FETCHED_TIMESTAMP);
         try {
@@ -237,7 +237,7 @@ class ProductConfigSettings {
         return minInterVal;
     }
 
-    private int getNoOfCallsInAllowedWindow() {
+    synchronized private int getNoOfCallsInAllowedWindow() {
         int noCallsAllowedInWindow = DEFAULT_NO_OF_CALLS;
         String value = settingsMap.get(PRODUCT_CONFIG_NO_OF_CALLS);
         try {
@@ -260,7 +260,7 @@ class ProductConfigSettings {
         }
     }
 
-    private int getWindowIntervalInMinutes() {
+    synchronized private int getWindowIntervalInMinutes() {
         int windowIntervalInMinutes = DEFAULT_WINDOW_LENGTH_MINS;
         String value = settingsMap.get(PRODUCT_CONFIG_WINDOW_LENGTH_MINS);
         try {

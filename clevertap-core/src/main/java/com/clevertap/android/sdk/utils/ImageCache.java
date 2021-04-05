@@ -115,7 +115,7 @@ public class ImageCache {
             }
             if (messageDigest == null) {
                 try {
-                    messageDigest = MessageDigest.getInstance("SHA1");
+                    messageDigest = MessageDigest.getInstance("SHA256");
                 } catch (NoSuchAlgorithmException e) {
                     Logger.d(
                             "CleverTap.ImageCache: image file system caching unavailable as SHA1 hash function not available on platform");

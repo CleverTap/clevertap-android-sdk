@@ -10,6 +10,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import org.json.JSONObject;
@@ -71,23 +72,26 @@ public class FileUtils {
         }
     }
 
-    public String readFromFile(String fileNameWithPath) {
+    public String readFromFile(String fileNameWithPath) throws IOException {
 
         String content = "";
+        InputStream inputStream = null;
+        InputStreamReader inputStreamReader = null;
+        BufferedReader bufferedReader = null;
         //Make sure to use a try-catch statement to catch any errors
         try {
             //Make your FilePath and File
             String yourFilePath = context.getFilesDir() + "/" + fileNameWithPath;
             File yourFile = new File(yourFilePath);
             //Make an InputStream with your File in the constructor
-            InputStream inputStream = new FileInputStream(yourFile);
+            inputStream = new FileInputStream(yourFile);
             StringBuilder stringBuilder = new StringBuilder();
             //Check to see if your inputStream is null
             //If it isn't use the inputStream to make a InputStreamReader
             //Use that to make a BufferedReader
             //Also create an empty String
-            InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
-            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+            inputStreamReader = new InputStreamReader(inputStream);
+            bufferedReader = new BufferedReader(inputStreamReader);
             String receiveString;
             //Use a while loop to append the lines from the Buffered reader
             while ((receiveString = bufferedReader.readLine()) != null) {
@@ -100,12 +104,23 @@ public class FileUtils {
             config.getLogger()
                     .verbose(config.getAccountId(), "[Exception While Reading: " + e.getLocalizedMessage());
             //Log your error with Log.e
+        }finally {
+            if (inputStream != null) {
+                inputStream.close();
+            }
+            if (inputStreamReader != null) {
+                inputStreamReader.close();
+            }
+            if (bufferedReader != null) {
+                bufferedReader.close();
+            }
         }
         return content;
     }
 
     public void writeJsonToFile(String dirName,
-            String fileName, JSONObject jsonObject) {
+            String fileName, JSONObject jsonObject) throws IOException {
+        FileWriter writer = null;
         try {
             if (jsonObject == null || TextUtils.isEmpty(dirName) || TextUtils.isEmpty(fileName)) {
                 return;
@@ -119,15 +134,18 @@ public class FileUtils {
                 }
 
                 File file1 = new File(file, fileName);
-                FileWriter writer = new FileWriter(file1, false);
+                writer = new FileWriter(file1, false);
                 writer.append(jsonObject.toString());
                 writer.flush();
-                writer.close();
             }
         } catch (Exception e) {
             e.printStackTrace();
             config.getLogger().verbose(config.getAccountId(),
                     "writeFileOnInternalStorage: failed" + e.getLocalizedMessage());
+        }finally {
+            if(writer != null){
+                writer.close();
+            }
         }
     }
 }

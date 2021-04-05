@@ -109,13 +109,9 @@ class CTGeofenceTaskManager {
         this.es = es;
     }
 
-    static CTGeofenceTaskManager getInstance() {
+    static synchronized CTGeofenceTaskManager getInstance() {
         if (taskManager == null) {
-            synchronized (CTGeofenceTaskManager.class) {
-                if (taskManager == null) {
-                    taskManager = new CTGeofenceTaskManager();
-                }
-            }
+            taskManager = new CTGeofenceTaskManager();
         }
         return taskManager;
     }

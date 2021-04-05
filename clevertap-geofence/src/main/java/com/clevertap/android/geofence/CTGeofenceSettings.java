@@ -289,6 +289,11 @@ public class CTGeofenceSettings {
                 && smallestDisplacement == that.smallestDisplacement;
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     public long getFastestInterval() {
         return fastestInterval;
     }

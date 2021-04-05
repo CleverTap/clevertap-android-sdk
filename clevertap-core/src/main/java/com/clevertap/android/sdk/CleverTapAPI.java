@@ -600,8 +600,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
         for (CleverTapAPI instance : getAvailableInstances(context)) {
             if (instance == null || instance.getCoreState().getConfig().isAnalyticsOnly()) {
-                Logger.d(instance.getAccountId(),
-                        "Instance is Analytics Only not processing device token");
+                Logger.d("Instance is Analytics Only not processing device token");
                 continue;
             }
             //get token from Manifest
