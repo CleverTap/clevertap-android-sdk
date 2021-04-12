@@ -127,7 +127,6 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
                     if (callbackManager.getPushAmpListener() != null) {
                         callbackManager.getPushAmpListener().onPushAmpPayloadReceived(pushBundle);
                     } else {
-                        //TODO: have to dev test PUSH AMP code.
                         controllerManager.getPushProviders()
                                 ._createNotification(context, pushBundle, Constants.EMPTY_NOTIFICATION_ID);
                     }

@@ -441,7 +441,7 @@ public class CleverTapInstanceConfig implements Parcelable {
     }
 
     private String getDefaultSuffix(@NonNull String tag) {
-        return "[" + ((!TextUtils.isEmpty(tag) ? ": " + tag : "") + ":" + accountId + "]");
+        return "[" + ((!TextUtils.isEmpty(tag) ? ":" + tag : "") + ":" + accountId + "]");
     }
 
     // convenience to construct the internal only default config
