@@ -61,6 +61,7 @@ CTGeofenceSettings ctGeofenceSettings = new CTGeofenceSettings.Builder()
                 .setInterval(interval)//long value for interval in milliseconds
                 .setFastestInterval(fastestInterval)//long value for fastest interval in milliseconds
                 .setSmallestDisplacement(displacement)//float value for smallest Displacement in meters
+                .setGeofenceNotificationResponsiveness(geofenceNotificationResponsiveness)// int value for geofence notification responsiveness in milliseconds
                 .build();
  ```
 **Note** - 
