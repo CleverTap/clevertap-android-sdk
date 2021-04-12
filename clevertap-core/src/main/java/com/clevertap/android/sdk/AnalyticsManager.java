@@ -474,20 +474,15 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                         JSONArray inappNotifs = new JSONArray();
                         r.put(Constants.INAPP_JSON_RESPONSE_KEY, inappNotifs);
                         inappNotifs.put(new JSONObject(extras.getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)));
-                        //TODO Review @Darshan @atul - processInAppResponse logic
                         CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
-
                         cleverTapResponse = new InAppResponse(cleverTapResponse, config,
                                 controllerManager, true);
-
                         cleverTapResponse.processResponse(r, null, context);
-                        //processInAppResponse(r, mContext);
                     } catch (Throwable t) {
                         Logger.v("Failed to display inapp notification from push notification payload", t);
                     }
                 }
             };
-
             mainLooperHandler.setPendingRunnable(pendingInappRunnable);
             return;
         }
@@ -506,13 +501,11 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                                 extras.getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
                         testPushObject.put("_id", String.valueOf(System.currentTimeMillis() / 1000));
                         inboxNotifs.put(testPushObject);
-                        //TODO Review @Darshan @atul - processInboxResponse logic
                         CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
                         cleverTapResponse = new InboxResponse(cleverTapResponse, config,
                                 ctLockManager, callbackManager, controllerManager);
 
                         cleverTapResponse.processResponse(r, null, context);
-                        //processInboxResponse(r);
                     } catch (Throwable t) {
                         Logger.v("Failed to process inbox message from push notification payload", t);
                     }
