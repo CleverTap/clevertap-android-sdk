@@ -32,22 +32,21 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
 
     private final Logger logger;
 
-    private final PushProviders pushProviders;
+    private final ControllerManager controllerManager;
 
     public PushAmpResponse(CleverTapResponse cleverTapResponse,
             Context context,
             CleverTapInstanceConfig config,
-            CTLockManager ctLockManager,
             BaseDatabaseManager dbManager,
             BaseCallbackManager callbackManager,
             ControllerManager controllerManager) {
         this.cleverTapResponse = cleverTapResponse;
         this.context = context;
         this.config = config;
-        pushProviders = controllerManager.getPushProviders();
         logger = this.config.getLogger();
         dbAdapter = dbManager.loadDBAdapter(context);
         this.callbackManager = callbackManager;
+        this.controllerManager = controllerManager;
     }
 
     @Override
@@ -74,7 +73,7 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
                 if (pushAmpObject.has("pf")) {
                     try {
                         int frequency = pushAmpObject.getInt("pf");
-                        pushProviders.updatePingFrequencyIfNeeded(context, frequency);
+                        controllerManager.getPushProviders().updatePingFrequencyIfNeeded(context, frequency);
                     } catch (Throwable t) {
                         logger
                                 .verbose("Error handling ping frequency in response : " + t.getMessage());
@@ -129,7 +128,7 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
                         callbackManager.getPushAmpListener().onPushAmpPayloadReceived(pushBundle);
                     } else {
                         //TODO: have to dev test PUSH AMP code.
-                        pushProviders
+                        controllerManager.getPushProviders()
                                 ._createNotification(context, pushBundle, Constants.EMPTY_NOTIFICATION_ID);
                     }
                 } else {

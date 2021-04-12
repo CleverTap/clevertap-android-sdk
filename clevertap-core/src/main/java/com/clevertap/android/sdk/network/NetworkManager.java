@@ -136,7 +136,7 @@ public class NetworkManager extends BaseNetworkManager {
         cleverTapResponse = new FeatureFlagResponse(cleverTapResponse, config, controllerManager);
         cleverTapResponse = new DisplayUnitResponse(cleverTapResponse, config,
                 callbackManager, controllerManager);
-        cleverTapResponse = new PushAmpResponse(cleverTapResponse, context, config, ctLockManager,
+        cleverTapResponse = new PushAmpResponse(cleverTapResponse, context, config,
                 baseDatabaseManager, callbackManager, controllerManager);
         cleverTapResponse = new InboxResponse(cleverTapResponse, config, ctLockManager,
                 callbackManager, controllerManager);
