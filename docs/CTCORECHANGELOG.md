@@ -2,6 +2,7 @@
 
 ### Version 4.1.0 (April 13, 2021)
 * Internal code has been refactored to follow SOLID principles and Unit Test Cases have been added
+* Adds support for Android 11
 * Reduces the SDK size and added performance improvements
 * Removes the deprecated Product Experiences (Screen AB/Dynamic Variables) related code
 * Removes support for JCenter
