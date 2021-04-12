@@ -28,6 +28,9 @@ class GoogleGeofenceAdapter implements CTGeofenceAdapter {
 
     private static final long GEOFENCE_EXPIRATION_IN_MILLISECONDS = Geofence.NEVER_EXPIRE;
 
+    /**
+     * How soon should the callback be called when the transition associated with the Geofence is triggered.
+     */
     static final int GEOFENCE_NOTIFICATION_RESPONSIVENESS_IN_MILLISECONDS = 0;
 
     private final Context context;
@@ -181,6 +184,9 @@ class GoogleGeofenceAdapter implements CTGeofenceAdapter {
         if (geofenceSettings != null) {
             geofenceNotificationResponsiveness = geofenceSettings.getGeofenceNotificationResponsiveness();
         }
+
+        CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
+                "Setting geofenceNotificationResponsiveness to " + geofenceNotificationResponsiveness);
 
         for (CTGeofence ctGeofence : fenceList) {
             googleFenceList.add(new Geofence.Builder()

@@ -204,6 +204,23 @@ public class CTGeofenceSettings {
             return this;
         }
 
+        /**
+         * Sets the best-effort notification responsiveness of the geofence. Defaults to 0.<br>
+         * Setting a big responsiveness value, for example 5 minutes, can save power significantly.<br>
+         * For example, if you set a responsiveness value of five minutes your app only checks for an entrance or
+         * exit
+         * alert once every five minutes.Setting lower values doesn't necessarily mean that users are notified within
+         * that time period (for example, if you set a value of 5 seconds it may take a bit longer than that to
+         * receive the alert).
+         *
+         * @param geofenceNotificationResponsiveness in (milliseconds) defines the best-effort description of how
+         *                                           soon should the callback be called when the transition associated
+         *                                           with the Geofence is triggered.
+         *                                           For instance, if set to 300000 milliseconds the callback will be
+         *                                           called 5 minutes within entering or
+         *                                           exiting the geofence.
+         * @return {@link CTGeofenceSettings.Builder}
+         */
         public CTGeofenceSettings.Builder setGeofenceNotificationResponsiveness(
                 int geofenceNotificationResponsiveness) {
             this.geofenceNotificationResponsiveness = geofenceNotificationResponsiveness;
