@@ -39,6 +39,9 @@ public class CTGeofenceSettings {
 
         private float smallestDisplacement = GoogleLocationAdapter.SMALLEST_DISPLACEMENT_IN_METERS;
 
+        private int geofenceNotificationResponsiveness =
+                GoogleGeofenceAdapter.GEOFENCE_NOTIFICATION_RESPONSIVENESS_IN_MILLISECONDS;
+
         public Builder() {
 
         }
@@ -200,6 +203,12 @@ public class CTGeofenceSettings {
             this.smallestDisplacement = smallestDisplacement;
             return this;
         }
+
+        public CTGeofenceSettings.Builder setGeofenceNotificationResponsiveness(
+                int geofenceNotificationResponsiveness) {
+            this.geofenceNotificationResponsiveness = geofenceNotificationResponsiveness;
+            return this;
+        }
     }
 
     /**
@@ -255,6 +264,8 @@ public class CTGeofenceSettings {
 
     private final byte locationFetchMode; // WorkManager or BroadcastReceiver
 
+    private final int geofenceNotificationResponsiveness;
+
     private final @LogLevel
     int logLevel;
 
@@ -270,6 +281,7 @@ public class CTGeofenceSettings {
         interval = builder.interval;
         fastestInterval = builder.fastestInterval;
         smallestDisplacement = builder.smallestDisplacement;
+        geofenceNotificationResponsiveness = builder.geofenceNotificationResponsiveness;
     }
 
     @Override
@@ -286,7 +298,8 @@ public class CTGeofenceSettings {
                 locationFetchMode == that.locationFetchMode &&
                 logLevel == that.logLevel && geofenceMonitoringCount == that.geofenceMonitoringCount
                 && id.equals(that.id) && interval == that.interval && fastestInterval == that.fastestInterval
-                && smallestDisplacement == that.smallestDisplacement;
+                && smallestDisplacement == that.smallestDisplacement && geofenceNotificationResponsiveness
+                == that.geofenceNotificationResponsiveness;
     }
 
     @Override
@@ -329,5 +342,9 @@ public class CTGeofenceSettings {
 
     public boolean isBackgroundLocationUpdatesEnabled() {
         return backgroundLocationUpdates;
+    }
+
+    public int getGeofenceNotificationResponsiveness() {
+        return geofenceNotificationResponsiveness;
     }
 }

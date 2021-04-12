@@ -28,6 +28,8 @@ class GoogleGeofenceAdapter implements CTGeofenceAdapter {
 
     private static final long GEOFENCE_EXPIRATION_IN_MILLISECONDS = Geofence.NEVER_EXPIRE;
 
+    static final int GEOFENCE_NOTIFICATION_RESPONSIVENESS_IN_MILLISECONDS = 0;
+
     private final Context context;
 
     private final GeofencingClient geofencingClient;
@@ -174,11 +176,18 @@ class GoogleGeofenceAdapter implements CTGeofenceAdapter {
     private ArrayList<Geofence> getGoogleGeofences(@NonNull List<CTGeofence> fenceList) {
         ArrayList<Geofence> googleFenceList = new ArrayList<>();
 
+        CTGeofenceSettings geofenceSettings = CTGeofenceAPI.getInstance(context).getGeofenceSettings();
+        int geofenceNotificationResponsiveness = GEOFENCE_NOTIFICATION_RESPONSIVENESS_IN_MILLISECONDS;
+        if (geofenceSettings != null) {
+            geofenceNotificationResponsiveness = geofenceSettings.getGeofenceNotificationResponsiveness();
+        }
+
         for (CTGeofence ctGeofence : fenceList) {
             googleFenceList.add(new Geofence.Builder()
                     // Set the request ID of the geofence. This is a string to identify this
                     // geofence.
                     .setRequestId(ctGeofence.getId())
+                    .setNotificationResponsiveness(geofenceNotificationResponsiveness)
 
                     .setCircularRegion(ctGeofence.getLatitude(), ctGeofence.getLongitude(),
                             ctGeofence.getRadius())
