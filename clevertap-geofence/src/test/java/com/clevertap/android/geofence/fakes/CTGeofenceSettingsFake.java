@@ -49,7 +49,7 @@ public class CTGeofenceSettingsFake {
             jsonObject = new JSONObject("{\"last_accuracy\":1,\"last_fetch_mode\":1," +
                     "\"last_bg_location_updates\":true,\"last_log_level\":3,\"last_geo_count\":47," +
                     "\"last_interval\":1800000,\"last_fastest_interval\":1800000,\"last_displacement\":200," +
-                    "\"id\":\"4RW-Z6Z-485Z\"}").toString();
+                    "\"id\":\"4RW-Z6Z-485Z\",\"last_geo_notification_responsiveness\":0}").toString();
 
         } catch (JSONException e) {
             e.printStackTrace();
