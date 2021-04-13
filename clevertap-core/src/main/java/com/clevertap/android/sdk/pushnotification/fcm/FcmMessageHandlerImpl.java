@@ -9,7 +9,6 @@ import android.os.Bundle;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
-import com.clevertap.android.sdk.pushnotification.PushConstants;
 import com.google.firebase.messaging.RemoteMessage;
 import java.util.Map;
 
@@ -33,7 +32,7 @@ public class FcmMessageHandlerImpl implements IFcmMessageHandler {
 
                 if (info.fromCleverTap) {
                     if (cleverTapAPI != null) {
-                        cleverTapAPI.config().log(LOG_TAG,
+                        cleverTapAPI.getCoreState().getConfig().log(LOG_TAG,
                                 FCM_LOG_TAG + "received notification from CleverTap: " + extras.toString());
                     } else {
                         Logger.d(LOG_TAG, FCM_LOG_TAG + "received notification from CleverTap: " + extras.toString());
@@ -52,7 +51,7 @@ public class FcmMessageHandlerImpl implements IFcmMessageHandler {
     public boolean onNewToken(final Context applicationContext, final String token) {
         boolean isSuccess = false;
         try {
-            CleverTapAPI.tokenRefresh(applicationContext, token, PushConstants.PushType.FCM);
+            CleverTapAPI.fcmTokenRefresh(applicationContext, token);
             Logger.d(LOG_TAG, FCM_LOG_TAG + "New token received from FCM - " + token);
             isSuccess = true;
         } catch (Throwable t) {

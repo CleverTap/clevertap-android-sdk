@@ -1,21 +1,6 @@
 <p align="center">
-  <img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/clevertap-logo.png" width="300"/>
+  <img src="https://github.com/CleverTap/clevertap-ios-sdk/blob/master/docs/images/clevertap-logo.png" height="220"/>
 </p>
-
-## ⍗ Table of contents
-
-* [Introduction](#-introduction)
-* [Installation](#-installation)
-* [Permissions](#-permissions)
-* [Initialization](#-initialization)
-* [Settings parameters](#-settings-parameters)
-* [Trigger Location](#-trigger-location)
-* [Callbacks/Listeners](#-callbackslisteners)
-* [Deactivation](#%EF%B8%8F-deactivation)
-* [ProGuard](#-proguard)
-* [Example Usage](#-example-usage)
-* [FAQ](#-faq)
-* [Questions](#-questions)
 
 ## 👋 Introduction
 [(Back to top)](#-table-of-contents)
@@ -76,6 +61,7 @@ CTGeofenceSettings ctGeofenceSettings = new CTGeofenceSettings.Builder()
                 .setInterval(interval)//long value for interval in milliseconds
                 .setFastestInterval(fastestInterval)//long value for fastest interval in milliseconds
                 .setSmallestDisplacement(displacement)//float value for smallest Displacement in meters
+                .setGeofenceNotificationResponsiveness(geofenceNotificationResponsiveness)// int value for geofence notification responsiveness in milliseconds
                 .build();
  ```
 **Note** - 

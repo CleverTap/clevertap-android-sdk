@@ -1,14 +1,6 @@
 <p align="center">
-  <img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/clevertap-logo.png" width="300"/>
+  <img src="https://github.com/CleverTap/clevertap-ios-sdk/blob/master/docs/images/clevertap-logo.png" height="220"/>
 </p>
-
-## ⍗ Table of contents
-
-* [Introduction](#-introduction)
-* [Register](#%EF%B8%8F-register)
-* [Create an Application](#-create-an-application)
-* [App Details](#-app-details)
-* [Integration](#-integration)
 
 ## 👋 Introduction
 [(Back to top)](#-table-of-contents)
@@ -50,7 +42,7 @@ Click on [Mi Push Console](http://admin.xmpush.global.xiaomi.com/) and click on 
 * Add the CleverTap Xiaomi Push dependency in app’s `build.gradle`
 
 ```groovy
-    implementation "com.clevertap.android:clevertap-xiaomi-sdk:1.0.0"
+    implementation "com.clevertap.android:clevertap-xiaomi-sdk:1.0.1"
 ```
 
 * Add the following to your app’s `AndroidManifest.xml` file

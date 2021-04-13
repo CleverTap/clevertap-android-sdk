@@ -1,14 +1,6 @@
 <p align="center">
-  <img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/clevertap-logo.png" width="300"/>
+  <img src="https://github.com/CleverTap/clevertap-ios-sdk/blob/master/docs/images/clevertap-logo.png" height="220"/>
 </p>
-
-## ⍗ Table of contents
-
-* [Introduction](#-introduction)
-* [Register](#-register)
-* [Enable Push Kit](#-enable-push-kit)
-* [Integration](#-integration)
-
 
 ## 👋 Introduction
 [(Back to top)](#-table-of-contents)

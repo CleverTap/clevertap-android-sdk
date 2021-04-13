@@ -220,6 +220,8 @@ class Utils {
                         .setFastestInterval(jsonObject.getLong(CTGeofenceConstants.KEY_LAST_FASTEST_INTERVAL))
                         .setSmallestDisplacement(
                                 (float) jsonObject.getDouble(CTGeofenceConstants.KEY_LAST_DISPLACEMENT))
+                        .setGeofenceNotificationResponsiveness(
+                                jsonObject.getInt(CTGeofenceConstants.KEY_LAST_GEO_NOTIFICATION_RESPONSIVENESS))
                         .build();
 
                 CTGeofenceAPI.getLogger().debug(CTGeofenceAPI.GEOFENCE_LOG_TAG,
@@ -293,6 +295,8 @@ class Utils {
             settings.put(CTGeofenceConstants.KEY_LAST_INTERVAL, ctGeofenceSettings.getInterval());
             settings.put(CTGeofenceConstants.KEY_LAST_FASTEST_INTERVAL, ctGeofenceSettings.getFastestInterval());
             settings.put(CTGeofenceConstants.KEY_LAST_DISPLACEMENT, ctGeofenceSettings.getSmallestDisplacement());
+            settings.put(CTGeofenceConstants.KEY_LAST_GEO_NOTIFICATION_RESPONSIVENESS,
+                    ctGeofenceSettings.getGeofenceNotificationResponsiveness());
             settings.put(CTGeofenceConstants.KEY_ID, CTGeofenceAPI.getInstance(context).getAccountId());
 
             boolean writeJsonToFile = FileUtils.writeJsonToFile(context, FileUtils.getCachedDirName(context),

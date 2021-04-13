@@ -108,12 +108,13 @@ public final class StorageHelper {
         }
     }
 
-    static int getInt(Context context, String key, int defaultValue) {
+    public static int getInt(Context context, String key, int defaultValue) {
         return getPreferences(context).getInt(key, defaultValue);
     }
 
     @SuppressWarnings("SameParameterValue")
-    static int getIntFromPrefs(Context context, CleverTapInstanceConfig config, String rawKey, int defaultValue) {
+    public static int getIntFromPrefs(Context context, CleverTapInstanceConfig config, String rawKey,
+            int defaultValue) {
         if (config.isDefaultInstance()) {
             int dummy = -1000;
             int _new = getInt(context, storageKeyWithSuffix(config, rawKey), dummy);
@@ -132,7 +133,8 @@ public final class StorageHelper {
     }
 
     @SuppressWarnings("SameParameterValue")
-    static long getLongFromPrefs(Context context, CleverTapInstanceConfig config, String rawKey, int defaultValue,
+    public static long getLongFromPrefs(Context context, CleverTapInstanceConfig config, String rawKey,
+            int defaultValue,
             String nameSpace) {
         if (config.isDefaultInstance()) {
             long dummy = -1000;
@@ -153,7 +155,7 @@ public final class StorageHelper {
         persist(editor);
     }
 
-    static void putInt(Context context, String key, int value) {
+    public static void putInt(Context context, String key, int value) {
         SharedPreferences prefs = getPreferences(context);
         SharedPreferences.Editor editor = prefs.edit().putInt(key, value);
         persist(editor);

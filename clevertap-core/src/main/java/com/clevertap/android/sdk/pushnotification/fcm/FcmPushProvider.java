@@ -3,8 +3,10 @@ package com.clevertap.android.sdk.pushnotification.fcm;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.ANDROID_PLATFORM;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
+import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.pushnotification.CTPushProvider;
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
@@ -16,11 +18,11 @@ import com.clevertap.android.sdk.pushnotification.PushConstants;
 @SuppressLint(value = "unused")
 public class FcmPushProvider implements CTPushProvider {
 
-    private IFcmSdkHandler mHandler;
+    private IFcmSdkHandler handler;
 
     @SuppressLint(value = "unused")
-    public FcmPushProvider(CTPushProviderListener ctPushListener) {
-        mHandler = new FcmSdkHandlerImpl(ctPushListener);
+    public FcmPushProvider(CTPushProviderListener ctPushListener, Context context, CleverTapInstanceConfig config) {
+        handler = new FcmSdkHandlerImpl(ctPushListener, context, config);
     }
 
     @Override
@@ -31,7 +33,7 @@ public class FcmPushProvider implements CTPushProvider {
     @NonNull
     @Override
     public PushConstants.PushType getPushType() {
-        return mHandler.getPushType();
+        return handler.getPushType();
     }
 
     /**
@@ -41,7 +43,7 @@ public class FcmPushProvider implements CTPushProvider {
      */
     @Override
     public boolean isAvailable() {
-        return mHandler.isAvailable();
+        return handler.isAvailable();
     }
 
     /**
@@ -51,7 +53,7 @@ public class FcmPushProvider implements CTPushProvider {
      */
     @Override
     public boolean isSupported() {
-        return mHandler.isSupported();
+        return handler.isSupported();
     }
 
     @Override
@@ -61,10 +63,10 @@ public class FcmPushProvider implements CTPushProvider {
 
     @Override
     public void requestToken() {
-        mHandler.requestToken();
+        handler.requestToken();
     }
 
     void setHandler(final IFcmSdkHandler handler) {
-        mHandler = handler;
+        this.handler = handler;
     }
 }

@@ -1,11 +1,13 @@
 package com.clevertap.android.sdk.login;
 
-import static com.clevertap.android.sdk.LogConstants.LOG_TAG_ON_USER_LOGIN;
+import static com.clevertap.android.sdk.login.LoginConstants.LOG_TAG_ON_USER_LOGIN;
 
-import androidx.annotation.NonNull;
+import android.content.Context;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
-import com.clevertap.android.sdk.BaseCTApiListener;
+import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.DeviceInfo;
+import com.clevertap.android.sdk.validation.ValidationResultStack;
 
 /**
  * Provides Repo instance for an account
@@ -16,23 +18,23 @@ public class IdentityRepoFactory {
     /**
      * Creates repo provider based on login state & config details.
      *
-     * @param ctApiListener - CleverTapAPI instance
      * @return - repo provider
      */
-    public static IdentityRepo getRepo(@NonNull BaseCTApiListener ctApiListener) {
-        final LoginInfoProvider infoProvider = new LoginInfoProvider(ctApiListener);
+    public static IdentityRepo getRepo(Context context, CleverTapInstanceConfig config, DeviceInfo deviceInfo,
+            ValidationResultStack validationResultStack) {
+        final LoginInfoProvider infoProvider = new LoginInfoProvider(context, config, deviceInfo);
         final IdentityRepo repo;
         if (infoProvider.isLegacyProfileLoggedIn()) {
             repo = new LegacyIdentityRepo(
-                    ctApiListener);// case 1: Migration (cached guid but no newly saved profile pref)
+                    config);// case 1: Migration (cached guid but no newly saved profile pref)
         } else {
             /* ----------------------------------------------------
              * case 2: Not logged in & using default config
              * case 3: Not logged in & using multi instance config
              * -----------------------------------------------------*/
-            repo = new ConfigurableIdentityRepo(ctApiListener);
+            repo = new ConfigurableIdentityRepo(context, config, deviceInfo, validationResultStack);
         }
-        ctApiListener.config().log(LOG_TAG_ON_USER_LOGIN,
+        config.log(LOG_TAG_ON_USER_LOGIN,
                 "Repo provider: " + repo.getClass().getSimpleName());
         return repo;
     }

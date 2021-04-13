@@ -2,6 +2,7 @@ package com.clevertap.android.sdk;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -285,7 +286,7 @@ public class CTInboxStyleConfig implements Parcelable {
         dest.writeString(noMessageViewTextColor);
     }
 
-    boolean isUsingTabs() {
+    public boolean isUsingTabs() {
         return (tabs != null && tabs.length > 0);
     }
 }

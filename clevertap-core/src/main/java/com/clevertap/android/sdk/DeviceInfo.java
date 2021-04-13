@@ -19,11 +19,16 @@ import androidx.annotation.IntDef;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationManagerCompat;
+import com.clevertap.android.sdk.login.LoginInfoProvider;
+import com.clevertap.android.sdk.utils.CTJsonConverter;
+import com.clevertap.android.sdk.validation.ValidationResult;
+import com.clevertap.android.sdk.validation.ValidationResultFactory;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.UUID;
+import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
 public class DeviceInfo {
@@ -304,11 +309,19 @@ public class DeviceInfo {
 
     private final ArrayList<ValidationResult> validationResults = new ArrayList<>();
 
+    private boolean enableNetworkInfoReporting = false;
 
-    DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID) {
+    private final CoreMetaData mCoreMetaData;
+
+    DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID, CoreMetaData coreMetaData) {
         this.context = context;
         this.config = config;
         this.library = null;
+        mCoreMetaData = coreMetaData;
+        onInitDeviceInfo(cleverTapID);
+    }
+
+    void onInitDeviceInfo(final String cleverTapID) {
         Thread deviceInfoCacheThread = new Thread(new Runnable() {
             @Override
             public void run() {
@@ -323,12 +336,12 @@ public class DeviceInfo {
         return getDeviceID() != null && getDeviceID().startsWith(Constants.ERROR_PROFILE_PREFIX);
     }
 
-    void forceNewDeviceID() {
+    public void forceNewDeviceID() {
         String deviceID = generateGUID();
         forceUpdateDeviceId(deviceID);
     }
 
-    void forceUpdateCustomCleverTapID(String cleverTapID) {
+    public void forceUpdateCustomCleverTapID(String cleverTapID) {
         if (Utils.validateCTID(cleverTapID)) {
             getConfigLogger()
                     .info(config.getAccountId(), "Setting CleverTap ID to custom CleverTap ID : " + cleverTapID);
@@ -350,7 +363,7 @@ public class DeviceInfo {
      * @param id The new device ID
      */
     @SuppressLint("CommitPrefEdits")
-    void forceUpdateDeviceId(String id) {
+    public void forceUpdateDeviceId(String id) {
         getConfigLogger().verbose(this.config.getAccountId(), "Force updating the device ID to " + id);
         synchronized (deviceIDLock) {
             StorageHelper.putString(context, getDeviceIdStorageKey(), id);
@@ -361,49 +374,97 @@ public class DeviceInfo {
         return getDeviceID();
     }
 
-    String getBluetoothVersion() {
+    /**
+     * Determines if a device is tablet, smart phone or TV
+     *
+     * @param context context
+     * @return one of the possible value of {@link DeviceType}
+     */
+    @DeviceType
+    public static int getDeviceType(final Context context) {
+
+        if (sDeviceType == NULL) {
+
+            try {
+                UiModeManager uiModeManager = (UiModeManager) context.getSystemService(Context.UI_MODE_SERVICE);
+                if (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
+                    sDeviceType = TV;
+                    return sDeviceType;
+                }
+            } catch (Exception e) {
+                //uiModeManager or context is null
+                Logger.d("Failed to decide whether device is a TV!");
+                e.printStackTrace();
+            }
+
+            try {
+                sDeviceType = context.getResources().getBoolean(R.bool.ctIsTablet) ? TABLET : SMART_PHONE;
+            } catch (Exception e) {
+                // resource not found or context is null
+                Logger.d("Failed to decide whether device is a smart phone or tablet!");
+                e.printStackTrace();
+                sDeviceType = UNKNOWN;
+            }
+
+        }
+        return sDeviceType;
+    }
+
+    //Event
+    public JSONObject getAppLaunchedFields() {
+
+        try {
+            boolean deviceIsMultiUser = false;
+            if (getGoogleAdID() != null) {
+                deviceIsMultiUser = new LoginInfoProvider(context, config, this).deviceIsMultiUser();
+            }
+            return CTJsonConverter.from(this, mCoreMetaData.getLocationFromUser(), enableNetworkInfoReporting,
+                    deviceIsMultiUser);
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(), "Failed to construct App Launched event", t);
+            return new JSONObject();
+        }
+    }
+
+    public String getBluetoothVersion() {
         return getDeviceCachedInfo().bluetoothVersion;
     }
 
-    int getBuild() {
+    public int getBuild() {
         return getDeviceCachedInfo().build;
     }
 
-    String getCarrier() {
+    public String getCarrier() {
         return getDeviceCachedInfo().carrier;
     }
 
-    Context getContext() {
+    public Context getContext() {
         return context;
     }
 
-    String getCountryCode() {
-        return getDeviceCachedInfo().countryCode;
-    }
-
-    int getDPI() {
-        return getDeviceCachedInfo().dpi;
-    }
-
-    String getDeviceID() {
+    public String getDeviceID() {
         return _getDeviceID() != null ? _getDeviceID() : getFallBackDeviceID();
     }
 
-    String getGoogleAdID() {
+    public String getCountryCode() {
+        return getDeviceCachedInfo().countryCode;
+    }
+
+    public int getDPI() {
+        return getDeviceCachedInfo().dpi;
+    }
+
+    public String getGoogleAdID() {
         synchronized (adIDLock) {
             return googleAdID;
         }
     }
 
-    double getHeight() {
+    public double getHeight() {
         return getDeviceCachedInfo().height;
     }
 
-    int getHeightPixels() {
-        return getDeviceCachedInfo().heightPixels;
-    }
-
-    String getLibrary() {
+    public String getLibrary() {
         return library;
     }
 
@@ -411,56 +472,52 @@ public class DeviceInfo {
         this.library = library;
     }
 
-    String getManufacturer() {
+    public String getManufacturer() {
         return getDeviceCachedInfo().manufacturer;
     }
 
-    String getModel() {
+    public String getModel() {
         return getDeviceCachedInfo().model;
     }
 
-    String getNetworkType() {
+    public String getNetworkType() {
         return getDeviceCachedInfo().networkType;
     }
 
-    boolean getNotificationsEnabledForUser() {
+    public boolean getNotificationsEnabledForUser() {
         return getDeviceCachedInfo().notificationsEnabled;
     }
 
-    String getOsName() {
+    public String getOsName() {
         return getDeviceCachedInfo().osName;
     }
 
-    String getOsVersion() {
+    public String getOsVersion() {
         return getDeviceCachedInfo().osVersion;
     }
 
-    int getSdkVersion() {
-        return getDeviceCachedInfo().sdkVersion;
-    }
-
-    ArrayList<ValidationResult> getValidationResults() {
+    public ArrayList<ValidationResult> getValidationResults() {
         // noinspection unchecked
         ArrayList<ValidationResult> tempValidationResults = (ArrayList<ValidationResult>) validationResults.clone();
         validationResults.clear();
         return tempValidationResults;
     }
 
-    String getVersionName() {
+    public int getSdkVersion() {
+        return getDeviceCachedInfo().sdkVersion;
+    }
+
+    public String getVersionName() {
         return getDeviceCachedInfo().versionName;
     }
 
-    double getWidth() {
+    public double getWidth() {
         return getDeviceCachedInfo().width;
-    }
-
-    int getWidthPixels() {
-        return getDeviceCachedInfo().widthPixels;
     }
 
     @SuppressLint("MissingPermission")
     @SuppressWarnings("MissingPermission")
-    Boolean isBluetoothEnabled() {
+    public Boolean isBluetoothEnabled() {
         Boolean isBluetoothEnabled = null;
         try {
             PackageManager pm = context.getPackageManager();
@@ -477,13 +534,13 @@ public class DeviceInfo {
         return isBluetoothEnabled;
     }
 
-    boolean isLimitAdTrackingEnabled() {
+    public boolean isLimitAdTrackingEnabled() {
         synchronized (adIDLock) {
             return limitAdTracking;
         }
     }
 
-    Boolean isWifiConnected() {
+    public Boolean isWifiConnected() {
         Boolean ret = null;
 
         if (PackageManager.PERMISSION_GRANTED == context
@@ -671,44 +728,54 @@ public class DeviceInfo {
      * @param context The Android context
      * @return The integer identifier for the image resource
      */
-    static int getAppIconAsIntId(final Context context) {
+    public static int getAppIconAsIntId(final Context context) {
         ApplicationInfo ai = context.getApplicationInfo();
         return ai.icon;
     }
 
-    /**
-     * Determines if a device is tablet, smart phone or TV
-     *
-     * @param context context
-     * @return one of the possible value of {@link DeviceType}
-     */
-    @DeviceType
-    static int getDeviceType(final Context context) {
+    int getHeightPixels() {
+        return getDeviceCachedInfo().heightPixels;
+    }
 
-        if (sDeviceType == NULL) {
+    void enableDeviceNetworkInfoReporting(boolean value) {
+        enableNetworkInfoReporting = value;
+        StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(config, Constants.NETWORK_INFO),
+                enableNetworkInfoReporting);
+        config.getLogger()
+                .verbose(config.getAccountId(),
+                        "Device Network Information reporting set to " + enableNetworkInfoReporting);
+    }
 
-            try {
-                UiModeManager uiModeManager = (UiModeManager) context.getSystemService(Context.UI_MODE_SERVICE);
-                if (uiModeManager.getCurrentModeType() == Configuration.UI_MODE_TYPE_TELEVISION) {
-                    sDeviceType = TV;
-                    return sDeviceType;
-                }
-            } catch (Exception e) {
-                //uiModeManager or context is null
-                Logger.d("Failed to decide whether device is a TV!");
-                e.printStackTrace();
-            }
+    void setDeviceNetworkInfoReportingFromStorage() {
+        boolean enabled = StorageHelper.getBooleanFromPrefs(context, config, Constants.NETWORK_INFO);
+        config.getLogger()
+                .verbose(config.getAccountId(),
+                        "Setting device network info reporting state from storage to " + enabled);
+        enableNetworkInfoReporting = enabled;
+    }
 
-            try {
-                sDeviceType = context.getResources().getBoolean(R.bool.ctIsTablet) ? TABLET : SMART_PHONE;
-            } catch (Exception e) {
-                // resource not found or context is null
-                Logger.d("Failed to decide whether device is a smart phone or tablet!");
-                e.printStackTrace();
-                sDeviceType = UNKNOWN;
-            }
+    int getWidthPixels() {
+        return getDeviceCachedInfo().widthPixels;
+    }
 
+    public void setCurrentUserOptOutStateFromStorage() {
+        String key = optOutKey();
+        if (key == null) {
+            config.getLogger().verbose(config.getAccountId(),
+                    "Unable to set current user OptOut state from storage: storage key is null");
+            return;
         }
-        return sDeviceType;
+        boolean storedOptOut = StorageHelper.getBooleanFromPrefs(context, config, key);
+        mCoreMetaData.setCurrentUserOptedOut(storedOptOut);
+        config.getLogger().verbose(config.getAccountId(),
+                "Set current user OptOut state from storage to: " + storedOptOut + " for key: " + key);
+    }
+
+    String optOutKey() {
+        String guid = getDeviceID();
+        if (guid == null) {
+            return null;
+        }
+        return "OptOut:" + guid;
     }
 }

@@ -37,12 +37,10 @@ class XiaomiPushProviderTest : BaseTestCase() {
 
         //init provider listener
         ctPushProviderListener = Mockito.mock(CTPushProviderListener::class.java)
-        Mockito.`when`(ctPushProviderListener.context()).thenReturn(application)
-        Mockito.`when`(ctPushProviderListener.config()).thenReturn(cleverTapInstanceConfig)
-        sdkHandler = XiaomiSdkHandler(ctPushProviderListener)
+        sdkHandler = XiaomiSdkHandler(application, cleverTapInstanceConfig)
         sdkHandler.setManifestInfo(manifestInfo)
         //init push provider
-        xiaomiPushProvider = XiaomiPushProvider(ctPushProviderListener)
+        xiaomiPushProvider = XiaomiPushProvider(ctPushProviderListener, application, cleverTapInstanceConfig)
         xiaomiPushProvider.setMiSdkHandler(sdkHandler)
     }
 

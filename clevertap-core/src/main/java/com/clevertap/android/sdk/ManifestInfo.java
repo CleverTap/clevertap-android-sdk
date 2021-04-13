@@ -129,15 +129,15 @@ public class ManifestInfo {
         return accountToken;
     }
 
-    String getExcludedActivities() {
+    public String getExcludedActivities() {
         return excludedActivities;
     }
 
-    String getIntentServiceName() {
+    public String getIntentServiceName() {
         return intentServiceName;
     }
 
-    String getNotificationIcon() {
+    public String getNotificationIcon() {
         return notificationIcon;
     }
 
@@ -165,10 +165,11 @@ public class ManifestInfo {
         return useADID;
     }
 
+    @SuppressWarnings("ConstantConditions")
     private String[] parseProfileKeys(final Bundle metaData) {
         String profileKeyString = _getManifestStringValueForKey(metaData, Constants.CLEVERTAP_IDENTIFIER);
         return !TextUtils.isEmpty(profileKeyString) ? profileKeyString.split(Constants.SEPARATOR_COMMA)
-                : NullConstants.NULL_STRING_ARRAY;
+                : Constants.NULL_STRING_ARRAY;
     }
 
     static void changeCredentials(String id, String token, String region) {
@@ -177,6 +178,13 @@ public class ManifestInfo {
         accountRegion = region;
     }
 
+    /**
+     * This returns string representation of int,boolean,string,float value of given key
+     *
+     * @param manifest bundle to retrieve values from
+     * @param name     key of bundle
+     * @return string representation of int,boolean,string,float
+     */
     private static String _getManifestStringValueForKey(Bundle manifest, String name) {
         try {
             Object o = manifest.get(name);

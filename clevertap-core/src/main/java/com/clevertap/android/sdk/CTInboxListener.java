@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk;
 
+import com.clevertap.android.sdk.inbox.CTInboxMessage;
+
 public interface CTInboxListener {
 
     /**

@@ -1,3 +1,5 @@
+apply plugin: 'org.sonarqube'
+
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
     // do not change order of apply
@@ -6,29 +8,39 @@ buildscript {
 
     repositories {
         google()// Google's Maven repository
-        jcenter()
-        maven { url 'http://developer.huawei.com/repo/' }
         mavenCentral()
+        gradlePluginPortal()
+        maven { url 'http://developer.huawei.com/repo/' }
+
     }
     dependencies {
         classpath "com.android.tools.build:gradle:$gradlePluginVersion"
         classpath "com.google.gms:google-services:$googleServicesPluginVersion"// Google Services plugin
         classpath "com.github.dcendents:android-maven-gradle-plugin:$mavenPluginVersion"
-        classpath "com.jfrog.bintray.gradle:gradle-bintray-plugin:$bintrayPluginVersion"
         classpath "com.huawei.agconnect:agcp:$huaweiPluginVersion"// Huawei Push Plugin
         classpath "org.jacoco:org.jacoco.core:$jacocoVersion"
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.1.1"
     }
 }
 
 allprojects {
     repositories {
-        jcenter()
         google()
+        mavenCentral()
+        gradlePluginPortal()
         maven { url 'http://developer.huawei.com/repo/' }
         flatDir {
             dirs 'libs'
         }
+    }
+}
+
+sonarqube {
+    properties {
+        property "sonar.projectKey", "CleverTap_clevertap-android-sdk"
+        property "sonar.organization", "clevertap"
+        property "sonar.host.url", "https://sonarcloud.io"
     }
 }
 

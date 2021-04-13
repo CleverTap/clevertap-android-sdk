@@ -9,20 +9,23 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.WindowManager;
 import androidx.fragment.app.FragmentActivity;
+import com.clevertap.android.sdk.inapp.CTInAppBaseFullFragment;
+import com.clevertap.android.sdk.inapp.CTInAppHtmlCoverFragment;
+import com.clevertap.android.sdk.inapp.CTInAppHtmlHalfInterstitialFragment;
+import com.clevertap.android.sdk.inapp.CTInAppHtmlInterstitialFragment;
+import com.clevertap.android.sdk.inapp.CTInAppNativeCoverFragment;
+import com.clevertap.android.sdk.inapp.CTInAppNativeCoverImageFragment;
+import com.clevertap.android.sdk.inapp.CTInAppNativeHalfInterstitialFragment;
+import com.clevertap.android.sdk.inapp.CTInAppNativeHalfInterstitialImageFragment;
+import com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialFragment;
+import com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialImageFragment;
+import com.clevertap.android.sdk.inapp.CTInAppNotification;
+import com.clevertap.android.sdk.inapp.CTInAppType;
+import com.clevertap.android.sdk.inapp.InAppListener;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 
-public final class InAppNotificationActivity extends FragmentActivity implements CTInAppBaseFragment.InAppListener {
-
-    interface InAppActivityListener {
-
-        void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData,
-                HashMap<String, String> keyValuePayload);
-
-        void inAppNotificationDidDismiss(Context context, CTInAppNotification inAppNotification, Bundle formData);
-
-        void inAppNotificationDidShow(CTInAppNotification inAppNotification, Bundle formData);
-    }
+public final class InAppNotificationActivity extends FragmentActivity implements InAppListener {
 
     private static boolean isAlertVisible = false;
 
@@ -30,7 +33,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     private CTInAppNotification inAppNotification;
 
-    private WeakReference<InAppActivityListener> listenerWeakReference;
+    private WeakReference<InAppListener> listenerWeakReference;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,7 +51,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             if (configBundle != null) {
                 config = configBundle.getParcelable("config");
             }
-            setListener(CleverTapAPI.instanceWithConfig(getApplicationContext(), config));
+            setListener(CleverTapAPI.instanceWithConfig(this, config).getCoreState().getInAppController());
         } catch (Throwable t) {
             Logger.v("Cannot find a valid notification bundle to show!", t);
             finish();
@@ -137,7 +140,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     }
 
     void didClick(Bundle data, HashMap<String, String> keyValueMap) {
-        InAppActivityListener listener = getListener();
+        InAppListener listener = getListener();
         if (listener != null) {
             listener.inAppNotificationDidClick(inAppNotification, data, keyValueMap);
         }
@@ -148,14 +151,14 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             isAlertVisible = false;
         }
         finish();
-        InAppActivityListener listener = getListener();
+        InAppListener listener = getListener();
         if (listener != null && getBaseContext() != null) {
             listener.inAppNotificationDidDismiss(getBaseContext(), inAppNotification, data);
         }
     }
 
     void didShow(Bundle data) {
-        InAppActivityListener listener = getListener();
+        InAppListener listener = getListener();
         if (listener != null) {
             listener.inAppNotificationDidShow(inAppNotification, data);
         }
@@ -171,8 +174,8 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         didDismiss(formData);
     }
 
-    InAppActivityListener getListener() {
-        InAppActivityListener listener = null;
+    InAppListener getListener() {
+        InAppListener listener = null;
         try {
             listener = listenerWeakReference.get();
         } catch (Throwable t) {
@@ -185,7 +188,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         return listener;
     }
 
-    void setListener(InAppActivityListener listener) {
+    void setListener(InAppListener listener) {
         listenerWeakReference = new WeakReference<>(listener);
     }
 
@@ -347,10 +350,13 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                 });
                     }
                 }
-                //noinspection ConstantConditions
-                alertDialog.show();
-                isAlertVisible = true;
-                didShow(null);
+                if(alertDialog != null){
+                    alertDialog.show();
+                    isAlertVisible = true;
+                    didShow(null);
+                }else{
+                    config.getLogger().debug("InAppNotificationActivity: Alert Dialog is null, not showing Alert InApp");
+                }
                 break;
             }
             default: {

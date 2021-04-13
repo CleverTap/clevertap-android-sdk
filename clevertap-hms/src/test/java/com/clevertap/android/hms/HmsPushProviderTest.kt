@@ -26,11 +26,9 @@ class HmsPushProviderTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         ctPushProviderListener = mock(CTPushProviderListener::class.java)
-        pushProvider = HmsPushProvider(ctPushProviderListener)
+        pushProvider = HmsPushProvider(ctPushProviderListener, application, cleverTapInstanceConfig)
         sdkHandler = mock(IHmsSdkHandler::class.java)
         pushProvider.setHmsSdkHandler(sdkHandler)
-        `when`(ctPushProviderListener.context()).thenReturn(application)
-        `when`(ctPushProviderListener.config()).thenReturn(cleverTapInstanceConfig)
     }
 
     @Test

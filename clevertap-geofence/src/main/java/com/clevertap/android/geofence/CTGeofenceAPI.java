@@ -41,7 +41,7 @@ public class CTGeofenceAPI implements GeofenceCallback {
 
     private static CTGeofenceAPI ctGeofenceAPI;
 
-    private static Logger logger;
+    private static final Logger logger;
 
     private String accountId;
 
@@ -78,13 +78,9 @@ public class CTGeofenceAPI implements GeofenceCallback {
      */
     @SuppressWarnings("WeakerAccess")
     @NonNull
-    public static CTGeofenceAPI getInstance(@NonNull Context context) {
+    public static synchronized CTGeofenceAPI getInstance(@NonNull Context context) {
         if (ctGeofenceAPI == null) {
-            synchronized (CTGeofenceAPI.class) {
-                if (ctGeofenceAPI == null) {
-                    ctGeofenceAPI = new CTGeofenceAPI(context);
-                }
-            }
+            ctGeofenceAPI = new CTGeofenceAPI(context);
         }
         return ctGeofenceAPI;
     }

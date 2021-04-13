@@ -1,21 +1,6 @@
 <p align="center">
-  <img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/clevertap-logo.png" width="300"/>
+  <img src="https://github.com/CleverTap/clevertap-ios-sdk/blob/master/docs/images/clevertap-logo.png" height="220"/>
 </p>
-
-## ⍗ Table of contents
-
-* [Introduction](#-introduction)
-* [Installation](#-installation)
-* [Permissions](#-permissions)
-* [Initialization](#-initialization)
-* [Settings parameters](#-settings-parameters)
-* [Trigger Location](#-trigger-location)
-* [Callbacks/Listeners](#-callbackslisteners)
-* [Deactivation](#%EF%B8%8F-deactivation)
-* [ProGuard](#-proguard)
-* [Example Usage](#-example-usage)
-* [FAQ](#-faq)
-* [Questions](#-questions)
 
 ## 👋 Introduction
 [(Back to top)](#-table-of-contents)
@@ -31,8 +16,8 @@ CleverTap Android Geofence SDK provides **Geofencing capabilities** to CleverTap
 Add the following dependencies to the `build.gradle`
 
 ```Groovy
-implementation "com.clevertap.android:clevertap-geofence-sdk:1.0.1"
-implementation "com.clevertap.android:clevertap-android-sdk:4.0.2" // 3.9.0 and above
+implementation "com.clevertap.android:clevertap-geofence-sdk:1.0.2"
+implementation "com.clevertap.android:clevertap-android-sdk:4.1.0" // 3.9.0 and above
 implementation "com.google.android.gms:play-services-location:17.0.0"
 implementation "androidx.work:work-runtime:2.3.4" // required for FETCH_LAST_LOCATION_PERIODIC
 implementation "androidx.concurrent:concurrent-futures:1.0.0" // required for FETCH_LAST_LOCATION_PERIODIC
@@ -76,6 +61,7 @@ CTGeofenceSettings ctGeofenceSettings = new CTGeofenceSettings.Builder()
                 .setInterval(interval)//long value for interval in milliseconds
                 .setFastestInterval(fastestInterval)//long value for fastest interval in milliseconds
                 .setSmallestDisplacement(displacement)//float value for smallest Displacement in meters
+                .setGeofenceNotificationResponsiveness(geofenceNotificationResponsiveness)// int value for geofence notification responsiveness in milliseconds
                 .build();
  ```
 **Note** - 

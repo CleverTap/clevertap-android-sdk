@@ -20,7 +20,7 @@
             android:orientation="vertical"
             android:visibility="visible">
 
-            <com.clevertap.android.sdk.CTCarouselViewPager
+            <com.clevertap.android.sdk.inbox.CTCarouselViewPager
                 android:id="@+id/image_carousel_viewpager"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />

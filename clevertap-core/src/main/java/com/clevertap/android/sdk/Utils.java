@@ -21,7 +21,10 @@ import android.os.Looper;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
 import androidx.core.content.ContextCompat;
+import com.google.firebase.iid.FirebaseInstanceId;
+import com.google.firebase.messaging.FirebaseMessaging;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,8 +40,9 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
 public final class Utils {
+
+    public static boolean haveVideoPlayerSupport;
 
     public static boolean containsIgnoreCase(Collection<String> collection, String key) {
         if (collection == null || key == null) {
@@ -50,6 +54,41 @@ public final class Utils {
             }
         }
         return false;
+    }
+
+    public static HashMap<String, Object> convertBundleObjectToHashMap(Bundle b) {
+        final HashMap<String, Object> map = new HashMap<>();
+        for (String s : b.keySet()) {
+            final Object o = b.get(s);
+
+            if (o instanceof Bundle) {
+                map.putAll(convertBundleObjectToHashMap((Bundle) o));
+            } else {
+                map.put(s, b.get(s));
+            }
+        }
+        return map;
+    }
+
+    public static HashMap<String, Object> convertJSONObjectToHashMap(JSONObject b) {
+        final HashMap<String, Object> map = new HashMap<>();
+        final Iterator<String> keys = b.keys();
+
+        while (keys.hasNext()) {
+            try {
+                final String s = keys.next();
+                final Object o = b.get(s);
+                if (o instanceof JSONObject) {
+                    map.putAll(convertJSONObjectToHashMap((JSONObject) o));
+                } else {
+                    map.put(s, b.get(s));
+                }
+            } catch (Throwable ignored) {
+                // Ignore
+            }
+        }
+
+        return map;
     }
 
     public static String convertToTitleCase(String text) {
@@ -73,6 +112,88 @@ public final class Utils {
         }
 
         return converted.toString();
+    }
+
+    public static Bitmap getBitmapFromURL(String srcUrl) {
+        // Safe bet, won't have more than three /s
+        srcUrl = srcUrl.replace("///", "/");
+        srcUrl = srcUrl.replace("//", "/");
+        srcUrl = srcUrl.replace("http:/", "http://");
+        srcUrl = srcUrl.replace("https:/", "https://");
+        HttpURLConnection connection = null;
+        try {
+            URL url = new URL(srcUrl);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setDoInput(true);
+            connection.connect();
+            InputStream input = connection.getInputStream();
+            return BitmapFactory.decodeStream(input);
+        } catch (IOException e) {
+
+            Logger.v("Couldn't download the notification icon. URL was: " + srcUrl);
+            return null;
+        } finally {
+            try {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            } catch (Throwable t) {
+                Logger.v("Couldn't close connection!", t);
+            }
+        }
+    }
+
+    public static byte[] getByteArrayFromImageURL(String srcUrl) {
+        srcUrl = srcUrl.replace("///", "/");
+        srcUrl = srcUrl.replace("//", "/");
+        srcUrl = srcUrl.replace("http:/", "http://");
+        srcUrl = srcUrl.replace("https:/", "https://");
+        HttpsURLConnection connection = null;
+        try {
+            URL url = new URL(srcUrl);
+            connection = (HttpsURLConnection) url.openConnection();
+            InputStream is = connection.getInputStream();
+            byte[] buffer = new byte[8192];
+            int bytesRead;
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            while ((bytesRead = is.read(buffer)) != -1) {
+                baos.write(buffer, 0, bytesRead);
+            }
+            return baos.toByteArray();
+        } catch (IOException e) {
+            Logger.v("Error processing image bytes from url: " + srcUrl);
+            return null;
+        } finally {
+            try {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            } catch (Throwable t) {
+                Logger.v("Couldn't close connection!", t);
+            }
+        }
+    }
+
+    public static Bitmap getNotificationBitmap(String icoPath, boolean fallbackToAppIcon, final Context context)
+            throws NullPointerException {
+        // If the icon path is not specified
+        if (icoPath == null || icoPath.equals("")) {
+            return fallbackToAppIcon ? getAppIcon(context) : null;
+        }
+        // Simply stream the bitmap
+        if (!icoPath.startsWith("http")) {
+            icoPath = Constants.ICON_BASE_URL + "/" + icoPath;
+        }
+        Bitmap ic = getBitmapFromURL(icoPath);
+        return (ic != null) ? ic : ((fallbackToAppIcon) ? getAppIcon(context) : null);
+    }
+
+    public static int getThumbnailImage(Context context, String image) {
+        if (context != null) {
+            return context.getResources().getIdentifier(image, "drawable", context.getPackageName());
+        } else {
+            return -1;
+        }
     }
 
     public static boolean isActivityDead(Activity activity) {
@@ -149,20 +270,7 @@ public final class Utils {
         return bundle;
     }
 
-    static HashMap<String, Object> convertBundleObjectToHashMap(Bundle b) {
-        final HashMap<String, Object> map = new HashMap<>();
-        for (String s : b.keySet()) {
-            final Object o = b.get(s);
-            if (o instanceof Bundle) {
-                map.putAll(convertBundleObjectToHashMap((Bundle) o));
-            } else {
-                map.put(s, b.get(s));
-            }
-        }
-        return map;
-    }
-
-    static ArrayList<String> convertJSONArrayToArrayList(JSONArray array) {
+    public static ArrayList<String> convertJSONArrayToArrayList(JSONArray array) {
         ArrayList<String> listdata = new ArrayList<>();
         if (array != null) {
             for (int i = 0; i < array.length(); i++) {
@@ -174,27 +282,6 @@ public final class Utils {
             }
         }
         return listdata;
-    }
-
-    static HashMap<String, Object> convertJSONObjectToHashMap(JSONObject b) {
-        final HashMap<String, Object> map = new HashMap<>();
-        final Iterator<String> keys = b.keys();
-
-        while (keys.hasNext()) {
-            try {
-                final String s = keys.next();
-                final Object o = b.get(s);
-                if (o instanceof JSONObject) {
-                    map.putAll(convertJSONObjectToHashMap((JSONObject) o));
-                } else {
-                    map.put(s, b.get(s));
-                }
-            } catch (Throwable ignored) {
-                // Ignore
-            }
-        }
-
-        return map;
     }
 
     static Bitmap drawableToBitmap(Drawable drawable)
@@ -212,68 +299,8 @@ public final class Utils {
         return bitmap;
     }
 
-    static Bitmap getBitmapFromURL(String srcUrl) {
-        // Safe bet, won't have more than three /s
-        srcUrl = srcUrl.replace("///", "/");
-        srcUrl = srcUrl.replace("//", "/");
-        srcUrl = srcUrl.replace("http:/", "http://");
-        srcUrl = srcUrl.replace("https:/", "https://");
-        HttpURLConnection connection = null;
-        try {
-            URL url = new URL(srcUrl);
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setDoInput(true);
-            connection.connect();
-            InputStream input = connection.getInputStream();
-            return BitmapFactory.decodeStream(input);
-        } catch (IOException e) {
-
-            Logger.v("Couldn't download the notification icon. URL was: " + srcUrl);
-            return null;
-        } finally {
-            try {
-                if (connection != null) {
-                    connection.disconnect();
-                }
-            } catch (Throwable t) {
-                Logger.v("Couldn't close connection!", t);
-            }
-        }
-    }
-
-    static byte[] getByteArrayFromImageURL(String srcUrl) {
-        srcUrl = srcUrl.replace("///", "/");
-        srcUrl = srcUrl.replace("//", "/");
-        srcUrl = srcUrl.replace("http:/", "http://");
-        srcUrl = srcUrl.replace("https:/", "https://");
-        HttpsURLConnection connection = null;
-        try {
-            URL url = new URL(srcUrl);
-            connection = (HttpsURLConnection) url.openConnection();
-            InputStream is = connection.getInputStream();
-            byte[] buffer = new byte[8192];
-            int bytesRead;
-            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
-            while ((bytesRead = is.read(buffer)) != -1) {
-                baos.write(buffer, 0, bytesRead);
-            }
-            return baos.toByteArray();
-        } catch (IOException e) {
-            Logger.v("Error processing image bytes from url: " + srcUrl);
-            return null;
-        } finally {
-            try {
-                if (connection != null) {
-                    connection.disconnect();
-                }
-            } catch (Throwable t) {
-                Logger.v("Couldn't close connection!", t);
-            }
-        }
-    }
-
     @SuppressLint("MissingPermission")
-    static String getCurrentNetworkType(final Context context) {
+    public static String getCurrentNetworkType(final Context context) {
         try {
             // First attempt to check for WiFi connectivity
             ConnectivityManager connManager = (ConnectivityManager) context
@@ -296,7 +323,7 @@ public final class Utils {
     }
 
     @SuppressLint("MissingPermission")
-    static String getDeviceNetworkType(final Context context) {
+    public static String getDeviceNetworkType(final Context context) {
         // Fall back to network type
         TelephonyManager teleMan = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         if (teleMan == null) {
@@ -344,32 +371,10 @@ public final class Utils {
         }
     }
 
-    static long getMemoryConsumption() {
+    public static long getMemoryConsumption() {
         long free = Runtime.getRuntime().freeMemory();
         long total = Runtime.getRuntime().totalMemory();
         return total - free;
-    }
-
-    static Bitmap getNotificationBitmap(String icoPath, boolean fallbackToAppIcon, final Context context)
-            throws NullPointerException {
-        // If the icon path is not specified
-        if (icoPath == null || icoPath.equals("")) {
-            return fallbackToAppIcon ? getAppIcon(context) : null;
-        }
-        // Simply stream the bitmap
-        if (!icoPath.startsWith("http")) {
-            icoPath = Constants.ICON_BASE_URL + "/" + icoPath;
-        }
-        Bitmap ic = getBitmapFromURL(icoPath);
-        return (ic != null) ? ic : ((fallbackToAppIcon) ? getAppIcon(context) : null);
-    }
-
-    static int getThumbnailImage(Context context, String image) {
-        if (context != null) {
-            return context.getResources().getIdentifier(image, "drawable", context.getPackageName());
-        } else {
-            return -1;
-        }
     }
 
     /**
@@ -378,7 +383,7 @@ public final class Utils {
      * @param context    The Android {@link Context}
      * @param permission The fully qualified Android permission name
      */
-    static boolean hasPermission(final Context context, String permission) {
+    public static boolean hasPermission(final Context context, String permission) {
         try {
             return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permission);
         } catch (Throwable t) {
@@ -386,7 +391,7 @@ public final class Utils {
         }
     }
 
-    static boolean validateCTID(String cleverTapID) {
+    public static boolean validateCTID(String cleverTapID) {
         if (cleverTapID == null) {
             Logger.i(
                     "CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is NULL.");
@@ -408,6 +413,37 @@ public final class Utils {
         return true;
     }
 
+    public static int getNow() {
+        return (int) (System.currentTimeMillis() / 1000);
+    }
+
+    /**
+     * Method to check whether app has ExoPlayer dependencies
+     *
+     * @return boolean - true/false depending on app's availability of ExoPlayer dependencies
+     */
+    private static boolean checkForExoPlayer() {
+        boolean exoPlayerPresent = false;
+        Class className = null;
+        try {
+            className = Class.forName("com.google.android.exoplayer2.SimpleExoPlayer");
+            className = Class.forName("com.google.android.exoplayer2.source.hls.HlsMediaSource");
+            className = Class.forName("com.google.android.exoplayer2.ui.PlayerView");
+            Logger.d("ExoPlayer is present");
+            exoPlayerPresent = true;
+        } catch (Throwable t) {
+            Logger.d("ExoPlayer library files are missing!!!");
+            Logger.d(
+                    "Please add ExoPlayer dependencies to render InApp or Inbox messages playing video. For more information checkout CleverTap documentation.");
+            if (className != null) {
+                Logger.d("ExoPlayer classes not found " + className.getName());
+            } else {
+                Logger.d("ExoPlayer classes not found");
+            }
+        }
+        return exoPlayerPresent;
+    }
+
     private static Bitmap getAppIcon(final Context context) throws NullPointerException {
         // Try to get the app logo first
         try {
@@ -421,5 +457,26 @@ public final class Utils {
             // No error handling here - handle upstream
             return drawableToBitmap(context.getPackageManager().getApplicationIcon(context.getApplicationInfo()));
         }
+    }
+
+    static {
+        haveVideoPlayerSupport = checkForExoPlayer();
+    }
+
+    @RestrictTo(Scope.LIBRARY)
+    public static String getFcmTokenUsingManifestMetaEntry(Context context, CleverTapInstanceConfig config) {
+        String token = null;
+        try {
+            String senderID = ManifestInfo.getInstance(context).getFCMSenderId();
+            if (senderID != null) {
+                config.getLogger().verbose(config.getAccountId(),
+                        "Requesting an FCM token with Manifest SenderId - " + senderID);
+                token = FirebaseInstanceId.getInstance().getToken(senderID, FirebaseMessaging.INSTANCE_ID_SCOPE);
+            }
+            config.getLogger().info(config.getAccountId(), "FCM token using Manifest SenderId: " + token);
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(), "Error requesting FCM token with Manifest SenderId", t);
+        }
+        return token;
     }
 }

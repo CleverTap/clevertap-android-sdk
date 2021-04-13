@@ -4,6 +4,9 @@ import static com.clevertap.android.sdk.StorageHelper.getPreferences;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import androidx.annotation.RestrictTo;
+import androidx.annotation.RestrictTo.Scope;
+import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -13,13 +16,14 @@ import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-class InAppFCManager {
+@RestrictTo(Scope.LIBRARY)
+public class InAppFCManager {
 
-    private static final SimpleDateFormat ddMMyyyy = new SimpleDateFormat("ddMMyyyy", Locale.US);
+    private final SimpleDateFormat ddMMyyyy = new SimpleDateFormat("ddMMyyyy", Locale.US);
 
-    private CleverTapInstanceConfig config;
+    private final CleverTapInstanceConfig config;
 
-    private Context context;
+    private final Context context;
 
     private String deviceId;
 
@@ -37,7 +41,73 @@ class InAppFCManager {
         init(deviceId);
     }
 
-    void attachToHeader(final Context context, JSONObject header) {
+    public boolean canShow(CTInAppNotification inapp) {
+        try {
+            if (inapp == null) {
+                return false;
+            }
+
+            final String id = getInAppID(inapp);
+            if (id == null) {
+                return true;
+            }
+
+            // Exclude from all caps?
+            if (inapp.isExcludeFromCaps()) {
+                return true;
+            }
+
+            if (!hasSessionCapacityMaxedOut(inapp)
+                    && !hasLifetimeCapacityMaxedOut(inapp)
+                    && !hasDailyCapacityMaxedOut(inapp)) {
+                return true;
+            }
+        } catch (Throwable t) {
+            return false;
+        }
+        return false;
+    }
+
+    public void changeUser(String deviceId) {
+        // reset counters
+        mShownThisSession.clear();
+        mShownThisSessionCount = 0;
+        mDismissedThisSession.clear();
+        this.deviceId = deviceId;
+        init(deviceId);
+    }
+
+    public void didDismiss(CTInAppNotification inapp) {
+        final Object id = inapp.getId();
+        if (id != null) {
+            mDismissedThisSession.add(id.toString());
+        }
+    }
+
+    public void didShow(final Context context, CTInAppNotification inapp) {
+        final String id = getInAppID(inapp);
+        if (id == null) {
+            return;
+        }
+
+        mShownThisSessionCount++;
+
+        Integer count = mShownThisSession.get(id);
+        if (count == null) {
+            count = 1;
+        }
+
+        mShownThisSession.put(id, ++count);
+
+        incrementInAppCountsInPersistentStore(id);
+
+        int shownToday = getIntFromPrefs(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId), 0);
+        StorageHelper
+                .putInt(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId)),
+                        ++shownToday);
+    }
+
+    public void attachToHeader(final Context context, JSONObject header) {
         try {
             // Trigger reset for dates
 
@@ -68,73 +138,7 @@ class InAppFCManager {
         }
     }
 
-    boolean canShow(CTInAppNotification inapp) {
-        try {
-            if (inapp == null) {
-                return false;
-            }
-
-            final String id = getInAppID(inapp);
-            if (id == null) {
-                return true;
-            }
-
-            // Exclude from all caps?
-            if (inapp.isExcludeFromCaps()) {
-                return true;
-            }
-
-            if (!hasSessionCapacityMaxedOut(inapp)
-                    && !hasLifetimeCapacityMaxedOut(inapp)
-                    && !hasDailyCapacityMaxedOut(inapp)) {
-                return true;
-            }
-        } catch (Throwable t) {
-            return false;
-        }
-        return false;
-    }
-
-    void changeUser(String deviceId) {
-        // reset counters
-        mShownThisSession.clear();
-        mShownThisSessionCount = 0;
-        mDismissedThisSession.clear();
-        this.deviceId = deviceId;
-        init(deviceId);
-    }
-
-    void didDismiss(CTInAppNotification inapp) {
-        final Object id = inapp.getId();
-        if (id != null) {
-            mDismissedThisSession.add(id.toString());
-        }
-    }
-
-    void didShow(final Context context, CTInAppNotification inapp) {
-        final String id = getInAppID(inapp);
-        if (id == null) {
-            return;
-        }
-
-        mShownThisSessionCount++;
-
-        Integer count = mShownThisSession.get(id);
-        if (count == null) {
-            count = 1;
-        }
-
-        mShownThisSession.put(id, ++count);
-
-        incrementInAppCountsInPersistentStore(id);
-
-        int shownToday = getIntFromPrefs(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId), 0);
-        StorageHelper
-                .putInt(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_COUNTS_SHOWN_TODAY, deviceId)),
-                        ++shownToday);
-    }
-
-    void processResponse(final Context context, final JSONObject response) {
+    public void processResponse(final Context context, final JSONObject response) {
         try {
             if (!response.has("inapp_stale")) {
                 return;
@@ -163,7 +167,7 @@ class InAppFCManager {
         }
     }
 
-    synchronized void updateLimits(final Context context, int perDay, int perSession) {
+    public synchronized void updateLimits(final Context context, int perDay, int perSession) {
         StorageHelper.putInt(context, storageKeyWithSuffix(getKeyWithDeviceId(Constants.KEY_MAX_PER_DAY, deviceId)),
                 perDay);
         StorageHelper

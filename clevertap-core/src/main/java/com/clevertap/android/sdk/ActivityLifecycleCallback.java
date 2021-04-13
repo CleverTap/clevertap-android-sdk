@@ -11,7 +11,7 @@ import android.os.Bundle;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public final class ActivityLifecycleCallback {
 
-    static boolean registered = false;
+    public static boolean registered = false;
 
     /**
      * Enables lifecycle callbacks for Android devices

@@ -35,7 +35,7 @@
             android:scaleType="centerCrop"
             android:visibility="invisible" />
 
-        <com.clevertap.android.sdk.GifImageView
+        <com.clevertap.android.sdk.gif.GifImageView
             android:id="@+id/gifImage"
             android:layout_width="458dp"
             android:layout_height="256dp"
@@ -104,7 +104,7 @@
         </LinearLayout>
     </RelativeLayout>
 
-    <com.clevertap.android.sdk.CloseImageView
+    <com.clevertap.android.sdk.customviews.CloseImageView
         android:layout_width="40dp"
         android:layout_height="40dp"
         android:layout_gravity="top|end"

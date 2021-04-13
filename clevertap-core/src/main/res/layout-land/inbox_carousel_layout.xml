@@ -17,7 +17,7 @@
             android:layout_height="match_parent"
             android:layout_above="@+id/timestamp_relative_layout">
 
-            <com.clevertap.android.sdk.CTCarouselViewPager
+            <com.clevertap.android.sdk.inbox.CTCarouselViewPager
                 android:id="@+id/image_carousel_viewpager"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent" />

@@ -44,7 +44,8 @@ import org.skyscreamer.jsonassert.JSONAssert;
         application = TestApplication.class
 )
 @PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*", "androidx.*", "org.json.*"})
-@PrepareForTest({FileUtils.class, CTGeofenceAPI.class, CleverTapAPI.class, com.clevertap.android.sdk.Utils.class})
+@PrepareForTest({FileUtils.class, CTGeofenceAPI.class, CleverTapAPI.class,
+        com.clevertap.android.sdk.Utils.class})
 public class UtilsTest extends BaseTestCase {
 
     @Rule

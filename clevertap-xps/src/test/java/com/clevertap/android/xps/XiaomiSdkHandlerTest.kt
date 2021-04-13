@@ -21,7 +21,7 @@ class XiaomiSdkHandlerTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         manifestInfo = Mockito.mock(ManifestInfo::class.java)
-        handler = XiaomiSdkHandler(baseCTApiListener)
+        handler = XiaomiSdkHandler(application, cleverTapInstanceConfig)
         handler.setManifestInfo(manifestInfo)
     }
 

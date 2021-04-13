@@ -10,7 +10,7 @@
             android:theme="@android:style/Theme.Translucent.NoTitleBar" />
 
         <activity
-            android:name="com.clevertap.android.sdk.CTInboxActivity"
+            android:name="com.clevertap.android.sdk.inbox.CTInboxActivity"
             android:configChanges="keyboardHidden"
             android:theme="@style/Theme.AppCompat.DayNight.DarkActionBar" />
 
