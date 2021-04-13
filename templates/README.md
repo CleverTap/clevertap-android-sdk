@@ -1,23 +1,10 @@
 <p align="center">
-  <img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/clevertap-logo.png" width="300"/>
+  <img src="https://github.com/CleverTap/clevertap-ios-sdk/blob/master/docs/images/clevertap-logo.png" height="220"/>
 </p>
 
 # CleverTap Android SDKs
 [![Build Status](https://app.bitrise.io/app/09efc6b9404a6341/status.svg?token=TejL3E1NHyTiR5ajHKGJ6Q)](https://app.bitrise.io/app/09efc6b9404a6341)
-[![codebeat badge](https://codebeat.co/badges/49b05fa0-4228-443c-9f1c-d11efa6d2ef8)](https://codebeat.co/projects/github-com-clevertap-clevertap-android-sdk-master)
-[ ![Download](https://api.bintray.com/packages/clevertap/Maven/CleverTapAndroidSDK/images/download.svg) ](https://bintray.com/clevertap/Maven/CleverTapAndroidSDK/_latestVersion)
-
-## ⍗ Table of contents
-* [Introduction](#-introduction)
-* [Installation](#-installation)
-	* [Dependencies](#-dependencies)
-* [Integration](#-integration)
-* [Initialization](#-initialization)
-* [Example Usage](#-example-usage)
-* [CleverTap Geofence SDK](#-clevertap-geofence-sdk)
-* [CleverTap Xiaomi Push SDK](#-clevertap-xiaomi-push-sdk)
-* [CleverTap Huawei Push SDK](#-clevertap-huawei-push-sdk)
-* [License](#-license)
+[![Download](https://api.bintray.com/packages/clevertap/Maven/CleverTapAndroidSDK/images/download.svg) ](https://bintray.com/clevertap/Maven/CleverTapAndroidSDK/_latestVersion)
 
 ## 👋 Introduction
 [(Back to top)](#-table-of-contents)
@@ -33,7 +20,7 @@ To get started, sign up [here](https://clevertap.com/live-product-demo/)
 ## 🎉 Installation
 [(Back to top)](#-table-of-contents)
 
-We publish the SDK to `jcenter` and `mavenCentral` as an `AAR` file. Just declare it as dependency in your `build.gradle` file.
+We publish the SDK to `mavenCentral` as an `AAR` file. Just declare it as dependency in your `build.gradle` file.
 
 ```groovy
     dependencies {      
@@ -73,7 +60,7 @@ Also be sure to include the `google-services.json` classpath in your Project lev
     buildscript {       
          repositories {      
              google()
-             jcenter()       
+             mavenCentral()       
 
              // if you are including the aar file manually in your Module libs directory add this:
              flatDir {
@@ -104,7 +91,7 @@ Interstitial InApp Notification templates support Audio and Video with the help 
     implementation "${ext.deps.exoPlayerUi}"
 ```  
 
-Once you've updated your module `build.gradle` file, make sure you have specified `jcenter()` and `google()` as a repositories in your project `build.gradle` and then sync your project in File -> Sync Project with Gradle Files.
+Once you've updated your module `build.gradle` file, make sure you have specified `mavenCentral()` and `google()` as a repositories in your project `build.gradle` and then sync your project in File -> Sync Project with Gradle Files.
 
 ## 🎉 Integration
 [(Back to top)](#-table-of-contents)
@@ -194,7 +181,6 @@ CleverTap Xiaomi Push SDK provides an out of the box service to use the Xiaomi P
 [(Back to top)](#-table-of-contents)
 
 CleverTap Huawei Push SDK provides an out of the box service to use the Huawei Messaging Service. Find the integration steps for the CleverTap Huawei Push SDK [here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTHUAWEIPUSH.md)
-
 
 ## 📄 License
 [(Back to top)](#-table-of-contents)

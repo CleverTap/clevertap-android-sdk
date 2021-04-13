@@ -9,8 +9,6 @@ ext {
     licenseName = 'MIT License'
     licenseUrl = 'https://opensource.org/licenses/MIT'
     allLicenses = ["MIT"]
-
-    minSdkVersionVal = 16
 }
 
 apply from: "../gradle-scripts/commons.gradle"
@@ -22,7 +20,4 @@ dependencies {
     compileOnly deps.androidXAnnotation
     testImplementation project(':test_shared')
     testImplementation fileTree('libs')
-    testImplementation deps.kotlinStdlib
-    testImplementation deps.json
-    testImplementation deps.gson
 }

@@ -8,9 +8,9 @@
 
     <application>
 
-        <receiver android:name=".CTGeofenceReceiver"></receiver>
+        <receiver android:name=".CTGeofenceReceiver" />
 
-        <receiver android:name=".CTLocationUpdateReceiver"></receiver>
+        <receiver android:name=".CTLocationUpdateReceiver" />
 
         <receiver android:name=".CTGeofenceBootReceiver">
             <intent-filter>

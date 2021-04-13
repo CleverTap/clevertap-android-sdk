@@ -4,13 +4,11 @@ import android.content.Context;
 import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
-import com.clevertap.android.sdk.BaseCTApiListener;
-import com.clevertap.android.sdk.CTJsonConverter;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.DeviceInfo;
-import com.clevertap.android.sdk.LogConstants;
 import com.clevertap.android.sdk.StorageHelper;
+import com.clevertap.android.sdk.utils.CTJsonConverter;
 import org.json.JSONObject;
 
 /**
@@ -23,12 +21,12 @@ public class LoginInfoProvider {
 
     private final Context context;
 
-    private final DeviceInfo mDeviceInfo;
+    private final DeviceInfo deviceInfo;
 
-    public LoginInfoProvider(BaseCTApiListener ctApiListener) {
-        context = ctApiListener.context();
-        config = ctApiListener.config();
-        mDeviceInfo = ctApiListener.deviceInfo();
+    public LoginInfoProvider(Context context, CleverTapInstanceConfig config, DeviceInfo deviceInfo) {
+        this.context = context;
+        this.config = config;
+        this.deviceInfo = deviceInfo;
     }
 
     //Profile
@@ -60,7 +58,7 @@ public class LoginInfoProvider {
     public boolean deviceIsMultiUser() {
         JSONObject cachedGUIDs = getCachedGUIDs();
         boolean deviceIsMultiUser = cachedGUIDs.length() > 1;
-        config.log(LogConstants.LOG_TAG_ON_USER_LOGIN,
+        config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
                 "deviceIsMultiUser:[" + deviceIsMultiUser + "]");
         return deviceIsMultiUser;
     }
@@ -70,9 +68,29 @@ public class LoginInfoProvider {
      */
     public JSONObject getCachedGUIDs() {
         String json = StorageHelper.getStringFromPrefs(context, config, Constants.CACHED_GUIDS_KEY, null);
-        config.log(LogConstants.LOG_TAG_ON_USER_LOGIN,
+        config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
                 "getCachedGUIDs:[" + json + "]");
         return CTJsonConverter.toJsonObject(json, config.getLogger(), config.getAccountId());
+    }
+
+    /**
+     * Caches the <Identity_Value, Guid> pairs for this account
+     *
+     * @param cachedGUIDs - jsonObject of the Pairs
+     */
+    public void setCachedGUIDs(JSONObject cachedGUIDs) {
+        if (cachedGUIDs == null) {
+            return;
+        }
+        try {
+            String cachedGuid = cachedGUIDs.toString();
+            StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.CACHED_GUIDS_KEY),
+                    cachedGuid);
+            config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
+                    "setCachedGUIDs:[" + cachedGuid + "]");
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(), "Error persisting guid cache: " + t.toString());
+        }
     }
 
     /**
@@ -81,7 +99,7 @@ public class LoginInfoProvider {
     public String getCachedIdentityKeysForAccount() {
         String cachedKeys = StorageHelper
                 .getStringFromPrefs(context, config, Constants.SP_KEY_PROFILE_IDENTITIES, "");
-        config.log(LogConstants.LOG_TAG_ON_USER_LOGIN, "getCachedIdentityKeysForAccount:" + cachedKeys);
+        config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "getCachedIdentityKeysForAccount:" + cachedKeys);
         return cachedKeys;
     }
 
@@ -101,7 +119,7 @@ public class LoginInfoProvider {
         JSONObject cache = getCachedGUIDs();
         try {
             String cachedGuid = cache.getString(cacheKey);
-            config.log(LogConstants.LOG_TAG_ON_USER_LOGIN,
+            config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
                     "getGUIDForIdentifier:[Key:" + key + ", value:" + cachedGuid + "]");
             return cachedGuid;
         } catch (Throwable t) {
@@ -113,29 +131,9 @@ public class LoginInfoProvider {
     public boolean isAnonymousDevice() {
         JSONObject cachedGUIDs = getCachedGUIDs();
         boolean isAnonymousDevice = cachedGUIDs.length() <= 0;
-        config.log(LogConstants.LOG_TAG_ON_USER_LOGIN,
+        config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
                 "isAnonymousDevice:[" + isAnonymousDevice + "]");
         return isAnonymousDevice;
-    }
-
-    /**
-     * Caches the <Identity_Value, Guid> pairs for this account
-     *
-     * @param cachedGUIDs - jsonObject of the Pairs
-     */
-    public void setCachedGUIDs(JSONObject cachedGUIDs) {
-        if (cachedGUIDs == null) {
-            return;
-        }
-        try {
-            String cachedGuid = cachedGUIDs.toString();
-            StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.CACHED_GUIDS_KEY),
-                    cachedGuid);
-            config.log(LogConstants.LOG_TAG_ON_USER_LOGIN,
-                    "setCachedGUIDs:[" + cachedGuid + "]");
-        } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Error persisting guid cache: " + t.toString());
-        }
     }
 
     /**
@@ -147,7 +145,7 @@ public class LoginInfoProvider {
         JSONObject jsonObject = getCachedGUIDs();
         boolean isLoggedIn = jsonObject != null && jsonObject.length() > 0 && TextUtils
                 .isEmpty(getCachedIdentityKeysForAccount());
-        config.log(LogConstants.LOG_TAG_ON_USER_LOGIN, "isLegacyProfileLoggedIn:" + isLoggedIn);
+        config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "isLegacyProfileLoggedIn:" + isLoggedIn);
         return isLoggedIn;
     }
 
@@ -159,12 +157,12 @@ public class LoginInfoProvider {
     public void saveIdentityKeysForAccount(final String valueCommaSeparated) {
         StorageHelper.putString(context, config, Constants.SP_KEY_PROFILE_IDENTITIES,
                 valueCommaSeparated);
-        config.log(LogConstants.LOG_TAG_ON_USER_LOGIN, "saveIdentityKeysForAccount:" + valueCommaSeparated);
+        config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "saveIdentityKeysForAccount:" + valueCommaSeparated);
     }
 
     private boolean isErrorDeviceId() {
-        boolean isErrorDeviceId = mDeviceInfo.isErrorDeviceId();
-        config.log(LogConstants.LOG_TAG_ON_USER_LOGIN,
+        boolean isErrorDeviceId = deviceInfo.isErrorDeviceId();
+        config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
                 "isErrorDeviceId:[" + isErrorDeviceId + "]");
         return isErrorDeviceId;
     }

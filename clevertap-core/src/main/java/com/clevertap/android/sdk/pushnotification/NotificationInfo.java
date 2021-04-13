@@ -22,7 +22,7 @@ public final class NotificationInfo {
      * <p/>
      * True if and only if this notification is from CleverTap, and it should be parsed for information.
      */
-    private final boolean shouldRender;
+    public final boolean shouldRender;
 
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     public NotificationInfo(boolean fromCleverTap, boolean shouldRender) {

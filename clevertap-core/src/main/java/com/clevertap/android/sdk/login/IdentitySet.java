@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.login;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants;
@@ -41,6 +42,11 @@ public class IdentitySet {
         return identities.equals(that.identities);
     }
 
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
     /**
      * Stringifies the identity set in comma separated string value.
      * Set           String
@@ -48,6 +54,7 @@ public class IdentitySet {
      *
      * @return String value of the identity set.
      */
+    @NonNull
     @Override
     public String toString() {
         StringBuilder stringBuilder = new StringBuilder();

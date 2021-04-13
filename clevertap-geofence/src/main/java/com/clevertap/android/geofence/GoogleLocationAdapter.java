@@ -36,12 +36,12 @@ class GoogleLocationAdapter implements CTLocationAdapter {
      * Applicable for both fetch modes ({@link CTGeofenceSettings#FETCH_CURRENT_LOCATION_PERIODIC}) and
      * ({@link CTGeofenceSettings#FETCH_LAST_LOCATION_PERIODIC})
      */
-    static final long INTERVAL_IN_MILLIS = 30 * 60 * 1000;
+    static final long INTERVAL_IN_MILLIS = 30 * 60 * 1000L;
 
     /**
      * Applicable only for ({@link CTGeofenceSettings#FETCH_CURRENT_LOCATION_PERIODIC})
      */
-    static final long INTERVAL_FASTEST_IN_MILLIS = 30 * 60 * 1000;
+    static final long INTERVAL_FASTEST_IN_MILLIS = 30 * 60 * 1000L;
 
     /**
      * Applicable only for ({@link CTGeofenceSettings#FETCH_CURRENT_LOCATION_PERIODIC})
@@ -51,7 +51,7 @@ class GoogleLocationAdapter implements CTLocationAdapter {
     /**
      * Applicable only for ({@link CTGeofenceSettings#FETCH_LAST_LOCATION_PERIODIC})
      */
-    private static final long FLEX_INTERVAL_IN_MILLIS = 10 * 60 * 1000;
+    private static final long FLEX_INTERVAL_IN_MILLIS = 10 * 60 * 1000L;
 
     private boolean backgroundLocationUpdatesEnabled;
 

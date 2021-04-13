@@ -12,7 +12,7 @@ import org.json.JSONObject;
 @SuppressWarnings("WeakerAccess")
 public class CTWebInterface {
 
-    private WeakReference<CleverTapAPI> weakReference;
+    private final WeakReference<CleverTapAPI> weakReference;
 
     public CTWebInterface(CleverTapAPI instance) {
         this.weakReference = new WeakReference<>(instance);

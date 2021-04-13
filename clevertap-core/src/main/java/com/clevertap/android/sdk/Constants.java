@@ -18,7 +18,7 @@ public interface Constants {
     @interface IdentityType {
 
     }
-
+    String TAG_FEATURE_IN_APPS = "TAG_FEATURE_IN_APPS";
     @NonNull
     String TYPE_IDENTITY = "Identity";
     @NonNull
@@ -136,7 +136,7 @@ public interface Constants {
     String[] SYSTEM_EVENTS = {NOTIFICATION_CLICKED_EVENT_NAME,
             NOTIFICATION_VIEWED_EVENT_NAME, GEOFENCE_ENTERED_EVENT_NAME,
             GEOFENCE_EXITED_EVENT_NAME};
-    long DEFAULT_PUSH_TTL = 1000 * 60 * 60 * 24 * 4;
+    long DEFAULT_PUSH_TTL = 1000L * 60 * 60 * 24 * 4;// 4 days
     String PF_JOB_ID = "pfjobid";
     int PING_FREQUENCY_VALUE = 240;
     String PING_FREQUENCY = "pf";
@@ -187,8 +187,6 @@ public interface Constants {
     String KEY_ENABLE_CUSTOM_CT_ID = "getEnableCustomCleverTapId";
     String KEY_BETA = "beta";
     String KEY_PACKAGE_NAME = "packageName";
-    String KEY_ENABLE_UIEDITOR = "enableUIEditor";
-    String KEY_ENABLE_ABTEST = "enableABTesting";
     String KEY_ALLOWED_PUSH_TYPES = "allowedPushTypes";
     String KEY_IDENTITY_TYPES = "identityTypes";
     String WZRK_PUSH_ID = "wzrk_pid";
@@ -282,4 +280,8 @@ public interface Constants {
     // valid profile identifier keys
     HashSet<String> LEGACY_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL));
     HashSet<String> ALL_IDENTITY_KEYS = new HashSet<>(Arrays.asList(TYPE_IDENTITY, TYPE_EMAIL, TYPE_PHONE));
+
+    int MAX_DELAY_FREQUENCY = 1000 * 60 * 10;
+
+    String[] NULL_STRING_ARRAY = new String[0];
 }

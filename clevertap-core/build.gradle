@@ -8,8 +8,6 @@ ext {
     licenseName = 'The Apache Software License, Version 2.0'
     licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
     allLicenses = ["Apache-2.0"]
-
-    minSdkVersionVal = 16
 }
 
 apply from: "../gradle-scripts/commons.gradle"
@@ -31,7 +29,14 @@ dependencies {
 
     // Unit testing dependencies
     testImplementation project(':test_shared')
-    testImplementation deps.androidXCoreKTX
-    testImplementation deps.kotlinStdlib
     testImplementation deps.firebaseMessaging
 }
+
+sonarqube {
+    properties {
+        property "sonar.projectKey", "CleverTap_clevertap-android-sdk"
+        property "sonar.organization", "clevertap"
+        property "sonar.host.url", "https://sonarcloud.io"
+    }
+}
+

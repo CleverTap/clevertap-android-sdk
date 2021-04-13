@@ -1,5 +1,23 @@
 package com.clevertap.android.sdk.product_config;
 
+import android.text.TextUtils;
+
+import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.OnSuccessListener;
+import com.clevertap.android.sdk.task.Task;
+import com.clevertap.android.sdk.utils.FileUtils;
+
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.TimeUnit;
+
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_MIN_FETCH_INTERVAL_SECONDS;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_NO_OF_CALLS;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.DEFAULT_WINDOW_LENGTH_MINS;
@@ -8,45 +26,35 @@ import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_NO_OF_CALLS;
 import static com.clevertap.android.sdk.product_config.CTProductConfigConstants.PRODUCT_CONFIG_WINDOW_LENGTH_MINS;
 
-import android.content.Context;
-import android.text.TextUtils;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.FileUtils;
-import com.clevertap.android.sdk.TaskManager;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 class ProductConfigSettings {
 
     private final CleverTapInstanceConfig config;
 
-    private final Context context;
+    private String guid;
 
-    private final String guid;
+    private final FileUtils fileUtils;
 
     private final Map<String, String> settingsMap = Collections.synchronizedMap(new HashMap<String, String>());
 
-    ProductConfigSettings(Context context, String guid, CleverTapInstanceConfig config) {
-        this.context = context.getApplicationContext();
+    ProductConfigSettings(String guid, CleverTapInstanceConfig config, FileUtils fileUtils) {
         this.guid = guid;
         this.config = config;
+        this.fileUtils = fileUtils;
         initDefaults();
     }
 
-    public void reset() {
-        initDefaults();
-        TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Void>() {
+    void eraseStoredSettingsFile(final FileUtils fileUtils) {
+        if (fileUtils == null) {
+            throw new IllegalArgumentException("FileUtils can't be null");
+        }
+        Task<Void> task = CTExecutorFactory.executors(config).ioTask();
+        task.execute("ProductConfigSettings#eraseStoredSettingsFile", new Callable<Void>() {
             @Override
-            public Void doInBackground(Void aVoid) {
+            public Void call() {
                 synchronized (this) {
                     try {
                         String fileName = getFullPath();
-                        FileUtils.deleteFile(context, config, fileName);
+                        fileUtils.deleteFile(fileName);
                         config.getLogger()
                                 .verbose(ProductConfigUtil.getLogTag(config), "Deleted settings file" + fileName);
                     } catch (Exception e) {
@@ -57,15 +65,39 @@ class ProductConfigSettings {
                     return null;
                 }
             }
-
-            @Override
-            public void onPostExecute(Void aVoid) {
-
-            }
         });
     }
 
-    long getLastFetchTimeStampInMillis() {
+    String getDirName() {
+        return CTProductConfigConstants.DIR_PRODUCT_CONFIG + "_" + config.getAccountId() + "_" + guid;
+    }
+
+    String getFullPath() {
+        return getDirName() + "/" + CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS;
+    }
+
+    String getGuid() {
+        return guid;
+    }
+
+    void setGuid(final String guid) {
+        this.guid = guid;
+    }
+
+    JSONObject getJsonObject(final String content) {
+        if (!TextUtils.isEmpty(content)) {
+            try {
+                return new JSONObject(content);
+            } catch (JSONException e) {
+                e.printStackTrace();
+                config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                        "LoadSettings failed: " + e.getLocalizedMessage());
+            }
+        }
+        return null;
+    }
+
+    synchronized long getLastFetchTimeStampInMillis() {
         long lastFetchedTimeStamp = 0L;
         String value = settingsMap.get(KEY_LAST_FETCHED_TIMESTAMP);
         try {
@@ -100,61 +132,60 @@ class ProductConfigSettings {
         settingsMap.put(PRODUCT_CONFIG_WINDOW_LENGTH_MINS, String.valueOf(DEFAULT_WINDOW_LENGTH_MINS));
         settingsMap.put(KEY_LAST_FETCHED_TIMESTAMP, String.valueOf(0));
         settingsMap.put(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS, String.valueOf(DEFAULT_MIN_FETCH_INTERVAL_SECONDS));
-        synchronized (this) {
-            config.getLogger()
-                    .verbose(ProductConfigUtil.getLogTag(config),
-                            "Settings loaded with default values: " + settingsMap);
-        }
+        config.getLogger()
+                .verbose(ProductConfigUtil.getLogTag(config),
+                        "Settings loaded with default values: " + settingsMap);
     }
 
     /**
      * loads settings from file.
      * It's a sync call, please make sure to call this from a background thread
      */
-    synchronized void loadSettings() {
-        String content;
+    synchronized void loadSettings(FileUtils fileUtils) {
+        if (fileUtils == null) {
+            throw new IllegalArgumentException("fileutils can't be null");
+        }
         try {
-            content = FileUtils.readFromFile(context, config, getFullPath());
+            String content = fileUtils.readFromFile(getFullPath());
+            JSONObject jsonObject = getJsonObject(content);
+            populateMapWithJson(jsonObject);
         } catch (Exception e) {
             e.printStackTrace();
             config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
                     "LoadSettings failed while reading file: " + e.getLocalizedMessage());
+        }
+    }
+
+    synchronized void populateMapWithJson(final JSONObject jsonObject) {
+        if (jsonObject == null) {
             return;
         }
-        if (!TextUtils.isEmpty(content)) {
-            JSONObject jsonObject = null;
-            try {
-                jsonObject = new JSONObject(content);
-            } catch (JSONException e) {
-                e.printStackTrace();
-                config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                        "LoadSettings failed: " + e.getLocalizedMessage());
-                return;
-            }
-            Iterator<String> iterator = jsonObject.keys();
-            while (iterator.hasNext()) {
-                String key = iterator.next();
-                if (!TextUtils.isEmpty(key)) {
-                    String value = null;
-                    try {
-                        Object obj = jsonObject.get(key);
-                        if (obj != null) {
-                            value = String.valueOf(obj);
-                        }
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                                "Failed loading setting for key " + key + " Error: " + e.getLocalizedMessage());
-                        continue;
-                    }
-                    if (!TextUtils.isEmpty(value)) {
-                        settingsMap.put(key, value);
-                    }
+        Iterator<String> iterator = jsonObject.keys();
+        while (iterator.hasNext()) {
+            String key = iterator.next();
+            if (!TextUtils.isEmpty(key)) {
+                String value;
+                try {
+                    Object obj = jsonObject.get(key);
+                    value = String.valueOf(obj);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                            "Failed loading setting for key " + key + " Error: " + e.getLocalizedMessage());
+                    continue;
+                }
+                if (!TextUtils.isEmpty(value)) {
+                    settingsMap.put(key, value);
                 }
             }
-            config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                    "LoadSettings completed with settings: " + settingsMap);
         }
+        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                "LoadSettings completed with settings: " + settingsMap);
+    }
+
+    void reset(final FileUtils fileUtils) {
+        initDefaults();
+        eraseStoredSettingsFile(fileUtils);
     }
 
     void setARPValue(JSONObject arp) {
@@ -191,14 +222,6 @@ class ProductConfigSettings {
         }
     }
 
-    private String getDirName() {
-        return CTProductConfigConstants.DIR_PRODUCT_CONFIG + "_" + config.getAccountId() + "_" + guid;
-    }
-
-    private String getFullPath() {
-        return getDirName() + "/" + CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS;
-    }
-
     private long getMinFetchIntervalInSeconds() {
         long minInterVal = DEFAULT_MIN_FETCH_INTERVAL_SECONDS;
         String value = settingsMap.get(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS);
@@ -214,7 +237,7 @@ class ProductConfigSettings {
         return minInterVal;
     }
 
-    private int getNoOfCallsInAllowedWindow() {
+    synchronized private int getNoOfCallsInAllowedWindow() {
         int noCallsAllowedInWindow = DEFAULT_NO_OF_CALLS;
         String value = settingsMap.get(PRODUCT_CONFIG_NO_OF_CALLS);
         try {
@@ -237,7 +260,7 @@ class ProductConfigSettings {
         }
     }
 
-    private int getWindowIntervalInMinutes() {
+    synchronized private int getWindowIntervalInMinutes() {
         int windowIntervalInMinutes = DEFAULT_WINDOW_LENGTH_MINS;
         String value = settingsMap.get(PRODUCT_CONFIG_WINDOW_LENGTH_MINS);
         try {
@@ -271,37 +294,37 @@ class ProductConfigSettings {
         }
     }
 
-    private void updateConfigToFile() {
-        TaskManager.getInstance().execute(new TaskManager.TaskListener<Void, Boolean>() {
+    private synchronized void updateConfigToFile() {
+        Task<Boolean> task = CTExecutorFactory.executors(config).ioTask();
+        task.addOnSuccessListener(new OnSuccessListener<Boolean>() {
             @Override
-            public Boolean doInBackground(Void aVoid) {
-                synchronized (this) {
-                    try {
-                        //Ensure that we are not saving min interval in seconds
-                        HashMap<String, String> toWriteMap = new HashMap<>(settingsMap);
-                        toWriteMap.remove(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS);
-
-                        FileUtils.writeJsonToFile(context, config, getDirName(),
-                                CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS, new JSONObject(toWriteMap));
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
-                                "UpdateConfigToFile failed: " + e.getLocalizedMessage());
-                        return false;
-                    }
-                    return true;
-                }
-            }
-
-            @Override
-            public void onPostExecute(Boolean isSuccess) {
+            public void onSuccess(final Boolean isSuccess) {
                 if (isSuccess) {
                     config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
                             "Product Config settings: writing Success " + settingsMap);
                 } else {
                     config.getLogger()
-                            .verbose(ProductConfigUtil.getLogTag(config), "Product Config settings: writing Failed");
+                            .verbose(ProductConfigUtil.getLogTag(config),
+                                    "Product Config settings: writing Failed");
                 }
+            }
+        }).execute("ProductConfigSettings#updateConfigToFile", new Callable<Boolean>() {
+            @Override
+            public Boolean call() {
+                try {
+                    //Ensure that we are not saving min interval in seconds
+                    HashMap<String, String> toWriteMap = new HashMap<>(settingsMap);
+                    toWriteMap.remove(PRODUCT_CONFIG_MIN_INTERVAL_IN_SECONDS);
+
+                    fileUtils.writeJsonToFile(getDirName(),
+                            CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS, new JSONObject(toWriteMap));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    config.getLogger().verbose(ProductConfigUtil.getLogTag(config),
+                            "UpdateConfigToFile failed: " + e.getLocalizedMessage());
+                    return false;
+                }
+                return true;
             }
         });
     }

@@ -18,7 +18,7 @@ public enum CTDisplayUnitType {
     MESSAGE_WITH_ICON("message-icon"),
     CUSTOM_KEY_VALUE("custom-key-value");
 
-    private final String type;
+    public final String type;
 
     /**
      * Returns the display type instance using the string value
@@ -27,7 +27,7 @@ public enum CTDisplayUnitType {
      * @return CTDisplayUnitType
      */
     @Nullable
-    public static CTDisplayUnitType type(String type) {
+    public static CTDisplayUnitType type(@NonNull String type) {
 
         if (!TextUtils.isEmpty(type)) {
             switch (type) {

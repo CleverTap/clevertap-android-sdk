@@ -40,6 +40,8 @@ public class CTGeofenceConstants {
 
     static final String KEY_LAST_DISPLACEMENT = "last_displacement";
 
+    static final String KEY_LAST_GEO_NOTIFICATION_RESPONSIVENESS = "last_geo_notification_responsiveness";
+
     static final String TAG_WORK_LOCATION_UPDATES = "com.clevertap.android.geofence.work.location";
 
     static final int ERROR_CODE = 515;

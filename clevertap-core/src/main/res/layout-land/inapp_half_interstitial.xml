@@ -84,7 +84,7 @@
         </LinearLayout>
     </RelativeLayout>
 
-    <com.clevertap.android.sdk.CloseImageView
+    <com.clevertap.android.sdk.customviews.CloseImageView
         android:layout_width="30dp"
         android:layout_height="30dp"
         android:layout_gravity="top|end"

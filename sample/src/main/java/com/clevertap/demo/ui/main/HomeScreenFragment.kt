@@ -119,6 +119,7 @@ class HomeScreenFragment : Fragment() {
                     .setInterval(3600000) // 1 hour
                     .setFastestInterval(1800000) // 30 minutes
                     .setSmallestDisplacement(1000f) // 1 km
+                    .setGeofenceNotificationResponsiveness(300000) // 5 minute
                     .build(), cleverTapInstance
             )
             setOnGeofenceApiInitializedListener {
