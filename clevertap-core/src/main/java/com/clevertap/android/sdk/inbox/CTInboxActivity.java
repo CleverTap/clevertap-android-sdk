@@ -147,7 +147,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             _allBundle.putInt("position", 0);
             CTInboxListViewFragment all = new CTInboxListViewFragment();
             all.setArguments(_allBundle);
-            inboxTabAdapter.addFragment(all, "ALL", 0);
+            inboxTabAdapter.addFragment(all, styleConfig.getFirstTabTitle(), 0);
 
             for (int i = 0; i < tabs.size(); i++) {
                 String filter = tabs.get(i);

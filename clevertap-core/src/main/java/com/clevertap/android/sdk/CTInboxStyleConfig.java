@@ -31,6 +31,8 @@ public class CTInboxStyleConfig implements Parcelable {
 
     private String backButtonColor;
 
+    private String firstTabTitle;
+
     private String inboxBackgroundColor;
 
     private String navBarColor;
@@ -66,6 +68,7 @@ public class CTInboxStyleConfig implements Parcelable {
         this.tabs = new String[0];
         this.noMessageViewText = "No Message(s) to show";
         this.noMessageViewTextColor = "#000000";
+        this.firstTabTitle = "ALL";
     }
 
     CTInboxStyleConfig(CTInboxStyleConfig config) {
@@ -81,6 +84,7 @@ public class CTInboxStyleConfig implements Parcelable {
         this.tabs = (config.tabs == null) ? new String[0] : Arrays.copyOf(config.tabs, config.tabs.length);
         this.noMessageViewText = config.noMessageViewText;
         this.noMessageViewTextColor = config.noMessageViewTextColor;
+        this.firstTabTitle = config.firstTabTitle;
     }
 
     protected CTInboxStyleConfig(Parcel in) {
@@ -96,6 +100,7 @@ public class CTInboxStyleConfig implements Parcelable {
         tabBackgroundColor = in.readString();
         noMessageViewText = in.readString();
         noMessageViewTextColor = in.readString();
+        firstTabTitle = in.readString();
     }
 
     @Override
@@ -114,6 +119,19 @@ public class CTInboxStyleConfig implements Parcelable {
      */
     public void setBackButtonColor(String backButtonColor) {
         this.backButtonColor = backButtonColor;
+    }
+
+    public String getFirstTabTitle() {
+        return firstTabTitle;
+    }
+
+    /**
+     * Sets the title of the first tab of the App Inbox
+     *
+     * @param title String - title of the first tab
+     */
+    public void setFirstTabTitle(String title) {
+        firstTabTitle = title;
     }
 
     public String getInboxBackgroundColor() {
@@ -270,6 +288,10 @@ public class CTInboxStyleConfig implements Parcelable {
         this.unselectedTabColor = unselectedTabColor;
     }
 
+    public boolean isUsingTabs() {
+        return (tabs != null && tabs.length > 0);
+    }
+
     @Override
     public void writeToParcel(Parcel dest, int flags) {
         dest.writeString(navBarColor);
@@ -284,9 +306,6 @@ public class CTInboxStyleConfig implements Parcelable {
         dest.writeString(tabBackgroundColor);
         dest.writeString(noMessageViewText);
         dest.writeString(noMessageViewTextColor);
-    }
-
-    public boolean isUsingTabs() {
-        return (tabs != null && tabs.length > 0);
+        dest.writeString(firstTabTitle);
     }
 }
