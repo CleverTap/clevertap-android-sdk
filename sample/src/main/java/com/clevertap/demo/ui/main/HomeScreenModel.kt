@@ -9,7 +9,8 @@ object HomeScreenModel {
                         "Push profile", "Update(Replace) Single-Value properties",
                         "Update(Add) Single-Value properties", "Update(Remove) Single-Value properties",
                         "Update(Replace) Multi-Value property", "Update(Add) Multi-Value property",
-                        "Update(Remove) Multi-Value property", "Profile Location", "Get User Profile Property"
+                        "Update(Remove) Multi-Value property", "Profile Location", "Get User Profile Property",
+                        "onUserLogin"
                 ),
                 "INBOX" to listOf(
                         "Open Inbox", "Show Total Counts", "Show Unread Counts", "Get All Inbox Messages",
