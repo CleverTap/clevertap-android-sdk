@@ -131,7 +131,7 @@ if (project.rootProject.file('local.properties').exists()) {
 task sourcesJar(type: Jar) {
     baseName "$artifact"
     from android.sourceSets.main.java.srcDirs
-    classifier = 'sources'
+    archiveClassifier.set('sources')
 }
 
 artifacts {
