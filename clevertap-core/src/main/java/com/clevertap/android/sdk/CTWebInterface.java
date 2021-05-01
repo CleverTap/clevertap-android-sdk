@@ -89,10 +89,11 @@ public class CTWebInterface {
                     JSONObject chargeDetailsObject = new JSONObject(chargeDetails);
                     chargeDetailsHashMap = Utils.convertJSONObjectToHashMap(chargeDetailsObject);
                 } catch (JSONException e) {
-                    Logger.v("Unable to parse eventActions from WebView " + e.getLocalizedMessage());
+                    Logger.v("Unable to parse chargeDetails for Charged Event from WebView " + e
+                            .getLocalizedMessage());
                 }
             } else {
-                Logger.v("eventActions passed to CTWebInterface is null");
+                Logger.v("chargeDetails passed to CTWebInterface is null");
                 return;
             }
             ArrayList<HashMap<String, Object>> itemsArrayList = null;
@@ -101,7 +102,7 @@ public class CTWebInterface {
                     JSONArray itemsArray = new JSONArray(items);
                     itemsArrayList = Utils.convertJSONArrayOfJSONObjectsToArrayListOfHashMaps(itemsArray);
                 } catch (JSONException e) {
-                    Logger.v("Unable to parse items from WebView " + e.getLocalizedMessage());
+                    Logger.v("Unable to parse items for Charged Event from WebView " + e.getLocalizedMessage());
                 }
             } else {
                 return;
