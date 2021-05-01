@@ -78,7 +78,7 @@ public class CTWebInterface {
      */
     @JavascriptInterface
     @SuppressWarnings({"JavaDoc"})
-    public void pushChargedEvent(String chargeDetails, JSONArray items) {
+    public void pushChargedEvent(String chargeDetails, String items) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
             Logger.d("CleverTap Instance is null.");
@@ -95,9 +95,14 @@ public class CTWebInterface {
                 Logger.v("eventActions passed to CTWebInterface is null");
                 return;
             }
-            ArrayList<HashMap<String, Object>> itemsArrayList;
+            ArrayList<HashMap<String, Object>> itemsArrayList = null;
             if (items != null) {
-                itemsArrayList = Utils.convertJSONArrayOfJSONObjectsToArrayListOfHashMaps(items);
+                try {
+                    JSONArray itemsArray = new JSONArray(items);
+                    itemsArrayList = Utils.convertJSONArrayOfJSONObjectsToArrayListOfHashMaps(itemsArray);
+                } catch (JSONException e) {
+                    Logger.v("Unable to parse items from WebView " + e.getLocalizedMessage());
+                }
             } else {
                 return;
             }
