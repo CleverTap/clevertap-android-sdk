@@ -171,8 +171,13 @@ class ActivityLifeCycleManager {
                                                 .getMessage());
                                 referrerClient.endConnection();
                                 coreMetaData.setInstallReferrerDataSent(false);
+                            }catch (NullPointerException npe){
+                                config.getLogger().debug(config.getAccountId(),
+                                        "Install referrer client null pointer exception caused by Google Play Install Referrer library - " + npe
+                                                .getMessage());
+                                referrerClient.endConnection();
+                                coreMetaData.setInstallReferrerDataSent(false);
                             }
-                            referrerClient.endConnection();
                             break;
                         case InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED:
                             // API not available on the current Play Store app.
