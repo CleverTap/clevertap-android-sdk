@@ -186,7 +186,14 @@ public class DeviceInfo {
         }
 
         private boolean getNotificationEnabledForUser() {
-            return NotificationManagerCompat.from(context).areNotificationsEnabled();
+            boolean isNotificationEnabled = true;
+            try {
+                isNotificationEnabled = NotificationManagerCompat.from(context).areNotificationsEnabled();
+            } catch (RuntimeException rte) {
+                Logger.d("Runtime exception caused when checking whether notification are enabled or not");
+                rte.printStackTrace();
+            }
+            return isNotificationEnabled;//returns true if any exception is raised.
         }
 
         private String getOsName() {

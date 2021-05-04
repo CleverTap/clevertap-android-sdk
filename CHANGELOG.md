@@ -1,5 +1,10 @@
 ## CHANGE LOG
 
+### May 4, 2021
+
+* [CleverTap Android SDK v4.1.1](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md)
+* [CleverTap Xiaomi Push SDK v1.0.2](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTXIAOMIPUSHCHANGELOG.md)
+
 ### April 13, 2021
 
 * [CleverTap Android SDK v4.1.0](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md)

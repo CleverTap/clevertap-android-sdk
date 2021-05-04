@@ -8,6 +8,8 @@
 <br /><br />
 <button onclick='invokeEventWithProps()'>Push Event Props</button>
 <br /><br />
+<button onclick='invokeChargedEvent()'>Push Charged Event</button>
+<br /><br />
 <button onclick='invokePushProfile()'>Push Profile</button>
 <br /><br />
 <button onclick='invokeAddProp()'>Add Property</button>
@@ -30,6 +32,11 @@
         function invokeEventWithProps(){
         var props = {foo: 'xyz', lang: 'French'};
             CleverTap.pushEvent('WebView button clicked',JSON.stringify(props))
+        }
+        function invokeChargedEvent(){
+        var chargeDetails = {Amount: 300, Payment: 'Card'};
+        var items = [{Category: 'Books', Name: 'Book name', Quantity: 1},{Category: 'Clothes', Name: 'Cloth name', Quantity: 1},{Category: 'Food', Name: 'Food name', Quantity: 1}]
+            CleverTap.pushChargedEvent(JSON.stringify(chargeDetails),JSON.stringify(items))
         }
         function invokePushProfile() {
             var props = {foo: 'xyz', lang: 'French'};
@@ -56,11 +63,6 @@
             var values = ['xyz123','xyz1234']
             CleverTap.setMultiValueForKey('foo', JSON.stringify(values));
         }
-
-
-
-
-
 </script>
 </body>
 </html>
