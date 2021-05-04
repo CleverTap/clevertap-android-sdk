@@ -23,9 +23,6 @@ ext["signing.secretKeyRingFile"] = ''
 ext["ossrhUsername"] = ''
 ext["ossrhPassword"] = ''
 ext["sonatypeStagingProfileId"] = ''
-ext["developerId"] = ''
-ext["developerName"] = ''
-ext["developerEmail"] = ''
 
 version = libraryVersion
 group = publishedGroupId
@@ -134,80 +131,67 @@ if (project.rootProject.file('local.properties').exists()) {
 task sourcesJar(type: Jar) {
     baseName "$artifact"
     from android.sourceSets.main.java.srcDirs
-    classifier = 'sources'
+    archiveClassifier.set('sources')
 }
 
 artifacts {
     archives sourcesJar
 }
 
-publishing {
-    publications {
-        release(MavenPublication) {
-            // The coordinates of the library, being set from variables that
-            // we'll set up later
-            groupId publishedGroupId
-            artifactId artifact
-            version version
+afterEvaluate {
+    publishing {
+        publications {
+            // Creates a Maven publication called "release".
+            release(MavenPublication) {
+                // Applies the component for the release build variant.
+                from components.release
 
-            // Two artifacts, the `aar` (or `jar`) and the sources
-            if (project.plugins.findPlugin("com.android.library")) {
-                artifact("$buildDir/outputs/aar/${artifact}-${libraryVersion}.aar")
-            } else {
-                artifact("$buildDir/libs/${project.getName()}-${version}.jar")
-            }
-            artifact sourcesJar
+                // You can then customize attributes of the publication as shown below.
+                groupId publishedGroupId
+                artifactId artifact
+                version version
 
-            // Mostly self-explanatory metadata
-            pom {
-                name = artifact
-                description = libraryDescription
-                url = siteUrl
-                licenses {
-                    license {
-                        name = licenseName
-                        url = licenseUrl
+                artifact sourcesJar
+
+                pom {
+                    name = artifact
+                    description = libraryDescription
+                    url = siteUrl
+                    packaging = "aar"
+                    licenses {
+                        license {
+                            name = licenseName
+                            url = licenseUrl
+                        }
                     }
-                }
-                developers {
-                    developer {
-                        id = developerId
-                        name = developerName
-                        email = developerEmail
+                    developers {
+                        developer {
+                            id = developerId
+                            name = developerName
+                            email = developerEmail
+                        }
+                        // Add all other devs here...
                     }
-                    // Add all other devs here...
-                }
-                // Version control info - if you're using GitHub, follow the format as seen here
-                scm {
-                    connection = 'scm:git:github.com/CleverTap/clevertap-android-sdk.git'
-                    developerConnection = 'scm:git:ssh:github.com/CleverTap/clevertap-android-sdk.git'
-                    url = 'https://github.com/CleverTap/clevertap-android-sdk/tree/master'
-                }
-                // A slightly hacky fix so that your POM will include any transitive dependencies
-                // that your library builds upon
-                withXml {
-                    def dependenciesNode = asNode().appendNode('dependencies')
-
-                    project.configurations.implementation.allDependencies.each {
-                        def dependencyNode = dependenciesNode.appendNode('dependency')
-                        dependencyNode.appendNode('groupId', it.group)
-                        dependencyNode.appendNode('artifactId', it.name)
-                        dependencyNode.appendNode('version', it.version)
+                    // Version control info - if you're using GitHub, follow the format as seen here
+                    scm {
+                        connection = 'scm:git:github.com/CleverTap/clevertap-android-sdk.git'
+                        developerConnection = 'scm:git:ssh:github.com/CleverTap/clevertap-android-sdk.git'
+                        url = 'https://github.com/CleverTap/clevertap-android-sdk/tree/master'
                     }
                 }
             }
         }
-    }
-    // The repository to publish to, Sonatype/MavenCentral
-    repositories {
-        maven {
-            // This is an arbitrary name, you may also use "mavencentral" or
-            // any other name that's descriptive for you
-            name = Repo
-            url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
-            credentials {
-                username ossrhUsername
-                password ossrhPassword
+        // The repository to publish to, Sonatype/MavenCentral
+        repositories {
+            maven {
+                // This is an arbitrary name, you may also use "mavencentral" or
+                // any other name that's descriptive for you
+                name = Repo
+                url = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+                credentials {
+                    username ossrhUsername
+                    password ossrhPassword
+                }
             }
         }
     }
