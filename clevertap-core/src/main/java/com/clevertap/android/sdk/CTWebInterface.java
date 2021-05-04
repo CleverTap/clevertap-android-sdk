@@ -71,7 +71,7 @@ public class CTWebInterface {
      *
      * @param chargeDetails Stringified {@link JSONObject} of charged event details
      *                      Stringified {@link JSONObject} will be converted to a HashMap<String,Object>
-     * @param items         A {@link JSONArray} which contains up to 15 JSON Object objects,
+     * @param items         A Stringified {@link JSONArray} which contains up to 15 JSON Object objects,
      *                      where each JSON Object object describes a particular item purchased
      *                      {@link JSONArray} of {@link JSONObject}s will be converted to an {@link ArrayList} of
      *                      {@link HashMap<String,Object>}
