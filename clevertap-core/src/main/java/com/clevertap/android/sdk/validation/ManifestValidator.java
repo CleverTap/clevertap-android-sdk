@@ -56,10 +56,6 @@ public final class ManifestValidator {
                     CTPushNotificationReceiver.class.getName());
             validateServiceInManifest((Application) context.getApplicationContext(),
                     CTNotificationIntentService.class.getName());
-            validateServiceInManifest((Application) context.getApplicationContext(),
-                    CTBackgroundJobService.class.getName());
-            validateServiceInManifest((Application) context.getApplicationContext(),
-                    CTBackgroundIntentService.class.getName());
             validateActivityInManifest((Application) context.getApplicationContext(),
                     InAppNotificationActivity.class);
             validateActivityInManifest((Application) context.getApplicationContext(),
@@ -70,6 +66,12 @@ public final class ManifestValidator {
                     "com.clevertap.android.geofence.CTLocationUpdateReceiver");
             validateReceiverInManifest((Application) context.getApplicationContext(),
                     "com.clevertap.android.geofence.CTGeofenceBootReceiver");
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP){
+                validateServiceInManifest((Application) context.getApplicationContext(),
+                        CTBackgroundJobService.class.getName());
+            }
+            validateServiceInManifest((Application) context.getApplicationContext(),
+                    CTBackgroundIntentService.class.getName());
         } catch (Exception e) {
             Logger.v("Receiver/Service issue : " + e.toString());
         }
