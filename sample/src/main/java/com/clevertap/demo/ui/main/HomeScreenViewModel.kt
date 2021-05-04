@@ -123,6 +123,17 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 println("Profile CleverTapId = ${cleverTapAPI?.cleverTapID}")
                 println("Profile CleverTap AttributionIdentifier = ${cleverTapAPI?.cleverTapAttributionIdentifier}")
             }
+            "19" -> {
+                // onUserLogin
+                val newProfile = HashMap<String, Any>()
+                var n = (0..10_000).random()
+                var p = (10_000..99_999).random()
+                newProfile["Name"] = "Don Joe $n}" // String
+                newProfile["Email"] = "donjoe$n@gmail.com" // Email address of the user
+                newProfile["Phone"] = "+141566$p" // Phone (with the country code, starting with +)
+                // add any other key value pairs.....
+                cleverTapAPI?.onUserLogin(newProfile)
+            }
             "20" -> {
                 // Open Inbox
                 val inboxTabs =
@@ -138,6 +149,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     navBarTitle = "MY INBOX"
                     navBarColor = "#FFFFFF"
                     inboxBackgroundColor = "#00FF00"
+                    firstTabTitle = "First Tab"
                     cleverTapAPI?.showAppInbox(this) //Opens activity With Tabs
                 }
             }

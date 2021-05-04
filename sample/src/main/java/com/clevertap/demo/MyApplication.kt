@@ -1,11 +1,11 @@
 package com.clevertap.demo
 
-import android.app.Application
 import android.app.NotificationManager
+import androidx.multidex.MultiDexApplication
 import com.clevertap.android.sdk.ActivityLifecycleCallback
 import com.clevertap.android.sdk.CleverTapAPI
 
-class MyApplication : Application() {
+class MyApplication : MultiDexApplication() {
 
     override fun onCreate() {
         ActivityLifecycleCallback.register(this)

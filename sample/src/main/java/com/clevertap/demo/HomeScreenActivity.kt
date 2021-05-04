@@ -7,16 +7,18 @@ import androidx.fragment.app.commitNow
 import com.clevertap.android.sdk.CTFeatureFlagsListener
 import com.clevertap.android.sdk.CTInboxListener
 import com.clevertap.android.sdk.CleverTapAPI
+import com.clevertap.android.sdk.SyncListener
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import com.clevertap.android.sdk.product_config.CTProductConfigListener
 import com.clevertap.demo.ui.main.HomeScreenFragment
+import org.json.JSONObject
 import java.util.ArrayList
 
 private const val TAG = "HomeScreenActivity"
 
 class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitListener, CTProductConfigListener,
-    CTFeatureFlagsListener {
+    CTFeatureFlagsListener, SyncListener {
 
     var cleverTapDefaultInstance: CleverTapAPI? = null
 
@@ -41,6 +43,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
         cleverTapDefaultInstance = CleverTapAPI.getDefaultInstance(this)
 
         cleverTapDefaultInstance?.apply {
+            syncListener = this@HomeScreenActivity
             enableDeviceNetworkInfoReporting(true)
             //Set the Notification Inbox Listener
             ctNotificationInboxListener = this@HomeScreenActivity
@@ -92,5 +95,13 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
 
     override fun featureFlagsUpdated() {
         Log.i(TAG, "featureFlagsUpdated() called")
+    }
+
+    override fun profileDataUpdated(updates: JSONObject?) {
+        Log.i(TAG, "profileDataUpdated() called")
+    }
+
+    override fun profileDidInitialize(CleverTapID: String?) {
+        Log.i(TAG, "profileDidInitialize() called")
     }
 }

@@ -6,7 +6,7 @@ android {
     compileSdkVersion 30
     defaultConfig {
         applicationId "com.clevertap.demo"
-        minSdkVersion 21
+        minSdkVersion 19
         targetSdkVersion 30
         versionCode 1
         versionName "1.0"
@@ -82,6 +82,8 @@ dependencies {
 
     implementation 'com.android.installreferrer:installreferrer:2.1'
     // Mandatory for v3.6.4 and above
+
+    implementation 'androidx.multidex:multidex:2.0.1'
 }
 
 apply plugin: 'com.google.gms.google-services'
