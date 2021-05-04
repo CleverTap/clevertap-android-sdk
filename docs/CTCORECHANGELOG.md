@@ -1,5 +1,12 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 4.1.1 (May 4, 2021)
+* Adds `setFirstTabTitle` method to set the name of the first tab in App Inbox
+* Adds `pushChargedEvent` to `CTWebInterface` class to allow raising Charged Event from JS
+* Removes a `NoClassDefFoundError` raised in Android Kitkat (v4.4) - #168
+* Removes a `NullPointerException` raised while handling `InstallReferrerClient` - #166
+* Other bug fixes
+
 ### Version 4.1.0 (April 13, 2021)
 * Adds support for Android 11
 * Reduces the SDK size and added performance improvements

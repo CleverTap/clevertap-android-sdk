@@ -200,6 +200,7 @@ public void inboxDidInitialize(){
     tabs.add("Others");//We support upto 2 tabs only. Additional tabs will be ignored
 
     CTInboxStyleConfig styleConfig = new CTInboxStyleConfig();
+    styleConfig.setFirstTabTitle("First Tab");//By default, name of the first tab is "ALL"
     styleConfig.setTabs(tabs);//Do not use this if you don't want to use tabs
     styleConfig.setTabBackgroundColor("#FF0000");//provide Hex code in string ONLY
     styleConfig.setSelectedTabIndicatorColor("#0000FF");

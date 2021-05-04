@@ -70,6 +70,36 @@ public final class Utils {
         return map;
     }
 
+    public static ArrayList<HashMap<String, Object>> convertJSONArrayOfJSONObjectsToArrayListOfHashMaps(
+            JSONArray jsonArray) {
+        final ArrayList<HashMap<String, Object>> hashMapArrayList = new ArrayList<>();
+        if (jsonArray != null) {
+            for (int i = 0; i < jsonArray.length(); i++) {
+                try {
+                    hashMapArrayList.add(convertJSONObjectToHashMap(jsonArray.getJSONObject(i)));
+                } catch (JSONException e) {
+                    Logger.v("Could not convert JSONArray of JSONObjects to ArrayList of HashMaps - " + e
+                            .getMessage());
+                }
+            }
+        }
+        return hashMapArrayList;
+    }
+
+    public static ArrayList<String> convertJSONArrayToArrayList(JSONArray array) {
+        ArrayList<String> listdata = new ArrayList<>();
+        if (array != null) {
+            for (int i = 0; i < array.length(); i++) {
+                try {
+                    listdata.add(array.getString(i));
+                } catch (JSONException e) {
+                    Logger.v("Could not convert JSONArray to ArrayList - " + e.getMessage());
+                }
+            }
+        }
+        return listdata;
+    }
+
     public static HashMap<String, Object> convertJSONObjectToHashMap(JSONObject b) {
         final HashMap<String, Object> map = new HashMap<>();
         final Iterator<String> keys = b.keys();
@@ -174,6 +204,101 @@ public final class Utils {
         }
     }
 
+    @SuppressLint("MissingPermission")
+    public static String getCurrentNetworkType(final Context context) {
+        try {
+            // First attempt to check for WiFi connectivity
+            ConnectivityManager connManager = (ConnectivityManager) context
+                    .getSystemService(Context.CONNECTIVITY_SERVICE);
+            if (connManager == null) {
+                return "Unavailable";
+            }
+            NetworkInfo mWifi = connManager
+                    .getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
+            if (mWifi != null && mWifi.isConnected()) {
+                return "WiFi";
+            }
+
+            return getDeviceNetworkType(context);
+
+        } catch (Throwable t) {
+            return "Unavailable";
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    public static String getDeviceNetworkType(final Context context) {
+        // Fall back to network type
+        TelephonyManager teleMan = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
+        if (teleMan == null) {
+            return "Unavailable";
+        }
+
+        int networkType = TelephonyManager.NETWORK_TYPE_UNKNOWN;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (hasPermission(context, Manifest.permission.READ_PHONE_STATE)) {
+                try {
+                    networkType = teleMan.getDataNetworkType();
+                } catch (SecurityException se) {
+                    Logger.d("Security Exception caught while fetch network type" + se.getMessage());
+                }
+            } else {
+                Logger.d("READ_PHONE_STATE permission not asked by the app or not granted by the user");
+            }
+        } else {
+            networkType = teleMan.getNetworkType();
+        }
+
+        switch (networkType) {
+            case TelephonyManager.NETWORK_TYPE_GPRS:
+            case TelephonyManager.NETWORK_TYPE_EDGE:
+            case TelephonyManager.NETWORK_TYPE_CDMA:
+            case TelephonyManager.NETWORK_TYPE_1xRTT:
+            case TelephonyManager.NETWORK_TYPE_IDEN:
+                return "2G";
+            case TelephonyManager.NETWORK_TYPE_UMTS:
+            case TelephonyManager.NETWORK_TYPE_EVDO_0:
+            case TelephonyManager.NETWORK_TYPE_EVDO_A:
+            case TelephonyManager.NETWORK_TYPE_HSDPA:
+            case TelephonyManager.NETWORK_TYPE_HSUPA:
+            case TelephonyManager.NETWORK_TYPE_HSPA:
+            case TelephonyManager.NETWORK_TYPE_EVDO_B:
+            case TelephonyManager.NETWORK_TYPE_EHRPD:
+            case TelephonyManager.NETWORK_TYPE_HSPAP:
+                return "3G";
+            case TelephonyManager.NETWORK_TYPE_LTE:
+                return "4G";
+            case TelephonyManager.NETWORK_TYPE_NR:
+                return "5G";
+            default:
+                return "Unknown";
+        }
+    }
+
+    @RestrictTo(Scope.LIBRARY)
+    public static String getFcmTokenUsingManifestMetaEntry(Context context, CleverTapInstanceConfig config) {
+        String token = null;
+        try {
+            String senderID = ManifestInfo.getInstance(context).getFCMSenderId();
+            if (senderID != null) {
+                config.getLogger().verbose(config.getAccountId(),
+                        "Requesting an FCM token with Manifest SenderId - " + senderID);
+                token = FirebaseInstanceId.getInstance().getToken(senderID, FirebaseMessaging.INSTANCE_ID_SCOPE);
+            }
+            config.getLogger().info(config.getAccountId(), "FCM token using Manifest SenderId: " + token);
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(), "Error requesting FCM token with Manifest SenderId", t);
+        }
+        return token;
+    }
+
+    public static long getMemoryConsumption() {
+        long free = Runtime.getRuntime().freeMemory();
+        long total = Runtime.getRuntime().totalMemory();
+        return total - free;
+    }
+
     public static Bitmap getNotificationBitmap(String icoPath, boolean fallbackToAppIcon, final Context context)
             throws NullPointerException {
         // If the icon path is not specified
@@ -188,11 +313,29 @@ public final class Utils {
         return (ic != null) ? ic : ((fallbackToAppIcon) ? getAppIcon(context) : null);
     }
 
+    public static int getNow() {
+        return (int) (System.currentTimeMillis() / 1000);
+    }
+
     public static int getThumbnailImage(Context context, String image) {
         if (context != null) {
             return context.getResources().getIdentifier(image, "drawable", context.getPackageName());
         } else {
             return -1;
+        }
+    }
+
+    /**
+     * Checks whether a particular permission is available or not.
+     *
+     * @param context    The Android {@link Context}
+     * @param permission The fully qualified Android permission name
+     */
+    public static boolean hasPermission(final Context context, String permission) {
+        try {
+            return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permission);
+        } catch (Throwable t) {
+            return false;
         }
     }
 
@@ -270,127 +413,6 @@ public final class Utils {
         return bundle;
     }
 
-    public static ArrayList<String> convertJSONArrayToArrayList(JSONArray array) {
-        ArrayList<String> listdata = new ArrayList<>();
-        if (array != null) {
-            for (int i = 0; i < array.length(); i++) {
-                try {
-                    listdata.add(array.getString(i));
-                } catch (JSONException e) {
-                    Logger.v("Could not convert JSONArray to ArrayList - " + e.getMessage());
-                }
-            }
-        }
-        return listdata;
-    }
-
-    static Bitmap drawableToBitmap(Drawable drawable)
-            throws NullPointerException {
-        if (drawable instanceof BitmapDrawable) {
-            return ((BitmapDrawable) drawable).getBitmap();
-        }
-
-        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
-                drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
-        Canvas canvas = new Canvas(bitmap);
-        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
-        drawable.draw(canvas);
-
-        return bitmap;
-    }
-
-    @SuppressLint("MissingPermission")
-    public static String getCurrentNetworkType(final Context context) {
-        try {
-            // First attempt to check for WiFi connectivity
-            ConnectivityManager connManager = (ConnectivityManager) context
-                    .getSystemService(Context.CONNECTIVITY_SERVICE);
-            if (connManager == null) {
-                return "Unavailable";
-            }
-            NetworkInfo mWifi = connManager
-                    .getNetworkInfo(ConnectivityManager.TYPE_WIFI);
-
-            if (mWifi != null && mWifi.isConnected()) {
-                return "WiFi";
-            }
-
-            return getDeviceNetworkType(context);
-
-        } catch (Throwable t) {
-            return "Unavailable";
-        }
-    }
-
-    @SuppressLint("MissingPermission")
-    public static String getDeviceNetworkType(final Context context) {
-        // Fall back to network type
-        TelephonyManager teleMan = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
-        if (teleMan == null) {
-            return "Unavailable";
-        }
-
-        int networkType = TelephonyManager.NETWORK_TYPE_UNKNOWN;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            if (hasPermission(context, Manifest.permission.READ_PHONE_STATE)) {
-                try {
-                    networkType = teleMan.getDataNetworkType();
-                } catch (SecurityException se) {
-                    Logger.d("Security Exception caught while fetch network type" + se.getMessage());
-                }
-            } else {
-                Logger.d("READ_PHONE_STATE permission not asked by the app or not granted by the user");
-            }
-        } else {
-            networkType = teleMan.getNetworkType();
-        }
-
-        switch (networkType) {
-            case TelephonyManager.NETWORK_TYPE_GPRS:
-            case TelephonyManager.NETWORK_TYPE_EDGE:
-            case TelephonyManager.NETWORK_TYPE_CDMA:
-            case TelephonyManager.NETWORK_TYPE_1xRTT:
-            case TelephonyManager.NETWORK_TYPE_IDEN:
-                return "2G";
-            case TelephonyManager.NETWORK_TYPE_UMTS:
-            case TelephonyManager.NETWORK_TYPE_EVDO_0:
-            case TelephonyManager.NETWORK_TYPE_EVDO_A:
-            case TelephonyManager.NETWORK_TYPE_HSDPA:
-            case TelephonyManager.NETWORK_TYPE_HSUPA:
-            case TelephonyManager.NETWORK_TYPE_HSPA:
-            case TelephonyManager.NETWORK_TYPE_EVDO_B:
-            case TelephonyManager.NETWORK_TYPE_EHRPD:
-            case TelephonyManager.NETWORK_TYPE_HSPAP:
-                return "3G";
-            case TelephonyManager.NETWORK_TYPE_LTE:
-                return "4G";
-            case TelephonyManager.NETWORK_TYPE_NR:
-                return "5G";
-            default:
-                return "Unknown";
-        }
-    }
-
-    public static long getMemoryConsumption() {
-        long free = Runtime.getRuntime().freeMemory();
-        long total = Runtime.getRuntime().totalMemory();
-        return total - free;
-    }
-
-    /**
-     * Checks whether a particular permission is available or not.
-     *
-     * @param context    The Android {@link Context}
-     * @param permission The fully qualified Android permission name
-     */
-    public static boolean hasPermission(final Context context, String permission) {
-        try {
-            return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permission);
-        } catch (Throwable t) {
-            return false;
-        }
-    }
-
     public static boolean validateCTID(String cleverTapID) {
         if (cleverTapID == null) {
             Logger.i(
@@ -413,8 +435,19 @@ public final class Utils {
         return true;
     }
 
-    public static int getNow() {
-        return (int) (System.currentTimeMillis() / 1000);
+    static Bitmap drawableToBitmap(Drawable drawable)
+            throws NullPointerException {
+        if (drawable instanceof BitmapDrawable) {
+            return ((BitmapDrawable) drawable).getBitmap();
+        }
+
+        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
+                drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+
+        return bitmap;
     }
 
     /**
@@ -461,22 +494,5 @@ public final class Utils {
 
     static {
         haveVideoPlayerSupport = checkForExoPlayer();
-    }
-
-    @RestrictTo(Scope.LIBRARY)
-    public static String getFcmTokenUsingManifestMetaEntry(Context context, CleverTapInstanceConfig config) {
-        String token = null;
-        try {
-            String senderID = ManifestInfo.getInstance(context).getFCMSenderId();
-            if (senderID != null) {
-                config.getLogger().verbose(config.getAccountId(),
-                        "Requesting an FCM token with Manifest SenderId - " + senderID);
-                token = FirebaseInstanceId.getInstance().getToken(senderID, FirebaseMessaging.INSTANCE_ID_SCOPE);
-            }
-            config.getLogger().info(config.getAccountId(), "FCM token using Manifest SenderId: " + token);
-        } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Error requesting FCM token with Manifest SenderId", t);
-        }
-        return token;
     }
 }
