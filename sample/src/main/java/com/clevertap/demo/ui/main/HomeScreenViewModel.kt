@@ -149,6 +149,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     navBarTitle = "MY INBOX"
                     navBarColor = "#FFFFFF"
                     inboxBackgroundColor = "#00FF00"
+                    firstTabTitle = "First Tab"
                     cleverTapAPI?.showAppInbox(this) //Opens activity With Tabs
                 }
             }
