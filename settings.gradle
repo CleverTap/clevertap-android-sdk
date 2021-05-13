@@ -1,5 +1,5 @@
+include ':lint_rules'
 include ':test_shared'
-include ':gradle-scripts'
 include ':clevertap-core'
 include ':sample'
 include ':clevertap-geofence'

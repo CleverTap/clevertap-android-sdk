@@ -51,4 +51,5 @@ dependencies {
     testImplementation deps.androidXConcurrentFutures
     testImplementation deps.androidXCoreKTX
     testImplementation deps.kotlinStdlib
+    testImplementation Deps.futures
 }
