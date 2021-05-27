@@ -27,6 +27,7 @@ public class FileUtils {
         this.config = config;
     }
 
+    //TODO: remove comment this is safe
     public void deleteDirectory(String dirName) {
         if (TextUtils.isEmpty(dirName)) {
             return;
@@ -50,6 +51,7 @@ public class FileUtils {
         }
     }
 
+    //TODO: remove comment this is safe
     public void deleteFile(String fileName) {
         if (TextUtils.isEmpty(fileName)) {
             return;
@@ -72,6 +74,7 @@ public class FileUtils {
         }
     }
 
+    //TODO: remove comment this is safe
     public String readFromFile(String fileNameWithPath) throws IOException {
 
         String content = "";
@@ -118,6 +121,7 @@ public class FileUtils {
         return content;
     }
 
+    //TODO: Need to check again
     public void writeJsonToFile(String dirName,
             String fileName, JSONObject jsonObject) throws IOException {
         FileWriter writer = null;
