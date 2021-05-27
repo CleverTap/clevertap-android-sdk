@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inbox;
 
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.annotation.WorkerThread;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -155,6 +156,7 @@ public class CTInboxController {
     }
 
     // always call async
+    @WorkerThread
     public boolean updateMessages(final JSONArray inboxMessages) {
         boolean haveUpdates = false;
         ArrayList<CTMessageDAO> newMessages = new ArrayList<>();
