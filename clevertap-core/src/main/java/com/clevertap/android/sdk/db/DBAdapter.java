@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.annotation.WorkerThread;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
@@ -161,6 +162,7 @@ public class DBAdapter {
                     break;
             }
         }
+
 
         @SuppressLint("UsableSpace")
         boolean belowMemThreshold() {
@@ -631,43 +633,7 @@ public class DBAdapter {
         }
     }
 
-    /**
-     * Adds a JSON string to the DB.
-     *
-     * @param obj   the JSON to record
-     * @param table the table to insert into
-     * @return the number of rows in the table, or DB_OUT_OF_MEMORY_ERROR/DB_UPDATE_ERROR
-     */
-    synchronized int storeObject(JSONObject obj, Table table) {
-        if (!this.belowMemThreshold()) {
-            Logger.v("There is not enough space left on the device to store data, data discarded");
-            return DB_OUT_OF_MEMORY_ERROR;
-        }
-
-        final String tableName = table.getName();
-
-        long count = DB_UPDATE_ERROR;
-
-        try {
-            final SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-            final ContentValues cv = new ContentValues();
-            cv.put(KEY_DATA, obj.toString());
-            cv.put(KEY_CREATED_AT, System.currentTimeMillis());
-            db.insert(tableName, null, cv);
-
-            String sql = "SELECT COUNT(*) FROM " + tableName;
-            SQLiteStatement statement = db.compileStatement(sql);
-            count = statement.simpleQueryForLong();
-        } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error adding data to table " + tableName + " Recreating DB");
-            dbHelper.deleteDatabase();
-        } finally {
-            dbHelper.close();
-        }
-        return (int) count;
-    }
-
+    // TODO: remove comment this is safe
     public synchronized void storePushNotificationId(String id, long ttl) {
 
         if (id == null) {
@@ -702,36 +668,12 @@ public class DBAdapter {
     }
 
     /**
-     * Adds a String timestamp representing uninstall flag to the DB.
-     */
-    public synchronized void storeUninstallTimestamp() {
-
-        if (!this.belowMemThreshold()) {
-            getConfigLogger().verbose("There is not enough space left on the device to store data, data discarded");
-            return;
-        }
-        final String tableName = Table.UNINSTALL_TS.getName();
-
-        try {
-            final SQLiteDatabase db = dbHelper.getWritableDatabase();
-            final ContentValues cv = new ContentValues();
-            cv.put(KEY_CREATED_AT, System.currentTimeMillis());
-            db.insert(tableName, null, cv);
-        } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error adding data to table " + tableName + " Recreating DB");
-            dbHelper.deleteDatabase();
-        } finally {
-            dbHelper.close();
-        }
-
-    }
-
-    /**
      * Adds a JSON string representing to the DB.
      *
      * @param obj the JSON to record
      * @return the number of rows in the table, or DB_OUT_OF_MEMORY_ERROR/DB_UPDATE_ERROR
      */
+    @WorkerThread
     public synchronized long storeUserProfile(String id, JSONObject obj) {
 
         if (id == null) {
@@ -762,6 +704,34 @@ public class DBAdapter {
         return ret;
     }
 
+    /**
+     * Adds a String timestamp representing uninstall flag to the DB.
+     */
+    public synchronized void storeUninstallTimestamp() {
+
+        if (!this.belowMemThreshold()) {
+            getConfigLogger().verbose("There is not enough space left on the device to store data, data discarded");
+            return;
+        }
+        final String tableName = Table.UNINSTALL_TS.getName();
+
+        try {
+            final SQLiteDatabase db = dbHelper.getWritableDatabase();
+            final ContentValues cv = new ContentValues();
+            cv.put(KEY_CREATED_AT, System.currentTimeMillis());
+            db.insert(tableName, null, cv);
+        } catch (final SQLiteException e) {
+            getConfigLogger().verbose("Error adding data to table " + tableName + " Recreating DB");
+            dbHelper.deleteDatabase();
+        } finally {
+            dbHelper.close();
+        }
+
+    }
+    // TODO: remove comment this is safe
+
+    // TODO: remove comment this is safe
+    @WorkerThread
     public synchronized void updatePushNotificationIds(String[] ids) {
         if (ids.length == 0) {
             return;
@@ -791,6 +761,45 @@ public class DBAdapter {
         } finally {
             dbHelper.close();
         }
+    }
+
+    /**
+     * Adds a JSON string to the DB.
+     *
+     * @param obj   the JSON to record
+     * @param table the table to insert into
+     * @return the number of rows in the table, or DB_OUT_OF_MEMORY_ERROR/DB_UPDATE_ERROR
+     */
+    // TODO: remove comment this is safe
+    @WorkerThread
+    synchronized int storeObject(JSONObject obj, Table table) {
+        if (!this.belowMemThreshold()) {
+            Logger.v("There is not enough space left on the device to store data, data discarded");
+            return DB_OUT_OF_MEMORY_ERROR;
+        }
+
+        final String tableName = table.getName();
+
+        long count = DB_UPDATE_ERROR;
+
+        try {
+            final SQLiteDatabase db = dbHelper.getWritableDatabase();
+
+            final ContentValues cv = new ContentValues();
+            cv.put(KEY_DATA, obj.toString());
+            cv.put(KEY_CREATED_AT, System.currentTimeMillis());
+            db.insert(tableName, null, cv);
+
+            String sql = "SELECT COUNT(*) FROM " + tableName;
+            SQLiteStatement statement = db.compileStatement(sql);
+            count = statement.simpleQueryForLong();
+        } catch (final SQLiteException e) {
+            getConfigLogger().verbose("Error adding data to table " + tableName + " Recreating DB");
+            dbHelper.deleteDatabase();
+        } finally {
+            dbHelper.close();
+        }
+        return (int) count;
     }
 
     /**
@@ -826,6 +835,7 @@ public class DBAdapter {
         }
     }
 
+    @WorkerThread
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private boolean belowMemThreshold() {
         return dbHelper.belowMemThreshold();
