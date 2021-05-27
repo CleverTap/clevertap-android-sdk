@@ -3,8 +3,12 @@ package com.clevertap.android.sdk;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+
+import androidx.annotation.MainThread;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.annotation.WorkerThread;
+
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.events.EventDetail;
 import java.util.ArrayList;
@@ -51,10 +55,12 @@ public class LocalDataStore {
         inflateLocalProfileAsync(context);
     }
 
+    // TODO: remove comment this is safe
     public void changeUser() {
         resetLocalProfileSync();
     }
 
+    @MainThread
     EventDetail getEventDetail(String eventName) {
         try {
             if (!isPersonalisationEnabled()) {
@@ -103,6 +109,7 @@ public class LocalDataStore {
         return _getProfileProperty(key);
     }
 
+    // TODO: remove comment this is safe
     public void persistEvent(Context context, JSONObject event, int type) {
 
         if (event == null) {
@@ -118,6 +125,7 @@ public class LocalDataStore {
         }
     }
 
+    // TODO: remove comment this is safe
     void removeProfileField(String key) {
         removeProfileField(key, false, true);
     }
@@ -129,6 +137,7 @@ public class LocalDataStore {
         removeProfileFields(fields, false);
     }
 
+    // TODO: remove comment this is safe
     public void setDataSyncFlag(JSONObject event) {
         try {
             // Check the personalisation flag
@@ -176,14 +185,17 @@ public class LocalDataStore {
         }
     }
 
+    // TODO: remove comment this is safe
     void setProfileField(String key, Object value) {
         setProfileField(key, value, false, true);
     }
 
+    // TODO: remove comment this is safe
     void setProfileFields(JSONObject fields) {
         setProfileFields(fields, false);
     }
 
+    //TODO: Need to check again
     @SuppressWarnings("rawtypes")
     public void syncWithUpstream(Context context, JSONObject response) {
         try {
@@ -270,6 +282,7 @@ public class LocalDataStore {
         }
     }
 
+    // TODO: remove comment this is safe
     private Object _getProfileProperty(String key) {
 
         if (key == null) {
@@ -287,6 +300,7 @@ public class LocalDataStore {
         }
     }
 
+    // TODO: remove comment this is safe
     private void _removeProfileField(String key) {
 
         if (key == null) {
@@ -366,6 +380,7 @@ public class LocalDataStore {
         return this.config.getLogger();
     }
 
+    // TODO: remove comment this is safe
     private int getIntFromPrefs(String rawKey, int defaultValue) {
         if (this.config.isDefaultInstance()) {
             int dummy = -1000;
@@ -390,6 +405,7 @@ public class LocalDataStore {
         }
     }
 
+    @MainThread
     private String getStringFromPrefs(String rawKey, String defaultValue, String nameSpace) {
         if (this.config.isDefaultInstance()) {
             String _new = StorageHelper
@@ -405,7 +421,7 @@ public class LocalDataStore {
     }
 
     // local cache/profile key expiry handling
-
+    // TODO: remove comment this is safe
     private void inflateLocalProfileAsync(final Context context) {
 
         final String accountID = this.config.getAccountId();
@@ -462,6 +478,7 @@ public class LocalDataStore {
 
     @SuppressWarnings("ConstantConditions")
     @SuppressLint("CommitPrefEdits")
+    // TODO: remove comment this is safe
     private void persistEvent(Context context, JSONObject event) {
         try {
             String evtName = event.getString("evtName");
@@ -489,7 +506,7 @@ public class LocalDataStore {
             getConfigLogger().verbose(getConfigAccountId(), "Failed to persist event locally", t);
         }
     }
-
+    // TODO: remove comment this is safe
     private void persistLocalProfileAsync() {
 
         final String profileID = this.config.getAccountId();
@@ -507,6 +524,7 @@ public class LocalDataStore {
         });
     }
 
+    // TODO: remove comment this is safe
     private void postAsyncSafely(final String name, final Runnable runnable) {
         try {
             final boolean executeSync = Thread.currentThread().getId() == EXECUTOR_THREAD_ID;
@@ -604,7 +622,7 @@ public class LocalDataStore {
         }
         persistLocalProfileAsync();
     }
-
+    // TODO: remove comment this is safe
     private void resetLocalProfileSync() {
 
         synchronized (PROFILE_EXPIRY_MAP) {
@@ -623,6 +641,7 @@ public class LocalDataStore {
         StorageHelper.putInt(context, storageKeyWithSuffix("local_cache_expires_in"), ttl);
     }
 
+    // TODO: remove comment this is safe
     private void setProfileField(String key, Object value, Boolean fromUpstream, boolean persist) {
         if (key == null || value == null) {
             return;
@@ -642,6 +661,7 @@ public class LocalDataStore {
         }
     }
 
+    // TODO: remove comment this is safe
     @SuppressWarnings("rawtypes")
     private void setProfileFields(JSONObject fields, Boolean fromUpstream) {
         if (fields == null) {
@@ -676,6 +696,7 @@ public class LocalDataStore {
         return (value == null) ? "" : value.toString();
     }
 
+    //TODO: Need to check again
     @SuppressWarnings({"rawtypes", "ConstantConditions"})
     private JSONObject syncEventsFromUpstream(Context context, JSONObject events) {
         try {
@@ -758,7 +779,7 @@ public class LocalDataStore {
             return null;
         }
     }
-
+    //TODO: Need to check again
     @SuppressWarnings("rawtypes")
     private JSONObject syncProfile(JSONObject remoteProfile) {
 
