@@ -2,8 +2,6 @@ package com.clevertap.android.sdk.inbox;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import androidx.annotation.RestrictTo;
-import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import java.util.ArrayList;

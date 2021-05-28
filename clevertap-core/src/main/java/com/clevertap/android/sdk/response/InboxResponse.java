@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.response;
 
 import android.content.Context;
+import androidx.annotation.WorkerThread;
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -36,6 +37,7 @@ public class InboxResponse extends CleverTapResponseDecorator {
     }
 
     //NotificationInbox
+    @WorkerThread
     @Override
     public void processResponse(final JSONObject response, final String stringBody, final Context context) {
 
@@ -70,6 +72,7 @@ public class InboxResponse extends CleverTapResponseDecorator {
 
 
     // always call async
+    @WorkerThread
     private void _processInboxMessages(JSONArray messages) {
         synchronized (inboxControllerLock) {
             if (controllerManager.getCTInboxController() == null) {
