@@ -5,6 +5,8 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.annotation.WorkerThread;
+
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import java.io.BufferedReader;
 import java.io.File;
@@ -15,6 +17,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import org.json.JSONObject;
 
+@WorkerThread
 @RestrictTo(Scope.LIBRARY_GROUP)
 public class FileUtils {
 
@@ -27,7 +30,6 @@ public class FileUtils {
         this.config = config;
     }
 
-    //TODO: remove comment this is safe
     public void deleteDirectory(String dirName) {
         if (TextUtils.isEmpty(dirName)) {
             return;
@@ -51,7 +53,6 @@ public class FileUtils {
         }
     }
 
-    //TODO: remove comment this is safe
     public void deleteFile(String fileName) {
         if (TextUtils.isEmpty(fileName)) {
             return;
@@ -74,7 +75,6 @@ public class FileUtils {
         }
     }
 
-    //TODO: remove comment this is safe
     public String readFromFile(String fileNameWithPath) throws IOException {
 
         String content = "";
@@ -121,7 +121,6 @@ public class FileUtils {
         return content;
     }
 
-    //TODO: Need to check again
     public void writeJsonToFile(String dirName,
             String fileName, JSONObject jsonObject) throws IOException {
         FileWriter writer = null;

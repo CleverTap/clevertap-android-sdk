@@ -1006,12 +1006,12 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             this.coreState.getConfig().setCreatedPostAppLaunch();
         }
 
-        coreState.getSessionManager().setLastVisitTime();
 
         task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("setStatesAsync", new Callable<Void>() {
             @Override
             public Void call() {
+                CleverTapAPI.this.coreState.getSessionManager().setLastVisitTime();
                 CleverTapAPI.this.coreState.getDeviceInfo().setDeviceNetworkInfoReportingFromStorage();
                 CleverTapAPI.this.coreState.getDeviceInfo().setCurrentUserOptOutStateFromStorage();
                 return null;
