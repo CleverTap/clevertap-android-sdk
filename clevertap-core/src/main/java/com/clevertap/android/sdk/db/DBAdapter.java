@@ -164,7 +164,6 @@ public class DBAdapter {
         }
 
 
-        // TODO: remove comment this is safe
         @SuppressLint("UsableSpace")
         boolean belowMemThreshold() {
             //noinspection SimplifiableIfStatement
@@ -174,7 +173,6 @@ public class DBAdapter {
             return true;
         }
 
-        // TODO: remove comment this is safe
         void deleteDatabase() {
             close();
             //noinspection ResultOfMethodCallIgnored
@@ -330,7 +328,6 @@ public class DBAdapter {
      * @return boolean value based on success of operation
      */
     @SuppressWarnings("UnusedReturnValue")
-    // TODO: remove comment this is safe
     public synchronized boolean deleteMessageForId(String messageId, String userId) {
         if (messageId == null || userId == null) {
             return false;
@@ -350,12 +347,10 @@ public class DBAdapter {
         }
     }
 
-    // TODO: remove comment this is safe
     public synchronized boolean doesPushNotificationIdExist(String id) {
         return id.equals(fetchPushNotificationId(id));
     }
 
-    // TODO: remove comment this is safe
     public synchronized String[] fetchPushNotificationIds() {
         if (!rtlDirtyFlag) {
             return new String[0];
@@ -386,7 +381,6 @@ public class DBAdapter {
         return pushIds.toArray(new String[0]);
     }
 
-    // TODO: remove comment this is safe
     public synchronized JSONObject fetchUserProfileById(final String id) {
 
         if (id == null) {
@@ -421,7 +415,6 @@ public class DBAdapter {
         return profile;
     }
 
-    // TODO: remove comment this is safe
     public synchronized long getLastUninstallTimestamp() {
         final String tName = Table.UNINSTALL_TS.getName();
         Cursor cursor = null;
@@ -494,7 +487,6 @@ public class DBAdapter {
      * @return boolean value depending on success of operation
      */
     @SuppressWarnings("UnusedReturnValue")
-    // TODO: remove comment this is safe
     public synchronized boolean markReadMessageForId(String messageId, String userId) {
         if (messageId == null || userId == null) {
             return false;
@@ -519,7 +511,6 @@ public class DBAdapter {
     /**
      * remove the user profile with id from the db.
      */
-    // TODO: remove comment this is safe
     public synchronized void removeUserProfile(String id) {
 
         if (id == null) {
@@ -540,7 +531,6 @@ public class DBAdapter {
     /**
      * Adds a String timestamp representing uninstall flag to the DB.
      */
-    // TODO: remove comment this is safe
     public synchronized void storeUninstallTimestamp() {
 
         if (!this.belowMemThreshold()) {
@@ -569,7 +559,6 @@ public class DBAdapter {
      * @param obj the JSON to record
      * @return the number of rows in the table, or DB_OUT_OF_MEMORY_ERROR/DB_UPDATE_ERROR
      */
-    // TODO: remove comment this is safe
     @WorkerThread
     public synchronized long storeUserProfile(String id, JSONObject obj) {
 
@@ -636,7 +625,6 @@ public class DBAdapter {
         }
     }
 
-    // TODO: remove comment this is safe
     synchronized void cleanUpPushNotifications() {
         //In Push_Notifications, KEY_CREATED_AT is stored as a future epoch, i.e. currentTimeMillis() + ttl,
         //so comparing to the current time for removal is correct
@@ -649,7 +637,6 @@ public class DBAdapter {
      * @param lastId the last id to delete
      * @param table  the table to remove events
      */
-    // TODO: remove comment this is safe
     @WorkerThread
     synchronized void cleanupEventsFromLastId(String lastId, Table table) {
         final String tName = table.getName();
@@ -665,7 +652,6 @@ public class DBAdapter {
         }
     }
 
-    // TODO: remove comment this is safe
     public synchronized void storePushNotificationId(String id, long ttl) {
 
         if (id == null) {
@@ -704,7 +690,6 @@ public class DBAdapter {
      *
      * @param table the table to remove events
      */
-    // TODO: remove comment this is safe
     synchronized void cleanupStaleEvents(Table table) {
         cleanInternal(table, DATA_EXPIRATION);
     }
@@ -716,7 +701,6 @@ public class DBAdapter {
      * @param table the table to read from
      * @return JSONObject containing the max row ID and a JSONArray of the JSONObject events or null
      */
-    // TODO: remove comment this is safe
     synchronized JSONObject fetchEvents(Table table, final int limit) {
         final String tName = table.getName();
         Cursor cursor = null;
@@ -762,7 +746,6 @@ public class DBAdapter {
         return null;
     }
 
-    // TODO: remove comment this is safe
     @WorkerThread
     public synchronized void updatePushNotificationIds(String[] ids) {
         if (ids.length == 0) {
@@ -802,7 +785,6 @@ public class DBAdapter {
      * @param table the table to insert into
      * @return the number of rows in the table, or DB_OUT_OF_MEMORY_ERROR/DB_UPDATE_ERROR
      */
-    // TODO: remove comment this is safe
     @WorkerThread
     synchronized int storeObject(JSONObject obj, Table table) {
         if (!this.belowMemThreshold()) {
@@ -839,7 +821,6 @@ public class DBAdapter {
      *
      * @param table the table to remove events
      */
-    // TODO: remove comment this is safe
     synchronized void removeEvents(Table table) {
         final String tName = table.getName();
 
@@ -854,14 +835,12 @@ public class DBAdapter {
         }
     }
 
-    // TODO: remove comment this is safe
     @WorkerThread
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private boolean belowMemThreshold() {
         return dbHelper.belowMemThreshold();
     }
 
-    // TODO: remove comment this is safe
     private void cleanInternal(Table table, long expiration) {
 
         final long time = (System.currentTimeMillis() - expiration) / 1000;
@@ -879,7 +858,6 @@ public class DBAdapter {
 
     }
 
-    // TODO: remove comment this is safe
     private void deleteDB() {
         dbHelper.deleteDatabase();
     }
@@ -911,7 +889,6 @@ public class DBAdapter {
         return this.config.getLogger();
     }
 
-    // TODO: remove comment this is safe
     private static String getDatabaseName(CleverTapInstanceConfig config) {
         return config.isDefaultInstance() ? DATABASE_NAME : DATABASE_NAME + "_" + config.getAccountId();
     }

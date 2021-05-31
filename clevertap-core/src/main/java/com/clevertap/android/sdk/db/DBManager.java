@@ -139,7 +139,6 @@ public class DBManager extends BaseDatabaseManager {
         }
     }
 
-    // TODO: remove comment this is safe
     //Event
     @WorkerThread
     @Override
@@ -149,7 +148,6 @@ public class DBManager extends BaseDatabaseManager {
         queueEventInternal(context, event, table);
     }
 
-    // TODO: remove comment this is safe
     @WorkerThread
     @Override
     public void queuePushNotificationViewedEventToDB(final Context context, final JSONObject event) {
@@ -177,7 +175,6 @@ public class DBManager extends BaseDatabaseManager {
         return cursor;
     }
 
-    // TODO: remove comment this is safe
     @WorkerThread
     private void queueEventInternal(final Context context, final JSONObject event, DBAdapter.Table table) {
         synchronized (ctLockManager.getEventLock()) {
