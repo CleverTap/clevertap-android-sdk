@@ -17,7 +17,6 @@ import com.clevertap.android.sdk.response.DisplayUnitResponse;
 import com.clevertap.android.sdk.response.InAppResponse;
 import com.clevertap.android.sdk.response.InboxResponse;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
-import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 import com.clevertap.android.sdk.utils.UriHelper;
@@ -57,8 +56,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     private final LocalDataStore localDataStore;
 
-    private final MainLooperHandler mainLooperHandler;
-
     private final ValidationResultStack validationResultStack;
 
     private final Validator validator;
@@ -77,7 +74,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             CoreMetaData coreMetaData,
             LocalDataStore localDataStore,
             DeviceInfo deviceInfo,
-            MainLooperHandler mainLooperHandler,
             BaseCallbackManager callbackManager, ControllerManager controllerManager,
             final CTLockManager ctLockManager) {
         this.context = context;
@@ -88,7 +84,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.coreMetaData = coreMetaData;
         this.localDataStore = localDataStore;
         this.deviceInfo = deviceInfo;
-        this.mainLooperHandler = mainLooperHandler;
         this.callbackManager = callbackManager;
         this.ctLockManager = ctLockManager;
         this.controllerManager = controllerManager;

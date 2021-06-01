@@ -5,14 +5,11 @@ import static com.clevertap.android.sdk.utils.CTJsonConverter.getRenderedTargetL
 import android.content.Context;
 import android.os.Bundle;
 import com.clevertap.android.sdk.BaseCallbackManager;
-import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
-import com.clevertap.android.sdk.db.DBAdapter;
-import com.clevertap.android.sdk.pushnotification.PushProviders;
 import java.util.Iterator;
 import org.json.JSONArray;
 import org.json.JSONException;
