@@ -464,9 +464,10 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
 
         if (extras.containsKey(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            Runnable pendingInappRunnable = new Runnable() {
+            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+            task.execute("testInappNotification",new Callable<Void>() {
                 @Override
-                public void run() {
+                public Void call() {
                     try {
                         Logger.v("Received in-app via push payload: " + extras
                                 .getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY));
@@ -481,16 +482,17 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                     } catch (Throwable t) {
                         Logger.v("Failed to display inapp notification from push notification payload", t);
                     }
+                    return null;
                 }
-            };
-            mainLooperHandler.setPendingRunnable(pendingInappRunnable);
+            });
             return;
         }
 
         if (extras.containsKey(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            Runnable pendingInboxRunnable = new Runnable() {
+            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+            task.execute("testInboxNotification",new Callable<Void>() {
                 @Override
-                public void run() {
+                public Void call() {
                     try {
                         Logger.v("Received inbox via push payload: " + extras
                                 .getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
@@ -509,9 +511,9 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                     } catch (Throwable t) {
                         Logger.v("Failed to process inbox message from push notification payload", t);
                     }
+                    return null;
                 }
-            };
-            mainLooperHandler.setPendingRunnable(pendingInboxRunnable);
+            });
             return;
         }
 

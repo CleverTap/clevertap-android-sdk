@@ -28,11 +28,11 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
 
     private final Context context;
 
-    private final DBAdapter dbAdapter;
-
     private final Logger logger;
 
     private final ControllerManager controllerManager;
+
+    private final BaseDatabaseManager baseDatabaseManager;
 
     public PushAmpResponse(CleverTapResponse cleverTapResponse,
             Context context,
@@ -44,7 +44,7 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
         this.context = context;
         this.config = config;
         logger = this.config.getLogger();
-        dbAdapter = dbManager.loadDBAdapter(context);
+        this.baseDatabaseManager = dbManager;
         this.callbackManager = callbackManager;
         this.controllerManager = controllerManager;
     }
@@ -84,7 +84,7 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
                     boolean ack = pushAmpObject.getBoolean("ack");
                     logger.verbose("Received ACK -" + ack);
                     if (ack) {
-                        JSONArray rtlArray = getRenderedTargetList(dbAdapter);
+                        JSONArray rtlArray = getRenderedTargetList(baseDatabaseManager.loadDBAdapter(context));
                         String[] rtlStringArray = new String[0];
                         if (rtlArray != null) {
                             rtlStringArray = new String[rtlArray.length()];
@@ -93,7 +93,7 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
                             rtlStringArray[i] = rtlArray.getString(i);
                         }
                         logger.verbose("Updating RTL values...");
-                        dbAdapter.updatePushNotificationIds(rtlStringArray);
+                        baseDatabaseManager.loadDBAdapter(context).updatePushNotificationIds(rtlStringArray);
                     }
                 }
             }
@@ -121,7 +121,7 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
                     String key = iterator.next().toString();
                     pushBundle.putString(key, pushObject.getString(key));
                 }
-                if (!pushBundle.isEmpty() && !dbAdapter
+                if (!pushBundle.isEmpty() && !baseDatabaseManager.loadDBAdapter(context)
                         .doesPushNotificationIdExist(pushObject.getString("wzrk_pid"))) {
                     logger.verbose("Creating Push Notification locally");
                     if (callbackManager.getPushAmpListener() != null) {
