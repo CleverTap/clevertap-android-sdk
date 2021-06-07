@@ -4,7 +4,6 @@ import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-import androidx.annotation.MainThread;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.annotation.WorkerThread;
@@ -192,7 +191,7 @@ public class LocalDataStore {
         setProfileFields(fields, false);
     }
 
-    //TODO: Not used.Remove later
+    //Not used.Remove later
     @SuppressWarnings("rawtypes")
     public void syncWithUpstream(Context context, JSONObject response) {
         try {
@@ -470,7 +469,6 @@ public class LocalDataStore {
 
     @SuppressWarnings("ConstantConditions")
     @SuppressLint("CommitPrefEdits")
-    // TODO: remove comment this is safe
     private void persistEvent(Context context, JSONObject event) {
         try {
             String evtName = event.getString("evtName");
@@ -498,7 +496,7 @@ public class LocalDataStore {
             getConfigLogger().verbose(getConfigAccountId(), "Failed to persist event locally", t);
         }
     }
-    // TODO: remove comment this is safe
+
     private void persistLocalProfileAsync() {
 
         final String profileID = this.config.getAccountId();
@@ -516,7 +514,6 @@ public class LocalDataStore {
         });
     }
 
-    // TODO: remove comment this is safe
     private void postAsyncSafely(final String name, final Runnable runnable) {
         try {
             final boolean executeSync = Thread.currentThread().getId() == EXECUTOR_THREAD_ID;
@@ -687,7 +684,7 @@ public class LocalDataStore {
         return (value == null) ? "" : value.toString();
     }
 
-    //TODO: Not used.Remove later
+    //Not used.Remove later
     @SuppressWarnings({"rawtypes", "ConstantConditions"})
     private JSONObject syncEventsFromUpstream(Context context, JSONObject events) {
         try {
@@ -770,7 +767,7 @@ public class LocalDataStore {
             return null;
         }
     }
-    //TODO: Not used.Remove later
+    //Not used.Remove later
     @SuppressWarnings("rawtypes")
     private JSONObject syncProfile(JSONObject remoteProfile) {
 

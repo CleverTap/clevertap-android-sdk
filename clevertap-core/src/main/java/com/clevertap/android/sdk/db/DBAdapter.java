@@ -443,7 +443,6 @@ public class DBAdapter {
      * @param userId String userid
      * @return ArrayList of {@link CTMessageDAO}
      */
-    // TODO: check pushNotificationClickedEvent in Analytics Manager, seems like a danger
     public synchronized ArrayList<CTMessageDAO> getMessages(String userId) {
         final String tName = Table.INBOX_MESSAGES.getName();
         Cursor cursor;
@@ -595,7 +594,6 @@ public class DBAdapter {
      *
      * @param inboxMessages ArrayList of type {@link CTMessageDAO}
      */
-    // TODO: check pushNotificationClickedEvent in Analytics Manager, seems like a danger
     @WorkerThread
     public synchronized void upsertMessages(ArrayList<CTMessageDAO> inboxMessages) {
         if (!this.belowMemThreshold()) {

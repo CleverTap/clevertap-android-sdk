@@ -27,7 +27,6 @@ public class DBManager extends BaseDatabaseManager {
         this.ctLockManager = ctLockManager;
     }
 
-    // TODO: check PushAmpResponse constructor seems like a danger
     @WorkerThread
     @Override
     public DBAdapter loadDBAdapter(final Context context) {
