@@ -80,7 +80,6 @@ class ActivityLifeCycleManager {
         config.getLogger().verbose(config.getAccountId(), "App in foreground");
         sessionManager.checkTimeoutSession();
         //Anything in this If block will run once per App Launch.
-        //Will not run for Apps which disable App Launched event
         if (!coreMetaData.isAppLaunchPushed()) {
 
             analyticsManager.pushAppLaunchedEvent();

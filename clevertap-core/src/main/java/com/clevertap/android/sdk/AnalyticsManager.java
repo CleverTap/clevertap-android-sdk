@@ -133,6 +133,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     @Override
     public void pushAppLaunchedEvent() {
+        //Will not run for Apps which disable App Launched event
         if (config.isDisableAppLaunchedEvent()) {
             coreMetaData.setAppLaunchPushed(true);
             config.getLogger()
