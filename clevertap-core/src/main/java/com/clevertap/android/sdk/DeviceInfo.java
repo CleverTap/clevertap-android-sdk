@@ -20,6 +20,8 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationManagerCompat;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
@@ -28,6 +30,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.concurrent.Callable;
+
 import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
@@ -320,12 +324,20 @@ public class DeviceInfo {
 
     private final CoreMetaData mCoreMetaData;
 
-    DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID, CoreMetaData coreMetaData) {
+    DeviceInfo(Context context, CleverTapInstanceConfig config, final String cleverTapID,
+               CoreMetaData coreMetaData) {
         this.context = context;
         this.config = config;
         this.library = null;
         mCoreMetaData = coreMetaData;
-        onInitDeviceInfo(cleverTapID);
+        Task<Void> initDeviceIDTask = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        initDeviceIDTask.execute("initDeviceInfo",new Callable<Void>() {
+            @Override
+            public Void call() {
+                onInitDeviceInfo(cleverTapID);
+                return null;
+            }
+        });
     }
 
     void onInitDeviceInfo(final String cleverTapID) {
