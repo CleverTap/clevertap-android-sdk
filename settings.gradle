@@ -2,7 +2,6 @@ plugins {
     id 'de.fayard.refreshVersions' version '0.10.0'
     id "com.gradle.enterprise" version "3.6.3"
 }
-include ':lint_rules'
 include ':test_shared'
 include ':clevertap-core'
 include ':sample'
