@@ -1,6 +1,6 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
-apply plugin: 'com.github.dcendents.android-maven'
+//apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'jacoco'
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
@@ -30,12 +30,12 @@ group = publishedGroupId
 def (major,minor,patch) = libraryVersion.split("\\.")
 
 android {
-    compileSdkVersion compileSdkVersionVal
-    buildToolsVersion buildToolsVersionVal
+    compileSdkVersion Android.compileSdkVersionVal
+    buildToolsVersion Android.buildToolsVersionVal
 
     defaultConfig {
         minSdkVersion minSdkVersionVal
-        targetSdkVersion targetSdkVersionVal
+        targetSdkVersion Android.targetSdkVersionVal
         versionCode "${major}0${minor}0${patch}".toInteger()
         versionName libraryVersion
 
@@ -88,11 +88,12 @@ android {
 }
 
 jacoco {
-    toolVersion = "$jacocoVersion"
+    toolVersion = SDKTest.jacocoToolVersion
 }
 
 tasks.withType(Test) {
     jacoco.includeNoLocationClasses = true
+    jacoco.excludes = ['jdk.internal.*']//https://github.com/gradle/gradle/issues/5184
 }
 
 task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'createDebugCoverageReport']) {

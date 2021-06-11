@@ -16,11 +16,11 @@ CleverTap Android Geofence SDK provides **Geofencing capabilities** to CleverTap
 Add the following dependencies to the `build.gradle`
 
 ```Groovy
-implementation "${ext.deps.clevertapGeofence}"
-implementation "${ext.deps.clevertapCore}" // 3.9.0 and above
-implementation "${ext.deps.playServicesLocation}"
-implementation "${ext.deps.workManager}" // required for FETCH_LAST_LOCATION_PERIODIC
-implementation "${ext.deps.androidXConcurrentFutures}" // required for FETCH_LAST_LOCATION_PERIODIC
+implementation "${ext.clevertap_geofence_sdk}${ext['version.com.clevertap.android..clevertap-geofence-sdk']}"
+implementation "${ext.clevertap_android_sdk}${ext['version.com.clevertap.android..clevertap-android-sdk']}" // 3.9.0 and above
+implementation "${ext.play_services_location}${ext['version.google.android.play-services-location']}"
+implementation "${ext.work_runtime}${ext['version.androidx.work']}" // required for FETCH_LAST_LOCATION_PERIODIC
+implementation "${ext.concurrent_futures}${ext['version.androidx.concurrent']}" // required for FETCH_LAST_LOCATION_PERIODIC
 ```
 ## 🔒 Permissions
 [(Back to top)](#-table-of-contents)

@@ -38,7 +38,7 @@ dependencies {
 allprojects {
     repositories {
         // FOR HUAWEI ADD THIS
-        maven {url 'http://developer.huawei.com/repo/'}
+        maven {url 'https://developer.huawei.com/repo/'}
        }
 }
 ```

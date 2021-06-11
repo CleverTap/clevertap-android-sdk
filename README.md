@@ -69,8 +69,8 @@ Also be sure to include the `google-services.json` classpath in your Project lev
         
          }       
          dependencies {      
-             classpath "com.android.tools.build:gradle:4.1.2" 
-             classpath "com.google.gms:google-services:4.3.3"        
+             classpath "com.android.tools.build:gradle:4.2.1"
+             classpath "com.google.gms:google-services:4.3.3"
         
              // NOTE: Do not place your application dependencies here; they belong       
              // in the individual module build.gradle files      

@@ -150,16 +150,16 @@ Use `onUserLogin` to maintain multiple distinct user profiles on the same device
 Add the following dependencies in your app's `build.gradle`
 
 ```groovy
-implementation "${ext.deps.appcompat}"//MANDATORY for App Inbox
-implementation "${ext.deps.recyclerview}"//MANDATORY for App Inbox
-implementation "${ext.deps.viewPager}"//MANDATORY for App Inbox
-implementation "${ext.deps.materialDesign}"//MANDATORY for App Inbox
-implementation "${ext.deps.glide}"//MANDATORY for App Inbox
+implementation "${ext.appcompat}${ext['version.androidx.appcompat']}"//MANDATORY for App Inbox
+implementation "${ext.recyclerview}${ext['version.androidx.recyclerview']}"//MANDATORY for App Inbox
+implementation "${ext.viewpager}${ext['version.androidx.viewpager']}"//MANDATORY for App Inbox
+implementation "${ext.material}${ext['version.google.android.material']}"//MANDATORY for App Inbox
+implementation "${ext.glide}${ext['version.com.github.bumptech.glide..glide']}"//MANDATORY for App Inbox
 
 //Optional ExoPlayer Libraries for Audio/Video Inbox Messages. Audio/Video messages will be dropped without these dependencies
-implementation "${ext.deps.exoPlayer}"
-implementation "${ext.deps.exoPlayerHls}"
-implementation "${ext.deps.exoPlayerUi}"
+implementation "${ext.exoplayer}${ext['version.com.google.android.exoplayer..exoplayer']}"
+implementation "${ext.exoplayer_hls}${ext['version.com.google.android.exoplayer..exoplayer-hls']}"
+implementation "${ext.exoplayer_ui}${ext['version.com.google.android.exoplayer..exoplayer-ui']}"
 ```
 #### Initializing the Inbox
 
@@ -337,5 +337,5 @@ To support in-app notifications, register the following activity in your Android
 From CleverTap SDK v3.6.4 onwards, just remove the above the Broadcast Receiver if you are using it and add the following gradle dependency to capture UTM details, app install time, referrer click time and other metrics provided by the Google Install Referrer Library.
 
 ```groovy
-    implementation "${ext.deps.installreferrer}"
+    implementation "${ext.installreferrer}${ext['version.com.android.installreferrer..installreferrer']}"
 ```
