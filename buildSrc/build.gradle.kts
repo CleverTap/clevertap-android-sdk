@@ -4,11 +4,5 @@ repositories {
 }
 plugins {
     `kotlin-dsl`
-    `java-library`
 }
 
-dependencies {
-
-    // Logging
-
-}
