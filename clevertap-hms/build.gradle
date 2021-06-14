@@ -20,7 +20,7 @@ apply from: "../gradle-scripts/commons.gradle"
 dependencies {
     compileOnly project(':clevertap-core')
     implementation Libs.push
-    compileOnly deps.androidXAnnotation
+    compileOnly Libs.androidx_annotation
 
     testImplementation project(':test_shared')
     testImplementation Libs.push

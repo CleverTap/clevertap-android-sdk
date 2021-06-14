@@ -2,9 +2,6 @@ apply plugin: 'org.sonarqube'
 
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-    // do not change order of apply
-    apply from: 'gradle-scripts/versions.gradle'
-    apply from: 'gradle-scripts/dependencies.gradle'
 
     repositories {
         google()// Google's Maven repository

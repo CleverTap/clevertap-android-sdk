@@ -35,7 +35,7 @@ dependencies {
     def mockito_version = '3.5.11'
     api Libs.mockito_core
     api "org.mockito:mockito-inline:$mockito_version"
-    api "org.robolectric:robolectric:$robolectricVersion"
+    api Libs.robolectric
     api Libs.opentest4j
 
     api Libs.androidx_test_core
