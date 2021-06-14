@@ -2130,6 +2130,16 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         coreState.getAnalyticsManager().removeValueForKey(key);
     }
 
+
+    public void incrementValueBy(final String key, Number value){
+
+    }
+
+
+    public void decrementValueBy(final String key, Number value){
+
+    }
+
     /**
      * This method is used to set the CTFeatureFlagsListener
      * Register to receive feature flag callbacks
