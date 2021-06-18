@@ -1137,7 +1137,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     public CTFeatureFlagsController featureFlag() {
         if (getConfig().isAnalyticsOnly()) {
-            getConfig().getLogger().debug(getAccountId(),"Feature flag is not supported with analytics only configuration");
+            getConfig().getLogger()
+                    .debug(getAccountId(), "Feature flag is not supported with analytics only configuration");
         }
         return coreState.getControllerManager().getCTFeatureFlagsController();
     }
@@ -2075,8 +2076,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused"})
     public void recordScreen(String screenName) {
-        if (screenName == null || (!coreState.getCoreMetaData().getScreenName().isEmpty() && coreState
-                .getCoreMetaData().getScreenName().equals(screenName))) {
+        String currentScreenName = coreState.getCoreMetaData().getScreenName();
+        if (screenName == null || (currentScreenName != null && !currentScreenName.isEmpty() && currentScreenName
+                .equals(screenName))) {
             return;
         }
         getConfigLogger().debug(getAccountId(), "Screen changed to " + screenName);

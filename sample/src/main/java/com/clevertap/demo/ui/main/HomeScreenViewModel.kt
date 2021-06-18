@@ -54,6 +54,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
 
                 cleverTapAPI?.pushChargedEvent(chargeDetails, items)
             }
+            "03" -> cleverTapAPI?.recordScreen("Cart Screen Viewed")
             "10" -> {
                 //Record a profile
                 val profileUpdate = HashMap<String, Any>()
