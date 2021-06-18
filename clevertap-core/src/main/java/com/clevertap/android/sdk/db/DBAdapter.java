@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.annotation.WorkerThread;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
@@ -361,6 +362,7 @@ public class DBAdapter {
      * @return boolean value based on success of operation
      */
     @SuppressWarnings("UnusedReturnValue")
+    @WorkerThread
     public synchronized boolean deleteMessageForId(String messageId, String userId) {
         if (messageId == null || userId == null) {
             return false;
@@ -528,6 +530,7 @@ public class DBAdapter {
      * @param userId String userid
      * @return ArrayList of {@link CTMessageDAO}
      */
+    @WorkerThread
     public synchronized ArrayList<CTMessageDAO> getMessages(String userId) {
         final String tName = Table.INBOX_MESSAGES.getName();
         Cursor cursor;
@@ -571,6 +574,7 @@ public class DBAdapter {
      * @return boolean value depending on success of operation
      */
     @SuppressWarnings("UnusedReturnValue")
+    @WorkerThread
     public synchronized boolean markReadMessageForId(String messageId, String userId) {
         if (messageId == null || userId == null) {
             return false;

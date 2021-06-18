@@ -1,6 +1,8 @@
 package com.clevertap.android.sdk;
 
 import android.content.Context;
+import androidx.annotation.AnyThread;
+import androidx.annotation.WorkerThread;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.displayunits.CTDisplayUnitController;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
@@ -118,6 +120,7 @@ public class ControllerManager {
         this.pushProviders = pushProviders;
     }
 
+    @AnyThread
     public void initializeInbox() {
         if (config.isAnalyticsOnly()) {
             config.getLogger()
@@ -135,6 +138,7 @@ public class ControllerManager {
     }
 
     // always call async
+    @WorkerThread
     private void _initializeInbox() {
         synchronized (ctLockManager.getInboxControllerLock()) {
             if (getCTInboxController() != null) {
