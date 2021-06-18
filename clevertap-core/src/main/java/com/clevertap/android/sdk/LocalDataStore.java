@@ -3,8 +3,11 @@ package com.clevertap.android.sdk;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.SharedPreferences;
+
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.annotation.WorkerThread;
+
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.events.EventDetail;
 import java.util.ArrayList;
@@ -51,6 +54,7 @@ public class LocalDataStore {
         inflateLocalProfileAsync(context);
     }
 
+    @WorkerThread
     public void changeUser() {
         resetLocalProfileSync();
     }
@@ -103,6 +107,7 @@ public class LocalDataStore {
         return _getProfileProperty(key);
     }
 
+    @WorkerThread
     public void persistEvent(Context context, JSONObject event, int type) {
 
         if (event == null) {
@@ -118,6 +123,7 @@ public class LocalDataStore {
         }
     }
 
+    @WorkerThread
     void removeProfileField(String key) {
         removeProfileField(key, false, true);
     }
@@ -129,6 +135,7 @@ public class LocalDataStore {
         removeProfileFields(fields, false);
     }
 
+    @WorkerThread
     public void setDataSyncFlag(JSONObject event) {
         try {
             // Check the personalisation flag
@@ -184,6 +191,7 @@ public class LocalDataStore {
         setProfileFields(fields, false);
     }
 
+    //Not used.Remove later
     @SuppressWarnings("rawtypes")
     public void syncWithUpstream(Context context, JSONObject response) {
         try {
@@ -405,7 +413,6 @@ public class LocalDataStore {
     }
 
     // local cache/profile key expiry handling
-
     private void inflateLocalProfileAsync(final Context context) {
 
         final String accountID = this.config.getAccountId();
@@ -623,6 +630,7 @@ public class LocalDataStore {
         StorageHelper.putInt(context, storageKeyWithSuffix("local_cache_expires_in"), ttl);
     }
 
+
     private void setProfileField(String key, Object value, Boolean fromUpstream, boolean persist) {
         if (key == null || value == null) {
             return;
@@ -676,6 +684,7 @@ public class LocalDataStore {
         return (value == null) ? "" : value.toString();
     }
 
+    //Not used.Remove later
     @SuppressWarnings({"rawtypes", "ConstantConditions"})
     private JSONObject syncEventsFromUpstream(Context context, JSONObject events) {
         try {
@@ -758,7 +767,7 @@ public class LocalDataStore {
             return null;
         }
     }
-
+    //Not used.Remove later
     @SuppressWarnings("rawtypes")
     private JSONObject syncProfile(JSONObject remoteProfile) {
 

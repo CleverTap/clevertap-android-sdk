@@ -15,6 +15,7 @@ import org.mockito.ArgumentMatchers.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 
+@Ignore
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28], application = TestApplication::class)
 class FcmMessageHandlerImplTest : BaseTestCase() {

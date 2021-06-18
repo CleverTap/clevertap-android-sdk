@@ -28,6 +28,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.UUID;
+
 import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
@@ -320,7 +321,8 @@ public class DeviceInfo {
 
     private final CoreMetaData mCoreMetaData;
 
-    DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID, CoreMetaData coreMetaData) {
+    DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID,
+               CoreMetaData coreMetaData) {
         this.context = context;
         this.config = config;
         this.library = null;

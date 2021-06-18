@@ -17,7 +17,6 @@ import com.clevertap.android.sdk.response.DisplayUnitResponse;
 import com.clevertap.android.sdk.response.InAppResponse;
 import com.clevertap.android.sdk.response.InboxResponse;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
-import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 import com.clevertap.android.sdk.utils.UriHelper;
@@ -57,8 +56,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     private final LocalDataStore localDataStore;
 
-    private final MainLooperHandler mainLooperHandler;
-
     private final ValidationResultStack validationResultStack;
 
     private final Validator validator;
@@ -77,7 +74,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             CoreMetaData coreMetaData,
             LocalDataStore localDataStore,
             DeviceInfo deviceInfo,
-            MainLooperHandler mainLooperHandler,
             BaseCallbackManager callbackManager, ControllerManager controllerManager,
             final CTLockManager ctLockManager) {
         this.context = context;
@@ -88,7 +84,6 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         this.coreMetaData = coreMetaData;
         this.localDataStore = localDataStore;
         this.deviceInfo = deviceInfo;
-        this.mainLooperHandler = mainLooperHandler;
         this.callbackManager = callbackManager;
         this.ctLockManager = ctLockManager;
         this.controllerManager = controllerManager;
@@ -138,6 +133,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     @Override
     public void pushAppLaunchedEvent() {
+        //Will not run for Apps which disable App Launched event
         if (config.isDisableAppLaunchedEvent()) {
             coreMetaData.setAppLaunchPushed(true);
             config.getLogger()
@@ -464,9 +460,10 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
 
         if (extras.containsKey(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            Runnable pendingInappRunnable = new Runnable() {
+            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+            task.execute("testInappNotification",new Callable<Void>() {
                 @Override
-                public void run() {
+                public Void call() {
                     try {
                         Logger.v("Received in-app via push payload: " + extras
                                 .getString(Constants.INAPP_PREVIEW_PUSH_PAYLOAD_KEY));
@@ -481,16 +478,17 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                     } catch (Throwable t) {
                         Logger.v("Failed to display inapp notification from push notification payload", t);
                     }
+                    return null;
                 }
-            };
-            mainLooperHandler.setPendingRunnable(pendingInappRunnable);
+            });
             return;
         }
 
         if (extras.containsKey(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY)) {
-            Runnable pendingInboxRunnable = new Runnable() {
+            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+            task.execute("testInboxNotification",new Callable<Void>() {
                 @Override
-                public void run() {
+                public Void call() {
                     try {
                         Logger.v("Received inbox via push payload: " + extras
                                 .getString(Constants.INBOX_PREVIEW_PUSH_PAYLOAD_KEY));
@@ -509,9 +507,9 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                     } catch (Throwable t) {
                         Logger.v("Failed to process inbox message from push notification payload", t);
                     }
+                    return null;
                 }
-            };
-            mainLooperHandler.setPendingRunnable(pendingInboxRunnable);
+            });
             return;
         }
 
