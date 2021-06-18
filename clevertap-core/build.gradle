@@ -1,35 +1,36 @@
+import static de.fayard.refreshVersions.core.Versions.versionFor
 ext {
     libraryName = 'CleverTapAndroidSDK'
     artifact = 'clevertap-android-sdk'
     libraryDescription = 'The CleverTap Android SDK'
 
-    libraryVersion = "$coreVersion"
+    libraryVersion = versionFor("version.com.clevertap.android..clevertap-android-sdk")
 
     licenseName = 'The Apache Software License, Version 2.0'
     licenseUrl = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
     allLicenses = ["Apache-2.0"]
+    minSdkVersionVal = Android.minSdkVersionVal
 }
 
 apply from: "../gradle-scripts/commons.gradle"
 
 dependencies {
-    compileOnly deps.firebaseMessaging
-    compileOnly deps.exoPlayer
-    compileOnly deps.exoPlayerHls
-    compileOnly deps.exoPlayerUi
-    compileOnly deps.glide
+    compileOnly Libs.firebase_messaging
+    compileOnly Libs.exoplayer
+    compileOnly Libs.exoplayer_hls
+    compileOnly Libs.exoplayer_ui
+    compileOnly Libs.glide
     //for notification
-    compileOnly deps.androidXCore
-    compileOnly deps.viewPager
-    implementation deps.appcompat
-    implementation deps.recyclerview
-    compileOnly deps.materialDesign
-    compileOnly deps.fragment
-    implementation deps.installreferrer
-
+    compileOnly Libs.androidx_core_core
+    compileOnly Libs.viewpager
+    implementation Libs.appcompat
+    implementation Libs.recyclerview
+    compileOnly Libs.material
+    compileOnly Libs.fragment
+    implementation Libs.installreferrer
     // Unit testing dependencies
     testImplementation project(':test_shared')
-    testImplementation deps.firebaseMessaging
+    testImplementation Libs.firebase_messaging
 }
 
 sonarqube {

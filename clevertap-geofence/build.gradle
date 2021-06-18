@@ -1,54 +1,56 @@
+import static de.fayard.refreshVersions.core.Versions.versionFor
 ext {
     libraryName = 'GeofenceSDK'
     artifact = 'clevertap-geofence-sdk'
     libraryDescription = 'The CleverTap Android Geofence SDK'
 
-    libraryVersion = "$geofenceVersion"
+    libraryVersion = versionFor("version.com.clevertap.android..clevertap-geofence-sdk")
 
     licenseName = 'MIT License'
     licenseUrl = 'https://opensource.org/licenses/MIT'
     allLicenses = ["MIT"]
+    minSdkVersionVal = Android.minSdkVersionVal
 }
 
 apply from: "../gradle-scripts/commons.gradle"
 
 dependencies {
     compileOnly project(':clevertap-core')
-    compileOnly deps.playServicesLocation
-    compileOnly deps.workManager
-    compileOnly deps.androidXConcurrentFutures
+    compileOnly Libs.play_services_location
+    compileOnly Libs.work_runtime
+    compileOnly Libs.concurrent_futures
 
     // Unit testing dependencies
-    testImplementation deps.junitPlatform
-    testImplementation deps.junitApi
-    testRuntimeOnly deps.junitEngine
+    testImplementation Libs.junit_platform_runner
+    testImplementation Libs.junit_jupiter_api
+    testRuntimeOnly Libs.junit_jupiter_engine
 
-    testImplementation deps.mockitoCore
-    testImplementation deps.robolectric
+    testImplementation Libs.mockito_core
+    testImplementation Libs.robolectric
 
-    testImplementation deps.androidXTestCore
-    testImplementation deps.androidXJunitExt
-    testImplementation deps.appcompat
+    testImplementation Libs.androidx_test_core
+    testImplementation Libs.androidx_test_ext_junit
+    testImplementation Libs.appcompat
 
     // AndroidJUnitRunner and JUnit Rules
-    androidTestImplementation deps.androidXTestRunner
-    androidTestImplementation deps.androidXTestRules
-    androidTestImplementation deps.espressoCore
+    androidTestImplementation Libs.androidx_test_runner
+    androidTestImplementation Libs.androidx_test_rules
+    androidTestImplementation Libs.espresso_core
 
-    testImplementation 'org.powermock:powermock-core:2.0.7'
-    testImplementation 'org.powermock:powermock-module-junit4:2.0.7'
-    testImplementation 'org.powermock:powermock-module-junit4-rule:1.6.6'
-    testImplementation 'org.powermock:powermock-api-mockito2:2.0.7'
-    testImplementation 'org.powermock:powermock-classloading-xstream:1.6.6'
-    testImplementation 'eu.codearte.catch-exception:catch-exception:2.0'
+    testImplementation Libs.powermock_core
+    testImplementation Libs.powermock_module_junit4
+    testImplementation Libs.powermock_module_junit4_rule
+    testImplementation Libs.powermock_api_mockito2
+    testImplementation Libs.powermock_classloading_xstream
+    testImplementation Libs.catch_exception
     testImplementation project(':clevertap-core')
 
-    testImplementation deps.installreferrer
-    testImplementation deps.playServicesLocation
-    testImplementation deps.jsonAssert
-    testImplementation deps.workManagerTesting
-    testImplementation 'org.awaitility:awaitility:4.0.3'
-    testImplementation deps.androidXConcurrentFutures
-    testImplementation deps.androidXCoreKTX
-    testImplementation deps.kotlinStdlib
+    testImplementation Libs.installreferrer
+    testImplementation Libs.play_services_location
+    testImplementation Libs.jsonassert
+    testImplementation Libs.work_testing
+    testImplementation Libs.awaitility
+    testImplementation Libs.concurrent_futures
+    testImplementation Libs.core_ktx
+    testImplementation Libs.kotlin_stdlib_jdk7
 }

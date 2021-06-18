@@ -1,7 +1,21 @@
+plugins {
+    id 'de.fayard.refreshVersions' version '0.10.0'
+    id "com.gradle.enterprise" version "3.6.3"
+}
 include ':test_shared'
-include ':gradle-scripts'
 include ':clevertap-core'
 include ':sample'
 include ':clevertap-geofence'
 include ':clevertap-xps'
 include ':clevertap-hms'
+
+refreshVersions {
+    enableBuildSrcLibs()
+}
+
+gradleEnterprise {
+    buildScan {
+        termsOfServiceUrl = "https://gradle.com/terms-of-service"
+        termsOfServiceAgree = "yes"
+    }
+}

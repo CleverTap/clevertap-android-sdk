@@ -2,25 +2,24 @@ apply plugin: 'org.sonarqube'
 
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
-    // do not change order of apply
-    apply from: 'gradle-scripts/versions.gradle'
-    apply from: 'gradle-scripts/dependencies.gradle'
 
     repositories {
         google()// Google's Maven repository
         mavenCentral()
         gradlePluginPortal()
-        maven { url 'http://developer.huawei.com/repo/' }
+        maven {
+            url 'https://developer.huawei.com/repo/' }
 
     }
     dependencies {
-        classpath "com.android.tools.build:gradle:$gradlePluginVersion"
-        classpath "com.google.gms:google-services:$googleServicesPluginVersion"// Google Services plugin
-        classpath "com.github.dcendents:android-maven-gradle-plugin:$mavenPluginVersion"
-        classpath "com.huawei.agconnect:agcp:$huaweiPluginVersion"// Huawei Push Plugin
-        classpath "org.jacoco:org.jacoco.core:$jacocoVersion"
-        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.1.1"
+        classpath Libs.com_android_tools_build_gradle
+        classpath Libs.google_services// Google Services plugin
+        //classpath "com.github.dcendents:android-maven-gradle-plugin:$mavenPluginVersion"
+        classpath Libs.agcp// Huawei Push Plugin
+        classpath Libs.org_jacoco_core
+        classpath Libs.kotlin_gradle_plugin
+        classpath Libs.sonarqube_gradle_plugin
+
     }
 }
 
@@ -29,7 +28,8 @@ allprojects {
         google()
         mavenCentral()
         gradlePluginPortal()
-        maven { url 'http://developer.huawei.com/repo/' }
+        maven {
+            url 'https://developer.huawei.com/repo/' }
         flatDir {
             dirs 'libs'
         }
@@ -49,18 +49,44 @@ task clean(type: Delete) {
 }
 
 task copyTemplates {
+    def props = new Properties()
+    file("versions.properties").withInputStream { props.load(it) }
     outputs.upToDateWhen { false }
+    props.put("clevertap_android_sdk",Libs.clevertap_android_sdk.dropRight(1))
+    props.put("clevertap_geofence_sdk",Libs.clevertap_geofence_sdk.dropRight(1))
+    props.put("clevertap_hms_sdk",Libs.clevertap_hms_sdk.dropRight(1))
+    props.put("clevertap_xiaomi_sdk",Libs.clevertap_xiaomi_sdk.dropRight(1))
+    props.put("play_services_location",Libs.play_services_location.dropRight(1))
+    props.put("work_runtime",Libs.work_runtime.dropRight(1))
+    props.put("concurrent_futures",Libs.concurrent_futures.dropRight(1))
+    props.put("push",Libs.push.dropRight(1))
+    props.put("appcompat",Libs.appcompat.dropRight(1))
+    props.put("viewpager",Libs.viewpager.dropRight(1))
+    props.put("material",Libs.material.dropRight(1))
+    props.put("glide",Libs.glide.dropRight(1))
+    props.put("recyclerview",Libs.recyclerview.dropRight(1))
+    props.put("exoplayer",Libs.exoplayer.dropRight(1))
+    props.put("exoplayer_ui",Libs.exoplayer_ui.dropRight(1))
+    props.put("exoplayer_hls",Libs.exoplayer_hls.dropRight(1))
+    props.put("installreferrer",Libs.installreferrer.dropRight(1))
+    props.put("firebase_messaging",Libs.firebase_messaging.dropRight(1))
+    props.put("androidx_core_core",Libs.androidx_core_core.dropRight(1))
+    props.put("agcp",Libs.agcp.dropRight(1))
+    props.put("com_android_tools_build_gradle",Libs.com_android_tools_build_gradle.dropRight(1))
+    props.put("google_services",Libs.google_services.dropRight(1))
+    props.put("play_services_ads",Libs.play_services_ads.dropRight(1))
+
     doLast{
         copy {
             from 'templates/README.md'
             into "."
-            expand('ext': project.ext.properties)
+            expand('ext': props.asImmutable())
         }
         copy {
             from 'templates'
             exclude "README.md"
             into "docs/"
-            expand('ext': project.ext.properties)
+            expand('ext': props.asImmutable())
         }
     }
 }
