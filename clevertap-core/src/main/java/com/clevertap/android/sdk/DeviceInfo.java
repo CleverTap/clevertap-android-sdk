@@ -330,7 +330,7 @@ public class DeviceInfo {
         onInitDeviceInfo(cleverTapID);
     }
 
-    void onInitDeviceInfo(String cleverTapID) {
+    void onInitDeviceInfo(final String cleverTapID) {
         Thread deviceInfoCacheThread = new Thread(new Runnable() {
             @Override
             public void run() {
