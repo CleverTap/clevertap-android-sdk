@@ -72,6 +72,12 @@ public final class ActivityLifecycleCallback {
                                 CleverTapAPI.onActivityResumed(activity);
                             }
                         } else {
+                            CoreMetaData.setAppForeground(true);
+                            String currentActivityName = CoreMetaData.getCurrentActivityName();
+                            CoreMetaData.setCurrentActivity(activity);
+                            if (currentActivityName == null || !currentActivityName.equals(activity.getLocalClassName())) {
+                                CoreMetaData.incrementActivityCount();
+                            }
                             Logger.v("Not running onActivityResumed for - " + activity.getLocalClassName());
                         }
                     }
