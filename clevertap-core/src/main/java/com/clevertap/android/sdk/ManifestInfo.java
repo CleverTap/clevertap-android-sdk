@@ -101,6 +101,10 @@ public class ManifestInfo {
         return accountId;
     }
 
+    public String getExcludedActivities() {
+        return excludedActivitiesForInApps;
+    }
+
     public String getFCMSenderId() {
         return fcmSenderId;
     }
