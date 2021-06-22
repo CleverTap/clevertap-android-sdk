@@ -24,8 +24,6 @@ public class ManifestInfo {
 
     private static ManifestInfo instance;
 
-    private static String excludedActivitiesForLifecycleMethods;
-
     private static String excludedActivitiesForInApps;
 
     private static boolean sslPinning;
@@ -80,8 +78,6 @@ public class ManifestInfo {
         useADID = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_USE_GOOGLE_AD_ID));
         appLaunchedDisabled = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_DISABLE_APP_LAUNCH));
         excludedActivitiesForInApps = _getManifestStringValueForKey(metaData, Constants.LABEL_INAPP_EXCLUDE);
-        excludedActivitiesForLifecycleMethods = _getManifestStringValueForKey(metaData,
-                Constants.LABEL_ACTIVITY_EXCLUDE);
         sslPinning = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_SSL_PINNING));
         backgroundSync = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_BACKGROUND_SYNC));
         useCustomID = "1".equals(_getManifestStringValueForKey(metaData, Constants.LABEL_CUSTOM_ID));
@@ -103,14 +99,6 @@ public class ManifestInfo {
 
     public String getAccountId() {
         return accountId;
-    }
-
-    public String getExcludedActivities() {
-        return excludedActivitiesForInApps;
-    }
-
-    public String getExcludedActivitiesForLifecycleMethods() {
-        return excludedActivitiesForLifecycleMethods;
     }
 
     public String getFCMSenderId() {

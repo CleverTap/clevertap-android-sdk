@@ -14,9 +14,6 @@ import java.util.HashSet;
 public final class ActivityLifecycleCallback {
 
     public static boolean registered = false;
-
-    private static HashSet<String> excludedActivitiesSet = null;
-
     /**
      * Enables lifecycle callbacks for Android devices
      *
@@ -35,22 +32,16 @@ public final class ActivityLifecycleCallback {
             return;
         }
 
-        updateBlacklistedActivitySet(application.getApplicationContext());
-
         registered = true;
         application.registerActivityLifecycleCallbacks(
                 new android.app.Application.ActivityLifecycleCallbacks() {
 
                     @Override
                     public void onActivityCreated(Activity activity, Bundle bundle) {
-                        if (canProcessLifeCycleCallbacksOnActivity(activity)) {
-                            if (cleverTapID != null) {
-                                CleverTapAPI.onActivityCreated(activity, cleverTapID);
-                            } else {
-                                CleverTapAPI.onActivityCreated(activity);
-                            }
+                        if (cleverTapID != null) {
+                            CleverTapAPI.onActivityCreated(activity, cleverTapID);
                         } else {
-                            Logger.v("Not running onActivityCreated for - " + activity.getLocalClassName());
+                            CleverTapAPI.onActivityCreated(activity);
                         }
                     }
 
@@ -65,14 +56,10 @@ public final class ActivityLifecycleCallback {
 
                     @Override
                     public void onActivityResumed(Activity activity) {
-                        if (canProcessLifeCycleCallbacksOnActivity(activity)) {
-                            if (cleverTapID != null) {
-                                CleverTapAPI.onActivityResumed(activity, cleverTapID);
-                            } else {
-                                CleverTapAPI.onActivityResumed(activity);
-                            }
+                        if (cleverTapID != null) {
+                            CleverTapAPI.onActivityResumed(activity, cleverTapID);
                         } else {
-                            Logger.v("Not running onActivityResumed for - " + activity.getLocalClassName());
+                            CleverTapAPI.onActivityResumed(activity);
                         }
                     }
 
@@ -101,32 +88,5 @@ public final class ActivityLifecycleCallback {
     @TargetApi(Build.VERSION_CODES.ICE_CREAM_SANDWICH)
     public static synchronized void register(android.app.Application application) {
         register(application, null);
-    }
-
-    private static boolean canProcessLifeCycleCallbacksOnActivity(Activity activity) {
-        for (String blacklistedActivity : excludedActivitiesSet) {
-            if (activity != null && activity.getLocalClassName().contains(blacklistedActivity)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static void updateBlacklistedActivitySet(Context context) {
-        if (excludedActivitiesSet == null) {
-            excludedActivitiesSet = new HashSet<>();
-            try {
-                String activities = ManifestInfo.getInstance(context).getExcludedActivitiesForLifecycleMethods();
-                if (activities != null) {
-                    String[] split = activities.split(",");
-                    for (String a : split) {
-                        excludedActivitiesSet.add(a.trim());
-                        Logger.v("Excluding following activity - " + a.trim());
-                    }
-                }
-            } catch (Throwable t) {
-                // Ignore
-            }
-        }
     }
 }
