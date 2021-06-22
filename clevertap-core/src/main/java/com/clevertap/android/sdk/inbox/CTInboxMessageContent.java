@@ -189,10 +189,8 @@ public class CTInboxMessageContent implements Parcelable {
         }
         try {
             JSONObject keyValues = jsonObject.getJSONObject(Constants.KEY_KV);
-            if (keyValues != null) {
                 Iterator<String> keys = keyValues.keys();
                 HashMap<String, String> keyValuesMap = new HashMap<>();
-                if (keys != null) {
                     String key, value;
                     while (keys.hasNext()) {
                         key = keys.next();
@@ -201,11 +199,8 @@ public class CTInboxMessageContent implements Parcelable {
                             keyValuesMap.put(key, value);
                         }
                     }
-                }
                 return !keyValuesMap.isEmpty() ? keyValuesMap : null;
-            } else {
-                return null;
-            }
+
         } catch (JSONException e) {
             Logger.v("Unable to get Link Key Value with JSON - " + e.getLocalizedMessage());
             return null;

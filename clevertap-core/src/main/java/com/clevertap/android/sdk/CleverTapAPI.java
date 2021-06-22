@@ -73,7 +73,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public enum LogLevel {
         OFF(-1),
         INFO(0),
-        DEBUG(2);
+        DEBUG(2),
+        VERBOSE(3);
 
         private final int value;
 
@@ -629,7 +630,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * @param level Can be one of the following:  -1 (disables all debugging), 0 (default, shows minimal SDK
      *              integration related logging),
-     *              1(shows debug output)
+     *              1(shows debug output), 3(shows verbose output)
      */
     @SuppressWarnings("WeakerAccess")
     public static void setDebugLevel(int level) {
@@ -642,7 +643,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * @param level Can be one of the following: LogLevel.OFF (disables all debugging), LogLevel.INFO (default, shows
      *              minimal SDK integration related logging),
-     *              LogLevel.DEBUG(shows debug output)
+     *              LogLevel.DEBUG(shows debug output),LogLevel.VERBOSE(shows verbose output)
      */
     @SuppressWarnings({"unused"})
     public static void setDebugLevel(LogLevel level) {
@@ -1006,12 +1007,12 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             this.coreState.getConfig().setCreatedPostAppLaunch();
         }
 
-        coreState.getSessionManager().setLastVisitTime();
 
         task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("setStatesAsync", new Callable<Void>() {
             @Override
             public Void call() {
+                CleverTapAPI.this.coreState.getSessionManager().setLastVisitTime();
                 CleverTapAPI.this.coreState.getDeviceInfo().setDeviceNetworkInfoReportingFromStorage();
                 CleverTapAPI.this.coreState.getDeviceInfo().setCurrentUserOptOutStateFromStorage();
                 return null;
@@ -1137,7 +1138,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     public CTFeatureFlagsController featureFlag() {
         if (getConfig().isAnalyticsOnly()) {
-            getConfig().getLogger().debug(getAccountId(),"Feature flag is not supported with analytics only configuration");
+            getConfig().getLogger()
+                    .debug(getAccountId(), "Feature flag is not supported with analytics only configuration");
         }
         return coreState.getControllerManager().getCTFeatureFlagsController();
     }
@@ -2075,8 +2077,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused"})
     public void recordScreen(String screenName) {
-        if (screenName == null || (!coreState.getCoreMetaData().getScreenName().isEmpty() && coreState
-                .getCoreMetaData().getScreenName().equals(screenName))) {
+        String currentScreenName = coreState.getCoreMetaData().getScreenName();
+        if (screenName == null || (currentScreenName != null && !currentScreenName.isEmpty() && currentScreenName
+                .equals(screenName))) {
             return;
         }
         getConfigLogger().debug(getAccountId(), "Screen changed to " + screenName);

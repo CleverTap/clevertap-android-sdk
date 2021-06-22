@@ -43,7 +43,7 @@ dependencies {
     implementation 'androidx.core:core:1.3.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.1'
     implementation 'androidx.coordinatorlayout:coordinatorlayout:1.1.0'
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.3.72"
     // LiveData
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:$lifecycle_version"
@@ -52,9 +52,12 @@ dependencies {
 
     //CleverTap Android SDK, make sure the AAR file is in the libs folder
     implementation project(':clevertap-core')
+    //implementation "com.clevertap.android:clevertap-android-sdk:4.1.1"
     implementation project(':clevertap-geofence')
+    //implementation "com.clevertap.android:clevertap-geofence-sdk:1.0.2"
     implementation project(':clevertap-xps')
-    // For Xiaomi Push use implementation 'com.clevertap.android:clevertap-xiaomi-sdk:1.0.0'
+    // For Xiaomi Push use
+    //implementation 'com.clevertap.android:clevertap-xiaomi-sdk:1.0.2'
     implementation project(':clevertap-hms')
     // For Huawei Push use
     //implementation 'com.clevertap.android:clevertap-hms-sdk:1.0.0'
@@ -84,6 +87,14 @@ dependencies {
     // Mandatory for v3.6.4 and above
 
     implementation 'androidx.multidex:multidex:2.0.1'
+/*
+    implementation "com.android.tools.build:gradle:4.2.1"
+    implementation "com.google.gms:google-services:4.3.3"// Google Services plugin
+    //classpath "com.github.dcendents:android-maven-gradle-plugin:$mavenPluginVersion"
+    implementation "com.huawei.agconnect:agcp:1.4.1.300"// Huawei Push Plugin
+    implementation "org.jacoco:org.jacoco.core:0.8.4"
+    implementation "org.jetbrains.kotlin:kotlin-gradle-plugin:1.3.72"
+    implementation "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:3.1.1"*/
 }
 
 apply plugin: 'com.google.gms.google-services'

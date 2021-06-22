@@ -79,7 +79,7 @@ class CleverTapFactory {
 
         AnalyticsManager analyticsManager = new AnalyticsManager(context, config, baseEventQueueManager, validator,
                 validationResultStack, coreMetaData, localDataStore, deviceInfo,
-                mainLooperHandler, callbackManager, controllerManager, ctLockManager);
+                callbackManager, controllerManager, ctLockManager);
         coreState.setAnalyticsManager(analyticsManager);
 
         InAppController inAppController = new InAppController(context, config, mainLooperHandler,

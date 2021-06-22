@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.db;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import androidx.annotation.WorkerThread;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
@@ -26,6 +27,7 @@ public class DBManager extends BaseDatabaseManager {
         this.ctLockManager = ctLockManager;
     }
 
+    @WorkerThread
     @Override
     public DBAdapter loadDBAdapter(final Context context) {
         if (dbAdapter == null) {
@@ -137,6 +139,7 @@ public class DBManager extends BaseDatabaseManager {
     }
 
     //Event
+    @WorkerThread
     @Override
     public void queueEventToDB(final Context context, final JSONObject event, final int type) {
         DBAdapter.Table table = (type == Constants.PROFILE_EVENT) ? DBAdapter.Table.PROFILE_EVENTS
@@ -144,6 +147,7 @@ public class DBManager extends BaseDatabaseManager {
         queueEventInternal(context, event, table);
     }
 
+    @WorkerThread
     @Override
     public void queuePushNotificationViewedEventToDB(final Context context, final JSONObject event) {
         queueEventInternal(context, event, DBAdapter.Table.PUSH_NOTIFICATION_VIEWED);
@@ -170,6 +174,7 @@ public class DBManager extends BaseDatabaseManager {
         return cursor;
     }
 
+    @WorkerThread
     private void queueEventInternal(final Context context, final JSONObject event, DBAdapter.Table table) {
         synchronized (ctLockManager.getEventLock()) {
             DBAdapter adapter = loadDBAdapter(context);

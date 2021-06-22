@@ -26,7 +26,7 @@ public class CoreMetaData extends CleverTapMetaData {
 
     private final Object appLaunchPushedLock = new Object();
 
-    private String currentScreenName = "";
+    private String currentScreenName = null;
 
     private int currentSessionId = 0;
 
@@ -208,7 +208,7 @@ public class CoreMetaData extends CleverTapMetaData {
     }
 
     public String getScreenName() {
-        return currentScreenName.equals("") ? null : currentScreenName;
+        return currentScreenName;
     }
 
     public synchronized void setWzrkParams(JSONObject wzrkParams) {

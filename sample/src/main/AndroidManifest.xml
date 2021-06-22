@@ -68,6 +68,9 @@
         <!-- <meta-data
              android:name="CLEVERTAP_IDENTIFIER"
              android:value="Email,Phone" />-->
+        <meta-data
+            android:name="CLEVERTAP_ACTIVITY_EXCLUDE"
+            android:value="HomeScreenActivity" />
         <service
             android:name="com.clevertap.android.sdk.pushnotification.fcm.FcmMessageListenerService"
             android:exported="true">

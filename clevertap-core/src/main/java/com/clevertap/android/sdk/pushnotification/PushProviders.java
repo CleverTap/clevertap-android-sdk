@@ -772,7 +772,7 @@ public class PushProviders implements CTPushProviderListener {
 
         if (VERSION_CODE < provider.minSDKSupportVersionCode()) {
             config.log(PushConstants.LOG_TAG,
-                    "Provider: %s version %s does not match the SDK version %s. Make sure all Airship dependencies are the same version.");
+                    "Provider: %s version %s does not match the SDK version %s. Make sure all CleverTap dependencies are the same version.");
             return false;
         }
         switch (provider.getPushType()) {

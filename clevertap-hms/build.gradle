@@ -1,3 +1,4 @@
+import static de.fayard.refreshVersions.core.Versions.versionFor
 apply plugin: 'com.huawei.agconnect'
 
 ext {
@@ -5,7 +6,7 @@ ext {
     artifact = 'clevertap-hms-sdk'
     libraryDescription = 'The CleverTap Android Huawei Push SDK'
 
-    libraryVersion = "$hmsVersion"
+    libraryVersion = versionFor("version.com.clevertap.android..clevertap-hms-sdk")
 
     licenseName = 'MIT License'
     licenseUrl = 'https://opensource.org/licenses/MIT'
@@ -18,9 +19,9 @@ apply from: "../gradle-scripts/commons.gradle"
 
 dependencies {
     compileOnly project(':clevertap-core')
-    implementation deps.huaweiPush
-    compileOnly deps.androidXAnnotation
+    implementation Libs.push
+    compileOnly Libs.androidx_annotation
 
     testImplementation project(':test_shared')
-    testImplementation deps.huaweiPush
+    testImplementation Libs.push
 }

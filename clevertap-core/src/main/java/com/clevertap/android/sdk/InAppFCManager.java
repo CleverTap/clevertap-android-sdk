@@ -7,12 +7,17 @@ import android.content.SharedPreferences;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.Task;
+
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.Callable;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -38,7 +43,15 @@ public class InAppFCManager {
         this.config = config;
         this.context = context;
         this.deviceId = deviceId;
-        init(deviceId);
+
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        task.execute("initInAppFCManager",new Callable<Void>() {
+            @Override
+            public Void call() {
+                init(InAppFCManager.this.deviceId);
+                return null;
+            }
+        });
     }
 
     public boolean canShow(CTInAppNotification inapp) {

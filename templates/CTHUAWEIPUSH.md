@@ -29,16 +29,22 @@ Download the `agconnect-services.json` file from the Huawei Console. Move the do
 * Add the following dependency to your Project-level `build.gradle` file
 
 ```groovy
-dependencies {
-        
+buildscript {
+    repositories {
         // FOR HUAWEI ADD THIS
-        classpath "com.huawei.agconnect:agcp:${ext.huaweiPluginVersion}"
+        maven {url 'http://developer.huawei.com/repo/'}
+        
     }
+    dependencies {
+        // FOR HUAWEI ADD THIS
+        classpath "${ext.agcp}${ext['version.com.huawei.agconnect..agcp']}"
+    }
+}
 
 allprojects {
     repositories {
         // FOR HUAWEI ADD THIS
-        maven {url 'http://developer.huawei.com/repo/'}
+        maven {url 'https://developer.huawei.com/repo/'}
        }
 }
 ```
@@ -46,8 +52,8 @@ allprojects {
 * Add the following to your app’s `build.gradle` file
 
 ```groovy
-implementation "${ext.deps.clevertapHMS}"
-implementation "${ext.deps.huaweiPush}"
+implementation "${ext.clevertap_hms_sdk}${ext['version.com.clevertap.android..clevertap-hms-sdk']}"
+implementation "${ext.push}${ext['version.com.huawei.hms..push']}"
 
 //At the bottom of the file add this
 apply plugin: 'com.huawei.agconnect'
