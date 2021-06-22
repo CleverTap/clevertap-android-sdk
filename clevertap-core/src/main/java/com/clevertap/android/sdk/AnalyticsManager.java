@@ -103,6 +103,20 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         });
     }
 
+    @Override
+    public void incrementValue(String key, Number value) {
+        String command = (localDataStore.getProfileValueForKey(key) != null)
+                ? Constants.COMMAND_INCREMENT : Constants.COMMAND_SET;
+        _constructIncrementDecrementValues(value,key,command);
+    }
+
+    @Override
+    public void decrementValue(String key, Number value) {
+        String command = (localDataStore.getProfileValueForKey(key) != null)
+                ? Constants.COMMAND_DECREMENT : Constants.COMMAND_SET;
+        _constructIncrementDecrementValues(value,key,command);
+    }
+
     /**
      * This method is internal to the CleverTap SDK.
      * Developers should not use this method manually
@@ -1000,6 +1014,51 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                     .verbose(config.getAccountId(), "Error handling multi value operation for key " + key, t);
         }
     }
+
+    private void _constructIncrementDecrementValues(Number value, String key, String command) {
+        try {
+            if (key == null) {
+                return;
+            }
+
+            // validate the key
+            ValidationResult vr = validator.cleanObjectKey(key);
+            key = vr.getObject().toString();
+
+            if (key.isEmpty()) {
+                ValidationResult error = ValidationResultFactory.create(512, Constants.KEY_EMPTY);
+                validationResultStack.pushValidationResult(error);
+                config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
+                // Abort
+                return;
+            }
+
+            // Check for an error
+            if (vr.getErrorCode() != 0) {
+                validationResultStack.pushValidationResult(vr);
+            }
+
+            Number updatedValue;
+            Object existing = _getProfilePropertyIgnorePersonalizationFlag(key);
+            if (existing == null) {
+                updatedValue = value;
+            } else {
+                Number cachedValue = (Number) localDataStore.getProfileValueForKey(key);
+                updatedValue = cachedValue.intValue() + value.intValue();
+            }
+
+            localDataStore.setProfileField(key, updatedValue);
+            config.getLogger().verbose(config.getAccountId(), "Value for--->" + localDataStore.getProfileValueForKey(key));
+
+            JSONObject commandObj = new JSONObject().put(command, updatedValue);
+            JSONObject updateObj = new JSONObject().put(key, commandObj);
+            baseEventQueueManager.pushBasicProfile(updateObj);
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(), "Failed to update profile value for key " + key, t);
+        }
+
+    }
+
 
     private void _push(Map<String, Object> profile) {
         if (profile == null || profile.isEmpty()) {

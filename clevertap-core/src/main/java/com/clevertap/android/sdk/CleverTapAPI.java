@@ -2133,14 +2133,30 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         coreState.getAnalyticsManager().removeValueForKey(key);
     }
 
-
-    public void incrementValueBy(final String key, Number value){
-
+    /**
+     * This method is used to increment the given value
+     *
+     * Number should be in positive range
+     *
+     * @param key String
+     * @param value Number
+     */
+    @SuppressWarnings("unused")
+    public void incrementValue(final String key, final Number value){
+        coreState.getAnalyticsManager().incrementValue(key,value);
     }
 
-
-    public void decrementValueBy(final String key, Number value){
-
+    /**
+     * This method is used to decrement the given value
+     *
+     * Number should be in positive range
+     *
+     * @param key String
+     * @param value Number
+     */
+    @SuppressWarnings("unused")
+    public void decrementValue(final String key, final Number value){
+        coreState.getAnalyticsManager().decrementValue(key,value);
     }
 
     /**
