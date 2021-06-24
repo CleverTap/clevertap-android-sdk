@@ -7,6 +7,7 @@ import android.content.Context;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import androidx.annotation.NonNull;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
@@ -1015,11 +1016,13 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
     }
 
-    private void _constructIncrementDecrementValues(Number value, String key, String command) {
+    private void _constructIncrementDecrementValues(Number value, String key, String command) {//Change method name
         try {
             if (key == null) {
                 return;
             }
+
+            //Add value check here.
 
             // validate the key
             ValidationResult vr = validator.cleanObjectKey(key);
@@ -1038,18 +1041,11 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                 validationResultStack.pushValidationResult(vr);
             }
 
-            Number updatedValue;
-            Object existing = _getProfilePropertyIgnorePersonalizationFlag(key);
-            if (existing == null) {
-                updatedValue = value;
-            } else {
-                Number cachedValue = (Number) localDataStore.getProfileValueForKey(key);
-                updatedValue = cachedValue.intValue() + value.intValue();
-            }
-
+            Number updatedValue = _handleIncrementDecrementValues(key,value,command);
+            //Save updated values locally
             localDataStore.setProfileField(key, updatedValue);
-            config.getLogger().verbose(config.getAccountId(), "Value for--->" + localDataStore.getProfileValueForKey(key));
 
+            // push to server
             JSONObject commandObj = new JSONObject().put(command, updatedValue);
             JSONObject updateObj = new JSONObject().put(key, commandObj);
             baseEventQueueManager.pushBasicProfile(updateObj);
@@ -1057,6 +1053,33 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             config.getLogger().verbose(config.getAccountId(), "Failed to update profile value for key " + key, t);
         }
 
+    }
+
+    private Number _handleIncrementDecrementValues(@NonNull String key, Number value, String command){
+        Number updatedValue = null;
+        Number existingValue = (Number) _getProfilePropertyIgnorePersonalizationFlag(key);
+        if (existingValue == null) {
+            updatedValue = value;
+            return updatedValue;
+        }
+
+        if (existingValue.equals(existingValue.intValue())){
+            if (command.equals(Constants.COMMAND_INCREMENT))
+                updatedValue = existingValue.intValue() + value.intValue();
+            else if (command.equals(Constants.COMMAND_DECREMENT))
+                updatedValue = existingValue.intValue() - value.intValue();
+        }else if (existingValue.equals(existingValue.floatValue())){
+            if (command.equals(Constants.COMMAND_INCREMENT))
+                updatedValue = existingValue.floatValue() + value.floatValue();
+            else if (command.equals(Constants.COMMAND_DECREMENT))
+                updatedValue = existingValue.floatValue() - value.floatValue();
+        }else if (existingValue.equals(existingValue.doubleValue())){
+            if (command.equals(Constants.COMMAND_INCREMENT))
+                updatedValue = existingValue.doubleValue() + value.doubleValue();
+            else if (command.equals(Constants.COMMAND_DECREMENT))
+                updatedValue = existingValue.doubleValue() - value.doubleValue();
+        }
+        return updatedValue;
     }
 
 
