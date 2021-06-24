@@ -1018,23 +1018,30 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     private void _constructIncrementDecrementValues(Number value, String key, String command) {//Change method name
         try {
-            if (key == null) {
+            if (key == null || value == null) {
                 return;
             }
-
-            //Add value check here.
 
             // validate the key
             ValidationResult vr = validator.cleanObjectKey(key);
             key = vr.getObject().toString();
 
             if (key.isEmpty()) {
-                ValidationResult error = ValidationResultFactory.create(512, Constants.KEY_EMPTY);
+                ValidationResult error = ValidationResultFactory.create(523, Constants.INVALID_MULTI_VALUE_KEY, key);
                 validationResultStack.pushValidationResult(error);
                 config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
                 // Abort
                 return;
             }
+
+            if (value.intValue() < 0 || value.doubleValue() < 0 || value.floatValue() < 0){
+                ValidationResult error = ValidationResultFactory.create(512, Constants.INVALID_MULTI_VALUE, key);
+                validationResultStack.pushValidationResult(error);
+                config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
+                // Abort
+                return;
+            }
+
 
             // Check for an error
             if (vr.getErrorCode() != 0) {
