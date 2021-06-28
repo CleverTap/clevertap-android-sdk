@@ -1016,7 +1016,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
     }
 
-    private void _constructIncrementDecrementValues(Number value, String key, String command) {//Change method name
+    private void _constructIncrementDecrementValues(Number value, String key, String command) {
         try {
             if (key == null || value == null) {
                 return;
@@ -1027,7 +1027,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             key = vr.getObject().toString();
 
             if (key.isEmpty()) {
-                ValidationResult error = ValidationResultFactory.create(523, Constants.INVALID_MULTI_VALUE_KEY, key);
+                ValidationResult error = ValidationResultFactory.create(512,
+                        Constants.PUSH_KEY_EMPTY, key);
                 validationResultStack.pushValidationResult(error);
                 config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
                 // Abort
@@ -1035,7 +1036,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             }
 
             if (value.intValue() < 0 || value.doubleValue() < 0 || value.floatValue() < 0){
-                ValidationResult error = ValidationResultFactory.create(512, Constants.INVALID_MULTI_VALUE, key);
+                ValidationResult error = ValidationResultFactory.create(512,
+                        Constants.INVALID_INCREMENT_DECREMENT_VALUE, key);
                 validationResultStack.pushValidationResult(error);
                 config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
                 // Abort
