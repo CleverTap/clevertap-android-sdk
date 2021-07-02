@@ -21,6 +21,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.annotation.WorkerThread;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.EventDetail;
@@ -1271,8 +1272,12 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Returns a unique CleverTap identifier suitable for use with install attribution providers.
      *
      * @return The attribution identifier currently being used to identify this user.
+     *
+     * <p><br><span style="color:red;background:#ffcc99" >&#9888; this method may take a long time to return,
+     * so you should not call it from the application main thread</span></p>
      */
     @SuppressWarnings("unused")
+    @WorkerThread
     public String getCleverTapAttributionIdentifier() {
         return coreState.getDeviceInfo().getAttributionID();
     }
@@ -1281,12 +1286,21 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Returns a unique identifier by which CleverTap identifies this user.
      *
      * @return The user identifier currently being used to identify this user.
+     *
+     * <p><br><span style="color:red;background:#ffcc99" >&#9888; this method may take a long time to return,
+     * so you should not call it from the application main thread</span></p>
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
+    @WorkerThread
     public String getCleverTapID() {
         return coreState.getDeviceInfo().getDeviceID();
     }
 
+    /**
+     * Returns a unique identifier by which CleverTap identifies this user, on Main thread Callback.
+     *
+     * @param onInitDeviceIDListener non-null callback to retrieve identifier on main thread.
+     */
     public void getCleverTapID(@NonNull OnInitDeviceIDListener onInitDeviceIDListener) {
         Task<Void> taskDeviceCachedInfo = CTExecutorFactory.executors(getConfig()).ioTask();
         taskDeviceCachedInfo.execute("getCleverTapID", new Callable<Void>() {

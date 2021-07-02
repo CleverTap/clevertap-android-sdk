@@ -347,9 +347,11 @@ public class DeviceInfo {
 
         Task<Void> task = CTExecutorFactory.executors(config).ioTask();
         task.addOnSuccessListener(new OnSuccessListener<Void>() {
+            // callback on main thread
             @Override
             public void onSuccess(final Void aVoid) {
-                getConfigLogger().verbose(config.getAccountId(), "DeviceID initialized successfully!");
+                getConfigLogger().verbose(config.getAccountId(),
+                        "DeviceID initialized successfully!" + Thread.currentThread());
                 // No need to put getDeviceID() on background thread because prefs already loaded
                 CleverTapAPI.instanceWithConfig(context, config).deviceIDCreated(getDeviceID());
             }
