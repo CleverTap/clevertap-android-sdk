@@ -987,6 +987,12 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     private CleverTapAPI(final Context context, final CleverTapInstanceConfig config, String cleverTapID) {
         this.context = context;
 
+       /* new Thread("SharedPreferences-load") {
+            public void run() {
+                StorageHelper.getPreferences(context.getApplicationContext());
+            }
+        }.start();*/
+
         CoreState coreState = CleverTapFactory
                 .getCoreState(context, config, cleverTapID);
         setCoreState(coreState);
@@ -1006,7 +1012,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         if (now - CoreMetaData.getInitialAppEnteredForegroundTime() > 5) {
             this.coreState.getConfig().setCreatedPostAppLaunch();
         }
-
 
         task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("setStatesAsync", new Callable<Void>() {
@@ -2328,22 +2333,44 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     //To be called from DeviceInfo AdID GUID generation
     void deviceIDCreated(String deviceId) {
-        Logger.v("Initializing InAppFC after Device ID Created = " + deviceId);
-        coreState.getControllerManager()
-                .setInAppFCManager(new InAppFCManager(context, coreState.getConfig(), deviceId));
-        Logger.v("Initializing ABTesting after Device ID Created = " + deviceId);
+
+        String accountId = coreState.getConfig().getAccountId();
+
+        if (coreState.getControllerManager() == null) {
+            Logger.v(accountId, "ControllerManager not set yet! Returning from deviceIDCreated()");
+            return;
+        }
+
+        if (coreState.getControllerManager().getInAppFCManager() == null) {
+            Logger.v(accountId, "Initializing InAppFC after Device ID Created = " + deviceId);
+            coreState.getControllerManager()
+                    .setInAppFCManager(new InAppFCManager(context, coreState.getConfig(), deviceId));
+        }
 
         /*
            Reinitialising product config & Feature Flag controllers with google ad id.
         */
-        if (coreState.getControllerManager().getCTFeatureFlagsController() != null) {
-            coreState.getControllerManager().getCTFeatureFlagsController().setGuidAndInit(deviceId);
+        CTFeatureFlagsController ctFeatureFlagsController = coreState.getControllerManager()
+                .getCTFeatureFlagsController();
+
+        if (ctFeatureFlagsController != null) {
+            if (!ctFeatureFlagsController.isInitialized()) {
+                Logger.v(accountId,
+                        "Initializing Feature Flags after Device ID Created = " + deviceId);
+            }
+            ctFeatureFlagsController.setGuidAndInit(deviceId);
         }
-        if (coreState.getControllerManager().getCTProductConfigController() != null) {
-            coreState.getControllerManager().getCTProductConfigController().setGuidAndInit(deviceId);
+        CTProductConfigController ctProductConfigController = coreState.getControllerManager()
+                .getCTProductConfigController();
+
+        if (ctProductConfigController != null) {
+            if (!ctProductConfigController.isInitialized()) {
+                Logger.v(accountId,
+                        "Initializing Product Config after Device ID Created = " + deviceId);
+            }
+            ctProductConfigController.setGuidAndInit(deviceId);
         }
-        getConfigLogger()
-                .verbose("Got device id from DeviceInfo, notifying user profile initialized to SyncListener");
+        Logger.v(accountId, "Got device id from DeviceInfo, notifying user profile initialized to SyncListener");
         coreState.getCallbackManager().notifyUserProfileInitialized(deviceId);
     }
 
