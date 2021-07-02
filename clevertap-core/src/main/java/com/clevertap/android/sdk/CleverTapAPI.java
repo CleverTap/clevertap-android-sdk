@@ -28,6 +28,7 @@ import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.inbox.CTMessageDAO;
+import com.clevertap.android.sdk.interfaces.OnInitDeviceIDListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
@@ -1284,6 +1285,17 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings({"unused", "WeakerAccess"})
     public String getCleverTapID() {
         return coreState.getDeviceInfo().getDeviceID();
+    }
+
+    public void getCleverTapID(@NonNull OnInitDeviceIDListener onInitDeviceIDListener) {
+        Task<Void> taskDeviceCachedInfo = CTExecutorFactory.executors(getConfig()).ioTask();
+        taskDeviceCachedInfo.execute("getCleverTapID", new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                onInitDeviceIDListener.onInitDeviceID(coreState.getDeviceInfo().getDeviceID());
+                return null;
+            }
+        });
     }
 
     @RestrictTo(Scope.LIBRARY)
