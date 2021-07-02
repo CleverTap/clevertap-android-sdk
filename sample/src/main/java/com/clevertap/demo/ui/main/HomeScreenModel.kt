@@ -39,7 +39,8 @@ object HomeScreenModel {
             ),
             "FEATURE FLAGS" to listOf("Get Feature Flag"),
             "WEBVIEW" to listOf("Raise events from WebView"),
-            "GEOFENCE" to listOf("Init Geofence", "Trigger Location", "Deactivate Geofence")
+            "GEOFENCE" to listOf("Init Geofence", "Trigger Location", "Deactivate Geofence"),
+            "DEVICE IDENTIFIERS" to listOf("Fetch CleverTapAttribution Identifier", "Fetch CleverTap ID")
         )
     }
 }
