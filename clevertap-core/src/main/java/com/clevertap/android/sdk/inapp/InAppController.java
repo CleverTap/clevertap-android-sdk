@@ -66,12 +66,26 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         }
     }
 
+    private enum InAppState {
+        DISCARDED(-1),
+        SUSPENDED(0),
+        RESUMED(1);
+
+        final int state;
+
+        InAppState(final int inAppState) {
+            state = inAppState;
+        }
+
+        int intValue() {
+            return state;
+        }
+    }
+
     private static CTInAppNotification currentlyDisplayingInApp = null;
 
     private static final List<CTInAppNotification> pendingNotifications = Collections
             .synchronizedList(new ArrayList<CTInAppNotification>());
-
-    private HashSet<String> inappActivityExclude = null;
 
     private final AnalyticsManager analyticsManager;
 
@@ -84,6 +98,10 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     private final ControllerManager controllerManager;
 
     private final CoreMetaData coreMetaData;
+
+    private InAppState inAppState;
+
+    private HashSet<String> inappActivityExclude = null;
 
     private final Logger logger;
 
@@ -105,6 +123,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         this.callbackManager = callbackManager;
         this.analyticsManager = analyticsManager;
         this.coreMetaData = coreMetaData;
+        this.inAppState = InAppState.RESUMED;
     }
 
     public void checkExistingInAppNotifications(Activity activity) {
@@ -146,6 +165,11 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             Logger.d("In-app notifications will not be shown for this activity ("
                     + (activity != null ? activity.getLocalClassName() : "") + ")");
         }
+    }
+
+    public void discardInApps() {
+        this.inAppState = InAppState.DISCARDED;
+        logger.verbose(config.getAccountId(), "InAppState is DISCARDED");
     }
 
     @Override
@@ -231,6 +255,13 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         displayNotification(inAppNotification);
     }
 
+    public void resumeInApps() {
+        this.inAppState = InAppState.RESUMED;
+        logger.verbose(config.getAccountId(), "InAppState is RESUMED");
+        logger.verbose(config.getAccountId(), "Resuming InApps by calling showInAppNotificationIfAny()");
+        showInAppNotificationIfAny();
+    }
+
     //InApp
     public void showNotificationIfAvailable(final Context context) {
         if (!config.isAnalyticsOnly()) {
@@ -245,12 +276,23 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         }
     }
 
+    public void suspendInApps() {
+        this.inAppState = InAppState.SUSPENDED;
+        logger.verbose(config.getAccountId(), "InAppState is SUSPENDED");
+    }
+
     //InApp
     private void _showNotificationIfAvailable(Context context) {
         SharedPreferences prefs = StorageHelper.getPreferences(context);
         try {
             if (!canShowInAppOnActivity()) {
                 Logger.v("Not showing notification on blacklisted activity");
+                return;
+            }
+
+            if (this.inAppState == InAppState.SUSPENDED) {
+                logger.debug(config.getAccountId(),
+                        "InApp Notifications are set to be suspended, not showing the InApp Notification");
                 return;
             }
 
@@ -263,8 +305,13 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 return;
             }
 
-            JSONObject inapp = inapps.getJSONObject(0);
-            prepareNotificationForDisplay(inapp);
+            if (this.inAppState != InAppState.DISCARDED) {
+                JSONObject inapp = inapps.getJSONObject(0);
+                prepareNotificationForDisplay(inapp);
+            } else {
+                logger.debug(config.getAccountId(),
+                        "InApp Notifications are set to be discarded, dropping the InApp Notification");
+            }
 
             // JSON array doesn't have the feature to remove a single element,
             // so we have to copy over the entire array, but the first element

@@ -8,7 +8,7 @@ import com.clevertap.android.sdk.CleverTapAPI
 class MyApplication : MultiDexApplication() {
 
     override fun onCreate() {
-        CleverTapAPI.setDebugLevel(3)
+        CleverTapAPI.setDebugLevel(CleverTapAPI.LogLevel.VERBOSE)
         ActivityLifecycleCallback.register(this)
         super.onCreate()
         CleverTapAPI.createNotificationChannel(

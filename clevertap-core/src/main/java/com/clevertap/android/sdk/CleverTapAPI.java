@@ -1037,6 +1037,35 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 .getAccountToken() + " accountRegion: " + config.getAccountRegion());
     }
 
+    public void suspendInAppNotifications(){
+        if(!getCoreState().getConfig().isAnalyticsOnly()){
+            getConfigLogger().debug(getAccountId(),"Suspending InApp Notifications...");
+            getConfigLogger().debug(getAccountId(),"Please Note - InApp Notifications will be suspended till resumeInAppNotifications() is not called again");
+            getCoreState().getInAppController().suspendInApps();
+        }else{
+            getConfigLogger().debug(getAccountId(),"CleverTap instance is set for Analytics only! Cannot suspend InApp Notifications.");
+        }
+    }
+
+    public void resumeInAppNotifications(){
+        if(!getCoreState().getConfig().isAnalyticsOnly()){
+            getConfigLogger().debug(getAccountId(),"Resuming InApp Notifications...");
+            getCoreState().getInAppController().resumeInApps();
+        }else{
+            getConfigLogger().debug(getAccountId(),"CleverTap instance is set for Analytics only! Cannot resume InApp Notifications.");
+        }
+    }
+
+    public void discardInAppNotifications(){
+        if(!getCoreState().getConfig().isAnalyticsOnly()){
+            getConfigLogger().debug(getAccountId(),"Discarding InApp Notifications...");
+            getConfigLogger().debug(getAccountId(),"Please Note - InApp Notifications will be dropped till resumeInAppNotifications() is not called again");
+            getCoreState().getInAppController().discardInApps();
+        }else{
+            getConfigLogger().debug(getAccountId(),"CleverTap instance is set for Analytics only! Cannot discard InApp Notifications.");
+        }
+    }
+
     /**
      * Add a unique value to a multi-value user profile property
      * If the property does not exist it will be created
