@@ -66,7 +66,7 @@ class AnalyticsManagerTest : BaseTestCase() {
         validationResult.`object` = "int_score"
         validationResult.errorCode = 200
 
-        val commandObj: JSONObject = JSONObject().put(Constants.COMMAND_INCREMENT, 20)
+        val commandObj: JSONObject = JSONObject().put(Constants.COMMAND_INCREMENT, 10)
         val updateObj = JSONObject().put("int_score", commandObj)
 
         val captor = ArgumentCaptor.forClass(JSONObject::class.java)
@@ -89,7 +89,7 @@ class AnalyticsManagerTest : BaseTestCase() {
         validationResult.`object` = "double_score"
         validationResult.errorCode = 200
 
-        val commandObj: JSONObject = JSONObject().put(Constants.COMMAND_INCREMENT, 20.5)
+        val commandObj: JSONObject = JSONObject().put(Constants.COMMAND_INCREMENT, 10.25)
         val updateObj = JSONObject().put("double_score", commandObj)
         val captor = ArgumentCaptor.forClass(JSONObject::class.java)
 
@@ -111,7 +111,7 @@ class AnalyticsManagerTest : BaseTestCase() {
         validationResult.`object` = "float_score"
         validationResult.errorCode = 200
 
-        val commandObj: JSONObject = JSONObject().put(Constants.COMMAND_INCREMENT, 20.5f)
+        val commandObj: JSONObject = JSONObject().put(Constants.COMMAND_INCREMENT, 10.25f)
         val updateObj = JSONObject().put("float_score", commandObj)
         val captor = ArgumentCaptor.forClass(JSONObject::class.java)
 
@@ -133,7 +133,7 @@ class AnalyticsManagerTest : BaseTestCase() {
         validationResult.`object` = "decr_int_score"
         validationResult.errorCode = 200
 
-        val commandObj: JSONObject = JSONObject().put(Constants.COMMAND_DECREMENT, 20)
+        val commandObj: JSONObject = JSONObject().put(Constants.COMMAND_DECREMENT, 10)
         val updateObj = JSONObject().put("decr_int_score", commandObj)
 
         val captor = ArgumentCaptor.forClass(JSONObject::class.java)
@@ -156,7 +156,7 @@ class AnalyticsManagerTest : BaseTestCase() {
         validationResult.`object` = "decr_double_score"
         validationResult.errorCode = 200
 
-        val commandObj: JSONObject = JSONObject().put(Constants.COMMAND_DECREMENT, 9.75)
+        val commandObj: JSONObject = JSONObject().put(Constants.COMMAND_DECREMENT, 10.50)
         val updateObj = JSONObject().put("decr_double_score", commandObj)
 
         val captor = ArgumentCaptor.forClass(JSONObject::class.java)
@@ -179,7 +179,7 @@ class AnalyticsManagerTest : BaseTestCase() {
         validationResult.`object` = "decr_float_score"
         validationResult.errorCode = 200
 
-        val commandObj: JSONObject = JSONObject().put(Constants.COMMAND_DECREMENT, 9.75f)
+        val commandObj: JSONObject = JSONObject().put(Constants.COMMAND_DECREMENT, 10.50f)
         val updateObj = JSONObject().put("decr_float_score", commandObj)
 
         val captor = ArgumentCaptor.forClass(JSONObject::class.java)

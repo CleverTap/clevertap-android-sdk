@@ -7,6 +7,8 @@ import android.content.Context;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
@@ -67,6 +69,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     private final HashMap<String, Object> notificationViewedIdTagMap = new HashMap<>();
 
+    private NUMBER_VALUE_TYPE numberValueType;
+
+    enum NUMBER_VALUE_TYPE {
+        INT_NUMBER, FLOAT_NUMBER, DOUBLE_NUMBER
+    }
+
     AnalyticsManager(Context context,
             CleverTapInstanceConfig config,
             BaseEventQueueManager baseEventQueueManager,
@@ -106,16 +114,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     @Override
     public void incrementValue(String key, Number value) {
-        String command = (localDataStore.getProfileValueForKey(key) != null)
-                ? Constants.COMMAND_INCREMENT : Constants.COMMAND_SET;
-        _constructIncrementDecrementValues(value,key,command);
+        _constructIncrementDecrementValues(value,key,Constants.COMMAND_INCREMENT);
     }
 
     @Override
     public void decrementValue(String key, Number value) {
-        String command = (localDataStore.getProfileValueForKey(key) != null)
-                ? Constants.COMMAND_DECREMENT : Constants.COMMAND_SET;
-        _constructIncrementDecrementValues(value,key,command);
+        _constructIncrementDecrementValues(value,key,Constants.COMMAND_DECREMENT);
     }
 
     /**
@@ -1055,11 +1059,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
             localDataStore.setProfileField(key, updatedValue);
 
             // push to server
-            JSONObject commandObj = new JSONObject().put(command, updatedValue);
+            JSONObject commandObj = new JSONObject().put(command, value);
             JSONObject updateObj = new JSONObject().put(key, commandObj);
             baseEventQueueManager.pushBasicProfile(updateObj);
         } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Failed to update profile value for key " + key, t);
+            config.getLogger().verbose(config.getAccountId(), "Failed to update profile value for key "
+                    + key, t);
         }
 
     }
@@ -1067,28 +1072,80 @@ public class AnalyticsManager extends BaseAnalyticsManager {
     private Number _handleIncrementDecrementValues(@NonNull String key, Number value, String command){
         Number updatedValue = null;
         Number existingValue = (Number) _getProfilePropertyIgnorePersonalizationFlag(key);
+
+        /*When existing value is NOT present in local data store,
+         we check the give value number type and do the necessary operation*/
         if (existingValue == null) {
-            updatedValue = value;
+            switch (getNumberValueType(value)){
+                case DOUBLE_NUMBER:
+                    if (command.equals(Constants.COMMAND_INCREMENT)){
+                        updatedValue = value.doubleValue();
+                    }else if (command.equals(Constants.COMMAND_DECREMENT)){
+                        updatedValue = -value.doubleValue();
+                    }
+                    break;
+                case FLOAT_NUMBER:
+                    if (command.equals(Constants.COMMAND_INCREMENT)){
+                        updatedValue = value.floatValue();
+                    }else if (command.equals(Constants.COMMAND_DECREMENT)){
+                        updatedValue = -value.floatValue();
+                    }
+                    break;
+                default:
+                    if (command.equals(Constants.COMMAND_INCREMENT)){
+                        updatedValue = value.intValue();
+                    }else if (command.equals(Constants.COMMAND_DECREMENT)){
+                        updatedValue = -value.intValue();
+                    }
+                    break;
+
+            }
             return updatedValue;
+
         }
 
-        if (existingValue.equals(existingValue.intValue())){
-            if (command.equals(Constants.COMMAND_INCREMENT))
-                updatedValue = existingValue.intValue() + value.intValue();
-            else if (command.equals(Constants.COMMAND_DECREMENT))
-                updatedValue = existingValue.intValue() - value.intValue();
-        }else if (existingValue.equals(existingValue.floatValue())){
-            if (command.equals(Constants.COMMAND_INCREMENT))
-                updatedValue = existingValue.floatValue() + value.floatValue();
-            else if (command.equals(Constants.COMMAND_DECREMENT))
-                updatedValue = existingValue.floatValue() - value.floatValue();
-        }else if (existingValue.equals(existingValue.doubleValue())){
-            if (command.equals(Constants.COMMAND_INCREMENT))
-                updatedValue = existingValue.doubleValue() + value.doubleValue();
-            else if (command.equals(Constants.COMMAND_DECREMENT))
-                updatedValue = existingValue.doubleValue() - value.doubleValue();
+        /*When existing value is present in local data store,
+         we check the existing number type and do the necessary operation*/
+        switch (getNumberValueType(existingValue)){
+            case DOUBLE_NUMBER:
+                if (command.equals(Constants.COMMAND_INCREMENT)){
+                    updatedValue = existingValue.doubleValue() + value.doubleValue();
+                }else if (command.equals(Constants.COMMAND_DECREMENT)){
+                    updatedValue = existingValue.doubleValue() - value.doubleValue();
+                }
+                break;
+            case FLOAT_NUMBER:
+                if (command.equals(Constants.COMMAND_INCREMENT)){
+                    updatedValue = existingValue.floatValue() + value.floatValue();
+                }else if (command.equals(Constants.COMMAND_DECREMENT)){
+                    updatedValue = existingValue.floatValue() - value.floatValue();
+                }
+                break;
+            default:
+                if (command.equals(Constants.COMMAND_INCREMENT)){
+                    updatedValue = existingValue.intValue() + value.intValue();
+                }else if (command.equals(Constants.COMMAND_DECREMENT)){
+                    updatedValue = existingValue.intValue() - value.intValue();
+                }
+                break;
+
         }
         return updatedValue;
+    }
+
+    /*
+        Based on the number value type returns the associated enum
+        (INT_NUMBER,DOUBLE_NUMBER,FLOAT_NUMBER)
+    */
+    private NUMBER_VALUE_TYPE getNumberValueType(Number value){
+        if (value.equals(value.intValue())) {
+            numberValueType = NUMBER_VALUE_TYPE.INT_NUMBER;
+        } else if (value.equals(value.doubleValue())) {
+            numberValueType = NUMBER_VALUE_TYPE.DOUBLE_NUMBER;
+        } else if (value.equals(value.floatValue())) {
+            numberValueType = NUMBER_VALUE_TYPE.FLOAT_NUMBER;
+        }
+        return numberValueType;
     }
 
 
