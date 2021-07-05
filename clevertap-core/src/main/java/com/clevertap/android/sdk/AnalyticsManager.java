@@ -7,7 +7,6 @@ import android.content.Context;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
@@ -69,9 +68,9 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     private final HashMap<String, Object> notificationViewedIdTagMap = new HashMap<>();
 
-    private NUMBER_VALUE_TYPE numberValueType;
+    private NumberValueType numberValueType;
 
-    enum NUMBER_VALUE_TYPE {
+    enum NumberValueType {
         INT_NUMBER, FLOAT_NUMBER, DOUBLE_NUMBER
     }
 
@@ -1137,13 +1136,13 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         Based on the number value type returns the associated enum
         (INT_NUMBER,DOUBLE_NUMBER,FLOAT_NUMBER)
     */
-    private NUMBER_VALUE_TYPE getNumberValueType(Number value){
+    private NumberValueType getNumberValueType(Number value){
         if (value.equals(value.intValue())) {
-            numberValueType = NUMBER_VALUE_TYPE.INT_NUMBER;
+            numberValueType = NumberValueType.INT_NUMBER;
         } else if (value.equals(value.doubleValue())) {
-            numberValueType = NUMBER_VALUE_TYPE.DOUBLE_NUMBER;
+            numberValueType = NumberValueType.DOUBLE_NUMBER;
         } else if (value.equals(value.floatValue())) {
-            numberValueType = NUMBER_VALUE_TYPE.FLOAT_NUMBER;
+            numberValueType = NumberValueType.FLOAT_NUMBER;
         }
         return numberValueType;
     }
