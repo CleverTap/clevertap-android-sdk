@@ -604,11 +604,19 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 Logger.d("Instance is Analytics Only not processing device token");
                 continue;
             }
-            //get token from Manifest
-            String tokenUsingManifestMetaEntry = Utils
-                    .getFcmTokenUsingManifestMetaEntry(context, instance.getCoreState().getConfig());
-            if (!TextUtils.isEmpty(tokenUsingManifestMetaEntry)) {
-                token = tokenUsingManifestMetaEntry;
+
+            if (!Utils.haveDeprecatedFirebaseInstanceId){
+                instance.getConfigLogger().debug(instance.getAccountId(),"It looks like you're using the " +
+                        "latest version of FCM where FirebaseInstanceId is deprecated, hence we won't be able to fetch " +
+                        "the token from sender id provided in manifest. Instead we will be using the token provided to us by Firebase.");
+            }else {
+                //get token from Manifest
+                String tokenUsingManifestMetaEntry = Utils
+                        .getFcmTokenUsingManifestMetaEntry(context, instance.getCoreState().getConfig());
+
+                if (!TextUtils.isEmpty(tokenUsingManifestMetaEntry)) {
+                    token = tokenUsingManifestMetaEntry;
+                }
             }
             instance.getCoreState().getPushProviders().doTokenRefresh(token, PushType.FCM);
         }
@@ -2167,6 +2175,32 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             getConfigLogger().debug(getAccountId(),
                     "CleverTap instance is set for Analytics only! Cannot resume InApp Notifications.");
         }
+    }
+  
+  /**
+     * This method is used to increment the given value
+     *
+     * Number should be in positive range
+     *
+     * @param key String
+     * @param value Number
+     */
+    @SuppressWarnings("unused")
+    public void incrementValue(final String key, final Number value){
+        coreState.getAnalyticsManager().incrementValue(key,value);
+    }
+
+    /**
+     * This method is used to decrement the given value
+     *
+     * Number should be in positive range
+     *
+     * @param key String
+     * @param value Number
+     */
+    @SuppressWarnings("unused")
+    public void decrementValue(final String key, final Number value){
+        coreState.getAnalyticsManager().decrementValue(key,value);
     }
 
     /**

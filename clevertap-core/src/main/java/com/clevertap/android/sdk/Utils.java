@@ -43,6 +43,7 @@ import org.json.JSONObject;
 public final class Utils {
 
     public static boolean haveVideoPlayerSupport;
+    public static boolean haveDeprecatedFirebaseInstanceId;
 
     public static boolean containsIgnoreCase(Collection<String> collection, String key) {
         if (collection == null || key == null) {
@@ -477,6 +478,27 @@ public final class Utils {
         return exoPlayerPresent;
     }
 
+    /**
+     * Method to check whether app has upgraded to Firebase Cloud Messaging v22.0.0 or greater.
+     *
+     * @return boolean - true/false depending on app's availability of FirebaseInstanceId in FirebaseMessaging
+     *                   dependencies
+     */
+    @SuppressWarnings("rawtypes")
+    private static boolean checkForFirebaseInstanceId(){
+        boolean isFirebaseInstanceIdPresent = false;
+        Class classname;
+        try {
+            classname = Class.forName("com.google.firebase.iid.FirebaseInstanceId");
+            isFirebaseInstanceIdPresent = true;
+            Logger.d("Firebase Instance Id is available." + classname);
+        }catch (Throwable throwable){
+            Logger.d("It looks like you're using FirebaseMessaging dependency v22.0.0." +
+                    "Ensure your app's version of FCM is v20.2.4");
+        }
+        return isFirebaseInstanceIdPresent;
+    }
+
     private static Bitmap getAppIcon(final Context context) throws NullPointerException {
         // Try to get the app logo first
         try {
@@ -494,5 +516,6 @@ public final class Utils {
 
     static {
         haveVideoPlayerSupport = checkForExoPlayer();
+        haveDeprecatedFirebaseInstanceId  = checkForFirebaseInstanceId();
     }
 }

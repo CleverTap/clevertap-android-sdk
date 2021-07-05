@@ -31,6 +31,10 @@ public class ValidationResultFactory {
                             msg = "Invalid multi value for key " + values[0]
                                     + ", profile multi value operation aborted.";
                             break;
+                        case Constants.INVALID_INCREMENT_DECREMENT_VALUE:
+                            msg = "Increment/Decrement value for profile key " +  values[0]
+                                   + ", cannot be zero or negative";
+                            break;
                         case Constants.PUSH_KEY_EMPTY:
                             msg = "Profile push key is empty";
                             break;

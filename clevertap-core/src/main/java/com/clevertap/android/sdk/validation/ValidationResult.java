@@ -44,7 +44,7 @@ public final class ValidationResult {
         this.errorDesc = errorDesc;
     }
 
-    void setObject(Object object) {
+    public void setObject(Object object) {
         this.object = object;
     }
 }
