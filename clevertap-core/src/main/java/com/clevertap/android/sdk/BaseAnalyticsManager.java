@@ -10,6 +10,10 @@ public abstract class BaseAnalyticsManager {
 
     public abstract void addMultiValuesForKey(String key, ArrayList<String> values);
 
+    public abstract void incrementValue(String key, Number value);
+
+    public abstract void decrementValue(String key, Number value);
+
     public abstract void fetchFeatureFlags();
 
     //Event
