@@ -493,8 +493,8 @@ public final class Utils {
             isFirebaseInstanceIdPresent = true;
             Logger.d("Firebase Instance Id is available." + classname);
         }catch (Throwable throwable){
-            Logger.d("It looks like you're using FirebaseMessaging dependency v22.0.0. " +
-                    "Ensure your app's version of FirebaseMessaging is less than 20.3.0.");
+            Logger.d("It looks like you're using FirebaseMessaging dependency v22.0.0." +
+                    "Ensure your app's version of FCM is v20.2.4");
         }
         return isFirebaseInstanceIdPresent;
     }

@@ -74,8 +74,8 @@ public class FcmSdkHandlerImpl implements IFcmSdkHandler {
     @Override
     public void requestToken() {
         if (!Utils.haveDeprecatedFirebaseInstanceId){
-            config.getLogger().debug(config.getAccountId(),"It looks like you're using the " +
-                    "latest FCM dependency.Downgrade you're FCM dependency to v20.2.4");
+            config.getLogger().debug(config.getAccountId(),"Downgrade you're FCM dependency " +
+                    "to v20.2.4 or else CleverTap SDK will not be able to generate a token for this device.");
             listener.onNewToken(null, getPushType());
             return;
         }
