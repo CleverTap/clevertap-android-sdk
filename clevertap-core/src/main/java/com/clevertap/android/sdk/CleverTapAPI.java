@@ -604,11 +604,19 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 Logger.d("Instance is Analytics Only not processing device token");
                 continue;
             }
-            //get token from Manifest
-            String tokenUsingManifestMetaEntry = Utils
-                    .getFcmTokenUsingManifestMetaEntry(context, instance.getCoreState().getConfig());
-            if (!TextUtils.isEmpty(tokenUsingManifestMetaEntry)) {
-                token = tokenUsingManifestMetaEntry;
+
+            if (!Utils.haveDeprecatedFirebaseInstanceId){
+                instance.getConfigLogger().debug(instance.getAccountId(),"It looks like you're using the " +
+                        "latest version of FCM where FirebaseInstanceId is deprecated, hence we won't be able to fetch " +
+                        "the token from sender id provided in manifest. Instead we will be using the token provided to us by Firebase.");
+            }else {
+                //get token from Manifest
+                String tokenUsingManifestMetaEntry = Utils
+                        .getFcmTokenUsingManifestMetaEntry(context, instance.getCoreState().getConfig());
+
+                if (!TextUtils.isEmpty(tokenUsingManifestMetaEntry)) {
+                    token = tokenUsingManifestMetaEntry;
+                }
             }
             instance.getCoreState().getPushProviders().doTokenRefresh(token, PushType.FCM);
         }

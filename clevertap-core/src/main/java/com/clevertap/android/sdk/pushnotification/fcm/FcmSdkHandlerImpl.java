@@ -74,8 +74,8 @@ public class FcmSdkHandlerImpl implements IFcmSdkHandler {
     @Override
     public void requestToken() {
         if (!Utils.haveDeprecatedFirebaseInstanceId){
-            config.log(LOG_TAG, FCM_LOG_TAG + "It looks like you're using the latest" +
-                    " FirebaseMessaging dependency v22.0.0.Ensure your app's version is less than 20.3.0.");
+            config.getLogger().debug(config.getAccountId(),"It looks like you're using the " +
+                    "latest FCM dependency.Downgrade you're FCM dependency to v20.2.4");
             listener.onNewToken(null, getPushType());
             return;
         }
