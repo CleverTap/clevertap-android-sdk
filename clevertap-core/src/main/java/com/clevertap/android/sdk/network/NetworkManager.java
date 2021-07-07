@@ -48,7 +48,6 @@ import java.security.SecureRandom;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Random;
 import java.util.concurrent.Callable;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -500,6 +499,9 @@ public class NetworkManager extends BaseNetworkManager {
             if (controllerManager.getInAppFCManager() != null) {
                 Logger.v("Attaching InAppFC to Header");
                 controllerManager.getInAppFCManager().attachToHeader(context, header);
+            } else {
+                logger.verbose(config.getAccountId(),
+                        "controllerManager.getInAppFCManager() is NULL, not Attaching InAppFC to Header");
             }
 
             // Resort to string concat for backward compatibility

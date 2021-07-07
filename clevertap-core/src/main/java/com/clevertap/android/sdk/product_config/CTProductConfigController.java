@@ -476,7 +476,7 @@ public class CTProductConfigController {
         return CTProductConfigConstants.DIR_PRODUCT_CONFIG + "_" + config.getAccountId() + "_" + settings.getGuid();
     }
 
-    ProductConfigSettings getSettings() {
+    public ProductConfigSettings getSettings() {
         return settings;
     }
 

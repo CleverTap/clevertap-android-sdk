@@ -814,6 +814,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 .validateCTID(cleverTapID)) {
             instance.coreState.getLoginController().asyncProfileSwitchUser(null, null, cleverTapID);
         }
+        Logger.v(config.getAccountId() + ":async_deviceID", "CleverTapAPI instance = " + instance);
         return instance;
     }
 
@@ -998,6 +999,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         CoreState coreState = CleverTapFactory
                 .getCoreState(context, config, cleverTapID);
         setCoreState(coreState);
+        Logger.v(config.getAccountId() + ":async_deviceID", "CoreState is set");
 
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("CleverTapAPI#initializeDeviceInfo", new Callable<Void>() {
@@ -2363,40 +2365,40 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         String accountId = coreState.getConfig().getAccountId();
 
         if (coreState.getControllerManager() == null) {
-            Logger.v(accountId, "ControllerManager not set yet! Returning from deviceIDCreated()");
+            Logger.v(accountId + ":async_deviceID",
+                    "ControllerManager not set yet! Returning from deviceIDCreated()");
             return;
         }
 
         if (coreState.getControllerManager().getInAppFCManager() == null) {
-            Logger.v(accountId, "Initializing InAppFC after Device ID Created = " + deviceId);
+            Logger.v(accountId + ":async_deviceID", "Initializing InAppFC after Device ID Created = " + deviceId);
             coreState.getControllerManager()
                     .setInAppFCManager(new InAppFCManager(context, coreState.getConfig(), deviceId));
         }
 
-        /*
-           Reinitialising product config & Feature Flag controllers with google ad id.
-        */
+        /**
+         * Reinitialising product config & Feature Flag controllers with device id if it's null
+         * during first initialisation
+         */
         CTFeatureFlagsController ctFeatureFlagsController = coreState.getControllerManager()
                 .getCTFeatureFlagsController();
 
-        if (ctFeatureFlagsController != null) {
-            if (!ctFeatureFlagsController.isInitialized()) {
-                Logger.v(accountId,
-                        "Initializing Feature Flags after Device ID Created = " + deviceId);
-            }
+        if (ctFeatureFlagsController != null && TextUtils.isEmpty(ctFeatureFlagsController.getGuid())) {
+            Logger.v(accountId + ":async_deviceID",
+                    "Initializing Feature Flags after Device ID Created = " + deviceId);
             ctFeatureFlagsController.setGuidAndInit(deviceId);
         }
         CTProductConfigController ctProductConfigController = coreState.getControllerManager()
                 .getCTProductConfigController();
 
-        if (ctProductConfigController != null) {
-            if (!ctProductConfigController.isInitialized()) {
-                Logger.v(accountId,
-                        "Initializing Product Config after Device ID Created = " + deviceId);
-            }
+        if (ctProductConfigController != null && TextUtils
+                .isEmpty(ctProductConfigController.getSettings().getGuid())) {
+            Logger.v(accountId + ":async_deviceID",
+                    "Initializing Product Config after Device ID Created = " + deviceId);
             ctProductConfigController.setGuidAndInit(deviceId);
         }
-        Logger.v(accountId, "Got device id from DeviceInfo, notifying user profile initialized to SyncListener");
+        Logger.v(accountId + ":async_deviceID",
+                "Got device id from DeviceInfo, notifying user profile initialized to SyncListener");
         coreState.getCallbackManager().notifyUserProfileInitialized(deviceId);
     }
 
