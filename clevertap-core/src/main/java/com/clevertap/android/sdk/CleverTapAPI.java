@@ -800,11 +800,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             instances.put(config.getAccountId(), instance);
             final CleverTapAPI finalInstance = instance;
             Task<Void> task = CTExecutorFactory.executors(instance.coreState.getConfig()).postAsyncSafelyTask();
-            task.execute("notifyProfileInitialized", new Callable<Void>() {
+            task.execute("recordDeviceIDErrors", new Callable<Void>() {
                 @Override
                 public Void call() {
                     if (finalInstance.getCleverTapID() != null) {
-                        finalInstance.coreState.getCallbackManager().notifyUserProfileInitialized();
                         finalInstance.coreState.getLoginController().recordDeviceIDErrors();
                     }
                     return null;
