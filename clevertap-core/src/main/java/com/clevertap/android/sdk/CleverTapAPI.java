@@ -989,16 +989,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     private CleverTapAPI(final Context context, final CleverTapInstanceConfig config, String cleverTapID) {
         this.context = context;
 
-       /* new Thread("SharedPreferences-load") {
-            public void run() {
-                StorageHelper.getPreferences(context.getApplicationContext());
-            }
-        }.start();*/
-
         CoreState coreState = CleverTapFactory
                 .getCoreState(context, config, cleverTapID);
         setCoreState(coreState);
-        Logger.v(config.getAccountId() + ":async_deviceID", "CoreState is set");
+        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "CoreState is set");
 
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
         task.execute("CleverTapAPI#initializeDeviceInfo", new Callable<Void>() {
@@ -2364,13 +2358,14 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         String accountId = coreState.getConfig().getAccountId();
 
         if (coreState.getControllerManager() == null) {
-            Logger.v(accountId + ":async_deviceID",
+            getConfigLogger().verbose(accountId + ":async_deviceID",
                     "ControllerManager not set yet! Returning from deviceIDCreated()");
             return;
         }
 
         if (coreState.getControllerManager().getInAppFCManager() == null) {
-            Logger.v(accountId + ":async_deviceID", "Initializing InAppFC after Device ID Created = " + deviceId);
+            getConfigLogger().verbose(accountId + ":async_deviceID",
+                    "Initializing InAppFC after Device ID Created = " + deviceId);
             coreState.getControllerManager()
                     .setInAppFCManager(new InAppFCManager(context, coreState.getConfig(), deviceId));
         }
@@ -2383,7 +2378,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 .getCTFeatureFlagsController();
 
         if (ctFeatureFlagsController != null && TextUtils.isEmpty(ctFeatureFlagsController.getGuid())) {
-            Logger.v(accountId + ":async_deviceID",
+            getConfigLogger().verbose(accountId + ":async_deviceID",
                     "Initializing Feature Flags after Device ID Created = " + deviceId);
             ctFeatureFlagsController.setGuidAndInit(deviceId);
         }
@@ -2392,11 +2387,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
         if (ctProductConfigController != null && TextUtils
                 .isEmpty(ctProductConfigController.getSettings().getGuid())) {
-            Logger.v(accountId + ":async_deviceID",
+            getConfigLogger().verbose(accountId + ":async_deviceID",
                     "Initializing Product Config after Device ID Created = " + deviceId);
             ctProductConfigController.setGuidAndInit(deviceId);
         }
-        Logger.v(accountId + ":async_deviceID",
+        getConfigLogger().verbose(accountId + ":async_deviceID",
                 "Got device id from DeviceInfo, notifying user profile initialized to SyncListener");
         coreState.getCallbackManager().notifyUserProfileInitialized(deviceId);
     }

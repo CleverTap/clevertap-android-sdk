@@ -14,7 +14,6 @@ import android.net.NetworkInfo;
 import android.os.Build;
 import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
-import android.util.Log;
 import android.view.WindowManager;
 import androidx.annotation.IntDef;
 import androidx.annotation.RestrictTo;
@@ -332,7 +331,7 @@ public class DeviceInfo {
         this.library = null;
         mCoreMetaData = coreMetaData;
         onInitDeviceInfo(cleverTapID);
-        Log.v(config.getAccountId() + ":async_deviceID", "DeviceInfo() called");
+        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "DeviceInfo() called");
     }
 
     void onInitDeviceInfo(final String cleverTapID) {
@@ -604,7 +603,7 @@ public class DeviceInfo {
     }
 
     private synchronized void fetchGoogleAdID() {
-        Log.v(config.getAccountId() + ":async_deviceID", "fetchGoogleAdID() called!");
+        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "fetchGoogleAdID() called!");
         if (getGoogleAdID() == null && !adIdRun) {
             String advertisingID = null;
             try {
@@ -617,7 +616,8 @@ public class DeviceInfo {
                 Boolean limitedAdTracking = (Boolean) isLimitAdTracking.invoke(adInfo);
                 synchronized (adIDLock) {
                     limitAdTracking = limitedAdTracking != null && limitedAdTracking;
-                    Log.v(config.getAccountId() + ":async_deviceID", "limitAdTracking = " + limitAdTracking);
+                    getConfigLogger().verbose(config.getAccountId() + ":async_deviceID",
+                            "limitAdTracking = " + limitAdTracking);
                     if (limitAdTracking) {
                         return;
                     }
@@ -638,12 +638,12 @@ public class DeviceInfo {
                 }
             }
 
-            Log.v(config.getAccountId() + ":async_deviceID", "fetchGoogleAdID() done executing!");
+            getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "fetchGoogleAdID() done executing!");
         }
     }
 
     private synchronized void generateDeviceID() {
-        Log.v(config.getAccountId() + ":async_deviceID", "generateDeviceID() called!");
+        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "generateDeviceID() called!");
         String generatedDeviceID;
         String adId = getGoogleAdID();
         if (adId != null) {
@@ -654,7 +654,7 @@ public class DeviceInfo {
             }
         }
         forceUpdateDeviceId(generatedDeviceID);
-        Log.v(config.getAccountId() + ":async_deviceID", "generateDeviceID() done executing!");
+        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "generateDeviceID() done executing!");
     }
 
     private String generateGUID() {
@@ -685,7 +685,7 @@ public class DeviceInfo {
     }
 
     private void initDeviceID(String cleverTapID) {
-        Log.v(config.getAccountId() + ":async_deviceID", "Called initDeviceID()");
+        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "Called initDeviceID()");
         //Show logging as per Manifest flag
         if (config.getEnableCustomCleverTapId()) {
             if (cleverTapID == null) {
@@ -699,9 +699,9 @@ public class DeviceInfo {
             }
         }
 
-        Log.v(config.getAccountId() + ":async_deviceID", "Calling _getDeviceID");
+        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "Calling _getDeviceID");
         String deviceID = _getDeviceID();
-        Log.v(config.getAccountId() + ":async_deviceID", "Called _getDeviceID");
+        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "Called _getDeviceID");
         if (deviceID != null && deviceID.trim().length() > 2) {
             getConfigLogger().verbose(config.getAccountId(), "CleverTap ID already present for profile");
             if (cleverTapID != null) {
@@ -717,9 +717,9 @@ public class DeviceInfo {
         }
 
         if (!this.config.isUseGoogleAdId()) {
-            Log.v(config.getAccountId() + ":async_deviceID", "Calling generateDeviceID()");
+            getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "Calling generateDeviceID()");
             generateDeviceID();
-            Log.v(config.getAccountId() + ":async_deviceID", "Called generateDeviceID()");
+            getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "Called generateDeviceID()");
             return;
         }
 
@@ -728,7 +728,7 @@ public class DeviceInfo {
         fetchGoogleAdID();
         generateDeviceID();
 
-        Log.v(config.getAccountId() + ":async_deviceID", "initDeviceID() done executing!");
+        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "initDeviceID() done executing!");
     }
 
     private String recordDeviceError(int messageCode, String... varargs) {

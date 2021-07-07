@@ -58,12 +58,15 @@ class CleverTapFactory {
                 ctLockManager, callbackManager, deviceInfo, baseDatabaseManager);
         coreState.setControllerManager(controllerManager);
 
-        Logger.v(config.getAccountId() + ":async_deviceID",
-                "coreState.getDeviceInfo() = " + coreState.getDeviceInfo());
-        Logger.v(config.getAccountId() + ":async_deviceID",
-                "coreState.getDeviceInfo().getDeviceID() = " + coreState.getDeviceInfo().getDeviceID());
-        Logger.v(config.getAccountId() + ":async_deviceID",
-                "controllerManager.getInAppFCManager() = " + controllerManager.getInAppFCManager());
+        coreState.getConfig().getLogger()
+                .verbose(config.getAccountId() + ":async_deviceID",
+                        "coreState.getDeviceInfo() = " + coreState.getDeviceInfo());
+        coreState.getConfig().getLogger()
+                .verbose(config.getAccountId() + ":async_deviceID",
+                        "coreState.getDeviceInfo().getDeviceID() = " + coreState.getDeviceInfo().getDeviceID());
+        coreState.getConfig().getLogger()
+                .verbose(config.getAccountId() + ":async_deviceID",
+                        "controllerManager.getInAppFCManager() = " + controllerManager.getInAppFCManager());
 
         if (coreState.getDeviceInfo() != null && coreState.getDeviceInfo().getDeviceID() != null
                 && controllerManager.getInAppFCManager() == null) {
@@ -122,7 +125,7 @@ class CleverTapFactory {
     static void initFeatureFlags(Context context, ControllerManager controllerManager, CleverTapInstanceConfig config,
             DeviceInfo deviceInfo, BaseCallbackManager callbackManager, AnalyticsManager analyticsManager) {
 
-        Logger.v(config.getAccountId() + ":async_deviceID",
+        config.getLogger().verbose(config.getAccountId() + ":async_deviceID",
                 "Initializing Feature Flags with device Id = " + deviceInfo.getDeviceID());
         if (config.isAnalyticsOnly()) {
             config.getLogger().debug(config.getAccountId(), "Feature Flag is not enabled for this instance");

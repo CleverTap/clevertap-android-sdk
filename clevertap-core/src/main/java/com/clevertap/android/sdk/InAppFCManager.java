@@ -350,7 +350,8 @@ public class InAppFCManager {
     }
 
     private void init(String deviceId) {
-        Logger.v(config.getAccountId() + ":async_deviceID", "InAppFCManager init() called");
+        getConfigLogger()
+                .verbose(config.getAccountId() + ":async_deviceID", "InAppFCManager init() called");
         try {
             migrateToNewPrefsKey(deviceId);
             final String today = ddMMyyyy.format(new Date());

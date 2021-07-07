@@ -237,7 +237,7 @@ public class CoreState extends CleverTapState {
             return;
         }
         if (getControllerManager().getCTProductConfigController() == null) {
-            Logger.v(config.getAccountId() + ":async_deviceID",
+            getConfig().getLogger().verbose(config.getAccountId() + ":async_deviceID",
                     "Initializing Product Config with device Id = " + getDeviceInfo().getDeviceID());
             CTProductConfigController ctProductConfigController = CTProductConfigFactory
                     .getInstance(context, getDeviceInfo(),
