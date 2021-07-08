@@ -13,6 +13,7 @@ import org.json.JSONObject
 class MyApplication : MultiDexApplication() {
 
     override fun onCreate() {
+
         StrictMode.setThreadPolicy(
             StrictMode.ThreadPolicy.Builder()
                 .detectDiskReads()

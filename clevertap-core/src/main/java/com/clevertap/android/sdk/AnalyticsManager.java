@@ -7,6 +7,8 @@ import android.content.Context;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
+
+import androidx.annotation.NonNull;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
@@ -66,6 +68,12 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
     private final HashMap<String, Object> notificationViewedIdTagMap = new HashMap<>();
 
+    private NumberValueType numberValueType;
+
+    enum NumberValueType {
+        INT_NUMBER, FLOAT_NUMBER, DOUBLE_NUMBER
+    }
+
     AnalyticsManager(Context context,
             CleverTapInstanceConfig config,
             BaseEventQueueManager baseEventQueueManager,
@@ -101,6 +109,16 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                 return null;
             }
         });
+    }
+
+    @Override
+    public void incrementValue(String key, Number value) {
+        _constructIncrementDecrementValues(value,key,Constants.COMMAND_INCREMENT);
+    }
+
+    @Override
+    public void decrementValue(String key, Number value) {
+        _constructIncrementDecrementValues(value,key,Constants.COMMAND_DECREMENT);
     }
 
     /**
@@ -1000,6 +1018,135 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                     .verbose(config.getAccountId(), "Error handling multi value operation for key " + key, t);
         }
     }
+
+    private void _constructIncrementDecrementValues(Number value, String key, String command) {
+        try {
+            if (key == null || value == null) {
+                return;
+            }
+
+            // validate the key
+            ValidationResult vr = validator.cleanObjectKey(key);
+            key = vr.getObject().toString();
+
+            if (key.isEmpty()) {
+                ValidationResult error = ValidationResultFactory.create(512,
+                        Constants.PUSH_KEY_EMPTY, key);
+                validationResultStack.pushValidationResult(error);
+                config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
+                // Abort
+                return;
+            }
+
+            if (value.intValue() < 0 || value.doubleValue() < 0 || value.floatValue() < 0){
+                ValidationResult error = ValidationResultFactory.create(512,
+                        Constants.INVALID_INCREMENT_DECREMENT_VALUE, key);
+                validationResultStack.pushValidationResult(error);
+                config.getLogger().debug(config.getAccountId(), error.getErrorDesc());
+                // Abort
+                return;
+            }
+
+
+            // Check for an error
+            if (vr.getErrorCode() != 0) {
+                validationResultStack.pushValidationResult(vr);
+            }
+
+            Number updatedValue = _handleIncrementDecrementValues(key,value,command);
+            //Save updated values locally
+            localDataStore.setProfileField(key, updatedValue);
+
+            // push to server
+            JSONObject commandObj = new JSONObject().put(command, value);
+            JSONObject updateObj = new JSONObject().put(key, commandObj);
+            baseEventQueueManager.pushBasicProfile(updateObj);
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(), "Failed to update profile value for key "
+                    + key, t);
+        }
+
+    }
+
+    private Number _handleIncrementDecrementValues(@NonNull String key, Number value, String command){
+        Number updatedValue = null;
+        Number existingValue = (Number) _getProfilePropertyIgnorePersonalizationFlag(key);
+
+        /*When existing value is NOT present in local data store,
+         we check the give value number type and do the necessary operation*/
+        if (existingValue == null) {
+            switch (getNumberValueType(value)){
+                case DOUBLE_NUMBER:
+                    if (command.equals(Constants.COMMAND_INCREMENT)){
+                        updatedValue = value.doubleValue();
+                    }else if (command.equals(Constants.COMMAND_DECREMENT)){
+                        updatedValue = -value.doubleValue();
+                    }
+                    break;
+                case FLOAT_NUMBER:
+                    if (command.equals(Constants.COMMAND_INCREMENT)){
+                        updatedValue = value.floatValue();
+                    }else if (command.equals(Constants.COMMAND_DECREMENT)){
+                        updatedValue = -value.floatValue();
+                    }
+                    break;
+                default:
+                    if (command.equals(Constants.COMMAND_INCREMENT)){
+                        updatedValue = value.intValue();
+                    }else if (command.equals(Constants.COMMAND_DECREMENT)){
+                        updatedValue = -value.intValue();
+                    }
+                    break;
+
+            }
+            return updatedValue;
+
+        }
+
+        /*When existing value is present in local data store,
+         we check the existing number type and do the necessary operation*/
+        switch (getNumberValueType(existingValue)){
+            case DOUBLE_NUMBER:
+                if (command.equals(Constants.COMMAND_INCREMENT)){
+                    updatedValue = existingValue.doubleValue() + value.doubleValue();
+                }else if (command.equals(Constants.COMMAND_DECREMENT)){
+                    updatedValue = existingValue.doubleValue() - value.doubleValue();
+                }
+                break;
+            case FLOAT_NUMBER:
+                if (command.equals(Constants.COMMAND_INCREMENT)){
+                    updatedValue = existingValue.floatValue() + value.floatValue();
+                }else if (command.equals(Constants.COMMAND_DECREMENT)){
+                    updatedValue = existingValue.floatValue() - value.floatValue();
+                }
+                break;
+            default:
+                if (command.equals(Constants.COMMAND_INCREMENT)){
+                    updatedValue = existingValue.intValue() + value.intValue();
+                }else if (command.equals(Constants.COMMAND_DECREMENT)){
+                    updatedValue = existingValue.intValue() - value.intValue();
+                }
+                break;
+
+        }
+        return updatedValue;
+    }
+
+    /*
+        Based on the number value type returns the associated enum
+        (INT_NUMBER,DOUBLE_NUMBER,FLOAT_NUMBER)
+    */
+    private NumberValueType getNumberValueType(Number value){
+        if (value.equals(value.intValue())) {
+            numberValueType = NumberValueType.INT_NUMBER;
+        } else if (value.equals(value.doubleValue())) {
+            numberValueType = NumberValueType.DOUBLE_NUMBER;
+        } else if (value.equals(value.floatValue())) {
+            numberValueType = NumberValueType.FLOAT_NUMBER;
+        }
+        return numberValueType;
+    }
+
 
     private void _push(Map<String, Object> profile) {
         if (profile == null || profile.isEmpty()) {

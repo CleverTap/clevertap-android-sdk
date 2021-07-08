@@ -218,6 +218,8 @@ public interface Constants {
     String COMMAND_ADD = "$add";
     String COMMAND_REMOVE = "$remove";
     String COMMAND_DELETE = "$delete";
+    String COMMAND_INCREMENT = "$incr";
+    String COMMAND_DECREMENT = "$decr";
     String GUID_PREFIX_GOOGLE_AD_ID = "__g";
     String CUSTOM_CLEVERTAP_ID_PREFIX = "__h";
     String ERROR_PROFILE_PREFIX = "__i";
@@ -272,6 +274,7 @@ public interface Constants {
     int INVALID_CT_CUSTOM_ID = 21;
     int INVALID_MULTI_VALUE_KEY = 23;
     int RESTRICTED_MULTI_VALUE_KEY = 24;
+    int INVALID_INCREMENT_DECREMENT_VALUE = 25;
     String CLEVERTAP_IDENTIFIER = "CLEVERTAP_IDENTIFIER";
     String SEPARATOR_COMMA = ",";
     String EMPTY_STRING = "";
