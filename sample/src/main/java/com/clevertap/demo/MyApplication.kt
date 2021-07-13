@@ -7,7 +7,7 @@ import com.clevertap.android.sdk.ActivityLifecycleCallback
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
 import com.clevertap.android.sdk.SyncListener
-import com.clevertap.android.sdk.interfaces.OnInitDeviceIDListener
+import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener
 import org.json.JSONObject
 
 class MyApplication : MultiDexApplication() {
@@ -45,7 +45,7 @@ class MyApplication : MultiDexApplication() {
             }
         }
 
-        defaultInstance?.getCleverTapID(OnInitDeviceIDListener {
+        defaultInstance?.getCleverTapID(OnInitCleverTapIDListener {
             println(
                 "CleverTap DeviceID from Application class= $it"
             )

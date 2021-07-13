@@ -6,7 +6,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
-import com.clevertap.android.sdk.interfaces.OnInitDeviceIDListener;
+import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
@@ -34,7 +34,7 @@ public class CallbackManager extends BaseCallbackManager {
 
     private WeakReference<CTFeatureFlagsListener> featureFlagListenerWeakReference;
 
-    private OnInitDeviceIDListener onInitDeviceIDListener;
+    private OnInitCleverTapIDListener onInitCleverTapIDListener;
 
     private WeakReference<CTProductConfigListener> productConfigListener;
 
@@ -177,13 +177,13 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     @Override
-    public OnInitDeviceIDListener getOnInitDeviceIDListener() {
-        return onInitDeviceIDListener;
+    public OnInitCleverTapIDListener getOnInitCleverTapIDListener() {
+        return onInitCleverTapIDListener;
     }
 
     @Override
-    public void setOnInitDeviceIDListener(final OnInitDeviceIDListener onInitDeviceIDListener) {
-        this.onInitDeviceIDListener = onInitDeviceIDListener;
+    public void setOnInitCleverTapIDListener(final OnInitCleverTapIDListener onInitCleverTapIDListener) {
+        this.onInitCleverTapIDListener = onInitCleverTapIDListener;
     }
 
     //Profile

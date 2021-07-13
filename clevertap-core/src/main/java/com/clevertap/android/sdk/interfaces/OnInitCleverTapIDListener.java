@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.interfaces;
 
-public interface OnInitDeviceIDListener {
+public interface OnInitCleverTapIDListener {
 
     void onInitDeviceID(String deviceID);
 }

@@ -2,7 +2,7 @@ package com.clevertap.android.sdk;
 
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
-import com.clevertap.android.sdk.interfaces.OnInitDeviceIDListener;
+import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
@@ -66,7 +66,7 @@ public abstract class BaseCallbackManager {
 
     public abstract void setSyncListener(SyncListener syncListener);
 
-    public abstract OnInitDeviceIDListener getOnInitDeviceIDListener();
+    public abstract OnInitCleverTapIDListener getOnInitCleverTapIDListener();
 
-    public abstract void setOnInitDeviceIDListener(OnInitDeviceIDListener onInitDeviceIDListener);
+    public abstract void setOnInitCleverTapIDListener(OnInitCleverTapIDListener onInitCleverTapIDListener);
 }
