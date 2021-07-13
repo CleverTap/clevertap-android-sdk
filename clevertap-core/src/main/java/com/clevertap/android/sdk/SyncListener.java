@@ -1,7 +1,16 @@
 package com.clevertap.android.sdk;
 
+import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import org.json.JSONObject;
 
+/**
+ * <p style="color:red;font-size: 25px;margin-left:10px">&#9760;</p>
+ * <b><span style="color:#4d2e00;background:#ffcc99" >Deprecated as of version <code>4.2.0</code> and will be
+ * removed in future versions</span>
+ * </b><br>
+ * <code>Use {@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener)} instead</code>
+ */
+@Deprecated
 public interface SyncListener {
 
     void profileDataUpdated(JSONObject updates);
