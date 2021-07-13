@@ -2469,6 +2469,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             return;
         }
 
+        /**
+         * Reinitialising InAppFCManager with device id, if it's null
+         * during first initialisation from CleverTapFactory.getCoreState()
+         */
         if (coreState.getControllerManager().getInAppFCManager() == null) {
             getConfigLogger().verbose(accountId + ":async_deviceID",
                     "Initializing InAppFC after Device ID Created = " + deviceId);
@@ -2477,8 +2481,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         /**
-         * Reinitialising product config & Feature Flag controllers with device id if it's null
-         * during first initialisation
+         * Reinitialising product config & Feature Flag controllers with device id, if it's null
+         * during first initialisation from CleverTapFactory.getCoreState()
          */
         CTFeatureFlagsController ctFeatureFlagsController = coreState.getControllerManager()
                 .getCTFeatureFlagsController();
