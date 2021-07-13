@@ -607,11 +607,12 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                 continue;
             }
 
-            if (!Utils.haveDeprecatedFirebaseInstanceId){
-                instance.getConfigLogger().debug(instance.getAccountId(),"It looks like you're using the " +
-                        "latest version of FCM where FirebaseInstanceId is deprecated, hence we won't be able to fetch " +
+            if (!Utils.haveDeprecatedFirebaseInstanceId) {
+                instance.getConfigLogger().debug(instance.getAccountId(), "It looks like you're using the " +
+                        "latest version of FCM where FirebaseInstanceId is deprecated, hence we won't be able to fetch "
+                        +
                         "the token from sender id provided in manifest. Instead we will be using the token provided to us by Firebase.");
-            }else {
+            } else {
                 //get token from Manifest
                 String tokenUsingManifestMetaEntry = Utils
                         .getFcmTokenUsingManifestMetaEntry(context, instance.getCoreState().getConfig());
@@ -1315,19 +1316,16 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Returns a unique identifier by which CleverTap identifies this user, on Main thread Callback.
+     * This method is used to decrement the given value
      *
-     * @param onInitDeviceIDListener non-null callback to retrieve identifier on main thread.
+     * Number should be in positive range
+     *
+     * @param key   String
+     * @param value Number
      */
-    public void getCleverTapID(@NonNull OnInitDeviceIDListener onInitDeviceIDListener) {
-        Task<Void> taskDeviceCachedInfo = CTExecutorFactory.executors(getConfig()).ioTask();
-        taskDeviceCachedInfo.execute("getCleverTapID", new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                onInitDeviceIDListener.onInitDeviceID(coreState.getDeviceInfo().getDeviceID());
-                return null;
-            }
-        });
+    @SuppressWarnings("unused")
+    public void decrementValue(final String key, final Number value) {
+        coreState.getAnalyticsManager().decrementValue(key, value);
     }
 
     @RestrictTo(Scope.LIBRARY)
@@ -2201,31 +2199,46 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                     "CleverTap instance is set for Analytics only! Cannot resume InApp Notifications.");
         }
     }
-  
-  /**
+
+    /**
+     * Returns a unique identifier by which CleverTap identifies this user, on Main thread Callback.
+     *
+     * @param onInitDeviceIDListener non-null callback to retrieve identifier on main thread.
+     */
+    public void getCleverTapID(@NonNull OnInitDeviceIDListener onInitDeviceIDListener) {
+        Task<Void> taskDeviceCachedInfo = CTExecutorFactory.executors(getConfig()).ioTask();
+        taskDeviceCachedInfo.execute("getCleverTapID", new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                String deviceID = coreState.getDeviceInfo().getDeviceID();
+                if (deviceID != null) {
+                    onInitDeviceIDListener.onInitDeviceID(deviceID);
+                } else {
+                    /**
+                     * If cleverTapID not yet generated during first init then set listener, through which
+                     * cleverTapID will be notified when it's generated and ready to use from deviceIDCreated()
+                     *
+                     * Setting callback here makes sure that callback will be give only once, either from
+                     * getCleverTapID() or deviceIDCreated()
+                     */
+                    coreState.getCallbackManager().setOnInitDeviceIDListener(onInitDeviceIDListener);
+                }
+                return null;
+            }
+        });
+    }
+
+    /**
      * This method is used to increment the given value
      *
      * Number should be in positive range
      *
-     * @param key String
+     * @param key   String
      * @param value Number
      */
     @SuppressWarnings("unused")
-    public void incrementValue(final String key, final Number value){
-        coreState.getAnalyticsManager().incrementValue(key,value);
-    }
-
-    /**
-     * This method is used to decrement the given value
-     *
-     * Number should be in positive range
-     *
-     * @param key String
-     * @param value Number
-     */
-    @SuppressWarnings("unused")
-    public void decrementValue(final String key, final Number value){
-        coreState.getAnalyticsManager().decrementValue(key,value);
+    public void incrementValue(final String key, final Number value) {
+        coreState.getAnalyticsManager().incrementValue(key, value);
     }
 
     /**
@@ -2480,6 +2493,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         getConfigLogger().verbose(accountId + ":async_deviceID",
                 "Got device id from DeviceInfo, notifying user profile initialized to SyncListener");
         coreState.getCallbackManager().notifyUserProfileInitialized(deviceId);
+
+        if (coreState.getCallbackManager().getOnInitDeviceIDListener() != null) {
+            coreState.getCallbackManager().getOnInitDeviceIDListener().onInitDeviceID(deviceId);
+        }
+
     }
 
     private CleverTapInstanceConfig getConfig() {
