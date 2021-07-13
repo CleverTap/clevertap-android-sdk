@@ -2219,7 +2219,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             public Void call() throws Exception {
                 String deviceID = coreState.getDeviceInfo().getDeviceID();
                 if (deviceID != null) {
-                    onInitCleverTapIDListener.onInitDeviceID(deviceID);
+                    onInitCleverTapIDListener.onInitCleverTapID(deviceID);
                 } else {
                     /**
                      * If cleverTapID not yet generated during first init then set listener, through which
@@ -2502,7 +2502,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         coreState.getCallbackManager().notifyUserProfileInitialized(deviceId);
 
         if (coreState.getCallbackManager().getOnInitCleverTapIDListener() != null) {
-            coreState.getCallbackManager().getOnInitCleverTapIDListener().onInitDeviceID(deviceId);
+            coreState.getCallbackManager().getOnInitCleverTapIDListener().onInitCleverTapID(deviceId);
         }
 
     }
