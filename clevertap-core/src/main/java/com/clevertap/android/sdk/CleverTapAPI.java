@@ -1292,11 +1292,18 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *
      * @return The attribution identifier currently being used to identify this user.
      *
-     * <p><br><span style="color:red;background:#ffcc99" >&#9888; this method may take a long time to return,
+     * <p><br><span style="background:#ffcc99" >&#9888; this method may take a long time to return,
      * so you should not call it from the application main thread</span></p>
+     *
+     * <p style="color:red;font-size: 25px;margin-left:10px">&#9760;</p>
+     * <b><span style="color:#4d2e00;background:#ffcc99" >Deprecated as of version <code>4.2.0</code> and will be
+     * removed in future versions</span>
+     * </b><br>
+     * <code>Use {@link CleverTapAPI#getCleverTapID(OnInitCleverTapIDListener)} instead</code>
      */
     @SuppressWarnings("unused")
     @WorkerThread
+    @Deprecated
     public String getCleverTapAttributionIdentifier() {
         return coreState.getDeviceInfo().getAttributionID();
     }
