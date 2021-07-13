@@ -1,5 +1,15 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 4.2.0 (July 14, 2021)
+* Adds public methods for suspending/discarding & resuming InApp Notifications
+* Adds public methods to increment/decrement values set via User properties
+* Adds a new callback to get CleverTap ID
+* Adds new `CleverTapAPI.LogLevel.VERBOSE` level for debugging
+* Fixes App Inbox UI for Android Tablets
+* Fixes `recordScreen` NPE crash
+* Fixes a few Strict Mode Read violations that caused ANRs
+* Other performance improvements and improved logging
+
 ### Version 4.1.1 (May 4, 2021)
 * Adds `setFirstTabTitle` method to set the name of the first tab in App Inbox
 * Adds `pushChargedEvent` to `CTWebInterface` class to allow raising Charged Event from JS
