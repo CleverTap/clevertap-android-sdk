@@ -58,16 +58,6 @@ class CleverTapFactory {
                 ctLockManager, callbackManager, deviceInfo, baseDatabaseManager);
         coreState.setControllerManager(controllerManager);
 
-        coreState.getConfig().getLogger()
-                .verbose(config.getAccountId() + ":async_deviceID",
-                        "coreState.getDeviceInfo() = " + coreState.getDeviceInfo());
-        coreState.getConfig().getLogger()
-                .verbose(config.getAccountId() + ":async_deviceID",
-                        "coreState.getDeviceInfo().getDeviceID() = " + coreState.getDeviceInfo().getDeviceID());
-        coreState.getConfig().getLogger()
-                .verbose(config.getAccountId() + ":async_deviceID",
-                        "controllerManager.getInAppFCManager() = " + controllerManager.getInAppFCManager());
-
         if (coreState.getDeviceInfo() != null && coreState.getDeviceInfo().getDeviceID() != null
                 && controllerManager.getInAppFCManager() == null) {
             coreState.getConfig().getLogger()
