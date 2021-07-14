@@ -25,6 +25,10 @@ public class CTFeatureFlagsController {
 
     final CleverTapInstanceConfig config;
 
+    public String getGuid() {
+        return guid;
+    }
+
     String guid;
 
     boolean isInitialized = false;

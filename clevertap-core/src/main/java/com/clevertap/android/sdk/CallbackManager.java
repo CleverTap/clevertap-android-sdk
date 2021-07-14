@@ -6,6 +6,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
+import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
@@ -32,6 +33,8 @@ public class CallbackManager extends BaseCallbackManager {
     private FailureFlushListener failureFlushListener;
 
     private WeakReference<CTFeatureFlagsListener> featureFlagListenerWeakReference;
+
+    private OnInitCleverTapIDListener onInitCleverTapIDListener;
 
     private WeakReference<CTProductConfigListener> productConfigListener;
 
@@ -171,6 +174,16 @@ public class CallbackManager extends BaseCallbackManager {
     @Override
     public void setSyncListener(final SyncListener syncListener) {
         this.syncListener = syncListener;
+    }
+
+    @Override
+    public OnInitCleverTapIDListener getOnInitCleverTapIDListener() {
+        return onInitCleverTapIDListener;
+    }
+
+    @Override
+    public void setOnInitCleverTapIDListener(final OnInitCleverTapIDListener onInitCleverTapIDListener) {
+        this.onInitCleverTapIDListener = onInitCleverTapIDListener;
     }
 
     //Profile

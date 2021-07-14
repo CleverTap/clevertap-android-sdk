@@ -190,6 +190,9 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         if (controllerManager.getInAppFCManager() != null) {
             controllerManager.getInAppFCManager().didDismiss(inAppNotification);
             logger.verbose(config.getAccountId(), "InApp Dismissed: " + inAppNotification.getCampaignId());
+        } else {
+            logger.verbose(config.getAccountId(), "Not calling InApp Dismissed: " + inAppNotification.getCampaignId()
+                    + " because InAppFCManager is null");
         }
         try {
             final InAppNotificationListener listener = callbackManager.getInAppNotificationListener();

@@ -9,7 +9,6 @@ import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
-
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -17,7 +16,6 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.Callable;
-
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -352,6 +350,8 @@ public class InAppFCManager {
     }
 
     private void init(String deviceId) {
+        getConfigLogger()
+                .verbose(config.getAccountId() + ":async_deviceID", "InAppFCManager init() called");
         try {
             migrateToNewPrefsKey(deviceId);
             final String today = ddMMyyyy.format(new Date());

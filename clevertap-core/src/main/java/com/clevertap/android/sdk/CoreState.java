@@ -231,13 +231,14 @@ public class CoreState extends CleverTapState {
     }
 
     private void initProductConfig() {
-        Logger.v("Initializing Product Config with device Id = " + getDeviceInfo().getDeviceID());
         if (getConfig().isAnalyticsOnly()) {
             getConfig().getLogger()
                     .debug(getConfig().getAccountId(), "Product Config is not enabled for this instance");
             return;
         }
         if (getControllerManager().getCTProductConfigController() == null) {
+            getConfig().getLogger().verbose(config.getAccountId() + ":async_deviceID",
+                    "Initializing Product Config with device Id = " + getDeviceInfo().getDeviceID());
             CTProductConfigController ctProductConfigController = CTProductConfigFactory
                     .getInstance(context, getDeviceInfo(),
                             getConfig(), analyticsManager, coreMetaData, callbackManager);

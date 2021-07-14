@@ -280,6 +280,12 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     cleverTapAPI?.featureFlag()?.get("is shown", true)
                 }"
             )
+            "80" -> println("CleverTapAttribution Identifier = ${cleverTapAPI?.cleverTapAttributionIdentifier}")
+            "81" -> cleverTapAPI?.getCleverTapID {
+                println(
+                    "CleverTap DeviceID from Application class= $it"
+                )
+            }
             //"60" -> webViewClickListener?.onWebViewClick()
 
         }
