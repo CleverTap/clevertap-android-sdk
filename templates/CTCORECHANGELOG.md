@@ -1,12 +1,14 @@
 ## CleverTap Android SDK CHANGE LOG
 
-### Version 4.2.0 (July 14, 2021)
+### Version 4.2.0 (July 15, 2021)
 * Adds public methods for suspending/discarding & resuming InApp Notifications
 * Adds public methods to increment/decrement values set via User properties
-* Adds a new callback to get CleverTap ID
+* Adds a new public method `getCleverTapID(OnInitCleverTapIDListener)` to get CleverTap ID through `OnInitCleverTapIDListener` callback
+* Deprecated `SyncListener` interface and will be removed in future versions, use `getCleverTapID(OnInitCleverTapIDListener)` instead
+* Deprecated `getCleverTapAttributionIdentifier()` method and will be removed in future versions, use `getCleverTapID(OnInitCleverTapIDListener)` instead
 * Adds new `CleverTapAPI.LogLevel.VERBOSE` level for debugging
 * Fixes App Inbox UI for Android Tablets
-* Fixes `recordScreen` NPE crash
+* Fixes `recordScreen()` NPE crash
 * Fixes a few Strict Mode Read violations that caused ANRs
 * Other performance improvements and improved logging
 
