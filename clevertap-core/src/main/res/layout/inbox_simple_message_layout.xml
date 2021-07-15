@@ -34,7 +34,7 @@
                 android:id="@+id/simple_message_frame_layout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:visibility="gone"></FrameLayout>
+                android:visibility="gone" />
 
             <FrameLayout
                 android:id="@+id/simple_progress_frame_layout"

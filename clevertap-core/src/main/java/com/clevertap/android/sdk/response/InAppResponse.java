@@ -72,6 +72,10 @@ public class InAppResponse extends CleverTapResponseDecorator {
                 Logger.v("Updating InAppFC Limits");
                 controllerManager.getInAppFCManager().updateLimits(context, perDay, perSession);
                 controllerManager.getInAppFCManager().processResponse(context, response);// Handle stale_inapp
+            } else {
+                logger.verbose(config.getAccountId(),
+                        "controllerManager.getInAppFCManager() is NULL, not Updating InAppFC Limits");
+
             }
 
             JSONArray inappNotifs;

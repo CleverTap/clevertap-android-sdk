@@ -10,6 +10,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.annotation.WorkerThread;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
@@ -161,6 +162,7 @@ public class DBAdapter {
                     break;
             }
         }
+
 
         @SuppressLint("UsableSpace")
         boolean belowMemThreshold() {
@@ -319,41 +321,6 @@ public class DBAdapter {
         dbHelper = new DatabaseHelper(context, dbName);
     }
 
-    synchronized void cleanUpPushNotifications() {
-        //In Push_Notifications, KEY_CREATED_AT is stored as a future epoch, i.e. currentTimeMillis() + ttl,
-        //so comparing to the current time for removal is correct
-        cleanInternal(Table.PUSH_NOTIFICATIONS, 0);
-    }
-
-    /**
-     * Removes sent events with an _id <= last_id from table
-     *
-     * @param lastId the last id to delete
-     * @param table  the table to remove events
-     */
-    synchronized void cleanupEventsFromLastId(String lastId, Table table) {
-        final String tName = table.getName();
-
-        try {
-            final SQLiteDatabase db = dbHelper.getWritableDatabase();
-            db.delete(tName, "_id <= " + lastId, null);
-        } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error removing sent data from table " + tName + " Recreating DB");
-            deleteDB();
-        } finally {
-            dbHelper.close();
-        }
-    }
-
-    /**
-     * Removes stale events.
-     *
-     * @param table the table to remove events
-     */
-    synchronized void cleanupStaleEvents(Table table) {
-        cleanInternal(table, DATA_EXPIRATION);
-    }
-
     /**
      * Deletes the inbox message for given messageId
      *
@@ -361,6 +328,7 @@ public class DBAdapter {
      * @return boolean value based on success of operation
      */
     @SuppressWarnings("UnusedReturnValue")
+    @WorkerThread
     public synchronized boolean deleteMessageForId(String messageId, String userId) {
         if (messageId == null || userId == null) {
             return false;
@@ -382,58 +350,6 @@ public class DBAdapter {
 
     public synchronized boolean doesPushNotificationIdExist(String id) {
         return id.equals(fetchPushNotificationId(id));
-    }
-
-    /**
-     * Returns a JSONObject keyed with the lastId retrieved and a value of a JSONArray of the retrieved JSONObject
-     * events
-     *
-     * @param table the table to read from
-     * @return JSONObject containing the max row ID and a JSONArray of the JSONObject events or null
-     */
-    synchronized JSONObject fetchEvents(Table table, final int limit) {
-        final String tName = table.getName();
-        Cursor cursor = null;
-        String lastId = null;
-
-        final JSONArray events = new JSONArray();
-
-        try {
-            final SQLiteDatabase db = dbHelper.getReadableDatabase();
-            cursor = db.query(tName, null, null, null, null, null, KEY_CREATED_AT + " ASC", String.valueOf(limit));
-
-            while (cursor.moveToNext()) {
-                if (cursor.isLast()) {
-                    lastId = cursor.getString(cursor.getColumnIndex("_id"));
-                }
-                try {
-                    final JSONObject j = new JSONObject(cursor.getString(cursor.getColumnIndex(KEY_DATA)));
-                    events.put(j);
-                } catch (final JSONException e) {
-                    // Ignore
-                }
-            }
-        } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Could not fetch records out of database " + tName + ".", e);
-            lastId = null;
-        } finally {
-            dbHelper.close();
-            if (cursor != null) {
-                cursor.close();
-            }
-        }
-
-        if (lastId != null) {
-            try {
-                final JSONObject ret = new JSONObject();
-                ret.put(lastId, events);
-                return ret;
-            } catch (JSONException e) {
-                // ignore
-            }
-        }
-
-        return null;
     }
 
     public synchronized String[] fetchPushNotificationIds() {
@@ -528,6 +444,7 @@ public class DBAdapter {
      * @param userId String userid
      * @return ArrayList of {@link CTMessageDAO}
      */
+    @WorkerThread
     public synchronized ArrayList<CTMessageDAO> getMessages(String userId) {
         final String tName = Table.INBOX_MESSAGES.getName();
         Cursor cursor;
@@ -571,6 +488,7 @@ public class DBAdapter {
      * @return boolean value depending on success of operation
      */
     @SuppressWarnings("UnusedReturnValue")
+    @WorkerThread
     public synchronized boolean markReadMessageForId(String messageId, String userId) {
         if (messageId == null || userId == null) {
             return false;
@@ -593,25 +511,6 @@ public class DBAdapter {
     }
 
     /**
-     * Removes all events from table
-     *
-     * @param table the table to remove events
-     */
-    synchronized void removeEvents(Table table) {
-        final String tName = table.getName();
-
-        try {
-            final SQLiteDatabase db = dbHelper.getWritableDatabase();
-            db.delete(tName, null, null);
-        } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error removing all events from table " + tName + " Recreating DB");
-            deleteDB();
-        } finally {
-            dbHelper.close();
-        }
-    }
-
-    /**
      * remove the user profile with id from the db.
      */
     public synchronized void removeUserProfile(String id) {
@@ -625,76 +524,6 @@ public class DBAdapter {
             db.delete(tableName, "_id = ?", new String[]{id});
         } catch (final SQLiteException e) {
             getConfigLogger().verbose("Error removing user profile from " + tableName + " Recreating DB");
-            dbHelper.deleteDatabase();
-        } finally {
-            dbHelper.close();
-        }
-    }
-
-    /**
-     * Adds a JSON string to the DB.
-     *
-     * @param obj   the JSON to record
-     * @param table the table to insert into
-     * @return the number of rows in the table, or DB_OUT_OF_MEMORY_ERROR/DB_UPDATE_ERROR
-     */
-    synchronized int storeObject(JSONObject obj, Table table) {
-        if (!this.belowMemThreshold()) {
-            Logger.v("There is not enough space left on the device to store data, data discarded");
-            return DB_OUT_OF_MEMORY_ERROR;
-        }
-
-        final String tableName = table.getName();
-
-        long count = DB_UPDATE_ERROR;
-
-        try {
-            final SQLiteDatabase db = dbHelper.getWritableDatabase();
-
-            final ContentValues cv = new ContentValues();
-            cv.put(KEY_DATA, obj.toString());
-            cv.put(KEY_CREATED_AT, System.currentTimeMillis());
-            db.insert(tableName, null, cv);
-
-            String sql = "SELECT COUNT(*) FROM " + tableName;
-            SQLiteStatement statement = db.compileStatement(sql);
-            count = statement.simpleQueryForLong();
-        } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error adding data to table " + tableName + " Recreating DB");
-            dbHelper.deleteDatabase();
-        } finally {
-            dbHelper.close();
-        }
-        return (int) count;
-    }
-
-    public synchronized void storePushNotificationId(String id, long ttl) {
-
-        if (id == null) {
-            return;
-        }
-
-        if (!this.belowMemThreshold()) {
-            getConfigLogger().verbose("There is not enough space left on the device to store data, data discarded");
-            return;
-        }
-        final String tableName = Table.PUSH_NOTIFICATIONS.getName();
-
-        if (ttl <= 0) {
-            ttl = System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL;
-        }
-
-        try {
-            final SQLiteDatabase db = dbHelper.getWritableDatabase();
-            final ContentValues cv = new ContentValues();
-            cv.put(KEY_DATA, id);
-            cv.put(KEY_CREATED_AT, ttl);
-            cv.put(IS_READ, 0);
-            db.insert(tableName, null, cv);
-            rtlDirtyFlag = true;
-            Logger.v("Stored PN - " + id + " with TTL - " + ttl);
-        } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error adding data to table " + tableName + " Recreating DB");
             dbHelper.deleteDatabase();
         } finally {
             dbHelper.close();
@@ -732,6 +561,7 @@ public class DBAdapter {
      * @param obj the JSON to record
      * @return the number of rows in the table, or DB_OUT_OF_MEMORY_ERROR/DB_UPDATE_ERROR
      */
+    @WorkerThread
     public synchronized long storeUserProfile(String id, JSONObject obj) {
 
         if (id == null) {
@@ -762,6 +592,162 @@ public class DBAdapter {
         return ret;
     }
 
+    /**
+     * Stores a list of inbox messages
+     *
+     * @param inboxMessages ArrayList of type {@link CTMessageDAO}
+     */
+    @WorkerThread
+    public synchronized void upsertMessages(ArrayList<CTMessageDAO> inboxMessages) {
+        if (!this.belowMemThreshold()) {
+            Logger.v("There is not enough space left on the device to store data, data discarded");
+            return;
+        }
+
+        try {
+            final SQLiteDatabase db = dbHelper.getWritableDatabase();
+            for (CTMessageDAO messageDAO : inboxMessages) {
+                final ContentValues cv = new ContentValues();
+                cv.put(_ID, messageDAO.getId());
+                cv.put(KEY_DATA, messageDAO.getJsonData().toString());
+                cv.put(WZRKPARAMS, messageDAO.getWzrkParams().toString());
+                cv.put(CAMPAIGN, messageDAO.getCampaignId());
+                cv.put(TAGS, messageDAO.getTags());
+                cv.put(IS_READ, messageDAO.isRead());
+                cv.put(EXPIRES, messageDAO.getExpires());
+                cv.put(KEY_CREATED_AT, messageDAO.getDate());
+                cv.put(USER_ID, messageDAO.getUserId());
+                db.insertWithOnConflict(Table.INBOX_MESSAGES.getName(), null, cv, SQLiteDatabase.CONFLICT_REPLACE);
+            }
+        } catch (final SQLiteException e) {
+            getConfigLogger().verbose("Error adding data to table " + Table.INBOX_MESSAGES.getName());
+        } finally {
+            dbHelper.close();
+        }
+    }
+
+    synchronized void cleanUpPushNotifications() {
+        //In Push_Notifications, KEY_CREATED_AT is stored as a future epoch, i.e. currentTimeMillis() + ttl,
+        //so comparing to the current time for removal is correct
+        cleanInternal(Table.PUSH_NOTIFICATIONS, 0);
+    }
+
+    /**
+     * Removes sent events with an _id <= last_id from table
+     *
+     * @param lastId the last id to delete
+     * @param table  the table to remove events
+     */
+    @WorkerThread
+    synchronized void cleanupEventsFromLastId(String lastId, Table table) {
+        final String tName = table.getName();
+
+        try {
+            final SQLiteDatabase db = dbHelper.getWritableDatabase();
+            db.delete(tName, "_id <= " + lastId, null);
+        } catch (final SQLiteException e) {
+            getConfigLogger().verbose("Error removing sent data from table " + tName + " Recreating DB");
+            deleteDB();
+        } finally {
+            dbHelper.close();
+        }
+    }
+
+    public synchronized void storePushNotificationId(String id, long ttl) {
+
+        if (id == null) {
+            return;
+        }
+
+        if (!this.belowMemThreshold()) {
+            getConfigLogger().verbose("There is not enough space left on the device to store data, data discarded");
+            return;
+        }
+        final String tableName = Table.PUSH_NOTIFICATIONS.getName();
+
+        if (ttl <= 0) {
+            ttl = System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL;
+        }
+
+        try {
+            final SQLiteDatabase db = dbHelper.getWritableDatabase();
+            final ContentValues cv = new ContentValues();
+            cv.put(KEY_DATA, id);
+            cv.put(KEY_CREATED_AT, ttl);
+            cv.put(IS_READ, 0);
+            db.insert(tableName, null, cv);
+            rtlDirtyFlag = true;
+            Logger.v("Stored PN - " + id + " with TTL - " + ttl);
+        } catch (final SQLiteException e) {
+            getConfigLogger().verbose("Error adding data to table " + tableName + " Recreating DB");
+            dbHelper.deleteDatabase();
+        } finally {
+            dbHelper.close();
+        }
+    }
+
+    /**
+     * Removes stale events.
+     *
+     * @param table the table to remove events
+     */
+    synchronized void cleanupStaleEvents(Table table) {
+        cleanInternal(table, DATA_EXPIRATION);
+    }
+
+    /**
+     * Returns a JSONObject keyed with the lastId retrieved and a value of a JSONArray of the retrieved JSONObject
+     * events
+     *
+     * @param table the table to read from
+     * @return JSONObject containing the max row ID and a JSONArray of the JSONObject events or null
+     */
+    synchronized JSONObject fetchEvents(Table table, final int limit) {
+        final String tName = table.getName();
+        Cursor cursor = null;
+        String lastId = null;
+
+        final JSONArray events = new JSONArray();
+
+        try {
+            final SQLiteDatabase db = dbHelper.getReadableDatabase();
+            cursor = db.query(tName, null, null, null, null, null, KEY_CREATED_AT + " ASC", String.valueOf(limit));
+
+            while (cursor.moveToNext()) {
+                if (cursor.isLast()) {
+                    lastId = cursor.getString(cursor.getColumnIndex("_id"));
+                }
+                try {
+                    final JSONObject j = new JSONObject(cursor.getString(cursor.getColumnIndex(KEY_DATA)));
+                    events.put(j);
+                } catch (final JSONException e) {
+                    // Ignore
+                }
+            }
+        } catch (final SQLiteException e) {
+            getConfigLogger().verbose("Could not fetch records out of database " + tName + ".", e);
+            lastId = null;
+        } finally {
+            dbHelper.close();
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+
+        if (lastId != null) {
+            try {
+                final JSONObject ret = new JSONObject();
+                ret.put(lastId, events);
+                return ret;
+            } catch (JSONException e) {
+                // ignore
+            }
+        }
+
+        return null;
+    }
+
+    @WorkerThread
     public synchronized void updatePushNotificationIds(String[] ids) {
         if (ids.length == 0) {
             return;
@@ -794,38 +780,63 @@ public class DBAdapter {
     }
 
     /**
-     * Stores a list of inbox messages
+     * Adds a JSON string to the DB.
      *
-     * @param inboxMessages ArrayList of type {@link CTMessageDAO}
+     * @param obj   the JSON to record
+     * @param table the table to insert into
+     * @return the number of rows in the table, or DB_OUT_OF_MEMORY_ERROR/DB_UPDATE_ERROR
      */
-    public synchronized void upsertMessages(ArrayList<CTMessageDAO> inboxMessages) {
+    @WorkerThread
+    synchronized int storeObject(JSONObject obj, Table table) {
         if (!this.belowMemThreshold()) {
             Logger.v("There is not enough space left on the device to store data, data discarded");
-            return;
+            return DB_OUT_OF_MEMORY_ERROR;
         }
+
+        final String tableName = table.getName();
+
+        long count = DB_UPDATE_ERROR;
 
         try {
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
-            for (CTMessageDAO messageDAO : inboxMessages) {
-                final ContentValues cv = new ContentValues();
-                cv.put(_ID, messageDAO.getId());
-                cv.put(KEY_DATA, messageDAO.getJsonData().toString());
-                cv.put(WZRKPARAMS, messageDAO.getWzrkParams().toString());
-                cv.put(CAMPAIGN, messageDAO.getCampaignId());
-                cv.put(TAGS, messageDAO.getTags());
-                cv.put(IS_READ, messageDAO.isRead());
-                cv.put(EXPIRES, messageDAO.getExpires());
-                cv.put(KEY_CREATED_AT, messageDAO.getDate());
-                cv.put(USER_ID, messageDAO.getUserId());
-                db.insertWithOnConflict(Table.INBOX_MESSAGES.getName(), null, cv, SQLiteDatabase.CONFLICT_REPLACE);
-            }
+
+            final ContentValues cv = new ContentValues();
+            cv.put(KEY_DATA, obj.toString());
+            cv.put(KEY_CREATED_AT, System.currentTimeMillis());
+            db.insert(tableName, null, cv);
+
+            String sql = "SELECT COUNT(*) FROM " + tableName;
+            SQLiteStatement statement = db.compileStatement(sql);
+            count = statement.simpleQueryForLong();
         } catch (final SQLiteException e) {
-            getConfigLogger().verbose("Error adding data to table " + Table.INBOX_MESSAGES.getName());
+            getConfigLogger().verbose("Error adding data to table " + tableName + " Recreating DB");
+            dbHelper.deleteDatabase();
+        } finally {
+            dbHelper.close();
+        }
+        return (int) count;
+    }
+
+    /**
+     * Removes all events from table
+     *
+     * @param table the table to remove events
+     */
+    synchronized void removeEvents(Table table) {
+        final String tName = table.getName();
+
+        try {
+            final SQLiteDatabase db = dbHelper.getWritableDatabase();
+            db.delete(tName, null, null);
+        } catch (final SQLiteException e) {
+            getConfigLogger().verbose("Error removing all events from table " + tName + " Recreating DB");
+            deleteDB();
         } finally {
             dbHelper.close();
         }
     }
 
+    @WorkerThread
     @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     private boolean belowMemThreshold() {
         return dbHelper.belowMemThreshold();

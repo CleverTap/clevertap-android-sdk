@@ -58,15 +58,17 @@ class CleverTapFactory {
                 ctLockManager, callbackManager, deviceInfo, baseDatabaseManager);
         coreState.setControllerManager(controllerManager);
 
-        if (coreState.getDeviceInfo() != null && coreState.getDeviceInfo().getDeviceID() != null) {
+        if (coreState.getDeviceInfo() != null && coreState.getDeviceInfo().getDeviceID() != null
+                && controllerManager.getInAppFCManager() == null) {
             coreState.getConfig().getLogger()
-                    .verbose("Initializing InAppFC with device Id = " + coreState.getDeviceInfo().getDeviceID());
+                    .verbose(config.getAccountId() + ":async_deviceID",
+                            "Initializing InAppFC with device Id = " + coreState.getDeviceInfo().getDeviceID());
             controllerManager
                     .setInAppFCManager(new InAppFCManager(context, config, coreState.getDeviceInfo().getDeviceID()));
         }
 
         NetworkManager networkManager = new NetworkManager(context, config, deviceInfo, coreMetaData,
-                validationResultStack, controllerManager,baseDatabaseManager,
+                validationResultStack, controllerManager, baseDatabaseManager,
                 callbackManager, ctLockManager, validator, localDataStore);
         coreState.setNetworkManager(networkManager);
 
@@ -79,7 +81,7 @@ class CleverTapFactory {
 
         AnalyticsManager analyticsManager = new AnalyticsManager(context, config, baseEventQueueManager, validator,
                 validationResultStack, coreMetaData, localDataStore, deviceInfo,
-                mainLooperHandler, callbackManager, controllerManager, ctLockManager);
+                callbackManager, controllerManager, ctLockManager);
         coreState.setAnalyticsManager(analyticsManager);
 
         InAppController inAppController = new InAppController(context, config, mainLooperHandler,
@@ -112,14 +114,17 @@ class CleverTapFactory {
 
     static void initFeatureFlags(Context context, ControllerManager controllerManager, CleverTapInstanceConfig config,
             DeviceInfo deviceInfo, BaseCallbackManager callbackManager, AnalyticsManager analyticsManager) {
-        Logger.v("Initializing Feature Flags with device Id = " + deviceInfo.getDeviceID());
+
+        config.getLogger().verbose(config.getAccountId() + ":async_deviceID",
+                "Initializing Feature Flags with device Id = " + deviceInfo.getDeviceID());
         if (config.isAnalyticsOnly()) {
             config.getLogger().debug(config.getAccountId(), "Feature Flag is not enabled for this instance");
         } else {
             controllerManager.setCTFeatureFlagsController(CTFeatureFlagsFactory.getInstance(context,
                     deviceInfo.getDeviceID(),
                     config, callbackManager, analyticsManager));
-            config.getLogger().verbose(config.getAccountId(), "Feature Flags initialized");
+            config.getLogger().verbose(config.getAccountId() + ":async_deviceID", "Feature Flags initialized");
         }
+
     }
 }

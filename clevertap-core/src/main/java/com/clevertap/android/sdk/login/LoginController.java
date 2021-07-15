@@ -16,6 +16,7 @@ import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBManager;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
 import com.clevertap.android.sdk.events.EventGroup;
+import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigFactory;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
@@ -278,11 +279,11 @@ public class LoginController {
     }
 
     private void resetFeatureFlags() {
-        if (controllerManager.getCTFeatureFlagsController() != null && controllerManager
-                .getCTFeatureFlagsController()
+        CTFeatureFlagsController ctFeatureFlagsController = controllerManager.getCTFeatureFlagsController();
+        if (ctFeatureFlagsController != null && ctFeatureFlagsController
                 .isInitialized()) {
-            controllerManager.getCTFeatureFlagsController().resetWithGuid(deviceInfo.getDeviceID());
-            controllerManager.getCTFeatureFlagsController().fetchFeatureFlags();
+            ctFeatureFlagsController.resetWithGuid(deviceInfo.getDeviceID());
+            ctFeatureFlagsController.fetchFeatureFlags();
         }
     }
 

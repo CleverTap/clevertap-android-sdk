@@ -20,6 +20,9 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationManagerCompat;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.OnSuccessListener;
+import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
@@ -28,6 +31,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.UUID;
+import java.util.concurrent.Callable;
 import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
@@ -320,23 +324,45 @@ public class DeviceInfo {
 
     private final CoreMetaData mCoreMetaData;
 
-    DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID, CoreMetaData coreMetaData) {
+    DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID,
+            CoreMetaData coreMetaData) {
         this.context = context;
         this.config = config;
         this.library = null;
         mCoreMetaData = coreMetaData;
         onInitDeviceInfo(cleverTapID);
+        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "DeviceInfo() called");
     }
 
     void onInitDeviceInfo(final String cleverTapID) {
-        Thread deviceInfoCacheThread = new Thread(new Runnable() {
+        Task<Void> taskDeviceCachedInfo = CTExecutorFactory.executors(config).ioTask();
+        taskDeviceCachedInfo.execute("getDeviceCachedInfo", new Callable<Void>() {
             @Override
-            public void run() {
+            public Void call() throws Exception {
                 getDeviceCachedInfo();
+                return null;
             }
         });
-        deviceInfoCacheThread.start();
-        initDeviceID(cleverTapID);
+
+        Task<Void> task = CTExecutorFactory.executors(config).ioTask();
+        task.addOnSuccessListener(new OnSuccessListener<Void>() {
+            // callback on main thread
+            @Override
+            public void onSuccess(final Void aVoid) {
+                getConfigLogger().verbose(config.getAccountId() + ":async_deviceID",
+                        "DeviceID initialized successfully!" + Thread.currentThread());
+                // No need to put getDeviceID() on background thread because prefs already loaded
+                CleverTapAPI.instanceWithConfig(context, config).deviceIDCreated(getDeviceID());
+            }
+        });
+        task.execute("initDeviceID", new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                initDeviceID(cleverTapID);
+                return null;
+            }
+        });
+
     }
 
     public boolean isErrorDeviceId() {
@@ -577,6 +603,7 @@ public class DeviceInfo {
     }
 
     private synchronized void fetchGoogleAdID() {
+        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "fetchGoogleAdID() called!");
         if (getGoogleAdID() == null && !adIdRun) {
             String advertisingID = null;
             try {
@@ -589,6 +616,8 @@ public class DeviceInfo {
                 Boolean limitedAdTracking = (Boolean) isLimitAdTracking.invoke(adInfo);
                 synchronized (adIDLock) {
                     limitAdTracking = limitedAdTracking != null && limitedAdTracking;
+                    getConfigLogger().verbose(config.getAccountId() + ":async_deviceID",
+                            "limitAdTracking = " + limitAdTracking);
                     if (limitAdTracking) {
                         return;
                     }
@@ -608,10 +637,13 @@ public class DeviceInfo {
                     googleAdID = advertisingID.replace("-", "");
                 }
             }
+
+            getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "fetchGoogleAdID() done executing!");
         }
     }
 
     private synchronized void generateDeviceID() {
+        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "generateDeviceID() called!");
         String generatedDeviceID;
         String adId = getGoogleAdID();
         if (adId != null) {
@@ -622,6 +654,7 @@ public class DeviceInfo {
             }
         }
         forceUpdateDeviceId(generatedDeviceID);
+        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "generateDeviceID() done executing!");
     }
 
     private String generateGUID() {
@@ -652,7 +685,7 @@ public class DeviceInfo {
     }
 
     private void initDeviceID(String cleverTapID) {
-
+        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "Called initDeviceID()");
         //Show logging as per Manifest flag
         if (config.getEnableCustomCleverTapId()) {
             if (cleverTapID == null) {
@@ -666,7 +699,9 @@ public class DeviceInfo {
             }
         }
 
+        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "Calling _getDeviceID");
         String deviceID = _getDeviceID();
+        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "Called _getDeviceID");
         if (deviceID != null && deviceID.trim().length() > 2) {
             getConfigLogger().verbose(config.getAccountId(), "CleverTap ID already present for profile");
             if (cleverTapID != null) {
@@ -682,21 +717,18 @@ public class DeviceInfo {
         }
 
         if (!this.config.isUseGoogleAdId()) {
+            getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "Calling generateDeviceID()");
             generateDeviceID();
+            getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "Called generateDeviceID()");
             return;
         }
 
         // fetch the googleAdID to generate GUID
         //has to be called on background thread
-        Thread generateGUIDFromAdIDThread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                fetchGoogleAdID();
-                generateDeviceID();
-                CleverTapAPI.instanceWithConfig(context, config).deviceIDCreated(getDeviceID());
-            }
-        });
-        generateGUIDFromAdIDThread.start();
+        fetchGoogleAdID();
+        generateDeviceID();
+
+        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "initDeviceID() done executing!");
     }
 
     private String recordDeviceError(int messageCode, String... varargs) {

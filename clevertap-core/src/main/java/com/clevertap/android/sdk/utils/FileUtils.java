@@ -5,6 +5,8 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.annotation.WorkerThread;
+
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import java.io.BufferedReader;
 import java.io.File;
@@ -15,6 +17,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import org.json.JSONObject;
 
+@WorkerThread
 @RestrictTo(Scope.LIBRARY_GROUP)
 public class FileUtils {
 

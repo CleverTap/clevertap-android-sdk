@@ -54,6 +54,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
 
                 cleverTapAPI?.pushChargedEvent(chargeDetails, items)
             }
+            "03" -> cleverTapAPI?.recordScreen("Cart Screen Viewed")
             "10" -> {
                 //Record a profile
                 val profileUpdate = HashMap<String, Any>()
@@ -114,16 +115,24 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 cleverTapAPI?.removeMultiValuesForKey("MyStuffList", arrayListOf("Socks", "Scarf"))
             }
             "17" -> {
+                //Update(Add) Increment Value
+                cleverTapAPI?.incrementValue("score", 50)
+            }
+            "18" -> {
+                // Update(Add) Decrement Value
+                cleverTapAPI?.decrementValue("score", 30)
+            }
+            "19" -> {
                 // Profile location
                 cleverTapAPI?.location = cleverTapAPI?.location
             }
-            "18" -> {
+            "110" -> {
                 // Get Profile Info
                 println("Profile Name = ${cleverTapAPI?.getProperty("Name")}")
                 println("Profile CleverTapId = ${cleverTapAPI?.cleverTapID}")
                 println("Profile CleverTap AttributionIdentifier = ${cleverTapAPI?.cleverTapAttributionIdentifier}")
             }
-            "19" -> {
+            "111" -> {
                 // onUserLogin
                 val newProfile = HashMap<String, Any>()
                 var n = (0..10_000).random()
@@ -271,6 +280,12 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     cleverTapAPI?.featureFlag()?.get("is shown", true)
                 }"
             )
+            "80" -> println("CleverTapAttribution Identifier = ${cleverTapAPI?.cleverTapAttributionIdentifier}")
+            "81" -> cleverTapAPI?.getCleverTapID {
+                println(
+                    "CleverTap DeviceID from Application class= $it"
+                )
+            }
             //"60" -> webViewClickListener?.onWebViewClick()
 
         }

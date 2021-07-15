@@ -8,6 +8,13 @@ import java.util.ArrayList
 class MockAnalyticsManager : BaseAnalyticsManager() {
 
     override fun addMultiValuesForKey(key: String, values: ArrayList<String>) {}
+    override fun incrementValue(key: String, value: Number) {
+
+    }
+    override fun decrementValue(key: String, value: Number) {
+
+    }
+
     override fun fetchFeatureFlags() {}
     override fun forcePushAppLaunchedEvent() {}
     override fun pushAppLaunchedEvent() {}
