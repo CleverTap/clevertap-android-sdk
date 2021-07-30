@@ -1,7 +1,7 @@
 package com.clevertap.android.xps;
 
 import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
-import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getAccountIdFromNotificationBundle;
+import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.XPS;
 import static com.clevertap.android.xps.XpsConstants.FAILED_WITH_EXCEPTION;
 import static com.clevertap.android.xps.XpsConstants.INVALID_TOKEN;
 import static com.clevertap.android.xps.XpsConstants.OTHER_COMMAND;
@@ -13,9 +13,8 @@ import android.content.Context;
 import android.os.Bundle;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
-import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.pushnotification.PushConstants;
+import com.clevertap.android.sdk.pushnotification.PushNotificationHandler;
 import com.xiaomi.mipush.sdk.ErrorCode;
 import com.xiaomi.mipush.sdk.MiPushClient;
 import com.xiaomi.mipush.sdk.MiPushCommandMessage;
@@ -25,10 +24,15 @@ import java.util.List;
 /**
  * Implementation of {@link IMiMessageHandler}
  */
-class XiaomiMessageHandlerImpl implements IMiMessageHandler {
+public class XiaomiMessageHandlerImpl implements IMiMessageHandler {
 
     private @NonNull
+    final
     IXiaomiNotificationParser mParser;
+
+    public XiaomiMessageHandlerImpl() {
+        this(new XiaomiNotificationParser());
+    }
 
     XiaomiMessageHandlerImpl(@NonNull final IXiaomiNotificationParser parser) {
         mParser = parser;
@@ -40,8 +44,9 @@ class XiaomiMessageHandlerImpl implements IMiMessageHandler {
         Bundle messageBundle = mParser.toBundle(message);
         if (messageBundle != null) {
             try {
-                createNotificationWithBundleMessage(context, messageBundle);
-                isSuccess = true;
+                isSuccess = PushNotificationHandler
+                        .getPushNotificationHandler().onMessageReceived(context, messageBundle, XPS.toString());
+
             } catch (Throwable e) {
                 e.printStackTrace();
                 isSuccess = false;
@@ -49,18 +54,6 @@ class XiaomiMessageHandlerImpl implements IMiMessageHandler {
             }
         }
         return isSuccess;
-    }
-
-    void createNotificationWithBundleMessage(final Context context, final Bundle messageBundle) {
-
-        CleverTapAPI cleverTapAPI = CleverTapAPI
-                .getGlobalInstance(context, getAccountIdFromNotificationBundle(messageBundle));
-        CleverTapAPI.createNotification(context, messageBundle);
-        if (cleverTapAPI != null) {
-            cleverTapAPI.getCoreState().getConfig().log(LOG_TAG, XIAOMI_LOG_TAG + "Creating Notification");
-        } else {
-            Logger.d(LOG_TAG, XIAOMI_LOG_TAG + "Creating Notification");
-        }
     }
 
     @Override
@@ -85,7 +78,8 @@ class XiaomiMessageHandlerImpl implements IMiMessageHandler {
                 Logger.d(LOG_TAG, "onReceiveRegisterResult() : Token is null or empty");
                 return INVALID_TOKEN;
             }
-            CleverTapAPI.tokenRefresh(context, token, PushConstants.PushType.XPS);
+            PushNotificationHandler.getPushNotificationHandler().onNewToken(context, token, XPS
+                    .getType());
             return TOKEN_SUCCESS;
         } catch (Throwable t) {
             Logger.d(LOG_TAG, "onReceiveRegisterResult() : Exception: ", t);

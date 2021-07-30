@@ -1,3 +1,4 @@
+
 package com.clevertap.android.sdk.db;
 
 import android.annotation.SuppressLint;

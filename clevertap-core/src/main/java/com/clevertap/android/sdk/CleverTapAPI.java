@@ -29,6 +29,7 @@ import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.inbox.CTMessageDAO;
+import com.clevertap.android.sdk.interfaces.NotificationHandler;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
@@ -101,6 +102,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     @SuppressWarnings({"FieldCanBeLocal", "unused"})
     private static String sdkVersion;  // For Google Play Store/Android Studio analytics
+
+    private static NotificationHandler sNotificationHandler;
 
     private final Context context;
 
@@ -703,6 +706,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         CleverTapAPI instance = null;
+        // TODO : correct
         for (String accountId : instances.keySet()) {
             instance = CleverTapAPI.instances.get(accountId);
         }
@@ -2207,32 +2211,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
-    /**
-     * Returns a unique identifier by which CleverTap identifies this user, on Main thread Callback.
-     *
-     * @param onInitCleverTapIDListener non-null callback to retrieve identifier on main thread.
-     */
-    public void getCleverTapID(@NonNull OnInitCleverTapIDListener onInitCleverTapIDListener) {
-        Task<Void> taskDeviceCachedInfo = CTExecutorFactory.executors(getConfig()).ioTask();
-        taskDeviceCachedInfo.execute("getCleverTapID", new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                String deviceID = coreState.getDeviceInfo().getDeviceID();
-                if (deviceID != null) {
-                    onInitCleverTapIDListener.onInitCleverTapID(deviceID);
-                } else {
-                    /**
-                     * If cleverTapID not yet generated during first init then set listener, through which
-                     * cleverTapID will be notified when it's generated and ready to use from deviceIDCreated()
-                     *
-                     * Setting callback here makes sure that callback will be give only once, either from
-                     * getCleverTapID() or deviceIDCreated()
-                     */
-                    coreState.getCallbackManager().setOnInitCleverTapIDListener(onInitCleverTapIDListener);
-                }
-                return null;
-            }
-        });
+    public static NotificationHandler getNotificationHandler() {
+        return sNotificationHandler;
     }
 
     /**
@@ -2699,5 +2679,41 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             }
         }
         return instance;
+    }
+
+    public static void setNotificationHandler(NotificationHandler notificationHandler) {
+        sNotificationHandler = notificationHandler;
+    }
+
+    public static void handleMessage(String pushType) {
+
+    }
+
+    /**
+     * Returns a unique identifier by which CleverTap identifies this user, on Main thread Callback.
+     *
+     * @param onInitCleverTapIDListener non-null callback to retrieve identifier on main thread.
+     */
+    public void getCleverTapID(@NonNull final OnInitCleverTapIDListener onInitCleverTapIDListener) {
+        Task<Void> taskDeviceCachedInfo = CTExecutorFactory.executors(getConfig()).ioTask();
+        taskDeviceCachedInfo.execute("getCleverTapID", new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                String deviceID = coreState.getDeviceInfo().getDeviceID();
+                if (deviceID != null) {
+                    onInitCleverTapIDListener.onInitCleverTapID(deviceID);
+                } else {
+                    /**
+                     * If cleverTapID not yet generated during first init then set listener, through which
+                     * cleverTapID will be notified when it's generated and ready to use from deviceIDCreated()
+                     *
+                     * Setting callback here makes sure that callback will be give only once, either from
+                     * getCleverTapID() or deviceIDCreated()
+                     */
+                    coreState.getCallbackManager().setOnInitCleverTapIDListener(onInitCleverTapIDListener);
+                }
+                return null;
+            }
+        });
     }
 }

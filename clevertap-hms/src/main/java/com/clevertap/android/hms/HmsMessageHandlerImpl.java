@@ -3,20 +3,24 @@ package com.clevertap.android.hms;
 import static com.clevertap.android.hms.HmsConstants.HMS_LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.HPS;
-import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getAccountIdFromNotificationBundle;
 
 import android.content.Context;
 import android.os.Bundle;
-import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
+import com.clevertap.android.sdk.pushnotification.PushNotificationHandler;
 import com.huawei.hms.push.RemoteMessage;
 
 /**
  * Implementation of {@link IHmsMessageHandler}
  */
-class HmsMessageHandlerImpl implements IHmsMessageHandler {
+public class HmsMessageHandlerImpl implements IHmsMessageHandler {
 
-    private IHmsNotificationParser mParser;
+    private final IHmsNotificationParser mParser;
+
+    public HmsMessageHandlerImpl() {
+        this(new HmsNotificationParser());
+    }
 
     HmsMessageHandlerImpl(final IHmsNotificationParser parser) {
         mParser = parser;
@@ -28,8 +32,8 @@ class HmsMessageHandlerImpl implements IHmsMessageHandler {
         Bundle messageBundle = mParser.toBundle(remoteMessage);
         if (messageBundle != null) {
             try {
-                createNotificationWithMessageBundle(context, messageBundle);
-                isSuccess = true;
+                isSuccess = PushNotificationHandler
+                        .getPushNotificationHandler().onMessageReceived(context, messageBundle, HPS.toString());
             } catch (Throwable e) {
                 e.printStackTrace();
                 Logger.d(LOG_TAG, HMS_LOG_TAG + "Error Creating Notification", e);
@@ -38,23 +42,12 @@ class HmsMessageHandlerImpl implements IHmsMessageHandler {
         return isSuccess;
     }
 
-    void createNotificationWithMessageBundle(final Context context, final Bundle messageBundle) {
-
-        CleverTapAPI cleverTapAPI = CleverTapAPI
-                .getGlobalInstance(context, getAccountIdFromNotificationBundle(messageBundle));
-        CleverTapAPI.createNotification(context, messageBundle);
-        if (cleverTapAPI != null) {
-            cleverTapAPI.getCoreState().getConfig().log(LOG_TAG, HMS_LOG_TAG + "Creating Notification");
-        } else {
-            Logger.d(LOG_TAG, HMS_LOG_TAG + "Creating Notification");
-        }
-    }
-
     @Override
     public boolean onNewToken(Context context, final String token) {
         boolean isSuccess = false;
         try {
-            CleverTapAPI.tokenRefresh(context, token, HPS);
+            PushNotificationHandler.getPushNotificationHandler().onNewToken(context, token, PushType.HPS
+                    .getType());
             Logger.d(LOG_TAG, HMS_LOG_TAG + "onNewToken: " + token);
             isSuccess = true;
         } catch (Throwable throwable) {
