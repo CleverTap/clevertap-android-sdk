@@ -5,33 +5,40 @@ import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
 
 import android.content.Context;
 import android.os.Bundle;
+import androidx.annotation.NonNull;
+import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.interfaces.INotificationParser;
+import com.clevertap.android.sdk.interfaces.IPushAmpHandler;
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.clevertap.android.sdk.pushnotification.PushNotificationHandler;
 import com.google.firebase.messaging.RemoteMessage;
-import java.util.Map;
 
 /**
  * implementation of {@link IFcmMessageHandler}
  */
-public class FcmMessageHandlerImpl implements IFcmMessageHandler {
+public class FcmMessageHandlerImpl implements IFcmMessageHandler, IPushAmpHandler<RemoteMessage> {
+
+    private final INotificationParser<RemoteMessage> mParser;
+
+    public FcmMessageHandlerImpl() {
+        this(new FcmNotificationParser());
+    }
+
+    FcmMessageHandlerImpl(final INotificationParser<RemoteMessage> parser) {
+        mParser = parser;
+    }
 
     @Override
     public boolean onMessageReceived(final Context context, final RemoteMessage message) {
         boolean isSuccess = false;
-        try {
-            if (message.getData().size() > 0) {
-                Bundle extras = new Bundle();
-                for (Map.Entry<String, String> entry : message.getData().entrySet()) {
-                    extras.putString(entry.getKey(), entry.getValue());
-                }
 
-                isSuccess = PushNotificationHandler.getPushNotificationHandler()
-                        .onMessageReceived(context, extras, PushType.FCM.toString());
-            }
-        } catch (Throwable t) {
-            Logger.d(LOG_TAG, FCM_LOG_TAG + "Error parsing FCM message", t);
+        Bundle messageBundle = mParser.toBundle(message);
+        if (messageBundle != null) {
+            isSuccess = PushNotificationHandler.getPushNotificationHandler()
+                    .onMessageReceived(context, messageBundle, PushType.FCM.toString());
         }
+
         return isSuccess;
     }
 
@@ -52,4 +59,11 @@ public class FcmMessageHandlerImpl implements IFcmMessageHandler {
     }
 
 
+    @Override
+    public void processPushAmp(final Context context, @NonNull final RemoteMessage message) {
+        Bundle messageBundle = mParser.toBundle(message);
+        if (messageBundle != null) {
+            CleverTapAPI.processPushNotification(context, messageBundle);
+        }
+    }
 }

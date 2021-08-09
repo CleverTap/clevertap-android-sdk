@@ -50,8 +50,10 @@ public class PushNotificationHandler implements NotificationHandler {
                 Logger.d(LOG_TAG, pushType + "received notification from CleverTap: " + message.toString());
             }
             if (isForPushTemplates(message) && CleverTapAPI.getNotificationHandler() != null) {
+                // render push template
                 CleverTapAPI.getNotificationHandler().onMessageReceived(applicationContext, message, pushType);
             } else {
+                // render core push
                 CleverTapAPI.createNotification(applicationContext, message);
             }
             return true;

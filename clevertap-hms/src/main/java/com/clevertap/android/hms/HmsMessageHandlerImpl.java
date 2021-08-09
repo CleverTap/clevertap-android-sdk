@@ -6,7 +6,11 @@ import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.
 
 import android.content.Context;
 import android.os.Bundle;
+import androidx.annotation.NonNull;
+import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.interfaces.INotificationParser;
+import com.clevertap.android.sdk.interfaces.IPushAmpHandler;
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.clevertap.android.sdk.pushnotification.PushNotificationHandler;
 import com.huawei.hms.push.RemoteMessage;
@@ -14,15 +18,15 @@ import com.huawei.hms.push.RemoteMessage;
 /**
  * Implementation of {@link IHmsMessageHandler}
  */
-public class HmsMessageHandlerImpl implements IHmsMessageHandler {
+public class HmsMessageHandlerImpl implements IHmsMessageHandler, IPushAmpHandler<RemoteMessage> {
 
-    private final IHmsNotificationParser mParser;
+    private final INotificationParser<RemoteMessage> mParser;
 
     public HmsMessageHandlerImpl() {
         this(new HmsNotificationParser());
     }
 
-    HmsMessageHandlerImpl(final IHmsNotificationParser parser) {
+    HmsMessageHandlerImpl(final INotificationParser<RemoteMessage> parser) {
         mParser = parser;
     }
 
@@ -56,4 +60,17 @@ public class HmsMessageHandlerImpl implements IHmsMessageHandler {
         }
         return isSuccess;
     }
+
+    @Override
+    public void processPushAmp(final Context context, @NonNull final RemoteMessage message) {
+        try {
+            Bundle messageBundle = mParser.toBundle(message);
+            if (messageBundle != null) {
+                CleverTapAPI.processPushNotification(context, messageBundle);
+            }
+        } catch (Throwable t) {
+            Logger.d(LOG_TAG, HMS_LOG_TAG + "Error processing push amp", t);
+        }
+    }
+
 }
