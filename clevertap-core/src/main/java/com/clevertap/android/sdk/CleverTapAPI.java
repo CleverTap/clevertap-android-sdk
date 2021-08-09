@@ -157,32 +157,32 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"WeakerAccess"})
     public static void createNotification(final Context context, final Bundle extras, final int notificationId) {
-        String _accountId = extras.getString(Constants.WZRK_ACCT_ID_KEY);
-        if (instances == null) {
-            CleverTapAPI instance = createInstanceIfAvailable(context, _accountId);
-            if (instance != null) {
+        CleverTapAPI instance = fromBundle(context, extras);
+        if (instance != null) {
+            try {
                 instance.coreState.getPushProviders()._createNotification(context, extras, notificationId);
+            } catch (Throwable t) {
+                // no-op
             }
-            return;
         }
+    }
 
-        for (String accountId : CleverTapAPI.instances.keySet()) {
-            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
-            boolean shouldProcess = false;
-            if (instance != null) {
-                shouldProcess = (_accountId == null && instance.coreState.getConfig().isDefaultInstance())
-                        || instance
-                        .getAccountId()
-                        .equals(_accountId);
-            }
-            if (shouldProcess) {
-                try {
-                    instance.coreState.getPushProviders()._createNotification(context, extras, notificationId);
-                } catch (Throwable t) {
-                    // no-op
-                }
-                break;
-            }
+    public static @Nullable
+    CleverTapAPI getGlobalInstance(Context context, String _accountId) {
+        return fromAccountId(context, _accountId);
+    }
+
+    /**
+     * Pass Push Notification Payload to CleverTap for smooth functioning of Push Amplification
+     *
+     * @param context - Application Context
+     * @param extras  - Bundle received via FCM/Push Amplification
+     */
+    @SuppressWarnings("unused")
+    public static void processPushNotification(Context context, Bundle extras) {
+        CleverTapAPI instance = fromBundle(context, extras);
+        if (instance != null) {
+            instance.coreState.getPushProviders().processCustomPushNotification(extras);
         }
     }
 
@@ -699,19 +699,26 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return getDefaultInstance(context, null);
     }
 
-    public static @Nullable
-    CleverTapAPI getGlobalInstance(Context context, String _accountId) {
+    private static CleverTapAPI fromAccountId(final Context context, final String _accountId) {
         if (instances == null) {
             return createInstanceIfAvailable(context, _accountId);
         }
 
-        CleverTapAPI instance = null;
-        // TODO : correct
-        for (String accountId : instances.keySet()) {
-            instance = CleverTapAPI.instances.get(accountId);
+        for (String accountId : CleverTapAPI.instances.keySet()) {
+            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+            boolean shouldProcess = false;
+            if (instance != null) {
+                shouldProcess = (_accountId == null && instance.coreState.getConfig().isDefaultInstance())
+                        || instance
+                        .getAccountId()
+                        .equals(_accountId);
+            }
+            if (shouldProcess) {
+                return instance;
+            }
         }
 
-        return instance;
+        return null;// failed to get instance
     }
 
     public static HashMap<String, CleverTapAPI> getInstances() {
@@ -909,29 +916,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
-    /**
-     * Pass Push Notification Payload to CleverTap for smooth functioning of Push Amplification
-     *
-     * @param context - Application Context
-     * @param extras  - Bundle received via FCM/Push Amplification
-     */
-    @SuppressWarnings("unused")
-    public static void processPushNotification(Context context, Bundle extras) {
+    private static CleverTapAPI fromBundle(final Context context, final Bundle extras) {
         String _accountId = extras.getString(Constants.WZRK_ACCT_ID_KEY);
-        if (instances == null) {
-            CleverTapAPI instance = createInstanceIfAvailable(context, _accountId);
-            if (instance != null) {
-                instance.coreState.getPushProviders().processCustomPushNotification(extras);
-            }
-            return;
-        }
-
-        for (String accountId : CleverTapAPI.instances.keySet()) {
-            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
-            if (instance != null) {
-                instance.coreState.getPushProviders().processCustomPushNotification(extras);
-            }
-        }
+        return fromAccountId(context, _accountId);
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY)

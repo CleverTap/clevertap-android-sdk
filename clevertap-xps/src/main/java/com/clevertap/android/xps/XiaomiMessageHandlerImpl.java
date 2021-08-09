@@ -13,7 +13,10 @@ import android.content.Context;
 import android.os.Bundle;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
+import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.interfaces.INotificationParser;
+import com.clevertap.android.sdk.interfaces.IPushAmpHandler;
 import com.clevertap.android.sdk.pushnotification.PushNotificationHandler;
 import com.xiaomi.mipush.sdk.ErrorCode;
 import com.xiaomi.mipush.sdk.MiPushClient;
@@ -24,17 +27,17 @@ import java.util.List;
 /**
  * Implementation of {@link IMiMessageHandler}
  */
-public class XiaomiMessageHandlerImpl implements IMiMessageHandler {
+public class XiaomiMessageHandlerImpl implements IMiMessageHandler, IPushAmpHandler<MiPushMessage> {
 
     private @NonNull
     final
-    IXiaomiNotificationParser mParser;
+    INotificationParser<MiPushMessage> mParser;
 
     public XiaomiMessageHandlerImpl() {
         this(new XiaomiNotificationParser());
     }
 
-    XiaomiMessageHandlerImpl(@NonNull final IXiaomiNotificationParser parser) {
+    XiaomiMessageHandlerImpl(@NonNull final INotificationParser<MiPushMessage> parser) {
         mParser = parser;
     }
 
@@ -84,6 +87,18 @@ public class XiaomiMessageHandlerImpl implements IMiMessageHandler {
         } catch (Throwable t) {
             Logger.d(LOG_TAG, "onReceiveRegisterResult() : Exception: ", t);
             return FAILED_WITH_EXCEPTION;
+        }
+    }
+
+    @Override
+    public void processPushAmp(final Context context, @NonNull final MiPushMessage message) {
+        try {
+            Bundle messageBundle = mParser.toBundle(message);
+            if (messageBundle != null) {
+                CleverTapAPI.processPushNotification(context, messageBundle);
+            }
+        } catch (Throwable t) {
+            Logger.d(LOG_TAG, XIAOMI_LOG_TAG + "Error processing push amp", t);
         }
     }
 }

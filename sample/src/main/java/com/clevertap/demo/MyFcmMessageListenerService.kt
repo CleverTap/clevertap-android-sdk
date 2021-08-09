@@ -11,10 +11,13 @@ class MyFcmMessageListenerService : FirebaseMessagingService() {
         var pushType = "fcm"
         if (pushType.equals("fcm")) {
             FcmMessageHandlerImpl().onMessageReceived(applicationContext, message)
+            //FcmMessageHandlerImpl().processPushAmp(applicationContext, message)
         } else if (pushType.equals("hps")) {
             //HmsMessageHandlerImpl().createNotification(applicationContext,message)
+            //HmsMessageHandlerImpl().processPushAmp(applicationContext,message)
         } else if (pushType.equals("xps")) {
             //XiaomiMessageHandlerImpl().createNotification(applicationContext,message)
+            //XiaomiMessageHandlerImpl().processPushAmp(applicationContext,message)
         }
     }
 }
