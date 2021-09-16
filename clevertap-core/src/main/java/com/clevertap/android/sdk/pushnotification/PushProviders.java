@@ -20,8 +20,6 @@ import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
-import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
@@ -61,7 +59,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Callable;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -85,6 +82,8 @@ public class PushProviders implements CTPushProviderListener {
     private final CleverTapInstanceConfig config;
 
     private final Context context;
+
+    private INotificationRenderer iNotificationRenderer = new CoreNotificationRenderer();
 
     private final ValidationResultStack validationResultStack;
 
@@ -141,16 +140,16 @@ public class PushProviders implements CTPushProviderListener {
     public void _createNotification(final Context context, final Bundle extras, final int notificationId) {
         if (extras == null || extras.get(Constants.NOTIFICATION_TAG) == null) {
             return;
-        }
+        } // Common
 
         if (config.isAnalyticsOnly()) {
             config.getLogger()
                     .debug(config.getAccountId(), "Instance is set for Analytics only, cannot create notification");
             return;
-        }
+        }// Common
 
         try {
-            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();// Common task
             task.execute("CleverTapAPI#_createNotification", new Callable<Void>() {
                 @Override
                 public Void call() {
@@ -164,9 +163,10 @@ public class PushProviders implements CTPushProviderListener {
                                         "Push Notification already rendered, not showing again");
                                 return null;
                             }
-                        }
-                        String notifMessage = extras.getString(Constants.NOTIF_MSG);
-                        notifMessage = (notifMessage != null) ? notifMessage : "";
+                        }// Common
+                        String notifMessage = iNotificationRenderer
+                                .getMessage(extras);//extras.getString(Constants.NOTIF_MSG);// uncommon - getMessage()
+                        notifMessage = (notifMessage != null) ? notifMessage : "";// common
                         if (notifMessage.isEmpty()) {
                             //silent notification
                             config.getLogger()
@@ -179,9 +179,10 @@ public class PushProviders implements CTPushProviderListener {
                                 updatePingFrequencyIfNeeded(context, Integer.parseInt(pingFreq));
                             }
                             return null;
-                        }
-                        String notifTitle = extras.getString(Constants.NOTIF_TITLE, "");
-                        notifTitle = notifTitle.isEmpty() ? context.getApplicationInfo().name : notifTitle;
+                        }// Common
+                        String notifTitle = iNotificationRenderer.getTitle(extras,
+                                context);//extras.getString(Constants.NOTIF_TITLE, "");// uncommon - getTitle()
+                        notifTitle = notifTitle.isEmpty() ? context.getApplicationInfo().name : notifTitle;//common
                         triggerNotification(context, extras, notifMessage, notifTitle, notificationId);
                     } catch (Throwable t) {
                         // Occurs if the notification image was null
@@ -905,19 +906,40 @@ public class PushProviders implements CTPushProviderListener {
         }
     }
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public @NonNull
+    INotificationRenderer getPushNotificationRenderer() {
+        return iNotificationRenderer;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private static JobInfo getJobInfo(int jobId, JobScheduler jobScheduler) {
+        for (JobInfo jobInfo : jobScheduler.getAllPendingJobs()) {
+            if (jobInfo.getId() == jobId) {
+                return jobInfo;
+            }
+        }
+        return null;
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public void setPushNotificationRenderer(@NonNull INotificationRenderer iNotificationRenderer) {
+        this.iNotificationRenderer = iNotificationRenderer;
+    }
+
     private void triggerNotification(Context context, Bundle extras, String notifMessage, String notifTitle,
             int notificationId) {
         NotificationManager notificationManager =
-                (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+                (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);// Common
 
         if (notificationManager == null) {
             String notificationManagerError = "Unable to render notification, Notification Manager is null.";
             config.getLogger().debug(config.getAccountId(), notificationManagerError);
             return;
-        }
+        }// common
 
-        String channelId = extras.getString(Constants.WZRK_CHANNEL_ID, "");
-        boolean requiresChannelId = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
+        String channelId = extras.getString(Constants.WZRK_CHANNEL_ID, "");// common
+        boolean requiresChannelId = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;// common
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             int messageCode = -1;
@@ -936,19 +958,20 @@ public class PushProviders implements CTPushProviderListener {
                 validationResultStack.pushValidationResult(channelIdError);
                 return;
             }
-        }
+        }// common
 
-        String icoPath = extras.getString(Constants.NOTIF_ICON);
-        Intent launchIntent = new Intent(context, CTPushNotificationReceiver.class);
+        /*String icoPath = extras.getString(Constants.NOTIF_ICON);// uncommon
+        Intent launchIntent = new Intent(context, CTPushNotificationReceiver.class);// uncommon 1
 
         PendingIntent pIntent;
 
         // Take all the properties from the notif and add it to the intent
-        launchIntent.putExtras(extras);
-        launchIntent.removeExtra(Constants.WZRK_ACTIONS);
+        launchIntent.putExtras(extras);// u1
+        launchIntent.removeExtra(Constants.WZRK_ACTIONS);//u1
         pIntent = PendingIntent.getBroadcast(context, (int) System.currentTimeMillis(),
-                launchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                launchIntent, PendingIntent.FLAG_UPDATE_CURRENT);//u1*/
 
+        /*// uncommon - START
         NotificationCompat.Style style;
         String bigPictureUrl = extras.getString(Constants.WZRK_BIG_PICTURE);
         if (bigPictureUrl != null && bigPictureUrl.startsWith("http")) {
@@ -981,7 +1004,7 @@ public class PushProviders implements CTPushProviderListener {
             style = new NotificationCompat.BigTextStyle()
                     .bigText(notifMessage);
         }
-
+        // uncommon - END*/
         int smallIcon;
         try {
             String x = ManifestInfo.getInstance(context).getNotificationIcon();
@@ -994,7 +1017,9 @@ public class PushProviders implements CTPushProviderListener {
             }
         } catch (Throwable t) {
             smallIcon = DeviceInfo.getAppIconAsIntId(context);
-        }
+        }// common extract to getSmallIcon()
+
+        iNotificationRenderer.setSmallIcon(smallIcon, context);
 
         int priorityInt = NotificationCompat.PRIORITY_DEFAULT;
         String priority = extras.getString(Constants.NOTIF_PRIORITY);
@@ -1005,12 +1030,13 @@ public class PushProviders implements CTPushProviderListener {
             if (priority.equals(Constants.PRIORITY_MAX)) {
                 priorityInt = NotificationCompat.PRIORITY_MAX;
             }
-        }
+        }// common, not there in templates
 
         // if we have no user set notificationID then try collapse key
         if (notificationId == Constants.EMPTY_NOTIFICATION_ID) {
             try {
-                Object collapse_key = extras.get(Constants.WZRK_COLLAPSE);
+                Object collapse_key = iNotificationRenderer
+                        .getCollapseKey(extras);//extras.get(Constants.WZRK_COLLAPSE); //use getCollapseKey()
                 if (collapse_key != null) {
                     if (collapse_key instanceof Number) {
                         notificationId = ((Number) collapse_key).intValue();
@@ -1034,20 +1060,21 @@ public class PushProviders implements CTPushProviderListener {
         } else {
             config.getLogger().debug(config.getAccountId(), "Have user provided notificationId: " + notificationId
                     + " won't use collapse_key (if any) as basis for notificationId");
-        }
+        } // common use getCollapseKey()
 
         // if after trying collapse_key notification is still empty set to random int
         if (notificationId == Constants.EMPTY_NOTIFICATION_ID) {
             notificationId = (int) (Math.random() * 100);
             config.getLogger().debug(config.getAccountId(), "Setting random notificationId: " + notificationId);
-        }
+        }// common use getCollapseKey()
 
         NotificationCompat.Builder nb;
         if (requiresChannelId) {
             nb = new NotificationCompat.Builder(context, channelId);
 
             // choices here are Notification.BADGE_ICON_NONE = 0, Notification.BADGE_ICON_SMALL = 1, Notification.BADGE_ICON_LARGE = 2.  Default is  Notification.BADGE_ICON_LARGE
-            String badgeIconParam = extras.getString(Constants.WZRK_BADGE_ICON, null);
+            String badgeIconParam = extras
+                    .getString(Constants.WZRK_BADGE_ICON, null);// common bi - not there in template
             if (badgeIconParam != null) {
                 try {
                     int badgeIconType = Integer.parseInt(badgeIconParam);
@@ -1057,9 +1084,9 @@ public class PushProviders implements CTPushProviderListener {
                 } catch (Throwable t) {
                     // no-op
                 }
-            }
+            }//cbi
 
-            String badgeCountParam = extras.getString(Constants.WZRK_BADGE_COUNT, null);
+            String badgeCountParam = extras.getString(Constants.WZRK_BADGE_COUNT, null);//cbi
             if (badgeCountParam != null) {
                 try {
                     int badgeCount = Integer.parseInt(badgeCountParam);
@@ -1069,21 +1096,22 @@ public class PushProviders implements CTPushProviderListener {
                 } catch (Throwable t) {
                     // no-op
                 }
-            }
-            if (extras.containsKey(Constants.WZRK_SUBTITLE)) {
+            }//cbi
+            /*if (extras.containsKey(Constants.WZRK_SUBTITLE)) {
                 nb.setSubText(extras.getString(Constants.WZRK_SUBTITLE));
-            }
+            }// uncommon*/
         } else {
             // noinspection all
             nb = new NotificationCompat.Builder(context);
         }
 
-        if (extras.containsKey(Constants.WZRK_COLOR)) {
+        /*if (extras.containsKey(Constants.WZRK_COLOR)) {
             int color = Color.parseColor(extras.getString(Constants.WZRK_COLOR));
             nb.setColor(color);
             nb.setColorized(true);
-        }
+        }// uncommon
 
+        // uncommon
         nb.setContentTitle(notifTitle)
                 .setContentText(notifMessage)
                 .setContentIntent(pIntent)
@@ -1092,10 +1120,13 @@ public class PushProviders implements CTPushProviderListener {
                 .setPriority(priorityInt)
                 .setSmallIcon(smallIcon);
 
-        nb.setLargeIcon(Utils.getNotificationBitmap(icoPath, true, context));
+        // uncommon
+        nb.setLargeIcon(Utils.getNotificationBitmap(icoPath, true, context));//uncommon
+*/
+        nb.setPriority(priorityInt);
 
         try {
-            if (extras.containsKey(Constants.WZRK_SOUND)) {
+            if (extras.containsKey(Constants.WZRK_SOUND)) {// common not there in template
                 Uri soundUri = null;
 
                 Object o = extras.get(Constants.WZRK_SOUND);
@@ -1125,6 +1156,7 @@ public class PushProviders implements CTPushProviderListener {
             config.getLogger().debug(config.getAccountId(), "Could not process sound parameter", t);
         }
 
+        /*// Uncommon - START
         // add actions if any
         JSONArray actions = null;
         String actionsString = extras.getString(Constants.WZRK_ACTIONS);
@@ -1231,12 +1263,18 @@ public class PushProviders implements CTPushProviderListener {
                                     "error adding notification action : " + t.getLocalizedMessage());
                 }
             }
+        }// Uncommon - END*/
+
+        nb = iNotificationRenderer.renderNotification(extras, context, nb, config, notificationId);
+        if (nb == null) {// template renderer can return null if template type is null
+            return;
         }
 
-        Notification n = nb.build();
-        notificationManager.notify(notificationId, n);
-        config.getLogger().debug(config.getAccountId(), "Rendered notification: " + n.toString());
+        Notification n = nb.build();// Common use build() b
+        notificationManager.notify(notificationId, n);//cb
+        config.getLogger().debug(config.getAccountId(), "Rendered notification: " + n.toString());//cb
 
+        // common not there in template - START
         String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE,
                 (System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL) / 1000 + "");
         long wzrk_ttl = Long.parseLong(ttl);
@@ -1254,15 +1292,6 @@ public class PushProviders implements CTPushProviderListener {
             return;
         }
         analyticsManager.pushNotificationViewedEvent(extras);
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    private static JobInfo getJobInfo(int jobId, JobScheduler jobScheduler) {
-        for (JobInfo jobInfo : jobScheduler.getAllPendingJobs()) {
-            if (jobInfo.getId() == jobId) {
-                return jobInfo;
-            }
-        }
-        return null;
+        //common not there in template - END
     }
 }

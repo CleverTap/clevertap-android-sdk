@@ -1,5 +1,6 @@
 package com.clevertap.demo.ui.main
 
+import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -283,7 +284,10 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             "80" -> println("CleverTapAttribution Identifier = ${cleverTapAPI?.cleverTapAttributionIdentifier}")
             "81" -> cleverTapAPI?.getCleverTapID {
                 println(
-                    "CleverTap DeviceID from Application class= $it"
+                    "CleverTap DeviceID from Application class= $it, thread=${
+                        if (Looper.myLooper() == Looper.getMainLooper()) "mainthread" else "bg thread"
+                        // Current Thread is Main Thread.
+                    }"
                 )
             }
             //"60" -> webViewClickListener?.onWebViewClick()
