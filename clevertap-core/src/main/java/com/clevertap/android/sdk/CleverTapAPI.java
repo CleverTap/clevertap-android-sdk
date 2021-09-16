@@ -34,6 +34,8 @@ import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
+import com.clevertap.android.sdk.pushnotification.CoreNotificationRenderer;
+import com.clevertap.android.sdk.pushnotification.INotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
@@ -160,6 +162,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         CleverTapAPI instance = fromBundle(context, extras);
         if (instance != null) {
             try {
+                instance.coreState.getPushProviders().setPushNotificationRenderer(new CoreNotificationRenderer());
                 instance.coreState.getPushProviders()._createNotification(context, extras, notificationId);
             } catch (Throwable t) {
                 // no-op
@@ -2703,4 +2706,14 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             }
         });
     }
+
+    public void renderPushNotification(@NonNull INotificationRenderer iNotificationRenderer, Context context,
+            Bundle extras) {
+        coreState.getPushProviders().setPushNotificationRenderer(iNotificationRenderer);
+        coreState.getPushProviders()._createNotification(context, extras, Constants.EMPTY_NOTIFICATION_ID);
+    }
+
+   /* public @NonNull INotificationRenderer getPushNotificationRenderer(){
+        return coreState.getPushProviders().getPushNotificationRenderer();
+    }*/
 }

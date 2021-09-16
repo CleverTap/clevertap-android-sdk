@@ -46,15 +46,17 @@ public class PushNotificationHandler implements NotificationHandler {
             if (cleverTapAPI != null) {
                 cleverTapAPI.getCoreState().getConfig().log(LOG_TAG,
                         pushType + "received notification from CleverTap: " + message.toString());
+                if (isForPushTemplates(message) && CleverTapAPI.getNotificationHandler() != null) {
+                    // render push template
+                    CleverTapAPI.getNotificationHandler().onMessageReceived(applicationContext, message, pushType);
+                } else {
+                    // render core push
+                    cleverTapAPI.renderPushNotification(new CoreNotificationRenderer(), applicationContext, message);
+                    //CleverTapAPI.createNotification(applicationContext, message);
+                }
             } else {
                 Logger.d(LOG_TAG, pushType + "received notification from CleverTap: " + message.toString());
-            }
-            if (isForPushTemplates(message) && CleverTapAPI.getNotificationHandler() != null) {
-                // render push template
-                CleverTapAPI.getNotificationHandler().onMessageReceived(applicationContext, message, pushType);
-            } else {
-                // render core push
-                CleverTapAPI.createNotification(applicationContext, message);
+                Logger.d(LOG_TAG, pushType + " not renderning since cleverTapAPI is null");
             }
             return true;
         }

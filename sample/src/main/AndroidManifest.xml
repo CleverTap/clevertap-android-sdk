@@ -89,6 +89,9 @@
         <activity
             android:name=".WebViewActivity"
             android:label="WebView" />
+        <meta-data
+            android:name="CLEVERTAP_BACKGROUND_SYNC"
+            android:value="1" />
     </application>
 
 </manifest>
