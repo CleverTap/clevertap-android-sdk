@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="padding_horizontal">16dp</dimen>
+    <dimen name="padding_vertical">8dp</dimen>
+
+    <dimen name="big_img_height">128dp</dimen>
+    <dimen name="big_img_marginTop">16dp</dimen>
+    <dimen name="flipper_height">232dp</dimen>
+    <dimen name="auto_carousel_padding_vertical">8dp</dimen>
+    <dimen name="auto_carousel_padding_horizontal">16dp</dimen>
+
+    <dimen name="large_icon">36dp</dimen>
+
+    <dimen name="five_cta_icon_margin">6dp</dimen>
+
+    <dimen name="manual_carousel_arrow">36dp</dimen>
+
+    <dimen name="chronometer_font_size">20sp</dimen>
+
+    <dimen name="rating_big_img">108dp</dimen>
+
+
+</resources>

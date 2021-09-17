@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/content_view_big"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <include
+        android:id="@+id/rel_lyt"
+        layout="@layout/content_view_small" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_below="@id/rel_lyt">
+
+        <ImageView
+            android:id="@+id/big_image"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/rating_big_img"
+            android:layout_marginBottom="@dimen/padding_vertical"
+            android:scaleType="centerCrop" />
+
+        <LinearLayout
+            android:id="@+id/rating_lyt"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_horizontal"
+            android:paddingBottom="@dimen/padding_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/star1"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/rating_star"
+                android:layout_weight="1"
+                android:src="@drawable/pt_star_outline" />
+
+            <ImageView
+                android:id="@+id/star2"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/rating_star"
+                android:layout_weight="1"
+                android:src="@drawable/pt_star_outline" />
+
+            <ImageView
+                android:id="@+id/star3"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/rating_star"
+                android:layout_weight="1"
+                android:src="@drawable/pt_star_outline" />
+
+            <ImageView
+                android:id="@+id/star4"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/rating_star"
+                android:layout_weight="1"
+                android:src="@drawable/pt_star_outline" />
+
+            <ImageView
+                android:id="@+id/star5"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/rating_star"
+                android:layout_weight="1"
+                android:src="@drawable/pt_star_outline" />
+
+        </LinearLayout>
+
+
+    </LinearLayout>
+</RelativeLayout>

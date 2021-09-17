@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/content_view_small"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/padding_horizontal"
+    android:paddingLeft="@dimen/padding_horizontal"
+    android:paddingTop="@dimen/padding_vertical"
+    android:paddingEnd="@dimen/padding_horizontal"
+    android:paddingRight="@dimen/padding_horizontal"
+    android:paddingBottom="@dimen/padding_vertical">
+
+
+    <include
+        android:id="@+id/metadata"
+        layout="@layout/metadata" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@+id/metadata"
+        android:layout_marginEnd="@dimen/padding_vertical"
+        android:layout_toStartOf="@+id/chronometer">
+
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/metadata_title_margin_vertical"
+            android:text="title"
+            android:textAppearance="@style/PushTitle" />
+
+        <TextView
+            android:id="@+id/msg"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/title"
+            android:layout_alignStart="@+id/title"
+            android:text="message"
+            android:textAppearance="@style/PushMessage" />
+
+    </RelativeLayout>
+
+    <Chronometer
+        android:id="@+id/chronometer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:textAlignment="center"
+        android:textSize="@dimen/chronometer_font_size" />
+
+
+</RelativeLayout>

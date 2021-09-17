@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/content_view_big"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@android:color/white"
+    android:orientation="vertical">
+
+    <ImageView
+        android:id="@+id/big_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop" />
+
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_alignBottom="@+id/big_image"
+        android:background="@drawable/scrim" />
+
+    <RelativeLayout
+        android:id="@+id/rel_lyt"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/big_image"
+        android:paddingStart="@dimen/padding_horizontal"
+        android:paddingLeft="@dimen/padding_horizontal"
+        android:paddingTop="@dimen/padding_vertical"
+        android:paddingEnd="@dimen/padding_horizontal"
+        android:paddingRight="@dimen/padding_horizontal"
+        android:paddingBottom="@dimen/padding_vertical">
+
+        <include
+            android:id="@+id/metadata"
+            layout="@layout/metadata" />
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/metadata"
+            android:layout_alignStart="@id/metadata"
+            android:layout_marginTop="@dimen/metadata_title_margin_vertical"
+            android:text="title"
+            android:textAppearance="@style/PushTitle"
+            android:textColor="@color/white" />
+
+        <TextView
+            android:id="@+id/msg"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/title"
+            android:layout_alignStart="@id/title"
+            android:text="message"
+            android:textAppearance="@style/PushMessage"
+            android:textColor="@color/white" />
+
+    </RelativeLayout>
+
+</RelativeLayout>
