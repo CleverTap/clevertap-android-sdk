@@ -20,14 +20,14 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.RemoteInput;
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.Constants;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
-import static com.clevertap.android.pushtemplates.TemplateRenderer.MAIN_ACTION;
-import static com.clevertap.android.pushtemplates.TemplateRenderer.TYPE_BUTTON_CLICK;
+import static com.clevertap.android.pushtemplates.PTNotificationIntentService.TYPE_BUTTON_CLICK;
 
 public class PushTemplateReceiver extends BroadcastReceiver {
     boolean clicked1 = true, clicked2 = true, clicked3 = true, clicked4 = true, clicked5 = true, img1 = false, img2 = false, img3 = false, buynow = true, bigimage = true, cta1 = true, cta2 = true, cta3 = true, cta4 = true, cta5 = true, close = true;
@@ -76,35 +76,35 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
         if (intent.getExtras() != null) {
             final Bundle extras = intent.getExtras();
-            pt_id = intent.getStringExtra(Constants.PT_ID);
-            pID = extras.getString(Constants.WZRK_PUSH_ID);
-            pt_msg = extras.getString(Constants.PT_MSG);
-            pt_msg_summary = extras.getString(Constants.PT_MSG_SUMMARY);
-            pt_msg_clr = extras.getString(Constants.PT_MSG_COLOR);
-            pt_title = extras.getString(Constants.PT_TITLE);
-            pt_title_clr = extras.getString(Constants.PT_TITLE_COLOR);
-            pt_img_small = extras.getString(Constants.PT_SMALL_IMG);
-            pt_large_icon = extras.getString(Constants.PT_NOTIF_ICON);
-            pt_bg = extras.getString(Constants.PT_BG);
-            pt_rating_default_dl = extras.getString(Constants.PT_DEFAULT_DL);
+            pt_id = intent.getStringExtra(com.clevertap.android.sdk.Constants.PT_ID);
+            pID = extras.getString(com.clevertap.android.sdk.Constants.WZRK_PUSH_ID);
+            pt_msg = extras.getString(com.clevertap.android.sdk.Constants.PT_MSG);
+            pt_msg_summary = extras.getString(com.clevertap.android.sdk.Constants.PT_MSG_SUMMARY);
+            pt_msg_clr = extras.getString(com.clevertap.android.sdk.Constants.PT_MSG_COLOR);
+            pt_title = extras.getString(com.clevertap.android.sdk.Constants.PT_TITLE);
+            pt_title_clr = extras.getString(com.clevertap.android.sdk.Constants.PT_TITLE_COLOR);
+            pt_img_small = extras.getString(com.clevertap.android.sdk.Constants.PT_SMALL_IMG);
+            pt_large_icon = extras.getString(com.clevertap.android.sdk.Constants.PT_NOTIF_ICON);
+            pt_bg = extras.getString(com.clevertap.android.sdk.Constants.PT_BG);
+            pt_rating_default_dl = extras.getString(com.clevertap.android.sdk.Constants.PT_DEFAULT_DL);
             imageList = Utils.getImageListFromExtras(extras);
             deepLinkList = Utils.getDeepLinkListFromExtras(extras);
             bigTextList = Utils.getBigTextFromExtras(extras);
             smallTextList = Utils.getSmallTextFromExtras(extras);
             priceList = Utils.getPriceFromExtras(extras);
-            pt_product_display_action = extras.getString(Constants.PT_PRODUCT_DISPLAY_ACTION);
-            pt_product_display_action_clr = extras.getString(Constants.PT_PRODUCT_DISPLAY_ACTION_COLOUR);
-            pt_product_display_linear = extras.getString(Constants.PT_PRODUCT_DISPLAY_LINEAR);
+            pt_product_display_action = extras.getString(com.clevertap.android.sdk.Constants.PT_PRODUCT_DISPLAY_ACTION);
+            pt_product_display_action_clr = extras.getString(com.clevertap.android.sdk.Constants.PT_PRODUCT_DISPLAY_ACTION_COLOUR);
+            pt_product_display_linear = extras.getString(com.clevertap.android.sdk.Constants.PT_PRODUCT_DISPLAY_LINEAR);
             notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
-            channelId = extras.getString(Constants.WZRK_CHANNEL_ID, "");
-            pt_big_img_alt = extras.getString(Constants.PT_BIG_IMG_ALT);
-            pt_small_icon_clr = extras.getString(Constants.PT_SMALL_ICON_COLOUR);
-            pt_product_display_action_text_clr = extras.getString(Constants.PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR);
+            channelId = extras.getString(com.clevertap.android.sdk.Constants.WZRK_CHANNEL_ID, "");
+            pt_big_img_alt = extras.getString(com.clevertap.android.sdk.Constants.PT_BIG_IMG_ALT);
+            pt_small_icon_clr = extras.getString(com.clevertap.android.sdk.Constants.PT_SMALL_ICON_COLOUR);
+            pt_product_display_action_text_clr = extras.getString(com.clevertap.android.sdk.Constants.PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR);
             requiresChannelId = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
             asyncHelper = AsyncHelper.getInstance();
-            pt_dismiss_intent = extras.getBoolean(Constants.PT_DISMISS_INTENT, false);
-            pt_rating_toast = extras.getString(Constants.PT_RATING_TOAST);
-            pt_subtitle = extras.getString(Constants.PT_SUBTITLE);
+            pt_dismiss_intent = extras.getBoolean(com.clevertap.android.sdk.Constants.PT_DISMISS_INTENT, false);
+            pt_rating_toast = extras.getString(com.clevertap.android.sdk.Constants.PT_RATING_TOAST);
+            pt_subtitle = extras.getString(com.clevertap.android.sdk.Constants.PT_SUBTITLE);
             setKeysFromDashboard(extras);
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -165,14 +165,14 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             contentViewManualCarousel = new RemoteViews(context.getPackageName(), R.layout.manual_carousel);
             setCustomContentViewBasicKeys(contentViewManualCarousel, context);
 
-            int notificationId = extras.getInt(Constants.PT_NOTIF_ID);
+            int notificationId = extras.getInt(com.clevertap.android.sdk.Constants.PT_NOTIF_ID);
 
-            final boolean rightSwipe = extras.getBoolean(Constants.PT_RIGHT_SWIPE);
+            final boolean rightSwipe = extras.getBoolean(com.clevertap.android.sdk.Constants.PT_RIGHT_SWIPE);
 
-            imageList = extras.getStringArrayList(Constants.PT_IMAGE_LIST);
-            deepLinkList = extras.getStringArrayList(Constants.PT_DEEPLINK_LIST);
+            imageList = extras.getStringArrayList(com.clevertap.android.sdk.Constants.PT_IMAGE_LIST);
+            deepLinkList = extras.getStringArrayList(com.clevertap.android.sdk.Constants.PT_DEEPLINK_LIST);
 
-            int currPosition = extras.getInt(Constants.PT_MANUAL_CAROUSEL_CURRENT);
+            int currPosition = extras.getInt(com.clevertap.android.sdk.Constants.PT_MANUAL_CAROUSEL_CURRENT);
             int newPosition;
             if (rightSwipe) {
                 contentViewManualCarousel.showNext(R.id.carousel_image);
@@ -205,22 +205,22 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 dl = deepLinkList.get(0);
             }
 
-            extras.putInt(Constants.PT_MANUAL_CAROUSEL_CURRENT, newPosition);
-            extras.remove(Constants.PT_RIGHT_SWIPE);
-            extras.putString(Constants.WZRK_DL,dl);
+            extras.putInt(com.clevertap.android.sdk.Constants.PT_MANUAL_CAROUSEL_CURRENT, newPosition);
+            extras.remove(com.clevertap.android.sdk.Constants.PT_RIGHT_SWIPE);
+            extras.putString(com.clevertap.android.sdk.Constants.DEEP_LINK_KEY,dl);
 
             Intent rightArrowPos0Intent = new Intent(context, PushTemplateReceiver.class);
-            rightArrowPos0Intent.putExtra(Constants.PT_RIGHT_SWIPE, true);
-            rightArrowPos0Intent.putExtra(Constants.PT_MANUAL_CAROUSEL_FROM, currPosition);
-            rightArrowPos0Intent.putExtra(Constants.PT_NOTIF_ID, notificationId);
+            rightArrowPos0Intent.putExtra(com.clevertap.android.sdk.Constants.PT_RIGHT_SWIPE, true);
+            rightArrowPos0Intent.putExtra(com.clevertap.android.sdk.Constants.PT_MANUAL_CAROUSEL_FROM, currPosition);
+            rightArrowPos0Intent.putExtra(com.clevertap.android.sdk.Constants.PT_NOTIF_ID, notificationId);
             rightArrowPos0Intent.putExtras(extras);
             PendingIntent contentRightPos0Intent = setPendingIntent(context, notificationId, extras, rightArrowPos0Intent, dl);
             contentViewManualCarousel.setOnClickPendingIntent(R.id.rightArrowPos0, contentRightPos0Intent);
 
             Intent leftArrowPos0Intent = new Intent(context, PushTemplateReceiver.class);
-            leftArrowPos0Intent.putExtra(Constants.PT_RIGHT_SWIPE, false);
-            leftArrowPos0Intent.putExtra(Constants.PT_MANUAL_CAROUSEL_FROM, currPosition);
-            leftArrowPos0Intent.putExtra(Constants.PT_NOTIF_ID, notificationId);
+            leftArrowPos0Intent.putExtra(com.clevertap.android.sdk.Constants.PT_RIGHT_SWIPE, false);
+            leftArrowPos0Intent.putExtra(com.clevertap.android.sdk.Constants.PT_MANUAL_CAROUSEL_FROM, currPosition);
+            leftArrowPos0Intent.putExtra(com.clevertap.android.sdk.Constants.PT_NOTIF_ID, notificationId);
             leftArrowPos0Intent.putExtras(extras);
             PendingIntent contentLeftPos0Intent = setPendingIntent(context, notificationId, extras, leftArrowPos0Intent, dl);
             contentViewManualCarousel.setOnClickPendingIntent(R.id.leftArrowPos0, contentLeftPos0Intent);
@@ -229,7 +229,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             Intent launchIntent = new Intent(context, PTPushNotificationReceiver.class);
             PendingIntent pIntent = setPendingIntent(context, notificationId, extras, launchIntent, dl);
 
-            NotificationCompat.Builder notificationBuilder = setBuilderWithChannelIDCheck(requiresChannelId, Constants.PT_SILENT_CHANNEL_ID, context);
+            NotificationCompat.Builder notificationBuilder = setBuilderWithChannelIDCheck(requiresChannelId, com.clevertap.android.sdk.Constants.PT_SILENT_CHANNEL_ID, context);
             Intent dismissIntent = new Intent(context, PushTemplateReceiver.class);
             PendingIntent dIntent;
             dIntent = setDismissIntent(context, extras, dismissIntent);
@@ -259,27 +259,27 @@ public class PushTemplateReceiver extends BroadcastReceiver {
         if (remoteInput != null) {
             //Fetch Reply
             CharSequence reply = remoteInput.getCharSequence(
-                    Constants.PT_INPUT_KEY);
+                    com.clevertap.android.sdk.Constants.PT_INPUT_KEY);
 
-            int notificationId = extras.getInt(Constants.PT_NOTIF_ID);
+            int notificationId = extras.getInt(com.clevertap.android.sdk.Constants.PT_NOTIF_ID);
 
             if (reply != null) {
 
                 PTLog.verbose("Processing Input from Input Template");
-                extras.putString(Constants.PT_INPUT_KEY, reply.toString());
-                Utils.raiseCleverTapEvent(context, config, extras, Constants.PT_INPUT_KEY);
+                extras.putString(com.clevertap.android.sdk.Constants.PT_INPUT_KEY, reply.toString());
+                Utils.raiseCleverTapEvent(context, config, extras, com.clevertap.android.sdk.Constants.PT_INPUT_KEY);
                 //Update the notification to show that the reply was received.
                 final NotificationCompat.Builder repliedNotification;
                 if (requiresChannelId) {
-                    repliedNotification = new NotificationCompat.Builder(context, Constants.PT_SILENT_CHANNEL_ID);
+                    repliedNotification = new NotificationCompat.Builder(context, com.clevertap.android.sdk.Constants.PT_SILENT_CHANNEL_ID);
                 } else {
                     repliedNotification = new NotificationCompat.Builder(context);
                 }
                 setSmallIcon(context);
                 repliedNotification.setSmallIcon(smallIcon)
                         .setContentTitle(pt_title)
-                        .setContentText(extras.getString(Constants.PT_INPUT_FEEDBACK))
-                        .setTimeoutAfter(Constants.PT_INPUT_TIMEOUT)
+                        .setContentText(extras.getString(com.clevertap.android.sdk.Constants.PT_INPUT_FEEDBACK))
+                        .setTimeoutAfter(com.clevertap.android.sdk.Constants.PT_INPUT_TIMEOUT)
                         .setDeleteIntent(dIntent)
                         .setWhen(System.currentTimeMillis())
                         .setAutoCancel(true);
@@ -292,18 +292,18 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 /* Check if Auto Open key is present and not empty, if not present then show feedback and
                 auto kill in 3 secs. If present, then launch the App with Dl or Launcher activity.
                 The launcher activity will get the reply in extras under the key "pt_reply" */
-                if (extras.getString(Constants.PT_INPUT_AUTO_OPEN) != null || extras.getBoolean(Constants.PT_INPUT_AUTO_OPEN)) {
+                if (extras.getString(com.clevertap.android.sdk.Constants.PT_INPUT_AUTO_OPEN) != null || extras.getBoolean(com.clevertap.android.sdk.Constants.PT_INPUT_AUTO_OPEN)) {
                     //adding delay for launcher
                     try {
-                        Thread.sleep(Constants.PT_INPUT_TIMEOUT);
+                        Thread.sleep(com.clevertap.android.sdk.Constants.PT_INPUT_TIMEOUT);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
 
                     Intent launchIntent;
 
-                    if (extras.containsKey(Constants.WZRK_DL)) {
-                        launchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(intent.getStringExtra(Constants.WZRK_DL)));
+                    if (extras.containsKey(com.clevertap.android.sdk.Constants.DEEP_LINK_KEY)) {
+                        launchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(intent.getStringExtra(com.clevertap.android.sdk.Constants.DEEP_LINK_KEY)));
                         Utils.setPackageNameFromResolveInfoList(context, launchIntent);
                     } else {
                         launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
@@ -317,7 +317,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                     //adding reply to extra
                     launchIntent.putExtra("pt_reply", reply);
 
-                    launchIntent.removeExtra(Constants.WZRK_ACTIONS);
+                    launchIntent.removeExtra(com.clevertap.android.sdk.Constants.WZRK_ACTIONS);
                     launchIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
 
                     context.startActivity(launchIntent);
@@ -332,8 +332,8 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
     private void handleRatingNotification(Context context, Bundle extras) {
         try {
-            int notificationId = extras.getInt(Constants.PT_NOTIF_ID);
-            if (extras.getBoolean(Constants.DEFAULT_DL, false)) {
+            int notificationId = extras.getInt(com.clevertap.android.sdk.Constants.PT_NOTIF_ID);
+            if (extras.getBoolean(com.clevertap.android.sdk.Constants.DEFAULT_DL, false)) {
                 config = extras.getParcelable("config");
                 notificationManager.cancel(notificationId);
                 Intent launchIntent;
@@ -346,7 +346,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
                 boolean isPTIntentServiceAvailable = Utils.isServiceAvailable(context, clazz);
                 if (isPTIntentServiceAvailable) {
-                    launchIntent = new Intent(MAIN_ACTION);
+                    launchIntent = new Intent(PTNotificationIntentService.MAIN_ACTION);
                     launchIntent.setPackage(context.getPackageName());
                     launchIntent.putExtra("pt_type", TYPE_BUTTON_CLICK);
                     launchIntent.putExtras(extras);
@@ -354,12 +354,12 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                     context.startService(launchIntent);
                 } else {
                     launchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(pt_rating_default_dl));
-                    launchIntent.removeExtra(Constants.WZRK_ACTIONS);
-                    launchIntent.putExtra(Constants.WZRK_FROM_KEY, Constants.WZRK_FROM);
+                    launchIntent.removeExtra(com.clevertap.android.sdk.Constants.WZRK_ACTIONS);
+                    launchIntent.putExtra(com.clevertap.android.sdk.Constants.WZRK_FROM_KEY, com.clevertap.android.sdk.Constants.WZRK_FROM);
                     launchIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                     Utils.raiseNotificationClicked(context, extras, config);
                     launchIntent.putExtras(extras);
-                    launchIntent.putExtra(Constants.WZRK_DL, pt_rating_default_dl);
+                    launchIntent.putExtra(com.clevertap.android.sdk.Constants.DEEP_LINK_KEY, pt_rating_default_dl);
                     context.startActivity(launchIntent);
                 }
 
@@ -395,7 +395,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             HashMap<String, Object> map = new HashMap<String, Object>();
             if (clicked1 == extras.getBoolean("click1", false)) {
                 contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
-                extras.putString(Constants.WZRK_C2A, Constants.PT_RATING_C2A_KEY + 1);
+                extras.putString(com.clevertap.android.sdk.Constants.WZRK_C2A, com.clevertap.android.sdk.Constants.PT_RATING_C2A_KEY + 1);
                 Utils.raiseNotificationClicked(context, extras, config);
                 clicked1 = false;
 
@@ -408,7 +408,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             if (clicked2 == extras.getBoolean("click2", false)) {
                 contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
                 contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
-                extras.putString(Constants.WZRK_C2A, Constants.PT_RATING_C2A_KEY + 2);
+                extras.putString(com.clevertap.android.sdk.Constants.WZRK_C2A, com.clevertap.android.sdk.Constants.PT_RATING_C2A_KEY + 2);
                 Utils.raiseNotificationClicked(context, extras, config);
                 clicked2 = false;
                 if (deepLinkList.size() > 1) {
@@ -423,7 +423,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
                 contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
                 contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_filled);
-                extras.putString(Constants.WZRK_C2A, Constants.PT_RATING_C2A_KEY + 3);
+                extras.putString(com.clevertap.android.sdk.Constants.WZRK_C2A, com.clevertap.android.sdk.Constants.PT_RATING_C2A_KEY + 3);
                 Utils.raiseNotificationClicked(context, extras, config);
                 clicked3 = false;
                 if (deepLinkList.size() > 2) {
@@ -439,7 +439,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 contentViewRating.setImageViewResource(R.id.star2, R.drawable.pt_star_filled);
                 contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_filled);
                 contentViewRating.setImageViewResource(R.id.star4, R.drawable.pt_star_filled);
-                extras.putString(Constants.WZRK_C2A, Constants.PT_RATING_C2A_KEY + 4);
+                extras.putString(com.clevertap.android.sdk.Constants.WZRK_C2A, com.clevertap.android.sdk.Constants.PT_RATING_C2A_KEY + 4);
                 Utils.raiseNotificationClicked(context, extras, config);
                 clicked4 = false;
                 if (deepLinkList.size() > 3) {
@@ -456,7 +456,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 contentViewRating.setImageViewResource(R.id.star3, R.drawable.pt_star_filled);
                 contentViewRating.setImageViewResource(R.id.star4, R.drawable.pt_star_filled);
                 contentViewRating.setImageViewResource(R.id.star5, R.drawable.pt_star_filled);
-                extras.putString(Constants.WZRK_C2A, Constants.PT_RATING_C2A_KEY + 5);
+                extras.putString(com.clevertap.android.sdk.Constants.WZRK_C2A, com.clevertap.android.sdk.Constants.PT_RATING_C2A_KEY + 5);
                 Utils.raiseNotificationClicked(context, extras, config);
                 clicked5 = false;
                 if (deepLinkList.size() > 4) {
@@ -472,7 +472,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
             NotificationCompat.Builder notificationBuilder;
             if (requiresChannelId) {
-                notificationBuilder = new NotificationCompat.Builder(context, Constants.PT_SILENT_CHANNEL_ID);
+                notificationBuilder = new NotificationCompat.Builder(context, com.clevertap.android.sdk.Constants.PT_SILENT_CHANNEL_ID);
             } else {
                 notificationBuilder = new NotificationCompat.Builder(context);
             }
@@ -503,9 +503,9 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
                 Intent launchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(pt_dl_clicked));
                 launchIntent.putExtras(extras);
-                launchIntent.putExtra(Constants.WZRK_DL, pt_dl_clicked);
-                launchIntent.removeExtra(Constants.WZRK_ACTIONS);
-                launchIntent.putExtra(Constants.WZRK_FROM_KEY, Constants.WZRK_FROM);
+                launchIntent.putExtra(com.clevertap.android.sdk.Constants.DEEP_LINK_KEY, pt_dl_clicked);
+                launchIntent.removeExtra(com.clevertap.android.sdk.Constants.WZRK_ACTIONS);
+                launchIntent.putExtra(com.clevertap.android.sdk.Constants.WZRK_FROM_KEY, com.clevertap.android.sdk.Constants.WZRK_FROM);
                 launchIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                 context.startActivity(launchIntent);
             }
@@ -517,10 +517,10 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
     private void handleProductDisplayNotification(Context context, Bundle extras) {
         try {
-            int notificationId = extras.getInt(Constants.PT_NOTIF_ID);
-            if (buynow == extras.getBoolean(Constants.PT_BUY_NOW, false)) {
+            int notificationId = extras.getInt(com.clevertap.android.sdk.Constants.PT_NOTIF_ID);
+            if (buynow == extras.getBoolean(com.clevertap.android.sdk.Constants.PT_BUY_NOW, false)) {
                 notificationManager.cancel(notificationId);
-                String dl = extras.getString(Constants.PT_BUY_NOW_DL, deepLinkList.get(0));
+                String dl = extras.getString(com.clevertap.android.sdk.Constants.PT_BUY_NOW_DL, deepLinkList.get(0));
                 config = extras.getParcelable("config");
                 notificationManager.cancel(notificationId);
                 Intent launchIntent;
@@ -534,18 +534,18 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
                 boolean isPTIntentServiceAvailable = Utils.isServiceAvailable(context, clazz);
                 if (isPTIntentServiceAvailable) {
-                    launchIntent = new Intent(MAIN_ACTION);
+                    launchIntent = new Intent(PTNotificationIntentService.MAIN_ACTION);
                     launchIntent.putExtras(extras);
                     launchIntent.putExtra("dl", dl);
                     launchIntent.setPackage(context.getPackageName());
-                    launchIntent.putExtra(Constants.PT_TYPE, TYPE_BUTTON_CLICK);
+                    launchIntent.putExtra(com.clevertap.android.sdk.Constants.PT_TYPE, TYPE_BUTTON_CLICK);
                     context.startService(launchIntent);
                 } else {
                     launchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(dl));
                     launchIntent.putExtras(extras);
-                    launchIntent.putExtra(Constants.WZRK_DL, dl);
-                    launchIntent.removeExtra(Constants.WZRK_ACTIONS);
-                    launchIntent.putExtra(Constants.WZRK_FROM_KEY, Constants.WZRK_FROM);
+                    launchIntent.putExtra(com.clevertap.android.sdk.Constants.DEEP_LINK_KEY, dl);
+                    launchIntent.removeExtra(com.clevertap.android.sdk.Constants.WZRK_ACTIONS);
+                    launchIntent.putExtra(com.clevertap.android.sdk.Constants.WZRK_FROM_KEY, com.clevertap.android.sdk.Constants.WZRK_FROM);
                     launchIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
                     Utils.raiseNotificationClicked(context, extras, config);
                     context.startActivity(launchIntent);
@@ -568,35 +568,35 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 setCustomContentViewBasicKeys(contentViewSmall, context);
             }
 
-            int currentPosition = extras.getInt(Constants.PT_CURRENT_POSITION);
+            int currentPosition = extras.getInt(com.clevertap.android.sdk.Constants.PT_CURRENT_POSITION);
 
             contentViewBig.setDisplayedChild(R.id.carousel_image, currentPosition);
-            imageList = extras.getStringArrayList(Constants.PT_IMAGE_LIST);
-            deepLinkList = extras.getStringArrayList(Constants.PT_DEEPLINK_LIST);
-            bigTextList = extras.getStringArrayList(Constants.PT_BIGTEXT_LIST);
-            smallTextList = extras.getStringArrayList(Constants.PT_SMALLTEXT_LIST);
-            priceList = extras.getStringArrayList(Constants.PT_PRICE_LIST);
+            imageList = extras.getStringArrayList(com.clevertap.android.sdk.Constants.PT_IMAGE_LIST);
+            deepLinkList = extras.getStringArrayList(com.clevertap.android.sdk.Constants.PT_DEEPLINK_LIST);
+            bigTextList = extras.getStringArrayList(com.clevertap.android.sdk.Constants.PT_BIGTEXT_LIST);
+            smallTextList = extras.getStringArrayList(com.clevertap.android.sdk.Constants.PT_SMALLTEXT_LIST);
+            priceList = extras.getStringArrayList(com.clevertap.android.sdk.Constants.PT_PRICE_LIST);
 
             String dl = deepLinkList.get(currentPosition);
             contentViewBig.setTextViewText(R.id.product_name, bigTextList.get(currentPosition));
             contentViewBig.setTextViewText(R.id.product_description, smallTextList.get(currentPosition));
             contentViewBig.setTextViewText(R.id.product_price, priceList.get(currentPosition));
-            extras.remove(Constants.PT_CURRENT_POSITION);
+            extras.remove(com.clevertap.android.sdk.Constants.PT_CURRENT_POSITION);
 
             Intent launchIntent = new Intent(context, PTPushNotificationReceiver.class);
 
             PendingIntent pIntent;
 
             Intent notificationIntent4 = new Intent(context, PushTemplateReceiver.class);
-            notificationIntent4.putExtra(Constants.PT_IMAGE_1, true);
-            notificationIntent4.putExtra(Constants.PT_NOTIF_ID, notificationId);
-            notificationIntent4.putExtra(Constants.PT_BUY_NOW_DL, dl);
-            notificationIntent4.putExtra(Constants.PT_BUY_NOW, true);
+            notificationIntent4.putExtra(com.clevertap.android.sdk.Constants.PT_IMAGE_1, true);
+            notificationIntent4.putExtra(com.clevertap.android.sdk.Constants.PT_NOTIF_ID, notificationId);
+            notificationIntent4.putExtra(com.clevertap.android.sdk.Constants.PT_BUY_NOW_DL, dl);
+            notificationIntent4.putExtra(com.clevertap.android.sdk.Constants.PT_BUY_NOW, true);
             notificationIntent4.putExtras(extras);
             PendingIntent contentIntent4 = PendingIntent.getBroadcast(context, new Random().nextInt(), notificationIntent4, 0);
             contentViewBig.setOnClickPendingIntent(R.id.product_action, contentIntent4);
 
-            NotificationCompat.Builder notificationBuilder = setBuilderWithChannelIDCheck(requiresChannelId, Constants.PT_SILENT_CHANNEL_ID, context);
+            NotificationCompat.Builder notificationBuilder = setBuilderWithChannelIDCheck(requiresChannelId, com.clevertap.android.sdk.Constants.PT_SILENT_CHANNEL_ID, context);
 
             if (deepLinkList != null && !deepLinkList.isEmpty()) {
                 pIntent = setPendingIntent(context, notificationId, extras, launchIntent, deepLinkList.get(0));
@@ -627,31 +627,31 @@ public class PushTemplateReceiver extends BroadcastReceiver {
         String dl = null;
 
 
-        int notificationId = extras.getInt(Constants.PT_NOTIF_ID);
+        int notificationId = extras.getInt(com.clevertap.android.sdk.Constants.PT_NOTIF_ID);
         if (cta1 == extras.getBoolean("cta1")) {
             dl = deepLinkList.get(0);
-            extras.putString(Constants.WZRK_C2A, Constants.PT_5CTA_C2A_KEY + 1 + "_" + dl);
+            extras.putString(com.clevertap.android.sdk.Constants.WZRK_C2A, com.clevertap.android.sdk.Constants.PT_5CTA_C2A_KEY + 1 + "_" + dl);
         }
         if (cta2 == extras.getBoolean("cta2")) {
             dl = deepLinkList.get(1);
-            extras.putString(Constants.WZRK_C2A, Constants.PT_5CTA_C2A_KEY + 2 + "_" + dl);
+            extras.putString(com.clevertap.android.sdk.Constants.WZRK_C2A, com.clevertap.android.sdk.Constants.PT_5CTA_C2A_KEY + 2 + "_" + dl);
         }
         if (cta3 == extras.getBoolean("cta3")) {
             dl = deepLinkList.get(2);
-            extras.putString(Constants.WZRK_C2A, Constants.PT_5CTA_C2A_KEY + 3 + "_" + dl);
+            extras.putString(com.clevertap.android.sdk.Constants.WZRK_C2A, com.clevertap.android.sdk.Constants.PT_5CTA_C2A_KEY + 3 + "_" + dl);
         }
         if (cta4 == extras.getBoolean("cta4")) {
             dl = deepLinkList.get(3);
-            extras.putString(Constants.WZRK_C2A, Constants.PT_5CTA_C2A_KEY + 4 + "_" + dl);
+            extras.putString(com.clevertap.android.sdk.Constants.WZRK_C2A, com.clevertap.android.sdk.Constants.PT_5CTA_C2A_KEY + 4 + "_" + dl);
         }
         if (cta5 == extras.getBoolean("cta5")) {
             dl = deepLinkList.get(4);
-            extras.putString(Constants.WZRK_C2A, Constants.PT_5CTA_C2A_KEY + 5 + "_" + dl);
+            extras.putString(com.clevertap.android.sdk.Constants.WZRK_C2A, com.clevertap.android.sdk.Constants.PT_5CTA_C2A_KEY + 5 + "_" + dl);
         }
-        extras.putString(Constants.WZRK_DL, dl);
+        extras.putString(com.clevertap.android.sdk.Constants.DEEP_LINK_KEY, dl);
 
         if (close == extras.getBoolean("close")) {
-            extras.putString(Constants.WZRK_C2A, Constants.PT_5CTA_C2A_KEY + "close");
+            extras.putString(com.clevertap.android.sdk.Constants.WZRK_C2A, com.clevertap.android.sdk.Constants.PT_5CTA_C2A_KEY + "close");
             notificationManager.cancel(notificationId);
             context.sendBroadcast(new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
         }
@@ -662,9 +662,9 @@ public class PushTemplateReceiver extends BroadcastReceiver {
         if (dl != null) {
             Intent launchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(dl));
             launchIntent.putExtras(extras);
-            launchIntent.putExtra(Constants.WZRK_DL, dl);
-            launchIntent.removeExtra(Constants.WZRK_ACTIONS);
-            launchIntent.putExtra(Constants.WZRK_FROM_KEY, Constants.WZRK_FROM);
+            launchIntent.putExtra(com.clevertap.android.sdk.Constants.DEEP_LINK_KEY, dl);
+            launchIntent.removeExtra(com.clevertap.android.sdk.Constants.WZRK_ACTIONS);
+            launchIntent.putExtra(com.clevertap.android.sdk.Constants.WZRK_FROM_KEY, com.clevertap.android.sdk.Constants.WZRK_FROM);
             launchIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
             context.startActivity(launchIntent);
             context.sendBroadcast(new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
@@ -673,13 +673,13 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
     private PendingIntent setPendingIntent(Context context, int notificationId, Bundle extras, Intent launchIntent, String dl) {
         launchIntent.putExtras(extras);
-        launchIntent.putExtra(Constants.PT_NOTIF_ID, notificationId);
+        launchIntent.putExtra(com.clevertap.android.sdk.Constants.PT_NOTIF_ID, notificationId);
         if (dl != null) {
-            launchIntent.putExtra(Constants.DEFAULT_DL, true);
-            launchIntent.putExtra(Constants.WZRK_DL, dl);
+            launchIntent.putExtra(com.clevertap.android.sdk.Constants.DEFAULT_DL, true);
+            launchIntent.putExtra(com.clevertap.android.sdk.Constants.DEEP_LINK_KEY, dl);
         }
-        launchIntent.removeExtra(Constants.WZRK_ACTIONS);
-        launchIntent.putExtra(Constants.WZRK_FROM_KEY, Constants.WZRK_FROM);
+        launchIntent.removeExtra(com.clevertap.android.sdk.Constants.WZRK_ACTIONS);
+        launchIntent.putExtra(com.clevertap.android.sdk.Constants.WZRK_FROM_KEY, com.clevertap.android.sdk.Constants.WZRK_FROM);
         launchIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         return PendingIntent.getBroadcast(context, (int) System.currentTimeMillis(),
                 launchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
@@ -687,7 +687,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
     private PendingIntent setDismissIntent(Context context, Bundle extras, Intent intent) {
         intent.putExtras(extras);
-        intent.putExtra(Constants.PT_DISMISS_INTENT, true);
+        intent.putExtra(com.clevertap.android.sdk.Constants.PT_DISMISS_INTENT, true);
         return PendingIntent.getBroadcast(context, (int) System.currentTimeMillis(),
                 intent, PendingIntent.FLAG_CANCEL_CURRENT);
     }
@@ -726,9 +726,9 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             contentView.setViewVisibility(R.id.sep_subtitle, View.GONE);
         }
         if (pt_meta_clr != null && !pt_meta_clr.isEmpty()) {
-            contentView.setTextColor(R.id.app_name, Utils.getColour(pt_meta_clr, Constants.PT_META_CLR_DEFAULTS));
-            contentView.setTextColor(R.id.timestamp, Utils.getColour(pt_meta_clr, Constants.PT_META_CLR_DEFAULTS));
-            contentView.setTextColor(R.id.subtitle, Utils.getColour(pt_meta_clr, Constants.PT_META_CLR_DEFAULTS));
+            contentView.setTextColor(R.id.app_name, Utils.getColour(pt_meta_clr, com.clevertap.android.sdk.Constants.PT_META_CLR_DEFAULTS));
+            contentView.setTextColor(R.id.timestamp, Utils.getColour(pt_meta_clr, com.clevertap.android.sdk.Constants.PT_META_CLR_DEFAULTS));
+            contentView.setTextColor(R.id.subtitle, Utils.getColour(pt_meta_clr, com.clevertap.android.sdk.Constants.PT_META_CLR_DEFAULTS));
             setDotSep(context);
         }
     }
@@ -745,25 +745,25 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
     private void setCustomContentViewMessageColour(RemoteViews contentView, String pt_msg_clr) {
         if (pt_msg_clr != null && !pt_msg_clr.isEmpty()) {
-            contentView.setTextColor(R.id.msg, Utils.getColour(pt_msg_clr, Constants.PT_COLOUR_BLACK));
+            contentView.setTextColor(R.id.msg, Utils.getColour(pt_msg_clr, com.clevertap.android.sdk.Constants.PT_COLOUR_BLACK));
         }
     }
 
     private void setCustomContentViewTitleColour(RemoteViews contentView, String pt_title_clr) {
         if (pt_title_clr != null && !pt_title_clr.isEmpty()) {
-            contentView.setTextColor(R.id.title, Utils.getColour(pt_title_clr, Constants.PT_COLOUR_BLACK));
+            contentView.setTextColor(R.id.title, Utils.getColour(pt_title_clr, com.clevertap.android.sdk.Constants.PT_COLOUR_BLACK));
         }
     }
 
     private void setCustomContentViewExpandedBackgroundColour(RemoteViews contentView, String pt_bg) {
         if (pt_bg != null && !pt_bg.isEmpty()) {
-            contentView.setInt(R.id.content_view_big, "setBackgroundColor", Utils.getColour(pt_bg, Constants.PT_COLOUR_WHITE));
+            contentView.setInt(R.id.content_view_big, "setBackgroundColor", Utils.getColour(pt_bg, com.clevertap.android.sdk.Constants.PT_COLOUR_WHITE));
         }
     }
 
     private void setCustomContentViewCollapsedBackgroundColour(RemoteViews contentView, String pt_bg) {
         if (pt_bg != null && !pt_bg.isEmpty()) {
-            contentView.setInt(R.id.content_view_small, "setBackgroundColor", Utils.getColour(pt_bg, Constants.PT_COLOUR_WHITE));
+            contentView.setInt(R.id.content_view_small, "setBackgroundColor", Utils.getColour(pt_bg, com.clevertap.android.sdk.Constants.PT_COLOUR_WHITE));
         }
     }
 
@@ -798,17 +798,17 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
 
                 bigPictureStyle = new NotificationCompat.BigPictureStyle()
-                        .setSummaryText(extras.getString(Constants.PT_INPUT_FEEDBACK))
+                        .setSummaryText(extras.getString(com.clevertap.android.sdk.Constants.PT_INPUT_FEEDBACK))
                         .bigPicture(bpMap);
 
             } catch (Throwable t) {
                 bigPictureStyle = new NotificationCompat.BigTextStyle()
-                        .bigText(extras.getString(Constants.PT_INPUT_FEEDBACK));
+                        .bigText(extras.getString(com.clevertap.android.sdk.Constants.PT_INPUT_FEEDBACK));
                 PTLog.verbose("Falling back to big text notification, couldn't fetch big picture", t);
             }
         } else {
             bigPictureStyle = new NotificationCompat.BigTextStyle()
-                    .bigText(extras.getString(Constants.PT_INPUT_FEEDBACK));
+                    .bigText(extras.getString(com.clevertap.android.sdk.Constants.PT_INPUT_FEEDBACK));
         }
 
         notificationBuilder.setStyle(bigPictureStyle);
@@ -821,7 +821,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             PackageManager pm = context.getPackageManager();
             ApplicationInfo ai = pm.getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
             metaData = ai.metaData;
-            String x = Utils._getManifestStringValueForKey(metaData, Constants.LABEL_NOTIFICATION_ICON);
+            String x = Utils._getManifestStringValueForKey(metaData, com.clevertap.android.sdk.Constants.LABEL_NOTIFICATION_ICON);
             if (x == null) throw new IllegalArgumentException();
             smallIcon = context.getResources().getIdentifier(x, "drawable", context.getPackageName());
             if (smallIcon == 0) throw new IllegalArgumentException();
@@ -838,31 +838,31 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
     private void setKeysFromDashboard(Bundle extras) {
         if (pt_title == null || pt_title.isEmpty()) {
-            pt_title = extras.getString(Constants.NOTIF_TITLE);
+            pt_title = extras.getString(com.clevertap.android.sdk.Constants.NOTIF_TITLE);
         }
         if (pt_msg == null || pt_msg.isEmpty()) {
-            pt_msg = extras.getString(Constants.NOTIF_MSG);
+            pt_msg = extras.getString(com.clevertap.android.sdk.Constants.NOTIF_MSG);
         }
         if (pt_msg_summary == null || pt_msg_summary.isEmpty()) {
-            pt_msg_summary = extras.getString(Constants.WZRK_MSG_SUMMARY);
+            pt_msg_summary = extras.getString(com.clevertap.android.sdk.Constants.WZRK_MSG_SUMMARY);
         }
         if (pt_big_img == null || pt_big_img.isEmpty()) {
-            pt_big_img = extras.getString(Constants.WZRK_BIG_PICTURE);
+            pt_big_img = extras.getString(com.clevertap.android.sdk.Constants.WZRK_BIG_PICTURE);
         }
         if (pt_rating_default_dl == null || pt_rating_default_dl.isEmpty()) {
-            pt_rating_default_dl = extras.getString(Constants.WZRK_DL);
+            pt_rating_default_dl = extras.getString(com.clevertap.android.sdk.Constants.DEEP_LINK_KEY);
         }
         if (pt_meta_clr == null || pt_meta_clr.isEmpty()) {
-            pt_meta_clr = extras.getString(Constants.WZRK_CLR);
+            pt_meta_clr = extras.getString(com.clevertap.android.sdk.Constants.WZRK_CLR);
         }
         if (pt_small_icon_clr == null || pt_small_icon_clr.isEmpty()) {
-            pt_small_icon_clr = extras.getString(Constants.WZRK_CLR);
+            pt_small_icon_clr = extras.getString(com.clevertap.android.sdk.Constants.WZRK_CLR);
         }
         if (pt_subtitle == null || pt_subtitle.isEmpty()) {
-            pt_subtitle = extras.getString(Constants.WZRK_SUBTITLE);
+            pt_subtitle = extras.getString(com.clevertap.android.sdk.Constants.WZRK_SUBTITLE);
         }
         if (pt_small_icon_clr == null || pt_small_icon_clr.isEmpty()) {
-            pt_small_icon_clr = extras.getString(Constants.WZRK_CLR);
+            pt_small_icon_clr = extras.getString(com.clevertap.android.sdk.Constants.WZRK_CLR);
         }
     }
 
