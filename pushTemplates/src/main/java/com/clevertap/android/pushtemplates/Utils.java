@@ -35,6 +35,7 @@ import androidx.core.content.ContextCompat;
 
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.Constants;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -63,14 +64,14 @@ public class Utils {
     public static boolean isPNFromCleverTap(Bundle extras) {
         if (extras == null) return false;
 
-        boolean fromCleverTap = extras.containsKey(Constants.NOTIF_TAG);
+        boolean fromCleverTap = extras.containsKey(PTConstants.NOTIF_TAG);
         boolean shouldRender = fromCleverTap && extras.containsKey("nm");
         return fromCleverTap && shouldRender;
     }
 
     public static boolean isForPushTemplates(Bundle extras) {
         if (extras == null) return false;
-        String pt_id = extras.getString(Constants.PT_ID);
+        String pt_id = extras.getString(PTConstants.PT_ID);
         return !(("0").equals(pt_id) || pt_id == null || pt_id.isEmpty());
     }
 
@@ -136,7 +137,7 @@ public class Utils {
             connection.setUseCaches(true);
             connection.addRequestProperty("Content-Type", "application/json");
             connection.addRequestProperty("Accept-Encoding", "gzip, deflate");
-            connection.setConnectTimeout(Constants.PT_CONNECTION_TIMEOUT);
+            connection.setConnectTimeout(PTConstants.PT_CONNECTION_TIMEOUT);
             connection.connect();
             // expect HTTP 200 OK, so we don't mistakenly save error report
             // instead of the file
@@ -386,7 +387,7 @@ public class Utils {
     static int getTimerThreshold(Bundle extras) {
         String val = "-1";
         for (String key : extras.keySet()) {
-            if (key.contains(Constants.PT_TIMER_THRESHOLD)) {
+            if (key.contains(PTConstants.PT_TIMER_THRESHOLD)) {
                 val = extras.getString(key);
             }
         }
@@ -476,7 +477,7 @@ public class Utils {
     static String getEventNameFromExtras(Bundle extras) {
         String eName = null;
         for (String key : extras.keySet()) {
-            if (key.contains(Constants.PT_EVENT_NAME_KEY)) {
+            if (key.contains(PTConstants.PT_EVENT_NAME_KEY)) {
                 eName = extras.getString(key);
             }
         }
@@ -488,10 +489,10 @@ public class Utils {
 
         String[] eProp;
         for (String key : extras.keySet()) {
-            if (key.contains(Constants.PT_EVENT_PROPERTY_KEY)) {
+            if (key.contains(PTConstants.PT_EVENT_PROPERTY_KEY)) {
                 if (extras.getString(key) != null && !extras.getString(key).isEmpty()) {
-                    if (key.contains(Constants.PT_EVENT_PROPERTY_SEPERATOR)) {
-                        eProp = key.split(Constants.PT_EVENT_PROPERTY_SEPERATOR);
+                    if (key.contains(PTConstants.PT_EVENT_PROPERTY_SEPERATOR)) {
+                        eProp = key.split(PTConstants.PT_EVENT_PROPERTY_SEPERATOR);
                         if (extras.getString(key).equalsIgnoreCase(pkey)) {
                             eProps.put(eProp[1], value);
                             continue;
@@ -516,10 +517,10 @@ public class Utils {
 
         String[] eProp;
         for (String key : extras.keySet()) {
-            if (key.contains(Constants.PT_EVENT_PROPERTY_KEY)) {
+            if (key.contains(PTConstants.PT_EVENT_PROPERTY_KEY)) {
                 if (extras.getString(key) != null && !extras.getString(key).isEmpty()) {
-                    if (key.contains(Constants.PT_EVENT_PROPERTY_SEPERATOR)) {
-                        eProp = key.split(Constants.PT_EVENT_PROPERTY_SEPERATOR);
+                    if (key.contains(PTConstants.PT_EVENT_PROPERTY_SEPERATOR)) {
+                        eProp = key.split(PTConstants.PT_EVENT_PROPERTY_SEPERATOR);
                         eProps.put(eProp[1], extras.getString(key));
                     } else {
                         PTLog.verbose("Property " + key + " does not have the separator");
@@ -537,12 +538,12 @@ public class Utils {
     public static int getTimerEnd(Bundle extras) {
         String val = "-1";
         for (String key : extras.keySet()) {
-            if (key.contains(Constants.PT_TIMER_END)) {
+            if (key.contains(PTConstants.PT_TIMER_END)) {
                 val = extras.getString(key);
             }
         }
         if (val.contains("$D_")) {
-            String[] temp = val.split(Constants.PT_TIMER_SPLIT);
+            String[] temp = val.split(PTConstants.PT_TIMER_SPLIT);
             val = temp[1];
         }
         long currentts = System.currentTimeMillis();
@@ -664,13 +665,13 @@ public class Utils {
         if (notificationManager == null) return;
         NotificationChannel notificationChannel;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (notificationManager.getNotificationChannel(Constants.PT_SILENT_CHANNEL_ID) == null || (notificationManager.getNotificationChannel(Constants.PT_SILENT_CHANNEL_ID) != null && !isNotificationChannelEnabled(notificationManager.getNotificationChannel(Constants.PT_SILENT_CHANNEL_ID)))) {
-                Uri soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.getPackageName() + "/raw/" + Constants.PT_SOUND_FILE_NAME);
-                notificationChannel = new NotificationChannel(Constants.PT_SILENT_CHANNEL_ID, Constants.PT_SILENT_CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH);
+            if (notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID) == null || (notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID) != null && !isNotificationChannelEnabled(notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID)))) {
+                Uri soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.getPackageName() + "/raw/" + PTConstants.PT_SOUND_FILE_NAME);
+                notificationChannel = new NotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID, PTConstants.PT_SILENT_CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH);
                 if (soundUri != null) {
                     notificationChannel.setSound(soundUri, new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build());
                 }
-                notificationChannel.setDescription(Constants.PT_SILENT_CHANNEL_DESC);
+                notificationChannel.setDescription(PTConstants.PT_SILENT_CHANNEL_DESC);
                 notificationChannel.setShowBadge(false);
                 notificationManager.createNotificationChannel(notificationChannel);
             }
@@ -682,8 +683,8 @@ public class Utils {
         NotificationManager notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
         if (notificationManager == null) return;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (notificationManager.getNotificationChannel(Constants.PT_SILENT_CHANNEL_ID) != null && isNotificationChannelEnabled(notificationManager.getNotificationChannel(Constants.PT_SILENT_CHANNEL_ID))) {
-                notificationManager.deleteNotificationChannel(Constants.PT_SILENT_CHANNEL_ID);
+            if (notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID) != null && isNotificationChannelEnabled(notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID))) {
+                notificationManager.deleteNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID);
             }
         }
 
@@ -699,7 +700,7 @@ public class Utils {
     static Bitmap setBitMapColour(Context context, int resourceID, String clr)
             throws NullPointerException {
         if (clr != null && !clr.isEmpty()) {
-            int color = getColour(clr, Constants.PT_COLOUR_GREY);
+            int color = getColour(clr, PTConstants.PT_COLOUR_GREY);
 
             Drawable mDrawable = Objects.requireNonNull(ContextCompat.getDrawable(context, resourceID)).mutate();
             mDrawable.setColorFilter(new PorterDuffColorFilter(color, PorterDuff.Mode.SRC_IN));
@@ -718,29 +719,29 @@ public class Utils {
     }
 
     static void setFallback(Boolean val) {
-        Constants.PT_FALLBACK = val;
+        PTConstants.PT_FALLBACK = val;
     }
 
     static boolean getFallback() {
-        return Constants.PT_FALLBACK;
+        return PTConstants.PT_FALLBACK;
     }
 
     public static int getFlipInterval(Bundle extras) {
-        String interval = extras.getString(Constants.PT_FLIP_INTERVAL);
+        String interval = extras.getString(PTConstants.PT_FLIP_INTERVAL);
         try {
             int t = 0;
             if (interval != null) {
                 t = Integer.parseInt(interval);
-                return Math.max(t, Constants.PT_FLIP_INTERVAL_TIME);
+                return Math.max(t, PTConstants.PT_FLIP_INTERVAL_TIME);
             }
         } catch (Exception e) {
-            PTLog.debug("Flip Interval couldn't be converted to number: " + interval + " - Defaulting to base value: " + Constants.PT_FLIP_INTERVAL_TIME);
+            PTLog.debug("Flip Interval couldn't be converted to number: " + interval + " - Defaulting to base value: " + PTConstants.PT_FLIP_INTERVAL_TIME);
         }
-        return Constants.PT_FLIP_INTERVAL_TIME;
+        return PTConstants.PT_FLIP_INTERVAL_TIME;
     }
 
     static String getImagePathFromList() {
-        return Constants.PT_IMAGE_PATH_LIST;
+        return PTConstants.PT_IMAGE_PATH_LIST;
     }
 
     static String getImageFileNameFromURL(String URL) {
@@ -758,7 +759,7 @@ public class Utils {
         String pId = intent.getStringExtra(Constants.WZRK_PUSH_ID);
 
         ContextWrapper cw = new ContextWrapper(context.getApplicationContext());
-        File MyDirectory = cw.getDir(Constants.PT_DIR, Context.MODE_PRIVATE);
+        File MyDirectory = cw.getDir(PTConstants.PT_DIR, Context.MODE_PRIVATE);
         String path = MyDirectory.getAbsolutePath();
         String[] fileList = MyDirectory.list();
         File fileToBeDeleted = null;

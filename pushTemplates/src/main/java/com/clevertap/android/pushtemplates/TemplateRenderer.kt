@@ -16,6 +16,7 @@ import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.RemoteInput
+import com.clevertap.android.pushtemplates.PTConstants.PT_COLLAPSE_KEY
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
@@ -209,7 +210,7 @@ class TemplateRenderer : INotificationRenderer {
         try {
             contentViewBig = RemoteViews(context.packageName, R.layout.zero_bezel)
             setCustomContentViewBasicKeys(contentViewBig!!, context)
-            val textOnlySmallView = pt_small_view != null && pt_small_view == Constants.TEXT_ONLY
+            val textOnlySmallView = pt_small_view != null && pt_small_view == PTConstants.TEXT_ONLY
             contentViewSmall = if (textOnlySmallView) {
                 RemoteViews(context.packageName, R.layout.cv_small_text_only)
             } else {
@@ -395,27 +396,27 @@ class TemplateRenderer : INotificationRenderer {
                     priceList!!.removeAt(index)
                 }
             }
-            extras.putStringArrayList(Constants.PT_IMAGE_LIST, tempImageList)
-            extras.putStringArrayList(Constants.PT_DEEPLINK_LIST, deepLinkList)
-            extras.putStringArrayList(Constants.PT_BIGTEXT_LIST, bigTextList)
-            extras.putStringArrayList(Constants.PT_SMALLTEXT_LIST, smallTextList)
-            extras.putStringArrayList(Constants.PT_PRICE_LIST, priceList)
+            extras.putStringArrayList(PTConstants.PT_IMAGE_LIST, tempImageList)
+            extras.putStringArrayList(PTConstants.PT_DEEPLINK_LIST, deepLinkList)
+            extras.putStringArrayList(PTConstants.PT_BIGTEXT_LIST, bigTextList)
+            extras.putStringArrayList(PTConstants.PT_SMALLTEXT_LIST, smallTextList)
+            extras.putStringArrayList(PTConstants.PT_PRICE_LIST, priceList)
             val requestCode1 = Random().nextInt()
             val requestCode2 = Random().nextInt()
             val requestCode3 = Random().nextInt()
             val notificationIntent1 = Intent(context, PushTemplateReceiver::class.java)
-            notificationIntent1.putExtra(Constants.PT_CURRENT_POSITION, 0)
-            notificationIntent1.putExtra(Constants.PT_NOTIF_ID, notificationId)
-            notificationIntent1.putExtra(Constants.PT_BUY_NOW_DL, deepLinkList!![0])
+            notificationIntent1.putExtra(PTConstants.PT_CURRENT_POSITION, 0)
+            notificationIntent1.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
+            notificationIntent1.putExtra(PTConstants.PT_BUY_NOW_DL, deepLinkList!![0])
             notificationIntent1.putExtras(extras)
             val contentIntent1 =
                 PendingIntent.getBroadcast(context, requestCode1, notificationIntent1, 0)
             contentViewBig!!.setOnClickPendingIntent(R.id.small_image1, contentIntent1)
             if (deepLinkList!!.size >= 2) {
                 val notificationIntent2 = Intent(context, PushTemplateReceiver::class.java)
-                notificationIntent2.putExtra(Constants.PT_CURRENT_POSITION, 1)
-                notificationIntent2.putExtra(Constants.PT_NOTIF_ID, notificationId)
-                notificationIntent2.putExtra(Constants.PT_BUY_NOW_DL, deepLinkList!![1])
+                notificationIntent2.putExtra(PTConstants.PT_CURRENT_POSITION, 1)
+                notificationIntent2.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
+                notificationIntent2.putExtra(PTConstants.PT_BUY_NOW_DL, deepLinkList!![1])
                 notificationIntent2.putExtras(extras)
                 val contentIntent2 =
                     PendingIntent.getBroadcast(context, requestCode2, notificationIntent2, 0)
@@ -423,19 +424,19 @@ class TemplateRenderer : INotificationRenderer {
             }
             if (deepLinkList!!.size >= 3) {
                 val notificationIntent3 = Intent(context, PushTemplateReceiver::class.java)
-                notificationIntent3.putExtra(Constants.PT_CURRENT_POSITION, 2)
-                notificationIntent3.putExtra(Constants.PT_NOTIF_ID, notificationId)
-                notificationIntent3.putExtra(Constants.PT_BUY_NOW_DL, deepLinkList!![2])
+                notificationIntent3.putExtra(PTConstants.PT_CURRENT_POSITION, 2)
+                notificationIntent3.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
+                notificationIntent3.putExtra(PTConstants.PT_BUY_NOW_DL, deepLinkList!![2])
                 notificationIntent3.putExtras(extras)
                 val contentIntent3 =
                     PendingIntent.getBroadcast(context, requestCode3, notificationIntent3, 0)
                 contentViewBig!!.setOnClickPendingIntent(R.id.small_image3, contentIntent3)
             }
             val notificationIntent4 = Intent(context, PushTemplateReceiver::class.java)
-            notificationIntent4.putExtra(Constants.PT_IMAGE_1, true)
-            notificationIntent4.putExtra(Constants.PT_NOTIF_ID, notificationId)
-            notificationIntent4.putExtra(Constants.PT_BUY_NOW_DL, deepLinkList!![0])
-            notificationIntent4.putExtra(Constants.PT_BUY_NOW, true)
+            notificationIntent4.putExtra(PTConstants.PT_IMAGE_1, true)
+            notificationIntent4.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
+            notificationIntent4.putExtra(PTConstants.PT_BUY_NOW_DL, deepLinkList!![0])
+            notificationIntent4.putExtra(PTConstants.PT_BUY_NOW, true)
             notificationIntent4.putExtra("config", config)
             notificationIntent4.putExtras(extras)
             val contentIntent4 =
@@ -536,42 +537,42 @@ class TemplateRenderer : INotificationRenderer {
             val reqCode6 = Random().nextInt()
             val notificationIntent1 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent1.putExtra("cta1", true)
-            notificationIntent1.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            notificationIntent1.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent1.putExtras(extras)
             val contentIntent1 =
                 PendingIntent.getBroadcast(context, reqCode1, notificationIntent1, 0)
             contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta1, contentIntent1)
             val notificationIntent2 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent2.putExtra("cta2", true)
-            notificationIntent2.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            notificationIntent2.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent2.putExtras(extras)
             val contentIntent2 =
                 PendingIntent.getBroadcast(context, reqCode2, notificationIntent2, 0)
             contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta2, contentIntent2)
             val notificationIntent3 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent3.putExtra("cta3", true)
-            notificationIntent3.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            notificationIntent3.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent3.putExtras(extras)
             val contentIntent3 =
                 PendingIntent.getBroadcast(context, reqCode3, notificationIntent3, 0)
             contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta3, contentIntent3)
             val notificationIntent4 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent4.putExtra("cta4", true)
-            notificationIntent4.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            notificationIntent4.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent4.putExtras(extras)
             val contentIntent4 =
                 PendingIntent.getBroadcast(context, reqCode4, notificationIntent4, 0)
             contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta4, contentIntent4)
             val notificationIntent5 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent5.putExtra("cta5", true)
-            notificationIntent5.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            notificationIntent5.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent5.putExtras(extras)
             val contentIntent5 =
                 PendingIntent.getBroadcast(context, reqCode5, notificationIntent5, 0)
             contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta5, contentIntent5)
             val notificationIntent6 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent6.putExtra("close", true)
-            notificationIntent6.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            notificationIntent6.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent6.putExtras(extras)
             val contentIntent6 =
                 PendingIntent.getBroadcast(context, reqCode6, notificationIntent6, 0)
@@ -684,7 +685,7 @@ class TemplateRenderer : INotificationRenderer {
             //Set Pending Intents for each star to listen to click
             val notificationIntent1 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent1.putExtra("click1", true)
-            notificationIntent1.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            notificationIntent1.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent1.putExtra("config", config)
             notificationIntent1.putExtras(extras)
             val contentIntent1 =
@@ -692,7 +693,7 @@ class TemplateRenderer : INotificationRenderer {
             contentViewRating!!.setOnClickPendingIntent(R.id.star1, contentIntent1)
             val notificationIntent2 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent2.putExtra("click2", true)
-            notificationIntent2.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            notificationIntent2.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent2.putExtra("config", config)
             notificationIntent2.putExtras(extras)
             val contentIntent2 =
@@ -700,7 +701,7 @@ class TemplateRenderer : INotificationRenderer {
             contentViewRating!!.setOnClickPendingIntent(R.id.star2, contentIntent2)
             val notificationIntent3 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent3.putExtra("click3", true)
-            notificationIntent3.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            notificationIntent3.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent3.putExtra("config", config)
             notificationIntent3.putExtras(extras)
             val contentIntent3 =
@@ -708,7 +709,7 @@ class TemplateRenderer : INotificationRenderer {
             contentViewRating!!.setOnClickPendingIntent(R.id.star3, contentIntent3)
             val notificationIntent4 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent4.putExtra("click4", true)
-            notificationIntent4.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            notificationIntent4.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent4.putExtra("config", config)
             notificationIntent4.putExtras(extras)
             val contentIntent4 =
@@ -716,7 +717,7 @@ class TemplateRenderer : INotificationRenderer {
             contentViewRating!!.setOnClickPendingIntent(R.id.star4, contentIntent4)
             val notificationIntent5 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent5.putExtra("click5", true)
-            notificationIntent5.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            notificationIntent5.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent5.putExtra("config", config)
             notificationIntent5.putExtras(extras)
             val contentIntent5 =
@@ -805,7 +806,7 @@ class TemplateRenderer : INotificationRenderer {
                 }
             }
             if (pt_manual_carousel_type == null || !pt_manual_carousel_type.equals(
-                    Constants.PT_MANUAL_CAROUSEL_FILMSTRIP,
+                    PTConstants.PT_MANUAL_CAROUSEL_FILMSTRIP,
                     ignoreCase = true
                 )
             ) {
@@ -817,13 +818,13 @@ class TemplateRenderer : INotificationRenderer {
                 R.id.carousel_image_left,
                 tempImageList.size - 1
             )
-            extras.putInt(Constants.PT_MANUAL_CAROUSEL_CURRENT, currentPosition)
-            extras.putStringArrayList(Constants.PT_IMAGE_LIST, tempImageList)
-            extras.putStringArrayList(Constants.PT_DEEPLINK_LIST, deepLinkList)
+            extras.putInt(PTConstants.PT_MANUAL_CAROUSEL_CURRENT, currentPosition)
+            extras.putStringArrayList(PTConstants.PT_IMAGE_LIST, tempImageList)
+            extras.putStringArrayList(PTConstants.PT_DEEPLINK_LIST, deepLinkList)
             val rightArrowPos0Intent = Intent(context, PushTemplateReceiver::class.java)
-            rightArrowPos0Intent.putExtra(Constants.PT_RIGHT_SWIPE, true)
-            rightArrowPos0Intent.putExtra(Constants.PT_MANUAL_CAROUSEL_FROM, 0)
-            rightArrowPos0Intent.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            rightArrowPos0Intent.putExtra(PTConstants.PT_RIGHT_SWIPE, true)
+            rightArrowPos0Intent.putExtra(PTConstants.PT_MANUAL_CAROUSEL_FROM, 0)
+            rightArrowPos0Intent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             rightArrowPos0Intent.putExtras(extras)
             val contentRightPos0Intent =
                 setPendingIntent(context, notificationId, extras, rightArrowPos0Intent, dl)
@@ -832,9 +833,9 @@ class TemplateRenderer : INotificationRenderer {
                 contentRightPos0Intent
             )
             val leftArrowPos0Intent = Intent(context, PushTemplateReceiver::class.java)
-            leftArrowPos0Intent.putExtra(Constants.PT_RIGHT_SWIPE, false)
-            leftArrowPos0Intent.putExtra(Constants.PT_MANUAL_CAROUSEL_FROM, 0)
-            leftArrowPos0Intent.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            leftArrowPos0Intent.putExtra(PTConstants.PT_RIGHT_SWIPE, false)
+            leftArrowPos0Intent.putExtra(PTConstants.PT_MANUAL_CAROUSEL_FROM, 0)
+            leftArrowPos0Intent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             leftArrowPos0Intent.putExtras(extras)
             val contentLeftPos0Intent =
                 setPendingIntent(context, notificationId, extras, leftArrowPos0Intent, dl)
@@ -885,8 +886,8 @@ class TemplateRenderer : INotificationRenderer {
     }
 
     private fun setUp(context: Context, extras: Bundle, config: CleverTapInstanceConfig?) {
-        pt_id = extras.getString(Constants.PT_ID)
-        val pt_json = extras.getString(Constants.PT_JSON)
+        pt_id = extras.getString(PTConstants.PT_ID)
+        val pt_json = extras.getString(PTConstants.PT_JSON)
         if (pt_id != null) {
             templateType = TemplateType.fromString(pt_id)
             var newExtras: Bundle? = null
@@ -899,48 +900,48 @@ class TemplateRenderer : INotificationRenderer {
             }
             if (newExtras != null) extras.putAll(newExtras)
         }
-        pt_msg = extras.getString(Constants.PT_MSG)
-        pt_msg_summary = extras.getString(Constants.PT_MSG_SUMMARY)
-        pt_msg_clr = extras.getString(Constants.PT_MSG_COLOR)
-        pt_title = extras.getString(Constants.PT_TITLE)
-        pt_title_clr = extras.getString(Constants.PT_TITLE_COLOR)
-        pt_meta_clr = extras.getString(Constants.PT_META_CLR)
-        pt_bg = extras.getString(Constants.PT_BG)
-        pt_big_img = extras.getString(Constants.PT_BIG_IMG)
-        pt_large_icon = extras.getString(Constants.PT_NOTIF_ICON)
-        pt_small_view = extras.getString(Constants.PT_SMALL_VIEW)
+        pt_msg = extras.getString(PTConstants.PT_MSG)
+        pt_msg_summary = extras.getString(PTConstants.PT_MSG_SUMMARY)
+        pt_msg_clr = extras.getString(PTConstants.PT_MSG_COLOR)
+        pt_title = extras.getString(PTConstants.PT_TITLE)
+        pt_title_clr = extras.getString(PTConstants.PT_TITLE_COLOR)
+        pt_meta_clr = extras.getString(PTConstants.PT_META_CLR)
+        pt_bg = extras.getString(PTConstants.PT_BG)
+        pt_big_img = extras.getString(PTConstants.PT_BIG_IMG)
+        pt_large_icon = extras.getString(PTConstants.PT_NOTIF_ICON)
+        pt_small_view = extras.getString(PTConstants.PT_SMALL_VIEW)
         imageList = Utils.getImageListFromExtras(extras)
         deepLinkList = Utils.getDeepLinkListFromExtras(extras)
         bigTextList = Utils.getBigTextFromExtras(extras)
         smallTextList = Utils.getSmallTextFromExtras(extras)
         priceList = Utils.getPriceFromExtras(extras)
-        pt_rating_default_dl = extras.getString(Constants.PT_DEFAULT_DL)
+        pt_rating_default_dl = extras.getString(PTConstants.PT_DEFAULT_DL)
         asyncHelper = AsyncHelper.instance
         //        dbHelper = new DBHelper(context);
         pt_timer_threshold = Utils.getTimerThreshold(extras)
-        pt_input_label = extras.getString(Constants.PT_INPUT_LABEL)
-        pt_input_feedback = extras.getString(Constants.PT_INPUT_FEEDBACK)
-        pt_input_auto_open = extras.getString(Constants.PT_INPUT_AUTO_OPEN)
-        pt_dismiss_on_click = extras.getString(Constants.PT_DISMISS_ON_CLICK)
-        pt_chrono_title_clr = extras.getString(Constants.PT_CHRONO_TITLE_COLOUR)
-        pt_product_display_action = extras.getString(Constants.PT_PRODUCT_DISPLAY_ACTION)
-        pt_product_display_action_clr = extras.getString(Constants.PT_PRODUCT_DISPLAY_ACTION_COLOUR)
+        pt_input_label = extras.getString(PTConstants.PT_INPUT_LABEL)
+        pt_input_feedback = extras.getString(PTConstants.PT_INPUT_FEEDBACK)
+        pt_input_auto_open = extras.getString(PTConstants.PT_INPUT_AUTO_OPEN)
+        pt_dismiss_on_click = extras.getString(PTConstants.PT_DISMISS_ON_CLICK)
+        pt_chrono_title_clr = extras.getString(PTConstants.PT_CHRONO_TITLE_COLOUR)
+        pt_product_display_action = extras.getString(PTConstants.PT_PRODUCT_DISPLAY_ACTION)
+        pt_product_display_action_clr = extras.getString(PTConstants.PT_PRODUCT_DISPLAY_ACTION_COLOUR)
         pt_timer_end = Utils.getTimerEnd(extras)
-        pt_big_img_alt = extras.getString(Constants.PT_BIG_IMG_ALT)
-        pt_msg_alt = extras.getString(Constants.PT_MSG_ALT)
-        pt_title_alt = extras.getString(Constants.PT_TITLE_ALT)
-        pt_product_display_linear = extras.getString(Constants.PT_PRODUCT_DISPLAY_LINEAR)
+        pt_big_img_alt = extras.getString(PTConstants.PT_BIG_IMG_ALT)
+        pt_msg_alt = extras.getString(PTConstants.PT_MSG_ALT)
+        pt_title_alt = extras.getString(PTConstants.PT_TITLE_ALT)
+        pt_product_display_linear = extras.getString(PTConstants.PT_PRODUCT_DISPLAY_LINEAR)
         pt_product_display_action_text_clr =
-            extras.getString(Constants.PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR)
-        pt_small_icon_clr = extras.getString(Constants.PT_SMALL_ICON_COLOUR)
-        pt_cancel_notif_id = extras.getString(Constants.PT_CANCEL_NOTIF_ID)
+            extras.getString(PTConstants.PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR)
+        pt_small_icon_clr = extras.getString(PTConstants.PT_SMALL_ICON_COLOUR)
+        pt_cancel_notif_id = extras.getString(PTConstants.PT_CANCEL_NOTIF_ID)
         pt_cancel_notif_ids = Utils.getNotificationIds(context)
         actions = Utils.getActionKeys(extras)
-        pt_subtitle = extras.getString(Constants.PT_SUBTITLE)
-        pt_collapse_key = extras[Constants.PT_COLLAPSE_KEY]
+        pt_subtitle = extras.getString(PTConstants.PT_SUBTITLE)
+        pt_collapse_key = extras[PTConstants.PT_COLLAPSE_KEY]
         pt_flip_interval = Utils.getFlipInterval(extras)
         pID = extras.getString(Constants.WZRK_PUSH_ID)
-        pt_manual_carousel_type = extras.getString(Constants.PT_MANUAL_CAROUSEL_TYPE)
+        pt_manual_carousel_type = extras.getString(PTConstants.PT_MANUAL_CAROUSEL_TYPE)
         if (config != null) {
             this.config = config
         }
@@ -1081,7 +1082,7 @@ class TemplateRenderer : INotificationRenderer {
     private fun setDotSep(context: Context) {
         try {
             pt_dot = context.resources.getIdentifier(
-                Constants.PT_DOT_SEP,
+                PTConstants.PT_DOT_SEP,
                 "drawable",
                 context.packageName
             )
@@ -1344,7 +1345,7 @@ class TemplateRenderer : INotificationRenderer {
             //Set Pending Intents for each star to listen to click
             val notificationIntent1 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent1.putExtra("click1", true)
-            notificationIntent1.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            notificationIntent1.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent1.putExtra("config", config)
             notificationIntent1.putExtras(extras)
             val contentIntent1 =
@@ -1352,7 +1353,7 @@ class TemplateRenderer : INotificationRenderer {
             contentViewRating!!.setOnClickPendingIntent(R.id.star1, contentIntent1)
             val notificationIntent2 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent2.putExtra("click2", true)
-            notificationIntent2.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            notificationIntent2.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent2.putExtra("config", config)
             notificationIntent2.putExtras(extras)
             val contentIntent2 =
@@ -1360,7 +1361,7 @@ class TemplateRenderer : INotificationRenderer {
             contentViewRating!!.setOnClickPendingIntent(R.id.star2, contentIntent2)
             val notificationIntent3 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent3.putExtra("click3", true)
-            notificationIntent3.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            notificationIntent3.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent3.putExtra("config", config)
             notificationIntent3.putExtras(extras)
             val contentIntent3 =
@@ -1368,7 +1369,7 @@ class TemplateRenderer : INotificationRenderer {
             contentViewRating!!.setOnClickPendingIntent(R.id.star3, contentIntent3)
             val notificationIntent4 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent4.putExtra("click4", true)
-            notificationIntent4.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            notificationIntent4.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent4.putExtra("config", config)
             notificationIntent4.putExtras(extras)
             val contentIntent4 =
@@ -1376,7 +1377,7 @@ class TemplateRenderer : INotificationRenderer {
             contentViewRating!!.setOnClickPendingIntent(R.id.star4, contentIntent4)
             val notificationIntent5 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent5.putExtra("click5", true)
-            notificationIntent5.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            notificationIntent5.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent5.putExtra("config", config)
             notificationIntent5.putExtras(extras)
             val contentIntent5 =
@@ -1614,7 +1615,7 @@ class TemplateRenderer : INotificationRenderer {
                 }
             }
             if (pt_manual_carousel_type == null || !pt_manual_carousel_type.equals(
-                    Constants.PT_MANUAL_CAROUSEL_FILMSTRIP,
+                    PTConstants.PT_MANUAL_CAROUSEL_FILMSTRIP,
                     ignoreCase = true
                 )
             ) {
@@ -1626,13 +1627,13 @@ class TemplateRenderer : INotificationRenderer {
                 R.id.carousel_image_left,
                 tempImageList.size - 1
             )
-            extras.putInt(Constants.PT_MANUAL_CAROUSEL_CURRENT, currentPosition)
-            extras.putStringArrayList(Constants.PT_IMAGE_LIST, tempImageList)
-            extras.putStringArrayList(Constants.PT_DEEPLINK_LIST, deepLinkList)
+            extras.putInt(PTConstants.PT_MANUAL_CAROUSEL_CURRENT, currentPosition)
+            extras.putStringArrayList(PTConstants.PT_IMAGE_LIST, tempImageList)
+            extras.putStringArrayList(PTConstants.PT_DEEPLINK_LIST, deepLinkList)
             val rightArrowPos0Intent = Intent(context, PushTemplateReceiver::class.java)
-            rightArrowPos0Intent.putExtra(Constants.PT_RIGHT_SWIPE, true)
-            rightArrowPos0Intent.putExtra(Constants.PT_MANUAL_CAROUSEL_FROM, 0)
-            rightArrowPos0Intent.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            rightArrowPos0Intent.putExtra(PTConstants.PT_RIGHT_SWIPE, true)
+            rightArrowPos0Intent.putExtra(PTConstants.PT_MANUAL_CAROUSEL_FROM, 0)
+            rightArrowPos0Intent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             rightArrowPos0Intent.putExtras(extras)
             val contentRightPos0Intent =
                 setPendingIntent(context, notificationId, extras, rightArrowPos0Intent, dl)
@@ -1641,9 +1642,9 @@ class TemplateRenderer : INotificationRenderer {
                 contentRightPos0Intent
             )
             val leftArrowPos0Intent = Intent(context, PushTemplateReceiver::class.java)
-            leftArrowPos0Intent.putExtra(Constants.PT_RIGHT_SWIPE, false)
-            leftArrowPos0Intent.putExtra(Constants.PT_MANUAL_CAROUSEL_FROM, 0)
-            leftArrowPos0Intent.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            leftArrowPos0Intent.putExtra(PTConstants.PT_RIGHT_SWIPE, false)
+            leftArrowPos0Intent.putExtra(PTConstants.PT_MANUAL_CAROUSEL_FROM, 0)
+            leftArrowPos0Intent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             leftArrowPos0Intent.putExtras(extras)
             val contentLeftPos0Intent =
                 setPendingIntent(context, notificationId, extras, leftArrowPos0Intent, dl)
@@ -1917,27 +1918,27 @@ class TemplateRenderer : INotificationRenderer {
                     priceList!!.removeAt(index)
                 }
             }
-            extras.putStringArrayList(Constants.PT_IMAGE_LIST, tempImageList)
-            extras.putStringArrayList(Constants.PT_DEEPLINK_LIST, deepLinkList)
-            extras.putStringArrayList(Constants.PT_BIGTEXT_LIST, bigTextList)
-            extras.putStringArrayList(Constants.PT_SMALLTEXT_LIST, smallTextList)
-            extras.putStringArrayList(Constants.PT_PRICE_LIST, priceList)
+            extras.putStringArrayList(PTConstants.PT_IMAGE_LIST, tempImageList)
+            extras.putStringArrayList(PTConstants.PT_DEEPLINK_LIST, deepLinkList)
+            extras.putStringArrayList(PTConstants.PT_BIGTEXT_LIST, bigTextList)
+            extras.putStringArrayList(PTConstants.PT_SMALLTEXT_LIST, smallTextList)
+            extras.putStringArrayList(PTConstants.PT_PRICE_LIST, priceList)
             val requestCode1 = Random().nextInt()
             val requestCode2 = Random().nextInt()
             val requestCode3 = Random().nextInt()
             val notificationIntent1 = Intent(context, PushTemplateReceiver::class.java)
-            notificationIntent1.putExtra(Constants.PT_CURRENT_POSITION, 0)
-            notificationIntent1.putExtra(Constants.PT_NOTIF_ID, notificationId)
-            notificationIntent1.putExtra(Constants.PT_BUY_NOW_DL, deepLinkList!![0])
+            notificationIntent1.putExtra(PTConstants.PT_CURRENT_POSITION, 0)
+            notificationIntent1.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
+            notificationIntent1.putExtra(PTConstants.PT_BUY_NOW_DL, deepLinkList!![0])
             notificationIntent1.putExtras(extras)
             val contentIntent1 =
                 PendingIntent.getBroadcast(context, requestCode1, notificationIntent1, 0)
             contentViewBig!!.setOnClickPendingIntent(R.id.small_image1, contentIntent1)
             if (deepLinkList!!.size >= 2) {
                 val notificationIntent2 = Intent(context, PushTemplateReceiver::class.java)
-                notificationIntent2.putExtra(Constants.PT_CURRENT_POSITION, 1)
-                notificationIntent2.putExtra(Constants.PT_NOTIF_ID, notificationId)
-                notificationIntent2.putExtra(Constants.PT_BUY_NOW_DL, deepLinkList!![1])
+                notificationIntent2.putExtra(PTConstants.PT_CURRENT_POSITION, 1)
+                notificationIntent2.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
+                notificationIntent2.putExtra(PTConstants.PT_BUY_NOW_DL, deepLinkList!![1])
                 notificationIntent2.putExtras(extras)
                 val contentIntent2 =
                     PendingIntent.getBroadcast(context, requestCode2, notificationIntent2, 0)
@@ -1945,19 +1946,19 @@ class TemplateRenderer : INotificationRenderer {
             }
             if (deepLinkList!!.size >= 3) {
                 val notificationIntent3 = Intent(context, PushTemplateReceiver::class.java)
-                notificationIntent3.putExtra(Constants.PT_CURRENT_POSITION, 2)
-                notificationIntent3.putExtra(Constants.PT_NOTIF_ID, notificationId)
-                notificationIntent3.putExtra(Constants.PT_BUY_NOW_DL, deepLinkList!![2])
+                notificationIntent3.putExtra(PTConstants.PT_CURRENT_POSITION, 2)
+                notificationIntent3.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
+                notificationIntent3.putExtra(PTConstants.PT_BUY_NOW_DL, deepLinkList!![2])
                 notificationIntent3.putExtras(extras)
                 val contentIntent3 =
                     PendingIntent.getBroadcast(context, requestCode3, notificationIntent3, 0)
                 contentViewBig!!.setOnClickPendingIntent(R.id.small_image3, contentIntent3)
             }
             val notificationIntent4 = Intent(context, PushTemplateReceiver::class.java)
-            notificationIntent4.putExtra(Constants.PT_IMAGE_1, true)
-            notificationIntent4.putExtra(Constants.PT_NOTIF_ID, notificationId)
-            notificationIntent4.putExtra(Constants.PT_BUY_NOW_DL, deepLinkList!![0])
-            notificationIntent4.putExtra(Constants.PT_BUY_NOW, true)
+            notificationIntent4.putExtra(PTConstants.PT_IMAGE_1, true)
+            notificationIntent4.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
+            notificationIntent4.putExtra(PTConstants.PT_BUY_NOW_DL, deepLinkList!![0])
+            notificationIntent4.putExtra(PTConstants.PT_BUY_NOW, true)
             notificationIntent4.putExtra("config", config)
             notificationIntent4.putExtras(extras)
             val contentIntent4 =
@@ -2073,42 +2074,42 @@ class TemplateRenderer : INotificationRenderer {
             val reqCode6 = Random().nextInt()
             val notificationIntent1 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent1.putExtra("cta1", true)
-            notificationIntent1.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            notificationIntent1.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent1.putExtras(extras)
             val contentIntent1 =
                 PendingIntent.getBroadcast(context, reqCode1, notificationIntent1, 0)
             contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta1, contentIntent1)
             val notificationIntent2 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent2.putExtra("cta2", true)
-            notificationIntent2.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            notificationIntent2.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent2.putExtras(extras)
             val contentIntent2 =
                 PendingIntent.getBroadcast(context, reqCode2, notificationIntent2, 0)
             contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta2, contentIntent2)
             val notificationIntent3 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent3.putExtra("cta3", true)
-            notificationIntent3.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            notificationIntent3.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent3.putExtras(extras)
             val contentIntent3 =
                 PendingIntent.getBroadcast(context, reqCode3, notificationIntent3, 0)
             contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta3, contentIntent3)
             val notificationIntent4 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent4.putExtra("cta4", true)
-            notificationIntent4.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            notificationIntent4.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent4.putExtras(extras)
             val contentIntent4 =
                 PendingIntent.getBroadcast(context, reqCode4, notificationIntent4, 0)
             contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta4, contentIntent4)
             val notificationIntent5 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent5.putExtra("cta5", true)
-            notificationIntent5.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            notificationIntent5.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent5.putExtras(extras)
             val contentIntent5 =
                 PendingIntent.getBroadcast(context, reqCode5, notificationIntent5, 0)
             contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta5, contentIntent5)
             val notificationIntent6 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent6.putExtra("close", true)
-            notificationIntent6.putExtra(Constants.PT_NOTIF_ID, notificationId)
+            notificationIntent6.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent6.putExtras(extras)
             val contentIntent6 =
                 PendingIntent.getBroadcast(context, reqCode6, notificationIntent6, 0)
@@ -2198,7 +2199,7 @@ class TemplateRenderer : INotificationRenderer {
         try {
             contentViewBig = RemoteViews(context.packageName, R.layout.zero_bezel)
             setCustomContentViewBasicKeys(contentViewBig!!, context)
-            val textOnlySmallView = pt_small_view != null && pt_small_view == Constants.TEXT_ONLY
+            val textOnlySmallView = pt_small_view != null && pt_small_view == PTConstants.TEXT_ONLY
             contentViewSmall = if (textOnlySmallView) {
                 RemoteViews(context.packageName, R.layout.cv_small_text_only)
             } else {
@@ -2270,12 +2271,12 @@ class TemplateRenderer : INotificationRenderer {
             contentViewTimerCollapsed = RemoteViews(context.packageName, R.layout.timer_collapsed)
             val timer_end: Int
             timer_end =
-                if (pt_timer_threshold != -1 && pt_timer_threshold >= Constants.PT_TIMER_MIN_THRESHOLD) {
-                    pt_timer_threshold * Constants.ONE_SECOND + Constants.ONE_SECOND
-                } else if (pt_timer_end >= Constants.PT_TIMER_MIN_THRESHOLD) {
-                    pt_timer_end * Constants.ONE_SECOND + Constants.ONE_SECOND
+                if (pt_timer_threshold != -1 && pt_timer_threshold >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
+                    pt_timer_threshold * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
+                } else if (pt_timer_end >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
+                    pt_timer_end * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
                 } else {
-                    PTLog.debug("Not rendering notification Timer End value lesser than threshold (10 seconds) from current time: " + Constants.PT_TIMER_END)
+                    PTLog.debug("Not rendering notification Timer End value lesser than threshold (10 seconds) from current time: " + PTConstants.PT_TIMER_END)
                     return
                 }
             setCustomContentViewBasicKeys(contentViewTimer!!, context)
@@ -2363,12 +2364,12 @@ class TemplateRenderer : INotificationRenderer {
             contentViewTimerCollapsed = RemoteViews(context.packageName, R.layout.timer_collapsed)
             val timer_end: Int
             timer_end =
-                if (pt_timer_threshold != -1 && pt_timer_threshold >= Constants.PT_TIMER_MIN_THRESHOLD) {
-                    pt_timer_threshold * Constants.ONE_SECOND + Constants.ONE_SECOND
-                } else if (pt_timer_end >= Constants.PT_TIMER_MIN_THRESHOLD) {
-                    pt_timer_end * Constants.ONE_SECOND + Constants.ONE_SECOND
+                if (pt_timer_threshold != -1 && pt_timer_threshold >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
+                    pt_timer_threshold * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
+                } else if (pt_timer_end >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
+                    pt_timer_end * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
                 } else {
-                    PTLog.debug("Not rendering notification Timer End value lesser than threshold (10 seconds) from current time: " + Constants.PT_TIMER_END)
+                    PTLog.debug("Not rendering notification Timer End value lesser than threshold (10 seconds) from current time: " + PTConstants.PT_TIMER_END)
                     return null
                 }
             setCustomContentViewBasicKeys(contentViewTimer!!, context)
@@ -2468,14 +2469,14 @@ class TemplateRenderer : INotificationRenderer {
             setStandardViewBigImageStyle(pt_big_img, extras, context, notificationBuilder)
             if (pt_input_label != null && pt_input_label!!.isNotEmpty()) {
                 //Initialise RemoteInput
-                val remoteInput = RemoteInput.Builder(Constants.PT_INPUT_KEY)
+                val remoteInput = RemoteInput.Builder(PTConstants.PT_INPUT_KEY)
                     .setLabel(pt_input_label)
                     .build()
 
                 //Set launchIntent to receiver
                 val replyIntent = Intent(context, PushTemplateReceiver::class.java)
-                replyIntent.putExtra(Constants.PT_INPUT_FEEDBACK, pt_input_feedback)
-                replyIntent.putExtra(Constants.PT_INPUT_AUTO_OPEN, pt_input_auto_open)
+                replyIntent.putExtra(PTConstants.PT_INPUT_FEEDBACK, pt_input_feedback)
+                replyIntent.putExtra(PTConstants.PT_INPUT_AUTO_OPEN, pt_input_auto_open)
                 replyIntent.putExtra("config", config)
                 val replyPendingIntent: PendingIntent
                 replyPendingIntent = if (deepLinkList != null) {
@@ -2503,7 +2504,7 @@ class TemplateRenderer : INotificationRenderer {
                 notificationBuilder.addAction(replyAction)
             }
             if (pt_dismiss_on_click != null) if (pt_dismiss_on_click!!.isNotEmpty()) extras.putString(
-                Constants.PT_DISMISS_ON_CLICK, pt_dismiss_on_click
+                PTConstants.PT_DISMISS_ON_CLICK, pt_dismiss_on_click
             )
             setActionButtons(context, extras, notificationId, notificationBuilder)
             val notification = notificationBuilder.build()
@@ -2544,14 +2545,14 @@ class TemplateRenderer : INotificationRenderer {
             nb = setStandardViewBigImageStyle(pt_big_img, extras, context, nb)
             if (pt_input_label != null && pt_input_label!!.isNotEmpty()) {
                 //Initialise RemoteInput
-                val remoteInput = RemoteInput.Builder(Constants.PT_INPUT_KEY)
+                val remoteInput = RemoteInput.Builder(PTConstants.PT_INPUT_KEY)
                     .setLabel(pt_input_label)
                     .build()
 
                 //Set launchIntent to receiver
                 val replyIntent = Intent(context, PushTemplateReceiver::class.java)
-                replyIntent.putExtra(Constants.PT_INPUT_FEEDBACK, pt_input_feedback)
-                replyIntent.putExtra(Constants.PT_INPUT_AUTO_OPEN, pt_input_auto_open)
+                replyIntent.putExtra(PTConstants.PT_INPUT_FEEDBACK, pt_input_feedback)
+                replyIntent.putExtra(PTConstants.PT_INPUT_AUTO_OPEN, pt_input_auto_open)
                 replyIntent.putExtra("config", config)
                 val replyPendingIntent: PendingIntent
                 replyPendingIntent = if (deepLinkList != null) {
@@ -2579,7 +2580,7 @@ class TemplateRenderer : INotificationRenderer {
                 nb.addAction(replyAction)
             }
             if (pt_dismiss_on_click != null) if (pt_dismiss_on_click!!.isNotEmpty()) extras.putString(
-                Constants.PT_DISMISS_ON_CLICK, pt_dismiss_on_click
+                PTConstants.PT_DISMISS_ON_CLICK, pt_dismiss_on_click
             )
             setActionButtons(context, extras, notificationId, nb)
         } catch (t: Throwable) {
@@ -2596,9 +2597,9 @@ class TemplateRenderer : INotificationRenderer {
         dl: String?
     ): PendingIntent {
         launchIntent.putExtras(extras)
-        launchIntent.putExtra(Constants.PT_NOTIF_ID, notificationId)
+        launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
         if (dl != null) {
-            launchIntent.putExtra(Constants.DEFAULT_DL, true)
+            launchIntent.putExtra(PTConstants.DEFAULT_DL, true)
             launchIntent.putExtra(Constants.DEEP_LINK_KEY, dl)
         }
         launchIntent.removeExtra(Constants.WZRK_ACTIONS)
@@ -2639,7 +2640,7 @@ class TemplateRenderer : INotificationRenderer {
             try {
                 val bpMap = Utils.getNotificationBitmap(pt_big_img, false, context)
                     ?: throw Exception("Failed to fetch big picture!")
-                bigPictureStyle = if (extras.containsKey(Constants.PT_MSG_SUMMARY)) {
+                bigPictureStyle = if (extras.containsKey(PTConstants.PT_MSG_SUMMARY)) {
                     val summaryText = pt_msg_summary
                     NotificationCompat.BigPictureStyle()
                         .setSummaryText(summaryText)
@@ -2704,15 +2705,15 @@ class TemplateRenderer : INotificationRenderer {
         if (pt_meta_clr != null && pt_meta_clr!!.isNotEmpty()) {
             contentView.setTextColor(
                 R.id.app_name,
-                Utils.getColour(pt_meta_clr, Constants.PT_META_CLR_DEFAULTS)
+                Utils.getColour(pt_meta_clr, PTConstants.PT_META_CLR_DEFAULTS)
             )
             contentView.setTextColor(
                 R.id.timestamp,
-                Utils.getColour(pt_meta_clr, Constants.PT_META_CLR_DEFAULTS)
+                Utils.getColour(pt_meta_clr, PTConstants.PT_META_CLR_DEFAULTS)
             )
             contentView.setTextColor(
                 R.id.subtitle,
-                Utils.getColour(pt_meta_clr, Constants.PT_META_CLR_DEFAULTS)
+                Utils.getColour(pt_meta_clr, PTConstants.PT_META_CLR_DEFAULTS)
             )
             setDotSep(context)
         }
@@ -2729,7 +2730,7 @@ class TemplateRenderer : INotificationRenderer {
                 "setBackgroundColor",
                 Utils.getColour(
                     pt_product_display_action_clr,
-                    Constants.PT_PRODUCT_DISPLAY_ACTION_CLR_DEFAULTS
+                    PTConstants.PT_PRODUCT_DISPLAY_ACTION_CLR_DEFAULTS
                 )
             )
         }
@@ -2762,7 +2763,7 @@ class TemplateRenderer : INotificationRenderer {
                 resourceID,
                 Utils.getColour(
                     pt_product_display_action_text_clr,
-                    Constants.PT_PRODUCT_DISPLAY_ACTION_TEXT_CLR_DEFAULT
+                    PTConstants.PT_PRODUCT_DISPLAY_ACTION_TEXT_CLR_DEFAULT
                 )
             )
         }
@@ -2829,7 +2830,7 @@ class TemplateRenderer : INotificationRenderer {
         if (pt_msg_clr != null && pt_msg_clr.isNotEmpty()) {
             contentView.setTextColor(
                 R.id.msg,
-                Utils.getColour(pt_msg_clr, Constants.PT_COLOUR_BLACK)
+                Utils.getColour(pt_msg_clr, PTConstants.PT_COLOUR_BLACK)
             )
         }
     }
@@ -2838,7 +2839,7 @@ class TemplateRenderer : INotificationRenderer {
         if (pt_title_clr != null && pt_title_clr.isNotEmpty()) {
             contentView.setTextColor(
                 R.id.title,
-                Utils.getColour(pt_title_clr, Constants.PT_COLOUR_BLACK)
+                Utils.getColour(pt_title_clr, PTConstants.PT_COLOUR_BLACK)
             )
         }
     }
@@ -2849,7 +2850,7 @@ class TemplateRenderer : INotificationRenderer {
         colour: String?
     ) {
         if (colour != null && colour.isNotEmpty()) {
-            contentView.setTextColor(rId, Utils.getColour(colour, Constants.PT_COLOUR_BLACK))
+            contentView.setTextColor(rId, Utils.getColour(colour, PTConstants.PT_COLOUR_BLACK))
         }
     }
 
@@ -2861,13 +2862,13 @@ class TemplateRenderer : INotificationRenderer {
         if (pt_chrono_title_clr != null && pt_chrono_title_clr.isNotEmpty()) {
             contentView.setTextColor(
                 R.id.chronometer,
-                Utils.getColour(pt_chrono_title_clr, Constants.PT_COLOUR_BLACK)
+                Utils.getColour(pt_chrono_title_clr, PTConstants.PT_COLOUR_BLACK)
             )
         } else {
             if (pt_title_clr != null && pt_title_clr.isNotEmpty()) {
                 contentView.setTextColor(
                     R.id.chronometer,
-                    Utils.getColour(pt_title_clr, Constants.PT_COLOUR_BLACK)
+                    Utils.getColour(pt_title_clr, PTConstants.PT_COLOUR_BLACK)
                 )
             }
         }
@@ -2881,7 +2882,7 @@ class TemplateRenderer : INotificationRenderer {
             contentView.setInt(
                 R.id.content_view_big,
                 "setBackgroundColor",
-                Utils.getColour(pt_bg, Constants.PT_COLOUR_WHITE)
+                Utils.getColour(pt_bg, PTConstants.PT_COLOUR_WHITE)
             )
         }
     }
@@ -2894,7 +2895,7 @@ class TemplateRenderer : INotificationRenderer {
             contentView.setInt(
                 R.id.content_view_small,
                 "setBackgroundColor",
-                Utils.getColour(pt_bg, Constants.PT_COLOUR_WHITE)
+                Utils.getColour(pt_bg, PTConstants.PT_COLOUR_WHITE)
             )
         }
     }
@@ -2907,7 +2908,7 @@ class TemplateRenderer : INotificationRenderer {
             contentView.setInt(
                 R.id.chronometer,
                 "setBackgroundColor",
-                Utils.getColour(pt_bg, Constants.PT_COLOUR_WHITE)
+                Utils.getColour(pt_bg, PTConstants.PT_COLOUR_WHITE)
             )
         }
     }
@@ -2957,7 +2958,7 @@ class TemplateRenderer : INotificationRenderer {
                     val action = actions!!.getJSONObject(i)
                     val label = action.optString("l")
                     val dl = action.optString("dl")
-                    val ico = action.optString(Constants.PT_NOTIF_ICON)
+                    val ico = action.optString(PTConstants.PT_NOTIF_ICON)
                     val id = action.optString("id")
                     val autoCancel = action.optBoolean("ac", true)
                     if (label.isEmpty() || id.isEmpty()) {
@@ -2982,7 +2983,7 @@ class TemplateRenderer : INotificationRenderer {
                         actionLaunchIntent = Intent(PTNotificationIntentService.MAIN_ACTION)
                         actionLaunchIntent.setPackage(context.packageName)
                         actionLaunchIntent.putExtra(
-                            Constants.PT_TYPE,
+                            PTConstants.PT_TYPE,
                             PTNotificationIntentService.TYPE_BUTTON_CLICK
                         )
                         if (dl.isNotEmpty()) {
@@ -2998,7 +2999,7 @@ class TemplateRenderer : INotificationRenderer {
                     if (actionLaunchIntent != null) {
                         actionLaunchIntent.putExtras(extras)
                         actionLaunchIntent.removeExtra(Constants.WZRK_ACTIONS)
-                        actionLaunchIntent.putExtra(Constants.PT_ACTION_ID, id)
+                        actionLaunchIntent.putExtra(PTConstants.PT_ACTION_ID, id)
                         actionLaunchIntent.putExtra("autoCancel", autoCancel)
                         actionLaunchIntent.putExtra("wzrk_c2a", id)
                         actionLaunchIntent.putExtra("notificationId", notificationId)
@@ -3060,9 +3061,9 @@ class TemplateRenderer : INotificationRenderer {
                 val applicationContext = context.applicationContext
                 val basicTemplateBundle = extras.clone() as Bundle
                 basicTemplateBundle.putString(Constants.WZRK_PUSH_ID, null) // skip dupe check
-                basicTemplateBundle.putString(Constants.PT_ID, "pt_basic") // set to basic
+                basicTemplateBundle.putString(PTConstants.PT_ID, "pt_basic") // set to basic
                 // force random id generation
-                basicTemplateBundle.putString(Constants.PT_COLLAPSE_KEY, null)
+                basicTemplateBundle.putString(PTConstants.PT_COLLAPSE_KEY, null)
                 basicTemplateBundle.putString(Constants.WZRK_COLLAPSE, null)
                 val templateRenderer: INotificationRenderer =
                     TemplateRenderer(applicationContext, basicTemplateBundle)
@@ -3131,16 +3132,16 @@ class TemplateRenderer : INotificationRenderer {
             pt_rating_default_dl = extras.getString(Constants.DEEP_LINK_KEY)
         }
         if (pt_meta_clr == null || pt_meta_clr!!.isEmpty()) {
-            pt_meta_clr = extras.getString(Constants.WZRK_CLR)
+            pt_meta_clr = extras.getString(Constants.WZRK_COLOR)
         }
         if (pt_small_icon_clr == null || pt_small_icon_clr!!.isEmpty()) {
-            pt_small_icon_clr = extras.getString(Constants.WZRK_CLR)
+            pt_small_icon_clr = extras.getString(Constants.WZRK_COLOR)
         }
         if (pt_subtitle == null || pt_subtitle!!.isEmpty()) {
             pt_subtitle = extras.getString(Constants.WZRK_SUBTITLE)
         }
         if (pt_small_icon_clr == null || pt_small_icon_clr!!.isEmpty()) {
-            pt_small_icon_clr = extras.getString(Constants.WZRK_CLR)
+            pt_small_icon_clr = extras.getString(Constants.WZRK_COLOR)
         }
         if (pt_collapse_key == null) {
             pt_collapse_key = extras[Constants.WZRK_COLLAPSE]
@@ -3149,7 +3150,7 @@ class TemplateRenderer : INotificationRenderer {
 
     private fun setDismissIntent(context: Context, extras: Bundle, intent: Intent): PendingIntent {
         intent.putExtras(extras)
-        intent.putExtra(Constants.PT_DISMISS_INTENT, true)
+        intent.putExtra(PTConstants.PT_DISMISS_INTENT, true)
         return PendingIntent.getBroadcast(
             context, System.currentTimeMillis().toInt(),
             intent, PendingIntent.FLAG_CANCEL_CURRENT
@@ -3170,10 +3171,10 @@ class TemplateRenderer : INotificationRenderer {
                     val cta = Utils.toJsonObject(
                         customCTAList[index]
                     )
-                    val bgClr = cta.getString(Constants.PT_CUSTOM_CTA_BG_CLR)
-                    val textClr = cta.getString(Constants.PT_CUSTOM_CTA_TEXT_CLR)
-                    val text = cta.getString(Constants.PT_CUSTOM_CTA_TEXT)
-                    val dl = cta.getString(Constants.PT_CUSTOM_CTA_DL)
+                    val bgClr = cta.getString(PTConstants.PT_CUSTOM_CTA_BG_CLR)
+                    val textClr = cta.getString(PTConstants.PT_CUSTOM_CTA_TEXT_CLR)
+                    val text = cta.getString(PTConstants.PT_CUSTOM_CTA_TEXT)
+                    val dl = cta.getString(PTConstants.PT_CUSTOM_CTA_DL)
                     setCustomContentViewText(tempRemoteView, customCTAIds[index], text)
                     tempRemoteView.setInt(
                         customCTAIds[index],
@@ -3189,7 +3190,7 @@ class TemplateRenderer : INotificationRenderer {
                     buttonIntent.putExtras(extras)
                     val contentRightPos0Intent = setPendingIntent(
                         context, extras.getInt(
-                            Constants.PT_NOTIF_ID
+                            PTConstants.PT_NOTIF_ID
                         ), extras, buttonIntent, dl
                     )
                     tempRemoteView.setOnClickPendingIntent(

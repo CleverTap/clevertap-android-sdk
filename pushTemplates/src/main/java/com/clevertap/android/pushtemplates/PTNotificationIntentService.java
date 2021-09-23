@@ -8,7 +8,6 @@ import android.net.Uri;
 import android.os.Bundle;
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.Constants;
 
 public class PTNotificationIntentService extends IntentService {
 
@@ -24,7 +23,7 @@ public class PTNotificationIntentService extends IntentService {
         Bundle extras = intent.getExtras();
         if (extras == null) return;
 
-        String type = extras.getString(com.clevertap.android.sdk.Constants.PT_TYPE);
+        String type = extras.getString(PTConstants.PT_TYPE);
         if (TYPE_BUTTON_CLICK.equals(type)) {
             PTLog.verbose("PTNotificationIntentService handling " + TYPE_BUTTON_CLICK);
             handleActionButtonClick(extras);
@@ -36,10 +35,10 @@ public class PTNotificationIntentService extends IntentService {
     private void handleActionButtonClick(Bundle extras) {
         try {
             boolean autoCancel = extras.getBoolean("autoCancel", false);
-            int notificationId = extras.getInt(com.clevertap.android.sdk.Constants.PT_NOTIF_ID, -1);
-            String actionID = extras.getString(com.clevertap.android.sdk.Constants.PT_ACTION_ID);
+            int notificationId = extras.getInt(PTConstants.PT_NOTIF_ID, -1);
+            String actionID = extras.getString(PTConstants.PT_ACTION_ID);
             String dl = extras.getString("dl");
-            String dismissOnClick = extras.getString(Constants.PT_DISMISS_ON_CLICK);
+            String dismissOnClick = extras.getString(PTConstants.PT_DISMISS_ON_CLICK);
             CleverTapInstanceConfig config = extras.getParcelable("config");
             Context context = getApplicationContext();
 
