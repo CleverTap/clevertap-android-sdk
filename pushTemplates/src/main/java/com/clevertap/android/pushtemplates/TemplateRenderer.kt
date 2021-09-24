@@ -1,12 +1,10 @@
 package com.clevertap.android.pushtemplates
 
-import android.annotation.SuppressLint
 import android.app.Notification
 import android.app.NotificationManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
 import android.os.*
@@ -16,7 +14,6 @@ import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.RemoteInput
-import com.clevertap.android.pushtemplates.PTConstants.PT_COLLAPSE_KEY
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
@@ -208,30 +205,30 @@ class TemplateRenderer : INotificationRenderer {
         var nb = nb
         PTLog.debug("Rendering Zero Bezel Template Push Notification with extras - $extras")
         try {
-            contentViewBig = RemoteViews(context.packageName, R.layout.zero_bezel)
+            contentViewBig = RemoteViews(context.packageName, R.layout.zero_bezel)// ZBBCV
             setCustomContentViewBasicKeys(contentViewBig!!, context)
             val textOnlySmallView = pt_small_view != null && pt_small_view == PTConstants.TEXT_ONLY
             contentViewSmall = if (textOnlySmallView) {
-                RemoteViews(context.packageName, R.layout.cv_small_text_only)
+                RemoteViews(context.packageName, R.layout.cv_small_text_only)// ZBTOSCV
             } else {
-                RemoteViews(context.packageName, R.layout.cv_small_zero_bezel)
+                RemoteViews(context.packageName, R.layout.cv_small_zero_bezel)// ZBMSCV
             }
-            setCustomContentViewBasicKeys(contentViewSmall!!, context)
-            setCustomContentViewTitle(contentViewBig!!, pt_title)
-            setCustomContentViewTitle(contentViewSmall!!, pt_title)
-            setCustomContentViewMessage(contentViewBig!!, pt_msg)
+            setCustomContentViewBasicKeys(contentViewSmall!!, context)// ZBSCV init // ZBTOSCV super init->ZBSCV // ZBMSCV super init->ZBSCV
+            setCustomContentViewTitle(contentViewBig!!, pt_title)// ZBBCV init
+            setCustomContentViewTitle(contentViewSmall!!, pt_title)// ZBSCV init // ZBTOSCV super init->ZBSCV // ZBMSCV super init->ZBSCV
+            setCustomContentViewMessage(contentViewBig!!, pt_msg)// ZBBCV init
             if (textOnlySmallView) {
-                contentViewSmall!!.setViewVisibility(R.id.msg, View.GONE)
+                contentViewSmall!!.setViewVisibility(R.id.msg, View.GONE)//ZBTOSCV init
             } else {
-                setCustomContentViewMessage(contentViewSmall!!, pt_msg)
+                setCustomContentViewMessage(contentViewSmall!!, pt_msg)// ZBMSCV init
             }
-            setCustomContentViewMessageSummary(contentViewBig!!, pt_msg_summary)
-            setCustomContentViewTitleColour(contentViewBig!!, pt_title_clr)
-            setCustomContentViewTitleColour(contentViewSmall!!, pt_title_clr)
-            setCustomContentViewExpandedBackgroundColour(contentViewBig!!, pt_bg)
-            setCustomContentViewCollapsedBackgroundColour(contentViewSmall!!, pt_bg)
-            setCustomContentViewMessageColour(contentViewBig!!, pt_msg_clr)
-            setCustomContentViewMessageColour(contentViewSmall!!, pt_msg_clr)
+            setCustomContentViewMessageSummary(contentViewBig!!, pt_msg_summary)// ZBBCV init
+            setCustomContentViewTitleColour(contentViewBig!!, pt_title_clr)// ZBBCV init
+            setCustomContentViewTitleColour(contentViewSmall!!, pt_title_clr)// ZBSCV init // ZBTOSCV super init->ZBSCV // ZBMSCV super init->ZBSCV
+            setCustomContentViewExpandedBackgroundColour(contentViewBig!!, pt_bg)// ZBBCV init
+            setCustomContentViewCollapsedBackgroundColour(contentViewSmall!!, pt_bg)// ZBSCV init // ZBTOSCV super init->ZBSCV // ZBMSCV super init->ZBSCV
+            setCustomContentViewMessageColour(contentViewBig!!, pt_msg_clr)// ZBBCV init
+            setCustomContentViewMessageColour(contentViewSmall!!, pt_msg_clr)// ZBSCV init // ZBTOSCV super init->ZBSCV // ZBMSCV super init->ZBSCV
             val launchIntent = Intent(context, PTPushNotificationReceiver::class.java)
             val pIntent: PendingIntent = if (deepLinkList != null) {
                 setPendingIntent(context, notificationId, extras, launchIntent, deepLinkList!![0])
@@ -245,17 +242,17 @@ class TemplateRenderer : INotificationRenderer {
                 pt_title,
                 pIntent
             )
-            setCustomContentViewBigImage(contentViewBig!!, pt_big_img)
+            setCustomContentViewBigImage(contentViewBig!!, pt_big_img)// ZBBCV init
             if (!textOnlySmallView) {
-                setCustomContentViewBigImage(contentViewSmall!!, pt_big_img)
+                setCustomContentViewBigImage(contentViewSmall!!, pt_big_img)// ZBMSCV init
             }
             if (textOnlySmallView) {
-                setCustomContentViewLargeIcon(contentViewSmall!!, pt_large_icon)
+                setCustomContentViewLargeIcon(contentViewSmall!!, pt_large_icon)// ZBTOSCV init
             }
-            setCustomContentViewSmallIcon(contentViewBig!!)
-            setCustomContentViewSmallIcon(contentViewSmall!!)
-            setCustomContentViewDotSep(contentViewBig!!)
-            setCustomContentViewDotSep(contentViewSmall!!)
+            setCustomContentViewSmallIcon(contentViewBig!!)// ZBBCV init
+            setCustomContentViewSmallIcon(contentViewSmall!!)// ZBSCV init // ZBTOSCV super init->ZBSCV // ZBMSCV super init->ZBSCV
+            setCustomContentViewDotSep(contentViewBig!!)// ZBBCV init
+            setCustomContentViewDotSep(contentViewSmall!!)// ZBSCV init // ZBTOSCV super init->ZBSCV // ZBMSCV super init->ZBSCV
             if (Utils.getFallback()) {
                 PTLog.debug("Image not fetched, falling back to Basic Template")
                 return renderBasicTemplateNotification(
@@ -277,27 +274,30 @@ class TemplateRenderer : INotificationRenderer {
     ): NotificationCompat.Builder? {
         var nb = nb
         PTLog.debug("Rendering Product Display Template Push Notification with extras - $extras")
+        /** ------------------------------------------------------------
+         * -------IMP: FIRST INIT BIG CONTENT VIEW THEN SMALL-----------
+         * ------------------------------------------------------------*/
         try {
             var isLinear = false
             if (pt_product_display_linear == null || pt_product_display_linear!!.isEmpty()) {
-                contentViewBig = RemoteViews(context.packageName, R.layout.product_display_template)
-                contentViewSmall = RemoteViews(context.packageName, R.layout.content_view_small)
+                contentViewBig = RemoteViews(context.packageName, R.layout.product_display_template)// PDNLBCV
+                contentViewSmall = RemoteViews(context.packageName, R.layout.content_view_small)//NLSCV
             } else {
                 isLinear = true
                 contentViewBig =
-                    RemoteViews(context.packageName, R.layout.product_display_linear_expanded)
+                    RemoteViews(context.packageName, R.layout.product_display_linear_expanded)// PDLBCV
                 contentViewSmall =
-                    RemoteViews(context.packageName, R.layout.product_display_linear_collapsed)
+                    RemoteViews(context.packageName, R.layout.product_display_linear_collapsed)//LSCV
             }
-            setCustomContentViewBasicKeys(contentViewBig!!, context)
+            setCustomContentViewBasicKeys(contentViewBig!!, context)// PDLBCV init // PDNLBCV super init->PDLBCV
             if (!isLinear) {
-                setCustomContentViewBasicKeys(contentViewSmall!!, context)
+                setCustomContentViewBasicKeys(contentViewSmall!!, context)//NLSCV super init -> scv
             }
             if (bigTextList!!.isNotEmpty()) {
-                setCustomContentViewText(contentViewBig!!, R.id.product_name, bigTextList!![0])
+                setCustomContentViewText(contentViewBig!!, R.id.product_name, bigTextList!![0])// PDLBCV init // PDNLBCV super init->PDLBCV
             }
             if (!isLinear) {
-                if (smallTextList!!.isNotEmpty()) {
+                if (smallTextList!!.isNotEmpty()) {// PDNLBCV init
                     setCustomContentViewText(
                         contentViewBig!!,
                         R.id.product_description,
@@ -306,43 +306,43 @@ class TemplateRenderer : INotificationRenderer {
                 }
             }
             if (priceList!!.isNotEmpty()) {
-                setCustomContentViewText(contentViewBig!!, R.id.product_price, priceList!![0])
+                setCustomContentViewText(contentViewBig!!, R.id.product_price, priceList!![0])// PDLBCV init // PDNLBCV super init->PDLBCV
             }
             if (!isLinear) {
-                setCustomContentViewTitle(contentViewBig!!, pt_title)
-                setCustomContentViewTitle(contentViewSmall!!, pt_title)
-                setCustomContentViewMessage(contentViewBig!!, pt_msg)
+                setCustomContentViewTitle(contentViewBig!!, pt_title)// PDNLBCV init
+                setCustomContentViewTitle(contentViewSmall!!, pt_title)//NLSCV super init -> scv
+                setCustomContentViewMessage(contentViewBig!!, pt_msg)// PDNLBCV init
                 setCustomContentViewElementColour(
                     contentViewBig!!,
                     R.id.product_description,
                     pt_msg_clr
-                )
-                setCustomContentViewElementColour(contentViewBig!!, R.id.product_name, pt_title_clr)
-                setCustomContentViewTitleColour(contentViewSmall!!, pt_title_clr)
+                )// PDNLBCV init
+                setCustomContentViewElementColour(contentViewBig!!, R.id.product_name, pt_title_clr)// PDNLBCV init
+                setCustomContentViewTitleColour(contentViewSmall!!, pt_title_clr)//NLSCV super init -> scv
             }
-            setCustomContentViewMessage(contentViewSmall!!, pt_msg)
-            setCustomContentViewMessageColour(contentViewSmall!!, pt_msg_clr)
-            setCustomContentViewExpandedBackgroundColour(contentViewBig!!, pt_bg)
-            setCustomContentViewCollapsedBackgroundColour(contentViewSmall!!, pt_bg)
+            setCustomContentViewMessage(contentViewSmall!!, pt_msg)//NLSCV super init -> scv // LSCV init
+            setCustomContentViewMessageColour(contentViewSmall!!, pt_msg_clr)//NLSCV super init -> scv // LSCV init
+            setCustomContentViewExpandedBackgroundColour(contentViewBig!!, pt_bg)// PDLBCV init // PDNLBCV super init->PDLBCV
+            setCustomContentViewCollapsedBackgroundColour(contentViewSmall!!, pt_bg)//NLSCV super init -> scv // LSCV init
             setCustomContentViewButtonLabel(
                 contentViewBig!!,
                 R.id.product_action,
                 pt_product_display_action
-            )
+            )// PDLBCV init // PDNLBCV super init->PDLBCV
             setCustomContentViewButtonColour(
                 contentViewBig!!,
                 R.id.product_action,
                 pt_product_display_action_clr
-            )
+            )// PDLBCV init // PDNLBCV super init->PDLBCV
             setCustomContentViewButtonText(
                 contentViewBig!!,
                 R.id.product_action,
                 pt_product_display_action_text_clr
-            )
-            setCustomContentViewLargeIcon(contentViewSmall!!, pt_large_icon)
+            )// PDLBCV init // PDNLBCV super init->PDLBCV
+            setCustomContentViewLargeIcon(contentViewSmall!!, pt_large_icon)//NLSCV super init -> scv // LSCV init
             if (!isLinear) {
-                setCustomContentViewSmallIcon(contentViewSmall!!)
-                setCustomContentViewDotSep(contentViewSmall!!)
+                setCustomContentViewSmallIcon(contentViewSmall!!)//NLSCV super init -> scv
+                setCustomContentViewDotSep(contentViewSmall!!)//NLSCV super init -> scv
             }
             var imageCounter = 0
             var isFirstImageOk = false
@@ -350,13 +350,17 @@ class TemplateRenderer : INotificationRenderer {
             smallImageLayoutIds.add(R.id.small_image1)
             smallImageLayoutIds.add(R.id.small_image2)
             smallImageLayoutIds.add(R.id.small_image3)
+            // --------------LSCV init---- START-------------extract logic
             val smallCollapsedImageLayoutIds = ArrayList<Int>()
             smallCollapsedImageLayoutIds.add(R.id.small_image1_collapsed)
             smallCollapsedImageLayoutIds.add(R.id.small_image2_collapsed)
             smallCollapsedImageLayoutIds.add(R.id.small_image3_collapsed)
+            // --------------LSCV init---- END-------------extract logic
             val tempImageList = ArrayList<String>()
+
             for (index in imageList!!.indices) {
                 if (isLinear) {
+                    // --------------LSCV init---- START-------------extract logic
                     Utils.loadImageURLIntoRemoteView(
                         smallCollapsedImageLayoutIds[imageCounter],
                         imageList!![index],
@@ -372,7 +376,9 @@ class TemplateRenderer : INotificationRenderer {
                             View.VISIBLE
                         )
                     }
+                    // --------------LSCV init---- END-------------extract logic
                 }
+                // --------------PDLBCV init // PDNLBCV super init->PDLBCV---- START-------------extract logic
                 Utils.loadImageURLIntoRemoteView(
                     smallImageLayoutIds[imageCounter], imageList!![index], contentViewBig
                 )
@@ -395,7 +401,9 @@ class TemplateRenderer : INotificationRenderer {
                     smallTextList!!.removeAt(index)
                     priceList!!.removeAt(index)
                 }
+                // --------------PDLBCV init // PDNLBCV super init->PDLBCV---- END-------------extract logic
             }
+            // --------------PDLBCV init // PDNLBCV super init->PDLBCV---- START-------------
             extras.putStringArrayList(PTConstants.PT_IMAGE_LIST, tempImageList)
             extras.putStringArrayList(PTConstants.PT_DEEPLINK_LIST, deepLinkList)
             extras.putStringArrayList(PTConstants.PT_BIGTEXT_LIST, bigTextList)
@@ -442,7 +450,9 @@ class TemplateRenderer : INotificationRenderer {
             val contentIntent4 =
                 PendingIntent.getBroadcast(context, Random().nextInt(), notificationIntent4, 0)
             contentViewBig!!.setOnClickPendingIntent(R.id.product_action, contentIntent4)
+            // --------------PDLBCV init // PDNLBCV super init->PDLBCV---- END-------------
             if (isLinear) {
+                // --------------LSCV init---- START-------------extract logic
                 val notificationSmallIntent1 =
                     Intent(context, PTPushNotificationReceiver::class.java)
                 val contentSmallIntent1 = setPendingIntent(
@@ -486,6 +496,7 @@ class TemplateRenderer : INotificationRenderer {
                         contentSmallIntent3
                     )
                 }
+                // --------------LSCV init---- END-------------extract logic
             }
             val dismissIntent = Intent(context, PushTemplateReceiver::class.java)
             val dIntent: PendingIntent
@@ -505,8 +516,10 @@ class TemplateRenderer : INotificationRenderer {
                 pIntent,
                 dIntent
             )
+            // --------------PDLBCV init // PDNLBCV super init->PDLBCV---- START-------------
             setCustomContentViewDotSep(contentViewBig!!)
             setCustomContentViewSmallIcon(contentViewBig!!)
+            // --------------PDLBCV init // PDNLBCV super init->PDLBCV---- END-------------
             if (imageCounter <= 1) {
                 PTLog.debug("2 or more images are not retrievable, not displaying the notification.")
                 return null
@@ -524,11 +537,14 @@ class TemplateRenderer : INotificationRenderer {
         var nb = nb
         PTLog.debug("Rendering Five Icon Template Push Notification with extras - $extras")
         try {
+            // --------------FI init---- START-------------
             if (pt_title == null || pt_title!!.isEmpty()) {
                 pt_title = Utils.getApplicationName(context)
             }
             contentFiveCTAs = RemoteViews(context.packageName, R.layout.five_cta)
             setCustomContentViewExpandedBackgroundColour(contentFiveCTAs!!, pt_bg)
+            // --------------FI init---- END-------------
+            // --------------FACTORY---- START-------------
             val reqCode1 = Random().nextInt()
             val reqCode2 = Random().nextInt()
             val reqCode3 = Random().nextInt()
@@ -541,44 +557,58 @@ class TemplateRenderer : INotificationRenderer {
             notificationIntent1.putExtras(extras)
             val contentIntent1 =
                 PendingIntent.getBroadcast(context, reqCode1, notificationIntent1, 0)
-            contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta1, contentIntent1)
+            // --------------FACTORY---- END-------------
+            contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta1, contentIntent1)// FI init
+            // --------------FACTORY---- START-------------
             val notificationIntent2 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent2.putExtra("cta2", true)
             notificationIntent2.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent2.putExtras(extras)
             val contentIntent2 =
                 PendingIntent.getBroadcast(context, reqCode2, notificationIntent2, 0)
-            contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta2, contentIntent2)
+            // --------------FACTORY---- END-------------
+            contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta2, contentIntent2)// FI init
+            // --------------FACTORY---- START-------------
             val notificationIntent3 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent3.putExtra("cta3", true)
             notificationIntent3.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent3.putExtras(extras)
             val contentIntent3 =
                 PendingIntent.getBroadcast(context, reqCode3, notificationIntent3, 0)
-            contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta3, contentIntent3)
+            // --------------FACTORY---- END-------------
+            contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta3, contentIntent3)// FI init
+            // --------------FACTORY---- START-------------
             val notificationIntent4 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent4.putExtra("cta4", true)
             notificationIntent4.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent4.putExtras(extras)
             val contentIntent4 =
                 PendingIntent.getBroadcast(context, reqCode4, notificationIntent4, 0)
-            contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta4, contentIntent4)
+            // --------------FACTORY---- END-------------
+            contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta4, contentIntent4)// FI init
+            // --------------FACTORY---- START-------------
             val notificationIntent5 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent5.putExtra("cta5", true)
             notificationIntent5.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent5.putExtras(extras)
             val contentIntent5 =
                 PendingIntent.getBroadcast(context, reqCode5, notificationIntent5, 0)
-            contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta5, contentIntent5)
+            // --------------FACTORY---- END-------------
+            contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta5, contentIntent5)// FI init
+            // --------------FACTORY---- START-------------
             val notificationIntent6 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent6.putExtra("close", true)
             notificationIntent6.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
             notificationIntent6.putExtras(extras)
             val contentIntent6 =
                 PendingIntent.getBroadcast(context, reqCode6, notificationIntent6, 0)
-            contentFiveCTAs!!.setOnClickPendingIntent(R.id.close, contentIntent6)
+            // --------------FACTORY---- END-------------
+            contentFiveCTAs!!.setOnClickPendingIntent(R.id.close, contentIntent6)// FI init
+            // --------------FACTORY---- START-------------
             val launchIntent = Intent(context, PTPushNotificationReceiver::class.java)
             val pIntent = setPendingIntent(context, notificationId, extras, launchIntent, null)
+            // --------------FACTORY---- END-------------
+            // --------------FI init---- START-------------
             nb = setNotificationBuilderBasics(
                 nb,
                 contentFiveCTAs!!,
@@ -646,6 +676,7 @@ class TemplateRenderer : INotificationRenderer {
                 PTLog.debug("More than 2 images were not retrieved in 5CTA Notification, not displaying Notification.")
                 return null
             }
+            // --------------FI init---- END-------------
         } catch (t: Throwable) {
             PTLog.verbose("Error creating image only notification", t)
         }
@@ -660,28 +691,32 @@ class TemplateRenderer : INotificationRenderer {
         PTLog.debug("Rendering Rating Template Push Notification with extras - $extras")
         try {
             contentViewRating = RemoteViews(context.packageName, R.layout.rating)
-            setCustomContentViewBasicKeys(contentViewRating!!, context)
+            setCustomContentViewBasicKeys(contentViewRating!!, context)// rating super init->iob
             contentViewSmall = RemoteViews(context.packageName, R.layout.content_view_small)
-            setCustomContentViewBasicKeys(contentViewSmall!!, context)
-            setCustomContentViewTitle(contentViewRating!!, pt_title)
-            setCustomContentViewTitle(contentViewSmall!!, pt_title)
-            setCustomContentViewMessage(contentViewRating!!, pt_msg)
-            setCustomContentViewMessage(contentViewSmall!!, pt_msg)
-            setCustomContentViewMessageSummary(contentViewRating!!, pt_msg_summary)
-            setCustomContentViewTitleColour(contentViewRating!!, pt_title_clr)
-            setCustomContentViewTitleColour(contentViewSmall!!, pt_title_clr)
-            setCustomContentViewMessageColour(contentViewRating!!, pt_msg_clr)
-            setCustomContentViewMessageColour(contentViewSmall!!, pt_msg_clr)
-            setCustomContentViewExpandedBackgroundColour(contentViewRating!!, pt_bg)
-            setCustomContentViewCollapsedBackgroundColour(contentViewSmall!!, pt_bg)
+            setCustomContentViewBasicKeys(contentViewSmall!!, context)// scv
+            setCustomContentViewTitle(contentViewRating!!, pt_title)// rating super init->iob
+            setCustomContentViewTitle(contentViewSmall!!, pt_title)// scv
+            setCustomContentViewMessage(contentViewRating!!, pt_msg)// rating super init->iob
+            setCustomContentViewMessage(contentViewSmall!!, pt_msg)// scv
+            setCustomContentViewMessageSummary(contentViewRating!!, pt_msg_summary)// rating super init->iob
+            setCustomContentViewTitleColour(contentViewRating!!, pt_title_clr)// rating super init->iob
+            setCustomContentViewTitleColour(contentViewSmall!!, pt_title_clr)// scv
+            setCustomContentViewMessageColour(contentViewRating!!, pt_msg_clr)// rating super init->iob
+            setCustomContentViewMessageColour(contentViewSmall!!, pt_msg_clr)// scv
+            setCustomContentViewExpandedBackgroundColour(contentViewRating!!, pt_bg)// rating super init->iob
+            setCustomContentViewCollapsedBackgroundColour(contentViewSmall!!, pt_bg)// scv
 
+
+            // --------------rating init---- START-------------
             //Set the rating stars
             contentViewRating!!.setImageViewResource(R.id.star1, R.drawable.pt_star_outline)
             contentViewRating!!.setImageViewResource(R.id.star2, R.drawable.pt_star_outline)
             contentViewRating!!.setImageViewResource(R.id.star3, R.drawable.pt_star_outline)
             contentViewRating!!.setImageViewResource(R.id.star4, R.drawable.pt_star_outline)
             contentViewRating!!.setImageViewResource(R.id.star5, R.drawable.pt_star_outline)
+            // --------------rating init---- END-------------
 
+            // --------------FACTORY---- START-------------
             //Set Pending Intents for each star to listen to click
             val notificationIntent1 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent1.putExtra("click1", true)
@@ -690,7 +725,9 @@ class TemplateRenderer : INotificationRenderer {
             notificationIntent1.putExtras(extras)
             val contentIntent1 =
                 PendingIntent.getBroadcast(context, Random().nextInt(), notificationIntent1, 0)
-            contentViewRating!!.setOnClickPendingIntent(R.id.star1, contentIntent1)
+            // --------------FACTORY---- END-------------
+            contentViewRating!!.setOnClickPendingIntent(R.id.star1, contentIntent1)// rating init
+            // --------------FACTORY---- START-------------
             val notificationIntent2 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent2.putExtra("click2", true)
             notificationIntent2.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
@@ -698,7 +735,9 @@ class TemplateRenderer : INotificationRenderer {
             notificationIntent2.putExtras(extras)
             val contentIntent2 =
                 PendingIntent.getBroadcast(context, Random().nextInt(), notificationIntent2, 0)
-            contentViewRating!!.setOnClickPendingIntent(R.id.star2, contentIntent2)
+            // --------------FACTORY---- END-------------
+            contentViewRating!!.setOnClickPendingIntent(R.id.star2, contentIntent2)// rating init
+            // --------------FACTORY---- START-------------
             val notificationIntent3 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent3.putExtra("click3", true)
             notificationIntent3.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
@@ -706,7 +745,9 @@ class TemplateRenderer : INotificationRenderer {
             notificationIntent3.putExtras(extras)
             val contentIntent3 =
                 PendingIntent.getBroadcast(context, Random().nextInt(), notificationIntent3, 0)
-            contentViewRating!!.setOnClickPendingIntent(R.id.star3, contentIntent3)
+            // --------------FACTORY---- END-------------
+            contentViewRating!!.setOnClickPendingIntent(R.id.star3, contentIntent3)// rating init
+            // --------------FACTORY---- START-------------
             val notificationIntent4 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent4.putExtra("click4", true)
             notificationIntent4.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
@@ -714,7 +755,9 @@ class TemplateRenderer : INotificationRenderer {
             notificationIntent4.putExtras(extras)
             val contentIntent4 =
                 PendingIntent.getBroadcast(context, Random().nextInt(), notificationIntent4, 0)
-            contentViewRating!!.setOnClickPendingIntent(R.id.star4, contentIntent4)
+            // --------------FACTORY---- END-------------
+            contentViewRating!!.setOnClickPendingIntent(R.id.star4, contentIntent4)// rating init
+            // --------------FACTORY---- START-------------
             val notificationIntent5 = Intent(context, PushTemplateReceiver::class.java)
             notificationIntent5.putExtra("click5", true)
             notificationIntent5.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
@@ -722,7 +765,9 @@ class TemplateRenderer : INotificationRenderer {
             notificationIntent5.putExtras(extras)
             val contentIntent5 =
                 PendingIntent.getBroadcast(context, Random().nextInt(), notificationIntent5, 0)
-            contentViewRating!!.setOnClickPendingIntent(R.id.star5, contentIntent5)
+            // --------------FACTORY---- END-------------
+            contentViewRating!!.setOnClickPendingIntent(R.id.star5, contentIntent5)// rating init
+            // --------------FACTORY---- START-------------
             val launchIntent = Intent(context, PushTemplateReceiver::class.java)
             val pIntent = setPendingIntent(
                 context,
@@ -731,20 +776,21 @@ class TemplateRenderer : INotificationRenderer {
                 launchIntent,
                 pt_rating_default_dl
             )
+            // --------------FACTORY---- END-------------
             nb = setNotificationBuilderBasics(
                 nb,
                 contentViewSmall!!,
                 contentViewRating!!,
                 pt_title,
                 pIntent
-            )
-            setCustomContentViewBigImage(contentViewRating!!, pt_big_img)
-            setCustomContentViewLargeIcon(contentViewSmall!!, pt_large_icon)
-            setCustomContentViewLargeIcon(contentViewRating!!, pt_large_icon)
-            setCustomContentViewSmallIcon(contentViewRating!!)
-            setCustomContentViewSmallIcon(contentViewSmall!!)
-            setCustomContentViewDotSep(contentViewRating!!)
-            setCustomContentViewDotSep(contentViewSmall!!)
+            )// rating init
+            setCustomContentViewBigImage(contentViewRating!!, pt_big_img)// rating super init->iob
+            setCustomContentViewLargeIcon(contentViewSmall!!, pt_large_icon)// scv
+            setCustomContentViewLargeIcon(contentViewRating!!, pt_large_icon)// rating super init->iob
+            setCustomContentViewSmallIcon(contentViewRating!!)// rating super init->iob
+            setCustomContentViewSmallIcon(contentViewSmall!!)// scv
+            setCustomContentViewDotSep(contentViewRating!!)// rating super init->iob
+            setCustomContentViewDotSep(contentViewSmall!!)// scv
         } catch (t: Throwable) {
             PTLog.verbose("Error creating rating notification ", t)
         }
@@ -759,22 +805,23 @@ class TemplateRenderer : INotificationRenderer {
         PTLog.debug("Rendering Manual Carousel Template Push Notification with extras - $extras")
         try {
             contentViewManualCarousel = RemoteViews(context.packageName, R.layout.manual_carousel)
-            setCustomContentViewBasicKeys(contentViewManualCarousel!!, context)
+            setCustomContentViewBasicKeys(contentViewManualCarousel!!, context)// maanual super init->scv
             contentViewSmall = RemoteViews(context.packageName, R.layout.content_view_small)
-            setCustomContentViewBasicKeys(contentViewSmall!!, context)
-            setCustomContentViewTitle(contentViewManualCarousel!!, pt_title)
-            setCustomContentViewTitle(contentViewSmall!!, pt_title)
-            setCustomContentViewMessage(contentViewManualCarousel!!, pt_msg)
-            setCustomContentViewMessage(contentViewSmall!!, pt_msg)
-            setCustomContentViewExpandedBackgroundColour(contentViewManualCarousel!!, pt_bg)
-            setCustomContentViewCollapsedBackgroundColour(contentViewSmall!!, pt_bg)
-            setCustomContentViewTitleColour(contentViewManualCarousel!!, pt_title_clr)
-            setCustomContentViewTitleColour(contentViewSmall!!, pt_title_clr)
-            setCustomContentViewMessageColour(contentViewManualCarousel!!, pt_msg_clr)
-            setCustomContentViewMessageColour(contentViewSmall!!, pt_msg_clr)
-            setCustomContentViewMessageSummary(contentViewManualCarousel!!, pt_msg_summary)
-            contentViewManualCarousel!!.setViewVisibility(R.id.leftArrowPos0, View.VISIBLE)
-            contentViewManualCarousel!!.setViewVisibility(R.id.rightArrowPos0, View.VISIBLE)
+            setCustomContentViewBasicKeys(contentViewSmall!!, context)// scv
+            setCustomContentViewTitle(contentViewManualCarousel!!, pt_title)// maanual super init->scv
+            setCustomContentViewTitle(contentViewSmall!!, pt_title)// scv
+            setCustomContentViewMessage(contentViewManualCarousel!!, pt_msg)// maanual super init->scv
+            setCustomContentViewMessage(contentViewSmall!!, pt_msg)// scv
+            setCustomContentViewExpandedBackgroundColour(contentViewManualCarousel!!, pt_bg)// maanual super init->scv
+            setCustomContentViewCollapsedBackgroundColour(contentViewSmall!!, pt_bg)// scv
+            setCustomContentViewTitleColour(contentViewManualCarousel!!, pt_title_clr)// maanual super init->scv
+            setCustomContentViewTitleColour(contentViewSmall!!, pt_title_clr)// scv
+            setCustomContentViewMessageColour(contentViewManualCarousel!!, pt_msg_clr)// maanual super init->scv
+            setCustomContentViewMessageColour(contentViewSmall!!, pt_msg_clr)// scv
+            setCustomContentViewMessageSummary(contentViewManualCarousel!!, pt_msg_summary)// manual init
+            contentViewManualCarousel!!.setViewVisibility(R.id.leftArrowPos0, View.VISIBLE)// manual init
+            contentViewManualCarousel!!.setViewVisibility(R.id.rightArrowPos0, View.VISIBLE)// manual init
+            // --------------manual init---- START-------------
             var imageCounter = 0
             var isFirstImageOk = false
             val dl = deepLinkList!![0]
@@ -821,6 +868,8 @@ class TemplateRenderer : INotificationRenderer {
             extras.putInt(PTConstants.PT_MANUAL_CAROUSEL_CURRENT, currentPosition)
             extras.putStringArrayList(PTConstants.PT_IMAGE_LIST, tempImageList)
             extras.putStringArrayList(PTConstants.PT_DEEPLINK_LIST, deepLinkList)
+            // --------------manual init---- END-------------
+            // --------------FACTORY---- START-------------
             val rightArrowPos0Intent = Intent(context, PushTemplateReceiver::class.java)
             rightArrowPos0Intent.putExtra(PTConstants.PT_RIGHT_SWIPE, true)
             rightArrowPos0Intent.putExtra(PTConstants.PT_MANUAL_CAROUSEL_FROM, 0)
@@ -828,10 +877,12 @@ class TemplateRenderer : INotificationRenderer {
             rightArrowPos0Intent.putExtras(extras)
             val contentRightPos0Intent =
                 setPendingIntent(context, notificationId, extras, rightArrowPos0Intent, dl)
+            // --------------FACTORY---- END-------------
             contentViewManualCarousel!!.setOnClickPendingIntent(
                 R.id.rightArrowPos0,
                 contentRightPos0Intent
-            )
+            )// manual init
+            // --------------FACTORY---- START-------------
             val leftArrowPos0Intent = Intent(context, PushTemplateReceiver::class.java)
             leftArrowPos0Intent.putExtra(PTConstants.PT_RIGHT_SWIPE, false)
             leftArrowPos0Intent.putExtra(PTConstants.PT_MANUAL_CAROUSEL_FROM, 0)
@@ -839,15 +890,18 @@ class TemplateRenderer : INotificationRenderer {
             leftArrowPos0Intent.putExtras(extras)
             val contentLeftPos0Intent =
                 setPendingIntent(context, notificationId, extras, leftArrowPos0Intent, dl)
+            // --------------FACTORY---- END-------------
             contentViewManualCarousel!!.setOnClickPendingIntent(
                 R.id.leftArrowPos0,
                 contentLeftPos0Intent
-            )
-            val launchIntent = Intent(context, PTPushNotificationReceiver::class.java)
+            )// manual init
+            // --------------FACTORY---- START-------------
+            val launchIntent = Intent(context, PTPushNotificationReceiver::class.java)//factory
             val pIntent = setPendingIntent(context, notificationId, extras, launchIntent, dl)
-            val dismissIntent = Intent(context, PushTemplateReceiver::class.java)
+            val dismissIntent = Intent(context, PushTemplateReceiver::class.java)//factory
             val dIntent: PendingIntent
             dIntent = setDismissIntent(context, extras, dismissIntent)
+            // --------------FACTORY---- END-------------
             nb = setNotificationBuilderBasics(
                 nb,
                 contentViewSmall!!,
@@ -855,17 +909,17 @@ class TemplateRenderer : INotificationRenderer {
                 pt_title,
                 pIntent,
                 dIntent
-            )
-            setCustomContentViewLargeIcon(contentViewSmall!!, pt_large_icon)
-            setCustomContentViewLargeIcon(contentViewManualCarousel!!, pt_large_icon)
-            setCustomContentViewSmallIcon(contentViewManualCarousel!!)
-            setCustomContentViewSmallIcon(contentViewSmall!!)
-            setCustomContentViewDotSep(contentViewManualCarousel!!)
-            setCustomContentViewDotSep(contentViewSmall!!)
+            )// manual init
+            setCustomContentViewLargeIcon(contentViewSmall!!, pt_large_icon)// scv
+            setCustomContentViewLargeIcon(contentViewManualCarousel!!, pt_large_icon)// maanual super init->scv
+            setCustomContentViewSmallIcon(contentViewManualCarousel!!)// maanual super init->scv
+            setCustomContentViewSmallIcon(contentViewSmall!!)// scv
+            setCustomContentViewDotSep(contentViewManualCarousel!!)// maanual super init->scv
+            setCustomContentViewDotSep(contentViewSmall!!)// scv
             if (imageCounter < 2) {
                 PTLog.debug("Need at least 2 images to display Manual Carousel, found - $imageCounter, not displaying the notification.")
                 return null
-            }
+            }// manual init
         } catch (t: Throwable) {
             PTLog.verbose("Error creating Manual carousel notification ", t)
         }
@@ -946,137 +1000,6 @@ class TemplateRenderer : INotificationRenderer {
             this.config = config
         }
         setKeysFromDashboard(extras)
-    }
-
-    @Synchronized
-    private fun dupeCheck(context: Context, extras: Bundle) {
-        try {
-            asyncHelper!!.postAsyncSafely("TemplateRenderer#_createNotification") {
-                //                    try {
-//                        if (extras.getString(_root_ide_package_.Constants.WZRK_PUSH_ID) != null) {
-//                            if (!extras.getString(_root_ide_package_.Constants.WZRK_PUSH_ID).isEmpty()) {
-//                                String ptID = extras.getString(_root_ide_package_.Constants.WZRK_PUSH_ID);
-//                                if (!dbHelper.isNotificationPresentInDB(ptID)) {
-//                                    _createNotification(context, extras);
-//                                    dbHelper.savePT(ptID, Utils.bundleToJSON(extras));
-//                                } else {
-//                                    PTLog.debug("Notification already Rendered. skipping this payload");
-//                                }
-//                            }
-//                        } else {
-//                            _createNotification(context, extras);
-//                        }
-//
-//                    } catch (Throwable t) {
-//                        PTLog.verbose("Couldn't render notification: " + t.getLocalizedMessage());
-//                    }
-            }
-        } catch (t: Throwable) {
-            PTLog.verbose("Failed to process push notification: " + t.localizedMessage)
-        }
-    }
-
-    private fun _createNotification(context: Context, extras: Bundle) {
-        if (pt_id == null) {
-            PTLog.verbose("Template ID not provided. Cannot create the notification")
-            return
-        }
-        notificationManager =
-            context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-        channelId = extras.getString(Constants.WZRK_CHANNEL_ID, "")
-        requiresChannelId = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            var channelIdError: String? = null
-            if (channelId!!.isEmpty()) {
-                channelIdError =
-                    "Unable to render notification, channelId is required but not provided in the notification payload: $extras"
-            } else if (notificationManager != null && notificationManager!!.getNotificationChannel(
-                    channelId
-                ) == null
-            ) {
-                channelIdError =
-                    "Unable to render notification, channelId: $channelId not registered by the app."
-            }
-            if (channelIdError != null) {
-                PTLog.verbose(channelIdError)
-                return
-            }
-        }
-        setSmallIcon(context)
-        val notificationId = setCollapseKey(pt_collapse_key)
-        when (templateType) {
-            TemplateType.BASIC -> if (hasAllBasicNotifKeys()) renderBasicTemplateNotification(
-                context,
-                extras,
-                notificationId
-            )
-            TemplateType.AUTO_CAROUSEL -> if (hasAllCarouselNotifKeys()) renderAutoCarouselNotification(
-                context,
-                extras,
-                notificationId
-            )
-            TemplateType.MANUAL_CAROUSEL -> if (hasAllManualCarouselNotifKeys()) renderManualCarouselNotification(
-                context,
-                extras,
-                notificationId
-            )
-            TemplateType.RATING -> if (hasAllRatingNotifKeys()) renderRatingNotification(
-                context,
-                extras,
-                notificationId
-            )
-            TemplateType.FIVE_ICONS -> if (hasAll5IconNotifKeys()) renderFiveIconNotification(
-                context,
-                extras,
-                notificationId
-            )
-            TemplateType.PRODUCT_DISPLAY -> if (hasAllProdDispNotifKeys()) renderProductDisplayNotification(
-                context,
-                extras,
-                notificationId
-            )
-            TemplateType.ZERO_BEZEL -> if (hasAllZeroBezelNotifKeys()) renderZeroBezelNotification(
-                context,
-                extras,
-                notificationId
-            )
-            TemplateType.TIMER -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                if (hasAllTimerKeys()) {
-                    renderTimerNotification(context, extras, notificationId)
-                }
-            } else {
-                PTLog.debug("Push Templates SDK supports Timer Notifications only on or above Android Nougat, reverting to basic template")
-                if (hasAllBasicNotifKeys()) {
-                    renderBasicTemplateNotification(context, extras, notificationId)
-                }
-            }
-            TemplateType.INPUT_BOX -> if (hasAllInputBoxKeys()) renderInputBoxNotification(
-                context,
-                extras,
-                notificationId
-            )
-            TemplateType.CANCEL -> renderCancelNotification()
-        }
-    }
-
-    private fun setSmallIcon(context: Context) {
-        val metaData: Bundle
-        try {
-            val pm = context.packageManager
-            val ai = pm.getApplicationInfo(context.packageName, PackageManager.GET_META_DATA)
-            metaData = ai.metaData
-            val x = Utils._getManifestStringValueForKey(metaData, Constants.LABEL_NOTIFICATION_ICON)
-                ?: throw IllegalArgumentException()
-            smallIcon = context.resources.getIdentifier(x, "drawable", context.packageName)
-            require(smallIcon != 0)
-        } catch (t: Throwable) {
-            smallIcon = Utils.getAppIconAsIntId(context)
-        }
-        try {
-            pt_small_icon = Utils.setBitMapColour(context, smallIcon, pt_small_icon_clr)
-        } catch (e: NullPointerException) {
-            PTLog.debug("NPE while setting small icon color")
-        }
     }
 
     private fun setDotSep(context: Context) {
@@ -1301,120 +1224,6 @@ class TemplateRenderer : INotificationRenderer {
         return result
     }
 
-    private fun renderCancelNotification() {
-        if (pt_cancel_notif_id != null && pt_cancel_notif_id!!.isNotEmpty()) {
-            val notificationId = pt_cancel_notif_id!!.toInt()
-            notificationManager!!.cancel(notificationId)
-        } else {
-            if (pt_cancel_notif_ids!!.size > 0) {
-                for (i in 0..pt_cancel_notif_ids!!.size) {
-                    notificationManager!!.cancel(pt_cancel_notif_ids!![i])
-                }
-            }
-        }
-    }
-
-    private fun renderRatingNotification(context: Context, extras: Bundle, notificationId: Int) {
-        var notificationId = notificationId
-        PTLog.debug("Rendering Rating Template Push Notification with extras - $extras")
-        try {
-            contentViewRating = RemoteViews(context.packageName, R.layout.rating)
-            setCustomContentViewBasicKeys(contentViewRating!!, context)
-            contentViewSmall = RemoteViews(context.packageName, R.layout.content_view_small)
-            setCustomContentViewBasicKeys(contentViewSmall!!, context)
-            setCustomContentViewTitle(contentViewRating!!, pt_title)
-            setCustomContentViewTitle(contentViewSmall!!, pt_title)
-            setCustomContentViewMessage(contentViewRating!!, pt_msg)
-            setCustomContentViewMessage(contentViewSmall!!, pt_msg)
-            setCustomContentViewMessageSummary(contentViewRating!!, pt_msg_summary)
-            setCustomContentViewTitleColour(contentViewRating!!, pt_title_clr)
-            setCustomContentViewTitleColour(contentViewSmall!!, pt_title_clr)
-            setCustomContentViewMessageColour(contentViewRating!!, pt_msg_clr)
-            setCustomContentViewMessageColour(contentViewSmall!!, pt_msg_clr)
-            setCustomContentViewExpandedBackgroundColour(contentViewRating!!, pt_bg)
-            setCustomContentViewCollapsedBackgroundColour(contentViewSmall!!, pt_bg)
-
-            //Set the rating stars
-            contentViewRating!!.setImageViewResource(R.id.star1, R.drawable.pt_star_outline)
-            contentViewRating!!.setImageViewResource(R.id.star2, R.drawable.pt_star_outline)
-            contentViewRating!!.setImageViewResource(R.id.star3, R.drawable.pt_star_outline)
-            contentViewRating!!.setImageViewResource(R.id.star4, R.drawable.pt_star_outline)
-            contentViewRating!!.setImageViewResource(R.id.star5, R.drawable.pt_star_outline)
-            notificationId = setNotificationId(notificationId)
-
-            //Set Pending Intents for each star to listen to click
-            val notificationIntent1 = Intent(context, PushTemplateReceiver::class.java)
-            notificationIntent1.putExtra("click1", true)
-            notificationIntent1.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-            notificationIntent1.putExtra("config", config)
-            notificationIntent1.putExtras(extras)
-            val contentIntent1 =
-                PendingIntent.getBroadcast(context, Random().nextInt(), notificationIntent1, 0)
-            contentViewRating!!.setOnClickPendingIntent(R.id.star1, contentIntent1)
-            val notificationIntent2 = Intent(context, PushTemplateReceiver::class.java)
-            notificationIntent2.putExtra("click2", true)
-            notificationIntent2.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-            notificationIntent2.putExtra("config", config)
-            notificationIntent2.putExtras(extras)
-            val contentIntent2 =
-                PendingIntent.getBroadcast(context, Random().nextInt(), notificationIntent2, 0)
-            contentViewRating!!.setOnClickPendingIntent(R.id.star2, contentIntent2)
-            val notificationIntent3 = Intent(context, PushTemplateReceiver::class.java)
-            notificationIntent3.putExtra("click3", true)
-            notificationIntent3.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-            notificationIntent3.putExtra("config", config)
-            notificationIntent3.putExtras(extras)
-            val contentIntent3 =
-                PendingIntent.getBroadcast(context, Random().nextInt(), notificationIntent3, 0)
-            contentViewRating!!.setOnClickPendingIntent(R.id.star3, contentIntent3)
-            val notificationIntent4 = Intent(context, PushTemplateReceiver::class.java)
-            notificationIntent4.putExtra("click4", true)
-            notificationIntent4.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-            notificationIntent4.putExtra("config", config)
-            notificationIntent4.putExtras(extras)
-            val contentIntent4 =
-                PendingIntent.getBroadcast(context, Random().nextInt(), notificationIntent4, 0)
-            contentViewRating!!.setOnClickPendingIntent(R.id.star4, contentIntent4)
-            val notificationIntent5 = Intent(context, PushTemplateReceiver::class.java)
-            notificationIntent5.putExtra("click5", true)
-            notificationIntent5.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-            notificationIntent5.putExtra("config", config)
-            notificationIntent5.putExtras(extras)
-            val contentIntent5 =
-                PendingIntent.getBroadcast(context, Random().nextInt(), notificationIntent5, 0)
-            contentViewRating!!.setOnClickPendingIntent(R.id.star5, contentIntent5)
-            val launchIntent = Intent(context, PushTemplateReceiver::class.java)
-            val pIntent = setPendingIntent(
-                context,
-                notificationId,
-                extras,
-                launchIntent,
-                pt_rating_default_dl
-            )
-            val notificationBuilder =
-                setBuilderWithChannelIDCheck(requiresChannelId, channelId, context)
-            setNotificationBuilderBasics(
-                notificationBuilder,
-                contentViewSmall!!,
-                contentViewRating!!,
-                pt_title,
-                pIntent
-            )
-            val notification = notificationBuilder.build()
-            setCustomContentViewBigImage(contentViewRating!!, pt_big_img)
-            setCustomContentViewLargeIcon(contentViewSmall!!, pt_large_icon)
-            setCustomContentViewLargeIcon(contentViewRating!!, pt_large_icon)
-            setCustomContentViewSmallIcon(contentViewRating!!)
-            setCustomContentViewSmallIcon(contentViewSmall!!)
-            setCustomContentViewDotSep(contentViewRating!!)
-            setCustomContentViewDotSep(contentViewSmall!!)
-            notificationManager!!.notify(notificationId, notification)
-            Utils.raiseNotificationViewed(context, extras, config)
-        } catch (t: Throwable) {
-            PTLog.verbose("Error creating rating notification ", t)
-        }
-    }
-
     private fun renderAutoCarouselNotification(
         context: Context,
         extras: Bundle,
@@ -1425,21 +1234,21 @@ class TemplateRenderer : INotificationRenderer {
         PTLog.debug("Rendering Auto Carousel Template Push Notification with extras - $extras")
         try {
             contentViewCarousel = RemoteViews(context.packageName, R.layout.auto_carousel)
-            setCustomContentViewBasicKeys(contentViewCarousel!!, context)
+            setCustomContentViewBasicKeys(contentViewCarousel!!, context)// auto super init->scv
             contentViewSmall = RemoteViews(context.packageName, R.layout.content_view_small)
-            setCustomContentViewBasicKeys(contentViewSmall!!, context)
-            setCustomContentViewTitle(contentViewCarousel!!, pt_title)
-            setCustomContentViewTitle(contentViewSmall!!, pt_title)
-            setCustomContentViewMessage(contentViewCarousel!!, pt_msg)
-            setCustomContentViewMessage(contentViewSmall!!, pt_msg)
-            setCustomContentViewExpandedBackgroundColour(contentViewCarousel!!, pt_bg)
-            setCustomContentViewCollapsedBackgroundColour(contentViewSmall!!, pt_bg)
-            setCustomContentViewTitleColour(contentViewCarousel!!, pt_title_clr)
-            setCustomContentViewTitleColour(contentViewSmall!!, pt_title_clr)
-            setCustomContentViewMessageColour(contentViewCarousel!!, pt_msg_clr)
-            setCustomContentViewMessageColour(contentViewSmall!!, pt_msg_clr)
-            setCustomContentViewMessageSummary(contentViewCarousel!!, pt_msg_summary)
-            setCustomContentViewViewFlipperInterval(contentViewCarousel!!, pt_flip_interval)
+            setCustomContentViewBasicKeys(contentViewSmall!!, context) // scv
+            setCustomContentViewTitle(contentViewCarousel!!, pt_title)// auto super init->scv
+            setCustomContentViewTitle(contentViewSmall!!, pt_title) // scv
+            setCustomContentViewMessage(contentViewCarousel!!, pt_msg)// auto super init->scv
+            setCustomContentViewMessage(contentViewSmall!!, pt_msg) // scv
+            setCustomContentViewExpandedBackgroundColour(contentViewCarousel!!, pt_bg)// auto super init->scv
+            setCustomContentViewCollapsedBackgroundColour(contentViewSmall!!, pt_bg) // scv
+            setCustomContentViewTitleColour(contentViewCarousel!!, pt_title_clr)// auto super init->scv
+            setCustomContentViewTitleColour(contentViewSmall!!, pt_title_clr) // scv
+            setCustomContentViewMessageColour(contentViewCarousel!!, pt_msg_clr)// auto super init->scv
+            setCustomContentViewMessageColour(contentViewSmall!!, pt_msg_clr) // scv
+            setCustomContentViewMessageSummary(contentViewCarousel!!, pt_msg_summary)// auto init
+            setCustomContentViewViewFlipperInterval(contentViewCarousel!!, pt_flip_interval)// auto init
             val launchIntent = Intent(context, PTPushNotificationReceiver::class.java)
             val pIntent: PendingIntent
             pIntent = if (deepLinkList != null) {
@@ -1451,6 +1260,7 @@ class TemplateRenderer : INotificationRenderer {
                 nb, contentViewSmall!!, contentViewCarousel!!, pt_title,
                 pIntent
             )
+            // -------------auto init START----------------setViewFlipper
             var imageCounter = 0
             for (index in imageList!!.indices) {
                 val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view)
@@ -1462,12 +1272,13 @@ class TemplateRenderer : INotificationRenderer {
                     PTLog.debug("Skipping Image in Auto Carousel.")
                 }
             }
-            setCustomContentViewLargeIcon(contentViewSmall!!, pt_large_icon)
-            setCustomContentViewLargeIcon(contentViewCarousel!!, pt_large_icon)
-            setCustomContentViewSmallIcon(contentViewCarousel!!)
-            setCustomContentViewSmallIcon(contentViewSmall!!)
-            setCustomContentViewDotSep(contentViewCarousel!!)
-            setCustomContentViewDotSep(contentViewSmall!!)
+            // -------------auto init END----------------setViewFlipper
+            setCustomContentViewLargeIcon(contentViewSmall!!, pt_large_icon) // scv
+            setCustomContentViewLargeIcon(contentViewCarousel!!, pt_large_icon)// auto super init->scv
+            setCustomContentViewSmallIcon(contentViewCarousel!!)// auto super init->scv
+            setCustomContentViewSmallIcon(contentViewSmall!!) // scv
+            setCustomContentViewDotSep(contentViewCarousel!!)// auto super init->scv
+            setCustomContentViewDotSep(contentViewSmall!!) // scv
             if (imageCounter < 2) {
                 PTLog.debug(
                     "Need at least 2 images to display Auto Carousel, found - "
@@ -1481,208 +1292,9 @@ class TemplateRenderer : INotificationRenderer {
         return nb
     }
 
-    private fun renderAutoCarouselNotification(
-        context: Context,
-        extras: Bundle,
-        notificationId: Int
-    ) {
-        var notificationId = notificationId
-        PTLog.debug("Rendering Auto Carousel Template Push Notification with extras - $extras")
-        try {
-            notificationId = setNotificationId(notificationId)
-            contentViewCarousel = RemoteViews(context.packageName, R.layout.auto_carousel)
-            setCustomContentViewBasicKeys(contentViewCarousel!!, context)
-            contentViewSmall = RemoteViews(context.packageName, R.layout.content_view_small)
-            setCustomContentViewBasicKeys(contentViewSmall!!, context)
-            setCustomContentViewTitle(contentViewCarousel!!, pt_title)
-            setCustomContentViewTitle(contentViewSmall!!, pt_title)
-            setCustomContentViewMessage(contentViewCarousel!!, pt_msg)
-            setCustomContentViewMessage(contentViewSmall!!, pt_msg)
-            setCustomContentViewExpandedBackgroundColour(contentViewCarousel!!, pt_bg)
-            setCustomContentViewCollapsedBackgroundColour(contentViewSmall!!, pt_bg)
-            setCustomContentViewTitleColour(contentViewCarousel!!, pt_title_clr)
-            setCustomContentViewTitleColour(contentViewSmall!!, pt_title_clr)
-            setCustomContentViewMessageColour(contentViewCarousel!!, pt_msg_clr)
-            setCustomContentViewMessageColour(contentViewSmall!!, pt_msg_clr)
-            setCustomContentViewMessageSummary(contentViewCarousel!!, pt_msg_summary)
-            setCustomContentViewViewFlipperInterval(contentViewCarousel!!, pt_flip_interval)
-            val launchIntent = Intent(context, PTPushNotificationReceiver::class.java)
-            val pIntent: PendingIntent
-            pIntent = if (deepLinkList != null) {
-                setPendingIntent(context, notificationId, extras, launchIntent, deepLinkList!![0])
-            } else {
-                setPendingIntent(context, notificationId, extras, launchIntent, null)
-            }
-            val notificationBuilder =
-                setBuilderWithChannelIDCheck(requiresChannelId, channelId, context)
-            setNotificationBuilderBasics(
-                notificationBuilder,
-                contentViewSmall!!,
-                contentViewCarousel!!,
-                pt_title,
-                pIntent
-            )
-            val notification = notificationBuilder.build()
-            var imageCounter = 0
-            for (index in imageList!!.indices) {
-                val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view)
-                Utils.loadImageURLIntoRemoteView(R.id.fimg, imageList!![index], tempRemoteView)
-                if (!Utils.getFallback()) {
-                    contentViewCarousel!!.addView(R.id.view_flipper, tempRemoteView)
-                    imageCounter++
-                } else {
-                    PTLog.debug("Skipping Image in Auto Carousel.")
-                }
-            }
-            setCustomContentViewLargeIcon(contentViewSmall!!, pt_large_icon)
-            setCustomContentViewLargeIcon(contentViewCarousel!!, pt_large_icon)
-            setCustomContentViewSmallIcon(contentViewCarousel!!)
-            setCustomContentViewSmallIcon(contentViewSmall!!)
-            setCustomContentViewDotSep(contentViewCarousel!!)
-            setCustomContentViewDotSep(contentViewSmall!!)
-            if (imageCounter < 2) {
-                PTLog.debug(
-                    "Need at least 2 images to display Auto Carousel, found - "
-                            + imageCounter + ", not displaying the notification."
-                )
-                return
-            }
-            notificationManager!!.notify(notificationId, notification)
-            Utils.raiseNotificationViewed(context, extras, config)
-        } catch (t: Throwable) {
-            PTLog.verbose("Error creating auto carousel notification ", t)
-        }
-    }
 
     private fun setCustomContentViewViewFlipperInterval(contentView: RemoteViews, interval: Int) {
         contentView.setInt(R.id.view_flipper, "setFlipInterval", interval)
-    }
-
-    private fun renderManualCarouselNotification(
-        context: Context,
-        extras: Bundle,
-        notificationId: Int
-    ) {
-        var notificationId = notificationId
-        PTLog.debug("Rendering Manual Carousel Template Push Notification with extras - $extras")
-        try {
-            notificationId = setNotificationId(notificationId)
-            contentViewManualCarousel = RemoteViews(context.packageName, R.layout.manual_carousel)
-            setCustomContentViewBasicKeys(contentViewManualCarousel!!, context)
-            contentViewSmall = RemoteViews(context.packageName, R.layout.content_view_small)
-            setCustomContentViewBasicKeys(contentViewSmall!!, context)
-            setCustomContentViewTitle(contentViewManualCarousel!!, pt_title)
-            setCustomContentViewTitle(contentViewSmall!!, pt_title)
-            setCustomContentViewMessage(contentViewManualCarousel!!, pt_msg)
-            setCustomContentViewMessage(contentViewSmall!!, pt_msg)
-            setCustomContentViewExpandedBackgroundColour(contentViewManualCarousel!!, pt_bg)
-            setCustomContentViewCollapsedBackgroundColour(contentViewSmall!!, pt_bg)
-            setCustomContentViewTitleColour(contentViewManualCarousel!!, pt_title_clr)
-            setCustomContentViewTitleColour(contentViewSmall!!, pt_title_clr)
-            setCustomContentViewMessageColour(contentViewManualCarousel!!, pt_msg_clr)
-            setCustomContentViewMessageColour(contentViewSmall!!, pt_msg_clr)
-            setCustomContentViewMessageSummary(contentViewManualCarousel!!, pt_msg_summary)
-            contentViewManualCarousel!!.setViewVisibility(R.id.leftArrowPos0, View.VISIBLE)
-            contentViewManualCarousel!!.setViewVisibility(R.id.rightArrowPos0, View.VISIBLE)
-            var imageCounter = 0
-            var isFirstImageOk = false
-            val dl = deepLinkList!![0]
-            var currentPosition = 0
-            val tempImageList = ArrayList<String>()
-            for (index in imageList!!.indices) {
-                val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view_rounded)
-                Utils.loadImageURLIntoRemoteView(
-                    R.id.flipper_img,
-                    imageList!![index],
-                    tempRemoteView,
-                    context
-                )
-                if (!Utils.getFallback()) {
-                    if (!isFirstImageOk) {
-                        currentPosition = index
-                        isFirstImageOk = true
-                    }
-                    contentViewManualCarousel!!.addView(R.id.carousel_image, tempRemoteView)
-                    contentViewManualCarousel!!.addView(R.id.carousel_image_right, tempRemoteView)
-                    contentViewManualCarousel!!.addView(R.id.carousel_image_left, tempRemoteView)
-                    imageCounter++
-                    tempImageList.add(imageList!![index])
-                } else {
-                    if (deepLinkList != null && deepLinkList!!.size == imageList!!.size) {
-                        deepLinkList!!.removeAt(index)
-                    }
-                    PTLog.debug("Skipping Image in Manual Carousel.")
-                }
-            }
-            if (pt_manual_carousel_type == null || !pt_manual_carousel_type.equals(
-                    PTConstants.PT_MANUAL_CAROUSEL_FILMSTRIP,
-                    ignoreCase = true
-                )
-            ) {
-                contentViewManualCarousel!!.setViewVisibility(R.id.carousel_image_right, View.GONE)
-                contentViewManualCarousel!!.setViewVisibility(R.id.carousel_image_left, View.GONE)
-            }
-            contentViewManualCarousel!!.setDisplayedChild(R.id.carousel_image_right, 1)
-            contentViewManualCarousel!!.setDisplayedChild(
-                R.id.carousel_image_left,
-                tempImageList.size - 1
-            )
-            extras.putInt(PTConstants.PT_MANUAL_CAROUSEL_CURRENT, currentPosition)
-            extras.putStringArrayList(PTConstants.PT_IMAGE_LIST, tempImageList)
-            extras.putStringArrayList(PTConstants.PT_DEEPLINK_LIST, deepLinkList)
-            val rightArrowPos0Intent = Intent(context, PushTemplateReceiver::class.java)
-            rightArrowPos0Intent.putExtra(PTConstants.PT_RIGHT_SWIPE, true)
-            rightArrowPos0Intent.putExtra(PTConstants.PT_MANUAL_CAROUSEL_FROM, 0)
-            rightArrowPos0Intent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-            rightArrowPos0Intent.putExtras(extras)
-            val contentRightPos0Intent =
-                setPendingIntent(context, notificationId, extras, rightArrowPos0Intent, dl)
-            contentViewManualCarousel!!.setOnClickPendingIntent(
-                R.id.rightArrowPos0,
-                contentRightPos0Intent
-            )
-            val leftArrowPos0Intent = Intent(context, PushTemplateReceiver::class.java)
-            leftArrowPos0Intent.putExtra(PTConstants.PT_RIGHT_SWIPE, false)
-            leftArrowPos0Intent.putExtra(PTConstants.PT_MANUAL_CAROUSEL_FROM, 0)
-            leftArrowPos0Intent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-            leftArrowPos0Intent.putExtras(extras)
-            val contentLeftPos0Intent =
-                setPendingIntent(context, notificationId, extras, leftArrowPos0Intent, dl)
-            contentViewManualCarousel!!.setOnClickPendingIntent(
-                R.id.leftArrowPos0,
-                contentLeftPos0Intent
-            )
-            val launchIntent = Intent(context, PTPushNotificationReceiver::class.java)
-            val pIntent = setPendingIntent(context, notificationId, extras, launchIntent, dl)
-            val notificationBuilder =
-                setBuilderWithChannelIDCheck(requiresChannelId, channelId, context)
-            val dismissIntent = Intent(context, PushTemplateReceiver::class.java)
-            val dIntent: PendingIntent
-            dIntent = setDismissIntent(context, extras, dismissIntent)
-            setNotificationBuilderBasics(
-                notificationBuilder,
-                contentViewSmall!!,
-                contentViewManualCarousel!!,
-                pt_title,
-                pIntent,
-                dIntent
-            )
-            val notification = notificationBuilder.build()
-            setCustomContentViewLargeIcon(contentViewSmall!!, pt_large_icon)
-            setCustomContentViewLargeIcon(contentViewManualCarousel!!, pt_large_icon)
-            setCustomContentViewSmallIcon(contentViewManualCarousel!!)
-            setCustomContentViewSmallIcon(contentViewSmall!!)
-            setCustomContentViewDotSep(contentViewManualCarousel!!)
-            setCustomContentViewDotSep(contentViewSmall!!)
-            if (imageCounter < 2) {
-                PTLog.debug("Need at least 2 images to display Manual Carousel, found - $imageCounter, not displaying the notification.")
-                return
-            }
-            notificationManager!!.notify(notificationId, notification)
-            Utils.raiseNotificationViewed(context, extras, config)
-        } catch (t: Throwable) {
-            PTLog.verbose("Error creating Manual carousel notification ", t)
-        }
     }
 
     private fun renderBasicTemplateNotification(
@@ -1695,20 +1307,20 @@ class TemplateRenderer : INotificationRenderer {
         PTLog.debug("Rendering Basic Template Push Notification with extras - $extras")
         try {
             contentViewBig = RemoteViews(context.packageName, R.layout.image_only_big)
-            setCustomContentViewBasicKeys(contentViewBig!!, context)
+            setCustomContentViewBasicKeys(contentViewBig!!, context)// iob super init
             contentViewSmall = RemoteViews(context.packageName, R.layout.content_view_small)
-            setCustomContentViewBasicKeys(contentViewSmall!!, context)
-            setCustomContentViewTitle(contentViewBig!!, pt_title)
-            setCustomContentViewTitle(contentViewSmall!!, pt_title)
-            setCustomContentViewMessage(contentViewBig!!, pt_msg)
-            setCustomContentViewMessage(contentViewSmall!!, pt_msg)
-            setCustomContentViewExpandedBackgroundColour(contentViewBig!!, pt_bg)
-            setCustomContentViewCollapsedBackgroundColour(contentViewSmall!!, pt_bg)
-            setCustomContentViewTitleColour(contentViewBig!!, pt_title_clr)
-            setCustomContentViewTitleColour(contentViewSmall!!, pt_title_clr)
-            setCustomContentViewMessageColour(contentViewBig!!, pt_msg_clr)
-            setCustomContentViewMessageColour(contentViewSmall!!, pt_msg_clr)
-            setCustomContentViewMessageSummary(contentViewBig!!, pt_msg_summary)
+            setCustomContentViewBasicKeys(contentViewSmall!!, context)//cv
+            setCustomContentViewTitle(contentViewBig!!, pt_title)// iob super init
+            setCustomContentViewTitle(contentViewSmall!!, pt_title)//cv
+            setCustomContentViewMessage(contentViewBig!!, pt_msg)// iob super init
+            setCustomContentViewMessage(contentViewSmall!!, pt_msg)//cv
+            setCustomContentViewExpandedBackgroundColour(contentViewBig!!, pt_bg)// iob super init
+            setCustomContentViewCollapsedBackgroundColour(contentViewSmall!!, pt_bg)//cv
+            setCustomContentViewTitleColour(contentViewBig!!, pt_title_clr)// iob super init
+            setCustomContentViewTitleColour(contentViewSmall!!, pt_title_clr)//cv
+            setCustomContentViewMessageColour(contentViewBig!!, pt_msg_clr)// iob super init
+            setCustomContentViewMessageColour(contentViewSmall!!, pt_msg_clr)//cv
+            setCustomContentViewMessageSummary(contentViewBig!!, pt_msg_summary)// iob
             val launchIntent = Intent(context, PTPushNotificationReceiver::class.java)
             val pIntent: PendingIntent
             pIntent = if (deepLinkList != null && deepLinkList!!.size > 0) {
@@ -1723,325 +1335,19 @@ class TemplateRenderer : INotificationRenderer {
                 pt_title,
                 pIntent
             )
-            setCustomContentViewSmallIcon(contentViewBig!!)
-            setCustomContentViewSmallIcon(contentViewSmall!!)
-            setCustomContentViewDotSep(contentViewBig!!)
-            setCustomContentViewDotSep(contentViewSmall!!)
-            setCustomContentViewBigImage(contentViewBig!!, pt_big_img)
-            setCustomContentViewLargeIcon(contentViewBig!!, pt_large_icon)
-            setCustomContentViewLargeIcon(contentViewSmall!!, pt_large_icon)
+            setCustomContentViewSmallIcon(contentViewBig!!)// iob super init
+            setCustomContentViewSmallIcon(contentViewSmall!!)// cv
+            setCustomContentViewDotSep(contentViewBig!!)// iob super init
+            setCustomContentViewDotSep(contentViewSmall!!)// cv
+            setCustomContentViewBigImage(contentViewBig!!, pt_big_img)// iob
+            setCustomContentViewLargeIcon(contentViewBig!!, pt_large_icon)// iob super init
+            setCustomContentViewLargeIcon(contentViewSmall!!, pt_large_icon) // cv
         } catch (t: Throwable) {
             PTLog.verbose("Error creating image only notification", t)
         }
         return nb
     }
 
-    private fun renderBasicTemplateNotification(
-        context: Context,
-        extras: Bundle,
-        notificationId: Int
-    ) {
-        var notificationId = notificationId
-        PTLog.debug("Rendering Basic Template Push Notification with extras - $extras")
-        try {
-            contentViewBig = RemoteViews(context.packageName, R.layout.image_only_big)
-            setCustomContentViewBasicKeys(contentViewBig!!, context)
-            contentViewSmall = RemoteViews(context.packageName, R.layout.content_view_small)
-            setCustomContentViewBasicKeys(contentViewSmall!!, context)
-            setCustomContentViewTitle(contentViewBig!!, pt_title)
-            setCustomContentViewTitle(contentViewSmall!!, pt_title)
-            setCustomContentViewMessage(contentViewBig!!, pt_msg)
-            setCustomContentViewMessage(contentViewSmall!!, pt_msg)
-            setCustomContentViewExpandedBackgroundColour(contentViewBig!!, pt_bg)
-            setCustomContentViewCollapsedBackgroundColour(contentViewSmall!!, pt_bg)
-            setCustomContentViewTitleColour(contentViewBig!!, pt_title_clr)
-            setCustomContentViewTitleColour(contentViewSmall!!, pt_title_clr)
-            setCustomContentViewMessageColour(contentViewBig!!, pt_msg_clr)
-            setCustomContentViewMessageColour(contentViewSmall!!, pt_msg_clr)
-            setCustomContentViewMessageSummary(contentViewBig!!, pt_msg_summary)
-            notificationId = setNotificationId(notificationId)
-            val launchIntent = Intent(context, PTPushNotificationReceiver::class.java)
-            val pIntent: PendingIntent
-            pIntent = if (deepLinkList != null && deepLinkList!!.size > 0) {
-                setPendingIntent(context, notificationId, extras, launchIntent, deepLinkList!![0])
-            } else {
-                setPendingIntent(context, notificationId, extras, launchIntent, null)
-            }
-            val notificationBuilder =
-                setBuilderWithChannelIDCheck(requiresChannelId, channelId, context)
-            setNotificationBuilderBasics(
-                notificationBuilder,
-                contentViewSmall!!,
-                contentViewBig!!,
-                pt_title,
-                pIntent
-            )
-            val notification = notificationBuilder.build()
-            setCustomContentViewSmallIcon(contentViewBig!!)
-            setCustomContentViewSmallIcon(contentViewSmall!!)
-            setCustomContentViewDotSep(contentViewBig!!)
-            setCustomContentViewDotSep(contentViewSmall!!)
-            setCustomContentViewBigImage(contentViewBig!!, pt_big_img)
-            setCustomContentViewLargeIcon(contentViewBig!!, pt_large_icon)
-            setCustomContentViewLargeIcon(contentViewSmall!!, pt_large_icon)
-            notificationManager!!.notify(notificationId, notification)
-            Utils.raiseNotificationViewed(context, extras, config)
-        } catch (t: Throwable) {
-            PTLog.verbose("Error creating image only notification", t)
-        }
-    }
-
-    private fun renderProductDisplayNotification(
-        context: Context,
-        extras: Bundle,
-        notificationId: Int
-    ) {
-        var notificationId = notificationId
-        PTLog.debug("Rendering Product Display Template Push Notification with extras - $extras")
-        try {
-            var isLinear = false
-            if (pt_product_display_linear == null || pt_product_display_linear!!.isEmpty()) {
-                contentViewBig = RemoteViews(context.packageName, R.layout.product_display_template)
-                contentViewSmall = RemoteViews(context.packageName, R.layout.content_view_small)
-            } else {
-                isLinear = true
-                contentViewBig =
-                    RemoteViews(context.packageName, R.layout.product_display_linear_expanded)
-                contentViewSmall =
-                    RemoteViews(context.packageName, R.layout.product_display_linear_collapsed)
-            }
-            setCustomContentViewBasicKeys(contentViewBig!!, context)
-            if (!isLinear) {
-                setCustomContentViewBasicKeys(contentViewSmall!!, context)
-            }
-            if (bigTextList!!.isNotEmpty()) {
-                setCustomContentViewText(contentViewBig!!, R.id.product_name, bigTextList!![0])
-            }
-            if (!isLinear) {
-                if (smallTextList!!.isNotEmpty()) {
-                    setCustomContentViewText(
-                        contentViewBig!!,
-                        R.id.product_description,
-                        smallTextList!![0]
-                    )
-                }
-            }
-            if (priceList!!.isNotEmpty()) {
-                setCustomContentViewText(contentViewBig!!, R.id.product_price, priceList!![0])
-            }
-            if (!isLinear) {
-                setCustomContentViewTitle(contentViewBig!!, pt_title)
-                setCustomContentViewTitle(contentViewSmall!!, pt_title)
-                setCustomContentViewMessage(contentViewBig!!, pt_msg)
-                setCustomContentViewElementColour(
-                    contentViewBig!!,
-                    R.id.product_description,
-                    pt_msg_clr
-                )
-                setCustomContentViewElementColour(contentViewBig!!, R.id.product_name, pt_title_clr)
-                setCustomContentViewTitleColour(contentViewSmall!!, pt_title_clr)
-            }
-            setCustomContentViewMessage(contentViewSmall!!, pt_msg)
-            setCustomContentViewMessageColour(contentViewSmall!!, pt_msg_clr)
-            setCustomContentViewExpandedBackgroundColour(contentViewBig!!, pt_bg)
-            setCustomContentViewCollapsedBackgroundColour(contentViewSmall!!, pt_bg)
-            setCustomContentViewButtonLabel(
-                contentViewBig!!,
-                R.id.product_action,
-                pt_product_display_action
-            )
-            setCustomContentViewButtonColour(
-                contentViewBig!!,
-                R.id.product_action,
-                pt_product_display_action_clr
-            )
-            setCustomContentViewButtonText(
-                contentViewBig!!,
-                R.id.product_action,
-                pt_product_display_action_text_clr
-            )
-            notificationId = setNotificationId(notificationId)
-            setCustomContentViewLargeIcon(contentViewSmall!!, pt_large_icon)
-            if (!isLinear) {
-                setCustomContentViewSmallIcon(contentViewSmall!!)
-                setCustomContentViewDotSep(contentViewSmall!!)
-            }
-            var imageCounter = 0
-            var isFirstImageOk = false
-            val smallImageLayoutIds = ArrayList<Int>()
-            smallImageLayoutIds.add(R.id.small_image1)
-            smallImageLayoutIds.add(R.id.small_image2)
-            smallImageLayoutIds.add(R.id.small_image3)
-            val smallCollapsedImageLayoutIds = ArrayList<Int>()
-            smallCollapsedImageLayoutIds.add(R.id.small_image1_collapsed)
-            smallCollapsedImageLayoutIds.add(R.id.small_image2_collapsed)
-            smallCollapsedImageLayoutIds.add(R.id.small_image3_collapsed)
-            val tempImageList = ArrayList<String>()
-            for (index in imageList!!.indices) {
-                if (isLinear) {
-                    Utils.loadImageURLIntoRemoteView(
-                        smallCollapsedImageLayoutIds[imageCounter],
-                        imageList!![index],
-                        contentViewSmall
-                    )
-                    contentViewSmall!!.setViewVisibility(
-                        smallCollapsedImageLayoutIds[imageCounter],
-                        View.VISIBLE
-                    )
-                    if (!Utils.getFallback()) {
-                        contentViewSmall!!.setViewVisibility(
-                            smallCollapsedImageLayoutIds[imageCounter],
-                            View.VISIBLE
-                        )
-                    }
-                }
-                Utils.loadImageURLIntoRemoteView(
-                    smallImageLayoutIds[imageCounter], imageList!![index], contentViewBig
-                )
-                val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view)
-                Utils.loadImageURLIntoRemoteView(R.id.fimg, imageList!![index], tempRemoteView)
-                if (!Utils.getFallback()) {
-                    if (!isFirstImageOk) {
-                        isFirstImageOk = true
-                    }
-                    contentViewBig!!.setViewVisibility(
-                        smallImageLayoutIds[imageCounter],
-                        View.VISIBLE
-                    )
-                    contentViewBig!!.addView(R.id.carousel_image, tempRemoteView)
-                    imageCounter++
-                    tempImageList.add(imageList!![index])
-                } else {
-                    deepLinkList!!.removeAt(index)
-                    bigTextList!!.removeAt(index)
-                    smallTextList!!.removeAt(index)
-                    priceList!!.removeAt(index)
-                }
-            }
-            extras.putStringArrayList(PTConstants.PT_IMAGE_LIST, tempImageList)
-            extras.putStringArrayList(PTConstants.PT_DEEPLINK_LIST, deepLinkList)
-            extras.putStringArrayList(PTConstants.PT_BIGTEXT_LIST, bigTextList)
-            extras.putStringArrayList(PTConstants.PT_SMALLTEXT_LIST, smallTextList)
-            extras.putStringArrayList(PTConstants.PT_PRICE_LIST, priceList)
-            val requestCode1 = Random().nextInt()
-            val requestCode2 = Random().nextInt()
-            val requestCode3 = Random().nextInt()
-            val notificationIntent1 = Intent(context, PushTemplateReceiver::class.java)
-            notificationIntent1.putExtra(PTConstants.PT_CURRENT_POSITION, 0)
-            notificationIntent1.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-            notificationIntent1.putExtra(PTConstants.PT_BUY_NOW_DL, deepLinkList!![0])
-            notificationIntent1.putExtras(extras)
-            val contentIntent1 =
-                PendingIntent.getBroadcast(context, requestCode1, notificationIntent1, 0)
-            contentViewBig!!.setOnClickPendingIntent(R.id.small_image1, contentIntent1)
-            if (deepLinkList!!.size >= 2) {
-                val notificationIntent2 = Intent(context, PushTemplateReceiver::class.java)
-                notificationIntent2.putExtra(PTConstants.PT_CURRENT_POSITION, 1)
-                notificationIntent2.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-                notificationIntent2.putExtra(PTConstants.PT_BUY_NOW_DL, deepLinkList!![1])
-                notificationIntent2.putExtras(extras)
-                val contentIntent2 =
-                    PendingIntent.getBroadcast(context, requestCode2, notificationIntent2, 0)
-                contentViewBig!!.setOnClickPendingIntent(R.id.small_image2, contentIntent2)
-            }
-            if (deepLinkList!!.size >= 3) {
-                val notificationIntent3 = Intent(context, PushTemplateReceiver::class.java)
-                notificationIntent3.putExtra(PTConstants.PT_CURRENT_POSITION, 2)
-                notificationIntent3.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-                notificationIntent3.putExtra(PTConstants.PT_BUY_NOW_DL, deepLinkList!![2])
-                notificationIntent3.putExtras(extras)
-                val contentIntent3 =
-                    PendingIntent.getBroadcast(context, requestCode3, notificationIntent3, 0)
-                contentViewBig!!.setOnClickPendingIntent(R.id.small_image3, contentIntent3)
-            }
-            val notificationIntent4 = Intent(context, PushTemplateReceiver::class.java)
-            notificationIntent4.putExtra(PTConstants.PT_IMAGE_1, true)
-            notificationIntent4.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-            notificationIntent4.putExtra(PTConstants.PT_BUY_NOW_DL, deepLinkList!![0])
-            notificationIntent4.putExtra(PTConstants.PT_BUY_NOW, true)
-            notificationIntent4.putExtra("config", config)
-            notificationIntent4.putExtras(extras)
-            val contentIntent4 =
-                PendingIntent.getBroadcast(context, Random().nextInt(), notificationIntent4, 0)
-            contentViewBig!!.setOnClickPendingIntent(R.id.product_action, contentIntent4)
-            if (isLinear) {
-                val notificationSmallIntent1 =
-                    Intent(context, PTPushNotificationReceiver::class.java)
-                val contentSmallIntent1 = setPendingIntent(
-                    context,
-                    notificationId,
-                    extras,
-                    notificationSmallIntent1,
-                    deepLinkList!![0]
-                )
-                contentViewSmall!!.setOnClickPendingIntent(
-                    R.id.small_image1_collapsed,
-                    contentSmallIntent1
-                )
-                if (deepLinkList!!.size >= 2) {
-                    val notificationSmallIntent2 =
-                        Intent(context, PTPushNotificationReceiver::class.java)
-                    val contentSmallIntent2 = setPendingIntent(
-                        context,
-                        notificationId,
-                        extras,
-                        notificationSmallIntent2,
-                        deepLinkList!![1]
-                    )
-                    contentViewSmall!!.setOnClickPendingIntent(
-                        R.id.small_image2_collapsed,
-                        contentSmallIntent2
-                    )
-                }
-                if (deepLinkList!!.size >= 3) {
-                    val notificationSmallIntent3 =
-                        Intent(context, PTPushNotificationReceiver::class.java)
-                    val contentSmallIntent3 = setPendingIntent(
-                        context,
-                        notificationId,
-                        extras,
-                        notificationSmallIntent3,
-                        deepLinkList!![2]
-                    )
-                    contentViewSmall!!.setOnClickPendingIntent(
-                        R.id.small_image3_collapsed,
-                        contentSmallIntent3
-                    )
-                }
-            }
-            val dismissIntent = Intent(context, PushTemplateReceiver::class.java)
-            val dIntent: PendingIntent
-            dIntent = setDismissIntent(context, extras, dismissIntent)
-            val launchIntent = Intent(context, PTPushNotificationReceiver::class.java)
-            val pIntent: PendingIntent
-            pIntent = if (deepLinkList != null) {
-                setPendingIntent(context, notificationId, extras, launchIntent, deepLinkList!![0])
-            } else {
-                setPendingIntent(context, notificationId, extras, launchIntent, null)
-            }
-            val notificationBuilder =
-                setBuilderWithChannelIDCheck(requiresChannelId, channelId, context)
-            setNotificationBuilderBasics(
-                notificationBuilder,
-                contentViewSmall!!,
-                contentViewBig!!,
-                pt_title,
-                pIntent,
-                dIntent
-            )
-            val notification = notificationBuilder.build()
-            setCustomContentViewDotSep(contentViewBig!!)
-            setCustomContentViewSmallIcon(contentViewBig!!)
-            if (imageCounter <= 1) {
-                PTLog.debug("2 or more images are not retrievable, not displaying the notification.")
-                return
-            }
-            notificationManager!!.notify(notificationId, notification)
-            Utils.raiseNotificationViewed(context, extras, config)
-        } catch (t: Throwable) {
-            PTLog.verbose("Error creating Product Display Notification ", t)
-        }
-    }
 
     private fun setCustomContentViewText(contentView: RemoteViews, resourceId: Int, s: String) {
         if (s.isNotEmpty()) {
@@ -2056,300 +1362,6 @@ class TemplateRenderer : INotificationRenderer {
         }
     }
 
-    private fun renderFiveIconNotification(context: Context, extras: Bundle, notificationId: Int) {
-        var notificationId = notificationId
-        PTLog.debug("Rendering Five Icon Template Push Notification with extras - $extras")
-        try {
-            if (pt_title == null || pt_title!!.isEmpty()) {
-                pt_title = Utils.getApplicationName(context)
-            }
-            contentFiveCTAs = RemoteViews(context.packageName, R.layout.five_cta)
-            setCustomContentViewExpandedBackgroundColour(contentFiveCTAs!!, pt_bg)
-            notificationId = setNotificationId(notificationId)
-            val reqCode1 = Random().nextInt()
-            val reqCode2 = Random().nextInt()
-            val reqCode3 = Random().nextInt()
-            val reqCode4 = Random().nextInt()
-            val reqCode5 = Random().nextInt()
-            val reqCode6 = Random().nextInt()
-            val notificationIntent1 = Intent(context, PushTemplateReceiver::class.java)
-            notificationIntent1.putExtra("cta1", true)
-            notificationIntent1.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-            notificationIntent1.putExtras(extras)
-            val contentIntent1 =
-                PendingIntent.getBroadcast(context, reqCode1, notificationIntent1, 0)
-            contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta1, contentIntent1)
-            val notificationIntent2 = Intent(context, PushTemplateReceiver::class.java)
-            notificationIntent2.putExtra("cta2", true)
-            notificationIntent2.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-            notificationIntent2.putExtras(extras)
-            val contentIntent2 =
-                PendingIntent.getBroadcast(context, reqCode2, notificationIntent2, 0)
-            contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta2, contentIntent2)
-            val notificationIntent3 = Intent(context, PushTemplateReceiver::class.java)
-            notificationIntent3.putExtra("cta3", true)
-            notificationIntent3.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-            notificationIntent3.putExtras(extras)
-            val contentIntent3 =
-                PendingIntent.getBroadcast(context, reqCode3, notificationIntent3, 0)
-            contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta3, contentIntent3)
-            val notificationIntent4 = Intent(context, PushTemplateReceiver::class.java)
-            notificationIntent4.putExtra("cta4", true)
-            notificationIntent4.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-            notificationIntent4.putExtras(extras)
-            val contentIntent4 =
-                PendingIntent.getBroadcast(context, reqCode4, notificationIntent4, 0)
-            contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta4, contentIntent4)
-            val notificationIntent5 = Intent(context, PushTemplateReceiver::class.java)
-            notificationIntent5.putExtra("cta5", true)
-            notificationIntent5.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-            notificationIntent5.putExtras(extras)
-            val contentIntent5 =
-                PendingIntent.getBroadcast(context, reqCode5, notificationIntent5, 0)
-            contentFiveCTAs!!.setOnClickPendingIntent(R.id.cta5, contentIntent5)
-            val notificationIntent6 = Intent(context, PushTemplateReceiver::class.java)
-            notificationIntent6.putExtra("close", true)
-            notificationIntent6.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-            notificationIntent6.putExtras(extras)
-            val contentIntent6 =
-                PendingIntent.getBroadcast(context, reqCode6, notificationIntent6, 0)
-            contentFiveCTAs!!.setOnClickPendingIntent(R.id.close, contentIntent6)
-            val launchIntent = Intent(context, PTPushNotificationReceiver::class.java)
-            val pIntent = setPendingIntent(context, notificationId, extras, launchIntent, null)
-            val notificationBuilder =
-                setBuilderWithChannelIDCheck(requiresChannelId, channelId, context)
-            setNotificationBuilderBasics(
-                notificationBuilder,
-                contentFiveCTAs!!,
-                contentFiveCTAs!!,
-                pt_title,
-                pIntent
-            )
-            notificationBuilder.setOngoing(true)
-            val notification = notificationBuilder.build()
-            var imageCounter = 0
-            for (imageKey in imageList!!.indices) {
-                if (imageKey == 0) {
-                    Utils.loadImageURLIntoRemoteView(
-                        R.id.cta1,
-                        imageList!![imageKey],
-                        contentFiveCTAs
-                    )
-                    if (Utils.getFallback()) {
-                        contentFiveCTAs!!.setViewVisibility(R.id.cta1, View.GONE)
-                        imageCounter++
-                    }
-                } else if (imageKey == 1) {
-                    Utils.loadImageURLIntoRemoteView(
-                        R.id.cta2,
-                        imageList!![imageKey],
-                        contentFiveCTAs
-                    )
-                    if (Utils.getFallback()) {
-                        imageCounter++
-                        contentFiveCTAs!!.setViewVisibility(R.id.cta2, View.GONE)
-                    }
-                } else if (imageKey == 2) {
-                    Utils.loadImageURLIntoRemoteView(
-                        R.id.cta3,
-                        imageList!![imageKey],
-                        contentFiveCTAs
-                    )
-                    if (Utils.getFallback()) {
-                        imageCounter++
-                        contentFiveCTAs!!.setViewVisibility(R.id.cta3, View.GONE)
-                    }
-                } else if (imageKey == 3) {
-                    Utils.loadImageURLIntoRemoteView(
-                        R.id.cta4,
-                        imageList!![imageKey],
-                        contentFiveCTAs
-                    )
-                    if (Utils.getFallback()) {
-                        imageCounter++
-                        contentFiveCTAs!!.setViewVisibility(R.id.cta4, View.GONE)
-                    }
-                } else if (imageKey == 4) {
-                    Utils.loadImageURLIntoRemoteView(
-                        R.id.cta5,
-                        imageList!![imageKey],
-                        contentFiveCTAs
-                    )
-                    if (Utils.getFallback()) {
-                        imageCounter++
-                        contentFiveCTAs!!.setViewVisibility(R.id.cta5, View.GONE)
-                    }
-                }
-            }
-            Utils.loadImageRidIntoRemoteView(R.id.close, R.drawable.pt_close, contentFiveCTAs)
-            if (imageCounter > 2) {
-                PTLog.debug("More than 2 images were not retrieved in 5CTA Notification, not displaying Notification.")
-                return
-            }
-            notificationManager!!.notify(notificationId, notification)
-            Utils.raiseNotificationViewed(context, extras, config)
-        } catch (t: Throwable) {
-            PTLog.verbose("Error creating image only notification", t)
-        }
-    }
-
-    private fun renderZeroBezelNotification(context: Context, extras: Bundle, notificationId: Int) {
-        var notificationId = notificationId
-        PTLog.debug("Rendering Zero Bezel Template Push Notification with extras - $extras")
-        try {
-            contentViewBig = RemoteViews(context.packageName, R.layout.zero_bezel)
-            setCustomContentViewBasicKeys(contentViewBig!!, context)
-            val textOnlySmallView = pt_small_view != null && pt_small_view == PTConstants.TEXT_ONLY
-            contentViewSmall = if (textOnlySmallView) {
-                RemoteViews(context.packageName, R.layout.cv_small_text_only)
-            } else {
-                RemoteViews(context.packageName, R.layout.cv_small_zero_bezel)
-            }
-            setCustomContentViewBasicKeys(contentViewSmall!!, context)
-            setCustomContentViewTitle(contentViewBig!!, pt_title)
-            setCustomContentViewTitle(contentViewSmall!!, pt_title)
-            setCustomContentViewMessage(contentViewBig!!, pt_msg)
-            if (textOnlySmallView) {
-                contentViewSmall!!.setViewVisibility(R.id.msg, View.GONE)
-            } else {
-                setCustomContentViewMessage(contentViewSmall!!, pt_msg)
-            }
-            setCustomContentViewMessageSummary(contentViewBig!!, pt_msg_summary)
-            setCustomContentViewTitleColour(contentViewBig!!, pt_title_clr)
-            setCustomContentViewTitleColour(contentViewSmall!!, pt_title_clr)
-            setCustomContentViewExpandedBackgroundColour(contentViewBig!!, pt_bg)
-            setCustomContentViewCollapsedBackgroundColour(contentViewSmall!!, pt_bg)
-            setCustomContentViewMessageColour(contentViewBig!!, pt_msg_clr)
-            setCustomContentViewMessageColour(contentViewSmall!!, pt_msg_clr)
-            notificationId = setNotificationId(notificationId)
-            val launchIntent = Intent(context, PTPushNotificationReceiver::class.java)
-            val pIntent: PendingIntent
-            pIntent = if (deepLinkList != null) {
-                setPendingIntent(context, notificationId, extras, launchIntent, deepLinkList!![0])
-            } else {
-                setPendingIntent(context, notificationId, extras, launchIntent, null)
-            }
-            val notificationBuilder =
-                setBuilderWithChannelIDCheck(requiresChannelId, channelId, context)
-            setNotificationBuilderBasics(
-                notificationBuilder,
-                contentViewSmall!!,
-                contentViewBig!!,
-                pt_title,
-                pIntent
-            )
-            val notification = notificationBuilder.build()
-            setCustomContentViewBigImage(contentViewBig!!, pt_big_img)
-            if (!textOnlySmallView) {
-                setCustomContentViewBigImage(contentViewSmall!!, pt_big_img)
-            }
-            if (textOnlySmallView) {
-                setCustomContentViewLargeIcon(contentViewSmall!!, pt_large_icon)
-            }
-            setCustomContentViewSmallIcon(contentViewBig!!)
-            setCustomContentViewSmallIcon(contentViewSmall!!)
-            setCustomContentViewDotSep(contentViewBig!!)
-            setCustomContentViewDotSep(contentViewSmall!!)
-            if (Utils.getFallback()) {
-                PTLog.debug("Image not fetched, falling back to Basic Template")
-                renderBasicTemplateNotification(context, extras, notificationId)
-            } else {
-                notificationManager!!.notify(notificationId, notification)
-                Utils.raiseNotificationViewed(context, extras, config)
-            }
-        } catch (t: Throwable) {
-            PTLog.verbose("Error creating image only notification", t)
-        }
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    private fun renderTimerNotification(context: Context, extras: Bundle, notificationId: Int) {
-        var notificationId = notificationId
-        PTLog.debug("Rendering Timer Template Push Notification with extras - $extras")
-        try {
-            contentViewTimer = RemoteViews(context.packageName, R.layout.timer)
-            contentViewTimerCollapsed = RemoteViews(context.packageName, R.layout.timer_collapsed)
-            val timer_end: Int
-            timer_end =
-                if (pt_timer_threshold != -1 && pt_timer_threshold >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
-                    pt_timer_threshold * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
-                } else if (pt_timer_end >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
-                    pt_timer_end * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
-                } else {
-                    PTLog.debug("Not rendering notification Timer End value lesser than threshold (10 seconds) from current time: " + PTConstants.PT_TIMER_END)
-                    return
-                }
-            setCustomContentViewBasicKeys(contentViewTimer!!, context)
-            setCustomContentViewBasicKeys(contentViewTimerCollapsed!!, context)
-            setCustomContentViewTitle(contentViewTimer!!, pt_title)
-            setCustomContentViewTitle(contentViewTimerCollapsed!!, pt_title)
-            setCustomContentViewMessage(contentViewTimer!!, pt_msg)
-            setCustomContentViewMessage(contentViewTimerCollapsed!!, pt_msg)
-            setCustomContentViewExpandedBackgroundColour(contentViewTimer!!, pt_bg)
-            setCustomContentViewCollapsedBackgroundColour(contentViewTimerCollapsed!!, pt_bg)
-            setCustomContentViewChronometerBackgroundColour(contentViewTimer!!, pt_bg)
-            setCustomContentViewChronometerBackgroundColour(contentViewTimerCollapsed!!, pt_bg)
-            setCustomContentViewTitleColour(contentViewTimer!!, pt_title_clr)
-            setCustomContentViewTitleColour(contentViewTimerCollapsed!!, pt_title_clr)
-            setCustomContentViewChronometerTitleColour(
-                contentViewTimer!!,
-                pt_chrono_title_clr,
-                pt_title_clr
-            )
-            setCustomContentViewChronometerTitleColour(
-                contentViewTimerCollapsed!!,
-                pt_chrono_title_clr,
-                pt_title_clr
-            )
-            setCustomContentViewMessageColour(contentViewTimer!!, pt_msg_clr)
-            setCustomContentViewMessageColour(contentViewTimerCollapsed!!, pt_msg_clr)
-            setCustomContentViewMessageSummary(contentViewTimer!!, pt_msg_summary)
-            contentViewTimer!!.setChronometer(
-                R.id.chronometer,
-                SystemClock.elapsedRealtime() + timer_end,
-                null,
-                true
-            )
-            contentViewTimer!!.setChronometerCountDown(R.id.chronometer, true)
-            contentViewTimerCollapsed!!.setChronometer(
-                R.id.chronometer,
-                SystemClock.elapsedRealtime() + timer_end,
-                null,
-                true
-            )
-            contentViewTimerCollapsed!!.setChronometerCountDown(R.id.chronometer, true)
-            notificationId = setNotificationId(notificationId)
-            val launchIntent = Intent(context, PTPushNotificationReceiver::class.java)
-            val pIntent: PendingIntent
-            pIntent = if (deepLinkList != null) {
-                setPendingIntent(context, notificationId, extras, launchIntent, deepLinkList!![0])
-            } else {
-                setPendingIntent(context, notificationId, extras, launchIntent, null)
-            }
-            val notificationBuilder =
-                setBuilderWithChannelIDCheck(requiresChannelId, channelId, context)
-            setNotificationBuilderBasics(
-                notificationBuilder,
-                contentViewTimerCollapsed!!,
-                contentViewTimer!!,
-                pt_title,
-                pIntent
-            )
-            notificationBuilder.setTimeoutAfter(timer_end.toLong())
-            val notification = notificationBuilder.build()
-            setCustomContentViewBigImage(contentViewTimer!!, pt_big_img)
-            setCustomContentViewSmallIcon(contentViewTimer!!)
-            setCustomContentViewSmallIcon(contentViewTimerCollapsed!!)
-            setCustomContentViewDotSep(contentViewTimer!!)
-            setCustomContentViewDotSep(contentViewTimerCollapsed!!)
-            notificationManager!!.notify(notificationId, notification)
-            Utils.raiseNotificationViewed(context, extras, config)
-            timerRunner(context, extras, notificationId, timer_end)
-        } catch (t: Throwable) {
-            PTLog.verbose("Error creating Timer notification ", t)
-        }
-    }
-
     @RequiresApi(api = Build.VERSION_CODES.N)
     private fun renderTimerNotification(
         context: Context,
@@ -2360,8 +1372,9 @@ class TemplateRenderer : INotificationRenderer {
         var nb = nb
         PTLog.debug("Rendering Timer Template Push Notification with extras - $extras")
         try {
-            contentViewTimer = RemoteViews(context.packageName, R.layout.timer)
-            contentViewTimerCollapsed = RemoteViews(context.packageName, R.layout.timer_collapsed)
+            contentViewTimer = RemoteViews(context.packageName, R.layout.timer)// TBCV
+            contentViewTimerCollapsed = RemoteViews(context.packageName, R.layout.timer_collapsed)// TSCV
+            // renderer call first -------START--------
             val timer_end: Int
             timer_end =
                 if (pt_timer_threshold != -1 && pt_timer_threshold >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
@@ -2372,45 +1385,47 @@ class TemplateRenderer : INotificationRenderer {
                     PTLog.debug("Not rendering notification Timer End value lesser than threshold (10 seconds) from current time: " + PTConstants.PT_TIMER_END)
                     return null
                 }
-            setCustomContentViewBasicKeys(contentViewTimer!!, context)
-            setCustomContentViewBasicKeys(contentViewTimerCollapsed!!, context)
-            setCustomContentViewTitle(contentViewTimer!!, pt_title)
-            setCustomContentViewTitle(contentViewTimerCollapsed!!, pt_title)
-            setCustomContentViewMessage(contentViewTimer!!, pt_msg)
-            setCustomContentViewMessage(contentViewTimerCollapsed!!, pt_msg)
-            setCustomContentViewExpandedBackgroundColour(contentViewTimer!!, pt_bg)
-            setCustomContentViewCollapsedBackgroundColour(contentViewTimerCollapsed!!, pt_bg)
-            setCustomContentViewChronometerBackgroundColour(contentViewTimer!!, pt_bg)
-            setCustomContentViewChronometerBackgroundColour(contentViewTimerCollapsed!!, pt_bg)
-            setCustomContentViewTitleColour(contentViewTimer!!, pt_title_clr)
-            setCustomContentViewTitleColour(contentViewTimerCollapsed!!, pt_title_clr)
+            // renderer call first -------END--------
+            setCustomContentViewBasicKeys(contentViewTimer!!, context)// TBCV super init -> TSCV
+            setCustomContentViewBasicKeys(contentViewTimerCollapsed!!, context) // TSCV init
+            setCustomContentViewTitle(contentViewTimer!!, pt_title)// TBCV super init -> TSCV
+            setCustomContentViewTitle(contentViewTimerCollapsed!!, pt_title)// TSCV init
+            setCustomContentViewMessage(contentViewTimer!!, pt_msg)// TBCV super init -> TSCV
+            setCustomContentViewMessage(contentViewTimerCollapsed!!, pt_msg)// TSCV init
+            setCustomContentViewExpandedBackgroundColour(contentViewTimer!!, pt_bg)// TBCV super init -> TSCV
+            setCustomContentViewCollapsedBackgroundColour(contentViewTimerCollapsed!!, pt_bg)// TSCV init
+            setCustomContentViewChronometerBackgroundColour(contentViewTimer!!, pt_bg)// TBCV super init -> TSCV
+            setCustomContentViewChronometerBackgroundColour(contentViewTimerCollapsed!!, pt_bg)// TSCV init
+            setCustomContentViewTitleColour(contentViewTimer!!, pt_title_clr)// TBCV super init -> TSCV
+            setCustomContentViewTitleColour(contentViewTimerCollapsed!!, pt_title_clr)// TSCV init
             setCustomContentViewChronometerTitleColour(
                 contentViewTimer!!,
                 pt_chrono_title_clr,
                 pt_title_clr
-            )
+            )// TBCV super init -> TSCV
             setCustomContentViewChronometerTitleColour(
                 contentViewTimerCollapsed!!,
                 pt_chrono_title_clr,
                 pt_title_clr
-            )
-            setCustomContentViewMessageColour(contentViewTimer!!, pt_msg_clr)
-            setCustomContentViewMessageColour(contentViewTimerCollapsed!!, pt_msg_clr)
-            setCustomContentViewMessageSummary(contentViewTimer!!, pt_msg_summary)
+            )// TSCV init
+            setCustomContentViewMessageColour(contentViewTimer!!, pt_msg_clr)// TBCV super init -> TSCV
+            setCustomContentViewMessageColour(contentViewTimerCollapsed!!, pt_msg_clr)// TSCV init
+            setCustomContentViewMessageSummary(contentViewTimer!!, pt_msg_summary)// TBCV init
             contentViewTimer!!.setChronometer(
                 R.id.chronometer,
                 SystemClock.elapsedRealtime() + timer_end,
                 null,
                 true
-            )
-            contentViewTimer!!.setChronometerCountDown(R.id.chronometer, true)
+            )// TBCV init
+            contentViewTimer!!.setChronometerCountDown(R.id.chronometer, true)// TBCV init
             contentViewTimerCollapsed!!.setChronometer(
                 R.id.chronometer,
                 SystemClock.elapsedRealtime() + timer_end,
                 null,
                 true
-            )
-            contentViewTimerCollapsed!!.setChronometerCountDown(R.id.chronometer, true)
+            )// TSCV init
+            contentViewTimerCollapsed!!.setChronometerCountDown(R.id.chronometer, true)// TSCV init
+            // --------------FACTORY---- START-------------
             val launchIntent = Intent(context, PTPushNotificationReceiver::class.java)
             val pIntent: PendingIntent
             pIntent = if (deepLinkList != null) {
@@ -2418,6 +1433,7 @@ class TemplateRenderer : INotificationRenderer {
             } else {
                 setPendingIntent(context, notificationId, extras, launchIntent, null)
             }
+            // --------------FACTORY---- END-------------
             nb = setNotificationBuilderBasics(
                 nb,
                 contentViewTimerCollapsed!!,
@@ -2426,11 +1442,11 @@ class TemplateRenderer : INotificationRenderer {
                 pIntent
             )
             nb.setTimeoutAfter(timer_end.toLong())
-            setCustomContentViewBigImage(contentViewTimer!!, pt_big_img)
-            setCustomContentViewSmallIcon(contentViewTimer!!)
-            setCustomContentViewSmallIcon(contentViewTimerCollapsed!!)
-            setCustomContentViewDotSep(contentViewTimer!!)
-            setCustomContentViewDotSep(contentViewTimerCollapsed!!)
+            setCustomContentViewBigImage(contentViewTimer!!, pt_big_img)// TBCV init
+            setCustomContentViewSmallIcon(contentViewTimer!!)// TBCV super init -> TSCV
+            setCustomContentViewSmallIcon(contentViewTimerCollapsed!!)// TSCV init
+            setCustomContentViewDotSep(contentViewTimer!!)// TBCV super init -> TSCV
+            setCustomContentViewDotSep(contentViewTimerCollapsed!!)// TSCV init
 
             // it's ok to run Timer before notifying notification using nb since we have min 10 secs which is enough.
             timerRunner(context, extras, notificationId, timer_end)
@@ -2438,81 +1454,6 @@ class TemplateRenderer : INotificationRenderer {
             PTLog.verbose("Error creating Timer notification ", t)
         }
         return nb
-    }
-
-    private fun renderInputBoxNotification(context: Context, extras: Bundle, notificationId: Int) {
-        var notificationId = notificationId
-        PTLog.debug("Rendering Input Box Template Push Notification with extras - $extras")
-        try {
-            //Fetch Notif ID
-            notificationId = setNotificationId(notificationId)
-
-            //Set launchIntent to receiver
-            val launchIntent = Intent(context, PTPushNotificationReceiver::class.java)
-            val pIntent: PendingIntent
-            pIntent = if (deepLinkList != null && deepLinkList!!.size > 0) {
-                setPendingIntent(context, notificationId, extras, launchIntent, deepLinkList!![0])
-            } else {
-                setPendingIntent(context, notificationId, extras, launchIntent, null)
-            }
-            val notificationBuilder =
-                setBuilderWithChannelIDCheck(requiresChannelId, channelId, context)
-            notificationBuilder.setSmallIcon(smallIcon)
-                .setContentTitle(pt_title)
-                .setContentText(pt_msg)
-                .setContentIntent(pIntent)
-                .setVibrate(longArrayOf(0L))
-                .setWhen(System.currentTimeMillis())
-                .setAutoCancel(true)
-
-            // Assign big picture notification
-            setStandardViewBigImageStyle(pt_big_img, extras, context, notificationBuilder)
-            if (pt_input_label != null && pt_input_label!!.isNotEmpty()) {
-                //Initialise RemoteInput
-                val remoteInput = RemoteInput.Builder(PTConstants.PT_INPUT_KEY)
-                    .setLabel(pt_input_label)
-                    .build()
-
-                //Set launchIntent to receiver
-                val replyIntent = Intent(context, PushTemplateReceiver::class.java)
-                replyIntent.putExtra(PTConstants.PT_INPUT_FEEDBACK, pt_input_feedback)
-                replyIntent.putExtra(PTConstants.PT_INPUT_AUTO_OPEN, pt_input_auto_open)
-                replyIntent.putExtra("config", config)
-                val replyPendingIntent: PendingIntent
-                replyPendingIntent = if (deepLinkList != null) {
-                    setPendingIntent(
-                        context,
-                        notificationId,
-                        extras,
-                        replyIntent,
-                        deepLinkList!![0]
-                    )
-                } else {
-                    setPendingIntent(context, notificationId, extras, replyIntent, null)
-                }
-
-                //Notification Action with RemoteInput instance added.
-                val replyAction = NotificationCompat.Action.Builder(
-                    android.R.drawable.sym_action_chat, pt_input_label, replyPendingIntent
-                )
-                    .addRemoteInput(remoteInput)
-                    .setAllowGeneratedReplies(true)
-                    .build()
-
-
-                //Notification.Action instance added to Notification Builder.
-                notificationBuilder.addAction(replyAction)
-            }
-            if (pt_dismiss_on_click != null) if (pt_dismiss_on_click!!.isNotEmpty()) extras.putString(
-                PTConstants.PT_DISMISS_ON_CLICK, pt_dismiss_on_click
-            )
-            setActionButtons(context, extras, notificationId, notificationBuilder)
-            val notification = notificationBuilder.build()
-            notificationManager!!.notify(notificationId, notification)
-            Utils.raiseNotificationViewed(context, extras, config)
-        } catch (t: Throwable) {
-            PTLog.verbose("Error creating Input Box notification ", t)
-        }
     }
 
     private fun renderInputBoxNotification(
@@ -2674,18 +1615,6 @@ class TemplateRenderer : INotificationRenderer {
         }
     }
 
-    private fun setBuilderWithChannelIDCheck(
-        requiresChannelId: Boolean,
-        channelId: String?,
-        context: Context
-    ): NotificationCompat.Builder {
-        return if (requiresChannelId) {
-            NotificationCompat.Builder(context, channelId!!)
-        } else {
-            NotificationCompat.Builder(context)
-        }
-    }
-
     private fun setCustomContentViewBasicKeys(contentView: RemoteViews, context: Context) {
         contentView.setTextViewText(R.id.app_name, Utils.getApplicationName(context))
         contentView.setTextViewText(R.id.timestamp, Utils.getTimeStamp(context))
@@ -2779,37 +1708,6 @@ class TemplateRenderer : INotificationRenderer {
             contentView.setViewVisibility(R.id.big_image, View.GONE)
         }
     }
-
-    private fun setCollapseKey(collapse_key: Any?): Int {
-        var notificationId = Constants.EMPTY_NOTIFICATION_ID
-        try {
-            if (collapse_key != null) {
-                if (collapse_key is Number) {
-                    notificationId = collapse_key.toInt()
-                } else if (collapse_key is String) {
-                    try {
-                        notificationId = collapse_key.toString().toInt()
-                        PTLog.debug("Converting collapse_key: $collapse_key to notificationId int: $notificationId")
-                    } catch (e: NumberFormatException) {
-                        notificationId = collapse_key.toString().hashCode()
-                        PTLog.debug("Converting collapse_key: $collapse_key to notificationId int: $notificationId")
-                    }
-                }
-            }
-        } catch (e: NumberFormatException) {
-            //no-op
-        }
-        return notificationId
-    }
-
-    private fun setNotificationId(notificationId: Int): Int {
-        var notificationId = notificationId
-        if (notificationId == Constants.EMPTY_NOTIFICATION_ID) {
-            notificationId = (Math.random() * 100).toInt()
-        }
-        return notificationId
-    }
-
     private fun setCustomContentViewMessageSummary(
         contentView: RemoteViews,
         pt_msg_summary: String?
@@ -3050,7 +1948,7 @@ class TemplateRenderer : INotificationRenderer {
                         @Override
                         public void run() {
                             if (hasAllBasicNotifKeys()) {
-                                renderBasicTemplateNotification(context, extras, _root_ide_package_.Constants.EMPTY_NOTIFICATION_ID);
+                                renderBasicTemplateNotification(context, extras, _root_ide_package_.PTConstants.EMPTY_NOTIFICATION_ID);
                             }
                         }
                     });
@@ -3224,17 +2122,5 @@ class TemplateRenderer : INotificationRenderer {
          */
         @JvmStatic
         var debugLevel = LogLevel.INFO.intValue()
-        @SuppressLint("NewApi")
-        fun createNotification(context: Context, extras: Bundle) {
-            PTLog.verbose("Creating notification...")
-            val templateRenderer = TemplateRenderer(context, extras)
-            templateRenderer.dupeCheck(context, extras)
-        }
-
-        fun createNotification(context: Context, extras: Bundle, config: CleverTapInstanceConfig) {
-            PTLog.verbose("Creating notification with config...")
-            val templateRenderer = TemplateRenderer(context, extras, config)
-            templateRenderer.dupeCheck(context, extras)
-        }
     }
 }
