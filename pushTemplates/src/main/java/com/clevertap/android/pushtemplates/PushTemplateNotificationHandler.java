@@ -10,7 +10,7 @@ import com.clevertap.android.sdk.pushnotification.PushNotificationUtil;
 
 import java.util.Objects;
 
-public class PushTemplateMessagingService implements NotificationHandler {
+public class PushTemplateNotificationHandler implements NotificationHandler {
 
     @Override
     public boolean onMessageReceived(final Context applicationContext, final Bundle message, final String pushType) {
