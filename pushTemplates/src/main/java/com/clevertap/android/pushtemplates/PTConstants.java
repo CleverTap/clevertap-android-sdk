@@ -26,7 +26,7 @@ public class PTConstants {
     public static boolean PT_FALLBACK = false;
     public static String PT_IMAGE_PATH_LIST = "";
     static final int ONE_SECOND = 1000;
-    static final String DEFAULT_DL = "default_dl";
+    public static final String DEFAULT_DL = "default_dl";
     public static final String NOTIF_TAG = "wzrk_pn";
     public static final String PT_ID = "pt_id";
     public static final String PT_NOTIF_ICON = "pt_ico";

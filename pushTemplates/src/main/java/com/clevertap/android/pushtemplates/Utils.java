@@ -289,12 +289,12 @@ public class Utils {
         return stList;
     }
 
-    static void loadImageBitmapIntoRemoteView(int imageViewID, Bitmap image,
+    public static void loadImageBitmapIntoRemoteView(int imageViewID, Bitmap image,
                                               RemoteViews remoteViews) {
         remoteViews.setImageViewBitmap(imageViewID, image);
     }
 
-    static void loadImageURLIntoRemoteView(int imageViewID, String imageUrl,
+    public static void loadImageURLIntoRemoteView(int imageViewID, String imageUrl,
                                            RemoteViews remoteViews) {
 
         Bitmap image = getBitmapFromURL(imageUrl);
@@ -309,7 +309,7 @@ public class Utils {
 
     }
 
-    static void loadImageURLIntoRemoteView(int imageViewID, String imageUrl,
+    public static void loadImageURLIntoRemoteView(int imageViewID, String imageUrl,
                                            RemoteViews remoteViews, Context context) {
         Bitmap image = getBitmapFromURL(imageUrl);
         setFallback(false);
@@ -322,17 +322,17 @@ public class Utils {
 
     }
 
-    static void loadImageRidIntoRemoteView(int imageViewID, int resourceID,
+    public static void loadImageRidIntoRemoteView(int imageViewID, int resourceID,
                                            RemoteViews remoteViews) {
         remoteViews.setImageViewResource(imageViewID, resourceID);
     }
 
-    static String getTimeStamp(Context context) {
+    public static String getTimeStamp(Context context) {
         return DateUtils.formatDateTime(context, System.currentTimeMillis(),
                 DateUtils.FORMAT_SHOW_TIME);
     }
 
-    static String getApplicationName(Context context) {
+    public static String getApplicationName(Context context) {
         ApplicationInfo applicationInfo = context.getApplicationInfo();
         int stringId = applicationInfo.labelRes;
         return stringId == 0 ? applicationInfo.nonLocalizedLabel.toString()
@@ -697,7 +697,7 @@ public class Utils {
         return false;
     }
 
-    static Bitmap setBitMapColour(Context context, int resourceID, String clr)
+    public static Bitmap setBitMapColour(Context context, int resourceID, String clr)
             throws NullPointerException {
         if (clr != null && !clr.isEmpty()) {
             int color = getColour(clr, PTConstants.PT_COLOUR_GREY);
@@ -709,7 +709,7 @@ public class Utils {
         return null;
     }
 
-    static int getColour(String clr, String default_clr) {
+    public static int getColour(String clr, String default_clr) {
         try {
             return Color.parseColor(clr);
         } catch (Exception e) {
@@ -722,7 +722,7 @@ public class Utils {
         PTConstants.PT_FALLBACK = val;
     }
 
-    static boolean getFallback() {
+    public static boolean getFallback() {
         return PTConstants.PT_FALLBACK;
     }
 

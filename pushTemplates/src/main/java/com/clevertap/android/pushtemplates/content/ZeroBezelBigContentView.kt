@@ -4,20 +4,26 @@ import android.content.Context
 import android.os.Build
 import android.text.Html
 import android.view.View
-import android.widget.RemoteViews
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
-open class BigImageContentView(context: Context,layoutId: Int=R.layout.image_only_big,
-                   renderer: TemplateRenderer): SmallContentView(context, layoutId, renderer) {
+class ZeroBezelBigContentView(context: Context, renderer: TemplateRenderer):
+    ContentView(context, R.layout.zero_bezel,renderer) {
 
     init {
+        setCustomContentViewTitle(renderer.pt_title)
+        setCustomContentViewMessage(renderer.pt_msg)
         setCustomContentViewMessageSummary(renderer.pt_msg_summary)
+        setCustomContentViewTitleColour(renderer.pt_title_clr)
+        setCustomContentViewExpandedBackgroundColour(renderer.pt_bg)
+        setCustomContentViewMessageColour(renderer.pt_msg_clr)
         setCustomContentViewBigImage(renderer.pt_big_img)
+        setCustomContentViewSmallIcon()
+        setCustomContentViewDotSep()
     }
 
-    internal fun setCustomContentViewMessageSummary(pt_msg_summary: String?) {
+    private fun setCustomContentViewMessageSummary(pt_msg_summary: String?) {
         if (pt_msg_summary != null && pt_msg_summary.isNotEmpty()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 remoteView.setTextViewText(
@@ -30,7 +36,7 @@ open class BigImageContentView(context: Context,layoutId: Int=R.layout.image_onl
         }
     }
 
-    internal fun setCustomContentViewBigImage(pt_big_img: String?) {
+    private fun setCustomContentViewBigImage(pt_big_img: String?) {
         if (pt_big_img != null && pt_big_img.isNotEmpty()) {
             Utils.loadImageURLIntoRemoteView(R.id.big_image, pt_big_img, remoteView)
             if (Utils.getFallback()) {
