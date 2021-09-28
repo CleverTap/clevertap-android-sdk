@@ -9,7 +9,7 @@ import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
-class AutoCarouselContentView(private var context: Context, private var renderer: TemplateRenderer):
+class AutoCarouselContentView(context: Context, renderer: TemplateRenderer):
     SmallContentView(context,R.layout.auto_carousel,renderer) {
 
     init {

@@ -19,7 +19,7 @@ public final class PTLog {
     }
 
 
-    static void debug(String message){
+    public static void debug(String message){
         if (getStaticDebugLevel() >= TemplateRenderer.LogLevel.DEBUG.intValue()){
             Log.d(PTConstants.LOG_TAG,message);
         }

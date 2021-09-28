@@ -1,7 +1,6 @@
 package com.clevertap.android.pushtemplates.content
 
 import android.content.Context
-import android.widget.RemoteViews
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer

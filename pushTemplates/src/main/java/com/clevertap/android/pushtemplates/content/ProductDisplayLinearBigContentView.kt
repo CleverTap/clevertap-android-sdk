@@ -81,7 +81,7 @@ open class ProductDisplayLinearBigContentView(context: Context,
         }
     }
 
-    internal fun setCustomContentViewButtonLabel(resourceID: Int,pt_product_display_action: String?) {
+    private fun setCustomContentViewButtonLabel(resourceID: Int, pt_product_display_action: String?) {
         if (pt_product_display_action != null && pt_product_display_action.isNotEmpty()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 remoteView.setTextViewText(
@@ -95,7 +95,7 @@ open class ProductDisplayLinearBigContentView(context: Context,
     }
 
 
-    internal fun setCustomContentViewButtonColour(resourceID: Int, pt_product_display_action_clr: String?) {
+    private fun setCustomContentViewButtonColour(resourceID: Int, pt_product_display_action_clr: String?) {
         if (pt_product_display_action_clr != null && pt_product_display_action_clr.isNotEmpty()) {
             remoteView.setInt(
                 resourceID,
