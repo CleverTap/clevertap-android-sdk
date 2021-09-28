@@ -1,8 +1,14 @@
 package com.clevertap.android.pushtemplates.validators
 
-class TimerTemplateValidator(private var validator: Validator): TemplateValidator {
+import com.clevertap.android.pushtemplates.checkers.Checker
+
+class TimerTemplateValidator(private var validator: Validator): TemplateValidator(validator.keys) {
 
     override fun validate(): Boolean {
-        TODO("Not yet implemented")
+        return validator.validate() && super.validateKeys()// All check must be true
+    }
+
+    override fun loadKeys(): List<Checker<out Any>> {
+        return listOf(keys[PT_TIMER_THRESHOLD]!!, keys[PT_TIMER_END]!!)
     }
 }

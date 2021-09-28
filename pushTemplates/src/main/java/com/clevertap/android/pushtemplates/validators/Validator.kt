@@ -2,14 +2,15 @@ package com.clevertap.android.pushtemplates.validators
 
 import com.clevertap.android.pushtemplates.checkers.Checker
 
-abstract class Validator: TemplateValidator {
+abstract class Validator(val keys: Map<String, Checker<out Any>>) {
 
-
-    private fun loadKeys(): List<Checker<Any>>{
-
+    abstract fun loadKeys(): List<Checker<out Any>>
+    open fun validate(): Boolean {
+        return validateKeys()
     }
 
-    override fun validate(): Boolean {
-        TODO("Not yet implemented")
+    fun validateKeys(): Boolean {
+        val keys = loadKeys()
+        return keys.and()
     }
 }

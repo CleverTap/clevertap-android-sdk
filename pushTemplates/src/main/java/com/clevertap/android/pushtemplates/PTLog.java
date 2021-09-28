@@ -2,7 +2,7 @@ package com.clevertap.android.pushtemplates;
 
 import android.util.Log;
 
-final class PTLog {
+public final class PTLog {
 
     private final int debugLevel;
 
@@ -31,7 +31,7 @@ final class PTLog {
         }
     }
 
-    static void verbose(String message){
+    public static void verbose(String message){
         if (getStaticDebugLevel() >= TemplateRenderer.LogLevel.VERBOSE.intValue()){
             Log.v(PTConstants.LOG_TAG,message);
         }

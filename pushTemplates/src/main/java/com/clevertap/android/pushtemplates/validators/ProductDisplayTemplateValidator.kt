@@ -1,9 +1,17 @@
 package com.clevertap.android.pushtemplates.validators
 
-class ProductDisplayTemplateValidator(private var validator: Validator): TemplateValidator {
+import com.clevertap.android.pushtemplates.checkers.Checker
 
+class ProductDisplayTemplateValidator(private var validator: Validator): TemplateValidator(validator.keys) {
 
     override fun validate(): Boolean {
-        TODO("Not yet implemented")
+        return validator.validate() && super.validateKeys()// All check must be true
+    }
+
+    override fun loadKeys(): List<Checker<out Any>> {
+        return listOf(keys[PT_THREE_DEEPLINK_LIST]!!,keys[PT_BIG_TEXT_LIST]!!,
+            keys[PT_SMALL_TEXT_LIST]!!,keys[PT_PRODUCT_DISPLAY_ACTION]!!,
+            keys[PT_PRODUCT_DISPLAY_ACTION_CLR]!!,keys[PT_THREE_IMAGE_LIST]!!
+        )
     }
 }

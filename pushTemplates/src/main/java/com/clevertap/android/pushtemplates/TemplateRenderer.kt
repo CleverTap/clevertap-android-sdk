@@ -27,23 +27,23 @@ import java.util.*
 class TemplateRenderer : INotificationRenderer {
     private var pt_id: String? = null
     private var templateType: TemplateType? = null
-    private var pt_title: String? = null
-    private var pt_msg: String? = null
-    private var pt_msg_summary: String? = null
-    private var pt_large_icon: String? = null
-    private var pt_big_img: String? = null
-    private var pt_title_clr: String? = null
-    private var pt_msg_clr: String? = null
+    var pt_title: String? = null
+    var pt_msg: String? = null
+    var pt_msg_summary: String? = null
+    var pt_large_icon: String? = null
+    var pt_big_img: String? = null
+    var pt_title_clr: String? = null
+    var pt_msg_clr: String? = null
     private var pt_chrono_title_clr: String? = null
-    private var imageList: ArrayList<String>? = null
-    private var deepLinkList: ArrayList<String>? = null
-    private var bigTextList: ArrayList<String>? = null
-    private var smallTextList: ArrayList<String>? = null
-    private var priceList: ArrayList<String>? = null
-    private var pt_product_display_action: String? = null
-    private var pt_product_display_action_clr: String? = null
-    private var pt_bg: String? = null
-    private var pt_rating_default_dl: String? = null
+    var imageList: ArrayList<String>? = null
+    var deepLinkList: ArrayList<String>? = null
+    var bigTextList: ArrayList<String>? = null
+    var smallTextList: ArrayList<String>? = null
+    var priceList: ArrayList<String>? = null
+    var pt_product_display_action: String? = null
+    var pt_product_display_action_clr: String? = null
+    var pt_bg: String? = null
+    var pt_rating_default_dl: String? = null
     private var pt_small_view: String? = null
     private var contentViewBig: RemoteViews? = null
     private var contentViewSmall: RemoteViews? = null
@@ -61,12 +61,12 @@ class TemplateRenderer : INotificationRenderer {
     private var asyncHelper: AsyncHelper? = null
 
     //    private DBHelper dbHelper;
-    private var pt_timer_threshold = 0
+    var pt_timer_threshold = 0
     private var pt_input_label: String? = null
-    private var pt_input_feedback: String? = null
+    var pt_input_feedback: String? = null
     private var pt_input_auto_open: String? = null
     private var pt_dismiss_on_click: String? = null
-    private var pt_timer_end = 0
+    var pt_timer_end = 0
     private var pt_title_alt: String? = null
     private var pt_msg_alt: String? = null
     private var pt_big_img_alt: String? = null
@@ -78,7 +78,7 @@ class TemplateRenderer : INotificationRenderer {
     private var pt_dot_sep: Bitmap? = null
     private var pt_cancel_notif_id: String? = null
     private var pt_cancel_notif_ids: ArrayList<Int>? = null
-    private var actions: JSONArray? = null
+    var actions: JSONArray? = null
     private var pt_subtitle: String? = null
     private var pID: String? = null
     private var pt_flip_interval = 0
