@@ -2,6 +2,7 @@ package com.clevertap.android.pushtemplates.content
 
 import android.content.Context
 import android.os.Build
+import android.os.Bundle
 import android.text.Html
 import android.view.View
 import android.widget.RemoteViews
@@ -24,6 +25,23 @@ open class ProductDisplayLinearBigContentView(context: Context,
 
         setCustomContentViewDotSep()
         setCustomContentViewSmallIcon()
+
+
+        remoteView.setOnClickPendingIntent(R.id.small_image1, PendingIntentFactory().getPendingIntent(context,
+            1, Bundle(),false, PRODUCT_DISPLAY_DL1_PENDING_INTENT,renderer))
+
+        if (renderer.deepLinkList!!.size >= 2) {
+            remoteView.setOnClickPendingIntent(R.id.small_image2, PendingIntentFactory().getPendingIntent(context,
+                1, Bundle(),false, PRODUCT_DISPLAY_DL2_PENDING_INTENT,renderer))
+        }
+
+        if (renderer.deepLinkList!!.size >= 3) {
+            remoteView.setOnClickPendingIntent(R.id.small_image3, PendingIntentFactory().getPendingIntent(context,
+                1, Bundle(),false, PRODUCT_DISPLAY_DL3_PENDING_INTENT,renderer))
+        }
+
+        remoteView.setOnClickPendingIntent(R.id.product_action, PendingIntentFactory().getPendingIntent(context,
+            1, Bundle(),false, PRODUCT_DISPLAY_BUY_NOW_PENDING_INTENT,renderer))
     }
 
 

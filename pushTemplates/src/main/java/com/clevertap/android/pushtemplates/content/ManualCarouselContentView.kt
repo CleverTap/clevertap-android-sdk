@@ -2,6 +2,7 @@ package com.clevertap.android.pushtemplates.content
 
 import android.content.Context
 import android.os.Build
+import android.os.Bundle
 import android.text.Html
 import android.view.View
 import android.widget.RemoteViews
@@ -59,6 +60,18 @@ class ManualCarouselContentView(context: Context, renderer: TemplateRenderer):
         renderer.contentViewManualCarousel!!.setDisplayedChild(
             R.id.carousel_image_left,
             tempImageList.size - 1
+        )
+
+        remoteView.setOnClickPendingIntent(
+            R.id.rightArrowPos0,
+            PendingIntentFactory().getPendingIntent(context,1, Bundle(),false,
+                MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT,renderer)//TODO Check notifId and extras here
+        )
+
+        remoteView.setOnClickPendingIntent(
+            R.id.leftArrowPos0,
+            PendingIntentFactory().getPendingIntent(context,1, Bundle(),false,
+                MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT,renderer)//TODO Check notifId and extras here
         )
 
 

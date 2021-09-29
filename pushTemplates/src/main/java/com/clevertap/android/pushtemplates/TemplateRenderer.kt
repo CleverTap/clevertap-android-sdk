@@ -64,7 +64,7 @@ class TemplateRenderer : INotificationRenderer {
     var pt_timer_threshold = 0
     private var pt_input_label: String? = null
     var pt_input_feedback: String? = null
-    private var pt_input_auto_open: String? = null
+    internal var pt_input_auto_open: String? = null
     private var pt_dismiss_on_click: String? = null
     var pt_timer_end = 0
     private var pt_title_alt: String? = null
@@ -84,7 +84,7 @@ class TemplateRenderer : INotificationRenderer {
     internal var pt_flip_interval = 0
     private var pt_collapse_key: Any? = null
     internal var pt_manual_carousel_type: String? = null
-    private var config: CleverTapInstanceConfig? = null
+    internal var config: CleverTapInstanceConfig? = null
 
     enum class LogLevel(private val value: Int) {
         OFF(-1), INFO(0), DEBUG(2), VERBOSE(3);
