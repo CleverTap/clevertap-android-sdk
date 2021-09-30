@@ -72,21 +72,21 @@ class FiveIconContentView(context: Context,renderer: TemplateRenderer):
        }
        Utils.loadImageRidIntoRemoteView(R.id.close, R.drawable.pt_close, remoteView)
 
-       remoteView.setOnClickPendingIntent(R.id.cta1, PendingIntentFactory().getPendingIntent(context,
+       remoteView.setOnClickPendingIntent(R.id.cta1, PendingIntentFactory.getPendingIntent(context,
            1, Bundle(),false, FIVE_ICON_CTA1_PENDING_INTENT,renderer))
-       remoteView.setOnClickPendingIntent(R.id.cta2, PendingIntentFactory().getPendingIntent(context,
+       remoteView.setOnClickPendingIntent(R.id.cta2, PendingIntentFactory.getPendingIntent(context,
            1, Bundle(),false, FIVE_ICON_CTA2_PENDING_INTENT,renderer))
 
-       remoteView.setOnClickPendingIntent(R.id.cta3, PendingIntentFactory().getPendingIntent(context,
+       remoteView.setOnClickPendingIntent(R.id.cta3, PendingIntentFactory.getPendingIntent(context,
            1, Bundle(),false, FIVE_ICON_CTA3_PENDING_INTENT,renderer))
 
-       remoteView.setOnClickPendingIntent(R.id.cta4, PendingIntentFactory().getPendingIntent(context,
+       remoteView.setOnClickPendingIntent(R.id.cta4, PendingIntentFactory.getPendingIntent(context,
            1, Bundle(),false, FIVE_ICON_CTA4_PENDING_INTENT,renderer))
 
-       remoteView.setOnClickPendingIntent(R.id.cta5, PendingIntentFactory().getPendingIntent(context,
+       remoteView.setOnClickPendingIntent(R.id.cta5, PendingIntentFactory.getPendingIntent(context,
            1, Bundle(),false, FIVE_ICON_CTA5_PENDING_INTENT,renderer))
 
-       remoteView.setOnClickPendingIntent(R.id.close, PendingIntentFactory().getPendingIntent(context,
+       remoteView.setOnClickPendingIntent(R.id.close, PendingIntentFactory.getPendingIntent(context,
            1, Bundle(),false, FIVE_ICON_CLOSE_PENDING_INTENT,renderer))
 
 

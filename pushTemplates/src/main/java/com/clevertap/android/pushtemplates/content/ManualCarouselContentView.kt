@@ -64,13 +64,13 @@ class ManualCarouselContentView(context: Context, renderer: TemplateRenderer):
 
         remoteView.setOnClickPendingIntent(
             R.id.rightArrowPos0,
-            PendingIntentFactory().getPendingIntent(context,1, Bundle(),false,
+            PendingIntentFactory.getPendingIntent(context,1, Bundle(),false,
                 MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT,renderer)//TODO Check notifId and extras here
         )
 
         remoteView.setOnClickPendingIntent(
             R.id.leftArrowPos0,
-            PendingIntentFactory().getPendingIntent(context,1, Bundle(),false,
+            PendingIntentFactory.getPendingIntent(context,1, Bundle(),false,
                 MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT,renderer)//TODO Check notifId and extras here
         )
 

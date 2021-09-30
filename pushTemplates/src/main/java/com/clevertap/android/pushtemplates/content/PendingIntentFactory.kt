@@ -35,11 +35,12 @@ const val TIMER_NOTIFICATION_PENDING_INTENT = 21
 const val INPUT_BOX_NOTIFICATION_PENDING_INTENT = 22
 const val INPUT_BOX_NOTIFICATION_REPLY__PENDING_INTENT = 23
 
-class PendingIntentFactory {
+internal object PendingIntentFactory {
 
     lateinit var launchIntent: Intent
 
-    private fun setPendingIntent(
+    @JvmStatic
+    fun setPendingIntent(
         context: Context, notificationId: Int, extras: Bundle, launchIntent: Intent,
         dl: String?): PendingIntent{
         launchIntent.putExtras(extras)
@@ -59,7 +60,8 @@ class PendingIntentFactory {
 
     }
 
-    private fun setDismissIntent(context: Context, extras: Bundle,intent: Intent): PendingIntent{
+    @JvmStatic
+    fun setDismissIntent(context: Context, extras: Bundle,intent: Intent): PendingIntent{
         intent.putExtras(extras)
         intent.putExtra(PTConstants.PT_DISMISS_INTENT, true)
         return PendingIntent.getBroadcast(
@@ -68,6 +70,7 @@ class PendingIntentFactory {
         )
     }
 
+    @JvmStatic
     fun getPendingIntent(context: Context, notificationId: Int, extras: Bundle,
                          isLauncher: Boolean,identifier: Int, renderer: TemplateRenderer): PendingIntent? {
 
@@ -308,9 +311,6 @@ class PendingIntentFactory {
             }
             else -> throw IllegalArgumentException("invalid pendingIntentType")
         }
-
-        return  null
-
     }
 
 }
