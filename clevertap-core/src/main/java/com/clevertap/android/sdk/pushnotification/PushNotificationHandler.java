@@ -10,9 +10,10 @@ import android.content.Context;
 import android.os.Bundle;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.interfaces.ActionButtonClickHandler;
 import com.clevertap.android.sdk.interfaces.NotificationHandler;
 
-public class PushNotificationHandler implements NotificationHandler {
+public class PushNotificationHandler implements ActionButtonClickHandler {
 
     private static class SingletonNotificationHandler {
 
@@ -33,6 +34,16 @@ public class PushNotificationHandler implements NotificationHandler {
 
     private PushNotificationHandler() {
         // NO-OP
+    }
+
+    @Override
+    public String getType(final Bundle extras) {
+        return extras.getString("ct_type");
+    }
+
+    @Override
+    public boolean onActionButtonClick(final Context context, final Bundle extras, final int notificationId) {
+        return false;
     }
 
     @Override

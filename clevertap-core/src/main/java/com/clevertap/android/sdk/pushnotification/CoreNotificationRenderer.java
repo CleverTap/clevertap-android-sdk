@@ -3,9 +3,6 @@ package com.clevertap.android.sdk.pushnotification;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.ServiceInfo;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
@@ -154,7 +151,7 @@ public class CoreNotificationRenderer implements INotificationRenderer {
             }
         }
 
-        boolean isCTIntentServiceAvailable = isServiceAvailable(context, clazz);
+        boolean isCTIntentServiceAvailable = Utils.isServiceAvailable(context, clazz);
 
         if (actions != null && actions.length() > 0) {
             for (int i = 0; i < actions.length(); i++) {
@@ -238,28 +235,4 @@ public class CoreNotificationRenderer implements INotificationRenderer {
         this.smallIcon = smallIcon;
     }
 
-    @SuppressWarnings("SameParameterValue")
-    private boolean isServiceAvailable(Context context, Class clazz) {
-        if (clazz == null) {
-            return false;
-        }
-
-        PackageManager pm = context.getPackageManager();
-        String packageName = context.getPackageName();
-
-        PackageInfo packageInfo;
-        try {
-            packageInfo = pm.getPackageInfo(packageName, PackageManager.GET_SERVICES);
-            ServiceInfo[] services = packageInfo.services;
-            for (ServiceInfo serviceInfo : services) {
-                if (serviceInfo.name.equals(clazz.getName())) {
-                    Logger.v("Service " + serviceInfo.name + " found");
-                    return true;
-                }
-            }
-        } catch (PackageManager.NameNotFoundException e) {
-            Logger.d("Intent Service name not found exception - " + e.getLocalizedMessage());
-        }
-        return false;
-    }
 }
