@@ -17,6 +17,7 @@ import androidx.core.app.RemoteInput
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
 import org.json.JSONArray
@@ -1845,7 +1846,7 @@ class TemplateRenderer : INotificationRenderer {
     ) {
         var clazz: Class<*>? = null
         try {
-            clazz = Class.forName("com.clevertap.pushtemplates.PTNotificationIntentService")
+            clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
         } catch (ex: ClassNotFoundException) {
             PTLog.debug("No Intent Service found")
         }
@@ -1878,11 +1879,11 @@ class TemplateRenderer : INotificationRenderer {
                     val sendToPTIntentService = autoCancel && isPTIntentServiceAvailable
                     var actionLaunchIntent: Intent?
                     if (sendToPTIntentService) {
-                        actionLaunchIntent = Intent(PTNotificationIntentService.MAIN_ACTION)
+                        actionLaunchIntent = Intent(CTNotificationIntentService.MAIN_ACTION)
                         actionLaunchIntent.setPackage(context.packageName)
                         actionLaunchIntent.putExtra(
                             PTConstants.PT_TYPE,
-                            PTNotificationIntentService.TYPE_BUTTON_CLICK
+                            CTNotificationIntentService.TYPE_BUTTON_CLICK
                         )
                         if (dl.isNotEmpty()) {
                             actionLaunchIntent.putExtra("dl", dl)

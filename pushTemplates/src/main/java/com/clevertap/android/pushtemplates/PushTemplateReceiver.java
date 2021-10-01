@@ -22,12 +22,13 @@ import androidx.core.app.RemoteInput;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 
+import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
-import static com.clevertap.android.pushtemplates.PTNotificationIntentService.TYPE_BUTTON_CLICK;
+import static com.clevertap.android.sdk.pushnotification.CTNotificationIntentService.TYPE_BUTTON_CLICK;
 
 public class PushTemplateReceiver extends BroadcastReceiver {
     boolean clicked1 = true, clicked2 = true, clicked3 = true, clicked4 = true, clicked5 = true, img1 = false, img2 = false, img3 = false, buynow = true, bigimage = true, cta1 = true, cta2 = true, cta3 = true, cta4 = true, cta5 = true, close = true;
@@ -339,14 +340,14 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 Intent launchIntent;
                 Class clazz = null;
                 try {
-                    clazz = Class.forName("s.PTNotificationIntentService");
+                    clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService");
                 } catch (ClassNotFoundException ex) {
                     PTLog.debug("No Intent Service found");
                 }
 
                 boolean isPTIntentServiceAvailable = Utils.isServiceAvailable(context, clazz);
                 if (isPTIntentServiceAvailable) {
-                    launchIntent = new Intent(PTNotificationIntentService.MAIN_ACTION);
+                    launchIntent = new Intent(CTNotificationIntentService.MAIN_ACTION);
                     launchIntent.setPackage(context.getPackageName());
                     launchIntent.putExtra("pt_type", TYPE_BUTTON_CLICK);
                     launchIntent.putExtras(extras);
@@ -527,14 +528,14 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
                 Class clazz = null;
                 try {
-                    clazz = Class.forName("s.PTNotificationIntentService");
+                    clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService");
                 } catch (ClassNotFoundException ex) {
                     PTLog.debug("No Intent Service found");
                 }
 
                 boolean isPTIntentServiceAvailable = Utils.isServiceAvailable(context, clazz);
                 if (isPTIntentServiceAvailable) {
-                    launchIntent = new Intent(PTNotificationIntentService.MAIN_ACTION);
+                    launchIntent = new Intent(CTNotificationIntentService.MAIN_ACTION);
                     launchIntent.putExtras(extras);
                     launchIntent.putExtra("dl", dl);
                     launchIntent.setPackage(context.getPackageName());
