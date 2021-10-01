@@ -1850,7 +1850,7 @@ class TemplateRenderer : INotificationRenderer {
         } catch (ex: ClassNotFoundException) {
             PTLog.debug("No Intent Service found")
         }
-        val isPTIntentServiceAvailable = Utils.isServiceAvailable(context, clazz)
+        val isPTIntentServiceAvailable = com.clevertap.android.sdk.Utils.isServiceAvailable(context, clazz)
         if (actions != null && actions!!.length() > 0) {
             for (i in 0 until actions!!.length()) {
                 try {

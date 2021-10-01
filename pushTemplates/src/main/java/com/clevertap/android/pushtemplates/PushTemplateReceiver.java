@@ -345,7 +345,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                     PTLog.debug("No Intent Service found");
                 }
 
-                boolean isPTIntentServiceAvailable = Utils.isServiceAvailable(context, clazz);
+                boolean isPTIntentServiceAvailable = com.clevertap.android.sdk.Utils.isServiceAvailable(context, clazz);
                 if (isPTIntentServiceAvailable) {
                     launchIntent = new Intent(CTNotificationIntentService.MAIN_ACTION);
                     launchIntent.setPackage(context.getPackageName());
@@ -533,7 +533,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                     PTLog.debug("No Intent Service found");
                 }
 
-                boolean isPTIntentServiceAvailable = Utils.isServiceAvailable(context, clazz);
+                boolean isPTIntentServiceAvailable = com.clevertap.android.sdk.Utils.isServiceAvailable(context, clazz);
                 if (isPTIntentServiceAvailable) {
                     launchIntent = new Intent(CTNotificationIntentService.MAIN_ACTION);
                     launchIntent.putExtras(extras);
