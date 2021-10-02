@@ -5,7 +5,7 @@ import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 
 class ProductDisplayNonLinearSmallContentView(context: Context, renderer: TemplateRenderer):
-    SmallContentView(context, R.layout.content_view_small, renderer) {
+    SmallContentView(context, renderer, R.layout.content_view_small) {
 
     init {
 

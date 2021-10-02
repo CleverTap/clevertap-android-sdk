@@ -8,7 +8,10 @@ import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
-class FiveIconContentView(context: Context,renderer: TemplateRenderer):
+class FiveIconContentView constructor(context: Context,
+    renderer: TemplateRenderer,
+    extras: Bundle
+):
     ContentView(context, R.layout.five_cta, renderer) {
 
    init {
@@ -73,21 +76,21 @@ class FiveIconContentView(context: Context,renderer: TemplateRenderer):
        Utils.loadImageRidIntoRemoteView(R.id.close, R.drawable.pt_close, remoteView)
 
        remoteView.setOnClickPendingIntent(R.id.cta1, PendingIntentFactory.getPendingIntent(context,
-           1, Bundle(),false, FIVE_ICON_CTA1_PENDING_INTENT,renderer))
+           renderer.notificationId, extras,false, FIVE_ICON_CTA1_PENDING_INTENT,renderer))
        remoteView.setOnClickPendingIntent(R.id.cta2, PendingIntentFactory.getPendingIntent(context,
-           1, Bundle(),false, FIVE_ICON_CTA2_PENDING_INTENT,renderer))
+           renderer.notificationId, extras,false, FIVE_ICON_CTA2_PENDING_INTENT,renderer))
 
        remoteView.setOnClickPendingIntent(R.id.cta3, PendingIntentFactory.getPendingIntent(context,
-           1, Bundle(),false, FIVE_ICON_CTA3_PENDING_INTENT,renderer))
+           renderer.notificationId, extras,false, FIVE_ICON_CTA3_PENDING_INTENT,renderer))
 
        remoteView.setOnClickPendingIntent(R.id.cta4, PendingIntentFactory.getPendingIntent(context,
-           1, Bundle(),false, FIVE_ICON_CTA4_PENDING_INTENT,renderer))
+           renderer.notificationId, extras,false, FIVE_ICON_CTA4_PENDING_INTENT,renderer))
 
        remoteView.setOnClickPendingIntent(R.id.cta5, PendingIntentFactory.getPendingIntent(context,
-           1, Bundle(),false, FIVE_ICON_CTA5_PENDING_INTENT,renderer))
+           renderer.notificationId, extras,false, FIVE_ICON_CTA5_PENDING_INTENT,renderer))
 
        remoteView.setOnClickPendingIntent(R.id.close, PendingIntentFactory.getPendingIntent(context,
-           1, Bundle(),false, FIVE_ICON_CLOSE_PENDING_INTENT,renderer))
+           renderer.notificationId, extras,false, FIVE_ICON_CLOSE_PENDING_INTENT,renderer))
 
 
        if (imageCounter > 2) {

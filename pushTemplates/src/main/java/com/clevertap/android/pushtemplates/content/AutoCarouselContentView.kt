@@ -10,15 +10,9 @@ import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
 class AutoCarouselContentView(context: Context, renderer: TemplateRenderer):
-    SmallContentView(context,R.layout.auto_carousel,renderer) {
+    SmallContentView(context,renderer,R.layout.auto_carousel,) {
 
     init {
-        setCustomContentViewBasicKeys()
-        setCustomContentViewTitle(renderer.pt_title)
-        setCustomContentViewMessage(renderer.pt_msg)
-        setCustomContentViewExpandedBackgroundColour(renderer.pt_bg)
-        setCustomContentViewTitleColour(renderer.pt_title_clr)
-        setCustomContentViewMessageColour(renderer.pt_msg_clr)
         setCustomContentViewMessageSummary(renderer.pt_msg_summary)
         setCustomContentViewViewFlipperInterval(renderer.pt_flip_interval)
         setViewFlipper()

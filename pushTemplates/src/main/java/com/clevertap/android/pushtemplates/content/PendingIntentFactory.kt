@@ -11,29 +11,35 @@ import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.sdk.Constants
 import java.util.*
 
-const val PENDING_INTENT_BASIC_PT = 1
-const val MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT = 2
-const val MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT = 3
-const val MANUAL_CAROUSEL_DISMISS_PENDING_INTENT = 4
-const val RATING_NOTIFICATION_CLICK1_PENDING_INTENT = 5
-const val RATING_NOTIFICATION_CLICK2_PENDING_INTENT = 6
-const val RATING_NOTIFICATION_CLICK3_PENDING_INTENT = 7
-const val RATING_NOTIFICATION_CLICK4_PENDING_INTENT = 8
-const val RATING_NOTIFICATION_CLICK5_PENDING_INTENT = 9
-const val FIVE_ICON_CTA1_PENDING_INTENT = 10
-const val FIVE_ICON_CTA2_PENDING_INTENT = 11
-const val FIVE_ICON_CTA3_PENDING_INTENT = 12
-const val FIVE_ICON_CTA4_PENDING_INTENT = 13
-const val FIVE_ICON_CTA5_PENDING_INTENT = 14
-const val FIVE_ICON_CLOSE_PENDING_INTENT = 15
-const val PRODUCT_DISPLAY_DL1_PENDING_INTENT = 16
-const val PRODUCT_DISPLAY_DL2_PENDING_INTENT = 17
-const val PRODUCT_DISPLAY_DL3_PENDING_INTENT = 18
-const val PRODUCT_DISPLAY_BUY_NOW_PENDING_INTENT = 19
-const val ZERO_BEZEL_PENDING_INTENT = 20
-const val TIMER_NOTIFICATION_PENDING_INTENT = 21
-const val INPUT_BOX_NOTIFICATION_PENDING_INTENT = 22
-const val INPUT_BOX_NOTIFICATION_REPLY__PENDING_INTENT = 23
+const val BASIC_CONTENT_PENDING_INTENT = 1
+const val AUTO_CAROUSEL_CONTENT_PENDING_INTENT = 2
+const val MANUAL_CAROUSEL_CONTENT_PENDING_INTENT = 3
+const val MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT = 4
+const val MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT = 5
+const val MANUAL_CAROUSEL_DISMISS_PENDING_INTENT = 6
+const val RATING_CONTENT_PENDING_INTENT = 7
+const val RATING_CLICK1_PENDING_INTENT = 8
+const val RATING_CLICK2_PENDING_INTENT = 9
+const val RATING_CLICK3_PENDING_INTENT = 10
+const val RATING_CLICK4_PENDING_INTENT = 11
+const val RATING_CLICK5_PENDING_INTENT = 12
+const val FIVE_ICON_CONTENT_PENDING_INTENT = 13
+const val FIVE_ICON_CTA1_PENDING_INTENT = 14
+const val FIVE_ICON_CTA2_PENDING_INTENT = 15
+const val FIVE_ICON_CTA3_PENDING_INTENT = 16
+const val FIVE_ICON_CTA4_PENDING_INTENT = 17
+const val FIVE_ICON_CTA5_PENDING_INTENT = 18
+const val FIVE_ICON_CLOSE_PENDING_INTENT = 19
+const val PRODUCT_DISPLAY_CONTENT_PENDING_INTENT = 20
+const val PRODUCT_DISPLAY_DL1_PENDING_INTENT = 21
+const val PRODUCT_DISPLAY_DL2_PENDING_INTENT = 22
+const val PRODUCT_DISPLAY_DL3_PENDING_INTENT = 23
+const val PRODUCT_DISPLAY_BUY_NOW_PENDING_INTENT = 24
+const val PRODUCT_DISPLAY_DISMISS_PENDING_INTENT = 25
+const val ZERO_BEZEL_CONTENT_PENDING_INTENT = 26
+const val TIMER_CONTENT_PENDING_INTENT = 27
+const val INPUT_BOX_NOTIFICATION_PENDING_INTENT = 28
+const val INPUT_BOX_NOTIFICATION_REPLY__PENDING_INTENT = 29
 
 internal object PendingIntentFactory {
 
@@ -81,16 +87,21 @@ internal object PendingIntentFactory {
         }
 
 
-        val pIntent:PendingIntent
         when (identifier) {
-            PENDING_INTENT_BASIC_PT -> {
-                pIntent = if (renderer.deepLinkList != null && renderer.deepLinkList!!.size > 0) {
-                    setPendingIntent(context, notificationId, extras, launchIntent, renderer.deepLinkList!![0])
+            BASIC_CONTENT_PENDING_INTENT, AUTO_CAROUSEL_CONTENT_PENDING_INTENT,
+            MANUAL_CAROUSEL_CONTENT_PENDING_INTENT, ZERO_BEZEL_CONTENT_PENDING_INTENT,
+            TIMER_CONTENT_PENDING_INTENT-> {
+                return if (renderer.deepLinkList != null && renderer.deepLinkList!!.size > 0) {
+                    setPendingIntent(
+                        context,
+                        notificationId,
+                        extras,
+                        launchIntent,
+                        renderer.deepLinkList!![0]
+                    )
                 } else {
                     setPendingIntent(context, notificationId, extras, launchIntent, null)
                 }
-
-                return pIntent
             }
 
             MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT -> {
@@ -119,11 +130,11 @@ internal object PendingIntentFactory {
             }
 
             MANUAL_CAROUSEL_DISMISS_PENDING_INTENT -> {
-                val dismissIntent = Intent(context, PushTemplateReceiver::class.java)//factory
+                val dismissIntent = Intent(context, PushTemplateReceiver::class.java)
                 return setDismissIntent(context, extras, dismissIntent)
             }
 
-            RATING_NOTIFICATION_CLICK1_PENDING_INTENT -> {
+            RATING_CLICK1_PENDING_INTENT -> {
                 launchIntent.putExtra("click1", true)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtra("config", renderer.config)
@@ -131,7 +142,7 @@ internal object PendingIntentFactory {
                 return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, 0)
             }
 
-            RATING_NOTIFICATION_CLICK2_PENDING_INTENT -> {
+            RATING_CLICK2_PENDING_INTENT -> {
                 launchIntent.putExtra("click2", true)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtra("config", renderer.config)
@@ -139,7 +150,7 @@ internal object PendingIntentFactory {
                 return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, 0)
             }
 
-            RATING_NOTIFICATION_CLICK3_PENDING_INTENT -> {
+            RATING_CLICK3_PENDING_INTENT -> {
                 launchIntent.putExtra("click3", true)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtra("config", renderer.config)
@@ -147,7 +158,7 @@ internal object PendingIntentFactory {
                 return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, 0)
             }
 
-            RATING_NOTIFICATION_CLICK4_PENDING_INTENT -> {
+            RATING_CLICK4_PENDING_INTENT -> {
                 launchIntent.putExtra("click4", true)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtra("config", renderer.config)
@@ -155,7 +166,7 @@ internal object PendingIntentFactory {
                 return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, 0)
             }
 
-            RATING_NOTIFICATION_CLICK5_PENDING_INTENT -> {
+            RATING_CLICK5_PENDING_INTENT -> {
                 launchIntent.putExtra("click5", true)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtra("config", renderer.config)
@@ -247,34 +258,6 @@ internal object PendingIntentFactory {
                 launchIntent.putExtra("config", renderer.config)
                 launchIntent.putExtras(extras)
                 return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, 0)
-            }
-
-            ZERO_BEZEL_PENDING_INTENT -> {
-                return if (renderer.deepLinkList != null) {
-                    setPendingIntent(
-                        context,
-                        notificationId,
-                        extras,
-                        launchIntent,
-                        renderer.deepLinkList!![0]
-                    )
-                } else {
-                    setPendingIntent(context, notificationId, extras, launchIntent, null)
-                }
-            }
-
-            TIMER_NOTIFICATION_PENDING_INTENT -> {
-                return if (renderer.deepLinkList != null) {
-                    setPendingIntent(
-                        context,
-                        notificationId,
-                        extras,
-                        launchIntent,
-                        renderer.deepLinkList!![0]
-                    )
-                } else {
-                    setPendingIntent(context, notificationId, extras, launchIntent, null)
-                }
             }
 
             INPUT_BOX_NOTIFICATION_PENDING_INTENT -> {

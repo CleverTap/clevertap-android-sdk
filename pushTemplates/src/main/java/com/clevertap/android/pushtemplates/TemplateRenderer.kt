@@ -14,6 +14,7 @@ import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
 import androidx.core.app.RemoteInput
+import com.clevertap.android.pushtemplates.styles.*
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
@@ -45,7 +46,7 @@ class TemplateRenderer : INotificationRenderer {
     internal var pt_product_display_action_clr: String? = null
     internal var pt_bg: String? = null
     internal var pt_rating_default_dl: String? = null
-    private var pt_small_view: String? = null
+    internal var pt_small_view: String? = null
     private var contentViewBig: RemoteViews? = null
     private var contentViewSmall: RemoteViews? = null
     private var contentViewCarousel: RemoteViews? = null
@@ -86,6 +87,7 @@ class TemplateRenderer : INotificationRenderer {
     private var pt_collapse_key: Any? = null
     internal var pt_manual_carousel_type: String? = null
     internal var config: CleverTapInstanceConfig? = null
+    internal var notificationId: Int = -1//Creates a instance field for access in ContentViews->PendingIntentFactory
 
     enum class LogLevel(private val value: Int) {
         OFF(-1), INFO(0), DEBUG(2), VERBOSE(3);
@@ -120,65 +122,56 @@ class TemplateRenderer : INotificationRenderer {
             PTLog.verbose("Template ID not provided. Cannot create the notification")
             return null
         }
+        this.notificationId = notificationId
         when (templateType) {
-            TemplateType.BASIC -> if (hasAllBasicNotifKeys()) return renderBasicTemplateNotification(
-                context,
-                extras,
-                notificationId,
-                nb
-            )
-            TemplateType.AUTO_CAROUSEL -> if (hasAllCarouselNotifKeys()) return renderAutoCarouselNotification(
-                context,
-                extras,
-                notificationId,
-                nb
-            )!!
-            TemplateType.MANUAL_CAROUSEL -> if (hasAllManualCarouselNotifKeys()) return renderManualCarouselNotification(
-                context,
-                extras,
-                notificationId,
-                nb
-            )!!
-            TemplateType.RATING -> if (hasAllRatingNotifKeys()) return renderRatingNotification(
-                context,
-                extras,
-                notificationId,
-                nb
-            )
-            TemplateType.FIVE_ICONS -> if (hasAll5IconNotifKeys()) return renderFiveIconNotification(
-                context,
-                extras,
-                notificationId,
-                nb
-            )!!
+            TemplateType.BASIC ->
+                if(hasAllBasicNotifKeys())
+                    return BasicStyle(this).builderFromStyle(context,extras,notificationId,nb)
+
+            TemplateType.AUTO_CAROUSEL ->
+                if (hasAllCarouselNotifKeys())
+                    return AutoCarouselStyle(this).builderFromStyle(context, extras, notificationId, nb)
+
+            TemplateType.MANUAL_CAROUSEL ->
+                if (hasAllManualCarouselNotifKeys())
+                    return ManualCarouselStyle(this,extras).builderFromStyle(context, extras, notificationId, nb)
+
+            TemplateType.RATING ->
+                if (hasAllRatingNotifKeys())
+                    return RatingStyle(this,extras).builderFromStyle(context, extras, notificationId, nb)
+
+            TemplateType.FIVE_ICONS ->
+                if (hasAll5IconNotifKeys())
+                    return FiveIconStyle(this,extras).builderFromStyle(context, extras, notificationId, nb)
+
             TemplateType.PRODUCT_DISPLAY -> if (hasAllProdDispNotifKeys()) return renderProductDisplayNotification(
                 context,
                 extras,
                 notificationId,
                 nb
-            )!!
-            TemplateType.ZERO_BEZEL -> if (hasAllZeroBezelNotifKeys()) return renderZeroBezelNotification(
-                context,
-                extras,
-                notificationId,
-                nb
-            )
+            )!!//Not changed to styles yet
+
+            TemplateType.ZERO_BEZEL ->
+                if (hasAllZeroBezelNotifKeys())
+                    return ZeroBezelStyle(this).builderFromStyle(context, extras, notificationId, nb)
+
             TemplateType.TIMER -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                if (hasAllTimerKeys()) {
-                    return renderTimerNotification(context, extras, notificationId, nb)!!
+                if (hasAllTimerKeys()){
+                    return TimerStyle(this,extras).builderFromStyle(context, extras, notificationId, nb)
                 }
             } else {
                 PTLog.debug("Push Templates SDK supports Timer Notifications only on or above Android Nougat, reverting to basic template")
                 if (hasAllBasicNotifKeys()) {
-                    return renderBasicTemplateNotification(context, extras, notificationId, nb)
+                    return BasicStyle(this).builderFromStyle(context,extras,notificationId,nb)
                 }
             }
+
             TemplateType.INPUT_BOX -> if (hasAllInputBoxKeys()) return renderInputBoxNotification(
                 context,
                 extras,
                 notificationId,
                 nb
-            )
+            )//Not changed to styles yet
             TemplateType.CANCEL -> renderCancelNotification(context)
         }
         return null
@@ -260,7 +253,7 @@ class TemplateRenderer : INotificationRenderer {
                     context,
                     extras,
                     notificationId,
-                    nb
+                    nb//where to add
                 ) // will overwrite set values on nb
             }
         } catch (t: Throwable) {
@@ -617,7 +610,7 @@ class TemplateRenderer : INotificationRenderer {
                 pt_title,
                 pIntent
             )
-            nb.setOngoing(true)
+            nb.setOngoing(true)//Not added yet.Check
             var imageCounter = 0
             for (imageKey in imageList!!.indices) {
                 if (imageKey == 0) {
@@ -971,7 +964,7 @@ class TemplateRenderer : INotificationRenderer {
         smallTextList = Utils.getSmallTextFromExtras(extras)
         priceList = Utils.getPriceFromExtras(extras)
         pt_rating_default_dl = extras.getString(PTConstants.PT_DEFAULT_DL)
-        asyncHelper = AsyncHelper.instance
+//        asyncHelper = AsyncHelper.instance
         //        dbHelper = new DBHelper(context);
         pt_timer_threshold = Utils.getTimerThreshold(extras)
         pt_input_label = extras.getString(PTConstants.PT_INPUT_LABEL)
@@ -1442,7 +1435,7 @@ class TemplateRenderer : INotificationRenderer {
                 pt_title,
                 pIntent
             )
-            nb.setTimeoutAfter(timer_end.toLong())
+            nb.setTimeoutAfter(timer_end.toLong())//not added yet.Check
             setCustomContentViewBigImage(contentViewTimer!!, pt_big_img)// TBCV init
             setCustomContentViewSmallIcon(contentViewTimer!!)// TBCV super init -> TSCV
             setCustomContentViewSmallIcon(contentViewTimerCollapsed!!)// TSCV init
@@ -2106,6 +2099,14 @@ class TemplateRenderer : INotificationRenderer {
                 contentView.addView(R.id.content_view_big, tempRemoteView)
             }
         }
+    }
+
+    private fun setNotificationId(notificationId: Int): Int {
+        var notificationId = notificationId
+        if (notificationId == Constants.EMPTY_NOTIFICATION_ID) {
+            notificationId = (Math.random() * 100).toInt()
+        }
+        return notificationId
     }
 
     companion object {

@@ -25,7 +25,7 @@ public class PTConstants {
     public static final String PT_MANUAL_CAROUSEL_FILMSTRIP = "filmstrip";
     public static boolean PT_FALLBACK = false;
     public static String PT_IMAGE_PATH_LIST = "";
-    static final int ONE_SECOND = 1000;
+    public static final int ONE_SECOND = 1000;
     public static final String DEFAULT_DL = "default_dl";
     public static final String NOTIF_TAG = "wzrk_pn";
     public static final String PT_ID = "pt_id";

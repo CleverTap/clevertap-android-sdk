@@ -10,7 +10,7 @@ import com.clevertap.android.pushtemplates.*
 import java.util.ArrayList
 
 open class ProductDisplayLinearBigContentView(context: Context,
-          layoutId: Int=R.layout.product_display_linear_expanded,renderer: TemplateRenderer):
+          layoutId: Int=R.layout.product_display_linear_expanded,renderer: TemplateRenderer,extras: Bundle):
     ContentView(context,layoutId ,renderer) {
 
     init {
@@ -28,20 +28,20 @@ open class ProductDisplayLinearBigContentView(context: Context,
 
 
         remoteView.setOnClickPendingIntent(R.id.small_image1, PendingIntentFactory.getPendingIntent(context,
-            1, Bundle(),false, PRODUCT_DISPLAY_DL1_PENDING_INTENT,renderer))
+            renderer.notificationId, extras,false, PRODUCT_DISPLAY_DL1_PENDING_INTENT,renderer))
 
         if (renderer.deepLinkList!!.size >= 2) {
             remoteView.setOnClickPendingIntent(R.id.small_image2, PendingIntentFactory.getPendingIntent(context,
-                1, Bundle(),false, PRODUCT_DISPLAY_DL2_PENDING_INTENT,renderer))
+                renderer.notificationId, extras,false, PRODUCT_DISPLAY_DL2_PENDING_INTENT,renderer))
         }
 
         if (renderer.deepLinkList!!.size >= 3) {
             remoteView.setOnClickPendingIntent(R.id.small_image3, PendingIntentFactory.getPendingIntent(context,
-                1, Bundle(),false, PRODUCT_DISPLAY_DL3_PENDING_INTENT,renderer))
+                renderer.notificationId, extras,false, PRODUCT_DISPLAY_DL3_PENDING_INTENT,renderer))
         }
 
         remoteView.setOnClickPendingIntent(R.id.product_action, PendingIntentFactory.getPendingIntent(context,
-            1, Bundle(),false, PRODUCT_DISPLAY_BUY_NOW_PENDING_INTENT,renderer))
+            renderer.notificationId, extras,false, PRODUCT_DISPLAY_BUY_NOW_PENDING_INTENT,renderer))
     }
 
 

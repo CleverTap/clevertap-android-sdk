@@ -1,13 +1,14 @@
 package com.clevertap.android.pushtemplates.content
 
 import android.content.Context
+import android.os.Bundle
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
-class ProductDisplayNonLinearBigContentView(context: Context, renderer: TemplateRenderer):
-    ProductDisplayLinearBigContentView(context, R.layout.product_display_template, renderer) {
+class ProductDisplayNonLinearBigContentView(context: Context, renderer: TemplateRenderer,extras: Bundle):
+    ProductDisplayLinearBigContentView(context, R.layout.product_display_template, renderer,extras) {
 
     init {
         if (renderer.smallTextList!!.isNotEmpty())

@@ -13,19 +13,19 @@ class TimerBigContentView(context: Context,timer_end: Int, renderer: TemplateRen
     TimerSmallContentView(context, R.layout.timer, renderer) {
 
 
-        init {
-            setCustomContentViewMessageSummary(renderer.pt_msg_summary)
-            remoteView.setChronometer(
-                R.id.chronometer,
-                SystemClock.elapsedRealtime() + timer_end,
-                null,
-                true
-            )
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                remoteView.setChronometerCountDown(R.id.chronometer, true)
-            }
-            setCustomContentViewBigImage(renderer.pt_big_img)
+    init {
+        setCustomContentViewMessageSummary(renderer.pt_msg_summary)
+        remoteView.setChronometer(
+            R.id.chronometer,
+            SystemClock.elapsedRealtime() + timer_end,
+            null,
+            true
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            remoteView.setChronometerCountDown(R.id.chronometer, true)
         }
+        setCustomContentViewBigImage(renderer.pt_big_img)
+    }
 
     private fun setCustomContentViewMessageSummary(pt_msg_summary: String?) {
         if (pt_msg_summary != null && pt_msg_summary.isNotEmpty()) {

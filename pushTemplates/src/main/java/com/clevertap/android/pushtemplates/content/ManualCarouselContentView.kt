@@ -9,8 +9,8 @@ import android.widget.RemoteViews
 import com.clevertap.android.pushtemplates.*
 import java.util.ArrayList
 
-class ManualCarouselContentView(context: Context, renderer: TemplateRenderer):
-    SmallContentView(context, R.layout.manual_carousel, renderer) {
+class ManualCarouselContentView(context: Context, renderer: TemplateRenderer,extras: Bundle):
+    SmallContentView(context, renderer, R.layout.manual_carousel) {
 
 
     init {
@@ -64,14 +64,14 @@ class ManualCarouselContentView(context: Context, renderer: TemplateRenderer):
 
         remoteView.setOnClickPendingIntent(
             R.id.rightArrowPos0,
-            PendingIntentFactory.getPendingIntent(context,1, Bundle(),false,
-                MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT,renderer)//TODO Check notifId and extras here
+            PendingIntentFactory.getPendingIntent(context,renderer.notificationId, extras,false,
+                MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT,renderer)
         )
 
         remoteView.setOnClickPendingIntent(
             R.id.leftArrowPos0,
-            PendingIntentFactory.getPendingIntent(context,1, Bundle(),false,
-                MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT,renderer)//TODO Check notifId and extras here
+            PendingIntentFactory.getPendingIntent(context,renderer.notificationId, extras,false,
+                MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT,renderer)
         )
 
 
