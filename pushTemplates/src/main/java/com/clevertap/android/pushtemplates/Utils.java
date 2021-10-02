@@ -577,29 +577,6 @@ public class Utils {
         return ids;
     }
 
-    @SuppressWarnings({"SameParameterValue", "rawtypes"})
-    static boolean isServiceAvailable(Context context, Class clazz) {
-        if (clazz == null) return false;
-
-        PackageManager pm = context.getPackageManager();
-        String packageName = context.getPackageName();
-
-        PackageInfo packageInfo;
-        try {
-            packageInfo = pm.getPackageInfo(packageName, PackageManager.GET_SERVICES);
-            ServiceInfo[] services = packageInfo.services;
-            for (ServiceInfo serviceInfo : services) {
-                if (serviceInfo.name.equals(clazz.getName())) {
-                    PTLog.verbose("Service " + serviceInfo.name + " found");
-                    return true;
-                }
-            }
-        } catch (PackageManager.NameNotFoundException e) {
-            PTLog.debug("Intent Service name not found exception - " + e.getLocalizedMessage());
-        }
-        return false;
-    }
-
     static void raiseNotificationClicked(Context context, Bundle extras, CleverTapInstanceConfig config) {
         CleverTapAPI instance;
         if (config != null) {
