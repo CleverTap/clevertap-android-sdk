@@ -9,7 +9,7 @@ import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
-class TimerBigContentView(context: Context,timer_end: Int, renderer: TemplateRenderer):
+class TimerBigContentView(context: Context,timer_end: Int?, renderer: TemplateRenderer):
     TimerSmallContentView(context, R.layout.timer, renderer) {
 
 
@@ -17,7 +17,7 @@ class TimerBigContentView(context: Context,timer_end: Int, renderer: TemplateRen
         setCustomContentViewMessageSummary(renderer.pt_msg_summary)
         remoteView.setChronometer(
             R.id.chronometer,
-            SystemClock.elapsedRealtime() + timer_end,
+            SystemClock.elapsedRealtime() + timer_end!!,
             null,
             true
         )

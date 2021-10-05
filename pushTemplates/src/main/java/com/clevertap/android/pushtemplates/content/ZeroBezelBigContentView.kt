@@ -12,6 +12,7 @@ class ZeroBezelBigContentView(context: Context, renderer: TemplateRenderer):
     ContentView(context, R.layout.zero_bezel,renderer) {
 
     init {
+        setCustomContentViewBasicKeys()
         setCustomContentViewTitle(renderer.pt_title)
         setCustomContentViewMessage(renderer.pt_msg)
         setCustomContentViewMessageSummary(renderer.pt_msg_summary)

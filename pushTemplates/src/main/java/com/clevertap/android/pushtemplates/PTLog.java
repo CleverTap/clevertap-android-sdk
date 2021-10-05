@@ -49,7 +49,7 @@ public final class PTLog {
         }
     }
 
-    static void verbose(String message, Throwable t){
+    public static void verbose(String message, Throwable t){
         if (getStaticDebugLevel() >= TemplateRenderer.LogLevel.VERBOSE.intValue()){
             Log.v(PTConstants.LOG_TAG,message,t);
         }

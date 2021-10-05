@@ -10,7 +10,7 @@ import com.clevertap.android.pushtemplates.*
 import java.util.ArrayList
 
 open class ProductDisplayLinearBigContentView(context: Context,
-          layoutId: Int=R.layout.product_display_linear_expanded,renderer: TemplateRenderer,extras: Bundle):
+          renderer: TemplateRenderer,extras: Bundle,layoutId: Int=R.layout.product_display_linear_expanded):
     ContentView(context,layoutId ,renderer) {
 
     init {
@@ -21,7 +21,7 @@ open class ProductDisplayLinearBigContentView(context: Context,
         setCustomContentViewButtonLabel(R.id.product_action,renderer.pt_product_display_action)
         setCustomContentViewButtonColour(R.id.product_action,renderer.pt_product_display_action_clr)
         setCustomContentViewButtonText(R.id.product_action,renderer.pt_product_display_action_text_clr)
-        setImageList()
+        setImageList(extras)
 
         setCustomContentViewDotSep()
         setCustomContentViewSmallIcon()
@@ -45,7 +45,7 @@ open class ProductDisplayLinearBigContentView(context: Context,
     }
 
 
-    internal fun setImageList(){
+    internal fun setImageList(extras: Bundle) {
         var imageCounter = 0
         var isFirstImageOk = false
         val smallImageLayoutIds = ArrayList<Int>()
@@ -78,6 +78,12 @@ open class ProductDisplayLinearBigContentView(context: Context,
                 renderer.priceList!!.removeAt(index)
             }
         }
+
+        extras.putStringArrayList(PTConstants.PT_IMAGE_LIST, tempImageList)
+        extras.putStringArrayList(PTConstants.PT_DEEPLINK_LIST, renderer.deepLinkList)
+        extras.putStringArrayList(PTConstants.PT_BIGTEXT_LIST, renderer.bigTextList)
+        extras.putStringArrayList(PTConstants.PT_SMALLTEXT_LIST, renderer.smallTextList)
+        extras.putStringArrayList(PTConstants.PT_PRICE_LIST, renderer.priceList)
 
         if (imageCounter <= 1) {
             PTLog.debug("2 or more images are not retrievable, not displaying the notification.")

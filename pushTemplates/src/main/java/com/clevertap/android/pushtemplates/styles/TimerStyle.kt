@@ -5,17 +5,25 @@ import android.content.Context
 import android.os.Bundle
 import android.widget.RemoteViews
 import com.clevertap.android.pushtemplates.PTConstants
+import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.content.*
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 
 class TimerStyle(private var renderer: TemplateRenderer, private var extras: Bundle): Style(renderer) {
-    override fun makeSmallContentView(context: Context, renderer: TemplateRenderer): RemoteViews {
-        return TimerSmallContentView(context,getTimerEnd(),renderer).remoteView
+
+    override fun makeSmallContentView(context: Context, renderer: TemplateRenderer): RemoteViews? {
+        return if (getTimerEnd() == null)
+            null
+        else
+            return TimerSmallContentView(context,getTimerEnd(),renderer).remoteView
     }
 
-    override fun makeBigContentView(context: Context, renderer: TemplateRenderer): RemoteViews {
-        return TimerBigContentView(context,getTimerEnd(),renderer).remoteView
+    override fun makeBigContentView(context: Context, renderer: TemplateRenderer): RemoteViews? {
+        return if (getTimerEnd() == null)
+            null
+        else
+            TimerBigContentView(context,getTimerEnd(),renderer).remoteView
     }
 
     override fun makePendingIntent(
@@ -38,18 +46,15 @@ class TimerStyle(private var renderer: TemplateRenderer, private var extras: Bun
 
 
     @Suppress("LocalVariableName")
-    private fun getTimerEnd(): Int{
+    private fun getTimerEnd(): Int?{//Boolean
         var timer_end: Int? = null
         if (renderer.pt_timer_threshold != -1 && renderer.pt_timer_threshold >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
             timer_end = renderer.pt_timer_threshold * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
         }else if (renderer.pt_timer_end >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
             timer_end = renderer.pt_timer_end * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
+        }else {
+                PTLog.debug("Not rendering notification Timer End value lesser than threshold (10 seconds) from current time: " + PTConstants.PT_TIMER_END)
         }
-
-//        else {
-////                PTLog.debug("Not rendering notification Timer End value lesser than threshold (10 seconds) from current time: " + Constants.PT_TIMER_END)
-////                return null
-////            }
-        return timer_end!!
+        return timer_end
     }
 }

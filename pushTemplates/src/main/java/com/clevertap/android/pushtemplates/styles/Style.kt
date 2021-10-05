@@ -10,10 +10,10 @@ import com.clevertap.android.pushtemplates.TemplateRenderer
 
 abstract class Style(private var renderer: TemplateRenderer) {
 
-    protected fun setNotificationBuilderBasics(
+    protected open fun setNotificationBuilderBasics(
         notificationBuilder: NotificationCompat.Builder,
-        contentViewSmall: RemoteViews,
-        contentViewBig: RemoteViews,
+        contentViewSmall: RemoteViews?,
+        contentViewBig: RemoteViews?,
         pt_title: String?,
         pIntent: PendingIntent?,
         dIntent: PendingIntent? = null
@@ -21,9 +21,13 @@ abstract class Style(private var renderer: TemplateRenderer) {
         if (dIntent != null){
             notificationBuilder.setDeleteIntent(dIntent)
         }
-        return notificationBuilder/*.setSmallIcon(smallIcon)TODO Check this*/
-            .setCustomContentView(contentViewSmall)
-            .setCustomBigContentView(contentViewBig)
+        if (contentViewSmall != null){
+            notificationBuilder.setCustomContentView(contentViewSmall)
+        }
+        if (contentViewBig != null){
+            notificationBuilder.setCustomBigContentView(contentViewBig)
+        }
+        return notificationBuilder.setSmallIcon(renderer.smallIcon)
             .setContentTitle(Html.fromHtml(pt_title))
             .setContentIntent(pIntent)
             .setVibrate(longArrayOf(0L))
@@ -31,15 +35,15 @@ abstract class Style(private var renderer: TemplateRenderer) {
             .setAutoCancel(true)
     }
 
-    protected abstract fun makeSmallContentView(context: Context,renderer: TemplateRenderer): RemoteViews
+    protected abstract fun makeSmallContentView(context: Context,renderer: TemplateRenderer): RemoteViews?
 
-    protected abstract fun makeBigContentView(context: Context,renderer: TemplateRenderer): RemoteViews
+    protected abstract fun makeBigContentView(context: Context,renderer: TemplateRenderer): RemoteViews?
 
     protected abstract fun makePendingIntent(context: Context, extras: Bundle, notificationId: Int): PendingIntent?
 
     protected abstract fun makeDismissIntent(context: Context, extras: Bundle, notificationId: Int): PendingIntent?
 
-    fun builderFromStyle(context: Context,extras: Bundle,notificationId:Int,
+    open fun builderFromStyle(context: Context,extras: Bundle,notificationId:Int,
                                 nb: NotificationCompat.Builder): NotificationCompat.Builder{
         return setNotificationBuilderBasics(nb,makeSmallContentView(context, renderer),makeBigContentView(context, renderer),
             renderer.pt_title,makePendingIntent(context,extras,notificationId),

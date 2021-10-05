@@ -64,15 +64,15 @@ class TemplateRenderer : INotificationRenderer {
 
     //    private DBHelper dbHelper;
     var pt_timer_threshold = 0
-    private var pt_input_label: String? = null
+    internal var pt_input_label: String? = null
     var pt_input_feedback: String? = null
     internal var pt_input_auto_open: String? = null
-    private var pt_dismiss_on_click: String? = null
+    internal var pt_dismiss_on_click: String? = null
     var pt_timer_end = 0
     private var pt_title_alt: String? = null
     private var pt_msg_alt: String? = null
     private var pt_big_img_alt: String? = null
-    private var pt_product_display_linear: String? = null
+    internal var pt_product_display_linear: String? = null
     internal var pt_meta_clr: String? = null
     internal var pt_product_display_action_text_clr: String? = null
     private var pt_small_icon_clr: String? = null
@@ -142,7 +142,7 @@ class TemplateRenderer : INotificationRenderer {
 
             TemplateType.FIVE_ICONS ->
                 if (hasAll5IconNotifKeys())
-                    return FiveIconStyle(this,extras).builderFromStyle(context, extras, notificationId, nb)
+                    return FiveIconStyle(this,extras).builderFromStyle(context, extras, notificationId, nb).setOngoing(true)
 
             TemplateType.PRODUCT_DISPLAY -> if (hasAllProdDispNotifKeys()) return renderProductDisplayNotification(
                 context,
@@ -200,7 +200,7 @@ class TemplateRenderer : INotificationRenderer {
         PTLog.debug("Rendering Zero Bezel Template Push Notification with extras - $extras")
         try {
             contentViewBig = RemoteViews(context.packageName, R.layout.zero_bezel)// ZBBCV
-            setCustomContentViewBasicKeys(contentViewBig!!, context)
+            setCustomContentViewBasicKeys(contentViewBig!!, context)// ZBBCV
             val textOnlySmallView = pt_small_view != null && pt_small_view == PTConstants.TEXT_ONLY
             contentViewSmall = if (textOnlySmallView) {
                 RemoteViews(context.packageName, R.layout.cv_small_text_only)// ZBTOSCV
@@ -610,7 +610,7 @@ class TemplateRenderer : INotificationRenderer {
                 pt_title,
                 pIntent
             )
-            nb.setOngoing(true)//Not added yet.Check
+            nb.setOngoing(true)
             var imageCounter = 0
             for (imageKey in imageList!!.indices) {
                 if (imageKey == 0) {
@@ -1377,7 +1377,7 @@ class TemplateRenderer : INotificationRenderer {
                     pt_timer_end * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
                 } else {
                     PTLog.debug("Not rendering notification Timer End value lesser than threshold (10 seconds) from current time: " + PTConstants.PT_TIMER_END)
-                    return null
+                    return null//TODO Check this
                 }
             // renderer call first -------END--------
             setCustomContentViewBasicKeys(contentViewTimer!!, context)// TBCV super init -> TSCV
@@ -1435,7 +1435,7 @@ class TemplateRenderer : INotificationRenderer {
                 pt_title,
                 pIntent
             )
-            nb.setTimeoutAfter(timer_end.toLong())//not added yet.Check
+            nb.setTimeoutAfter(timer_end.toLong())//TODO not added yet.Check
             setCustomContentViewBigImage(contentViewTimer!!, pt_big_img)// TBCV init
             setCustomContentViewSmallIcon(contentViewTimer!!)// TBCV super init -> TSCV
             setCustomContentViewSmallIcon(contentViewTimerCollapsed!!)// TSCV init
@@ -2101,7 +2101,7 @@ class TemplateRenderer : INotificationRenderer {
         }
     }
 
-    private fun setNotificationId(notificationId: Int): Int {
+    private fun setNotificationId(notificationId: Int): Int {//TODO Check this
         var notificationId = notificationId
         if (notificationId == Constants.EMPTY_NOTIFICATION_ID) {
             notificationId = (Math.random() * 100).toInt()

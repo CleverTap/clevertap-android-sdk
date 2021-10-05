@@ -62,6 +62,10 @@ class ManualCarouselContentView(context: Context, renderer: TemplateRenderer,ext
             tempImageList.size - 1
         )
 
+        extras.putInt(PTConstants.PT_MANUAL_CAROUSEL_CURRENT, currentPosition)//TODO Check extras in ManualCarousel style being updated
+        extras.putStringArrayList(PTConstants.PT_IMAGE_LIST, tempImageList)
+        extras.putStringArrayList(PTConstants.PT_DEEPLINK_LIST, renderer.deepLinkList)
+
         remoteView.setOnClickPendingIntent(
             R.id.rightArrowPos0,
             PendingIntentFactory.getPendingIntent(context,renderer.notificationId, extras,false,
@@ -78,11 +82,6 @@ class ManualCarouselContentView(context: Context, renderer: TemplateRenderer,ext
         if (imageCounter < 2) {
             PTLog.debug("Need at least 2 images to display Manual Carousel, found - $imageCounter, not displaying the notification.")
         }
-
-
-//        extras.putInt(PTConstants.PT_MANUAL_CAROUSEL_CURRENT, currentPosition)
-//        extras.putStringArrayList(PTConstants.PT_IMAGE_LIST, tempImageList)
-//        extras.putStringArrayList(PTConstants.PT_DEEPLINK_LIST, deepLinkList)
     }
 
     private fun setCustomContentViewMessageSummary(pt_msg_summary: String?) {

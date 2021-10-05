@@ -77,7 +77,7 @@ public class Utils {
 
 
     @SuppressWarnings("unused")
-    static Bitmap getNotificationBitmap(String icoPath, boolean fallbackToAppIcon,
+    public static Bitmap getNotificationBitmap(String icoPath, boolean fallbackToAppIcon,
                                         final Context context)
             throws NullPointerException {
         // If the icon path is not specified
