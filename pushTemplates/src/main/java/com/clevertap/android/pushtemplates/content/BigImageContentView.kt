@@ -10,11 +10,20 @@ import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
 open class BigImageContentView(context: Context,renderer: TemplateRenderer,layoutId: Int=R.layout.image_only_big):
-    SmallContentView(context, renderer, layoutId) {
+    ContentView(context, layoutId, renderer) {
 
     init {
+        setCustomContentViewBasicKeys()
+        setCustomContentViewTitle(renderer.pt_title)
+        setCustomContentViewMessage(renderer.pt_msg)
+        setCustomContentViewExpandedBackgroundColour(renderer.pt_bg)
+        setCustomContentViewTitleColour(renderer.pt_title_clr)
+        setCustomContentViewMessageColour(renderer.pt_msg_clr)
         setCustomContentViewMessageSummary(renderer.pt_msg_summary)
+        setCustomContentViewSmallIcon()
+        setCustomContentViewDotSep()
         setCustomContentViewBigImage(renderer.pt_big_img)
+        setCustomContentViewLargeIcon(renderer.pt_large_icon)
     }
 
     private fun setCustomContentViewMessageSummary(pt_msg_summary: String?) {

@@ -232,6 +232,10 @@ internal object PendingIntentFactory {
                 return PendingIntent.getBroadcast(context, reqCode, launchIntent, 0)
             }
 
+            FIVE_ICON_CONTENT_PENDING_INTENT -> {
+                return setPendingIntent(context, notificationId, extras, launchIntent, null)
+            }
+
             FIVE_ICON_CLOSE_PENDING_INTENT -> {
                 val reqCode = Random().nextInt()
                 launchIntent.putExtra("close", true)

@@ -10,7 +10,7 @@ import com.clevertap.android.pushtemplates.*
 import java.util.ArrayList
 
 class ManualCarouselContentView(context: Context, renderer: TemplateRenderer,extras: Bundle):
-    SmallContentView(context, renderer, R.layout.manual_carousel) {
+    BigImageContentView(context, renderer, R.layout.manual_carousel) {
 
 
     init {
@@ -53,11 +53,11 @@ class ManualCarouselContentView(context: Context, renderer: TemplateRenderer,ext
                 ignoreCase = true
             )
         ) {
-            renderer.contentViewManualCarousel!!.setViewVisibility(R.id.carousel_image_right, View.GONE)
-            renderer.contentViewManualCarousel!!.setViewVisibility(R.id.carousel_image_left, View.GONE)
+            remoteView.setViewVisibility(R.id.carousel_image_right, View.GONE)
+            remoteView.setViewVisibility(R.id.carousel_image_left, View.GONE)
         }
-        renderer.contentViewManualCarousel!!.setDisplayedChild(R.id.carousel_image_right, 1)
-        renderer.contentViewManualCarousel!!.setDisplayedChild(
+        remoteView.setDisplayedChild(R.id.carousel_image_right, 1)
+        remoteView.setDisplayedChild(
             R.id.carousel_image_left,
             tempImageList.size - 1
         )

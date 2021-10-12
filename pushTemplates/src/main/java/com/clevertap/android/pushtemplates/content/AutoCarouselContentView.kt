@@ -10,7 +10,7 @@ import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
 class AutoCarouselContentView(context: Context, renderer: TemplateRenderer):
-    SmallContentView(context,renderer,R.layout.auto_carousel,) {
+    BigImageContentView(context,renderer,R.layout.auto_carousel) {
 
     init {
         setCustomContentViewMessageSummary(renderer.pt_msg_summary)

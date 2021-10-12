@@ -11,7 +11,7 @@ import java.util.ArrayList
 class ProductDisplayLinearSmallContentView(context: Context,
                                            renderer: TemplateRenderer, extras: Bundle
 ):
-    ContentView(context, R.layout.product_display_linear_collapsed, renderer) {
+    SmallContentView(context, renderer, R.layout.product_display_linear_collapsed) {
 
     init {
         setCustomContentViewMessage(renderer.pt_msg)
