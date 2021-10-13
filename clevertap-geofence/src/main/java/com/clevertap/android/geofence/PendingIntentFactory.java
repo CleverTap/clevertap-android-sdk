@@ -3,6 +3,7 @@ package com.clevertap.android.geofence;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build.VERSION;
 import androidx.annotation.Nullable;
 
 /**
@@ -53,8 +54,13 @@ class PendingIntentFactory {
                 throw new IllegalArgumentException("invalid pendingIntentType");
         }
 
+        if (VERSION.SDK_INT >= 31)//Android S
+        {
+            flags |= PendingIntent.FLAG_MUTABLE/*used by android framework*/;
+        }
+
         return PendingIntent.getBroadcast(context.getApplicationContext(), broadcastSenderRequestCode, intent,
-                flags | PendingIntent.FLAG_MUTABLE/*used by android framework*/);
+                flags);
 
     }
 
