@@ -53,7 +53,8 @@ class PendingIntentFactory {
                 throw new IllegalArgumentException("invalid pendingIntentType");
         }
 
-        return PendingIntent.getBroadcast(context.getApplicationContext(), broadcastSenderRequestCode, intent, flags);
+        return PendingIntent.getBroadcast(context.getApplicationContext(), broadcastSenderRequestCode, intent,
+                flags | PendingIntent.FLAG_MUTABLE/*used by android framework*/);
 
     }
 
