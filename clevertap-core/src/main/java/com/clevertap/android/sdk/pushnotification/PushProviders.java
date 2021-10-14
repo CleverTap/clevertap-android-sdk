@@ -25,6 +25,7 @@ import android.graphics.Color;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Build.VERSION;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.TextUtils;
@@ -946,8 +947,13 @@ public class PushProviders implements CTPushProviderListener {
         // Take all the properties from the notif and add it to the intent
         launchIntent.putExtras(extras);
         launchIntent.removeExtra(Constants.WZRK_ACTIONS);
+        int flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (VERSION.SDK_INT >= 23)//Android M
+        {
+            flagsLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
+        }
         pIntent = PendingIntent.getBroadcast(context, (int) System.currentTimeMillis(),
-                launchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                launchIntent, flagsLaunchPendingIntent);
 
         NotificationCompat.Style style;
         String bigPictureUrl = extras.getString(Constants.WZRK_BIG_PICTURE);
@@ -1216,12 +1222,17 @@ public class PushProviders implements CTPushProviderListener {
 
                     PendingIntent actionIntent;
                     int requestCode = ((int) System.currentTimeMillis()) + i;
+                    int flagsActionLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
+                    if (VERSION.SDK_INT >= 23)//Android M
+                    {
+                        flagsActionLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
+                    }
                     if (sendToCTIntentService) {
                         actionIntent = PendingIntent.getService(context, requestCode,
-                                actionLaunchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                                actionLaunchIntent, flagsActionLaunchPendingIntent);
                     } else {
                         actionIntent = PendingIntent.getActivity(context, requestCode,
-                                actionLaunchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                                actionLaunchIntent, flagsActionLaunchPendingIntent);
                     }
                     nb.addAction(icon, label, actionIntent);
 
