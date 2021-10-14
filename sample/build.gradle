@@ -63,9 +63,9 @@ dependencies {
     //implementation 'com.clevertap.android:clevertap-hms-sdk:1.0.0'
     //implementation 'com.huawei.hms:push:5.0.0.300'
 
-    implementation 'com.google.android.gms:play-services-location:17.0.0'// Needed for geofence
-    implementation 'androidx.work:work-runtime:2.3.4'// Needed for geofence
-    implementation 'androidx.concurrent:concurrent-futures:1.0.0'// Needed for geofence
+    implementation 'com.google.android.gms:play-services-location:18.0.0'// Needed for geofence
+    implementation 'androidx.work:work-runtime:2.7.0-rc01'// Needed for geofence
+    implementation 'androidx.concurrent:concurrent-futures:1.1.0'// Needed for geofence
 
     implementation 'com.google.firebase:firebase-messaging:20.2.4' //Needed for FCM
     implementation 'com.google.android.gms:play-services-ads:19.4.0' //Needed to use Google Ad Ids
