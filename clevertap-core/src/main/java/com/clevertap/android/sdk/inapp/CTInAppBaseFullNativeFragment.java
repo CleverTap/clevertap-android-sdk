@@ -1,16 +1,20 @@
 package com.clevertap.android.sdk.inapp;
 
 import android.content.Context;
+import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RoundRectShape;
+import android.os.Build;
 import android.util.DisplayMetrics;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Button;
+
+import com.clevertap.android.sdk.Logger;
 
 public abstract class CTInAppBaseFullNativeFragment extends CTInAppBaseFullFragment {
 
@@ -19,9 +23,17 @@ public abstract class CTInAppBaseFullNativeFragment extends CTInAppBaseFullFragm
         if (wm == null) {
             return 0;
         }
-        DisplayMetrics dm = new DisplayMetrics();
-        wm.getDefaultDisplay().getMetrics(dm);
-        return dm.densityDpi;
+        //Returns the dpi using Device Configuration API for API30 above
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            Configuration configuration = context.getResources().getConfiguration();
+            Logger.d("DeviceInfo-getDPI()", "dpi-> " + configuration.densityDpi);
+            return configuration.densityDpi;
+        }else {
+            DisplayMetrics dm = new DisplayMetrics();
+            wm.getDefaultDisplay().getMetrics(dm);
+            Logger.d("DeviceInfo-getDPI()", "dpi-> " + dm.densityDpi);
+            return dm.densityDpi;
+        }
     }
 
     void setupInAppButton(Button inAppButton, final CTInAppNotificationButton inAppNotificationButton,
