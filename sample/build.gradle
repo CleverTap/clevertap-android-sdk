@@ -83,7 +83,7 @@ dependencies {
     implementation 'androidx.recyclerview:recyclerview:1.2.1'
     implementation 'androidx.viewpager:viewpager:1.0.0'
 
-    implementation 'com.android.installreferrer:installreferrer:2.1'
+    implementation 'com.android.installreferrer:installreferrer:2.2'
     // Mandatory for v3.6.4 and above
 
     implementation 'androidx.multidex:multidex:2.0.1'
