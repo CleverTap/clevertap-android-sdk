@@ -15,7 +15,7 @@ ext {
 apply from: "../gradle-scripts/commons.gradle"
 
 dependencies {
-    compileOnly Libs.firebase_messaging
+    compileOnly Libs.firebase_messaging//TODO update
     compileOnly Libs.exoplayer
     compileOnly Libs.exoplayer_hls
     compileOnly Libs.exoplayer_ui
