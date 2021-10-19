@@ -21,8 +21,8 @@ dependencies {
     compileOnly Libs.exoplayer_ui
     compileOnly Libs.glide
     //for notification
-    compileOnly Libs.androidx_core_core
-    compileOnly Libs.viewpager
+    compileOnly Libs.androidx_core_core//TODO update-conflict with firebase
+    compileOnly Libs.viewpager//TODO update-conflict with latest core
     implementation Libs.appcompat
     implementation Libs.recyclerview
     compileOnly Libs.material
