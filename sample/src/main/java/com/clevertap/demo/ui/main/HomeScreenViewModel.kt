@@ -26,8 +26,10 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     "Category" to "Mens Accessories", "Price" to 59.99, "Date" to Date()
                 )
                 cleverTapAPI?.pushEvent("Product viewed", prodViewedAction)
-                cleverTapAPI?.pushEvent("video-inapp")
-                cleverTapAPI?.pushEvent("video-inbox")
+                //cleverTapAPI?.pushEvent("video-inapp")
+                //cleverTapAPI?.pushEvent("video-inbox")
+                cleverTapAPI?.pushEvent("caurousel-inapp")
+                cleverTapAPI?.pushEvent("icon-inbox")
             }
             "02" -> {
                 //Record a Charged (Transactional) event
