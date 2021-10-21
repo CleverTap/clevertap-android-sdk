@@ -1,14 +1,17 @@
 package com.clevertap.demo
 
 import android.app.NotificationManager
+import android.util.Log
 import androidx.multidex.MultiDexApplication
 import com.clevertap.android.sdk.ActivityLifecycleCallback
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
 import com.clevertap.android.sdk.SyncListener
+import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import org.json.JSONObject
+import java.util.HashMap
 
-class MyApplication : MultiDexApplication() {
+class MyApplication : MultiDexApplication(), CTPushNotificationListener {
 
     override fun onCreate() {
 
@@ -27,6 +30,8 @@ class MyApplication : MultiDexApplication() {
             }
         }
 
+        defaultInstance?.ctPushNotificationListener = this
+
         defaultInstance?.getCleverTapID {
             println(
                 "CleverTap DeviceID from Application class= $it"
@@ -41,5 +46,9 @@ class MyApplication : MultiDexApplication() {
             this, "BRTesting", "Offers",
             "All Offers", NotificationManager.IMPORTANCE_MAX, true
         )
+    }
+
+    override fun onNotificationClickedPayloadReceived(payload: HashMap<String, Any>?) {
+        Log.i("MyApplication", "onNotificationClickedPayloadReceived = $payload")
     }
 }
