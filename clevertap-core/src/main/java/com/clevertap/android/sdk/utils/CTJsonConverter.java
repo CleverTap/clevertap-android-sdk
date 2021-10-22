@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.utils;
 
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
@@ -82,6 +83,10 @@ public class CTJsonConverter {
             evtData.put("hgt", deviceInfo.getHeight());
             evtData.put("dpi", deviceInfo.getDPI());
             evtData.put("dt", DeviceInfo.getDeviceType(deviceInfo.getContext()));
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {//Sends StandbyBucket info on API 28 and above.
+                evtData.put("abckt", deviceInfo.getAppBucket());
+                Logger.d("CTJsonConverter", deviceInfo.getAppBucket());
+            }
             if (deviceInfo.getLibrary() != null) {
                 evtData.put("lib", deviceInfo.getLibrary());
             }

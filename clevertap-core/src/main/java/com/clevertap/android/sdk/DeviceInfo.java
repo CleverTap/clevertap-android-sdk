@@ -3,6 +3,8 @@ package com.clevertap.android.sdk;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.UiModeManager;
+import android.app.usage.UsageStats;
+import android.app.usage.UsageStatsManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
@@ -19,6 +21,7 @@ import android.view.WindowInsets;
 import android.view.WindowManager;
 import android.view.WindowMetrics;
 import androidx.annotation.IntDef;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationManagerCompat;
@@ -37,10 +40,18 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import org.json.JSONObject;
 
+import static android.content.Context.USAGE_STATS_SERVICE;
+
 @RestrictTo(Scope.LIBRARY)
 public class DeviceInfo {
 
     private class DeviceCachedInfo {
+
+        private final static String STANDBY_BUCKET_ACTIVE = "active";
+        private final static String STANDBY_BUCKET_FREQUENT = "frequent";
+        private final static String STANDBY_BUCKET_RARE = "rare";
+        private final static String STANDBY_BUCKET_RESTRICTED = "restricted";
+        private final static String STANDBY_BUCKET_WORKING_SET = "working_set";
 
         private final String bluetoothVersion;
 
@@ -76,6 +87,8 @@ public class DeviceInfo {
 
         private final int widthPixels;
 
+        private String appBucket;
+
         DeviceCachedInfo() {
             versionName = getVersionName();
             osName = getOsName();
@@ -94,6 +107,9 @@ public class DeviceInfo {
             widthPixels = getWidthPixels();
             dpi = getDPI();
             notificationsEnabled = getNotificationEnabledForUser();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                appBucket = getAppBucket();
+            }
         }
 
         private String getBluetoothVersion() {
@@ -224,6 +240,33 @@ public class DeviceInfo {
 
         private String getManufacturer() {
             return Build.MANUFACTURER;
+        }
+
+        /*
+            This method gets the standby values for app.Standby buckets are divided into the following:-
+            STANDBY_BUCKET_ACTIVE - The app was used very recently, currently in use or likely to be used very soon.
+            STANDBY_BUCKET_FREQUENT - The app was used in the last few days and/or likely to be used in the next few days.
+            STANDBY_BUCKET_RARE - The app has not be used for several days and/or is unlikely to be used for several days.
+            STANDBY_BUCKET_RESTRICTED - The app has not be used for several days, is unlikely to be used for several days, and has
+                                        been misbehaving in some manner.
+            STANDBY_BUCKET_WORKING_SET - The app was used recently and/or likely to be used in the next few hours.
+        */
+        @RequiresApi(api = Build.VERSION_CODES.P)
+        private String getAppBucket(){
+            UsageStatsManager usm = (UsageStatsManager) context.getSystemService(USAGE_STATS_SERVICE);
+            switch (usm.getAppStandbyBucket()) {
+                case UsageStatsManager.STANDBY_BUCKET_ACTIVE:
+                    return STANDBY_BUCKET_ACTIVE;
+                case UsageStatsManager.STANDBY_BUCKET_FREQUENT:
+                    return STANDBY_BUCKET_FREQUENT;
+                case UsageStatsManager.STANDBY_BUCKET_RARE:
+                    return STANDBY_BUCKET_RARE;
+                case UsageStatsManager.STANDBY_BUCKET_RESTRICTED:
+                    return STANDBY_BUCKET_RESTRICTED;
+                case UsageStatsManager.STANDBY_BUCKET_WORKING_SET:
+                    return STANDBY_BUCKET_WORKING_SET;
+                default: return "";
+            }
         }
 
         private String getModel() {
@@ -591,6 +634,10 @@ public class DeviceInfo {
 
     public String getManufacturer() {
         return getDeviceCachedInfo().manufacturer;
+    }
+
+    public String getAppBucket() {
+        return getDeviceCachedInfo().appBucket;
     }
 
     public String getModel() {
