@@ -4,6 +4,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import androidx.annotation.Nullable;
 
 /**
@@ -54,8 +55,7 @@ class PendingIntentFactory {
                 throw new IllegalArgumentException("invalid pendingIntentType");
         }
 
-        if (VERSION.SDK_INT >= 31)//Android S
-        {
+        if (VERSION.SDK_INT >= VERSION_CODES.S) {
             flags |= PendingIntent.FLAG_MUTABLE/*used by android framework*/;
         }
 

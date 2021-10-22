@@ -120,6 +120,10 @@ class MockDeviceInfo(
         return true
     }
 
+    override fun getAppBucket(): String {
+        return "active"
+    }
+
     override fun getAppLaunchedFields(): JSONObject {
         val obj = JSONObject()
         obj.put("Build", "1")
