@@ -10,7 +10,10 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 
-
+/**
+ * In order to support Android 12 notification trampoline, this class is being deprecated from 4.3.0 onwards
+ */
+@Deprecated(since = "4.3.0")
 public class CTPushNotificationReceiver extends BroadcastReceiver {
 
     @Override

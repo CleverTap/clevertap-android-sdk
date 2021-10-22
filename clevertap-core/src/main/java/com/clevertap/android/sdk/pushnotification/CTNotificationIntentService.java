@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.pushnotification;
 
+import android.annotation.SuppressLint;
 import android.app.IntentService;
 import android.app.NotificationManager;
 import android.content.Context;
@@ -9,6 +10,10 @@ import android.os.Bundle;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 
+/**
+ * In order to support Android 12 notification trampoline, this class is being deprecated from 4.3.0 onwards
+ */
+@Deprecated(since = "4.3.0")
 public class CTNotificationIntentService extends IntentService {
 
     public final static String MAIN_ACTION = "com.clevertap.PUSH_EVENT";
@@ -35,6 +40,7 @@ public class CTNotificationIntentService extends IntentService {
         }
     }
 
+    @SuppressLint("MissingPermission")
     private void handleActionButtonClick(Bundle extras) {
         try {
             boolean autoCancel = extras.getBoolean("autoCancel", false);
