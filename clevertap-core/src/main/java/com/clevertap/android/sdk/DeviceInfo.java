@@ -169,12 +169,10 @@ public class DeviceInfo {
             //Returns the dpi using Device Configuration API for API30 above
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 Configuration configuration = context.getResources().getConfiguration();
-                Logger.d("DeviceInfo-getDPI()", "dpi-> " + configuration.densityDpi);
                 return configuration.densityDpi;
             } else {
                 DisplayMetrics dm = new DisplayMetrics();
                 wm.getDefaultDisplay().getMetrics(dm);
-                Logger.d("DeviceInfo-getDPI()", "dpi-> " + dm.densityDpi);
                 return dm.densityDpi;
             }
         }
@@ -209,10 +207,6 @@ public class DeviceInfo {
             }
             // Calculate the width in inches
             double rHeight = height / dpi;
-            Logger.d("DeviceInfo-getHeight()", "dm.heightPixels-> " + height);
-            Logger.d("DeviceInfo-getHeight()", "dpi-> " + dpi);
-            Logger.d("DeviceInfo-getHeight()", "rHeight-> " + rHeight);
-            Logger.d("DeviceInfo-getHeight()", "toTwoPlaces(rHeight)-> " + toTwoPlaces(rHeight));
             return toTwoPlaces(rHeight);
         }
 
@@ -228,12 +222,10 @@ public class DeviceInfo {
                         .getInsetsIgnoringVisibility(WindowInsets.Type.systemGestures());
                 int heightInPixel = windowMetrics.getBounds().height() -
                         insets.top - insets.bottom;
-                Logger.d("DeviceInfo-getHeight()", "getHeightPixels()-> " + heightInPixel);
                 return heightInPixel;
             } else {
                 DisplayMetrics dm = new DisplayMetrics();
                 wm.getDefaultDisplay().getMetrics(dm);
-                Logger.d("DeviceInfo-getHeight()", "getHeightPixels()-> " + dm.heightPixels);
                 return dm.heightPixels;
             }
         }
@@ -242,7 +234,8 @@ public class DeviceInfo {
             return Build.MANUFACTURER;
         }
 
-        /*
+        /**
+         *  This method is used for devices above API 28
             This method gets the standby values for app.Standby buckets are divided into the following:-
             STANDBY_BUCKET_ACTIVE - The app was used very recently, currently in use or likely to be used very soon.
             STANDBY_BUCKET_FREQUENT - The app was used in the last few days and/or likely to be used in the next few days.
@@ -250,6 +243,9 @@ public class DeviceInfo {
             STANDBY_BUCKET_RESTRICTED - The app has not be used for several days, is unlikely to be used for several days, and has
                                         been misbehaving in some manner.
             STANDBY_BUCKET_WORKING_SET - The app was used recently and/or likely to be used in the next few hours.
+
+            @return one of the possible String value of AppStandbyBucket(). If no AppBucket info is found,
+                    returns empty String
         */
         @RequiresApi(api = Build.VERSION_CODES.P)
         private String getAppBucket(){
@@ -343,10 +339,6 @@ public class DeviceInfo {
             }
             // Calculate the width in inches
             double rWidth = width / dpi;
-            Logger.d("DeviceInfo-getWidth()", "dm.widthPixels-> " + width);
-            Logger.d("DeviceInfo-getWidth()", "dpi-> " + dpi);
-            Logger.d("DeviceInfo-getWidth()", "rWidth-> " + rWidth);
-            Logger.d("DeviceInfo-getWidth()", "toTwoPlaces(rWidth)-> " + toTwoPlaces(rWidth));
             return toTwoPlaces(rWidth);
 
         }
@@ -363,12 +355,10 @@ public class DeviceInfo {
                         .getInsetsIgnoringVisibility(WindowInsets.Type.systemGestures());
                 int widthInPixel = windowMetrics.getBounds().width() -
                         insets.right - insets.left;
-                Logger.d("DeviceInfo-getWidth()", "getWidthPixels()-> " + widthInPixel);
                 return widthInPixel;
             } else {
                 DisplayMetrics dm = new DisplayMetrics();
                 wm.getDefaultDisplay().getMetrics(dm);
-                Logger.d("DeviceInfo-getWidth()", "getWidthPixels()-> " + dm.widthPixels);
                 return dm.widthPixels;
             }
         }

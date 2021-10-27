@@ -85,9 +85,8 @@ public class CTJsonConverter {
             evtData.put("hgt", deviceInfo.getHeight());
             evtData.put("dpi", deviceInfo.getDPI());
             evtData.put("dt", DeviceInfo.getDeviceType(deviceInfo.getContext()));
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {//Sends StandbyBucket info on API 28 and above.
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 evtData.put("abckt", deviceInfo.getAppBucket());
-                Logger.d("CTJsonConverter", deviceInfo.getAppBucket());
             }
             if (deviceInfo.getLibrary() != null) {
                 evtData.put("lib", deviceInfo.getLibrary());
