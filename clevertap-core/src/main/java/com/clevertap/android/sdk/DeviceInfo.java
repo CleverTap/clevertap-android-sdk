@@ -171,7 +171,7 @@ public class DeviceInfo {
                 Configuration configuration = context.getResources().getConfiguration();
                 Logger.d("DeviceInfo-getDPI()", "dpi-> " + configuration.densityDpi);
                 return configuration.densityDpi;
-            }else {
+            } else {
                 DisplayMetrics dm = new DisplayMetrics();
                 wm.getDefaultDisplay().getMetrics(dm);
                 Logger.d("DeviceInfo-getDPI()", "dpi-> " + dm.densityDpi);
@@ -200,7 +200,7 @@ public class DeviceInfo {
 
                 dpi = configuration.densityDpi;
 
-            }else {
+            } else {
                 DisplayMetrics dm = new DisplayMetrics();
                 wm.getDefaultDisplay().getMetrics(dm);
 
@@ -225,12 +225,12 @@ public class DeviceInfo {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                 WindowMetrics windowMetrics = wm.getCurrentWindowMetrics();
                 Insets insets = windowMetrics.getWindowInsets()
-                        .getInsetsIgnoringVisibility( WindowInsets.Type.systemGestures());
-               int heightInPixel = windowMetrics.getBounds().height() -
+                        .getInsetsIgnoringVisibility(WindowInsets.Type.systemGestures());
+                int heightInPixel = windowMetrics.getBounds().height() -
                         insets.top - insets.bottom;
                 Logger.d("DeviceInfo-getHeight()", "getHeightPixels()-> " + heightInPixel);
-               return heightInPixel;
-            }else {
+                return heightInPixel;
+            } else {
                 DisplayMetrics dm = new DisplayMetrics();
                 wm.getDefaultDisplay().getMetrics(dm);
                 Logger.d("DeviceInfo-getHeight()", "getHeightPixels()-> " + dm.heightPixels);
@@ -334,7 +334,7 @@ public class DeviceInfo {
 
                 dpi = configuration.densityDpi;
 
-            }else {
+            } else {
                 DisplayMetrics dm = new DisplayMetrics();
                 wm.getDefaultDisplay().getMetrics(dm);
 
@@ -361,11 +361,11 @@ public class DeviceInfo {
                 WindowMetrics windowMetrics = wm.getCurrentWindowMetrics();
                 Insets insets = windowMetrics.getWindowInsets()
                         .getInsetsIgnoringVisibility(WindowInsets.Type.systemGestures());
-                int widthInPixel =  windowMetrics.getBounds().width() -
+                int widthInPixel = windowMetrics.getBounds().width() -
                         insets.right - insets.left;
                 Logger.d("DeviceInfo-getWidth()", "getWidthPixels()-> " + widthInPixel);
                 return widthInPixel;
-            }else {
+            } else {
                 DisplayMetrics dm = new DisplayMetrics();
                 wm.getDefaultDisplay().getMetrics(dm);
                 Logger.d("DeviceInfo-getWidth()", "getWidthPixels()-> " + dm.widthPixels);
@@ -439,99 +439,27 @@ public class DeviceInfo {
 
     private final Object deviceIDLock = new Object();
 
+    private boolean enableNetworkInfoReporting = false;
+
     private String googleAdID = null;
 
     private String library;
 
     private boolean limitAdTracking = false;
 
-    private final ArrayList<ValidationResult> validationResults = new ArrayList<>();
-
-    private boolean enableNetworkInfoReporting = false;
-
     private final CoreMetaData mCoreMetaData;
 
-    DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID,
-            CoreMetaData coreMetaData) {
-        this.context = context;
-        this.config = config;
-        this.library = null;
-        mCoreMetaData = coreMetaData;
-        onInitDeviceInfo(cleverTapID);
-        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "DeviceInfo() called");
-    }
-
-    void onInitDeviceInfo(final String cleverTapID) {
-        Task<Void> taskDeviceCachedInfo = CTExecutorFactory.executors(config).ioTask();
-        taskDeviceCachedInfo.execute("getDeviceCachedInfo", new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                getDeviceCachedInfo();
-                return null;
-            }
-        });
-
-        Task<Void> task = CTExecutorFactory.executors(config).ioTask();
-        task.addOnSuccessListener(new OnSuccessListener<Void>() {
-            // callback on main thread
-            @Override
-            public void onSuccess(final Void aVoid) {
-                getConfigLogger().verbose(config.getAccountId() + ":async_deviceID",
-                        "DeviceID initialized successfully!" + Thread.currentThread());
-                // No need to put getDeviceID() on background thread because prefs already loaded
-                CleverTapAPI.instanceWithConfig(context, config).deviceIDCreated(getDeviceID());
-            }
-        });
-        task.execute("initDeviceID", new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                initDeviceID(cleverTapID);
-                return null;
-            }
-        });
-
-    }
-
-    public boolean isErrorDeviceId() {
-        return getDeviceID() != null && getDeviceID().startsWith(Constants.ERROR_PROFILE_PREFIX);
-    }
-
-    public void forceNewDeviceID() {
-        String deviceID = generateGUID();
-        forceUpdateDeviceId(deviceID);
-    }
-
-    public void forceUpdateCustomCleverTapID(String cleverTapID) {
-        if (Utils.validateCTID(cleverTapID)) {
-            getConfigLogger()
-                    .info(config.getAccountId(), "Setting CleverTap ID to custom CleverTap ID : " + cleverTapID);
-            forceUpdateDeviceId(Constants.CUSTOM_CLEVERTAP_ID_PREFIX + cleverTapID);
-        } else {
-            setOrGenerateFallbackDeviceID();
-            removeDeviceID();
-            String error = recordDeviceError(Constants.INVALID_CT_CUSTOM_ID, cleverTapID, getFallBackDeviceID());
-            getConfigLogger().info(config.getAccountId(), error);
-        }
-    }
+    private final ArrayList<ValidationResult> validationResults = new ArrayList<>();
 
     /**
-     * Force updates the device ID, with the ID specified.
-     * <p>
-     * This is used internally by the SDK, there is no need to call this explicitly.
-     * </p>
+     * Returns the integer identifier for the default app icon.
      *
-     * @param id The new device ID
+     * @param context The Android context
+     * @return The integer identifier for the image resource
      */
-    @SuppressLint("CommitPrefEdits")
-    public void forceUpdateDeviceId(String id) {
-        getConfigLogger().verbose(this.config.getAccountId(), "Force updating the device ID to " + id);
-        synchronized (deviceIDLock) {
-            StorageHelper.putString(context, getDeviceIdStorageKey(), id);
-        }
-    }
-
-    String getAttributionID() {
-        return getDeviceID();
+    public static int getAppIconAsIntId(final Context context) {
+        ApplicationInfo ai = context.getApplicationInfo();
+        return ai.icon;
     }
 
     /**
@@ -570,6 +498,50 @@ public class DeviceInfo {
         return sDeviceType;
     }
 
+    DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID,
+            CoreMetaData coreMetaData) {
+        this.context = context;
+        this.config = config;
+        this.library = null;
+        mCoreMetaData = coreMetaData;
+        onInitDeviceInfo(cleverTapID);
+        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "DeviceInfo() called");
+    }
+
+    public void forceNewDeviceID() {
+        String deviceID = generateGUID();
+        forceUpdateDeviceId(deviceID);
+    }
+
+    public void forceUpdateCustomCleverTapID(String cleverTapID) {
+        if (Utils.validateCTID(cleverTapID)) {
+            getConfigLogger()
+                    .info(config.getAccountId(), "Setting CleverTap ID to custom CleverTap ID : " + cleverTapID);
+            forceUpdateDeviceId(Constants.CUSTOM_CLEVERTAP_ID_PREFIX + cleverTapID);
+        } else {
+            setOrGenerateFallbackDeviceID();
+            removeDeviceID();
+            String error = recordDeviceError(Constants.INVALID_CT_CUSTOM_ID, cleverTapID, getFallBackDeviceID());
+            getConfigLogger().info(config.getAccountId(), error);
+        }
+    }
+
+    /**
+     * Force updates the device ID, with the ID specified.
+     * <p>
+     * This is used internally by the SDK, there is no need to call this explicitly.
+     * </p>
+     *
+     * @param id The new device ID
+     */
+    @SuppressLint("CommitPrefEdits")
+    public void forceUpdateDeviceId(String id) {
+        getConfigLogger().verbose(this.config.getAccountId(), "Force updating the device ID to " + id);
+        synchronized (deviceIDLock) {
+            StorageHelper.putString(context, getDeviceIdStorageKey(), id);
+        }
+    }
+
     //Event
     public JSONObject getAppLaunchedFields() {
 
@@ -602,16 +574,16 @@ public class DeviceInfo {
         return context;
     }
 
-    public String getDeviceID() {
-        return _getDeviceID() != null ? _getDeviceID() : getFallBackDeviceID();
-    }
-
     public String getCountryCode() {
         return getDeviceCachedInfo().countryCode;
     }
 
     public int getDPI() {
         return getDeviceCachedInfo().dpi;
+    }
+
+    public String getDeviceID() {
+        return _getDeviceID() != null ? _getDeviceID() : getFallBackDeviceID();
     }
 
     public String getGoogleAdID() {
@@ -660,15 +632,15 @@ public class DeviceInfo {
         return getDeviceCachedInfo().osVersion;
     }
 
+    public int getSdkVersion() {
+        return getDeviceCachedInfo().sdkVersion;
+    }
+
     public ArrayList<ValidationResult> getValidationResults() {
         // noinspection unchecked
         ArrayList<ValidationResult> tempValidationResults = (ArrayList<ValidationResult>) validationResults.clone();
         validationResults.clear();
         return tempValidationResults;
-    }
-
-    public int getSdkVersion() {
-        return getDeviceCachedInfo().sdkVersion;
     }
 
     public String getVersionName() {
@@ -698,6 +670,10 @@ public class DeviceInfo {
         return isBluetoothEnabled;
     }
 
+    public boolean isErrorDeviceId() {
+        return getDeviceID() != null && getDeviceID().startsWith(Constants.ERROR_PROFILE_PREFIX);
+    }
+
     public boolean isLimitAdTrackingEnabled() {
         synchronized (adIDLock) {
             return limitAdTracking;
@@ -720,6 +696,87 @@ public class DeviceInfo {
         }
 
         return ret;
+    }
+
+    public void setCurrentUserOptOutStateFromStorage() {
+        String key = optOutKey();
+        if (key == null) {
+            config.getLogger().verbose(config.getAccountId(),
+                    "Unable to set current user OptOut state from storage: storage key is null");
+            return;
+        }
+        boolean storedOptOut = StorageHelper.getBooleanFromPrefs(context, config, key);
+        mCoreMetaData.setCurrentUserOptedOut(storedOptOut);
+        config.getLogger().verbose(config.getAccountId(),
+                "Set current user OptOut state from storage to: " + storedOptOut + " for key: " + key);
+    }
+
+    void enableDeviceNetworkInfoReporting(boolean value) {
+        enableNetworkInfoReporting = value;
+        StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(config, Constants.NETWORK_INFO),
+                enableNetworkInfoReporting);
+        config.getLogger()
+                .verbose(config.getAccountId(),
+                        "Device Network Information reporting set to " + enableNetworkInfoReporting);
+    }
+
+    String getAttributionID() {
+        return getDeviceID();
+    }
+
+    int getHeightPixels() {
+        return getDeviceCachedInfo().heightPixels;
+    }
+
+    int getWidthPixels() {
+        return getDeviceCachedInfo().widthPixels;
+    }
+
+    void onInitDeviceInfo(final String cleverTapID) {
+        Task<Void> taskDeviceCachedInfo = CTExecutorFactory.executors(config).ioTask();
+        taskDeviceCachedInfo.execute("getDeviceCachedInfo", new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                getDeviceCachedInfo();
+                return null;
+            }
+        });
+
+        Task<Void> task = CTExecutorFactory.executors(config).ioTask();
+        task.addOnSuccessListener(new OnSuccessListener<Void>() {
+            // callback on main thread
+            @Override
+            public void onSuccess(final Void aVoid) {
+                getConfigLogger().verbose(config.getAccountId() + ":async_deviceID",
+                        "DeviceID initialized successfully!" + Thread.currentThread());
+                // No need to put getDeviceID() on background thread because prefs already loaded
+                CleverTapAPI.instanceWithConfig(context, config).deviceIDCreated(getDeviceID());
+            }
+        });
+        task.execute("initDeviceID", new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                initDeviceID(cleverTapID);
+                return null;
+            }
+        });
+
+    }
+
+    String optOutKey() {
+        String guid = getDeviceID();
+        if (guid == null) {
+            return null;
+        }
+        return "OptOut:" + guid;
+    }
+
+    void setDeviceNetworkInfoReportingFromStorage() {
+        boolean enabled = StorageHelper.getBooleanFromPrefs(context, config, Constants.NETWORK_INFO);
+        config.getLogger()
+                .verbose(config.getAccountId(),
+                        "Setting device network info reporting state from storage to " + enabled);
+        enableNetworkInfoReporting = enabled;
     }
 
     private String _getDeviceID() {
@@ -765,6 +822,12 @@ public class DeviceInfo {
             }
             if (advertisingID != null && advertisingID.trim().length() > 2) {
                 synchronized (adIDLock) {
+                    if (advertisingID.contains("00000000")) {
+                        //Device has opted out of sharing Google Advertising ID
+                        getConfigLogger().debug(config.getAccountId(),
+                                "Device user has opted out of sharing Advertising ID, falling back to random UUID for CleverTap ID generation");
+                        return;
+                    }
                     googleAdID = advertisingID.replace("-", "");
                 }
             }
@@ -890,62 +953,5 @@ public class DeviceInfo {
     private void updateFallbackID(String fallbackId) {
         getConfigLogger().verbose(this.config.getAccountId(), "Updating the fallback id - " + fallbackId);
         StorageHelper.putString(context, getFallbackIdStorageKey(), fallbackId);
-    }
-
-    /**
-     * Returns the integer identifier for the default app icon.
-     *
-     * @param context The Android context
-     * @return The integer identifier for the image resource
-     */
-    public static int getAppIconAsIntId(final Context context) {
-        ApplicationInfo ai = context.getApplicationInfo();
-        return ai.icon;
-    }
-
-    int getHeightPixels() {
-        return getDeviceCachedInfo().heightPixels;
-    }
-
-    void enableDeviceNetworkInfoReporting(boolean value) {
-        enableNetworkInfoReporting = value;
-        StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(config, Constants.NETWORK_INFO),
-                enableNetworkInfoReporting);
-        config.getLogger()
-                .verbose(config.getAccountId(),
-                        "Device Network Information reporting set to " + enableNetworkInfoReporting);
-    }
-
-    void setDeviceNetworkInfoReportingFromStorage() {
-        boolean enabled = StorageHelper.getBooleanFromPrefs(context, config, Constants.NETWORK_INFO);
-        config.getLogger()
-                .verbose(config.getAccountId(),
-                        "Setting device network info reporting state from storage to " + enabled);
-        enableNetworkInfoReporting = enabled;
-    }
-
-    int getWidthPixels() {
-        return getDeviceCachedInfo().widthPixels;
-    }
-
-    public void setCurrentUserOptOutStateFromStorage() {
-        String key = optOutKey();
-        if (key == null) {
-            config.getLogger().verbose(config.getAccountId(),
-                    "Unable to set current user OptOut state from storage: storage key is null");
-            return;
-        }
-        boolean storedOptOut = StorageHelper.getBooleanFromPrefs(context, config, key);
-        mCoreMetaData.setCurrentUserOptedOut(storedOptOut);
-        config.getLogger().verbose(config.getAccountId(),
-                "Set current user OptOut state from storage to: " + storedOptOut + " for key: " + key);
-    }
-
-    String optOutKey() {
-        String guid = getDeviceID();
-        if (guid == null) {
-            return null;
-        }
-        return "OptOut:" + guid;
     }
 }

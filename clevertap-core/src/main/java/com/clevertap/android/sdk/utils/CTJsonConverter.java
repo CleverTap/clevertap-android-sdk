@@ -3,12 +3,14 @@ package com.clevertap.android.sdk.utils;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
@@ -89,6 +91,10 @@ public class CTJsonConverter {
             }
             if (deviceInfo.getLibrary() != null) {
                 evtData.put("lib", deviceInfo.getLibrary());
+            }
+            String fcmSenderId = ManifestInfo.getInstance(deviceInfo.getContext()).getFCMSenderId();
+            if (!TextUtils.isEmpty(fcmSenderId)) {//only for 4.3.0 for tracking custom sender ID users.
+                evtData.put("fcmsid", true);
             }
 
             String cc = deviceInfo.getCountryCode();
