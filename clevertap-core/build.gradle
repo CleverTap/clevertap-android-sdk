@@ -14,15 +14,22 @@ ext {
 
 apply from: "../gradle-scripts/commons.gradle"
 
+android {
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
 dependencies {
-    compileOnly Libs.firebase_messaging//TODO update
+    compileOnly Libs.firebase_messaging
     compileOnly Libs.exoplayer
     compileOnly Libs.exoplayer_hls
     compileOnly Libs.exoplayer_ui
     compileOnly Libs.glide
     //for notification
-    compileOnly Libs.androidx_core_core//TODO update-conflict with firebase
-    compileOnly Libs.viewpager//TODO update-conflict with latest core
+    compileOnly Libs.androidx_core_core
+    compileOnly Libs.viewpager
     implementation Libs.appcompat
     implementation Libs.recyclerview
     compileOnly Libs.material

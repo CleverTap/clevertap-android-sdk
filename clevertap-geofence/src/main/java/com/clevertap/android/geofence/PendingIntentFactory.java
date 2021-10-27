@@ -56,7 +56,8 @@ class PendingIntentFactory {
         }
 
         if (VERSION.SDK_INT >= VERSION_CODES.S) {
-            flags |= PendingIntent.FLAG_MUTABLE/*used by android framework*/;
+            /*require mutable PendingIntent object for requesting device location information*/
+            flags |= PendingIntent.FLAG_MUTABLE;
         }
 
         return PendingIntent.getBroadcast(context.getApplicationContext(), broadcastSenderRequestCode, intent,

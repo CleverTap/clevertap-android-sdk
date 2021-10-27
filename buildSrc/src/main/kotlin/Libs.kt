@@ -59,7 +59,7 @@ object Libs {
 
     const val viewpager: String = "androidx.viewpager:viewpager:_"
 
-    const val work_runtime: String = "androidx.work:work-runtime:_"//TODO check RC version
+    const val work_runtime: String = "androidx.work:work-runtime:_"
 
     const val work_testing: String = "androidx.work:work-testing:_"
 
