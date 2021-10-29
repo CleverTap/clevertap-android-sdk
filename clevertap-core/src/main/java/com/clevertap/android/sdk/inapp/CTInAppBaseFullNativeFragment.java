@@ -26,12 +26,10 @@ public abstract class CTInAppBaseFullNativeFragment extends CTInAppBaseFullFragm
         //Returns the dpi using Device Configuration API for API30 above
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             Configuration configuration = context.getResources().getConfiguration();
-            Logger.d("DeviceInfo-getDPI()", "dpi-> " + configuration.densityDpi);
             return configuration.densityDpi;
         }else {
             DisplayMetrics dm = new DisplayMetrics();
             wm.getDefaultDisplay().getMetrics(dm);
-            Logger.d("DeviceInfo-getDPI()", "dpi-> " + dm.densityDpi);
             return dm.densityDpi;
         }
     }
