@@ -11,7 +11,18 @@ import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 
 /**
- * In order to support Android 12 notification trampoline, this class is being deprecated from 4.3.0 onwards
+ * Android 12 prevents components that start other activities inside services or broadcast receivers when notification is opened.
+ * If this requirement is not met, the system will prevent the activity from starting.
+ *
+ * As a part of these Android OS changes, CleverTap will be deprecating the CTPushNotificationReceiver class from v4.3.0
+ *
+ * CTPushNotificationReceiver was used to handle Push notifications with deep links pointing inside the app or third-party applications/URLs.
+ * The receiver would first raise the Notification Clicked event and then open the Activity as mentioned in the deep link.
+ *
+ * Android 12 restricts usage of notification trampolines, meaning that notification must start the activity directly on the notification tap.
+ * Tracking of Notification Clicked events now happens in the {@link CleverTapAPI} }instance registered by {@link com.clevertap.android.sdk.ActivityLifecycleCallback}.
+ * The push payload is attached as an extra to the notification intent and processed when the notification is tapped.
+ * If the deep link is to a third-party application or a URL, then the Notification Clicked event will NO LONGER be tracked.
  */
 @Deprecated(since = "4.3.0")
 public class CTPushNotificationReceiver extends BroadcastReceiver {

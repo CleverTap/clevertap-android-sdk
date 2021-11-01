@@ -11,7 +11,18 @@ import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 
 /**
- * In order to support Android 12 notification trampoline, this class is being deprecated from 4.3.0 onwards
+ * Android 12 prevents components that start other activities inside services or broadcast receivers when notification is opened.
+ * If this requirement is not met, the system will prevent the activity from starting.
+ *
+ * As a part of these Android OS changes, CleverTap will be deprecating the CTNotificationIntentService class from v4.3.0
+ *
+ * CTNotificationIntentService was used to handle Push notifications with action buttons. The service used to open the deeplink
+ * and close the notification tray.
+ *
+ * From Android 12, closing of the notification tray is now handled by the OS when it opens an Activity.
+ * If the action buttons are redirecting the user to an existing activity inside the app, then
+ * the Notification Clicked event will be triggered with the event properties mentioning which action button was clicked.
+ * If the deep link is to a third-party application or a URL, then the Notification Clicked event will not be tracked.
  */
 @Deprecated(since = "4.3.0")
 public class CTNotificationIntentService extends IntentService {
