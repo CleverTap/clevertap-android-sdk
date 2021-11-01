@@ -2577,7 +2577,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             deepLink = intent.getData();
             if (deepLink != null) {
                 Bundle queryArgs = UriHelper.getAllKeyValuePairs(deepLink.toString(), true);
-                _accountId = queryArgs.getString(Constants.WZRK_ACCT_ID_KEY);//null
+                _accountId = queryArgs.getString(Constants.WZRK_ACCT_ID_KEY);
             }
         } catch (Throwable t) {
             // Ignore
