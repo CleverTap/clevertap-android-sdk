@@ -3,7 +3,6 @@ package com.clevertap.android.sdk;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.UiModeManager;
-import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
@@ -797,6 +796,8 @@ public class DeviceInfo {
                     getConfigLogger().verbose(config.getAccountId() + ":async_deviceID",
                             "limitAdTracking = " + limitAdTracking);
                     if (limitAdTracking) {
+                        getConfigLogger().debug(config.getAccountId(),
+                                "Device user has opted out of sharing Advertising ID, falling back to random UUID for CleverTap ID generation");
                         return;
                     }
                 }

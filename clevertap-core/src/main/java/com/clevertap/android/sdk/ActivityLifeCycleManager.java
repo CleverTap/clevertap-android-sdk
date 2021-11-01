@@ -112,9 +112,9 @@ class ActivityLifeCycleManager {
         inAppController.checkPendingInAppNotifications(activity);
     }
 
-    public void onActivityCreated(final Bundle notification, final Uri deepLink) {
+    public void onActivityCreated(final Bundle notification, final Uri deepLink, String accountId) {
         try {
-            boolean shouldProcess = config.isDefaultInstance();
+            boolean shouldProcess = (accountId == null && config.isDefaultInstance()) || config.getAccountId().equals(accountId);
 
             if (shouldProcess) {
                 if (notification != null && !notification.isEmpty() && notification
