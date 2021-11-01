@@ -2577,7 +2577,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             deepLink = intent.getData();
             if (deepLink != null) {
                 Bundle queryArgs = UriHelper.getAllKeyValuePairs(deepLink.toString(), true);
-                _accountId = queryArgs.getString(Constants.WZRK_ACCT_ID_KEY);
+                _accountId = queryArgs.getString(Constants.WZRK_ACCT_ID_KEY);//null
             }
         } catch (Throwable t) {
             // Ignore
@@ -2609,9 +2609,15 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             return;
         }
 
-        CleverTapAPI instance = CleverTapAPI.instances.get(_accountId);
-        if (instance != null) {
-            instance.coreState.getActivityLifeCycleManager().onActivityCreated(notification, deepLink);
+        try{
+            for(String accountId : CleverTapAPI.instances.keySet()){
+                CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+                if(instance != null){
+                    instance.coreState.getActivityLifeCycleManager().onActivityCreated(notification, deepLink, _accountId);
+                }
+            }
+        }catch (Throwable t){
+            Logger.v("Throwable - " + t.getLocalizedMessage());
         }
     }
 
