@@ -440,7 +440,7 @@ public class PushProviders implements CTPushProviderListener {
         task.execute("runningJobService", new Callable<Void>() {
             @Override
             public Void call() {
-                if (isNotificationSupported()) {
+                if (!isNotificationSupported()) {
                     Logger.v(config.getAccountId(), "Token is not present, not running the Job");
                     return null;
                 }
