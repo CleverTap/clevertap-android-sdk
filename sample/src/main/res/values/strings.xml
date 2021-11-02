@@ -13,7 +13,6 @@
     <!-- Geofence -->
     <string name="ok">OK</string>
     <string name="permission_rationale">All the time location permission required for core functionality</string>
-    <string name="permission_denied_explanation">Permission was denied, but is needed for core
-        functionality.</string>
+    <string name="permission_denied_explanation">Please provide All time Precise location Permission from settings.</string>
     <string name="settings">Settings</string>
 </resources>

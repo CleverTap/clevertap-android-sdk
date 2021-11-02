@@ -3,19 +3,24 @@ package com.clevertap.android.sdk;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.UiModeManager;
+import android.app.usage.UsageStatsManager;
 import android.bluetooth.BluetoothAdapter;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
+import android.graphics.Insets;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.telephony.TelephonyManager;
 import android.util.DisplayMetrics;
+import android.view.WindowInsets;
 import android.view.WindowManager;
+import android.view.WindowMetrics;
 import androidx.annotation.IntDef;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationManagerCompat;
@@ -34,10 +39,18 @@ import java.util.UUID;
 import java.util.concurrent.Callable;
 import org.json.JSONObject;
 
+import static android.content.Context.USAGE_STATS_SERVICE;
+
 @RestrictTo(Scope.LIBRARY)
 public class DeviceInfo {
 
     private class DeviceCachedInfo {
+
+        private final static String STANDBY_BUCKET_ACTIVE = "active";
+        private final static String STANDBY_BUCKET_FREQUENT = "frequent";
+        private final static String STANDBY_BUCKET_RARE = "rare";
+        private final static String STANDBY_BUCKET_RESTRICTED = "restricted";
+        private final static String STANDBY_BUCKET_WORKING_SET = "working_set";
 
         private final String bluetoothVersion;
 
@@ -73,6 +86,8 @@ public class DeviceInfo {
 
         private final int widthPixels;
 
+        private String appBucket;
+
         DeviceCachedInfo() {
             versionName = getVersionName();
             osName = getOsName();
@@ -91,6 +106,9 @@ public class DeviceInfo {
             widthPixels = getWidthPixels();
             dpi = getDPI();
             notificationsEnabled = getNotificationEnabledForUser();
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                appBucket = getAppBucket();
+            }
         }
 
         private String getBluetoothVersion() {
@@ -147,20 +165,47 @@ public class DeviceInfo {
             if (wm == null) {
                 return 0;
             }
-            DisplayMetrics dm = new DisplayMetrics();
-            wm.getDefaultDisplay().getMetrics(dm);
-            return dm.densityDpi;
+            //Returns the dpi using Device Configuration API for API30 above
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                Configuration configuration = context.getResources().getConfiguration();
+                return configuration.densityDpi;
+            } else {
+                DisplayMetrics dm = new DisplayMetrics();
+                wm.getDefaultDisplay().getMetrics(dm);
+                return dm.densityDpi;
+            }
         }
 
         private double getHeight() {
+            int height;
+            float dpi;
+
             WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
             if (wm == null) {
                 return 0.0;
             }
-            DisplayMetrics dm = new DisplayMetrics();
-            wm.getDefaultDisplay().getMetrics(dm);
-            // Calculate the height in inches
-            double rHeight = dm.heightPixels / dm.ydpi;
+
+            //Returns height using WindowMetrics API for API30 above
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                WindowMetrics windowMetrics = wm.getCurrentWindowMetrics();
+                Configuration configuration = context.getResources().getConfiguration();
+                Insets insets = windowMetrics.getWindowInsets()
+                        .getInsetsIgnoringVisibility(WindowInsets.Type.systemGestures());
+
+                height = windowMetrics.getBounds().height() -
+                        insets.top - insets.bottom;
+
+                dpi = configuration.densityDpi;
+
+            } else {
+                DisplayMetrics dm = new DisplayMetrics();
+                wm.getDefaultDisplay().getMetrics(dm);
+
+                height = dm.heightPixels;
+                dpi = dm.ydpi;
+            }
+            // Calculate the width in inches
+            double rHeight = height / dpi;
             return toTwoPlaces(rHeight);
         }
 
@@ -169,13 +214,54 @@ public class DeviceInfo {
             if (wm == null) {
                 return 0;
             }
-            DisplayMetrics dm = new DisplayMetrics();
-            wm.getDefaultDisplay().getMetrics(dm);
-            return dm.heightPixels;
+            //Returns height in pixels using WindowMetrics API for API30 above
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                WindowMetrics windowMetrics = wm.getCurrentWindowMetrics();
+                Insets insets = windowMetrics.getWindowInsets()
+                        .getInsetsIgnoringVisibility(WindowInsets.Type.systemGestures());
+                int heightInPixel = windowMetrics.getBounds().height() -
+                        insets.top - insets.bottom;
+                return heightInPixel;
+            } else {
+                DisplayMetrics dm = new DisplayMetrics();
+                wm.getDefaultDisplay().getMetrics(dm);
+                return dm.heightPixels;
+            }
         }
 
         private String getManufacturer() {
             return Build.MANUFACTURER;
+        }
+
+        /**
+         *  This method is used for devices above API 28
+            This method gets the standby values for app.Standby buckets are divided into the following:-
+            STANDBY_BUCKET_ACTIVE - The app was used very recently, currently in use or likely to be used very soon.
+            STANDBY_BUCKET_FREQUENT - The app was used in the last few days and/or likely to be used in the next few days.
+            STANDBY_BUCKET_RARE - The app has not be used for several days and/or is unlikely to be used for several days.
+            STANDBY_BUCKET_RESTRICTED - The app has not be used for several days, is unlikely to be used for several days, and has
+                                        been misbehaving in some manner.
+            STANDBY_BUCKET_WORKING_SET - The app was used recently and/or likely to be used in the next few hours.
+
+            @return one of the possible String value of AppStandbyBucket(). If no AppBucket info is found,
+                    returns empty String
+        */
+        @RequiresApi(api = Build.VERSION_CODES.P)
+        private String getAppBucket(){
+            UsageStatsManager usm = (UsageStatsManager) context.getSystemService(USAGE_STATS_SERVICE);
+            switch (usm.getAppStandbyBucket()) {
+                case UsageStatsManager.STANDBY_BUCKET_ACTIVE:
+                    return STANDBY_BUCKET_ACTIVE;
+                case UsageStatsManager.STANDBY_BUCKET_FREQUENT:
+                    return STANDBY_BUCKET_FREQUENT;
+                case UsageStatsManager.STANDBY_BUCKET_RARE:
+                    return STANDBY_BUCKET_RARE;
+                case UsageStatsManager.STANDBY_BUCKET_RESTRICTED:
+                    return STANDBY_BUCKET_RESTRICTED;
+                case UsageStatsManager.STANDBY_BUCKET_WORKING_SET:
+                    return STANDBY_BUCKET_WORKING_SET;
+                default: return "";
+            }
         }
 
         private String getModel() {
@@ -224,14 +310,34 @@ public class DeviceInfo {
         }
 
         private double getWidth() {
+            int width;
+            float dpi;
+
             WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
             if (wm == null) {
                 return 0.0;
             }
-            DisplayMetrics dm = new DisplayMetrics();
-            wm.getDefaultDisplay().getMetrics(dm);
+
+            //Returns width using WindowMetrics API for API30 above
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                WindowMetrics windowMetrics = wm.getCurrentWindowMetrics();
+                Configuration configuration = context.getResources().getConfiguration();
+                Insets insets = windowMetrics.getWindowInsets()
+                        .getInsetsIgnoringVisibility(WindowInsets.Type.systemGestures());
+                width = windowMetrics.getBounds().width() -
+                        insets.right - insets.left;
+
+                dpi = configuration.densityDpi;
+
+            } else {
+                DisplayMetrics dm = new DisplayMetrics();
+                wm.getDefaultDisplay().getMetrics(dm);
+
+                width = dm.widthPixels;
+                dpi = dm.xdpi;
+            }
             // Calculate the width in inches
-            double rWidth = dm.widthPixels / dm.xdpi;
+            double rWidth = width / dpi;
             return toTwoPlaces(rWidth);
 
         }
@@ -241,9 +347,19 @@ public class DeviceInfo {
             if (wm == null) {
                 return 0;
             }
-            DisplayMetrics dm = new DisplayMetrics();
-            wm.getDefaultDisplay().getMetrics(dm);
-            return dm.widthPixels;
+            //Returns width in pixels using WindowMetrics API for API30 above
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                WindowMetrics windowMetrics = wm.getCurrentWindowMetrics();
+                Insets insets = windowMetrics.getWindowInsets()
+                        .getInsetsIgnoringVisibility(WindowInsets.Type.systemGestures());
+                int widthInPixel = windowMetrics.getBounds().width() -
+                        insets.right - insets.left;
+                return widthInPixel;
+            } else {
+                DisplayMetrics dm = new DisplayMetrics();
+                wm.getDefaultDisplay().getMetrics(dm);
+                return dm.widthPixels;
+            }
         }
 
         private double toTwoPlaces(double n) {
@@ -312,99 +428,27 @@ public class DeviceInfo {
 
     private final Object deviceIDLock = new Object();
 
+    private boolean enableNetworkInfoReporting = false;
+
     private String googleAdID = null;
 
     private String library;
 
     private boolean limitAdTracking = false;
 
-    private final ArrayList<ValidationResult> validationResults = new ArrayList<>();
-
-    private boolean enableNetworkInfoReporting = false;
-
     private final CoreMetaData mCoreMetaData;
 
-    DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID,
-            CoreMetaData coreMetaData) {
-        this.context = context;
-        this.config = config;
-        this.library = null;
-        mCoreMetaData = coreMetaData;
-        onInitDeviceInfo(cleverTapID);
-        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "DeviceInfo() called");
-    }
-
-    void onInitDeviceInfo(final String cleverTapID) {
-        Task<Void> taskDeviceCachedInfo = CTExecutorFactory.executors(config).ioTask();
-        taskDeviceCachedInfo.execute("getDeviceCachedInfo", new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                getDeviceCachedInfo();
-                return null;
-            }
-        });
-
-        Task<Void> task = CTExecutorFactory.executors(config).ioTask();
-        task.addOnSuccessListener(new OnSuccessListener<Void>() {
-            // callback on main thread
-            @Override
-            public void onSuccess(final Void aVoid) {
-                getConfigLogger().verbose(config.getAccountId() + ":async_deviceID",
-                        "DeviceID initialized successfully!" + Thread.currentThread());
-                // No need to put getDeviceID() on background thread because prefs already loaded
-                CleverTapAPI.instanceWithConfig(context, config).deviceIDCreated(getDeviceID());
-            }
-        });
-        task.execute("initDeviceID", new Callable<Void>() {
-            @Override
-            public Void call() throws Exception {
-                initDeviceID(cleverTapID);
-                return null;
-            }
-        });
-
-    }
-
-    public boolean isErrorDeviceId() {
-        return getDeviceID() != null && getDeviceID().startsWith(Constants.ERROR_PROFILE_PREFIX);
-    }
-
-    public void forceNewDeviceID() {
-        String deviceID = generateGUID();
-        forceUpdateDeviceId(deviceID);
-    }
-
-    public void forceUpdateCustomCleverTapID(String cleverTapID) {
-        if (Utils.validateCTID(cleverTapID)) {
-            getConfigLogger()
-                    .info(config.getAccountId(), "Setting CleverTap ID to custom CleverTap ID : " + cleverTapID);
-            forceUpdateDeviceId(Constants.CUSTOM_CLEVERTAP_ID_PREFIX + cleverTapID);
-        } else {
-            setOrGenerateFallbackDeviceID();
-            removeDeviceID();
-            String error = recordDeviceError(Constants.INVALID_CT_CUSTOM_ID, cleverTapID, getFallBackDeviceID());
-            getConfigLogger().info(config.getAccountId(), error);
-        }
-    }
+    private final ArrayList<ValidationResult> validationResults = new ArrayList<>();
 
     /**
-     * Force updates the device ID, with the ID specified.
-     * <p>
-     * This is used internally by the SDK, there is no need to call this explicitly.
-     * </p>
+     * Returns the integer identifier for the default app icon.
      *
-     * @param id The new device ID
+     * @param context The Android context
+     * @return The integer identifier for the image resource
      */
-    @SuppressLint("CommitPrefEdits")
-    public void forceUpdateDeviceId(String id) {
-        getConfigLogger().verbose(this.config.getAccountId(), "Force updating the device ID to " + id);
-        synchronized (deviceIDLock) {
-            StorageHelper.putString(context, getDeviceIdStorageKey(), id);
-        }
-    }
-
-    String getAttributionID() {
-        return getDeviceID();
+    public static int getAppIconAsIntId(final Context context) {
+        ApplicationInfo ai = context.getApplicationInfo();
+        return ai.icon;
     }
 
     /**
@@ -443,6 +487,50 @@ public class DeviceInfo {
         return sDeviceType;
     }
 
+    DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID,
+            CoreMetaData coreMetaData) {
+        this.context = context;
+        this.config = config;
+        this.library = null;
+        mCoreMetaData = coreMetaData;
+        onInitDeviceInfo(cleverTapID);
+        getConfigLogger().verbose(config.getAccountId() + ":async_deviceID", "DeviceInfo() called");
+    }
+
+    public void forceNewDeviceID() {
+        String deviceID = generateGUID();
+        forceUpdateDeviceId(deviceID);
+    }
+
+    public void forceUpdateCustomCleverTapID(String cleverTapID) {
+        if (Utils.validateCTID(cleverTapID)) {
+            getConfigLogger()
+                    .info(config.getAccountId(), "Setting CleverTap ID to custom CleverTap ID : " + cleverTapID);
+            forceUpdateDeviceId(Constants.CUSTOM_CLEVERTAP_ID_PREFIX + cleverTapID);
+        } else {
+            setOrGenerateFallbackDeviceID();
+            removeDeviceID();
+            String error = recordDeviceError(Constants.INVALID_CT_CUSTOM_ID, cleverTapID, getFallBackDeviceID());
+            getConfigLogger().info(config.getAccountId(), error);
+        }
+    }
+
+    /**
+     * Force updates the device ID, with the ID specified.
+     * <p>
+     * This is used internally by the SDK, there is no need to call this explicitly.
+     * </p>
+     *
+     * @param id The new device ID
+     */
+    @SuppressLint("CommitPrefEdits")
+    public void forceUpdateDeviceId(String id) {
+        getConfigLogger().verbose(this.config.getAccountId(), "Force updating the device ID to " + id);
+        synchronized (deviceIDLock) {
+            StorageHelper.putString(context, getDeviceIdStorageKey(), id);
+        }
+    }
+
     //Event
     public JSONObject getAppLaunchedFields() {
 
@@ -475,16 +563,16 @@ public class DeviceInfo {
         return context;
     }
 
-    public String getDeviceID() {
-        return _getDeviceID() != null ? _getDeviceID() : getFallBackDeviceID();
-    }
-
     public String getCountryCode() {
         return getDeviceCachedInfo().countryCode;
     }
 
     public int getDPI() {
         return getDeviceCachedInfo().dpi;
+    }
+
+    public String getDeviceID() {
+        return _getDeviceID() != null ? _getDeviceID() : getFallBackDeviceID();
     }
 
     public String getGoogleAdID() {
@@ -509,6 +597,10 @@ public class DeviceInfo {
         return getDeviceCachedInfo().manufacturer;
     }
 
+    public String getAppBucket() {
+        return getDeviceCachedInfo().appBucket;
+    }
+
     public String getModel() {
         return getDeviceCachedInfo().model;
     }
@@ -529,15 +621,15 @@ public class DeviceInfo {
         return getDeviceCachedInfo().osVersion;
     }
 
+    public int getSdkVersion() {
+        return getDeviceCachedInfo().sdkVersion;
+    }
+
     public ArrayList<ValidationResult> getValidationResults() {
         // noinspection unchecked
         ArrayList<ValidationResult> tempValidationResults = (ArrayList<ValidationResult>) validationResults.clone();
         validationResults.clear();
         return tempValidationResults;
-    }
-
-    public int getSdkVersion() {
-        return getDeviceCachedInfo().sdkVersion;
     }
 
     public String getVersionName() {
@@ -567,6 +659,10 @@ public class DeviceInfo {
         return isBluetoothEnabled;
     }
 
+    public boolean isErrorDeviceId() {
+        return getDeviceID() != null && getDeviceID().startsWith(Constants.ERROR_PROFILE_PREFIX);
+    }
+
     public boolean isLimitAdTrackingEnabled() {
         synchronized (adIDLock) {
             return limitAdTracking;
@@ -589,6 +685,87 @@ public class DeviceInfo {
         }
 
         return ret;
+    }
+
+    public void setCurrentUserOptOutStateFromStorage() {
+        String key = optOutKey();
+        if (key == null) {
+            config.getLogger().verbose(config.getAccountId(),
+                    "Unable to set current user OptOut state from storage: storage key is null");
+            return;
+        }
+        boolean storedOptOut = StorageHelper.getBooleanFromPrefs(context, config, key);
+        mCoreMetaData.setCurrentUserOptedOut(storedOptOut);
+        config.getLogger().verbose(config.getAccountId(),
+                "Set current user OptOut state from storage to: " + storedOptOut + " for key: " + key);
+    }
+
+    void enableDeviceNetworkInfoReporting(boolean value) {
+        enableNetworkInfoReporting = value;
+        StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(config, Constants.NETWORK_INFO),
+                enableNetworkInfoReporting);
+        config.getLogger()
+                .verbose(config.getAccountId(),
+                        "Device Network Information reporting set to " + enableNetworkInfoReporting);
+    }
+
+    String getAttributionID() {
+        return getDeviceID();
+    }
+
+    int getHeightPixels() {
+        return getDeviceCachedInfo().heightPixels;
+    }
+
+    int getWidthPixels() {
+        return getDeviceCachedInfo().widthPixels;
+    }
+
+    void onInitDeviceInfo(final String cleverTapID) {
+        Task<Void> taskDeviceCachedInfo = CTExecutorFactory.executors(config).ioTask();
+        taskDeviceCachedInfo.execute("getDeviceCachedInfo", new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                getDeviceCachedInfo();
+                return null;
+            }
+        });
+
+        Task<Void> task = CTExecutorFactory.executors(config).ioTask();
+        task.addOnSuccessListener(new OnSuccessListener<Void>() {
+            // callback on main thread
+            @Override
+            public void onSuccess(final Void aVoid) {
+                getConfigLogger().verbose(config.getAccountId() + ":async_deviceID",
+                        "DeviceID initialized successfully!" + Thread.currentThread());
+                // No need to put getDeviceID() on background thread because prefs already loaded
+                CleverTapAPI.instanceWithConfig(context, config).deviceIDCreated(getDeviceID());
+            }
+        });
+        task.execute("initDeviceID", new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                initDeviceID(cleverTapID);
+                return null;
+            }
+        });
+
+    }
+
+    String optOutKey() {
+        String guid = getDeviceID();
+        if (guid == null) {
+            return null;
+        }
+        return "OptOut:" + guid;
+    }
+
+    void setDeviceNetworkInfoReportingFromStorage() {
+        boolean enabled = StorageHelper.getBooleanFromPrefs(context, config, Constants.NETWORK_INFO);
+        config.getLogger()
+                .verbose(config.getAccountId(),
+                        "Setting device network info reporting state from storage to " + enabled);
+        enableNetworkInfoReporting = enabled;
     }
 
     private String _getDeviceID() {
@@ -619,6 +796,8 @@ public class DeviceInfo {
                     getConfigLogger().verbose(config.getAccountId() + ":async_deviceID",
                             "limitAdTracking = " + limitAdTracking);
                     if (limitAdTracking) {
+                        getConfigLogger().debug(config.getAccountId(),
+                                "Device user has opted out of sharing Advertising ID, falling back to random UUID for CleverTap ID generation");
                         return;
                     }
                 }
@@ -634,6 +813,12 @@ public class DeviceInfo {
             }
             if (advertisingID != null && advertisingID.trim().length() > 2) {
                 synchronized (adIDLock) {
+                    if (advertisingID.contains("00000000")) {
+                        //Device has opted out of sharing Google Advertising ID
+                        getConfigLogger().debug(config.getAccountId(),
+                                "Device user has opted out of sharing Advertising ID, falling back to random UUID for CleverTap ID generation");
+                        return;
+                    }
                     googleAdID = advertisingID.replace("-", "");
                 }
             }
@@ -759,62 +944,5 @@ public class DeviceInfo {
     private void updateFallbackID(String fallbackId) {
         getConfigLogger().verbose(this.config.getAccountId(), "Updating the fallback id - " + fallbackId);
         StorageHelper.putString(context, getFallbackIdStorageKey(), fallbackId);
-    }
-
-    /**
-     * Returns the integer identifier for the default app icon.
-     *
-     * @param context The Android context
-     * @return The integer identifier for the image resource
-     */
-    public static int getAppIconAsIntId(final Context context) {
-        ApplicationInfo ai = context.getApplicationInfo();
-        return ai.icon;
-    }
-
-    int getHeightPixels() {
-        return getDeviceCachedInfo().heightPixels;
-    }
-
-    void enableDeviceNetworkInfoReporting(boolean value) {
-        enableNetworkInfoReporting = value;
-        StorageHelper.putBoolean(context, StorageHelper.storageKeyWithSuffix(config, Constants.NETWORK_INFO),
-                enableNetworkInfoReporting);
-        config.getLogger()
-                .verbose(config.getAccountId(),
-                        "Device Network Information reporting set to " + enableNetworkInfoReporting);
-    }
-
-    void setDeviceNetworkInfoReportingFromStorage() {
-        boolean enabled = StorageHelper.getBooleanFromPrefs(context, config, Constants.NETWORK_INFO);
-        config.getLogger()
-                .verbose(config.getAccountId(),
-                        "Setting device network info reporting state from storage to " + enabled);
-        enableNetworkInfoReporting = enabled;
-    }
-
-    int getWidthPixels() {
-        return getDeviceCachedInfo().widthPixels;
-    }
-
-    public void setCurrentUserOptOutStateFromStorage() {
-        String key = optOutKey();
-        if (key == null) {
-            config.getLogger().verbose(config.getAccountId(),
-                    "Unable to set current user OptOut state from storage: storage key is null");
-            return;
-        }
-        boolean storedOptOut = StorageHelper.getBooleanFromPrefs(context, config, key);
-        mCoreMetaData.setCurrentUserOptedOut(storedOptOut);
-        config.getLogger().verbose(config.getAccountId(),
-                "Set current user OptOut state from storage to: " + storedOptOut + " for key: " + key);
-    }
-
-    String optOutKey() {
-        String guid = getDeviceID();
-        if (guid == null) {
-            return null;
-        }
-        return "OptOut:" + guid;
     }
 }

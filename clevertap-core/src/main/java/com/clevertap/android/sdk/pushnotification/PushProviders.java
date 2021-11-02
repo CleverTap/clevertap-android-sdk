@@ -25,6 +25,8 @@ import android.graphics.Color;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.TextUtils;
@@ -386,74 +388,6 @@ public class PushProviders implements CTPushProviderListener {
         });
     }
 
-    public void runInstanceJobWork(final Context context, final JobParameters parameters) {
-        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-        task.execute("runningJobService", new Callable<Void>() {
-            @Override
-            public Void call() {
-                if (isNotificationSupported()) {
-                    Logger.v(config.getAccountId(), "Token is not present, not running the Job");
-                    return null;
-                }
-
-                Calendar now = Calendar.getInstance();
-
-                int hour = now.get(Calendar.HOUR_OF_DAY); // Get hour in 24 hour format
-                int minute = now.get(Calendar.MINUTE);
-
-                Date currentTime = parseTimeToDate(hour + ":" + minute);
-                Date startTime = parseTimeToDate(Constants.DND_START);
-                Date endTime = parseTimeToDate(Constants.DND_STOP);
-
-                if (isTimeBetweenDNDTime(startTime, endTime, currentTime)) {
-                    Logger.v(config.getAccountId(), "Job Service won't run in default DND hours");
-                    return null;
-                }
-
-                long lastTS = baseDatabaseManager.loadDBAdapter(context).getLastUninstallTimestamp();
-
-                if (lastTS == 0 || lastTS > System.currentTimeMillis() - 24 * 60 * 60 * 1000) {
-                    try {
-                        JSONObject eventObject = new JSONObject();
-                        eventObject.put("bk", 1);
-                        analyticsManager.sendPingEvent(eventObject);
-
-                        if (parameters == null) {
-                            int pingFrequency = getPingFrequency(context);
-                            AlarmManager alarmManager = (AlarmManager) context
-                                    .getSystemService(Context.ALARM_SERVICE);
-                            Intent cancelIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
-                            cancelIntent.setPackage(context.getPackageName());
-                            PendingIntent alarmPendingIntent = PendingIntent
-                                    .getService(context, config.getAccountId().hashCode(), cancelIntent,
-                                            PendingIntent.FLAG_UPDATE_CURRENT);
-                            if (alarmManager != null) {
-                                alarmManager.cancel(alarmPendingIntent);
-                            }
-                            Intent alarmIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
-                            alarmIntent.setPackage(context.getPackageName());
-                            PendingIntent alarmServicePendingIntent = PendingIntent
-                                    .getService(context, config.getAccountId().hashCode(), alarmIntent,
-                                            PendingIntent.FLAG_UPDATE_CURRENT);
-                            if (alarmManager != null) {
-                                if (pingFrequency != -1) {
-                                    alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
-                                            SystemClock.elapsedRealtime() + (pingFrequency
-                                                    * Constants.ONE_MIN_IN_MILLIS),
-                                            Constants.ONE_MIN_IN_MILLIS * pingFrequency, alarmServicePendingIntent);
-                                }
-                            }
-                        }
-                    } catch (JSONException e) {
-                        Logger.v("Unable to raise background Ping event");
-                    }
-
-                }
-                return null;
-            }
-        });
-    }
-
     /**
      * Unregister the token for a push type from Clevertap's server.
      * Devices with unregistered token wont be reachable.
@@ -501,20 +435,77 @@ public class PushProviders implements CTPushProviderListener {
         return alreadyAvailable;
     }
 
-    private void createAlarmScheduler(Context context) {
-        int pingFrequency = getPingFrequency(context);
-        if (pingFrequency > 0) {
-            AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
-            Intent intent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
-            intent.setPackage(context.getPackageName());
-            PendingIntent alarmPendingIntent = PendingIntent
-                    .getService(context, config.getAccountId().hashCode(), intent,
-                            PendingIntent.FLAG_UPDATE_CURRENT);
-            if (alarmManager != null) {
-                alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime(),
-                        Constants.ONE_MIN_IN_MILLIS * pingFrequency, alarmPendingIntent);
+    public void runInstanceJobWork(final Context context, final JobParameters parameters) {
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        task.execute("runningJobService", new Callable<Void>() {
+            @Override
+            public Void call() {
+                if (!isNotificationSupported()) {
+                    Logger.v(config.getAccountId(), "Token is not present, not running the Job");
+                    return null;
+                }
+
+                Calendar now = Calendar.getInstance();
+
+                int hour = now.get(Calendar.HOUR_OF_DAY); // Get hour in 24 hour format
+                int minute = now.get(Calendar.MINUTE);
+
+                Date currentTime = parseTimeToDate(hour + ":" + minute);
+                Date startTime = parseTimeToDate(Constants.DND_START);
+                Date endTime = parseTimeToDate(Constants.DND_STOP);
+
+                if (isTimeBetweenDNDTime(startTime, endTime, currentTime)) {
+                    Logger.v(config.getAccountId(), "Job Service won't run in default DND hours");
+                    return null;
+                }
+
+                long lastTS = baseDatabaseManager.loadDBAdapter(context).getLastUninstallTimestamp();
+
+                if (lastTS == 0 || lastTS > System.currentTimeMillis() - 24 * 60 * 60 * 1000) {
+                    try {
+                        JSONObject eventObject = new JSONObject();
+                        eventObject.put("bk", 1);
+                        analyticsManager.sendPingEvent(eventObject);
+
+                        int flagsAlarmPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
+                        if (VERSION.SDK_INT >= VERSION_CODES.S) {
+                            flagsAlarmPendingIntent |= PendingIntent.FLAG_MUTABLE;
+                        }
+
+                        if (parameters == null) {
+                            int pingFrequency = getPingFrequency(context);
+                            AlarmManager alarmManager = (AlarmManager) context
+                                    .getSystemService(Context.ALARM_SERVICE);
+                            Intent cancelIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
+                            cancelIntent.setPackage(context.getPackageName());
+                            PendingIntent alarmPendingIntent = PendingIntent
+                                    .getService(context, config.getAccountId().hashCode(), cancelIntent,
+                                            flagsAlarmPendingIntent);
+                            if (alarmManager != null) {
+                                alarmManager.cancel(alarmPendingIntent);
+                            }
+                            Intent alarmIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
+                            alarmIntent.setPackage(context.getPackageName());
+                            PendingIntent alarmServicePendingIntent = PendingIntent
+                                    .getService(context, config.getAccountId().hashCode(), alarmIntent,
+                                            flagsAlarmPendingIntent);
+                            if (alarmManager != null) {
+                                if (pingFrequency != -1) {
+                                    alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                                            SystemClock.elapsedRealtime() + (pingFrequency
+                                                    * Constants.ONE_MIN_IN_MILLIS),
+                                            Constants.ONE_MIN_IN_MILLIS * pingFrequency, alarmServicePendingIntent);
+                                }
+                            }
+                        }
+                    } catch (JSONException e) {
+                        Logger.v("Unable to raise background Ping event");
+                    }
+
+                }
+                return null;
             }
-        }
+        });
     }
 
     @SuppressLint("MissingPermission")
@@ -893,16 +884,51 @@ public class PushProviders implements CTPushProviderListener {
         StorageHelper.putInt(context, Constants.PING_FREQUENCY, pingFrequency);
     }
 
+    private void createAlarmScheduler(Context context) {
+        int pingFrequency = getPingFrequency(context);
+        if (pingFrequency > 0) {
+            AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+            Intent intent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
+            intent.setPackage(context.getPackageName());
+
+            int flagsAlarmPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
+            if (VERSION.SDK_INT >= VERSION_CODES.S) {
+                flagsAlarmPendingIntent |= PendingIntent.FLAG_MUTABLE;
+            }
+            PendingIntent alarmPendingIntent = PendingIntent
+                    .getService(context, config.getAccountId().hashCode(), intent,
+                            flagsAlarmPendingIntent);
+            if (alarmManager != null) {
+                alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime(),
+                        Constants.ONE_MIN_IN_MILLIS * pingFrequency, alarmPendingIntent);
+            }
+        }
+    }
+
     private void stopAlarmScheduler(Context context) {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         Intent cancelIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
         cancelIntent.setPackage(context.getPackageName());
+        int flagsAlarmPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (VERSION.SDK_INT >= VERSION_CODES.S) {
+            flagsAlarmPendingIntent |= PendingIntent.FLAG_MUTABLE;
+        }
         PendingIntent alarmPendingIntent = PendingIntent
                 .getService(context, config.getAccountId().hashCode(), cancelIntent,
-                        PendingIntent.FLAG_UPDATE_CURRENT);
+                        flagsAlarmPendingIntent);
         if (alarmManager != null && alarmPendingIntent != null) {
             alarmManager.cancel(alarmPendingIntent);
         }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+    private static JobInfo getJobInfo(int jobId, JobScheduler jobScheduler) {
+        for (JobInfo jobInfo : jobScheduler.getAllPendingJobs()) {
+            if (jobInfo.getId() == jobId) {
+                return jobInfo;
+            }
+        }
+        return null;
     }
 
     private void triggerNotification(Context context, Bundle extras, String notifMessage, String notifTitle,
@@ -939,15 +965,6 @@ public class PushProviders implements CTPushProviderListener {
         }
 
         String icoPath = extras.getString(Constants.NOTIF_ICON);
-        Intent launchIntent = new Intent(context, CTPushNotificationReceiver.class);
-
-        PendingIntent pIntent;
-
-        // Take all the properties from the notif and add it to the intent
-        launchIntent.putExtras(extras);
-        launchIntent.removeExtra(Constants.WZRK_ACTIONS);
-        pIntent = PendingIntent.getBroadcast(context, (int) System.currentTimeMillis(),
-                launchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         NotificationCompat.Style style;
         String bigPictureUrl = extras.getString(Constants.WZRK_BIG_PICTURE);
@@ -1086,7 +1103,7 @@ public class PushProviders implements CTPushProviderListener {
 
         nb.setContentTitle(notifTitle)
                 .setContentText(notifMessage)
-                .setContentIntent(pIntent)
+                .setContentIntent(LaunchPendingIntentFactory.getLaunchPendingIntent(extras, context))
                 .setAutoCancel(true)
                 .setStyle(style)
                 .setPriority(priorityInt)
@@ -1184,7 +1201,8 @@ public class PushProviders implements CTPushProviderListener {
                         }
                     }
 
-                    boolean sendToCTIntentService = (autoCancel && isCTIntentServiceAvailable);
+                    boolean sendToCTIntentService = (VERSION.SDK_INT < VERSION_CODES.S && autoCancel
+                            && isCTIntentServiceAvailable);
 
                     Intent actionLaunchIntent;
                     if (sendToCTIntentService) {
@@ -1216,12 +1234,16 @@ public class PushProviders implements CTPushProviderListener {
 
                     PendingIntent actionIntent;
                     int requestCode = ((int) System.currentTimeMillis()) + i;
+                    int flagsActionLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
+                    if (VERSION.SDK_INT >= VERSION_CODES.M) {
+                        flagsActionLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
+                    }
                     if (sendToCTIntentService) {
                         actionIntent = PendingIntent.getService(context, requestCode,
-                                actionLaunchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                                actionLaunchIntent, flagsActionLaunchPendingIntent);
                     } else {
                         actionIntent = PendingIntent.getActivity(context, requestCode,
-                                actionLaunchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                                actionLaunchIntent, flagsActionLaunchPendingIntent);
                     }
                     nb.addAction(icon, label, actionIntent);
 
@@ -1254,15 +1276,5 @@ public class PushProviders implements CTPushProviderListener {
             return;
         }
         analyticsManager.pushNotificationViewedEvent(extras);
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-    private static JobInfo getJobInfo(int jobId, JobScheduler jobScheduler) {
-        for (JobInfo jobInfo : jobScheduler.getAllPendingJobs()) {
-            if (jobInfo.getId() == jobId) {
-                return jobInfo;
-            }
-        }
-        return null;
     }
 }

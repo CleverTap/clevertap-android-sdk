@@ -15,6 +15,7 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".HomeScreenActivity"
+            android:exported="true"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -71,6 +72,7 @@
         <meta-data
             android:name="CLEVERTAP_ACTIVITY_EXCLUDE"
             android:value="HomeScreenActivity" />
+
         <service
             android:name="com.clevertap.android.sdk.pushnotification.fcm.FcmMessageListenerService"
             android:exported="true">
@@ -88,7 +90,23 @@
 
         <activity
             android:name=".WebViewActivity"
-            android:label="WebView" />
+            android:exported="true"
+            android:label="WebView">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <!-- If a user clicks on a shared link that uses the "http" scheme, your
+                     app should be able to delegate that traffic to "https". -->
+                <data
+                    android:host="${applicationId}"
+                    android:pathPrefix="/WebViewActivity"
+                    android:scheme="ctdemo" />
+
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>

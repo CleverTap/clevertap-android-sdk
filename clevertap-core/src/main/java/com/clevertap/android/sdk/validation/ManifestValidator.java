@@ -6,11 +6,13 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
+import android.text.TextUtils;
 import com.clevertap.android.sdk.ActivityLifecycleCallback;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
@@ -33,6 +35,12 @@ public final class ManifestValidator {
         checkSDKVersion(deviceInfo);
         validationApplicationLifecyleCallback(context);
         checkReceiversServices(context, pushProviders);
+        if (!TextUtils.isEmpty(ManifestInfo.getInstance(context).getFCMSenderId())){
+            Logger.i("We have noticed that your app is using a custom FCM Sender ID, this feature will " +
+                    "be DISCONTINUED from the next version of the CleverTap Android SDK. With the next release, " +
+                    "CleverTap Android SDK will only fetch the token using the google-services.json." +
+                    " Please reach out to CleverTap Support for any questions.");
+        }
     }
 
     private static void checkApplicationClass(final Context context) {

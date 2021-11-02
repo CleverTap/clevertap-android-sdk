@@ -26,25 +26,29 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     "Category" to "Mens Accessories", "Price" to 59.99, "Date" to Date()
                 )
                 cleverTapAPI?.pushEvent("Product viewed", prodViewedAction)
+                //cleverTapAPI?.pushEvent("video-inapp")
+                //cleverTapAPI?.pushEvent("video-inbox")
+                cleverTapAPI?.pushEvent("caurousel-inapp")
+                cleverTapAPI?.pushEvent("icon-inbox")
             }
             "02" -> {
                 //Record a Charged (Transactional) event
-                val chargeDetails = hashMapOf(
+                val chargeDetails = hashMapOf<String, Any>(
                     "Amount" to 300, "Payment Mode" to "Credit card",
                     "Charged ID" to 24052013
                 )
 
-                val item1 = hashMapOf(
+                val item1 = hashMapOf<String, Any>(
                     "Product category" to "books",
                     "Book name" to "The Millionaire next door", "Quantity" to 1
                 )
 
-                val item2 = hashMapOf(
+                val item2 = hashMapOf<String, Any>(
                     "Product category" to "books",
                     "Book name" to "Achieving inner zen", "Quantity" to 1
                 )
 
-                val item3 = hashMapOf(
+                val item3 = hashMapOf<String, Any>(
                     "Product category" to "books",
                     "Book name" to "Chuck it, let's do it", "Quantity" to 5
                 )
@@ -255,7 +259,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 } ?: println("DisplayUnit Id is null")
             }
             "40" -> {
-                val hashMap = hashMapOf(
+                val hashMap = hashMapOf<String, Any>(
                     "text color" to "red", "msg count" to 100, "price" to 100.50, "is shown" to true,
                     "json" to """{"key":"val","key2":50}"""
                 )

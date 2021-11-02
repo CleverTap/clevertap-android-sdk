@@ -42,6 +42,7 @@ import org.robolectric.annotation.Config;
 @PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*", "androidx.*", "org.json.*"})
 @PrepareForTest({CTGeofenceAPI.class, Utils.class, CleverTapAPI.class
         , LocationServices.class, Tasks.class})
+@Ignore
 public class GoogleGeofenceAdapterTest extends BaseTestCase {
 
     @Mock
@@ -161,7 +162,7 @@ public class GoogleGeofenceAdapterTest extends BaseTestCase {
         GoogleGeofenceAdapter geofenceAdapter = new GoogleGeofenceAdapter(application);
         geofenceAdapter.removeAllGeofence(null, onSuccessListener);
 
-        verify(geofencingClient, never()).removeGeofences(ArgumentMatchers.<String>anyList());
+        verify(geofencingClient, never()).removeGeofences(ArgumentMatchers.anyList());
 
     }
 
@@ -171,7 +172,7 @@ public class GoogleGeofenceAdapterTest extends BaseTestCase {
         GoogleGeofenceAdapter geofenceAdapter = new GoogleGeofenceAdapter(application);
         geofenceAdapter.removeAllGeofence(new ArrayList<String>(), onSuccessListener);
 
-        verify(geofencingClient, never()).removeGeofences(ArgumentMatchers.<String>anyList());
+        verify(geofencingClient, never()).removeGeofences(ArgumentMatchers.anyList());
 
     }
 
