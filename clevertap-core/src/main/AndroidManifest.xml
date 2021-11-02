@@ -33,9 +33,5 @@
             android:exported="false"
             android:permission="android.permission.BIND_JOB_SERVICE" />
 
-        <meta-data
-            android:name="CLEVERTAP_BACKGROUND_SYNC"
-            android:value="1" />
-
     </application>
 </manifest>
