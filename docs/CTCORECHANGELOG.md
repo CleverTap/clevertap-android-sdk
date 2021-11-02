@@ -1,5 +1,13 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 4.3.0 (November 2, 2021)
+* Adds support for [apps targeting Android 12 (API 31)](https://developer.android.com/about/versions/12/behavior-changes-12)
+  This version is compatible with all new Android 12 changes like Notification Trampolines, Pending Intents Mutability and Safer Component Exporting.
+  For more information check out the [CleverTap documentation for Android 12 here](https://developer.clevertap.com/docs/android-12-changes)
+* Deprecated `CTPushNotificationReceiver` and `CTNotificationIntentService` as a part of Notification Trampoline restrictions in Android 12 (API 31)
+* Last version with support for custom FCM Sender ID for generating the FCM token
+* Fixes a bug where `UTM Visited` event was not being raised on click of a direct deep link
+
 ### Version 4.2.0 (July 15, 2021)
 * Adds public methods for suspending/discarding & resuming InApp Notifications
 * Adds public methods to increment/decrement values set via User properties
