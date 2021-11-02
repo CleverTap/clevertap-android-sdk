@@ -3,6 +3,8 @@ package com.clevertap.android.geofence;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import androidx.annotation.Nullable;
 
 /**
@@ -53,7 +55,13 @@ class PendingIntentFactory {
                 throw new IllegalArgumentException("invalid pendingIntentType");
         }
 
-        return PendingIntent.getBroadcast(context.getApplicationContext(), broadcastSenderRequestCode, intent, flags);
+        if (VERSION.SDK_INT >= VERSION_CODES.S) {
+            /*require mutable PendingIntent object for requesting device location information*/
+            flags |= PendingIntent.FLAG_MUTABLE;
+        }
+
+        return PendingIntent.getBroadcast(context.getApplicationContext(), broadcastSenderRequestCode, intent,
+                flags);
 
     }
 

@@ -7,7 +7,7 @@ import androidx.fragment.app.commitNow
 import com.clevertap.android.sdk.CTFeatureFlagsListener
 import com.clevertap.android.sdk.CTInboxListener
 import com.clevertap.android.sdk.CleverTapAPI
-import com.clevertap.android.sdk.CleverTapAPI.LogLevel.DEBUG
+import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
 import com.clevertap.android.sdk.SyncListener
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
@@ -38,7 +38,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
     private fun initCleverTap() {
 
         //Set Debug level for CleverTap
-        CleverTapAPI.setDebugLevel(DEBUG)
+        CleverTapAPI.setDebugLevel(VERBOSE)
 
         //Create CleverTap's default instance
         cleverTapDefaultInstance = CleverTapAPI.getDefaultInstance(this)

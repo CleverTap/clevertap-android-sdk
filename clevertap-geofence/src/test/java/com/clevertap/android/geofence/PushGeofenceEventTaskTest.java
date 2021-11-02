@@ -38,6 +38,7 @@ import org.skyscreamer.jsonassert.JSONAssert;
 @PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*", "androidx.*", "org.json.*"})
 @PrepareForTest({CTGeofenceAPI.class, CleverTapAPI.class, Utils.class, GeofencingEvent.class
         , FileUtils.class})
+@Ignore
 public class PushGeofenceEventTaskTest extends BaseTestCase {
 
 

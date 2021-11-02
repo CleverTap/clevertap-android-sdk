@@ -28,12 +28,14 @@ implementation "${ext.concurrent_futures}${ext['version.androidx.concurrent']}" 
 In order to start using geofence in your app, the app will need below permissions in `AndroidManifest.xml` which is already added by SDK so you don’t have to add anything in manifest.
 ```XML
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
 <uses-permission android:name="android.permission.WAKE_LOCK" />
 <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 ```
 Before SDK initialization App will need to prompt users to grant below permissions at runtime. Since users can revoke permissions at any time from the app Settings screen, your app needs to check that it has the permissions it needs every time it runs.
 See [Permissions](https://developer.android.com/preview/features/runtime-permissions.html) and [Location Permissions](https://developer.android.com/training/location/permissions#request-location-access-runtime) for more details.
+Also if your app targets Android 12 or higher then you must also request the ACCESS_COARSE_LOCATION with ACCESS_FINE_LOCATION permission. You must include both permissions in a single runtime request.See [Android 12 location Permissions changes](https://developer.android.com/about/versions/12/behavior-changes-12#approximate-location) for more details.
 
 ```XML
 android.permission.ACCESS_FINE_LOCATION
