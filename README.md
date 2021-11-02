@@ -24,7 +24,7 @@ We publish the SDK to `mavenCentral` as an `AAR` file. Just declare it as depend
 
 ```groovy
     dependencies {      
-         implementation "com.clevertap.android:clevertap-android-sdk:4.2.0"
+         implementation "com.clevertap.android:clevertap-android-sdk:4.3.0"
     }
 ```
 
@@ -32,7 +32,7 @@ Alternatively, you can download and add the AAR file included in this repo in yo
     
  ```groovy
     dependencies {      
-        implementation (name: "clevertap-android-sdk-4.2.0", ext: 'aar')
+        implementation (name: "clevertap-android-sdk-4.3.0", ext: 'aar')
     }
 ```
 
@@ -44,11 +44,11 @@ Add the Firebase Messaging library and Android Support Library v4 as dependencie
 
 ```groovy
      dependencies {      
-         implementation "com.clevertap.android:clevertap-android-sdk:4.2.0"
+         implementation "com.clevertap.android:clevertap-android-sdk:4.3.0"
          implementation "androidx.core:core:1.3.0"
          implementation "com.google.firebase:firebase-messaging:20.2.4"
          implementation "com.google.android.gms:play-services-ads:19.4.0" // Required only if you enable Google ADID collection in the SDK (turned off by default).
-         implementation "com.android.installreferrer:installreferrer:2.1" // Mandatory for v3.6.4 and above
+         implementation "com.android.installreferrer:installreferrer:2.2" // Mandatory for v3.6.4 and above
      }
 ```
 
@@ -86,9 +86,9 @@ apply plugin: 'com.google.gms.google-services'
 Interstitial InApp Notification templates support Audio and Video with the help of ExoPlayer. To enable Audio/Video in your Interstitial InApp Notifications, add the following dependencies in your `build.gradle` file :
     
 ```groovy
-    implementation "com.google.android.exoplayer:exoplayer:2.11.5"
-    implementation "com.google.android.exoplayer:exoplayer-hls:2.11.5"
-    implementation "com.google.android.exoplayer:exoplayer-ui:2.11.5"
+    implementation "com.google.android.exoplayer:exoplayer:2.15.1"
+    implementation "com.google.android.exoplayer:exoplayer-hls:2.15.1"
+    implementation "com.google.android.exoplayer:exoplayer-ui:2.15.1"
 ```  
 
 Once you've updated your module `build.gradle` file, make sure you have specified `mavenCentral()` and `google()` as a repositories in your project `build.gradle` and then sync your project in File -> Sync Project with Gradle Files.
