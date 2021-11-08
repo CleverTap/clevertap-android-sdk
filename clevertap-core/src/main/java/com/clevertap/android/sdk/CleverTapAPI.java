@@ -2579,9 +2579,15 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             return;
         }
 
-        CleverTapAPI instance = CleverTapAPI.instances.get(_accountId);
-        if (instance != null) {
-            instance.coreState.getActivityLifeCycleManager().onActivityCreated(notification, deepLink);
+        try{
+            for(String accountId : CleverTapAPI.instances.keySet()){
+                CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+                if(instance != null){
+                    instance.coreState.getActivityLifeCycleManager().onActivityCreated(notification, deepLink, _accountId);
+                }
+            }
+        }catch (Throwable t){
+            Logger.v("Throwable - " + t.getLocalizedMessage());
         }
     }
 

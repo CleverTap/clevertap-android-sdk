@@ -18,15 +18,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxBaseMessageViewHolder;
-import com.google.android.exoplayer2.ExoPlaybackException;
-import com.google.android.exoplayer2.PlaybackParameters;
 import com.google.android.exoplayer2.Player;
 import com.google.android.exoplayer2.SimpleExoPlayer;
-import com.google.android.exoplayer2.source.TrackGroupArray;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
-import com.google.android.exoplayer2.trackselection.TrackSelection;
-import com.google.android.exoplayer2.trackselection.TrackSelectionArray;
+import com.google.android.exoplayer2.trackselection.ExoTrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
 import com.google.android.exoplayer2.ui.PlayerView;
@@ -187,7 +183,7 @@ public class MediaPlayerRecyclerView extends RecyclerView {
         Drawable artwork = ResourcesCompat.getDrawable(context.getResources(), R.drawable.ct_audio, null);
         videoSurfaceView.setDefaultArtwork(artwork);
 
-        TrackSelection.Factory videoTrackSelectionFactory =
+        ExoTrackSelection.Factory videoTrackSelectionFactory =
                 new AdaptiveTrackSelection.Factory();
         TrackSelector trackSelector =
                 new DefaultTrackSelector(appContext, videoTrackSelectionFactory);
@@ -225,21 +221,9 @@ public class MediaPlayerRecyclerView extends RecyclerView {
                 }
             }
         });
-        player.addListener(new Player.EventListener() {
+        player.addListener(new Player.Listener() {
             @Override
-            public void onLoadingChanged(boolean isLoading) {
-            }
-
-            @Override
-            public void onPlaybackParametersChanged(@NonNull PlaybackParameters playbackParameters) {
-            }
-
-            @Override
-            public void onPlayerError(@NonNull ExoPlaybackException error) {
-            }
-
-            @Override
-            public void onPlayerStateChanged(boolean playWhenReady, int playbackState) {
+            public void onPlaybackStateChanged(final int playbackState) {
                 switch (playbackState) {
                     case Player.STATE_BUFFERING:
                         if (playingHolder != null) {
@@ -264,26 +248,6 @@ public class MediaPlayerRecyclerView extends RecyclerView {
                     default:
                         break;
                 }
-            }
-
-            @Override
-            public void onPositionDiscontinuity(int reason) {
-            }
-
-            @Override
-            public void onRepeatModeChanged(int repeatMode) {
-            }
-
-            @Override
-            public void onSeekProcessed() {
-            }
-
-            @Override
-            public void onShuffleModeEnabledChanged(boolean shuffleModeEnabled) {
-            }
-
-            @Override
-            public void onTracksChanged(@NonNull TrackGroupArray trackGroups, @NonNull TrackSelectionArray trackSelections) {
             }
         });
     }

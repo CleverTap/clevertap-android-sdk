@@ -30,6 +30,7 @@ import org.robolectric.annotation.Config;
 )
 @PowerMockIgnore({"org.mockito.*", "org.robolectric.*", "android.*", "androidx.*", "org.json.*"})
 @PrepareForTest({CTGeofenceAPI.class, CleverTapAPI.class, Utils.class, LocationResult.class})
+@Ignore
 public class PushLocationEventTaskTest extends BaseTestCase {
 
     @Mock
