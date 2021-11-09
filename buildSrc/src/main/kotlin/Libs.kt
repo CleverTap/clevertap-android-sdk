@@ -167,6 +167,9 @@ object Libs {
         "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:_"
 
     const val xmlpull: String = "xmlpull:xmlpull:_"
+
+    const val kotlin_stblib: String = "org.jetbrains.kotlin:kotlin-stdlib:_"
+
 }
 
 object Android {
