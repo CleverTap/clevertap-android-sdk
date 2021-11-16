@@ -7,7 +7,7 @@ class BasicTemplateValidator(private var validator: Validator): TemplateValidato
 ) {
 
     override fun validate(): Boolean {
-        return validator.validate() && super.validateKeys()// All check must be true
+        return validator.validate() and super.validateKeys()// All check must be true
     }
 
     override fun loadKeys(): List<Checker<out Any>> {
