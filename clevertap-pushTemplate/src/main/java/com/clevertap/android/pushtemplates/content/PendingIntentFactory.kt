@@ -3,6 +3,8 @@ package com.clevertap.android.pushtemplates.content
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.os.Build
+import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.PTPushNotificationReceiver
@@ -63,9 +65,13 @@ internal object PendingIntentFactory {
         launchIntent.putExtra(Constants.WZRK_FROM_KEY, Constants.WZRK_FROM)
         launchIntent.flags =
             Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
+        var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+        if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
+            flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
+        }
         return PendingIntent.getBroadcast(
             context, System.currentTimeMillis().toInt(),
-            launchIntent, PendingIntent.FLAG_UPDATE_CURRENT
+            launchIntent, flagsLaunchPendingIntent
         )
 
     }
