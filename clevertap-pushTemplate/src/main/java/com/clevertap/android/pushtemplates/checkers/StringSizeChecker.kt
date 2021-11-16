@@ -6,7 +6,7 @@ class StringSizeChecker(var entity: String?, var size: Int, var errorMsg: String
     SizeChecker<String>(entity, size, errorMsg) {
 
     override fun check(): Boolean {
-        val b = entity == null || entity?.trim()?.length ?: -1 <= size
+        val b = entity?.trim()?.length ?: -1 <= size
         if (b) {
             PTLog.verbose("$errorMsg. Not showing notification")
         }
