@@ -41,7 +41,9 @@ object HomeScreenModel {
             "FEATURE FLAGS" to listOf("Get Feature Flag"),
             "WEBVIEW" to listOf("Raise events from WebView"),
             "GEOFENCE" to listOf("Init Geofence", "Trigger Location", "Deactivate Geofence"),
-            "DEVICE IDENTIFIERS" to listOf("Fetch CleverTapAttribution Identifier", "Fetch CleverTap ID")
+            "DEVICE IDENTIFIERS" to listOf("Fetch CleverTapAttribution Identifier", "Fetch CleverTap ID"),
+            "PUSH TEMPLATES" to listOf("Basic Push", "Carousel Push", "Manual Carousel Push", "FilmStrip Carousel Push",
+            "Rating Push","Product Display","Linear Product Display","Five CTA","Zero Bezel","Timer Push","Input Box Push")
         )
     }
 }

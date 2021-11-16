@@ -32,7 +32,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
             }
         }
 
-        val bundle = Bundle().apply {
+        /*val bundle = Bundle().apply {
             putString("wzrk_acct_id", "TEST-46W-WWR-R85Z")
             putString("nm", "Grab 'em on Myntra's Maxessorize Sale")
             putString("nt", "Ye dil ❤️️ maange more accessories?")
@@ -60,8 +60,8 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
         }.start()
         Thread {
             CleverTapAPI.createNotification(applicationContext, bundle)
-        }.start()
-        //initCleverTap()
+        }.start()*/
+        initCleverTap()
     }
 
     private fun initCleverTap() {

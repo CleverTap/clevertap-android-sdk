@@ -6,10 +6,13 @@ import android.content.Intent
 import android.util.Log
 import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
+import com.clevertap.android.pushtemplates.PushTemplateNotificationHandler
+import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.sdk.ActivityLifecycleCallback
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
 import com.clevertap.android.sdk.SyncListener
+import com.clevertap.android.sdk.interfaces.NotificationHandler
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import com.google.android.gms.security.ProviderInstaller
 import com.google.android.gms.security.ProviderInstaller.ProviderInstallListener
@@ -21,6 +24,8 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener {
     override fun onCreate() {
 
         CleverTapAPI.setDebugLevel(VERBOSE)
+        TemplateRenderer.debugLevel = 3;
+        CleverTapAPI.setNotificationHandler(PushTemplateNotificationHandler() as NotificationHandler);
         ActivityLifecycleCallback.register(this)
         super.onCreate()
 

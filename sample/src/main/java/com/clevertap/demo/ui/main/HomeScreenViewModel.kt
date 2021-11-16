@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.clevertap.android.sdk.CTInboxStyleConfig
 import com.clevertap.android.sdk.CleverTapAPI
+import java.util.ArrayList
 import java.util.Date
 
 class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel() {
@@ -294,6 +295,17 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     }"
                 )
             }
+            "90"-> cleverTapAPI?.pushEvent("Send Basic Push")
+            "91"-> cleverTapAPI?.pushEvent("Send Auto Carousel Push")
+            "92"-> cleverTapAPI?.pushEvent("Send Manual Carousel Push")
+            "93"-> cleverTapAPI?.pushEvent("Send Filmstrip Carousel Push")
+            "94"-> cleverTapAPI?.pushEvent("Send Rating Push")
+            "95"-> cleverTapAPI?.pushEvent("Send Product Display Notification")
+            "96"-> cleverTapAPI?.pushEvent("Send Linear Product Display Push")
+            "97"-> cleverTapAPI?.pushEvent("Send CTA Notification")
+            "98"-> cleverTapAPI?.pushEvent("Send Zero Bezel Notification")
+            "99"-> cleverTapAPI?.pushEvent("Send Timer Notification")
+            "910"-> cleverTapAPI?.pushEvent("Send Input Box Notification")
             //"60" -> webViewClickListener?.onWebViewClick()
 
         }
