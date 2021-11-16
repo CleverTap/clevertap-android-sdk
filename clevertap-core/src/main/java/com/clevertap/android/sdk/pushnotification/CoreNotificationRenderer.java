@@ -7,7 +7,10 @@ import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
+import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationCompat.Builder;
@@ -29,7 +32,7 @@ public class CoreNotificationRenderer implements INotificationRenderer {
     private int smallIcon;
 
     @Override
-    public Object getCollapseKey(final Bundle extras) {
+    public @Nullable Object getCollapseKey(final Bundle extras) {
         Object collapse_key = extras.get(Constants.WZRK_COLLAPSE);
         return collapse_key;
     }
@@ -51,15 +54,6 @@ public class CoreNotificationRenderer implements INotificationRenderer {
     public NotificationCompat.Builder renderNotification(final Bundle extras, final Context context,
             final Builder nb, final CleverTapInstanceConfig config, final int notificationId) {
         String icoPath = extras.getString(Constants.NOTIF_ICON);// uncommon
-        Intent launchIntent = new Intent(context, CTPushNotificationReceiver.class);// uncommon 1
-
-        PendingIntent pIntent;
-
-        // Take all the properties from the notif and add it to the intent
-        launchIntent.putExtras(extras);// u1
-        launchIntent.removeExtra(Constants.WZRK_ACTIONS);//u1
-        pIntent = PendingIntent.getBroadcast(context, (int) System.currentTimeMillis(),
-                launchIntent, PendingIntent.FLAG_UPDATE_CURRENT);//u1
 
         // uncommon - START
         NotificationCompat.Style style;
@@ -109,7 +103,7 @@ public class CoreNotificationRenderer implements INotificationRenderer {
         // uncommon
         nb.setContentTitle(notifTitle)
                 .setContentText(notifMessage)
-                .setContentIntent(pIntent)
+                .setContentIntent(LaunchPendingIntentFactory.getLaunchPendingIntent(extras, context))
                 .setAutoCancel(true)
                 .setStyle(style)
                 .setSmallIcon(smallIcon);
@@ -177,7 +171,8 @@ public class CoreNotificationRenderer implements INotificationRenderer {
                         }
                     }
 
-                    boolean sendToCTIntentService = (autoCancel && isCTIntentServiceAvailable);
+                    boolean sendToCTIntentService = (VERSION.SDK_INT < VERSION_CODES.S && autoCancel
+                            && isCTIntentServiceAvailable);
 
                     Intent actionLaunchIntent;
                     if (sendToCTIntentService) {
@@ -209,12 +204,16 @@ public class CoreNotificationRenderer implements INotificationRenderer {
 
                     PendingIntent actionIntent;
                     int requestCode = ((int) System.currentTimeMillis()) + i;
+                    int flagsActionLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
+                    if (VERSION.SDK_INT >= VERSION_CODES.M) {
+                        flagsActionLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
+                    }
                     if (sendToCTIntentService) {
                         actionIntent = PendingIntent.getService(context, requestCode,
-                                actionLaunchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                                actionLaunchIntent, flagsActionLaunchPendingIntent);
                     } else {
                         actionIntent = PendingIntent.getActivity(context, requestCode,
-                                actionLaunchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                                actionLaunchIntent, flagsActionLaunchPendingIntent);
                     }
                     nb.addAction(icon, label, actionIntent);
 
