@@ -1,24 +1,17 @@
 package com.clevertap.android.pushtemplates
 
-import android.app.Notification
 import android.app.NotificationManager
-import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
 import android.graphics.Bitmap
-import android.net.Uri
 import android.os.*
-import android.text.Html
-import android.view.View
 import android.widget.RemoteViews
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
-import androidx.core.app.RemoteInput
 import com.clevertap.android.pushtemplates.styles.*
+import com.clevertap.android.pushtemplates.validators.ValidatorFactory
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
 import org.json.JSONArray
@@ -27,6 +20,7 @@ import org.json.JSONObject
 import java.util.*
 
 class TemplateRenderer : INotificationRenderer {
+
     private var pt_id: String? = null
     private var templateType: TemplateType? = null
     internal var pt_title: String? = null
@@ -105,12 +99,12 @@ class TemplateRenderer : INotificationRenderer {
         setUp(context, extras, config)
     }
 
-    override fun getMessage(extras: Bundle): String {
-        return pt_msg!! // TODO: Check if set properly before caller calls this
+    override fun getMessage(extras: Bundle): String? {
+        return pt_msg // TODO: Check if set properly before caller calls this
     }
 
-    override fun getTitle(extras: Bundle, context: Context): String {
-        return pt_title!! // TODO: Check if set properly before caller calls this
+    override fun getTitle(extras: Bundle, context: Context): String? {
+        return pt_title // TODO: Check if set properly before caller calls this
     }
 
     override fun renderNotification(
@@ -125,44 +119,49 @@ class TemplateRenderer : INotificationRenderer {
         this.notificationId = notificationId
         when (templateType) {
             TemplateType.BASIC ->
-                if(hasAllBasicNotifKeys())
-                    return BasicStyle(this).builderFromStyle(context,extras,notificationId,nb)
+                if (ValidatorFactory.getValidator(TemplateType.BASIC, this)?.validate() == true)
+                    return BasicStyle(this).builderFromStyle(context, extras, notificationId, nb)
 
             TemplateType.AUTO_CAROUSEL ->
-                if (hasAllCarouselNotifKeys())
+                if (ValidatorFactory.getValidator(TemplateType.AUTO_CAROUSEL, this)?.validate() == true)
                     return AutoCarouselStyle(this).builderFromStyle(context, extras, notificationId, nb)
 
             TemplateType.MANUAL_CAROUSEL ->
-                if (hasAllManualCarouselNotifKeys())
-                    return ManualCarouselStyle(this,extras).builderFromStyle(context, extras, notificationId, nb)
+                if (ValidatorFactory.getValidator(TemplateType.MANUAL_CAROUSEL, this)?.validate() == true)
+                    return ManualCarouselStyle(this, extras).builderFromStyle(context, extras, notificationId, nb)
 
             TemplateType.RATING ->
-                if (hasAllRatingNotifKeys())
-                    return RatingStyle(this,extras).builderFromStyle(context, extras, notificationId, nb)
+                if (ValidatorFactory.getValidator(TemplateType.RATING, this)?.validate() == true)
+                    return RatingStyle(this, extras).builderFromStyle(context, extras, notificationId, nb)
 
             TemplateType.FIVE_ICONS ->
-                if (hasAll5IconNotifKeys())
-                    return FiveIconStyle(this,extras).builderFromStyle(context, extras, notificationId, nb).setOngoing(true)
+                if (ValidatorFactory.getValidator(TemplateType.FIVE_ICONS, this)?.validate() == true)
+                    return FiveIconStyle(this, extras).builderFromStyle(context, extras, notificationId, nb)
+                        .setOngoing(true)
 
-            TemplateType.PRODUCT_DISPLAY -> if (hasAllProdDispNotifKeys())
-                return ProductDisplayStyle(this,extras).builderFromStyle(context, extras, notificationId, nb)
+            TemplateType.PRODUCT_DISPLAY -> if (ValidatorFactory.getValidator(TemplateType.PRODUCT_DISPLAY, this)
+                    ?.validate() == true
+            )
+                return ProductDisplayStyle(this, extras).builderFromStyle(context, extras, notificationId, nb)
 
             TemplateType.ZERO_BEZEL ->
-                if (hasAllZeroBezelNotifKeys())
+                if (ValidatorFactory.getValidator(TemplateType.ZERO_BEZEL, this)?.validate() == true)
                     return ZeroBezelStyle(this).builderFromStyle(context, extras, notificationId, nb)
 
             TemplateType.TIMER -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                if (hasAllTimerKeys()){
-                    return TimerStyle(this,extras).builderFromStyle(context, extras, notificationId, nb)
+                if (ValidatorFactory.getValidator(TemplateType.TIMER, this)?.validate() == true) {
+                    return TimerStyle(this, extras).builderFromStyle(context, extras, notificationId, nb)
                 }
             } else {
                 PTLog.debug("Push Templates SDK supports Timer Notifications only on or above Android Nougat, reverting to basic template")
-                if (hasAllBasicNotifKeys()) {
-                    return BasicStyle(this).builderFromStyle(context,extras,notificationId,nb)
+                if (ValidatorFactory.getValidator(TemplateType.BASIC, this)?.validate() == true) {
+                    return BasicStyle(this).builderFromStyle(context, extras, notificationId, nb)
                 }
             }
 
-            TemplateType.INPUT_BOX -> if (hasAllInputBoxKeys())
+            TemplateType.INPUT_BOX -> if (ValidatorFactory.getValidator(TemplateType.INPUT_BOX, this)
+                    ?.validate() == true
+            )
                 return InputBoxStyle(this).builderFromStyle(context, extras, notificationId, nb)
 
             TemplateType.CANCEL -> renderCancelNotification(context)
@@ -922,8 +921,8 @@ class TemplateRenderer : INotificationRenderer {
         }
     }
 
-    override fun getCollapseKey(extras: Bundle): Any {
-        return pt_collapse_key!! // TODO: Check if set properly before caller calls this
+    override fun getCollapseKey(extras: Bundle): Any? {
+        return pt_collapse_key // TODO: Check if set properly before caller calls this
     }
 
     private fun setUp(context: Context, extras: Bundle, config: CleverTapInstanceConfig?) {
@@ -1002,215 +1001,6 @@ class TemplateRenderer : INotificationRenderer {
 //        }
 //    }
 
-    private fun hasAllBasicNotifKeys(): Boolean {
-        var result = true
-        if (pt_title == null || pt_title!!.isEmpty()) {
-            PTLog.verbose("Title is missing or empty. Not showing notification")
-            result = false
-        }
-        if (pt_msg == null || pt_msg!!.isEmpty()) {
-            PTLog.verbose("Message is missing or empty. Not showing notification")
-            result = false
-        }
-        if (pt_bg == null || pt_bg!!.isEmpty()) {
-            PTLog.verbose("Background colour is missing or empty. Not showing notification")
-            result = false
-        }
-        return result
-    }
-
-    private fun hasAllZeroBezelNotifKeys(): Boolean {
-        var result = true
-        if (pt_title == null || pt_title!!.isEmpty()) {
-            PTLog.verbose("Title is missing or empty. Not showing notification")
-            result = false
-        }
-        if (pt_msg == null || pt_msg!!.isEmpty()) {
-            PTLog.verbose("Message is missing or empty. Not showing notification")
-            result = false
-        }
-        if (deepLinkList == null || deepLinkList!!.size == 0) {
-            PTLog.verbose("Deeplink is missing or empty. Not showing notification")
-            result = false
-        }
-        if (pt_big_img == null || pt_big_img!!.isEmpty()) {
-            PTLog.verbose("Display Image is missing or empty. Not showing notification")
-            result = false
-        }
-        return result
-    }
-
-    private fun hasAllCarouselNotifKeys(): Boolean {
-        var result = true
-        if (pt_title == null || pt_title!!.isEmpty()) {
-            PTLog.verbose("Title is missing or empty. Not showing notification")
-            result = false
-        }
-        if (pt_msg == null || pt_msg!!.isEmpty()) {
-            PTLog.verbose("Message is missing or empty. Not showing notification")
-            result = false
-        }
-        if (deepLinkList == null || deepLinkList!!.size == 0) {
-            PTLog.verbose("Deeplink is missing or empty. Not showing notification")
-            result = false
-        }
-        if (imageList == null || imageList!!.size < 3) {
-            PTLog.verbose("Three required images not present. Not showing notification")
-            result = false
-        }
-        if (pt_bg == null || pt_bg!!.isEmpty()) {
-            PTLog.verbose("Background colour is missing or empty. Not showing notification")
-            result = false
-        }
-        return result
-    }
-
-    private fun hasAllManualCarouselNotifKeys(): Boolean {
-        var result = true
-        if (pt_title == null || pt_title!!.isEmpty()) {
-            PTLog.verbose("Title is missing or empty. Not showing notification")
-            result = false
-        }
-        if (pt_msg == null || pt_msg!!.isEmpty()) {
-            PTLog.verbose("Message is missing or empty. Not showing notification")
-            result = false
-        }
-        if (deepLinkList == null || deepLinkList!!.size == 0) {
-            PTLog.verbose("Deeplink is missing or empty. Not showing notification")
-            result = false
-        }
-        if (imageList == null || imageList!!.size < 3) {
-            PTLog.verbose("Three required images not present. Not showing notification")
-            result = false
-        }
-        if (pt_bg == null || pt_bg!!.isEmpty()) {
-            PTLog.verbose("Background colour is missing or empty. Not showing notification")
-            result = false
-        }
-        return result
-    }
-
-    private fun hasAllRatingNotifKeys(): Boolean {
-        var result = true
-        if (pt_title == null || pt_title!!.isEmpty()) {
-            PTLog.verbose("Title is missing or empty. Not showing notification")
-            result = false
-        }
-        if (pt_msg == null || pt_msg!!.isEmpty()) {
-            PTLog.verbose("Message is missing or empty. Not showing notification")
-            result = false
-        }
-        if (pt_rating_default_dl == null || pt_rating_default_dl!!.isEmpty()) {
-            PTLog.verbose("Default deeplink is missing or empty. Not showing notification")
-            result = false
-        }
-        if (deepLinkList == null || deepLinkList!!.size == 0) {
-            PTLog.verbose("At least one deeplink is required. Not showing notification")
-            result = false
-        }
-        if (pt_bg == null || pt_bg!!.isEmpty()) {
-            PTLog.verbose("Background colour is missing or empty. Not showing notification")
-            result = false
-        }
-        return result
-    }
-
-    private fun hasAll5IconNotifKeys(): Boolean {
-        var result = true
-        if (deepLinkList == null || deepLinkList!!.size < 5) {
-            PTLog.verbose("Five required deeplinks not present. Not showing notification")
-            result = false
-        }
-        if (imageList == null || imageList!!.size < 5) {
-            PTLog.verbose("Five required images not present. Not showing notification")
-            result = false
-        }
-        if (pt_bg == null || pt_bg!!.isEmpty()) {
-            PTLog.verbose("Background colour is missing or empty. Not showing notification")
-            result = false
-        }
-        return result
-    }
-
-    private fun hasAllProdDispNotifKeys(): Boolean {
-        var result = true
-        if (pt_title == null || pt_title!!.isEmpty()) {
-            PTLog.verbose("Title is missing or empty. Not showing notification")
-            result = false
-        }
-        if (pt_msg == null || pt_msg!!.isEmpty()) {
-            PTLog.verbose("Message is missing or empty. Not showing notification")
-            result = false
-        }
-        if (bigTextList == null || bigTextList!!.size < 3) {
-            PTLog.verbose("Three required product titles not present. Not showing notification")
-            result = false
-        }
-        if (smallTextList == null || smallTextList!!.size < 3) {
-            PTLog.verbose("Three required product descriptions not present. Not showing notification")
-            result = false
-        }
-        if (deepLinkList == null || deepLinkList!!.size < 3) {
-            PTLog.verbose("Three required deeplinks not present. Not showing notification")
-            result = false
-        }
-        if (imageList == null || imageList!!.size < 3) {
-            PTLog.verbose("Three required images not present. Not showing notification")
-            result = false
-        }
-        if (pt_bg == null || pt_bg!!.isEmpty()) {
-            PTLog.verbose("Background colour is missing or empty. Not showing notification")
-            result = false
-        }
-        if (pt_product_display_action == null || pt_product_display_action!!.isEmpty()) {
-            PTLog.verbose("Button label is missing or empty. Not showing notification")
-            result = false
-        }
-        if (pt_product_display_action_clr == null || pt_product_display_action_clr!!.isEmpty()) {
-            PTLog.verbose("Button colour is missing or empty. Not showing notification")
-            result = false
-        }
-        return result
-    }
-
-    private fun hasAllTimerKeys(): Boolean {
-        var result = true
-        if (pt_title == null || pt_title!!.isEmpty()) {
-            PTLog.verbose("Title is missing or empty. Not showing notification")
-            result = false
-        }
-        if (pt_msg == null || pt_msg!!.isEmpty()) {
-            PTLog.verbose("Message is missing or empty. Not showing notification")
-            result = false
-        }
-        if (pt_timer_threshold == -1 && pt_timer_end == -1) {
-            PTLog.verbose("Timer Threshold or End time not defined. Not showing notification")
-            result = false
-        }
-        if (pt_bg == null || pt_bg!!.isEmpty()) {
-            PTLog.verbose("Background colour is missing or empty. Not showing notification")
-            result = false
-        }
-        return result
-    }
-
-    private fun hasAllInputBoxKeys(): Boolean {
-        var result = true
-        if (pt_title == null || pt_title!!.isEmpty()) {
-            PTLog.verbose("Title is missing or empty. Not showing notification")
-            result = false
-        }
-        if (pt_msg == null || pt_msg!!.isEmpty()) {
-            PTLog.verbose("Message is missing or empty. Not showing notification")
-            result = false
-        }
-        if ((pt_input_feedback == null || pt_input_feedback!!.isEmpty()) && actions == null) {
-            PTLog.verbose("Feedback Text or Actions is missing or empty. Not showing notification")
-            result = false
-        }
-        return result
-    }
-
 //    private fun renderAutoCarouselNotification(
 //        context: Context,
 //        extras: Bundle,
@@ -1279,7 +1069,6 @@ class TemplateRenderer : INotificationRenderer {
 //        return nb
 //    }
 
-
 //    private fun setCustomContentViewViewFlipperInterval(contentView: RemoteViews, interval: Int) {
 //        contentView.setInt(R.id.view_flipper, "setFlipInterval", interval)
 //    }
@@ -1334,7 +1123,6 @@ class TemplateRenderer : INotificationRenderer {
 //        }
 //        return nb
 //    }
-
 
 //    private fun setCustomContentViewText(contentView: RemoteViews, resourceId: Int, s: String) {
 //        if (s.isNotEmpty()) {
@@ -1540,7 +1328,7 @@ class TemplateRenderer : INotificationRenderer {
 //        )
 //    }
 
-//    private fun setNotificationBuilderBasics(
+    //    private fun setNotificationBuilderBasics(
 //        notificationBuilder: NotificationCompat.Builder,
 //        contentViewSmall: RemoteViews,
 //        contentViewBig: RemoteViews,
@@ -1912,59 +1700,6 @@ class TemplateRenderer : INotificationRenderer {
 //        }
 //    }
 //
-    @RequiresApi(Build.VERSION_CODES.M)//TODO Need to check this
-    private fun timerRunner(context: Context, extras: Bundle, notificationId: Int, delay: Int) {
-        val handler = Handler(Looper.getMainLooper())
-        extras.remove("wzrk_rnv")
-        if (pt_title_alt != null && pt_title_alt!!.isNotEmpty()) {
-            pt_title = pt_title_alt
-        }
-        if (pt_big_img_alt != null && pt_big_img_alt!!.isNotEmpty()) {
-            pt_big_img = pt_big_img_alt
-        }
-        if (pt_msg_alt != null && pt_msg_alt!!.isNotEmpty()) {
-            pt_msg = pt_msg_alt
-        }
-
-        /*handler.postDelayed(new Runnable() {
-            @RequiresApi(api = Build.VERSION_CODES.M)
-            @Override
-            public void run() {
-                if (Utils.isNotificationInTray(context, notificationId)) {
-                    asyncHelper.postAsyncSafely("TemplateRenderer#timerRunner", new Runnable() {
-                        @Override
-                        public void run() {
-                            if (hasAllBasicNotifKeys()) {
-                                renderBasicTemplateNotification(context, extras, _root_ide_package_.PTConstants.EMPTY_NOTIFICATION_ID);
-                            }
-                        }
-                    });
-                }
-            }
-        }, delay - 100);*/handler.postDelayed({
-            if (Utils.isNotificationInTray(context, notificationId) && hasAllBasicNotifKeys()) {
-                val applicationContext = context.applicationContext
-                val basicTemplateBundle = extras.clone() as Bundle
-                basicTemplateBundle.putString(Constants.WZRK_PUSH_ID, null) // skip dupe check
-                basicTemplateBundle.putString(PTConstants.PT_ID, "pt_basic") // set to basic
-                // force random id generation
-                basicTemplateBundle.putString(PTConstants.PT_COLLAPSE_KEY, null)
-                basicTemplateBundle.putString(Constants.WZRK_COLLAPSE, null)
-                val templateRenderer: INotificationRenderer =
-                    TemplateRenderer(applicationContext, basicTemplateBundle)
-                val cleverTapAPI = CleverTapAPI
-                    .getGlobalInstance(
-                        applicationContext,
-                        PushNotificationUtil.getAccountIdFromNotificationBundle(basicTemplateBundle)
-                    )
-                cleverTapAPI?.renderPushNotification(
-                    templateRenderer,
-                    applicationContext,
-                    basicTemplateBundle
-                )
-            }
-        }, (delay - 100).toLong())
-    }
 //
 //    private fun setCustomContentViewSmallIcon(contentView: RemoteViews) {
 //        if (pt_small_icon != null) {
