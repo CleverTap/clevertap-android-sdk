@@ -67,7 +67,7 @@ internal object PendingIntentFactory {
             Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP or Intent.FLAG_ACTIVITY_NEW_TASK
         var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
         if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
-            flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
+            flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
         }
         return PendingIntent.getBroadcast(
             context, System.currentTimeMillis().toInt(),

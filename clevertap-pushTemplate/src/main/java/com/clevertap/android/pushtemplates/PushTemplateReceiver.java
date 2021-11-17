@@ -19,6 +19,7 @@ import android.widget.RemoteViews;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.RemoteInput;
 
+import com.clevertap.android.pushtemplates.content.PendingIntentFactory;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 
@@ -682,8 +683,12 @@ public class PushTemplateReceiver extends BroadcastReceiver {
         launchIntent.removeExtra(Constants.WZRK_ACTIONS);
         launchIntent.putExtra(Constants.WZRK_FROM_KEY, Constants.WZRK_FROM);
         launchIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
+        int flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            flagsLaunchPendingIntent |= PendingIntent.FLAG_MUTABLE;
+        }
         return PendingIntent.getBroadcast(context, (int) System.currentTimeMillis(),
-                launchIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                launchIntent, flagsLaunchPendingIntent);
     }
 
     private PendingIntent setDismissIntent(Context context, Bundle extras, Intent intent) {
