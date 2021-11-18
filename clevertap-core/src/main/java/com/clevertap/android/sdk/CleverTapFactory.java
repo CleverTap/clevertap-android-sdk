@@ -63,8 +63,8 @@ class CleverTapFactory {
         coreState.setControllerManager(controllerManager);
 
         //Get device id should be async to avoid strict mode policy.
-        Task<Void> taskDeviceId = CTExecutorFactory.executors(config).ioTask();
-        taskDeviceId.execute("getDeviceId", new Callable<Void>() {
+        Task<Void> taskInitFCManager = CTExecutorFactory.executors(config).ioTask();
+        taskInitFCManager.execute("initFCManager", new Callable<Void>() {
             @Override
             public Void call() throws Exception {
                 if (coreState.getDeviceInfo() != null && coreState.getDeviceInfo().getDeviceID() != null
@@ -103,7 +103,16 @@ class CleverTapFactory {
         coreState.setInAppController(inAppController);
         coreState.getControllerManager().setInAppController(inAppController);
 
-        initFeatureFlags(context, controllerManager, config, deviceInfo, callbackManager, analyticsManager);
+        Task<Void> taskInitFeatureFlags = CTExecutorFactory.executors(config).ioTask();
+        taskInitFeatureFlags.execute("initFeatureFlags", new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                initFeatureFlags(context, controllerManager, config, deviceInfo, callbackManager, analyticsManager);
+                return null;
+            }
+        });
+
+
 
         LocationManager locationManager = new LocationManager(context, config, coreMetaData, baseEventQueueManager);
         coreState.setLocationManager(locationManager);

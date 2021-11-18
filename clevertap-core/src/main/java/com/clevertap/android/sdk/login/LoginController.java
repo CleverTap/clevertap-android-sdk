@@ -284,6 +284,9 @@ public class LoginController {
                 .isInitialized()) {
             ctFeatureFlagsController.resetWithGuid(deviceInfo.getDeviceID());
             ctFeatureFlagsController.fetchFeatureFlags();
+        }else {
+            config.getLogger().verbose(config.getAccountId(),
+                    Constants.FEATURE_DISPLAY_UNIT + "Can't reset Display Units, CTFeatureFlagsController is null");
         }
     }
 
