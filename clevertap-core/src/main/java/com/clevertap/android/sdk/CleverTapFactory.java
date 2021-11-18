@@ -9,9 +9,13 @@ import com.clevertap.android.sdk.inapp.InAppController;
 import com.clevertap.android.sdk.login.LoginController;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.pushnotification.PushProviders;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.MainLooperHandler;
+import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import com.clevertap.android.sdk.validation.Validator;
+
+import java.util.concurrent.Callable;
 
 class CleverTapFactory {
 
@@ -58,14 +62,24 @@ class CleverTapFactory {
                 ctLockManager, callbackManager, deviceInfo, baseDatabaseManager);
         coreState.setControllerManager(controllerManager);
 
-        if (coreState.getDeviceInfo() != null && coreState.getDeviceInfo().getDeviceID() != null
-                && controllerManager.getInAppFCManager() == null) {
-            coreState.getConfig().getLogger()
-                    .verbose(config.getAccountId() + ":async_deviceID",
-                            "Initializing InAppFC with device Id = " + coreState.getDeviceInfo().getDeviceID());
-            controllerManager
-                    .setInAppFCManager(new InAppFCManager(context, config, coreState.getDeviceInfo().getDeviceID()));
-        }
+        //Get device id should be async to avoid strict mode policy.
+        Task<Void> taskDeviceId = CTExecutorFactory.executors(config).ioTask();
+        taskDeviceId.execute("getDeviceId", new Callable<Void>() {
+            @Override
+            public Void call() throws Exception {
+                if (coreState.getDeviceInfo() != null && coreState.getDeviceInfo().getDeviceID() != null
+                        && controllerManager.getInAppFCManager() == null) {
+                    coreState.getConfig().getLogger()
+                            .verbose(config.getAccountId() + ":async_deviceID",
+                                    "Initializing InAppFC with device Id = " + coreState.getDeviceInfo().getDeviceID());
+                    controllerManager
+                            .setInAppFCManager(new InAppFCManager(context, config, coreState.getDeviceInfo().getDeviceID()));
+                }
+                return null;
+            }
+        });
+
+
 
         NetworkManager networkManager = new NetworkManager(context, config, deviceInfo, coreMetaData,
                 validationResultStack, controllerManager, baseDatabaseManager,
