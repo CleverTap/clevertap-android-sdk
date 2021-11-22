@@ -2,6 +2,7 @@ package com.clevertap.android.pushtemplates.styles
 
 import android.app.PendingIntent
 import android.content.Context
+import android.graphics.Color
 import android.os.Bundle
 import android.text.Html
 import android.widget.RemoteViews
@@ -32,6 +33,7 @@ abstract class Style(private var renderer: TemplateRenderer) {
             .setContentIntent(pIntent)
             .setVibrate(longArrayOf(0L))
             .setWhen(System.currentTimeMillis())
+            .setColor(Color.parseColor(renderer.pt_small_icon_clr?:"#FFFFFF"))
             .setAutoCancel(true)
     }
 
