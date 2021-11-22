@@ -110,9 +110,9 @@ public class Utils {
 
     static Bitmap drawableToBitmap(Drawable drawable)
             throws NullPointerException {
-        if (drawable instanceof BitmapDrawable) {
+        /*if (drawable instanceof BitmapDrawable) {
             return ((BitmapDrawable) drawable).getBitmap();
-        }
+        }*/
 
         Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
                 drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
