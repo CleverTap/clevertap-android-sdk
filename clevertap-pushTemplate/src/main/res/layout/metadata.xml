@@ -2,7 +2,7 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
-    android:layout_height="16dp"
+    android:layout_height="20dp"
     android:gravity="center">
 
     <ImageView
@@ -10,7 +10,8 @@
         android:layout_width="@dimen/metadata_small_icon_x"
         android:layout_height="@dimen/metadata_small_icon_y"
         android:layout_alignParentStart="true"
-        android:layout_marginEnd="@dimen/metadata_margin_x" />
+        android:layout_marginEnd="@dimen/metadata_margin_x"
+        android:layout_centerVertical="true"/>
 
     <TextView
         android:id="@+id/app_name"

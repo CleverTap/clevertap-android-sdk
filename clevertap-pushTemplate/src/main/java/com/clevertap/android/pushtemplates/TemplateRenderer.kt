@@ -69,7 +69,7 @@ class TemplateRenderer : INotificationRenderer {
     internal var pt_product_display_linear: String? = null
     internal var pt_meta_clr: String? = null
     internal var pt_product_display_action_text_clr: String? = null
-    private var pt_small_icon_clr: String? = null
+    internal var pt_small_icon_clr: String? = null
     internal var pt_small_icon: Bitmap? = null
     internal var pt_dot_sep: Bitmap? = null
     private var pt_cancel_notif_id: String? = null
