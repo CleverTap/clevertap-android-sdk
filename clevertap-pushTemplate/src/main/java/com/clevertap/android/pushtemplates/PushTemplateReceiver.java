@@ -19,7 +19,6 @@ import android.widget.RemoteViews;
 import androidx.core.app.NotificationCompat;
 import androidx.core.app.RemoteInput;
 
-import com.clevertap.android.pushtemplates.content.PendingIntentFactory;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 
@@ -371,7 +370,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             contentViewRating = new RemoteViews(context.getPackageName(), R.layout.rating);
             setCustomContentViewBasicKeys(contentViewRating, context);
 
-            contentViewSmall = new RemoteViews(context.getPackageName(), R.layout.content_view_small);
+            contentViewSmall = new RemoteViews(context.getPackageName(), R.layout.content_view_small_single_line_msg);
 
             setCustomContentViewBasicKeys(contentViewSmall, context);
 
@@ -558,7 +557,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             boolean isLinear = false;
             if (pt_product_display_linear == null || pt_product_display_linear.isEmpty()) {
                 contentViewBig = new RemoteViews(context.getPackageName(), R.layout.product_display_template);
-                contentViewSmall = new RemoteViews(context.getPackageName(), R.layout.content_view_small);
+                contentViewSmall = new RemoteViews(context.getPackageName(), R.layout.content_view_small_single_line_msg);
             } else {
                 isLinear = true;
                 contentViewBig = new RemoteViews(context.getPackageName(), R.layout.product_display_linear_expanded);

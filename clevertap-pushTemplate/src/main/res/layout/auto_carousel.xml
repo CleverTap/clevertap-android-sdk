@@ -5,7 +5,7 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <include layout="@layout/content_view_small"
+    <include layout="@layout/content_view_small_multi_line_msg"
         android:id="@+id/rel_lyt"/>
 
     <ViewFlipper

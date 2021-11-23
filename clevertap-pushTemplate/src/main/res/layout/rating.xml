@@ -6,7 +6,7 @@
 
     <include
         android:id="@+id/rel_lyt"
-        layout="@layout/content_view_small" />
+        layout="@layout/content_view_small_single_line_msg" />
 
     <LinearLayout
         android:layout_width="match_parent"

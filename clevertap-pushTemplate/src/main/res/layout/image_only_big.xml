@@ -6,61 +6,9 @@
     android:background="@android:color/white"
     android:orientation="vertical">
 
-    <RelativeLayout
-        android:id="@+id/content_view_small"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:paddingLeft="@dimen/padding_horizontal"
-        android:paddingTop="@dimen/padding_vertical"
-        android:paddingRight="@dimen/padding_horizontal"
-        android:paddingBottom="@dimen/padding_vertical" >
-
-
-        <include
-            android:id="@+id/metadata"
-            layout="@layout/metadata" />
-
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/metadata"
-            android:layout_alignStart="@+id/metadata"
-            android:id="@+id/rel_lyt">
-
-            <TextView
-                android:id="@+id/title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/metadata_title_margin_vertical"
-                android:layout_marginEnd="@dimen/metadata_title_margin_horizontal"
-                android:layout_alignParentStart="true"
-                android:layout_toStartOf="@+id/large_icon"
-                android:text="title"
-                android:textAppearance="@style/PushTitle" />
-
-            <TextView
-                android:id="@+id/msg"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/title"
-                android:layout_alignStart="@id/title"
-                android:layout_alignParentStart="true"
-                android:layout_toStartOf="@+id/large_icon"
-                android:text="message message"
-                android:textAppearance="@style/PushMessage"
-                />
-
-
-            <ImageView
-                android:id="@+id/large_icon"
-                android:layout_width="@dimen/large_icon"
-                android:layout_height="@dimen/large_icon"
-                android:layout_marginStart="@dimen/metadata_title_margin_horizontal"
-                android:layout_alignParentEnd="true"
-                android:scaleType="centerCrop" />
-        </RelativeLayout>
-
-    </RelativeLayout>
+    <include
+        android:id="@+id/rel_lyt"
+        layout="@layout/content_view_small_multi_line_msg" />
 
     <ImageView
         android:id="@+id/big_image"

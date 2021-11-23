@@ -5,7 +5,7 @@ import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 
 open class SmallContentView(context: Context,
-    renderer: TemplateRenderer,layoutId: Int = R.layout.content_view_small): ContentView(context,layoutId,renderer) {
+    renderer: TemplateRenderer,layoutId: Int = R.layout.content_view_small_single_line_msg): ContentView(context,layoutId,renderer) {
 
     init {
         setCustomContentViewBasicKeys()
