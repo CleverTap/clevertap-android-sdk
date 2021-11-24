@@ -1,5 +1,9 @@
 ## CleverTap Android SDK CHANGE LOG
 
+
+### Version 4.3.1 (November 25, 2021)
+* Fixes a Strict Mode Read violation that caused ANRs
+
 ### Version 4.3.0 (November 2, 2021)
 * Adds support for [apps targeting Android 12 (API 31)](https://developer.android.com/about/versions/12/behavior-changes-12)
   This version is compatible with all new Android 12 changes like Notification Trampolines, Pending Intents Mutability and Safer Component Exporting.
