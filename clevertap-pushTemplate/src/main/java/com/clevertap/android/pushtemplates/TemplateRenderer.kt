@@ -150,6 +150,7 @@ class TemplateRenderer : INotificationRenderer {
 
             TemplateType.TIMER -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 if (ValidatorFactory.getValidator(TemplateType.TIMER, this)?.validate() == true) {
+                    timerRunner(context, extras, notificationId, getTimerEnd())
                     return TimerStyle(this, extras).builderFromStyle(context, extras, notificationId, nb)
                 }
             } else {
@@ -183,6 +184,77 @@ class TemplateRenderer : INotificationRenderer {
             }
         }
     }
+
+    private fun getTimerEnd(): Int?{
+        var timer_end: Int? = null
+        if (pt_timer_threshold != -1 && pt_timer_threshold >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
+            timer_end = pt_timer_threshold * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
+        }else if (pt_timer_end >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
+            timer_end = pt_timer_end * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND
+        }else {
+            PTLog.debug("Not rendering notification Timer End value lesser than threshold (10 seconds) from current time: " + PTConstants.PT_TIMER_END)
+        }
+        return timer_end
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
+    private fun timerRunner(context: Context, extras: Bundle, notificationId: Int, delay: Int?) {
+        val handler = Handler(Looper.getMainLooper())
+        extras.remove("wzrk_rnv")
+        if (pt_title_alt != null && pt_title_alt!!.isNotEmpty()) {
+            pt_title = pt_title_alt
+        }
+        if (pt_big_img_alt != null && pt_big_img_alt!!.isNotEmpty()) {
+            pt_big_img = pt_big_img_alt
+        }
+        if (pt_msg_alt != null && pt_msg_alt!!.isNotEmpty()) {
+            pt_msg = pt_msg_alt
+        }
+
+        /*handler.postDelayed(new Runnable() {
+            @RequiresApi(api = Build.VERSION_CODES.M)
+            @Override
+            public void run() {
+                if (Utils.isNotificationInTray(context, notificationId)) {
+                    asyncHelper.postAsyncSafely("TemplateRenderer#timerRunner", new Runnable() {
+                        @Override
+                        public void run() {
+                            if (hasAllBasicNotifKeys()) {
+                                renderBasicTemplateNotification(context, extras, _root_ide_package_.PTConstants.EMPTY_NOTIFICATION_ID);
+                            }
+                        }
+                    });
+                }
+            }
+        }, delay - 100);*/
+
+        handler.postDelayed({
+            if (Utils.isNotificationInTray(context, notificationId) && ValidatorFactory.
+                getValidator(TemplateType.BASIC, this)?.validate() == true) {
+                val applicationContext = context.applicationContext
+                val basicTemplateBundle = extras.clone() as Bundle
+                basicTemplateBundle.putString(Constants.WZRK_PUSH_ID, null) // skip dupe check
+                basicTemplateBundle.putString(PTConstants.PT_ID, "pt_basic") // set to basic
+                // force random id generation
+                basicTemplateBundle.putString(PTConstants.PT_COLLAPSE_KEY, null)
+                basicTemplateBundle.putString(Constants.WZRK_COLLAPSE, null)
+                val templateRenderer: INotificationRenderer =
+                    TemplateRenderer(applicationContext, basicTemplateBundle)
+                val cleverTapAPI = CleverTapAPI
+                    .getGlobalInstance(
+                        applicationContext,
+                        PushNotificationUtil.getAccountIdFromNotificationBundle(basicTemplateBundle)
+                    )
+                cleverTapAPI?.renderPushNotification(
+                    templateRenderer,
+                    applicationContext,
+                    basicTemplateBundle
+                )
+            }
+        }, (delay!! - 100).toLong())
+    }
+
+
 
 //    private fun renderZeroBezelNotification(
 //        context: Context, extras: Bundle, notificationId: Int,

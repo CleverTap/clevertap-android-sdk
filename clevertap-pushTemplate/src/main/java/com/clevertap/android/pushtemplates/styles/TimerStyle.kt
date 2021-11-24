@@ -15,15 +15,17 @@ class TimerStyle(private var renderer: TemplateRenderer, private var extras: Bun
     override fun makeSmallContentView(context: Context, renderer: TemplateRenderer): RemoteViews? {
         return if (getTimerEnd() == null)
             null
-        else
-            return TimerSmallContentView(context,getTimerEnd(),renderer).remoteView
+        else {
+            return TimerSmallContentView(context, getTimerEnd(), renderer).remoteView
+        }
     }
 
     override fun makeBigContentView(context: Context, renderer: TemplateRenderer): RemoteViews? {
         return if (getTimerEnd() == null)
             null
-        else
-            TimerBigContentView(context,getTimerEnd(),renderer).remoteView
+        else {
+           return TimerBigContentView(context, getTimerEnd(), renderer).remoteView
+        }
     }
 
     override fun makePendingIntent(
@@ -46,7 +48,7 @@ class TimerStyle(private var renderer: TemplateRenderer, private var extras: Bun
 
 
     @Suppress("LocalVariableName")
-    private fun getTimerEnd(): Int?{//Boolean
+    private fun getTimerEnd(): Int?{
         var timer_end: Int? = null
         if (renderer.pt_timer_threshold != -1 && renderer.pt_timer_threshold >= PTConstants.PT_TIMER_MIN_THRESHOLD) {
             timer_end = renderer.pt_timer_threshold * PTConstants.ONE_SECOND + PTConstants.ONE_SECOND

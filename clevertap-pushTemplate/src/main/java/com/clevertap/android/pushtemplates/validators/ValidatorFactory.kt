@@ -84,7 +84,7 @@ internal class ValidatorFactory {
             hashMap[PT_FIVE_DEEPLINK_LIST] =
                 ListSizeChecker(templateRenderer.deepLinkList, 5, "Five required deeplinks not present")
             hashMap[PT_FIVE_IMAGE_LIST] =
-                ListSizeChecker(templateRenderer.imageList, 5, "Five required images not present")
+                ListSizeChecker(templateRenderer.imageList, 3, "Five required images not present")
             //----------PROD DISPLAY-------------
             hashMap[PT_THREE_DEEPLINK_LIST] =
                 ListSizeChecker(templateRenderer.deepLinkList, 3, "Three required deeplinks not present")
