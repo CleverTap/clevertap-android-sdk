@@ -3,6 +3,7 @@ package com.clevertap.demo
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+import android.os.StrictMode
 import android.util.Log
 import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
@@ -19,6 +20,21 @@ import java.util.HashMap
 class MyApplication : MultiDexApplication(), CTPushNotificationListener {
 
     override fun onCreate() {
+
+        /*StrictMode.setThreadPolicy(
+            StrictMode.ThreadPolicy.Builder()
+                .detectAll()   // or .detectAll() for all detectable problems
+                .penaltyLog()
+                //.penaltyDeath()
+                .build()
+        );
+        StrictMode.setVmPolicy(
+            StrictMode.VmPolicy.Builder()
+                .detectAll()
+                .penaltyLog()
+                //.penaltyDeath()
+                .build()
+        )*/
 
         CleverTapAPI.setDebugLevel(VERBOSE)
         ActivityLifecycleCallback.register(this)
