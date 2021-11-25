@@ -71,6 +71,9 @@ public class FeatureFlagResponse extends CleverTapResponseDecorator {
 
         if (kvArray != null && controllerManager.getCTFeatureFlagsController() != null) {
             controllerManager.getCTFeatureFlagsController().updateFeatureFlags(responseKV);
+        }else {
+            config.getLogger().verbose(config.getAccountId(),
+                    Constants.FEATURE_FLAG_UNIT + "Can't parse feature flags, CTFeatureFlagsController is null");
         }
     }
 }
