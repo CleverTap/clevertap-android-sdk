@@ -21,7 +21,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener {
 
     override fun onCreate() {
 
-        StrictMode.setThreadPolicy(
+        /*StrictMode.setThreadPolicy(
             StrictMode.ThreadPolicy.Builder()
                 .detectAll()   // or .detectAll() for all detectable problems
                 .penaltyLog()
@@ -34,7 +34,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener {
                 .penaltyLog()
                 //.penaltyDeath()
                 .build()
-        );
+        )*/
 
         CleverTapAPI.setDebugLevel(VERBOSE)
         ActivityLifecycleCallback.register(this)
