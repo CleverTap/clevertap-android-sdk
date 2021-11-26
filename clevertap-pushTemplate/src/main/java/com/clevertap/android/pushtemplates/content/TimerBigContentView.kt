@@ -10,12 +10,12 @@ import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
 class TimerBigContentView(context: Context,timer_end: Int?, renderer: TemplateRenderer):
-    TimerSmallContentView(context, R.layout.timer, renderer) {
+    TimerSmallContentView(context,timer_end,renderer, R.layout.timer) {
 
 
     init {
         setCustomContentViewMessageSummary(renderer.pt_msg_summary)
-        remoteView.setChronometer(
+        /*remoteView.setChronometer(
             R.id.chronometer,
             SystemClock.elapsedRealtime() + timer_end!!,
             null,
@@ -23,7 +23,7 @@ class TimerBigContentView(context: Context,timer_end: Int?, renderer: TemplateRe
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             remoteView.setChronometerCountDown(R.id.chronometer, true)
-        }
+        }*/
         setCustomContentViewBigImage(renderer.pt_big_img)
     }
 

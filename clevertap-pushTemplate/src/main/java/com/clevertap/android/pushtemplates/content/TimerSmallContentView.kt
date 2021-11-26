@@ -8,8 +8,8 @@ import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
-open class TimerSmallContentView(context: Context, timer_end: Int?,renderer: TemplateRenderer):
-    ContentView(context, R.layout.timer_collapsed,renderer) {
+open class TimerSmallContentView(context: Context, timer_end: Int?,renderer: TemplateRenderer,layoutId: Int = R.layout.timer_collapsed):
+    ContentView(context, layoutId,renderer) {
 
     init {
         setCustomContentViewBasicKeys()

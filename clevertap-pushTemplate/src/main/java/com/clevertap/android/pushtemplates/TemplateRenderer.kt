@@ -150,8 +150,11 @@ class TemplateRenderer : INotificationRenderer {
 
             TemplateType.TIMER -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 if (ValidatorFactory.getValidator(TemplateType.TIMER, this)?.validate() == true) {
-                    timerRunner(context, extras, notificationId, getTimerEnd())
-                    return TimerStyle(this, extras).builderFromStyle(context, extras, notificationId, nb)
+                    val timerEnd = getTimerEnd()
+                    timerRunner(context, extras, notificationId, timerEnd)
+                    return TimerStyle(this, extras).builderFromStyle(context, extras, notificationId, nb).setTimeoutAfter(
+                        timerEnd!!.toLong()
+                    )
                 }
             } else {
                 PTLog.debug("Push Templates SDK supports Timer Notifications only on or above Android Nougat, reverting to basic template")
