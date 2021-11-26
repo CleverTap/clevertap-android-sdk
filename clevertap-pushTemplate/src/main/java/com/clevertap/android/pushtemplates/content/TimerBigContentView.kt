@@ -15,15 +15,6 @@ class TimerBigContentView(context: Context,timer_end: Int?, renderer: TemplateRe
 
     init {
         setCustomContentViewMessageSummary(renderer.pt_msg_summary)
-        /*remoteView.setChronometer(
-            R.id.chronometer,
-            SystemClock.elapsedRealtime() + timer_end!!,
-            null,
-            true
-        )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-            remoteView.setChronometerCountDown(R.id.chronometer, true)
-        }*/
         setCustomContentViewBigImage(renderer.pt_big_img)
     }
 

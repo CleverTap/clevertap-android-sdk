@@ -393,7 +393,6 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
             String pt_dl_clicked = deepLinkList.get(0);
 
-            HashMap<String, Object> map = new HashMap<String, Object>();
             if (clicked1 == extras.getBoolean("click1", false)) {
                 contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
                 extras.putString(Constants.KEY_C2A, PTConstants.PT_RATING_C2A_KEY + 1);

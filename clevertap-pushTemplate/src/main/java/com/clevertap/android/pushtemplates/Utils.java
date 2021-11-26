@@ -61,21 +61,6 @@ import static android.content.Context.NOTIFICATION_SERVICE;
 @SuppressWarnings("WeakerAccess")
 public class Utils {
 
-    public static boolean isPNFromCleverTap(Bundle extras) {
-        if (extras == null) return false;
-
-        boolean fromCleverTap = extras.containsKey(PTConstants.NOTIF_TAG);
-        boolean shouldRender = fromCleverTap && extras.containsKey("nm");
-        return fromCleverTap && shouldRender;
-    }
-
-    public static boolean isForPushTemplates(Bundle extras) {
-        if (extras == null) return false;
-        String pt_id = extras.getString(PTConstants.PT_ID);
-        return !(("0").equals(pt_id) || pt_id == null || pt_id.isEmpty());
-    }
-
-
     @SuppressWarnings("unused")
     public static Bitmap getNotificationBitmap(String icoPath, boolean fallbackToAppIcon,
                                         final Context context)
@@ -110,10 +95,6 @@ public class Utils {
 
     static Bitmap drawableToBitmap(Drawable drawable)
             throws NullPointerException {
-        /*if (drawable instanceof BitmapDrawable) {
-            return ((BitmapDrawable) drawable).getBitmap();
-        }*/
-
         Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
                 drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
@@ -455,25 +436,6 @@ public class Utils {
 
     }
 
-    static void raiseCleverTapEvent(Context context, CleverTapInstanceConfig config, String evtName, HashMap<String, Object> eProps) {
-
-        CleverTapAPI instance;
-        if (config != null) {
-            instance = CleverTapAPI.instanceWithConfig(context, config);
-        } else {
-            instance = CleverTapAPI.getDefaultInstance(context);
-        }
-
-        if (evtName != null && !evtName.isEmpty()) {
-            if (instance != null) {
-                instance.pushEvent(evtName, eProps);
-            } else {
-                PTLog.debug("CleverTap instance is NULL, not raising the event");
-            }
-        }
-
-    }
-
     static String getEventNameFromExtras(Bundle extras) {
         String eName = null;
         for (String key : extras.keySet()) {
@@ -717,21 +679,6 @@ public class Utils {
         return PTConstants.PT_FLIP_INTERVAL_TIME;
     }
 
-    static String getImagePathFromList() {
-        return PTConstants.PT_IMAGE_PATH_LIST;
-    }
-
-    static String getImageFileNameFromURL(String URL) {
-        if (URL.lastIndexOf(".") > URL.lastIndexOf("/") + 1) {
-            return URL.substring(URL.lastIndexOf("/") + 1, URL.lastIndexOf("."));
-        } else if (URL.length() > URL.lastIndexOf("/") + 1) {
-            return URL.substring(URL.lastIndexOf("/") + 1);
-        } else {
-            URL = URL.substring(0, URL.length() - 1);
-            return URL.substring(URL.lastIndexOf("/") + 1);
-        }
-    }
-
     static void deleteImageFromStorage(Context context, Intent intent) {
         String pId = intent.getStringExtra(Constants.WZRK_PUSH_ID);
 
@@ -757,17 +704,6 @@ public class Utils {
                 }
             }
         }
-    }
-
-
-    public static Bundle jsonStringToBundle(String jsonString) {
-        try {
-            JSONObject jsonObject = toJsonObject(jsonString);
-            return jsonToBundle(jsonObject);
-        } catch (JSONException ignored) {
-
-        }
-        return null;
     }
 
     public static JSONObject toJsonObject(String jsonString) throws JSONException {
