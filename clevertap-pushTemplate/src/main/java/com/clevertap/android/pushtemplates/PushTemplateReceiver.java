@@ -393,6 +393,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
             String pt_dl_clicked = deepLinkList.get(0);
 
+            HashMap<String, Object> map = new HashMap<String, Object>();
             if (clicked1 == extras.getBoolean("click1", false)) {
                 contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);
                 extras.putString(Constants.KEY_C2A, PTConstants.PT_RATING_C2A_KEY + 1);
@@ -579,7 +580,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
             String dl = deepLinkList.get(currentPosition);
             contentViewBig.setTextViewText(R.id.product_name, bigTextList.get(currentPosition));
-            contentViewBig.setTextViewText(R.id.msg, smallTextList.get(currentPosition));
+            contentViewBig.setTextViewText(R.id.product_description, smallTextList.get(currentPosition));
             contentViewBig.setTextViewText(R.id.product_price, priceList.get(currentPosition));
             extras.remove(PTConstants.PT_CURRENT_POSITION);
 

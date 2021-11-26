@@ -11,25 +11,23 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.ManifestInfo;
-import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.pushnotification.CTPushProviderListener;
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;
-import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.iid.InstanceIdResult;
+import com.google.firebase.messaging.FirebaseMessaging;
 
 /**
  * implementation of {@link IFcmMessageHandler}
  */
 public class FcmSdkHandlerImpl implements IFcmSdkHandler {
 
-    private final CTPushProviderListener listener;
-
     private final CleverTapInstanceConfig config;
 
     private final Context context;
+
+    private final CTPushProviderListener listener;
 
     private ManifestInfo manifestInfo;
 
@@ -73,56 +71,36 @@ public class FcmSdkHandlerImpl implements IFcmSdkHandler {
 
     @Override
     public void requestToken() {
-        if (!Utils.haveDeprecatedFirebaseInstanceId){
-            config.getLogger().debug(config.getAccountId(),"Downgrade you're FCM dependency " +
-                    "to v20.2.4 or else CleverTap SDK will not be able to generate a token for this device.");
-            listener.onNewToken(null, getPushType());
-            return;
-        }
         try {
-            String tokenUsingManifestMetaEntry = Utils
-                    .getFcmTokenUsingManifestMetaEntry(context, config);
-            if (!TextUtils.isEmpty(tokenUsingManifestMetaEntry)) {
-                config.log(LOG_TAG, FCM_LOG_TAG + "FCM token - " + tokenUsingManifestMetaEntry);
-                listener.onNewToken(tokenUsingManifestMetaEntry, getPushType());
-            } else {
-                config
-                        .log(LOG_TAG, FCM_LOG_TAG + "Requesting FCM token using googleservices.json");
-                FirebaseInstanceId.getInstance().getInstanceId()
-                        .addOnCompleteListener(new OnCompleteListener<InstanceIdResult>() {
-                            @Override
-                            public void onComplete(@NonNull Task<InstanceIdResult> task) {
-                                if (!task.isSuccessful()) {
-                                    config
-                                            .log(LOG_TAG, FCM_LOG_TAG + "FCM token using googleservices.json failed",
-                                                    task.getException());
-                                    listener.onNewToken(null, getPushType());
-                                    return;
-                                }
-
-                                // Get new Instance ID token
-                                String token = task.getResult() != null ? task.getResult().getToken() : null;
-                                config
-                                        .log(LOG_TAG, FCM_LOG_TAG + "FCM token using googleservices.json - " + token);
-                                listener.onNewToken(token, getPushType());
-                            }
-                        });
-            }
+            config.log(LOG_TAG, FCM_LOG_TAG + "Requesting FCM token using googleservices.json");
+            FirebaseMessaging
+                    .getInstance()
+                    .getToken()
+                    .addOnCompleteListener
+                            (new OnCompleteListener<String>() {
+                                 @Override
+                                 public void onComplete(@NonNull final Task<String> task) {
+                                     if (!task.isSuccessful()) {
+                                         config.log(LOG_TAG,
+                                                 FCM_LOG_TAG + "FCM token using googleservices.json failed",
+                                                 task.getException());
+                                         listener.onNewToken(null, getPushType());
+                                         return;
+                                     }
+                                     String token = task.getResult() != null ? task.getResult() : null;
+                                     config.log(LOG_TAG,
+                                             FCM_LOG_TAG + "FCM token using googleservices.json - " + token);
+                                     listener.onNewToken(token, getPushType());
+                                 }
+                             }
+                            );
         } catch (Throwable t) {
             config.log(LOG_TAG, FCM_LOG_TAG + "Error requesting FCM token", t);
             listener.onNewToken(null, getPushType());
         }
     }
 
-    String getFCMSenderID() {
-        return manifestInfo.getFCMSenderId();
-    }
-
     String getSenderId() {
-        String senderId = getFCMSenderID();
-        if (!TextUtils.isEmpty(senderId)) {
-            return senderId;
-        }
         FirebaseApp app = FirebaseApp.getInstance();
         return app.getOptions().getGcmSenderId();
     }
