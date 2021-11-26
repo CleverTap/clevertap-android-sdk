@@ -579,7 +579,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
             String dl = deepLinkList.get(currentPosition);
             contentViewBig.setTextViewText(R.id.product_name, bigTextList.get(currentPosition));
-            contentViewBig.setTextViewText(R.id.product_description, smallTextList.get(currentPosition));
+            contentViewBig.setTextViewText(R.id.msg, smallTextList.get(currentPosition));
             contentViewBig.setTextViewText(R.id.product_price, priceList.get(currentPosition));
             extras.remove(PTConstants.PT_CURRENT_POSITION);
 
