@@ -45,7 +45,7 @@
                 android:layout_below="@+id/title"
                 android:layout_alignStart="@+id/title"
                 android:text="message"
-                android:textAppearance="@style/PushMessage" />
+                android:textAppearance="@style/PushMessageMultiLine" />
 
         </RelativeLayout>
 

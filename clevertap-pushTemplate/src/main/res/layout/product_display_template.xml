@@ -8,39 +8,9 @@
     android:padding="16dp"
     android:id="@+id/content_view_big">
 
-    <RelativeLayout
+    <include
         android:id="@+id/rel_lyt"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <include
-            android:id="@+id/metadata"
-            layout="@layout/metadata" />
-
-        <TextView
-            android:id="@+id/product_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/metadata"
-            android:layout_alignStart="@id/metadata"
-            android:layout_marginTop="8dp"
-            android:layout_marginEnd="8dp"
-            android:text="title"
-            android:textAppearance="@style/PushTitle"
-            tools:ignore="RtlCompat" />
-
-        <TextView
-            android:id="@+id/product_description"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/product_name"
-            android:layout_alignStart="@id/product_name"
-            android:layout_marginEnd="8dp"
-            android:text="message"
-            android:textAppearance="@style/PushMessage" />
-
-    </RelativeLayout>
-
+        layout="@layout/content_view_small_multi_line_msg" />
 
     <LinearLayout
         android:id="@+id/carousel_relative_layout"

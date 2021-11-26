@@ -12,10 +12,10 @@ class ProductDisplayNonLinearBigContentView(context: Context, renderer: Template
 
     init {
         if (renderer.smallTextList!!.isNotEmpty())
-            setCustomContentViewText(R.id.product_description, renderer.smallTextList!![0])
+            setCustomContentViewText(R.id.msg, renderer.smallTextList!![0])
         setCustomContentViewTitle(renderer.pt_title)
         setCustomContentViewMessage(renderer.pt_msg)
-        setCustomContentViewElementColour(R.id.product_description, renderer.pt_msg_clr)
+        setCustomContentViewElementColour(R.id.msg, renderer.pt_msg_clr)
         setCustomContentViewElementColour(R.id.product_name, renderer.pt_title_clr)
     }
 
