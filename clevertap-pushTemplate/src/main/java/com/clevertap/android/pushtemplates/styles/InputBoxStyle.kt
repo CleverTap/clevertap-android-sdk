@@ -4,6 +4,8 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
@@ -140,15 +142,21 @@ class InputBoxStyle(private var renderer: TemplateRenderer): Style(renderer) {
                     }
                     var actionIntent: PendingIntent? = null
                     val requestCode = System.currentTimeMillis().toInt() + i
+
+                    var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+                    if (Build.VERSION.SDK_INT >= VERSION_CODES.S) {
+                        flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
+                    }
+
                     actionIntent = if (sendToPTIntentService) {
                         PendingIntent.getService(
                             context, requestCode,
-                            actionLaunchIntent!!, PendingIntent.FLAG_UPDATE_CURRENT
+                            actionLaunchIntent!!, flagsLaunchPendingIntent
                         )
                     } else {
                         PendingIntent.getActivity(
                             context, requestCode,
-                            actionLaunchIntent, PendingIntent.FLAG_UPDATE_CURRENT
+                            actionLaunchIntent,flagsLaunchPendingIntent
                         )
                     }
                     nb.addAction(icon, label, actionIntent)

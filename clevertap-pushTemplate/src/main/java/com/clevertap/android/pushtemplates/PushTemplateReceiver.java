@@ -11,6 +11,8 @@ import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.text.Html;
 import android.view.View;
@@ -587,13 +589,17 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
             PendingIntent pIntent;
 
+            int flagsActionLaunchPendingIntent = 0;
+            if (VERSION.SDK_INT >= VERSION_CODES.M) {
+                flagsActionLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
+            }
             Intent notificationIntent4 = new Intent(context, PushTemplateReceiver.class);
             notificationIntent4.putExtra(PTConstants.PT_IMAGE_1, true);
             notificationIntent4.putExtra(PTConstants.PT_NOTIF_ID, notificationId);
             notificationIntent4.putExtra(PTConstants.PT_BUY_NOW_DL, dl);
             notificationIntent4.putExtra(PTConstants.PT_BUY_NOW, true);
             notificationIntent4.putExtras(extras);
-            PendingIntent contentIntent4 = PendingIntent.getBroadcast(context, new Random().nextInt(), notificationIntent4, 0);
+            PendingIntent contentIntent4 = PendingIntent.getBroadcast(context, new Random().nextInt(), notificationIntent4, flagsActionLaunchPendingIntent);
             contentViewBig.setOnClickPendingIntent(R.id.product_action, contentIntent4);
 
             NotificationCompat.Builder notificationBuilder = setBuilderWithChannelIDCheck(requiresChannelId, PTConstants.PT_SILENT_CHANNEL_ID, context);
@@ -682,7 +688,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
         launchIntent.putExtra(Constants.WZRK_FROM_KEY, Constants.WZRK_FROM);
         launchIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
         int flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
             flagsLaunchPendingIntent |= PendingIntent.FLAG_MUTABLE;
         }
         return PendingIntent.getBroadcast(context, (int) System.currentTimeMillis(),
@@ -692,8 +698,14 @@ public class PushTemplateReceiver extends BroadcastReceiver {
     private PendingIntent setDismissIntent(Context context, Bundle extras, Intent intent) {
         intent.putExtras(extras);
         intent.putExtra(PTConstants.PT_DISMISS_INTENT, true);
+
+        int flagsLaunchPendingIntent = PendingIntent.FLAG_CANCEL_CURRENT;
+        if (Build.VERSION.SDK_INT >= VERSION_CODES.S) {
+            flagsLaunchPendingIntent = flagsLaunchPendingIntent | PendingIntent.FLAG_MUTABLE;
+        }
+
         return PendingIntent.getBroadcast(context, (int) System.currentTimeMillis(),
-                intent, PendingIntent.FLAG_CANCEL_CURRENT);
+                intent, flagsLaunchPendingIntent);
     }
 
     private void setNotificationBuilderBasics(NotificationCompat.Builder notificationBuilder, RemoteViews contentViewSmall, RemoteViews contentViewBig, String pt_title, PendingIntent pIntent, PendingIntent dIntent) {
