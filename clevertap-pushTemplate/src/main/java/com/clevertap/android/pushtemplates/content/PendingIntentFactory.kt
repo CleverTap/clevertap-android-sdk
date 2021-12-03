@@ -80,9 +80,13 @@ internal object PendingIntentFactory {
     fun setDismissIntent(context: Context, extras: Bundle, intent: Intent): PendingIntent {
         intent.putExtras(extras)
         intent.putExtra(PTConstants.PT_DISMISS_INTENT, true)
+        var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+        if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
+            flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
+        }
         return PendingIntent.getBroadcast(
             context, System.currentTimeMillis().toInt(),
-            intent, PendingIntent.FLAG_CANCEL_CURRENT
+            intent, flagsLaunchPendingIntent
         )
     }
 
@@ -162,7 +166,11 @@ internal object PendingIntentFactory {
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtra("config", renderer.config)
                 launchIntent.putExtras(extras)
-                return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, 0)
+                var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+                if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
+                    flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
+                }
+                return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, flagsLaunchPendingIntent)
             }
 
             RATING_CLICK2_PENDING_INTENT -> {
@@ -170,7 +178,11 @@ internal object PendingIntentFactory {
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtra("config", renderer.config)
                 launchIntent.putExtras(extras)
-                return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, 0)
+                var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+                if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
+                    flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
+                }
+                return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, flagsLaunchPendingIntent)
             }
 
             RATING_CLICK3_PENDING_INTENT -> {
@@ -178,7 +190,11 @@ internal object PendingIntentFactory {
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtra("config", renderer.config)
                 launchIntent.putExtras(extras)
-                return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, 0)
+                var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+                if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
+                    flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
+                }
+                return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, flagsLaunchPendingIntent)
             }
 
             RATING_CLICK4_PENDING_INTENT -> {
@@ -186,7 +202,11 @@ internal object PendingIntentFactory {
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtra("config", renderer.config)
                 launchIntent.putExtras(extras)
-                return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, 0)
+                var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+                if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
+                    flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
+                }
+                return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, flagsLaunchPendingIntent)
             }
 
             RATING_CLICK5_PENDING_INTENT -> {
@@ -194,7 +214,11 @@ internal object PendingIntentFactory {
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtra("config", renderer.config)
                 launchIntent.putExtras(extras)
-                return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, 0)
+                var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+                if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
+                    flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
+                }
+                return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, flagsLaunchPendingIntent)
             }
 
 
@@ -203,7 +227,11 @@ internal object PendingIntentFactory {
                 launchIntent.putExtra("cta1", true)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtras(extras)
-                return PendingIntent.getBroadcast(context, reqCode, launchIntent, 0)
+                var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+                if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
+                    flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
+                }
+                return PendingIntent.getBroadcast(context, reqCode, launchIntent, flagsLaunchPendingIntent)
             }
 
             FIVE_ICON_CTA2_PENDING_INTENT -> {
@@ -211,7 +239,11 @@ internal object PendingIntentFactory {
                 launchIntent.putExtra("cta2", true)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtras(extras)
-                return PendingIntent.getBroadcast(context, reqCode, launchIntent, 0)
+                var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+                if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
+                    flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
+                }
+                return PendingIntent.getBroadcast(context, reqCode, launchIntent, flagsLaunchPendingIntent)
             }
 
             FIVE_ICON_CTA3_PENDING_INTENT -> {
@@ -219,7 +251,11 @@ internal object PendingIntentFactory {
                 launchIntent.putExtra("cta3", true)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtras(extras)
-                return PendingIntent.getBroadcast(context, reqCode, launchIntent, 0)
+                var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+                if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
+                    flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
+                }
+                return PendingIntent.getBroadcast(context, reqCode, launchIntent, flagsLaunchPendingIntent)
             }
 
             FIVE_ICON_CTA4_PENDING_INTENT -> {
@@ -227,7 +263,11 @@ internal object PendingIntentFactory {
                 launchIntent.putExtra("cta4", true)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtras(extras)
-                return PendingIntent.getBroadcast(context, reqCode, launchIntent, 0)
+                var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+                if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
+                    flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
+                }
+                return PendingIntent.getBroadcast(context, reqCode, launchIntent, flagsLaunchPendingIntent)
             }
 
             FIVE_ICON_CTA5_PENDING_INTENT -> {
@@ -235,7 +275,11 @@ internal object PendingIntentFactory {
                 launchIntent.putExtra("cta5", true)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtras(extras)
-                return PendingIntent.getBroadcast(context, reqCode, launchIntent, 0)
+                var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+                if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
+                    flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
+                }
+                return PendingIntent.getBroadcast(context, reqCode, launchIntent, flagsLaunchPendingIntent)
             }
 
             FIVE_ICON_CONTENT_PENDING_INTENT -> {
@@ -247,7 +291,11 @@ internal object PendingIntentFactory {
                 launchIntent.putExtra("close", true)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtras(extras)
-                return PendingIntent.getBroadcast(context, reqCode, launchIntent, 0)
+                var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+                if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
+                    flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
+                }
+                return PendingIntent.getBroadcast(context, reqCode, launchIntent, flagsLaunchPendingIntent)
             }
 
             PRODUCT_DISPLAY_DL1_PENDING_INTENT -> {
@@ -256,7 +304,11 @@ internal object PendingIntentFactory {
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtra(PTConstants.PT_BUY_NOW_DL, renderer.deepLinkList!![0])
                 launchIntent.putExtras(extras)
-                return PendingIntent.getBroadcast(context, requestCode, launchIntent, 0)
+                var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+                if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
+                    flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
+                }
+                return PendingIntent.getBroadcast(context, requestCode, launchIntent, flagsLaunchPendingIntent)
             }
 
             PRODUCT_DISPLAY_DL2_PENDING_INTENT -> {
@@ -265,7 +317,11 @@ internal object PendingIntentFactory {
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtra(PTConstants.PT_BUY_NOW_DL, renderer.deepLinkList!![1])
                 launchIntent.putExtras(extras)
-                return PendingIntent.getBroadcast(context, requestCode, launchIntent, 0)
+                var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+                if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
+                    flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
+                }
+                return PendingIntent.getBroadcast(context, requestCode, launchIntent, flagsLaunchPendingIntent)
             }
 
             PRODUCT_DISPLAY_DL3_PENDING_INTENT -> {
@@ -274,7 +330,11 @@ internal object PendingIntentFactory {
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtra(PTConstants.PT_BUY_NOW_DL, renderer.deepLinkList!![2])
                 launchIntent.putExtras(extras)
-                return PendingIntent.getBroadcast(context, requestCode, launchIntent, 0)
+                var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+                if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
+                    flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
+                }
+                return PendingIntent.getBroadcast(context, requestCode, launchIntent, flagsLaunchPendingIntent)
             }
 
             PRODUCT_DISPLAY_CONTENT_SMALL1_PENDING_INTENT -> {
@@ -319,7 +379,11 @@ internal object PendingIntentFactory {
                 launchIntent.putExtra(PTConstants.PT_BUY_NOW, true)
                 launchIntent.putExtra("config", renderer.config)
                 launchIntent.putExtras(extras)
-                return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, 0)
+                var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+                if (Build.VERSION.SDK_INT >= VERSION_CODES.M) {
+                    flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
+                }
+                return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, flagsLaunchPendingIntent)
             }
 
             INPUT_BOX_CONTENT_PENDING_INTENT -> {
