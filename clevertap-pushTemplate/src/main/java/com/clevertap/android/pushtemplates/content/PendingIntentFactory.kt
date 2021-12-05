@@ -53,14 +53,14 @@ internal object PendingIntentFactory {
 
     @JvmStatic
     fun setPendingIntent(
-        context: Context, notificationId: Int, extras: Bundle, launchIntent: Intent,
-        dl: String?
+        context: Context, notificationId: Int, extras: Bundle, launchIntent: Intent
     ): PendingIntent {
+        val dl = extras[Constants.DEEP_LINK_KEY]
         launchIntent.putExtras(extras)
         launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
         if (dl != null) {
             launchIntent.putExtra(PTConstants.DEFAULT_DL, true)
-            launchIntent.putExtra(Constants.DEEP_LINK_KEY, dl)
+            //launchIntent.putExtra(Constants.DEEP_LINK_KEY, dl)
         }
         launchIntent.removeExtra(Constants.WZRK_ACTIONS)
         launchIntent.putExtra(Constants.WZRK_FROM_KEY, Constants.WZRK_FROM)
@@ -114,19 +114,21 @@ internal object PendingIntentFactory {
             MANUAL_CAROUSEL_CONTENT_PENDING_INTENT, ZERO_BEZEL_CONTENT_PENDING_INTENT,
             TIMER_CONTENT_PENDING_INTENT,PRODUCT_DISPLAY_CONTENT_PENDING_INTENT -> {
                 return if (renderer.deepLinkList != null && renderer.deepLinkList!!.size > 0) {
+                    extras.putString(Constants.DEEP_LINK_KEY,renderer.deepLinkList!![0])
                     setPendingIntent(
                         context,
                         notificationId,
                         extras,
-                        launchIntent,
-                        renderer.deepLinkList!![0]
+                        launchIntent
                     )
                 } else {
-                    setPendingIntent(context, notificationId, extras, launchIntent, null)
+                    extras.putString(Constants.DEEP_LINK_KEY,null)
+                    setPendingIntent(context, notificationId, extras, launchIntent)
                 }
             }
 
             MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT -> {
+                extras.putString(Constants.DEEP_LINK_KEY,renderer.deepLinkList!![0])
                 launchIntent.putExtra(PTConstants.PT_RIGHT_SWIPE, true)
                 launchIntent.putExtra(PTConstants.PT_MANUAL_CAROUSEL_FROM, 0)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
@@ -136,19 +138,19 @@ internal object PendingIntentFactory {
                     context,
                     notificationId,
                     extras,
-                    launchIntent,
-                    renderer.deepLinkList!![0]
+                    launchIntent
                 )
             }
 
             MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT -> {
+                extras.putString(Constants.DEEP_LINK_KEY,renderer.deepLinkList!![0])
                 launchIntent.putExtra(PTConstants.PT_RIGHT_SWIPE, false)
                 launchIntent.putExtra(PTConstants.PT_MANUAL_CAROUSEL_FROM, 0)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtras(extras)
 
                 return setPendingIntent(
-                    context, notificationId, extras, launchIntent, renderer.deepLinkList!![0]
+                    context, notificationId, extras, launchIntent
                 )
             }
 
@@ -158,12 +160,13 @@ internal object PendingIntentFactory {
             }
 
             RATING_CONTENT_PENDING_INTENT -> {
+                extras.putString(Constants.DEEP_LINK_KEY,
+                    renderer.pt_rating_default_dl)
                 return setPendingIntent(
                     context,
                     notificationId,
                     extras,
-                    launchIntent,
-                    renderer.pt_rating_default_dl
+                    launchIntent
                 )
             }
 
@@ -208,7 +211,7 @@ internal object PendingIntentFactory {
             }
 
 
-            FIVE_ICON_CTA1_PENDING_INTENT -> {
+            FIVE_ICON_CTA1_PENDING_INTENT -> { // TODO : OK to handle same as LaunchPendingIntentFactory
                 val reqCode = Random().nextInt()
                 launchIntent.putExtra("cta1", true)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
@@ -216,7 +219,7 @@ internal object PendingIntentFactory {
                 return PendingIntent.getBroadcast(context, reqCode, launchIntent, flagsLaunchPendingIntent)
             }
 
-            FIVE_ICON_CTA2_PENDING_INTENT -> {
+            FIVE_ICON_CTA2_PENDING_INTENT -> {// TODO : OK to handle same as LaunchPendingIntentFactory
                 val reqCode = Random().nextInt()
                 launchIntent.putExtra("cta2", true)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
@@ -224,7 +227,7 @@ internal object PendingIntentFactory {
                 return PendingIntent.getBroadcast(context, reqCode, launchIntent, flagsLaunchPendingIntent)
             }
 
-            FIVE_ICON_CTA3_PENDING_INTENT -> {
+            FIVE_ICON_CTA3_PENDING_INTENT -> {// TODO : OK to handle same as LaunchPendingIntentFactory
                 val reqCode = Random().nextInt()
                 launchIntent.putExtra("cta3", true)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
@@ -232,7 +235,7 @@ internal object PendingIntentFactory {
                 return PendingIntent.getBroadcast(context, reqCode, launchIntent, flagsLaunchPendingIntent)
             }
 
-            FIVE_ICON_CTA4_PENDING_INTENT -> {
+            FIVE_ICON_CTA4_PENDING_INTENT -> {// TODO : OK to handle same as LaunchPendingIntentFactory
                 val reqCode = Random().nextInt()
                 launchIntent.putExtra("cta4", true)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
@@ -240,7 +243,7 @@ internal object PendingIntentFactory {
                 return PendingIntent.getBroadcast(context, reqCode, launchIntent, flagsLaunchPendingIntent)
             }
 
-            FIVE_ICON_CTA5_PENDING_INTENT -> {
+            FIVE_ICON_CTA5_PENDING_INTENT -> {// TODO : OK to handle same as LaunchPendingIntentFactory
                 val reqCode = Random().nextInt()
                 launchIntent.putExtra("cta5", true)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
@@ -249,10 +252,11 @@ internal object PendingIntentFactory {
             }
 
             FIVE_ICON_CONTENT_PENDING_INTENT -> {
-                return setPendingIntent(context, notificationId, extras, launchIntent, null)
+                extras.putString(Constants.DEEP_LINK_KEY,null)
+                return setPendingIntent(context, notificationId, extras, launchIntent)
             }
 
-            FIVE_ICON_CLOSE_PENDING_INTENT -> {
+            FIVE_ICON_CLOSE_PENDING_INTENT -> {// TODO : pass to PushTemplateReceiver
                 val reqCode = Random().nextInt()
                 launchIntent.putExtra("close", true)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
@@ -288,32 +292,35 @@ internal object PendingIntentFactory {
             }
 
             PRODUCT_DISPLAY_CONTENT_SMALL1_PENDING_INTENT -> {
+                extras.putString(Constants.DEEP_LINK_KEY,
+                    renderer.deepLinkList!![0])
                 return setPendingIntent(
                     context,
                     notificationId,
                     extras,
-                    launchIntent,
-                    renderer.deepLinkList!![0]
+                    launchIntent
                 )
             }
 
             PRODUCT_DISPLAY_CONTENT_SMALL2_PENDING_INTENT -> {
+                extras.putString(Constants.DEEP_LINK_KEY,
+                    renderer.deepLinkList!![1])
                     return setPendingIntent(
                         context,
                         notificationId,
                         extras,
-                        launchIntent,
-                        renderer.deepLinkList!![1]
+                        launchIntent
                     )
             }
 
             PRODUCT_DISPLAY_CONTENT_SMALL3_PENDING_INTENT -> {
+                extras.putString(Constants.DEEP_LINK_KEY,
+                    renderer.deepLinkList!![2])
                     return setPendingIntent(
                         context,
                         notificationId,
                         extras,
-                        launchIntent,
-                        renderer.deepLinkList!![2]
+                        launchIntent
                     )
             }
 
@@ -333,21 +340,22 @@ internal object PendingIntentFactory {
             }
 
             INPUT_BOX_CONTENT_PENDING_INTENT -> {
-
+                extras.putString(Constants.DEEP_LINK_KEY,renderer.deepLinkList!![0])
                 return if (renderer.deepLinkList != null && renderer.deepLinkList!!.size > 0) {
                     setPendingIntent(
                         context,
                         notificationId,
                         extras,
-                        launchIntent,
-                        renderer.deepLinkList!![0]
+                        launchIntent
                     )
                 } else {
-                    setPendingIntent(context, notificationId, extras, launchIntent, null)
+                    extras.putString(Constants.DEEP_LINK_KEY,null)
+                    setPendingIntent(context, notificationId, extras, launchIntent)
                 }
             }
 
             INPUT_BOX_REPLY_PENDING_INTENT -> {
+                extras.putString(Constants.DEEP_LINK_KEY,renderer.deepLinkList!![0])
                 launchIntent.putExtra(PTConstants.PT_INPUT_FEEDBACK, renderer.pt_input_feedback)
                 launchIntent.putExtra(PTConstants.PT_INPUT_AUTO_OPEN, renderer.pt_input_auto_open)
                 launchIntent.putExtra("config", renderer.config)
@@ -357,11 +365,11 @@ internal object PendingIntentFactory {
                         context,
                         notificationId,
                         extras,
-                        launchIntent,
-                        renderer.deepLinkList!![0]
+                        launchIntent
                     )
                 } else {
-                    setPendingIntent(context, notificationId, extras, launchIntent, null)
+                    extras.putString(Constants.DEEP_LINK_KEY,null)
+                    setPendingIntent(context, notificationId, extras, launchIntent)
                 }
             }
             else -> throw IllegalArgumentException("invalid pendingIntentType")
