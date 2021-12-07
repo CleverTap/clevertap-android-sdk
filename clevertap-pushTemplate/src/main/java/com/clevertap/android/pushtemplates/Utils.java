@@ -1,6 +1,7 @@
 package com.clevertap.android.pushtemplates;
 
 import android.annotation.SuppressLint;
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.content.ContentResolver;
@@ -523,6 +524,18 @@ public class Utils {
             }
         }
         return false;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
+    public static Notification getNotificationById(Context context, int notificationId) {
+        NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+        StatusBarNotification[] notifications = mNotificationManager.getActiveNotifications();
+        for (StatusBarNotification notification : notifications) {
+            if (notification.getId() == notificationId) {
+                return notification.getNotification();
+            }
+        }
+        return null;
     }
 
     public static ArrayList<Integer> getNotificationIds(Context context) {

@@ -153,35 +153,40 @@ public class PushProviders implements CTPushProviderListener {
                 @Override
                 public Void call() {
                     try {
-                        config.getLogger()
-                                .debug(config.getAccountId(), "Handling notification: " + extras.toString());
-                        if (extras.getString(Constants.WZRK_PUSH_ID) != null) {
-                            if (baseDatabaseManager.loadDBAdapter(context)
-                                    .doesPushNotificationIdExist(extras.getString(Constants.WZRK_PUSH_ID))) {
-                                config.getLogger().debug(config.getAccountId(),
-                                        "Push Notification already rendered, not showing again");
-                                return null;
-                            }
-                        }// Common
-                        String notifMessage = iNotificationRenderer
-                                .getMessage(extras);//extras.getString(Constants.NOTIF_MSG);// uncommon - getMessage()
-                        notifMessage = (notifMessage != null) ? notifMessage : "";// common
-                        if (notifMessage.isEmpty()) {
-                            //silent notification
+                        /*String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
+                        if (extrasFrom==null || !extrasFrom.equals("PTReceiver")) {*/
                             config.getLogger()
-                                    .verbose(config.getAccountId(),
-                                            "Push notification message is empty, not rendering");
-                            baseDatabaseManager.loadDBAdapter(context)
-                                    .storeUninstallTimestamp();
-                            String pingFreq = extras.getString("pf", "");
-                            if (!TextUtils.isEmpty(pingFreq)) {
-                                updatePingFrequencyIfNeeded(context, Integer.parseInt(pingFreq));
-                            }
-                            return null;
-                        }// Common
-                        String notifTitle = iNotificationRenderer.getTitle(extras,
-                                context);//extras.getString(Constants.NOTIF_TITLE, "");// uncommon - getTitle()
-                        notifTitle = notifTitle.isEmpty() ? context.getApplicationInfo().name : notifTitle;//common
+                                    .debug(config.getAccountId(), "Handling notification: " + extras.toString());
+                            if (extras.getString(Constants.WZRK_PUSH_ID) != null) {
+                                if (baseDatabaseManager.loadDBAdapter(context)
+                                        .doesPushNotificationIdExist(extras.getString(Constants.WZRK_PUSH_ID))) {
+                                    config.getLogger().debug(config.getAccountId(),
+                                            "Push Notification already rendered, not showing again");
+                                    return null;
+                                }
+                            }// Common
+                            String notifMessage = iNotificationRenderer
+                                    .getMessage(
+                                            extras);//extras.getString(Constants.NOTIF_MSG);// uncommon - getMessage()
+                            notifMessage = (notifMessage != null) ? notifMessage : "";// common
+                            if (notifMessage.isEmpty()) {
+                                //silent notification
+                                config.getLogger()
+                                        .verbose(config.getAccountId(),
+                                                "Push notification message is empty, not rendering");
+                                baseDatabaseManager.loadDBAdapter(context)
+                                        .storeUninstallTimestamp();
+                                String pingFreq = extras.getString("pf", "");
+                                if (!TextUtils.isEmpty(pingFreq)) {
+                                    updatePingFrequencyIfNeeded(context, Integer.parseInt(pingFreq));
+                                }
+                                return null;
+                            }// Common
+                            String notifTitle = iNotificationRenderer.getTitle(extras,
+                                    context);//extras.getString(Constants.NOTIF_TITLE, "");// uncommon - getTitle()
+                            notifTitle = notifTitle.isEmpty() ? context.getApplicationInfo().name
+                                    : notifTitle;//common
+                        //}
                         triggerNotification(context, extras, notificationId);
                     } catch (Throwable t) {
                         // Occurs if the notification image was null
@@ -1086,22 +1091,25 @@ public class PushProviders implements CTPushProviderListener {
         notificationManager.notify(notificationId, n);
         config.getLogger().debug(config.getAccountId(), "Rendered notification: " + n.toString());//cb
 
-        String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE,
-                (System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL) / 1000 + "");
-        long wzrk_ttl = Long.parseLong(ttl);
-        String wzrk_pid = extras.getString(Constants.WZRK_PUSH_ID);
-        DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-        config.getLogger().verbose("Storing Push Notification..." + wzrk_pid + " - with ttl - " + ttl);
-        dbAdapter.storePushNotificationId(wzrk_pid, wzrk_ttl);
+        //String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
+        //if (extrasFrom==null || !extrasFrom.equals("PTReceiver")) {
+            String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE,
+                    (System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL) / 1000 + "");
+            long wzrk_ttl = Long.parseLong(ttl);
+            String wzrk_pid = extras.getString(Constants.WZRK_PUSH_ID);
+            DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
+            config.getLogger().verbose("Storing Push Notification..." + wzrk_pid + " - with ttl - " + ttl);
+            dbAdapter.storePushNotificationId(wzrk_pid, wzrk_ttl);
 
-        boolean notificationViewedEnabled = "true".equals(extras.getString(Constants.WZRK_RNV, ""));
-        if (!notificationViewedEnabled) {
-            ValidationResult notificationViewedError = ValidationResultFactory
-                    .create(512, Constants.NOTIFICATION_VIEWED_DISABLED, extras.toString());
-            config.getLogger().debug(notificationViewedError.getErrorDesc());
-            validationResultStack.pushValidationResult(notificationViewedError);
-            return;
-        }
-        analyticsManager.pushNotificationViewedEvent(extras);
+            boolean notificationViewedEnabled = "true".equals(extras.getString(Constants.WZRK_RNV, ""));
+            if (!notificationViewedEnabled) {
+                ValidationResult notificationViewedError = ValidationResultFactory
+                        .create(512, Constants.NOTIFICATION_VIEWED_DISABLED, extras.toString());
+                config.getLogger().debug(notificationViewedError.getErrorDesc());
+                validationResultStack.pushValidationResult(notificationViewedError);
+                return;
+            }
+            analyticsManager.pushNotificationViewedEvent(extras);
+        //}
     }
 }

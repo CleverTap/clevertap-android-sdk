@@ -2716,7 +2716,13 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public void renderPushNotification(@NonNull INotificationRenderer iNotificationRenderer, Context context,
             Bundle extras) {
         coreState.getPushProviders().setPushNotificationRenderer(iNotificationRenderer);
-        coreState.getPushProviders()._createNotification(context, extras, Constants.EMPTY_NOTIFICATION_ID);
+
+        /*if (extras!=null && extras.containsKey(Constants.PT_NOTIF_ID))
+        {
+            coreState.getPushProviders()._createNotification(context, extras, extras.getInt(Constants.PT_NOTIF_ID));
+        } else {*/
+            coreState.getPushProviders()._createNotification(context, extras, Constants.EMPTY_NOTIFICATION_ID);
+        //}
     }
 
    /* public @NonNull INotificationRenderer getPushNotificationRenderer(){

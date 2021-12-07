@@ -35,6 +35,7 @@ abstract class Style(private var renderer: TemplateRenderer) {
             .setWhen(System.currentTimeMillis())
             .setColor(Color.parseColor(renderer.pt_small_icon_clr?:"#FFFFFF"))
             .setAutoCancel(true)
+            .setOnlyAlertOnce(true)
     }
 
     protected abstract fun makeSmallContentView(context: Context,renderer: TemplateRenderer): RemoteViews?

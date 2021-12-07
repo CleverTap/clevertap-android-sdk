@@ -19,17 +19,25 @@ import android.view.View;
 import android.widget.RemoteViews;
 
 import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationCompat.Builder;
 import androidx.core.app.RemoteInput;
 
+import com.clevertap.android.pushtemplates.content.PendingIntentFactory;
+import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 
+import com.clevertap.android.sdk.interfaces.NotificationHandler;
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Random;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
+import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.MANUAL_CAROUSEL_CONTENT_PENDING_INTENT;
+import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.MANUAL_CAROUSEL_DISMISS_PENDING_INTENT;
+import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT;
+import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT;
 import static com.clevertap.android.sdk.pushnotification.CTNotificationIntentService.TYPE_BUTTON_CLICK;
 
 public class PushTemplateReceiver extends BroadcastReceiver {
@@ -165,10 +173,30 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
     private void handleManualCarouselNotification(Context context, Bundle extras) {
         try {
-            contentViewManualCarousel = new RemoteViews(context.getPackageName(), R.layout.manual_carousel);
-            setCustomContentViewBasicKeys(contentViewManualCarousel, context);
+            /*extras.putString(Constants.EXTRAS_FROM,"PTReceiver");
+            NotificationHandler notificationHandler = CleverTapAPI.getNotificationHandler();
+            if (notificationHandler!=null)
+            {
+                notificationHandler.onMessageReceived(context,extras,"FCM");
+            }*/
 
             int notificationId = extras.getInt(PTConstants.PT_NOTIF_ID);
+            Notification notification = null;
+            if (VERSION.SDK_INT >= VERSION_CODES.S) {
+                /**
+                 * Android 12 requires to recreate remote views to update notification
+                 * but recreating remote views creates performance issue and notification lag,
+                 * hence using below method to get remote views from existing notification
+                 */
+                notification = Utils.getNotificationById(context, notificationId);
+                if (notification!=null) {
+                    contentViewManualCarousel = notification.bigContentView;
+                    contentViewSmall = notification.contentView;
+                }
+            } else {
+                contentViewManualCarousel = new RemoteViews(context.getPackageName(), R.layout.manual_carousel);
+            }
+            setCustomContentViewBasicKeys(contentViewManualCarousel, context);
 
             final boolean rightSwipe = extras.getBoolean(PTConstants.PT_RIGHT_SWIPE);
 
@@ -211,37 +239,49 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             extras.putInt(PTConstants.PT_MANUAL_CAROUSEL_CURRENT, newPosition);
             extras.remove(PTConstants.PT_RIGHT_SWIPE);
             extras.putString(Constants.DEEP_LINK_KEY,dl);
+            extras.putInt(PTConstants.PT_MANUAL_CAROUSEL_FROM, currPosition);
 
-            Intent rightArrowPos0Intent = new Intent(context, PushTemplateReceiver.class);
-            rightArrowPos0Intent.putExtra(PTConstants.PT_RIGHT_SWIPE, true);
-            rightArrowPos0Intent.putExtra(PTConstants.PT_MANUAL_CAROUSEL_FROM, currPosition);
-            rightArrowPos0Intent.putExtra(PTConstants.PT_NOTIF_ID, notificationId);
-            rightArrowPos0Intent.putExtras(extras);
-            PendingIntent contentRightPos0Intent = setPendingIntent(context, notificationId, extras, rightArrowPos0Intent, dl);
-            contentViewManualCarousel.setOnClickPendingIntent(R.id.rightArrowPos0, contentRightPos0Intent);
+            contentViewManualCarousel.setOnClickPendingIntent(R.id.rightArrowPos0,  PendingIntentFactory
+                    .getPendingIntent(context,notificationId, extras,false,
+                    MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT,null));
 
-            Intent leftArrowPos0Intent = new Intent(context, PushTemplateReceiver.class);
-            leftArrowPos0Intent.putExtra(PTConstants.PT_RIGHT_SWIPE, false);
-            leftArrowPos0Intent.putExtra(PTConstants.PT_MANUAL_CAROUSEL_FROM, currPosition);
-            leftArrowPos0Intent.putExtra(PTConstants.PT_NOTIF_ID, notificationId);
-            leftArrowPos0Intent.putExtras(extras);
-            PendingIntent contentLeftPos0Intent = setPendingIntent(context, notificationId, extras, leftArrowPos0Intent, dl);
-            contentViewManualCarousel.setOnClickPendingIntent(R.id.leftArrowPos0, contentLeftPos0Intent);
+            contentViewManualCarousel.setOnClickPendingIntent(R.id.leftArrowPos0, PendingIntentFactory
+                    .getPendingIntent(context,notificationId, extras,false,
+                            MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT,null));
 
 
-            Intent launchIntent = new Intent(context, PTPushNotificationReceiver.class);
-            PendingIntent pIntent = setPendingIntent(context, notificationId, extras, launchIntent, dl);
+            PendingIntent pIntent = PendingIntentFactory.getPendingIntent(context,notificationId,extras,true,
+                    MANUAL_CAROUSEL_CONTENT_PENDING_INTENT,null
+            );//setPendingIntent(context, notificationId, extras, launchIntent, dl);
 
-            NotificationCompat.Builder notificationBuilder = setBuilderWithChannelIDCheck(requiresChannelId, PTConstants.PT_SILENT_CHANNEL_ID, context);
-            Intent dismissIntent = new Intent(context, PushTemplateReceiver.class);
+            NotificationCompat.Builder notificationBuilder;
+            if (VERSION.SDK_INT >= VERSION_CODES.S) {
+                if (notification!=null)
+                {
+                    notificationBuilder = new Builder(context, notification);
+                } else {
+                    notificationBuilder = setBuilderWithChannelIDCheck(requiresChannelId, PTConstants.PT_SILENT_CHANNEL_ID, context);
+                }
+            } else {
+                notificationBuilder = setBuilderWithChannelIDCheck(requiresChannelId, PTConstants.PT_SILENT_CHANNEL_ID, context);
+            }
+
+            //NotificationCompat.Builder notificationBuilder = setBuilderWithChannelIDCheck(requiresChannelId, PTConstants.PT_SILENT_CHANNEL_ID, context);
+            /*Intent dismissIntent = new Intent(context, PushTemplateReceiver.class);
             PendingIntent dIntent;
-            dIntent = setDismissIntent(context, extras, dismissIntent);
+            dIntent = setDismissIntent(context, extras, dismissIntent);*/
+
+            PendingIntent dIntent = PendingIntentFactory.getPendingIntent(context,notificationId,extras,false,
+                    MANUAL_CAROUSEL_DISMISS_PENDING_INTENT,null);
 
             setSmallIcon(context);
 
-            setNotificationBuilderBasics(notificationBuilder, contentViewSmall, contentViewManualCarousel, pt_title, pIntent, dIntent);
+            //if (VERSION.SDK_INT < VERSION_CODES.S) {
+                setNotificationBuilderBasics(notificationBuilder, contentViewSmall, contentViewManualCarousel,
+                        pt_title, pIntent, dIntent);
 
-            Notification notification = notificationBuilder.build();
+                notification = notificationBuilder.build();
+            //}
 
             notificationManager.notify(notificationId, notification);
 
