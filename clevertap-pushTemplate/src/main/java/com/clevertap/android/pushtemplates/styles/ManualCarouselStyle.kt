@@ -24,16 +24,16 @@ class ManualCarouselStyle(private var renderer: TemplateRenderer,private var ext
         extras: Bundle,
         notificationId: Int
     ): PendingIntent? {
-        /*val extrasFrom = extras.getString(Constants.EXTRAS_FROM)
-        if (extrasFrom == null || extrasFrom != "PTReceiver") {*/
-            return PendingIntentFactory.getPendingIntent(context,notificationId,extras,true,
+        val extrasFrom = extras.getString(Constants.EXTRAS_FROM)
+        return if (extrasFrom == null || extrasFrom != "PTReceiver") {
+            PendingIntentFactory.getPendingIntent(context,notificationId,extras,true,
                 MANUAL_CAROUSEL_CONTENT_PENDING_INTENT,renderer
             )
-        /*}else{
-            return PendingIntentFactory.getPendingIntent(context,notificationId,extras,true,
+        }else{
+            PendingIntentFactory.getPendingIntent(context,notificationId,extras,true,
                 MANUAL_CAROUSEL_CONTENT_PENDING_INTENT,null
             )
-        }*/
+        }
     }
 
     override fun makeDismissIntent(

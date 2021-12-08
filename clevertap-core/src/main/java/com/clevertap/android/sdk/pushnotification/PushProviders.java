@@ -153,8 +153,8 @@ public class PushProviders implements CTPushProviderListener {
                 @Override
                 public Void call() {
                     try {
-                        /*String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
-                        if (extrasFrom==null || !extrasFrom.equals("PTReceiver")) {*/
+                        String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
+                        if (extrasFrom==null || !extrasFrom.equals("PTReceiver")) {
                             config.getLogger()
                                     .debug(config.getAccountId(), "Handling notification: " + extras.toString());
                             if (extras.getString(Constants.WZRK_PUSH_ID) != null) {
@@ -186,7 +186,7 @@ public class PushProviders implements CTPushProviderListener {
                                     context);//extras.getString(Constants.NOTIF_TITLE, "");// uncommon - getTitle()
                             notifTitle = notifTitle.isEmpty() ? context.getApplicationInfo().name
                                     : notifTitle;//common
-                        //}
+                        }
                         triggerNotification(context, extras, notificationId);
                     } catch (Throwable t) {
                         // Occurs if the notification image was null
@@ -1091,8 +1091,8 @@ public class PushProviders implements CTPushProviderListener {
         notificationManager.notify(notificationId, n);
         config.getLogger().debug(config.getAccountId(), "Rendered notification: " + n.toString());//cb
 
-        //String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
-        //if (extrasFrom==null || !extrasFrom.equals("PTReceiver")) {
+        String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
+        if (extrasFrom==null || !extrasFrom.equals("PTReceiver")) {
             String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE,
                     (System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL) / 1000 + "");
             long wzrk_ttl = Long.parseLong(ttl);
@@ -1110,6 +1110,6 @@ public class PushProviders implements CTPushProviderListener {
                 return;
             }
             analyticsManager.pushNotificationViewedEvent(extras);
-        //}
+        }
     }
 }

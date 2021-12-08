@@ -60,8 +60,7 @@ class ManualCarouselContentView(context: Context, renderer: TemplateRenderer,ext
             remoteView.setViewVisibility(R.id.carousel_image_left, View.GONE)
         }
         
-        /*if(extras.containsKey(PTConstants.PT_RIGHT_SWIPE)){
-
+        if(extras.containsKey(PTConstants.PT_RIGHT_SWIPE)){
             val rightSwipe = extras.getBoolean(PTConstants.PT_RIGHT_SWIPE)
             val currPosition = extras.getInt(PTConstants.PT_MANUAL_CAROUSEL_CURRENT)
             val nextPosition: Int
@@ -128,11 +127,11 @@ class ManualCarouselContentView(context: Context, renderer: TemplateRenderer,ext
                 )
             )
 
-            *//*val pIntent = getPendingIntent(
-                context, notificationId, extras, true,
-                MANUAL_CAROUSEL_CONTENT_PENDING_INTENT, null
-            )*//*
-        } else {*/
+//            val pIntent = getPendingIntent(
+//                context, notificationId, extras, true,
+//                MANUAL_CAROUSEL_CONTENT_PENDING_INTENT, null
+//            )
+        } else {
             remoteView.setDisplayedChild(R.id.carousel_image_right, 1)
             remoteView.setDisplayedChild(
                 R.id.carousel_image_left,
@@ -161,7 +160,7 @@ class ManualCarouselContentView(context: Context, renderer: TemplateRenderer,ext
             if (imageCounter < 2) {
                 PTLog.debug("Need at least 2 images to display Manual Carousel, found - $imageCounter, not displaying the notification.")
             }
-        //}
+        }
         
     }
 
