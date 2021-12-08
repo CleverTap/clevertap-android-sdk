@@ -289,5 +289,6 @@ public interface Constants {
 
     String[] NULL_STRING_ARRAY = new String[0];
     //public static final String PT_NOTIF_ID = "notificationId";
+    public static final String CLOSE_SYSTEM_DIALOGS = "close_system_dialogs";
 
 }

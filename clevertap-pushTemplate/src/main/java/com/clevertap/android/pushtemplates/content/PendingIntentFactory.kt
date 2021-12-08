@@ -213,52 +213,12 @@ internal object PendingIntentFactory {
                 return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, flagsLaunchPendingIntent)
             }
 
-            FIVE_ICON_CTA1_PENDING_INTENT -> { // TODO : OK to handle same as LaunchPendingIntentFactory
-                val reqCode = Random().nextInt()
-                launchIntent.putExtra("cta1", true)
-                launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-                launchIntent.putExtras(extras)
-                return PendingIntent.getBroadcast(context, reqCode, launchIntent, flagsLaunchPendingIntent)
-            }
-
-            FIVE_ICON_CTA2_PENDING_INTENT -> {// TODO : OK to handle same as LaunchPendingIntentFactory
-                val reqCode = Random().nextInt()
-                launchIntent.putExtra("cta2", true)
-                launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-                launchIntent.putExtras(extras)
-                return PendingIntent.getBroadcast(context, reqCode, launchIntent, flagsLaunchPendingIntent)
-            }
-
-            FIVE_ICON_CTA3_PENDING_INTENT -> {// TODO : OK to handle same as LaunchPendingIntentFactory
-                val reqCode = Random().nextInt()
-                launchIntent.putExtra("cta3", true)
-                launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-                launchIntent.putExtras(extras)
-                return PendingIntent.getBroadcast(context, reqCode, launchIntent, flagsLaunchPendingIntent)
-            }
-
-            FIVE_ICON_CTA4_PENDING_INTENT -> {// TODO : OK to handle same as LaunchPendingIntentFactory
-                val reqCode = Random().nextInt()
-                launchIntent.putExtra("cta4", true)
-                launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-                launchIntent.putExtras(extras)
-                return PendingIntent.getBroadcast(context, reqCode, launchIntent, flagsLaunchPendingIntent)
-            }
-
-            FIVE_ICON_CTA5_PENDING_INTENT -> {// TODO : OK to handle same as LaunchPendingIntentFactory
-                val reqCode = Random().nextInt()
-                launchIntent.putExtra("cta5", true)
-                launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
-                launchIntent.putExtras(extras)
-                return PendingIntent.getBroadcast(context, reqCode, launchIntent, flagsLaunchPendingIntent)
-            }
-
             FIVE_ICON_CONTENT_PENDING_INTENT -> {
                 extras.putString(Constants.DEEP_LINK_KEY, null)
                 return setPendingIntent(context, notificationId, extras, launchIntent)
             }
 
-            FIVE_ICON_CLOSE_PENDING_INTENT -> {// TODO : pass to PushTemplateReceiver
+            FIVE_ICON_CLOSE_PENDING_INTENT -> {
                 val reqCode = Random().nextInt()
                 launchIntent.putExtra("close", true)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)

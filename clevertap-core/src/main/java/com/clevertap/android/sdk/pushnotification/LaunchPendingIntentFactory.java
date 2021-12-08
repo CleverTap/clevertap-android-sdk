@@ -8,12 +8,14 @@ import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Utils;
 
-class LaunchPendingIntentFactory {
+@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+public class LaunchPendingIntentFactory {
 
-    static PendingIntent getLaunchPendingIntent(@NonNull Bundle extras, @NonNull Context context) {
+    public static PendingIntent getLaunchPendingIntent(@NonNull Bundle extras, @NonNull Context context) {
         Intent launchIntent;
         PendingIntent pIntent;
         if (VERSION.SDK_INT >= VERSION_CODES.S) {

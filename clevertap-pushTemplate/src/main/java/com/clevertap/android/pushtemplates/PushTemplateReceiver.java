@@ -671,50 +671,15 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
     private void handleFiveCTANotification(Context context, Bundle extras) {
         String dl = null;
-
-
         int notificationId = extras.getInt(PTConstants.PT_NOTIF_ID);
-        if (cta1 == extras.getBoolean("cta1")) {
-            dl = deepLinkList.get(0);
-            extras.putString(Constants.KEY_C2A, PTConstants.PT_5CTA_C2A_KEY + 1 + "_" + dl);
-        }
-        if (cta2 == extras.getBoolean("cta2")) {
-            dl = deepLinkList.get(1);
-            extras.putString(Constants.KEY_C2A, PTConstants.PT_5CTA_C2A_KEY + 2 + "_" + dl);
-        }
-        if (cta3 == extras.getBoolean("cta3")) {
-            dl = deepLinkList.get(2);
-            extras.putString(Constants.KEY_C2A, PTConstants.PT_5CTA_C2A_KEY + 3 + "_" + dl);
-        }
-        if (cta4 == extras.getBoolean("cta4")) {
-            dl = deepLinkList.get(3);
-            extras.putString(Constants.KEY_C2A, PTConstants.PT_5CTA_C2A_KEY + 4 + "_" + dl);
-        }
-        if (cta5 == extras.getBoolean("cta5")) {
-            dl = deepLinkList.get(4);
-            extras.putString(Constants.KEY_C2A, PTConstants.PT_5CTA_C2A_KEY + 5 + "_" + dl);
-        }
         extras.putString(Constants.DEEP_LINK_KEY, dl);
 
         if (close == extras.getBoolean("close")) {
             extras.putString(Constants.KEY_C2A, PTConstants.PT_5CTA_C2A_KEY + "close");
             notificationManager.cancel(notificationId);
-            context.sendBroadcast(new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
+            //context.sendBroadcast(new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
         }
-
         Utils.raiseNotificationClicked(context, extras, config);
-
-
-        if (dl != null) {
-            Intent launchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(dl));
-            launchIntent.putExtras(extras);
-            launchIntent.putExtra(Constants.DEEP_LINK_KEY, dl);
-            launchIntent.removeExtra(Constants.WZRK_ACTIONS);
-            launchIntent.putExtra(Constants.WZRK_FROM_KEY, Constants.WZRK_FROM);
-            launchIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP | Intent.FLAG_ACTIVITY_NEW_TASK);
-            context.startActivity(launchIntent);
-            context.sendBroadcast(new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
-        }
     }
 
     private PendingIntent setPendingIntent(Context context, int notificationId, Bundle extras, Intent launchIntent, String dl) {
