@@ -11,11 +11,9 @@ import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
 
-class FiveIconContentView constructor(context: Context,
+class FiveIconBigContentView constructor(context: Context,
     renderer: TemplateRenderer,
-    extras: Bundle
-):
-    ContentView(context, R.layout.five_cta, renderer) {
+    extras: Bundle):ContentView(context, R.layout.five_cta_expanded, renderer) {
 
    init {
        if (renderer.pt_title == null || renderer.pt_title!!.isEmpty()) {
