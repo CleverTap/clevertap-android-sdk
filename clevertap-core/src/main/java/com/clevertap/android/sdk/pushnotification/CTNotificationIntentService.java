@@ -6,8 +6,11 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import com.clevertap.android.sdk.CleverTapAPI;
+import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.interfaces.ActionButtonClickHandler;
@@ -55,7 +58,7 @@ public class CTNotificationIntentService extends IntentService {
                     .getPushNotificationHandler();
         }
 
-        String type = mActionButtonClickHandler.getType(extras);
+        String type = extras.getString(Constants.KEY_CT_TYPE);//mActionButtonClickHandler.getType(extras);
         if (TYPE_BUTTON_CLICK.equals(type)) {
             Logger.v("CTNotificationIntentService handling " + TYPE_BUTTON_CLICK);
             handleActionButtonClick(extras);
@@ -76,6 +79,14 @@ public class CTNotificationIntentService extends IntentService {
             boolean isActionButtonClickHandled = mActionButtonClickHandler
                     .onActionButtonClick(context, extras, notificationId);
             if (isActionButtonClickHandled) {
+                return;
+            }
+
+            /**
+             * For Android 12 Trampoline restrictions, do not process deeplink from here
+             */
+            if (VERSION.SDK_INT>= VERSION_CODES.S)
+            {
                 return;
             }
 

@@ -37,11 +37,6 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
     }
 
     @Override
-    public String getType(final Bundle extras) {
-        return extras.getString("ct_type");
-    }
-
-    @Override
     public boolean onActionButtonClick(final Context context, final Bundle extras, final int notificationId) {
         return false;
     }

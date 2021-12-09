@@ -12,17 +12,15 @@ import java.util.Objects;
 public class PushTemplateNotificationHandler implements ActionButtonClickHandler {
 
     @Override
-    public String getType(final Bundle extras) {
-        return extras.getString(PTConstants.PT_TYPE);
-    }
-
-    @Override
     public boolean onActionButtonClick(final Context context, final Bundle extras, final int notificationId) {
         String actionID = extras.getString(PTConstants.PT_ACTION_ID);
         String dismissOnClick = extras.getString(PTConstants.PT_DISMISS_ON_CLICK);
         CleverTapInstanceConfig config = extras.getParcelable("config");
 
         if (dismissOnClick != null && dismissOnClick.equalsIgnoreCase("true")) {
+            /**
+             * For input box remind CTA,pt_dismiss_on_click must be true to raise event
+             */
             if (actionID != null && actionID.contains("remind")) {
                 Utils.raiseCleverTapEvent(context, config, extras);
             }

@@ -236,6 +236,10 @@ class TemplateRenderer : INotificationRenderer {
         }
     }
 
+    override fun getActionButtonIconKey(): String {
+        return PTConstants.PT_NOTIF_ICON
+    }
+
     override fun getCollapseKey(extras: Bundle): Any? {
         return pt_collapse_key // TODO: Check if set properly before caller calls this
     }

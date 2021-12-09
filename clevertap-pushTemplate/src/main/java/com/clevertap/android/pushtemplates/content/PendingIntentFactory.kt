@@ -308,8 +308,8 @@ internal object PendingIntentFactory {
             }
 
             INPUT_BOX_CONTENT_PENDING_INTENT -> {
-                extras.putString(Constants.DEEP_LINK_KEY, renderer?.deepLinkList!![0])
-                return if (renderer.deepLinkList != null && renderer?.deepLinkList!!.size > 0) {
+                return if (renderer?.deepLinkList != null && renderer?.deepLinkList!!.size > 0) {
+                    extras.putString(Constants.DEEP_LINK_KEY, renderer?.deepLinkList?.get(0))
                     setPendingIntent(
                         context,
                         notificationId,
@@ -323,7 +323,10 @@ internal object PendingIntentFactory {
             }
 
             INPUT_BOX_REPLY_PENDING_INTENT -> {
-                extras.putString(Constants.DEEP_LINK_KEY, renderer?.deepLinkList!![0])
+                if (renderer?.deepLinkList!!.size>0)
+                {
+                    extras.putString(Constants.DEEP_LINK_KEY, renderer?.deepLinkList!![0])
+                }
                 launchIntent.putExtra(PTConstants.PT_INPUT_FEEDBACK, renderer?.pt_input_feedback)
                 launchIntent.putExtra(PTConstants.PT_INPUT_AUTO_OPEN, renderer?.pt_input_auto_open)
                 launchIntent.putExtra("config", renderer?.config)

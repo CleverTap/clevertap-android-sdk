@@ -288,7 +288,9 @@ public interface Constants {
     int MAX_DELAY_FREQUENCY = 1000 * 60 * 10;
 
     String[] NULL_STRING_ARRAY = new String[0];
-    public static final String PT_NOTIF_ID = "notificationId";
-    public static final String CLOSE_SYSTEM_DIALOGS = "close_system_dialogs";
+    String PT_NOTIF_ID = "notificationId";
+    String CLOSE_SYSTEM_DIALOGS = "close_system_dialogs";
+    String KEY_CT_TYPE = "ct_type";
+    String PT_INPUT_KEY = "pt_input_reply";
 
 }

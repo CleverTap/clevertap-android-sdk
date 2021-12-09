@@ -125,105 +125,7 @@ public class CoreNotificationRenderer implements INotificationRenderer {
             }
         }
 
-        String intentServiceName = ManifestInfo.getInstance(context).getIntentServiceName();
-        Class clazz = null;
-        if (intentServiceName != null) {
-            try {
-                clazz = Class.forName(intentServiceName);
-            } catch (ClassNotFoundException e) {
-                try {
-                    clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService");
-                } catch (ClassNotFoundException ex) {
-                    Logger.d("No Intent Service found");
-                }
-            }
-        } else {
-            try {
-                clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService");
-            } catch (ClassNotFoundException ex) {
-                Logger.d("No Intent Service found");
-            }
-        }
-
-        boolean isCTIntentServiceAvailable = Utils.isServiceAvailable(context, clazz);
-
-        if (actions != null && actions.length() > 0) {
-            for (int i = 0; i < actions.length(); i++) {
-                try {
-                    JSONObject action = actions.getJSONObject(i);
-                    String label = action.optString("l");
-                    String dl = action.optString("dl");
-                    String ico = action.optString(Constants.NOTIF_ICON);
-                    String id = action.optString("id");
-                    boolean autoCancel = action.optBoolean("ac", true);
-                    if (label.isEmpty() || id.isEmpty()) {
-                        config.getLogger().debug(config.getAccountId(),
-                                "not adding push notification action: action label or id missing");
-                        continue;
-                    }
-                    int icon = 0;
-                    if (!ico.isEmpty()) {
-                        try {
-                            icon = context.getResources().getIdentifier(ico, "drawable", context.getPackageName());
-                        } catch (Throwable t) {
-                            config.getLogger().debug(config.getAccountId(),
-                                    "unable to add notification action icon: " + t.getLocalizedMessage());
-                        }
-                    }
-
-                    boolean sendToCTIntentService = (VERSION.SDK_INT < VERSION_CODES.S && autoCancel
-                            && isCTIntentServiceAvailable);
-
-                    Intent actionLaunchIntent;
-                    if (sendToCTIntentService) {
-                        actionLaunchIntent = new Intent(CTNotificationIntentService.MAIN_ACTION);
-                        actionLaunchIntent.setPackage(context.getPackageName());
-                        actionLaunchIntent.putExtra("ct_type", CTNotificationIntentService.TYPE_BUTTON_CLICK);
-                        if (!dl.isEmpty()) {
-                            actionLaunchIntent.putExtra("dl", dl);
-                        }
-                    } else {
-                        if (!dl.isEmpty()) {
-                            actionLaunchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(dl));
-                        } else {
-                            actionLaunchIntent = context.getPackageManager()
-                                    .getLaunchIntentForPackage(context.getPackageName());
-                        }
-                    }
-
-                    if (actionLaunchIntent != null) {
-                        actionLaunchIntent.putExtras(extras);
-                        actionLaunchIntent.removeExtra(Constants.WZRK_ACTIONS);
-                        actionLaunchIntent.putExtra("actionId", id);
-                        actionLaunchIntent.putExtra("autoCancel", autoCancel);
-                        actionLaunchIntent.putExtra("wzrk_c2a", id);
-                        actionLaunchIntent.putExtra("notificationId", notificationId);
-
-                        actionLaunchIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                    }
-
-                    PendingIntent actionIntent;
-                    int requestCode = ((int) System.currentTimeMillis()) + i;
-                    int flagsActionLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
-                    if (VERSION.SDK_INT >= VERSION_CODES.M) {
-                        flagsActionLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
-                    }
-                    if (sendToCTIntentService) {
-                        actionIntent = PendingIntent.getService(context, requestCode,
-                                actionLaunchIntent, flagsActionLaunchPendingIntent);
-                    } else {
-                        actionIntent = PendingIntent.getActivity(context, requestCode,
-                                actionLaunchIntent, flagsActionLaunchPendingIntent);
-                    }
-                    nb.addAction(icon, label, actionIntent);
-
-                } catch (Throwable t) {
-                    config.getLogger()
-                            .debug(config.getAccountId(),
-                                    "error adding notification action : " + t.getLocalizedMessage());
-                }
-            }
-        }// Uncommon - END
+        setActionButtons(context,extras,notificationId,nb,actions);
 
         return nb;
 
@@ -232,6 +134,11 @@ public class CoreNotificationRenderer implements INotificationRenderer {
     @Override
     public void setSmallIcon(final int smallIcon, final Context context) {
         this.smallIcon = smallIcon;
+    }
+
+    @Override
+    public String getActionButtonIconKey() {
+        return Constants.NOTIF_ICON;
     }
 
 }

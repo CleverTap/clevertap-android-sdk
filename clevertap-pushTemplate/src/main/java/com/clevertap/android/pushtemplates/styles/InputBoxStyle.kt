@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
+import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import android.widget.RemoteViews
@@ -54,11 +55,44 @@ class InputBoxStyle(private var renderer: TemplateRenderer): Style(renderer) {
                 .setLabel(renderer.pt_input_label)
                 .build()
 
+            val replyIntent : PendingIntent
+            /*if (VERSION.SDK_INT < VERSION_CODES.S || (extras.getString(PTConstants.PT_INPUT_AUTO_OPEN) == null && !extras.getBoolean(PTConstants.PT_INPUT_AUTO_OPEN)))
+            {*/
+                replyIntent = PendingIntentFactory.getPendingIntent(context,notificationId,extras,false,
+                    INPUT_BOX_REPLY_PENDING_INTENT,renderer)!!
+            /*} else {
+                    var launchIntent : Intent?
+                    if (extras.containsKey(Constants.DEEP_LINK_KEY) && extras.getString(Constants.DEEP_LINK_KEY)!=null) {
+                        launchIntent = Intent(
+                            Intent.ACTION_VIEW,
+                            Uri.parse(extras.getString(Constants.DEEP_LINK_KEY))
+                        )
+                        com.clevertap.android.sdk.Utils.setPackageNameFromResolveInfoList(context, launchIntent)
+                    } else {
+                        launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
+                    }
+
+                    launchIntent?.flags = (Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+
+                    extras.putInt(PTConstants.PT_NOTIF_ID,notificationId)
+                    // Take all the properties from the notif and add it to the intent
+                    launchIntent?.putExtras(extras)
+                    launchIntent?.removeExtra(Constants.WZRK_ACTIONS)
+
+                    val flagsLaunchPendingIntent = (PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
+
+                    replyIntent = PendingIntent.getActivity(
+                        context,
+                        System.currentTimeMillis().toInt(),
+                        launchIntent,
+                        flagsLaunchPendingIntent
+                    )
+                }*/
             //Notification Action with RemoteInput instance added.
             val replyAction = NotificationCompat.Action.Builder(
-                android.R.drawable.sym_action_chat, renderer.pt_input_label, PendingIntentFactory.
-                getPendingIntent(context,notificationId,extras,false,
-                    INPUT_BOX_REPLY_PENDING_INTENT,renderer))
+                android.R.drawable.sym_action_chat, renderer.pt_input_label,replyIntent
+            )
                 .addRemoteInput(remoteInput)
                 .setAllowGeneratedReplies(true)
                 .build()
@@ -69,102 +103,8 @@ class InputBoxStyle(private var renderer: TemplateRenderer): Style(renderer) {
         if (renderer.pt_dismiss_on_click != null && renderer.pt_dismiss_on_click!!.isNotEmpty()){
             extras.putString(PTConstants.PT_DISMISS_ON_CLICK, renderer.pt_dismiss_on_click)
         }
-        setActionButtons(context, extras, notificationId, inputBoxNotificationBuilder)
+        renderer.setActionButtons(context,extras,notificationId,inputBoxNotificationBuilder,renderer.actions)
         return inputBoxNotificationBuilder
-    }
-
-    private fun setActionButtons(
-        context: Context,
-        extras: Bundle,
-        notificationId: Int,
-        nb: NotificationCompat.Builder
-    ) {
-        var clazz: Class<*>? = null
-        try {
-            clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
-        } catch (ex: ClassNotFoundException) {
-            PTLog.debug("No Intent Service found")
-        }
-        val isPTIntentServiceAvailable = com.clevertap.android.sdk.Utils.isServiceAvailable(context, clazz)
-        if (renderer.actions != null && renderer.actions!!.length() > 0) {
-            for (i in 0 until renderer.actions!!.length()) {
-                try {
-                    val action = renderer.actions!!.getJSONObject(i)
-                    val label = action.optString("l")
-                    val dl = action.optString("dl")
-                    val ico = action.optString(PTConstants.PT_NOTIF_ICON)
-                    val id = action.optString("id")
-                    val autoCancel = action.optBoolean("ac", true)
-                    if (label.isEmpty() || id.isEmpty()) {
-                        PTLog.debug("not adding push notification action: action label or id missing")
-                        continue
-                    }
-                    var icon = 0
-                    if (ico.isNotEmpty()) {
-                        try {
-                            icon = context.resources.getIdentifier(
-                                ico,
-                                "drawable",
-                                context.packageName
-                            )
-                        } catch (t: Throwable) {
-                            PTLog.debug("unable to add notification action icon: " + t.localizedMessage)
-                        }
-                    }
-                    val sendToPTIntentService = autoCancel && isPTIntentServiceAvailable
-                    var actionLaunchIntent: Intent?
-                    if (sendToPTIntentService) {
-                        actionLaunchIntent = Intent(CTNotificationIntentService.MAIN_ACTION)
-                        actionLaunchIntent.setPackage(context.packageName)
-                        actionLaunchIntent.putExtra(
-                            PTConstants.PT_TYPE,
-                            CTNotificationIntentService.TYPE_BUTTON_CLICK
-                        )
-                        if (dl.isNotEmpty()) {
-                            actionLaunchIntent.putExtra("dl", dl)
-                        }
-                    } else {
-                        actionLaunchIntent = if (dl.isNotEmpty()) {
-                            Intent(Intent.ACTION_VIEW, Uri.parse(dl))
-                        } else {
-                            context.packageManager.getLaunchIntentForPackage(context.packageName)
-                        }
-                    }
-                    if (actionLaunchIntent != null) {
-                        actionLaunchIntent.putExtras(extras)
-                        actionLaunchIntent.removeExtra(Constants.WZRK_ACTIONS)
-                        actionLaunchIntent.putExtra(PTConstants.PT_ACTION_ID, id)
-                        actionLaunchIntent.putExtra("autoCancel", autoCancel)
-                        actionLaunchIntent.putExtra("wzrk_c2a", id)
-                        actionLaunchIntent.putExtra("notificationId", notificationId)
-                        actionLaunchIntent.flags =
-                            Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
-                    }
-                    var actionIntent: PendingIntent? = null
-                    val requestCode = System.currentTimeMillis().toInt() + i
-
-                    var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
-                    if (Build.VERSION.SDK_INT >= VERSION_CODES.S) {
-                        flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_MUTABLE
-                    }
-
-                    actionIntent = if (sendToPTIntentService) {
-                        PendingIntent.getService(
-                            context, requestCode,
-                            actionLaunchIntent!!, flagsLaunchPendingIntent
-                        )
-                    } else {
-                        PendingIntent.getActivity(
-                            context, requestCode,
-                            actionLaunchIntent,flagsLaunchPendingIntent
-                        )
-                    }
-                    nb.addAction(icon, label, actionIntent)
-                } catch (t: Throwable) {
-                    PTLog.debug("error adding notification action : " + t.localizedMessage)
-                }
-            }
-        }
     }
 
     private fun setStandardViewBigImageStyle(

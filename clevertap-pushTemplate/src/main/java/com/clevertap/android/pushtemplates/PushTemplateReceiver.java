@@ -327,7 +327,8 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 /* Check if Auto Open key is present and not empty, if not present then show feedback and
                 auto kill in 3 secs. If present, then launch the App with Dl or Launcher activity.
                 The launcher activity will get the reply in extras under the key "pt_reply" */
-                if (extras.getString(PTConstants.PT_INPUT_AUTO_OPEN) != null || extras.getBoolean(PTConstants.PT_INPUT_AUTO_OPEN)) {
+                if (VERSION.SDK_INT < VERSION_CODES.S && (extras.getString(PTConstants.PT_INPUT_AUTO_OPEN) != null
+                                || extras.getBoolean(PTConstants.PT_INPUT_AUTO_OPEN))) {
                     //adding delay for launcher
                     try {
                         Thread.sleep(PTConstants.PT_INPUT_TIMEOUT);
@@ -337,7 +338,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
                     Intent launchIntent;
 
-                    if (extras.containsKey(Constants.DEEP_LINK_KEY)) {
+                    if (extras.containsKey(Constants.DEEP_LINK_KEY) && extras.getString(Constants.DEEP_LINK_KEY)!=null) {
                         launchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(intent.getStringExtra(Constants.DEEP_LINK_KEY)));
                         Utils.setPackageNameFromResolveInfoList(context, launchIntent);
                     } else {
