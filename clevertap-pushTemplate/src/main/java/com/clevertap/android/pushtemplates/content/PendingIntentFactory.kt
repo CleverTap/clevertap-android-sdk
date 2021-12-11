@@ -8,10 +8,14 @@ import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import com.clevertap.android.pushtemplates.PTConstants
+import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.PTPushNotificationReceiver
 import com.clevertap.android.pushtemplates.PushTemplateReceiver
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.Utils
+import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
+import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
 import java.util.Random
 
 const val BASIC_CONTENT_PENDING_INTENT = 1
@@ -228,28 +232,28 @@ internal object PendingIntentFactory {
 
             PRODUCT_DISPLAY_DL1_PENDING_INTENT -> {
                 val requestCode = Random().nextInt()
+                launchIntent.putExtras(extras)
                 launchIntent.putExtra(PTConstants.PT_CURRENT_POSITION, 0)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtra(PTConstants.PT_BUY_NOW_DL, renderer?.deepLinkList!![0])
-                launchIntent.putExtras(extras)
                 return PendingIntent.getBroadcast(context, requestCode, launchIntent, flagsLaunchPendingIntent)
             }
 
             PRODUCT_DISPLAY_DL2_PENDING_INTENT -> {
                 val requestCode = Random().nextInt()
+                launchIntent.putExtras(extras)
                 launchIntent.putExtra(PTConstants.PT_CURRENT_POSITION, 1)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtra(PTConstants.PT_BUY_NOW_DL, renderer?.deepLinkList!![1])
-                launchIntent.putExtras(extras)
                 return PendingIntent.getBroadcast(context, requestCode, launchIntent, flagsLaunchPendingIntent)
             }
 
             PRODUCT_DISPLAY_DL3_PENDING_INTENT -> {
                 val requestCode = Random().nextInt()
+                launchIntent.putExtras(extras)
                 launchIntent.putExtra(PTConstants.PT_CURRENT_POSITION, 2)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtra(PTConstants.PT_BUY_NOW_DL, renderer?.deepLinkList!![2])
-                launchIntent.putExtras(extras)
                 return PendingIntent.getBroadcast(context, requestCode, launchIntent, flagsLaunchPendingIntent)
             }
 
@@ -344,6 +348,42 @@ internal object PendingIntentFactory {
                 }
             }
             else -> throw IllegalArgumentException("invalid pendingIntentType")
+        }
+    }
+
+    @JvmStatic
+    fun getCtaLaunchPendingIntent(context: Context, extras: Bundle, dl: String, notificationId: Int): PendingIntent {
+        var clazz: Class<*>? = null
+        try {
+            clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
+        } catch (ex: ClassNotFoundException) {
+            PTLog.debug("No Intent Service found")
+        }
+
+        val isCTIntentServiceAvailable = Utils.isServiceAvailable(context, clazz)
+
+        return if (VERSION.SDK_INT < VERSION_CODES.S && isCTIntentServiceAvailable) {
+            extras.putBoolean("autoCancel", true)
+            extras.putInt(Constants.PT_NOTIF_ID, notificationId)
+            launchIntent = Intent(CTNotificationIntentService.MAIN_ACTION)
+            launchIntent.putExtras(extras)
+            launchIntent.putExtra("dl", dl)
+            launchIntent.setPackage(context.packageName)
+            launchIntent.putExtra(Constants.KEY_CT_TYPE, CTNotificationIntentService.TYPE_BUTTON_CLICK)
+
+            var flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+            if (VERSION.SDK_INT >= VERSION_CODES.M) {
+                flagsLaunchPendingIntent = flagsLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
+            }
+            PendingIntent.getService(
+                context,
+                System.currentTimeMillis().toInt(),
+                launchIntent,
+                flagsLaunchPendingIntent
+            )
+        } else {
+            extras.putString(Constants.DEEP_LINK_KEY, dl)
+            LaunchPendingIntentFactory.getActivityIntent(extras, context)
         }
     }
 }

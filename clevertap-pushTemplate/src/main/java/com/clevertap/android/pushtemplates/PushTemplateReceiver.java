@@ -552,8 +552,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
     private void handleProductDisplayNotification(Context context, Bundle extras) {
         try {
-            int notificationId = extras.getInt(PTConstants.PT_NOTIF_ID);
-            if (buynow == extras.getBoolean(PTConstants.PT_BUY_NOW, false)) {
+            /*if (buynow == extras.getBoolean(PTConstants.PT_BUY_NOW, false)) {
                 notificationManager.cancel(notificationId);
                 String dl = extras.getString(PTConstants.PT_BUY_NOW_DL, deepLinkList.get(0));
                 config = extras.getParcelable("config");
@@ -586,16 +585,22 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                     context.startActivity(launchIntent);
                 }
                 return;
-            }
-
+            }*/
+            if (VERSION.SDK_INT >= VERSION_CODES.M) {
+                int notificationId = extras.getInt(PTConstants.PT_NOTIF_ID);
+                Notification notification = Utils.getNotificationById(context, notificationId);
+                if (notification != null) {
+                    contentViewBig = notification.bigContentView;
+                    contentViewSmall = notification.contentView;
+                }
             boolean isLinear = false;
             if (pt_product_display_linear == null || pt_product_display_linear.isEmpty()) {
-                contentViewBig = new RemoteViews(context.getPackageName(), R.layout.product_display_template);
-                contentViewSmall = new RemoteViews(context.getPackageName(), R.layout.content_view_small_single_line_msg);
+                //contentViewBig = new RemoteViews(context.getPackageName(), R.layout.product_display_template);
+                //contentViewSmall = new RemoteViews(context.getPackageName(), R.layout.content_view_small_single_line_msg);
             } else {
                 isLinear = true;
-                contentViewBig = new RemoteViews(context.getPackageName(), R.layout.product_display_linear_expanded);
-                contentViewSmall = new RemoteViews(context.getPackageName(), R.layout.product_display_linear_collapsed);
+                //contentViewBig = new RemoteViews(context.getPackageName(), R.layout.product_display_linear_expanded);
+                //contentViewSmall = new RemoteViews(context.getPackageName(), R.layout.product_display_linear_collapsed);
             }
 
             setCustomContentViewBasicKeys(contentViewBig, context);
@@ -613,30 +618,37 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             priceList = extras.getStringArrayList(PTConstants.PT_PRICE_LIST);
 
             String dl = deepLinkList.get(currentPosition);
-            contentViewBig.setTextViewText(R.id.product_name, bigTextList.get(currentPosition));
+            if (!isLinear)
+            {
+                contentViewBig.setTextViewText(R.id.title, bigTextList.get(currentPosition));
+            } else {
+                contentViewBig.setTextViewText(R.id.product_name, bigTextList.get(currentPosition));
+            }
             contentViewBig.setTextViewText(R.id.msg, smallTextList.get(currentPosition));
             contentViewBig.setTextViewText(R.id.product_price, priceList.get(currentPosition));
             extras.remove(PTConstants.PT_CURRENT_POSITION);
 
+            Bundle bundleBuyNow = (Bundle) extras.clone();
+            bundleBuyNow.putBoolean(PTConstants.PT_IMAGE_1, true);
+            bundleBuyNow.putInt(PTConstants.PT_NOTIF_ID, notificationId);
+            bundleBuyNow.putString(PTConstants.PT_BUY_NOW_DL, dl);
+            bundleBuyNow.putBoolean(PTConstants.PT_BUY_NOW, true);
+
+            contentViewBig.setOnClickPendingIntent(R.id.product_action,
+                    PendingIntentFactory.getCtaLaunchPendingIntent(context,
+                            bundleBuyNow, dl, notificationId));
+
+                NotificationCompat.Builder notificationBuilder;
+                if (notification!=null)
+                {
+                    notificationBuilder = new Builder(context, notification);
+                } else {
+                    notificationBuilder = setBuilderWithChannelIDCheck(requiresChannelId,
+                            PTConstants.PT_SILENT_CHANNEL_ID, context);
+                }
+
             Intent launchIntent = new Intent(context, PTPushNotificationReceiver.class);
-
             PendingIntent pIntent;
-
-            int flagsActionLaunchPendingIntent = 0;
-            if (VERSION.SDK_INT >= VERSION_CODES.M) {
-                flagsActionLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
-            }
-            Intent notificationIntent4 = new Intent(context, PushTemplateReceiver.class);
-            notificationIntent4.putExtra(PTConstants.PT_IMAGE_1, true);
-            notificationIntent4.putExtra(PTConstants.PT_NOTIF_ID, notificationId);
-            notificationIntent4.putExtra(PTConstants.PT_BUY_NOW_DL, dl);
-            notificationIntent4.putExtra(PTConstants.PT_BUY_NOW, true);
-            notificationIntent4.putExtras(extras);
-            PendingIntent contentIntent4 = PendingIntent.getBroadcast(context, new Random().nextInt(), notificationIntent4, flagsActionLaunchPendingIntent);
-            contentViewBig.setOnClickPendingIntent(R.id.product_action, contentIntent4);
-
-            NotificationCompat.Builder notificationBuilder = setBuilderWithChannelIDCheck(requiresChannelId, PTConstants.PT_SILENT_CHANNEL_ID, context);
-
             if (deepLinkList != null && !deepLinkList.isEmpty()) {
                 pIntent = setPendingIntent(context, notificationId, extras, launchIntent, dl);
             } else {
@@ -650,11 +662,20 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 dIntent = setDismissIntent(context, extras, dismissIntent);
                 setSmallIcon(context);
 
-                setNotificationBuilderBasics(notificationBuilder, contentViewSmall, contentViewBig, pt_title, pIntent, dIntent);
+                setNotificationBuilderBasics(notificationBuilder, contentViewSmall, contentViewBig, pt_title, pIntent,
+                        dIntent);
 
-                Notification notification = notificationBuilder.build();
+                notification = notificationBuilder.build();
 
                 notificationManager.notify(notificationId, notification);
+            }
+        } else{
+                extras.putString(Constants.EXTRAS_FROM,"PTReceiver");
+                NotificationHandler notificationHandler = CleverTapAPI.getNotificationHandler();
+                if (notificationHandler!=null)
+                {
+                    notificationHandler.onMessageReceived(context,extras,"FCM");
+                }
             }
 
         } catch (Throwable t) {

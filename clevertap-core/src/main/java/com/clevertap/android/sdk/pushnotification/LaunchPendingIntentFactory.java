@@ -19,30 +19,7 @@ public class LaunchPendingIntentFactory {
         Intent launchIntent;
         PendingIntent pIntent;
         if (VERSION.SDK_INT >= VERSION_CODES.S) {
-            if (extras.containsKey(Constants.DEEP_LINK_KEY)) {
-                launchIntent = new Intent(Intent.ACTION_VIEW,
-                        Uri.parse(extras.getString(Constants.DEEP_LINK_KEY)));
-                Utils.setPackageNameFromResolveInfoList(context, launchIntent);
-            } else {
-                launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
-                if (launchIntent == null) {
-                    return null;
-                }
-            }
-
-            launchIntent.setFlags(
-                    Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP
-                            | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-
-            // Take all the properties from the notif and add it to the intent
-            launchIntent.putExtras(extras);
-            launchIntent.removeExtra(Constants.WZRK_ACTIONS);
-
-            int flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
-                    | PendingIntent.FLAG_IMMUTABLE;
-
-            pIntent = PendingIntent.getActivity(context, (int) System.currentTimeMillis(), launchIntent,
-                    flagsLaunchPendingIntent);
+            pIntent = getActivityIntent(extras, context);
         } else {
             launchIntent = new Intent(context, CTPushNotificationReceiver.class);
             // Take all the properties from the notif and add it to the intent
@@ -57,5 +34,37 @@ public class LaunchPendingIntentFactory {
                     launchIntent, flagsLaunchPendingIntent);
         }
         return pIntent;
+    }
+
+    public static PendingIntent getActivityIntent(@NonNull Bundle extras, @NonNull Context context){
+        Intent launchIntent;
+        if (extras.containsKey(Constants.DEEP_LINK_KEY)) {
+            launchIntent = new Intent(Intent.ACTION_VIEW,
+                    Uri.parse(extras.getString(Constants.DEEP_LINK_KEY)));
+            Utils.setPackageNameFromResolveInfoList(context, launchIntent);
+        } else {
+            launchIntent = context.getPackageManager().getLaunchIntentForPackage(context.getPackageName());
+            if (launchIntent == null) {
+                return null;
+            }
+        }
+
+        launchIntent.setFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP
+                        | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+
+        // Take all the properties from the notif and add it to the intent
+        launchIntent.putExtras(extras);
+        launchIntent.removeExtra(Constants.WZRK_ACTIONS);
+
+        int flagsLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (VERSION.SDK_INT >= VERSION_CODES.M) {
+            flagsLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
+        }
+
+        return PendingIntent.getActivity(context, (int) System.currentTimeMillis(), launchIntent,
+                flagsLaunchPendingIntent);
+
+
     }
 }

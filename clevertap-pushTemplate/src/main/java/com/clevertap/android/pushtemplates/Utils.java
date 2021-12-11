@@ -264,7 +264,7 @@ public class Utils {
     static ArrayList<String> getPriceFromExtras(Bundle extras) {
         ArrayList<String> stList = new ArrayList<>();
         for (String key : extras.keySet()) {
-            if (key.contains("pt_price")) {
+            if (key.contains("pt_price") && !key.contains("pt_price_list")) {
                 stList.add(extras.getString(key));
             }
         }
