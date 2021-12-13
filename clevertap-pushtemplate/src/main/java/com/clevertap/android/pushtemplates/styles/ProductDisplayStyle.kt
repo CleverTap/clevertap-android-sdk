@@ -10,11 +10,12 @@ import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 
 class ProductDisplayStyle(private var renderer: TemplateRenderer, private var extras: Bundle): Style(renderer) {
     override fun makeSmallContentView(context: Context, renderer: TemplateRenderer): RemoteViews {
-        return if (renderer.pt_product_display_linear == null || renderer.pt_product_display_linear!!.isEmpty()) {
+        return ProductDisplayNonLinearSmallContentView(context, renderer).remoteView
+        /*if (renderer.pt_product_display_linear == null || renderer.pt_product_display_linear!!.isEmpty()) {
             ProductDisplayNonLinearSmallContentView(context, renderer).remoteView
         }else{
-            ProductDisplayLinearSmallContentView(context, renderer,extras).remoteView
-        }
+            ProductDisplayNonLinearSmallContentView(context, renderer).remoteView
+        }*/ //For both linear and non-linear collapsed view layout will be the same
     }
 
     override fun makeBigContentView(context: Context, renderer: TemplateRenderer): RemoteViews {

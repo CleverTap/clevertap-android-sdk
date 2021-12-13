@@ -14,7 +14,7 @@
         android:id="@+id/carousel_relative_layout"
         android:layout_width="match_parent"
         android:layout_height="200dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="4dp"
         android:weightSum="1">
 
         <ViewFlipper
