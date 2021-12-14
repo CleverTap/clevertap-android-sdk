@@ -30,6 +30,7 @@ const val RATING_CLICK2_PENDING_INTENT = 9
 const val RATING_CLICK3_PENDING_INTENT = 10
 const val RATING_CLICK4_PENDING_INTENT = 11
 const val RATING_CLICK5_PENDING_INTENT = 12
+//const val RATING_CLICK_CONFIRM_PENDING_INTENT = 120
 const val FIVE_ICON_CONTENT_PENDING_INTENT = 13
 const val FIVE_ICON_CTA1_PENDING_INTENT = 14
 const val FIVE_ICON_CTA2_PENDING_INTENT = 15
@@ -50,6 +51,7 @@ const val ZERO_BEZEL_CONTENT_PENDING_INTENT = 29
 const val TIMER_CONTENT_PENDING_INTENT = 30
 const val INPUT_BOX_CONTENT_PENDING_INTENT = 31
 const val INPUT_BOX_REPLY_PENDING_INTENT = 32
+const val RATING_CONFIRM_PENDING_INTENT = 33
 
 internal object PendingIntentFactory {
 
@@ -178,44 +180,57 @@ internal object PendingIntentFactory {
             }
 
             RATING_CLICK1_PENDING_INTENT -> {
+                launchIntent.putExtras(extras)
                 launchIntent.putExtra("click1", true)
+                launchIntent.putExtra("clickedStar", 1)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtra("config", renderer?.config)
-                launchIntent.putExtras(extras)
                 return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, flagsLaunchPendingIntent)
             }
 
             RATING_CLICK2_PENDING_INTENT -> {
+                launchIntent.putExtras(extras)
                 launchIntent.putExtra("click2", true)
+                launchIntent.putExtra("clickedStar", 2)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtra("config", renderer?.config)
-                launchIntent.putExtras(extras)
                 return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, flagsLaunchPendingIntent)
             }
 
             RATING_CLICK3_PENDING_INTENT -> {
+                launchIntent.putExtras(extras)
                 launchIntent.putExtra("click3", true)
+                launchIntent.putExtra("clickedStar", 3)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtra("config", renderer?.config)
-                launchIntent.putExtras(extras)
                 return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, flagsLaunchPendingIntent)
             }
 
             RATING_CLICK4_PENDING_INTENT -> {
+                launchIntent.putExtras(extras)
                 launchIntent.putExtra("click4", true)
+                launchIntent.putExtra("clickedStar", 4)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtra("config", renderer?.config)
-                launchIntent.putExtras(extras)
                 return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, flagsLaunchPendingIntent)
             }
 
             RATING_CLICK5_PENDING_INTENT -> {
+                launchIntent.putExtras(extras)
                 launchIntent.putExtra("click5", true)
+                launchIntent.putExtra("clickedStar", 5)
                 launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent.putExtra("config", renderer?.config)
-                launchIntent.putExtras(extras)
                 return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, flagsLaunchPendingIntent)
             }
+
+           /* RATING_CLICK_CONFIRM_PENDING_INTENT -> {
+                launchIntent.putExtras(extras)
+                launchIntent.putExtra("clickedStar", 6)
+                launchIntent.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
+                //launchIntent.putExtra("config", renderer?.config)
+                return PendingIntent.getBroadcast(context, Random().nextInt(), launchIntent, flagsLaunchPendingIntent)
+            }*/
 
             FIVE_ICON_CONTENT_PENDING_INTENT -> {
                 extras.putString(Constants.DEEP_LINK_KEY, null)
