@@ -39,6 +39,8 @@
             android:layout_alignStart="@id/title"
             android:layout_alignParentStart="true"
             android:layout_toStartOf="@+id/large_icon"
+            android:maxLines="3"
+            android:ellipsize="end"
             android:text="message message"
             android:textAppearance="@style/PushMessageMultiLine"
             />
