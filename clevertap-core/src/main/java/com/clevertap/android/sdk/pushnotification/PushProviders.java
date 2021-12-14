@@ -1000,6 +1000,7 @@ public class PushProviders implements CTPushProviderListener {
                         }
                     }
                 }
+                notificationId = Math.abs(notificationId); //Notification Id always needs to be positive
             } catch (NumberFormatException e) {
                 // no-op
             }

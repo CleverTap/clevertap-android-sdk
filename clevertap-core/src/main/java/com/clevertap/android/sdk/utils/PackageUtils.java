@@ -4,7 +4,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import androidx.annotation.NonNull;
 import com.google.android.gms.common.ConnectionResult;
-import com.google.android.gms.common.GoogleApiAvailability;
+import com.google.android.gms.common.GoogleApiAvailabilityLight;
 
 public class PackageUtils {
 
@@ -15,7 +15,7 @@ public class PackageUtils {
     public static boolean isGooglePlayServicesAvailable(@NonNull Context context) {
         try {
             Class.forName("com.google.android.gms.common.GooglePlayServicesUtil");
-            int status = GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(context);
+            int status = GoogleApiAvailabilityLight.getInstance().isGooglePlayServicesAvailable(context);
             return status == ConnectionResult.SUCCESS;
         } catch (ClassNotFoundException e) {
             return false;
