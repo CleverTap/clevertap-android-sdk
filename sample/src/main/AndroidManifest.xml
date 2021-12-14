@@ -87,18 +87,6 @@
                 <action android:name="com.clevertap.PUSH_EVENT" />
             </intent-filter>
         </service>
-        <receiver
-            android:name="com.clevertap.android.pushtemplates.PTPushNotificationReceiver"
-            android:exported="false"
-            android:enabled="true">
-        </receiver>
-
-        <receiver
-            android:name="com.clevertap.android.pushtemplates.PushTemplateReceiver"
-            android:exported="false"
-            android:enabled="true">
-        </receiver>
-
         <activity
             android:name=".WebViewActivity"
             android:exported="true"
