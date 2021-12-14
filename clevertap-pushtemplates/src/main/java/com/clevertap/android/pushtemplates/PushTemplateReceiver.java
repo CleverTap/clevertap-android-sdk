@@ -37,6 +37,7 @@ import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt
 import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.MANUAL_CAROUSEL_DISMISS_PENDING_INTENT;
 import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT;
 import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT;
+import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.PRODUCT_DISPLAY_CONTENT_PENDING_INTENT;
 import static com.clevertap.android.sdk.pushnotification.CTNotificationIntentService.TYPE_BUTTON_CLICK;
 
 public class PushTemplateReceiver extends BroadcastReceiver {
@@ -287,7 +288,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
         Bundle remoteInput = RemoteInput.getResultsFromIntent(intent);
         Intent dismissIntent = new Intent(context, PushTemplateReceiver.class);
         PendingIntent dIntent;
-        dIntent = setDismissIntent(context, extras, dismissIntent);
+        dIntent = PendingIntentFactory.setDismissIntent(context, extras, dismissIntent);
         config = extras.getParcelable("config");
 
         if (remoteInput != null) {
@@ -624,7 +625,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 }
                 Intent dismissIntent = new Intent(context, PushTemplateReceiver.class);
                 PendingIntent dIntent;
-                dIntent = setDismissIntent(context, extras, dismissIntent);
+                dIntent = PendingIntentFactory.setDismissIntent(context, extras, dismissIntent);
 
                 if (notificationManager != null) {
                     //Use the Builder to build notification
@@ -790,19 +791,18 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                             PTConstants.PT_SILENT_CHANNEL_ID, context);
                 }
 
-            Intent launchIntent = new Intent(context, PTPushNotificationReceiver.class);
             PendingIntent pIntent;
-            if (deepLinkList != null && !deepLinkList.isEmpty()) {
-                pIntent = setPendingIntent(context, notificationId, extras, launchIntent, dl);
-            } else {
-                pIntent = setPendingIntent(context, notificationId, extras, launchIntent, null);
-            }
+            Bundle bundleLaunchIntent = (Bundle) extras.clone();
+            bundleLaunchIntent.putString(Constants.DEEP_LINK_KEY,dl);
+            pIntent = PendingIntentFactory.getPendingIntent(context,notificationId,bundleLaunchIntent,true,
+                    PRODUCT_DISPLAY_CONTENT_PENDING_INTENT,null
+            );
 
             if (notificationManager != null) {
                 //Use the Builder to build notification
                 Intent dismissIntent = new Intent(context, PushTemplateReceiver.class);
                 PendingIntent dIntent;
-                dIntent = setDismissIntent(context, extras, dismissIntent);
+                dIntent = PendingIntentFactory.setDismissIntent(context, extras, dismissIntent);
                 setSmallIcon(context);
 
                 setNotificationBuilderBasics(notificationBuilder, contentViewSmall, contentViewBig, pt_title, pIntent,
@@ -855,19 +855,6 @@ public class PushTemplateReceiver extends BroadcastReceiver {
         }
         return PendingIntent.getBroadcast(context, (int) System.currentTimeMillis(),
                 launchIntent, flagsLaunchPendingIntent);
-    }
-
-    private PendingIntent setDismissIntent(Context context, Bundle extras, Intent intent) {
-        intent.putExtras(extras);
-        intent.putExtra(PTConstants.PT_DISMISS_INTENT, true);
-
-        int flagsLaunchPendingIntent = PendingIntent.FLAG_CANCEL_CURRENT;
-        if (Build.VERSION.SDK_INT >= VERSION_CODES.S) {
-            flagsLaunchPendingIntent = flagsLaunchPendingIntent | PendingIntent.FLAG_MUTABLE;
-        }
-
-        return PendingIntent.getBroadcast(context, (int) System.currentTimeMillis(),
-                intent, flagsLaunchPendingIntent);
     }
 
     private void setNotificationBuilderBasics(NotificationCompat.Builder notificationBuilder, RemoteViews contentViewSmall, RemoteViews contentViewBig, String pt_title, PendingIntent pIntent, PendingIntent dIntent) {

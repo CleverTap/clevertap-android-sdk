@@ -38,7 +38,7 @@ public class LaunchPendingIntentFactory {
 
     public static PendingIntent getActivityIntent(@NonNull Bundle extras, @NonNull Context context){
         Intent launchIntent;
-        if (extras.containsKey(Constants.DEEP_LINK_KEY)) {
+        if (extras.containsKey(Constants.DEEP_LINK_KEY) && extras.getString(Constants.DEEP_LINK_KEY)!=null) {
             launchIntent = new Intent(Intent.ACTION_VIEW,
                     Uri.parse(extras.getString(Constants.DEEP_LINK_KEY)));
             Utils.setPackageNameFromResolveInfoList(context, launchIntent);
