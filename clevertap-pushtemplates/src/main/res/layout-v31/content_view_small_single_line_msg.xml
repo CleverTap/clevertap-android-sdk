@@ -17,6 +17,8 @@
             android:layout_marginEnd="@dimen/metadata_title_margin_horizontal"
             android:layout_alignParentStart="true"
             android:layout_toStartOf="@+id/large_icon"
+            android:maxLines="1"
+            android:ellipsize="end"
             android:text="title"
             android:textAppearance="@style/PushTitle" />
 
@@ -31,9 +33,7 @@
             android:text="message message"
             android:textAppearance="@style/PushMessage"
             android:maxLines="1"
-            android:ellipsize="end"
-            />
-
+            android:ellipsize="end"/>
 
     <ImageView
         android:id="@+id/large_icon"
@@ -42,6 +42,7 @@
         android:layout_marginStart="@dimen/metadata_title_margin_horizontal"
         android:layout_alignParentEnd="true"
         android:scaleType="centerCrop" />
+
     </RelativeLayout>
 
 </RelativeLayout>
