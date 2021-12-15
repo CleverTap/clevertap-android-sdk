@@ -32,6 +32,8 @@
             android:layout_toStartOf="@+id/large_icon"
             android:layout_toLeftOf="@id/large_icon"
             android:text="title"
+            android:maxLines="1"
+            android:ellipsize="end"
             android:textAppearance="@style/PushTitle" />
 
         <TextView
