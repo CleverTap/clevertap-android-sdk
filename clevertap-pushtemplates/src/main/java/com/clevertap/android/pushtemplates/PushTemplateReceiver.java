@@ -30,7 +30,10 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.interfaces.NotificationHandler;
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService;
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.Task;
 import java.util.ArrayList;
+import java.util.concurrent.Callable;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
 import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.MANUAL_CAROUSEL_CONTENT_PENDING_INTENT;
@@ -42,6 +45,9 @@ import static com.clevertap.android.sdk.pushnotification.CTNotificationIntentSer
 
 public class PushTemplateReceiver extends BroadcastReceiver {
     boolean clicked1 = true, clicked2 = true, clicked3 = true, clicked4 = true, clicked5 = true, img1 = false, img2 = false, img3 = false, buynow = true, bigimage = true, cta1 = true, cta2 = true, cta3 = true, cta4 = true, cta5 = true, close = true;
+
+    private CleverTapAPI cleverTapAPI;
+
     private RemoteViews contentViewBig, contentViewSmall, contentViewRating, contentViewManualCarousel;
     private String pt_id;
     private TemplateType templateType;
@@ -73,7 +79,6 @@ public class PushTemplateReceiver extends BroadcastReceiver {
     private String pt_product_display_action_text_clr;
     private String pt_big_img;
     private String pt_meta_clr;
-    private AsyncHelper asyncHelper;
     private boolean pt_dismiss_intent;
     private String pt_rating_toast;
     private String pt_subtitle;
@@ -87,6 +92,8 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
         if (intent.getExtras() != null) {
             final Bundle extras = intent.getExtras();
+            cleverTapAPI = CleverTapAPI
+                    .getGlobalInstance(context, extras.getString(Constants.WZRK_ACCT_ID_KEY));
             pt_id = intent.getStringExtra(PTConstants.PT_ID);
             pID = extras.getString(Constants.WZRK_PUSH_ID);
             pt_msg = extras.getString(PTConstants.PT_MSG);
@@ -112,7 +119,6 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             pt_small_icon_clr = extras.getString(PTConstants.PT_SMALL_ICON_COLOUR);
             pt_product_display_action_text_clr = extras.getString(PTConstants.PT_PRODUCT_DISPLAY_ACTION_TEXT_COLOUR);
             requiresChannelId = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
-            asyncHelper = AsyncHelper.getInstance();
             pt_dismiss_intent = extras.getBoolean(PTConstants.PT_DISMISS_INTENT, false);
             pt_rating_toast = extras.getString(PTConstants.PT_RATING_TOAST);
             pt_subtitle = extras.getString(PTConstants.PT_SUBTITLE);
@@ -134,40 +140,52 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             if (pt_id != null) {
                 templateType = TemplateType.fromString(pt_id);
             }
-            asyncHelper.postAsyncSafely("PushTemplateReceiver#renderTemplate", new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        if (pt_dismiss_intent) {
-                            Utils.deleteSilentNotificationChannel(context);
-                            Utils.deleteImageFromStorage(context, intent);
-                            return;
-                        }
-                        if (templateType != null) {
-                            switch (templateType) {
-                                case RATING:
-                                    handleRatingNotification(context, extras);
-                                    break;
-                                case FIVE_ICONS:
-                                    handleFiveCTANotification(context, extras);
-                                    break;
-                                case PRODUCT_DISPLAY:
-                                    handleProductDisplayNotification(context, extras);
-                                    break;
-                                case INPUT_BOX:
-                                    handleInputBoxNotification(context, extras, intent);
-                                    break;
-                                case MANUAL_CAROUSEL:
-                                    handleManualCarouselNotification(context, extras);
-                                    break;
-                            }
-                        }
-                    } catch (Throwable t) {
-                        PTLog.verbose("Couldn't render notification: " + t.getLocalizedMessage());
-                    }
-                }
-            });
 
+            if (cleverTapAPI != null) {
+                try {
+                    this.config = cleverTapAPI.getCoreState().getConfig();
+                    Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+                    task.execute("PushTemplateReceiver#renderNotification", new Callable<Void>() {
+                        @Override
+                        public Void call() throws Exception {
+                            try {
+                                if (pt_dismiss_intent) {
+                                    Utils.deleteSilentNotificationChannel(context);
+                                    Utils.deleteImageFromStorage(context, intent);
+                                    return null;
+                                }
+                                if (templateType != null) {
+                                    switch (templateType) {
+                                        case RATING:
+                                            handleRatingNotification(context, extras);
+                                            break;
+                                        case FIVE_ICONS:
+                                            handleFiveCTANotification(context, extras);
+                                            break;
+                                        case PRODUCT_DISPLAY:
+                                            handleProductDisplayNotification(context, extras);
+                                            break;
+                                        case INPUT_BOX:
+                                            handleInputBoxNotification(context, extras, intent);
+                                            break;
+                                        case MANUAL_CAROUSEL:
+                                            handleManualCarouselNotification(context, extras);
+                                            break;
+                                    }
+                                }
+                            } catch (Throwable t) {
+                                PTLog.verbose("Couldn't render notification: " + t.getLocalizedMessage());
+                            }
+                            return null;
+                        }
+                    });
+                } catch (Exception e) {
+                    PTLog.verbose("Couldn't render notification: " + e.getLocalizedMessage());
+                }
+
+            } else {
+                PTLog.verbose("clevertap instance is null, not running PushTemplateReceiver#renderNotification");
+            }
         }
     }
 
@@ -371,7 +389,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
             int notificationId = extras.getInt(PTConstants.PT_NOTIF_ID);
 
             if (extras.getBoolean(PTConstants.DEFAULT_DL, false)) {
-                config = extras.getParcelable("config");
+                this.config = extras.getParcelable("config");
                 notificationManager.cancel(notificationId);
                 Intent launchIntent;
                 Class clazz = null;
@@ -397,7 +415,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                     launchIntent.putExtra(Constants.WZRK_FROM_KEY, Constants.WZRK_FROM);
                     launchIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP
                             | Intent.FLAG_ACTIVITY_NEW_TASK);
-                    Utils.raiseNotificationClicked(context, extras, config);
+                    Utils.raiseNotificationClicked(context, extras, this.config);
                     launchIntent.putExtras(extras);
                     launchIntent.putExtra(Constants.DEEP_LINK_KEY, pt_rating_default_dl);
                     context.startActivity(launchIntent);
@@ -662,11 +680,11 @@ public class PushTemplateReceiver extends BroadcastReceiver {
     }
 
     private void handleRatingDeepLink(final Context context, final Bundle extras, final int notificationId,
-            final String pt_dl_clicked) throws InterruptedException {
+            final String pt_dl_clicked, final CleverTapInstanceConfig config) throws InterruptedException {
             Thread.sleep(1000);
             notificationManager.cancel(notificationId);
 
-            setToast(context, pt_rating_toast);
+            setToast(context, pt_rating_toast,config);
 
             Intent it = new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS);
             context.sendBroadcast(it);
@@ -1028,9 +1046,10 @@ public class PushTemplateReceiver extends BroadcastReceiver {
         }
     }
 
-    private void setToast(Context context, String message) {
+    private void setToast(Context context, String message,
+            final CleverTapInstanceConfig config) {
         if (message != null && !message.isEmpty()) {
-            Utils.showToast(context, message);
+            Utils.showToast(context, message,config);
         }
     }
 

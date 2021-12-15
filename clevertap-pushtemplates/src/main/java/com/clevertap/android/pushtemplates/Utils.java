@@ -34,6 +34,9 @@ import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 
+import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.Task;
+import java.util.concurrent.Callable;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -642,24 +645,21 @@ public class Utils {
         return actions;
     }
 
-    static void showToast(final Context context, final String message) {
-        AsyncHelper.getMainThreadHandler().post(new Runnable() {
-            Toast toast;
-
-            @SuppressLint("ShowToast")
-            @Override
-            public void run() {
-                if (!TextUtils.isEmpty(message)) {
-                    if (toast != null) {
-                        toast.cancel(); //dismiss current toast if visible
-                        toast.setText(message);
-                    } else {
-                        toast = Toast.makeText(context, message, Toast.LENGTH_SHORT);
+    static void showToast(final Context context, final String message,
+            final CleverTapInstanceConfig config) {
+        if (config!=null)
+        {
+            Task<Void> task = CTExecutorFactory.executors(config).mainTask();
+            task.execute("PushTemplatesUtils#showToast", new Callable<Void>() {
+                @Override
+                public Void call() {
+                    if (!TextUtils.isEmpty(message)) {
+                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show();
                     }
-                    toast.show();
+                    return null;
                 }
-            }
-        });
+            });
+        }
     }
 
     static void createSilentNotificationChannel(Context context) {
