@@ -14,7 +14,7 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_alignBottom="@+id/big_image"
-        android:background="@drawable/scrim" />
+        android:background="@drawable/scrim"/>
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -29,7 +29,7 @@
 
         <include
             android:id="@+id/metadata"
-            layout="@layout/metadata" />
+            layout="@layout/metadata"/>
 
         <TextView
             android:id="@+id/title"
@@ -37,12 +37,13 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/metadata"
             android:layout_alignStart="@+id/metadata"
+            android:layout_alignLeft="@id/metadata"
             android:layout_marginTop="@dimen/metadata_title_margin_vertical"
             android:ellipsize="end"
             android:maxLines="1"
             android:text="title"
             android:textAppearance="@style/PushTitle"
-            android:textColor="@color/white" />
+            android:textColor="@color/white"/>
 
         <TextView
             android:id="@+id/msg"
@@ -50,11 +51,12 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/title"
             android:layout_alignStart="@id/title"
+            android:layout_alignLeft="@id/title"
             android:ellipsize="end"
             android:maxLines="2"
             android:text="message message message"
             android:textAppearance="@style/PushMessage"
-            android:textColor="@color/white" />
+            android:textColor="@color/white"/>
 
     </RelativeLayout>
 </RelativeLayout>

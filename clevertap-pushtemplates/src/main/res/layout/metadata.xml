@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
     android:layout_height="20dp"
     android:gravity="center">
@@ -10,7 +9,9 @@
         android:layout_width="@dimen/metadata_small_icon_x"
         android:layout_height="@dimen/metadata_small_icon_y"
         android:layout_alignParentStart="true"
+        android:layout_alignParentLeft="true"
         android:layout_marginEnd="@dimen/metadata_margin_x"
+        android:layout_marginRight="@dimen/metadata_margin_x"
         android:layout_centerVertical="true"/>
 
     <TextView
@@ -18,6 +19,7 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_toEndOf="@id/small_icon"
+        android:layout_toRightOf="@id/small_icon"
         android:text="app name"
         android:textAppearance="@style/MetaData" />
 
@@ -30,6 +32,7 @@
         android:layout_marginEnd="2dp"
         android:layout_marginBottom="0dp"
         android:layout_toEndOf="@id/app_name"
+        android:layout_toRightOf="@id/app_name"
         android:padding="1dp"
         android:scaleType="centerInside"
         android:src="@drawable/pt_dot_sep" />
@@ -39,6 +42,7 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_toEndOf="@id/sep_subtitle"
+        android:layout_toRightOf="@id/sep_subtitle"
         android:ellipsize="end"
         android:maxWidth="120dp"
         android:maxLines="1"
@@ -52,6 +56,7 @@
         android:layout_marginStart="2dp"
         android:layout_marginEnd="2dp"
         android:layout_toEndOf="@id/subtitle"
+        android:layout_toRightOf="@id/subtitle"
         android:padding="1dp"
         android:src="@drawable/pt_dot_sep" />
 
@@ -60,8 +65,9 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:layout_toEndOf="@id/sep"
+        android:layout_toRightOf="@id/sep"
         android:ellipsize="end"
         android:maxLines="1"
         android:text="timestamp"
-        android:textAppearance="@style/MetaData" />
+        android:textAppearance="@style/MetaData"/>
 </RelativeLayout>

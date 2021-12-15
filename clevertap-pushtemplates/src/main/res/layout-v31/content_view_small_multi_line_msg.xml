@@ -30,8 +30,7 @@
             android:maxLines="3"
             android:ellipsize="end"
             android:text="message message"
-            android:textAppearance="@style/PushMessageMultiLine"
-            />
+            android:textAppearance="@style/PushMessageMultiLine"/>
 
 
     <ImageView

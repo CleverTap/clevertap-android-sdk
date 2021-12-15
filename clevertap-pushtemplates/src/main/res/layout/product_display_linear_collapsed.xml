@@ -20,7 +20,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="-85dp"
+        android:layout_marginLeft="-85dp"
         android:layout_toEndOf="@+id/large_icon"
+        android:layout_toRightOf="@id/large_icon"
         android:text="message message "
         android:textAppearance="@style/PushMessage" />
 
@@ -29,8 +31,10 @@
         android:layout_height="match_parent"
         android:layout_below="@id/msg"
         android:layout_marginStart="-85dp"
+        android:layout_marginLeft="-85dp"
         android:layout_marginTop="8dp"
         android:layout_toEndOf="@id/large_icon"
+        android:layout_toRightOf="@id/large_icon"
         android:orientation="horizontal"
         android:paddingLeft="4dp"
         android:paddingRight="4dp">
@@ -40,7 +44,9 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_marginStart="-5dp"
+            android:layout_marginLeft="-5dp"
             android:layout_marginEnd="2dp"
+            android:layout_marginRight="2dp"
             android:layout_weight="1"
             android:visibility="gone"/>
 
@@ -58,6 +64,7 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_marginEnd="-4dp"
+            android:layout_marginRight="-4dp"
             android:layout_weight="1"
             android:visibility="gone"/>
 

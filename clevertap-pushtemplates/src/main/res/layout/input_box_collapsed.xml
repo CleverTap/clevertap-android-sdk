@@ -26,6 +26,7 @@
             android:layout_height="18.2dp"
             android:layout_alignBottom="@id/large_icon"
             android:layout_alignEnd="@id/large_icon"
+            android:layout_alignRight="@id/large_icon"
             android:src="@android:drawable/ic_dialog_info"/>
 
     </RelativeLayout>
@@ -37,6 +38,7 @@
         android:layout_alignParentBottom="false"
         android:layout_marginTop="3dp"
         android:layout_toEndOf="@+id/icon_container"
+        android:layout_toRightOf="@id/icon_container"
         android:gravity="center_vertical"
         android:orientation="vertical"
         android:paddingStart="6dp"
@@ -46,15 +48,15 @@
             android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Notification Sample App"
-            />
+            android:text="Notification Sample App"/>
+
 
         <TextView
             android:id="@+id/msg_summary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Expand me to see a detailed message!"
-            />
+            android:text="Expand me to see a detailed message!"/>
+
     </LinearLayout>
 
     <TextView
@@ -62,10 +64,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
         android:layout_alignParentTop="true"
         android:paddingEnd="3.5dp"
         android:paddingStart="3.5dp"
-        android:paddingTop="8dp"
-        />
+        android:paddingTop="8dp" />
 
 </RelativeLayout>

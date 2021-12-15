@@ -13,18 +13,20 @@
         android:layout_width="@dimen/large_icon"
         android:layout_height="@dimen/large_icon"
         android:layout_alignParentStart="true"
-        android:scaleType="centerCrop" />
+        android:layout_alignParentLeft="true"
+        android:scaleType="centerCrop"/>
 
 
     <RelativeLayout
         android:id="@+id/rel_lyt"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toEndOf="@id/large_icon">
+        android:layout_toEndOf="@id/large_icon"
+        android:layout_toRightOf="@id/large_icon">
 
         <include
             android:id="@+id/metadata"
-            layout="@layout/metadata" />
+            layout="@layout/metadata"/>
 
         <TextView
             android:id="@+id/title"
@@ -32,11 +34,12 @@
             android:layout_height="wrap_content"
             android:layout_below="@+id/metadata"
             android:layout_marginStart="@dimen/metadata_title_margin_horizontal"
+            android:layout_marginLeft="@dimen/metadata_title_margin_horizontal"
             android:ellipsize="end"
             android:maxLines="2"
             android:layout_marginTop="4dp"
             android:text="title"
-            android:textAppearance="@style/PushTitle" />
+            android:textAppearance="@style/PushTitle"/>
     </RelativeLayout>
 
 </RelativeLayout>
