@@ -54,9 +54,6 @@ class TemplateRenderer : INotificationRenderer {
     internal var pt_dot = 0
     private var requiresChannelId = false
     private var notificationManager: NotificationManager? = null
-    private var asyncHelper: AsyncHelper? = null
-
-    //    private DBHelper dbHelper;
     var pt_timer_threshold = 0
     internal var pt_input_label: String? = null
     var pt_input_feedback: String? = null
