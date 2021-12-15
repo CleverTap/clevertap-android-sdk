@@ -658,18 +658,22 @@ public class PushTemplateReceiver extends BroadcastReceiver {
 
                     notificationManager.notify(notificationId, notification);
                 }
-                if (VERSION.SDK_INT < VERSION_CODES.S){
-                    handleRatingDeepLink(context, extras, notificationId, pt_dl_clicked);
+                if (VERSION.SDK_INT < VERSION_CODES.S)
+                    {
+                        Utils.raiseNotificationClicked(context, extras, this.config);
+                        handleRatingDeepLink(context, extras, notificationId, pt_dl_clicked,this.config);
                 }
             }
             else{
                 extras.putString(Constants.EXTRAS_FROM,"PTReceiver");
                 Bundle clonedExtras = (Bundle) extras.clone();
                 NotificationHandler notificationHandler = CleverTapAPI.getNotificationHandler();
-                if (notificationHandler!=null){
+                    if (notificationHandler!=null)
+                    {
                     notificationHandler.onMessageReceived(context,extras,"FCM");
                     clonedExtras.putString(Constants.DEEP_LINK_KEY, pt_dl_clicked);
-                    handleRatingDeepLink(context, clonedExtras, notificationId, pt_dl_clicked);
+                        Utils.raiseNotificationClicked(context, clonedExtras, this.config);
+                        handleRatingDeepLink(context, clonedExtras, notificationId, pt_dl_clicked,this.config);
                 }
             }
             Utils.raiseCleverTapEvent(context,config,"Rating Submitted", Utils.convertRatingBundleObjectToHashMap(extras));
