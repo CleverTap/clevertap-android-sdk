@@ -18,15 +18,15 @@ import com.huawei.hms.push.RemoteMessage;
 /**
  * Implementation of {@link IHmsMessageHandler}
  */
-public class HmsMessageHandlerImpl implements IHmsMessageHandler, IPushAmpHandler<RemoteMessage> {
+public class CTHmsMessageHandler implements IHmsMessageHandler, IPushAmpHandler<RemoteMessage> {
 
     private final INotificationParser<RemoteMessage> mParser;
 
-    public HmsMessageHandlerImpl() {
+    public CTHmsMessageHandler() {
         this(new HmsNotificationParser());
     }
 
-    HmsMessageHandlerImpl(final INotificationParser<RemoteMessage> parser) {
+    CTHmsMessageHandler(final INotificationParser<RemoteMessage> parser) {
         mParser = parser;
     }
 
