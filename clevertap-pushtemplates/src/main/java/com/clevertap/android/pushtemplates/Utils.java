@@ -9,17 +9,13 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
-import android.content.pm.ServiceInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffColorFilter;
-import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.media.AudioAttributes;
 import android.net.Uri;
@@ -473,6 +469,22 @@ public class Utils {
             }
         }
 
+    }
+
+    static HashMap<String, Object> convertRatingBundleObjectToHashMap(Bundle b) {
+        b.remove("config");
+        final HashMap<String, Object> map = new HashMap<>();
+        for (String s : b.keySet()) {
+            if (s.contains("wzrk_")||s.equals(PTConstants.PT_ID)) {
+                final Object o = b.get(s);
+                if (o instanceof Bundle) {
+                    map.putAll(convertRatingBundleObjectToHashMap((Bundle) o));
+                } else {
+                    map.put(s, b.get(s));
+                }
+            }
+        }
+        return map;
     }
 
     static String getEventNameFromExtras(Bundle extras) {
