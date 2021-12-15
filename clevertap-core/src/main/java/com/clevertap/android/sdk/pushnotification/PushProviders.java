@@ -989,17 +989,20 @@ public class PushProviders implements CTPushProviderListener {
                     } else if (collapse_key instanceof String) {
                         try {
                             notificationId = Integer.parseInt(collapse_key.toString());
-                            config.getLogger().debug(config.getAccountId(),
+                            config.getLogger().verbose(config.getAccountId(),
                                     "Converting collapse_key: " + collapse_key + " to notificationId int: "
                                             + notificationId);
                         } catch (NumberFormatException e) {
                             notificationId = (collapse_key.toString().hashCode());
-                            config.getLogger().debug(config.getAccountId(),
+                            config.getLogger().verbose(config.getAccountId(),
                                     "Converting collapse_key: " + collapse_key + " to notificationId int: "
                                             + notificationId);
                         }
                     }
                     notificationId = Math.abs(notificationId); //Notification Id always needs to be positive
+                    config.getLogger().debug(config.getAccountId(),
+                            "Creating the notification id: " + notificationId + " from collapse_key: "
+                                    + collapse_key);
                 }
             } catch (NumberFormatException e) {
                 // no-op
