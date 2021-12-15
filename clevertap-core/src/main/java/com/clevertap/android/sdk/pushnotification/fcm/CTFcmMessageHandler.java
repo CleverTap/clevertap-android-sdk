@@ -17,15 +17,15 @@ import com.google.firebase.messaging.RemoteMessage;
 /**
  * implementation of {@link IFcmMessageHandler}
  */
-public class FcmMessageHandlerImpl implements IFcmMessageHandler, IPushAmpHandler<RemoteMessage> {
+public class CTFcmMessageHandler implements IFcmMessageHandler, IPushAmpHandler<RemoteMessage> {
 
     private final INotificationParser<RemoteMessage> mParser;
 
-    public FcmMessageHandlerImpl() {
+    public CTFcmMessageHandler() {
         this(new FcmNotificationParser());
     }
 
-    FcmMessageHandlerImpl(final INotificationParser<RemoteMessage> parser) {
+    CTFcmMessageHandler(final INotificationParser<RemoteMessage> parser) {
         mParser = parser;
     }
 
