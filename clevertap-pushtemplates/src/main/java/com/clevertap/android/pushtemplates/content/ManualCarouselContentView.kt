@@ -133,6 +133,7 @@ class ManualCarouselContentView(context: Context, renderer: TemplateRenderer,ext
 //            )
         } else {
             remoteView.setDisplayedChild(R.id.carousel_image_right, 1)
+            remoteView.setDisplayedChild(R.id.carousel_image,0)
             remoteView.setDisplayedChild(
                 R.id.carousel_image_left,
                 tempImageList.size - 1
