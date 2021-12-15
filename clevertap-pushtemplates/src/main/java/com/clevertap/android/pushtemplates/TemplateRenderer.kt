@@ -238,6 +238,7 @@ class TemplateRenderer : INotificationRenderer {
                 // force random id generation
                 basicTemplateBundle.putString(PTConstants.PT_COLLAPSE_KEY, null)
                 basicTemplateBundle.putString(Constants.WZRK_COLLAPSE, null)
+                basicTemplateBundle.remove(Constants.PT_NOTIF_ID)
                 val templateRenderer: INotificationRenderer =
                     TemplateRenderer(applicationContext, basicTemplateBundle)
                 val cleverTapAPI = CleverTapAPI
