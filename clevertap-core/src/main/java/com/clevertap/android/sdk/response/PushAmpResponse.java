@@ -10,6 +10,8 @@ import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
+import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
+import com.clevertap.android.sdk.pushnotification.PushNotificationHandler;
 import java.util.Iterator;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -124,8 +126,8 @@ public class PushAmpResponse extends CleverTapResponseDecorator {
                     if (callbackManager.getPushAmpListener() != null) {
                         callbackManager.getPushAmpListener().onPushAmpPayloadReceived(pushBundle);
                     } else {
-                        controllerManager.getPushProviders()
-                                ._createNotification(context, pushBundle, Constants.EMPTY_NOTIFICATION_ID);
+                        PushNotificationHandler.getPushNotificationHandler()
+                                .onMessageReceived(context, pushBundle, PushType.FCM.toString());
                     }
                 } else {
                     logger.verbose(config.getAccountId(),

@@ -20,7 +20,9 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
         val commandPosition = "$groupPosition$childPosition"
         clickCommand.value = commandPosition
         when (commandPosition) {
-            "00" -> cleverTapAPI?.pushEvent("testEvent")
+            "00" -> {
+                cleverTapAPI?.pushEvent("testEventPushAmp")
+            }
             "01" -> {
                 //Record an event with properties
                 val prodViewedAction = mapOf(
