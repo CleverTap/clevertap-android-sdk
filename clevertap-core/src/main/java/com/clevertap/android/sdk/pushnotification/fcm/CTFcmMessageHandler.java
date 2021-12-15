@@ -30,7 +30,7 @@ public class CTFcmMessageHandler implements IFcmMessageHandler, IPushAmpHandler<
     }
 
     @Override
-    public boolean onMessageReceived(final Context context, final RemoteMessage message) {
+    public boolean createNotification(final Context context, final RemoteMessage message) {
         boolean isSuccess = false;
 
         Bundle messageBundle = mParser.toBundle(message);

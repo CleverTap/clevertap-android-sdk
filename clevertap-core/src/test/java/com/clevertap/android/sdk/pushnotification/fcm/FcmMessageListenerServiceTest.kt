@@ -51,7 +51,7 @@ class FcmMessageListenerServiceTest : BaseTestCase() {
         try {
             service.onMessageReceived(RemoteMessage(Bundle()))
             Mockito.verify(
-                mMockedMessageHandlerCT.onMessageReceived(
+                mMockedMessageHandlerCT.createNotification(
                     Mockito.any(Context::class.java),
                     Mockito.any(RemoteMessage::class.java)
                 ), Mockito.times(1)

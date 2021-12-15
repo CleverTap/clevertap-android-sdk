@@ -13,7 +13,7 @@ public class FcmMessageListenerService extends FirebaseMessagingService {
 
     @Override
     public void onMessageReceived(@NonNull RemoteMessage message) {
-        mHandler.onMessageReceived(getApplicationContext(), message);
+        mHandler.createNotification(getApplicationContext(), message);
     }
 
     @Override

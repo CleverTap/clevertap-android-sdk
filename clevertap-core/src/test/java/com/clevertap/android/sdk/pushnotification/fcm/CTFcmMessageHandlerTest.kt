@@ -33,13 +33,13 @@ class CTFcmMessageHandlerTest : BaseTestCase() {
 
     @Test
     fun testCreateNotification_Null_Message() {
-        Assert.assertFalse(mHandlerCT.onMessageReceived(application, null))
+        Assert.assertFalse(mHandlerCT.createNotification(application, null))
     }
 
     @Test
     fun testCreateNotification_Invalid_Message() {
         //empty bundle
-        Assert.assertFalse(mHandlerCT.onMessageReceived(application, RemoteMessage(Bundle())))
+        Assert.assertFalse(mHandlerCT.createNotification(application, RemoteMessage(Bundle())))
     }
 
     @Test
@@ -47,7 +47,7 @@ class CTFcmMessageHandlerTest : BaseTestCase() {
         val bundle = Bundle()
         bundle.putString("title", "Test Title")
         bundle.putString("messagee", "Test Message")
-        Assert.assertFalse(mHandlerCT.onMessageReceived(application, RemoteMessage(bundle)))
+        Assert.assertFalse(mHandlerCT.createNotification(application, RemoteMessage(bundle)))
     }
 
     @Test
@@ -56,7 +56,7 @@ class CTFcmMessageHandlerTest : BaseTestCase() {
         bundle.putString("title", "Test Title")
         bundle.putString("messagee", "Test Message")
         bundle.putString(Constants.NOTIFICATION_TAG, "Some Data")
-        val isSuccess = mHandlerCT.onMessageReceived(application, RemoteMessage(bundle))
+        val isSuccess = mHandlerCT.createNotification(application, RemoteMessage(bundle))
         Assert.assertTrue(isSuccess)
     }
 

@@ -15,7 +15,7 @@ public interface IFcmMessageHandler {
      * @param message            - Firebase Remote message
      * @return true if everything is fine & notification is rendered successfully
      */
-    boolean onMessageReceived(final Context applicationContext, RemoteMessage message);
+    boolean createNotification(final Context applicationContext, RemoteMessage message);
 
     /**
      * @param applicationContext - application context

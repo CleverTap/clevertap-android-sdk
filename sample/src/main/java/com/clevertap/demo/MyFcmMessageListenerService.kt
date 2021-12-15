@@ -11,7 +11,7 @@ class MyFcmMessageListenerService : FirebaseMessagingService() {
         var pushType = "fcm"
         if (pushType.equals("fcm")) {
             CTFcmMessageHandler()
-                .onMessageReceived(applicationContext, message)
+                .createNotification(applicationContext, message)
             //CTFcmMessageHandler().processPushAmp(applicationContext, message)
         } else if (pushType.equals("hps")) {
             //HmsMessageHandlerImpl().createNotification(applicationContext,message)
