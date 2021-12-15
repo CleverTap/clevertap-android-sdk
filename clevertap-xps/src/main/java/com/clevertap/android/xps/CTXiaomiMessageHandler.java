@@ -27,17 +27,17 @@ import java.util.List;
 /**
  * Implementation of {@link IMiMessageHandler}
  */
-public class XiaomiMessageHandlerImpl implements IMiMessageHandler, IPushAmpHandler<MiPushMessage> {
+public class CTXiaomiMessageHandler implements IMiMessageHandler, IPushAmpHandler<MiPushMessage> {
 
     private @NonNull
     final
     INotificationParser<MiPushMessage> mParser;
 
-    public XiaomiMessageHandlerImpl() {
+    public CTXiaomiMessageHandler() {
         this(new XiaomiNotificationParser());
     }
 
-    XiaomiMessageHandlerImpl(@NonNull final INotificationParser<MiPushMessage> parser) {
+    CTXiaomiMessageHandler(@NonNull final INotificationParser<MiPushMessage> parser) {
         mParser = parser;
     }
 
