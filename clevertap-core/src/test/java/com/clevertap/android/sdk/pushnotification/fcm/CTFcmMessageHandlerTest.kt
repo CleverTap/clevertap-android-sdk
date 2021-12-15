@@ -19,27 +19,27 @@ import org.robolectric.annotation.Config
 @Ignore
 @RunWith(RobolectricTestRunner::class)
 @Config(sdk = [28], application = TestApplication::class)
-class FcmMessageHandlerImplTest : BaseTestCase() {
+class CTFcmMessageHandlerTest : BaseTestCase() {
 
-    private lateinit var handler: FcmMessageHandlerImpl
+    private lateinit var mHandlerCT: CTFcmMessageHandler
 
     @Before
     @Throws(Exception::class)
     override fun setUp() {
         super.setUp()
 
-        handler = FcmMessageHandlerImpl()
+        mHandlerCT = CTFcmMessageHandler()
     }
 
     @Test
     fun testCreateNotification_Null_Message() {
-        Assert.assertFalse(handler.onMessageReceived(application, null))
+        Assert.assertFalse(mHandlerCT.onMessageReceived(application, null))
     }
 
     @Test
     fun testCreateNotification_Invalid_Message() {
         //empty bundle
-        Assert.assertFalse(handler.onMessageReceived(application, RemoteMessage(Bundle())))
+        Assert.assertFalse(mHandlerCT.onMessageReceived(application, RemoteMessage(Bundle())))
     }
 
     @Test
@@ -47,7 +47,7 @@ class FcmMessageHandlerImplTest : BaseTestCase() {
         val bundle = Bundle()
         bundle.putString("title", "Test Title")
         bundle.putString("messagee", "Test Message")
-        Assert.assertFalse(handler.onMessageReceived(application, RemoteMessage(bundle)))
+        Assert.assertFalse(mHandlerCT.onMessageReceived(application, RemoteMessage(bundle)))
     }
 
     @Test
@@ -56,13 +56,13 @@ class FcmMessageHandlerImplTest : BaseTestCase() {
         bundle.putString("title", "Test Title")
         bundle.putString("messagee", "Test Message")
         bundle.putString(Constants.NOTIFICATION_TAG, "Some Data")
-        val isSuccess = handler.onMessageReceived(application, RemoteMessage(bundle))
+        val isSuccess = mHandlerCT.onMessageReceived(application, RemoteMessage(bundle))
         Assert.assertTrue(isSuccess)
     }
 
     @Test
     fun testOnNewToken_Success() {
-        Assert.assertTrue(handler.onNewToken(application, FCM_TOKEN))
+        Assert.assertTrue(mHandlerCT.onNewToken(application, FCM_TOKEN))
     }
 
     @Test
@@ -70,7 +70,7 @@ class FcmMessageHandlerImplTest : BaseTestCase() {
         Mockito.mockStatic(CleverTapAPI::class.java).use {
             Mockito.`when`(CleverTapAPI.tokenRefresh(any(Context::class.java), eq(FCM_TOKEN), FCM))
                 .thenThrow(RuntimeException("Something Went Wrong"))
-            Assert.assertFalse(handler.onNewToken(application, FCM_TOKEN))
+            Assert.assertFalse(mHandlerCT.onNewToken(application, FCM_TOKEN))
         }
     }
 }
