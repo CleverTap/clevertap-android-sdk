@@ -8,8 +8,13 @@ import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
-open class TimerSmallContentView(context: Context, timer_end: Int?,renderer: TemplateRenderer,layoutId: Int = R.layout.timer_collapsed):
-    ContentView(context, layoutId,renderer) {
+open class TimerSmallContentView(
+    context: Context,
+    timer_end: Int?,
+    renderer: TemplateRenderer,
+    layoutId: Int = R.layout.timer_collapsed
+) :
+    ContentView(context, layoutId, renderer) {
 
     init {
         setCustomContentViewBasicKeys()
@@ -18,8 +23,10 @@ open class TimerSmallContentView(context: Context, timer_end: Int?,renderer: Tem
         setCustomContentViewCollapsedBackgroundColour(renderer.pt_bg)
         setCustomContentViewChronometerBackgroundColour(renderer.pt_bg)
         setCustomContentViewTitleColour(renderer.pt_title_clr)
-        setCustomContentViewChronometerTitleColour(renderer.pt_chrono_title_clr,
-            renderer.pt_title_clr)
+        setCustomContentViewChronometerTitleColour(
+            renderer.pt_chrono_title_clr,
+            renderer.pt_title_clr
+        )
         setCustomContentViewMessageColour(renderer.pt_msg_clr)
         remoteView.setChronometer(
             R.id.chronometer,
@@ -34,7 +41,6 @@ open class TimerSmallContentView(context: Context, timer_end: Int?,renderer: Tem
         setCustomContentViewDotSep()
     }
 
-
     internal fun setCustomContentViewChronometerBackgroundColour(pt_bg: String?) {
         if (pt_bg != null && pt_bg.isNotEmpty()) {
             remoteView.setInt(
@@ -45,8 +51,10 @@ open class TimerSmallContentView(context: Context, timer_end: Int?,renderer: Tem
         }
     }
 
-    internal fun setCustomContentViewChronometerTitleColour(pt_chrono_title_clr: String?,
-        pt_title_clr: String?) {
+    internal fun setCustomContentViewChronometerTitleColour(
+        pt_chrono_title_clr: String?,
+        pt_title_clr: String?
+    ) {
         if (pt_chrono_title_clr != null && pt_chrono_title_clr.isNotEmpty()) {
             remoteView.setTextColor(
                 R.id.chronometer,

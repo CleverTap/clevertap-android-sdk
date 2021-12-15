@@ -6,7 +6,7 @@ import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
-class ZeroBezelMixedSmallContentView(context: Context, renderer: TemplateRenderer):
+class ZeroBezelMixedSmallContentView(context: Context, renderer: TemplateRenderer) :
     ZeroBezelSmallContentView(context, R.layout.cv_small_zero_bezel, renderer) {
 
     init {

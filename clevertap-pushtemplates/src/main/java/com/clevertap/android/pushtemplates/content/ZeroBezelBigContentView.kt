@@ -8,8 +8,8 @@ import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
-class ZeroBezelBigContentView(context: Context, renderer: TemplateRenderer):
-    ContentView(context, R.layout.zero_bezel,renderer) {
+class ZeroBezelBigContentView(context: Context, renderer: TemplateRenderer) :
+    ContentView(context, R.layout.zero_bezel, renderer) {
 
     init {
         setCustomContentViewBasicKeys()

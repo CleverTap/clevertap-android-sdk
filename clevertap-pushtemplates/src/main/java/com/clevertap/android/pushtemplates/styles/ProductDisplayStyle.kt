@@ -5,24 +5,24 @@ import android.content.Context
 import android.os.Bundle
 import android.widget.RemoteViews
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.pushtemplates.content.*
+import com.clevertap.android.pushtemplates.content.PRODUCT_DISPLAY_CONTENT_PENDING_INTENT
+import com.clevertap.android.pushtemplates.content.PRODUCT_DISPLAY_DISMISS_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
+import com.clevertap.android.pushtemplates.content.ProductDisplayLinearBigContentView
+import com.clevertap.android.pushtemplates.content.ProductDisplayNonLinearBigContentView
+import com.clevertap.android.pushtemplates.content.ProductDisplayNonLinearSmallContentView
 
-class ProductDisplayStyle(private var renderer: TemplateRenderer, private var extras: Bundle): Style(renderer) {
+class ProductDisplayStyle(private var renderer: TemplateRenderer, private var extras: Bundle) : Style(renderer) {
+
     override fun makeSmallContentView(context: Context, renderer: TemplateRenderer): RemoteViews {
         return ProductDisplayNonLinearSmallContentView(context, renderer).remoteView
-        /*if (renderer.pt_product_display_linear == null || renderer.pt_product_display_linear!!.isEmpty()) {
-            ProductDisplayNonLinearSmallContentView(context, renderer).remoteView
-        }else{
-            ProductDisplayNonLinearSmallContentView(context, renderer).remoteView
-        }*/ //For both linear and non-linear collapsed view layout will be the same
     }
 
     override fun makeBigContentView(context: Context, renderer: TemplateRenderer): RemoteViews {
         return if (renderer.pt_product_display_linear == null || renderer.pt_product_display_linear!!.isEmpty()) {
             ProductDisplayNonLinearBigContentView(context, renderer, extras).remoteView
-        }else{
-            ProductDisplayLinearBigContentView(context,renderer, extras).remoteView
+        } else {
+            ProductDisplayLinearBigContentView(context, renderer, extras).remoteView
         }
     }
 
@@ -31,8 +31,9 @@ class ProductDisplayStyle(private var renderer: TemplateRenderer, private var ex
         extras: Bundle,
         notificationId: Int
     ): PendingIntent? {
-        return PendingIntentFactory.getPendingIntent(context,notificationId,extras,true,
-            PRODUCT_DISPLAY_CONTENT_PENDING_INTENT,renderer
+        return PendingIntentFactory.getPendingIntent(
+            context, notificationId, extras, true,
+            PRODUCT_DISPLAY_CONTENT_PENDING_INTENT, renderer
         )
     }
 
@@ -41,8 +42,9 @@ class ProductDisplayStyle(private var renderer: TemplateRenderer, private var ex
         extras: Bundle,
         notificationId: Int
     ): PendingIntent? {
-        return PendingIntentFactory.getPendingIntent(context,notificationId,extras,false,
-            PRODUCT_DISPLAY_DISMISS_PENDING_INTENT,renderer
+        return PendingIntentFactory.getPendingIntent(
+            context, notificationId, extras, false,
+            PRODUCT_DISPLAY_DISMISS_PENDING_INTENT, renderer
         )
     }
 }

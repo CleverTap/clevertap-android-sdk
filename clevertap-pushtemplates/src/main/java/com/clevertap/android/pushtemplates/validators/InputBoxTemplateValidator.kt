@@ -2,7 +2,7 @@ package com.clevertap.android.pushtemplates.validators
 
 import com.clevertap.android.pushtemplates.checkers.Checker
 
-class InputBoxTemplateValidator(private var validator: Validator): TemplateValidator(validator.keys) {
+class InputBoxTemplateValidator(private var validator: Validator) : TemplateValidator(validator.keys) {
 
     override fun validate(): Boolean {
         return validator.validate() && super.validateKeys()// All check must be true

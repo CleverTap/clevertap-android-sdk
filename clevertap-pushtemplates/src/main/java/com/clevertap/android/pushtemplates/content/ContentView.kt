@@ -5,14 +5,18 @@ import android.os.Build
 import android.text.Html
 import android.view.View
 import android.widget.RemoteViews
-import com.clevertap.android.pushtemplates.*
+import com.clevertap.android.pushtemplates.PTConstants
+import com.clevertap.android.pushtemplates.PTLog
+import com.clevertap.android.pushtemplates.R
+import com.clevertap.android.pushtemplates.TemplateRenderer
+import com.clevertap.android.pushtemplates.Utils
 
 open class ContentView(
     internal var context: Context, layoutId: Int,
-    internal var renderer: TemplateRenderer) {
+    internal var renderer: TemplateRenderer
+) {
 
     internal var remoteView: RemoteViews = RemoteViews(context.packageName, layoutId)
-
 
     fun setCustomContentViewBasicKeys() {
         remoteView.setTextViewText(R.id.app_name, Utils.getApplicationName(context))
@@ -146,5 +150,4 @@ open class ContentView(
             )
         }
     }
-
 }

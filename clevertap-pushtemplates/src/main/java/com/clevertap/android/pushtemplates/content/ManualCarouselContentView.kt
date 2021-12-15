@@ -6,15 +6,18 @@ import android.os.Bundle
 import android.text.Html
 import android.view.View
 import android.widget.RemoteViews
-import com.clevertap.android.pushtemplates.*
+import com.clevertap.android.pushtemplates.PTConstants
+import com.clevertap.android.pushtemplates.PTLog
+import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.R.id
+import com.clevertap.android.pushtemplates.TemplateRenderer
+import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory.getPendingIntent
 import com.clevertap.android.sdk.Constants
 import java.util.ArrayList
 
-class ManualCarouselContentView(context: Context, renderer: TemplateRenderer,extras: Bundle):
+class ManualCarouselContentView(context: Context, renderer: TemplateRenderer, extras: Bundle) :
     BigImageContentView(context, renderer, R.layout.manual_carousel) {
-
 
     init {
         setCustomContentViewMessageSummary(renderer.pt_msg_summary)
@@ -59,8 +62,8 @@ class ManualCarouselContentView(context: Context, renderer: TemplateRenderer,ext
             remoteView.setViewVisibility(R.id.carousel_image_right, View.GONE)
             remoteView.setViewVisibility(R.id.carousel_image_left, View.GONE)
         }
-        
-        if(extras.containsKey(PTConstants.PT_RIGHT_SWIPE)){
+
+        if (extras.containsKey(PTConstants.PT_RIGHT_SWIPE)) {
             val rightSwipe = extras.getBoolean(PTConstants.PT_RIGHT_SWIPE)
             val currPosition = extras.getInt(PTConstants.PT_MANUAL_CAROUSEL_CURRENT)
             val nextPosition: Int
@@ -68,7 +71,7 @@ class ManualCarouselContentView(context: Context, renderer: TemplateRenderer,ext
             val newPosition: Int
 
             if (currPosition == tempImageList.size - 1) {
-                nextPosition =  0
+                nextPosition = 0
             } else {
                 nextPosition = currPosition + 1
             }
@@ -94,7 +97,6 @@ class ManualCarouselContentView(context: Context, renderer: TemplateRenderer,ext
                 remoteView.showPrevious(id.carousel_image)
                 remoteView.showPrevious(id.carousel_image_right)
                 remoteView.showPrevious(id.carousel_image_left)
-
             }
             var dl = ""
             val deepLinkList = renderer.deepLinkList
@@ -126,35 +128,37 @@ class ManualCarouselContentView(context: Context, renderer: TemplateRenderer,ext
                     MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT, null
                 )
             )
-
-//            val pIntent = getPendingIntent(
-//                context, notificationId, extras, true,
-//                MANUAL_CAROUSEL_CONTENT_PENDING_INTENT, null
-//            )
         } else {
             remoteView.setDisplayedChild(R.id.carousel_image_right, 1)
-            remoteView.setDisplayedChild(R.id.carousel_image,0)
+            remoteView.setDisplayedChild(R.id.carousel_image, 0)
             remoteView.setDisplayedChild(
                 R.id.carousel_image_left,
                 tempImageList.size - 1
             )
 
-            extras.putInt(PTConstants.PT_MANUAL_CAROUSEL_CURRENT, currentPosition)//TODO Check extras in ManualCarousel style being updated
+            extras.putInt(
+                PTConstants.PT_MANUAL_CAROUSEL_CURRENT,
+                currentPosition
+            )
             extras.putStringArrayList(PTConstants.PT_IMAGE_LIST, tempImageList)
             extras.putStringArrayList(PTConstants.PT_DEEPLINK_LIST, renderer.deepLinkList)
 
-            extras.putString(Constants.DEEP_LINK_KEY,renderer.deepLinkList!![0])
+            extras.putString(Constants.DEEP_LINK_KEY, renderer.deepLinkList!![0])
             extras.putInt(PTConstants.PT_MANUAL_CAROUSEL_FROM, 0)
             remoteView.setOnClickPendingIntent(
                 R.id.rightArrowPos0,
-                PendingIntentFactory.getPendingIntent(context,renderer.notificationId, extras,false,
-                    MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT,renderer)
+                PendingIntentFactory.getPendingIntent(
+                    context, renderer.notificationId, extras, false,
+                    MANUAL_CAROUSEL_RIGHT_ARROW_PENDING_INTENT, renderer
+                )
             )
 
             remoteView.setOnClickPendingIntent(
                 R.id.leftArrowPos0,
-                PendingIntentFactory.getPendingIntent(context,renderer.notificationId, extras,false,
-                    MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT,renderer)
+                PendingIntentFactory.getPendingIntent(
+                    context, renderer.notificationId, extras, false,
+                    MANUAL_CAROUSEL_LEFT_ARROW_PENDING_INTENT, renderer
+                )
             )
 
 
@@ -162,7 +166,6 @@ class ManualCarouselContentView(context: Context, renderer: TemplateRenderer,ext
                 PTLog.debug("Need at least 2 images to display Manual Carousel, found - $imageCounter, not displaying the notification.")
             }
         }
-        
     }
 
     private fun setCustomContentViewMessageSummary(pt_msg_summary: String?) {

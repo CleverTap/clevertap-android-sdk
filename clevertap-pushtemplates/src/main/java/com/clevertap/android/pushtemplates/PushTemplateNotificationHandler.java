@@ -34,7 +34,6 @@ public class PushTemplateNotificationHandler implements ActionButtonClickHandler
     public boolean onMessageReceived(final Context applicationContext, final Bundle message, final String pushType) {
         try {
             PTLog.debug("Inside Push Templates");
-            //TemplateRenderer.createNotification(applicationContext, message);
             // initial setup
             INotificationRenderer templateRenderer = new TemplateRenderer(applicationContext, message);
             CleverTapAPI cleverTapAPI = CleverTapAPI

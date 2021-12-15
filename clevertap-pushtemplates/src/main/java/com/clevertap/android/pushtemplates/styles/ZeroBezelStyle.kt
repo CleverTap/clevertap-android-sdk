@@ -6,17 +6,20 @@ import android.os.Bundle
 import android.widget.RemoteViews
 import com.clevertap.android.pushtemplates.PTConstants
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.pushtemplates.content.*
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
+import com.clevertap.android.pushtemplates.content.ZERO_BEZEL_CONTENT_PENDING_INTENT
+import com.clevertap.android.pushtemplates.content.ZeroBezelBigContentView
+import com.clevertap.android.pushtemplates.content.ZeroBezelMixedSmallContentView
+import com.clevertap.android.pushtemplates.content.ZeroBezelTextOnlySmallContentView
 
-class ZeroBezelStyle(private var renderer: TemplateRenderer): Style(renderer) {
+class ZeroBezelStyle(private var renderer: TemplateRenderer) : Style(renderer) {
 
     override fun makeSmallContentView(context: Context, renderer: TemplateRenderer): RemoteViews {
         val textOnlySmallView = renderer.pt_small_view != null &&
                 renderer.pt_small_view == PTConstants.TEXT_ONLY
-        return if (textOnlySmallView){
+        return if (textOnlySmallView) {
             ZeroBezelTextOnlySmallContentView(context, renderer).remoteView
-        }else{
+        } else {
             ZeroBezelMixedSmallContentView(context, renderer).remoteView
         }
     }
@@ -30,8 +33,9 @@ class ZeroBezelStyle(private var renderer: TemplateRenderer): Style(renderer) {
         extras: Bundle,
         notificationId: Int
     ): PendingIntent? {
-        return PendingIntentFactory.getPendingIntent(context,notificationId,extras,true,
-            ZERO_BEZEL_CONTENT_PENDING_INTENT,renderer
+        return PendingIntentFactory.getPendingIntent(
+            context, notificationId, extras, true,
+            ZERO_BEZEL_CONTENT_PENDING_INTENT, renderer
         )
     }
 
@@ -42,5 +46,4 @@ class ZeroBezelStyle(private var renderer: TemplateRenderer): Style(renderer) {
     ): PendingIntent? {
         return null
     }
-
 }

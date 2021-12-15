@@ -2,7 +2,7 @@ package com.clevertap.android.pushtemplates.validators
 
 import com.clevertap.android.pushtemplates.checkers.Checker
 
-class BasicTemplateValidator(private var validator: Validator): TemplateValidator(
+class BasicTemplateValidator(private var validator: Validator) : TemplateValidator(
     validator.keys
 ) {
 

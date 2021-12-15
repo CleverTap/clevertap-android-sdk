@@ -9,8 +9,8 @@ import com.clevertap.android.pushtemplates.R
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.Utils
 
-class AutoCarouselContentView(context: Context, renderer: TemplateRenderer):
-    BigImageContentView(context,renderer,R.layout.auto_carousel) {
+class AutoCarouselContentView(context: Context, renderer: TemplateRenderer) :
+    BigImageContentView(context, renderer, R.layout.auto_carousel) {
 
     init {
         setCustomContentViewMessageSummary(renderer.pt_msg_summary)
@@ -35,7 +35,7 @@ class AutoCarouselContentView(context: Context, renderer: TemplateRenderer):
         remoteView.setInt(R.id.view_flipper, "setFlipInterval", interval)
     }
 
-    private fun setViewFlipper(){
+    private fun setViewFlipper() {
         var imageCounter = 0
         for (index in renderer.imageList!!.indices) {
             val tempRemoteView = RemoteViews(context.packageName, R.layout.image_view)

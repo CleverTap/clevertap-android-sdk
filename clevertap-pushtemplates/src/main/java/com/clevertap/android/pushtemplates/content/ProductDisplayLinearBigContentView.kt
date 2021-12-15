@@ -6,13 +6,19 @@ import android.os.Bundle
 import android.text.Html
 import android.view.View
 import android.widget.RemoteViews
-import com.clevertap.android.pushtemplates.*
+import com.clevertap.android.pushtemplates.PTConstants
+import com.clevertap.android.pushtemplates.PTLog
+import com.clevertap.android.pushtemplates.R
+import com.clevertap.android.pushtemplates.TemplateRenderer
+import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.sdk.Constants
 import java.util.ArrayList
 
-open class ProductDisplayLinearBigContentView(context: Context,
-          renderer: TemplateRenderer,extras: Bundle,layoutId: Int=R.layout.product_display_linear_expanded):
-    ContentView(context,layoutId ,renderer) {
+open class ProductDisplayLinearBigContentView(
+    context: Context,
+    renderer: TemplateRenderer, extras: Bundle, layoutId: Int = R.layout.product_display_linear_expanded
+) :
+    ContentView(context, layoutId, renderer) {
 
     protected var productName: String = renderer.bigTextList!![0]
     protected var productPrice: String = renderer.priceList!![0]
@@ -21,7 +27,7 @@ open class ProductDisplayLinearBigContentView(context: Context,
 
     init {
         var currentPosition = 0
-        val extrasFrom = extras.getString(Constants.EXTRAS_FROM,"")
+        val extrasFrom = extras.getString(Constants.EXTRAS_FROM, "")
         if (extrasFrom == "PTReceiver") {
             currentPosition = extras.getInt(PTConstants.PT_CURRENT_POSITION, 0)
             productName = renderer.bigTextList!![currentPosition]
@@ -30,12 +36,12 @@ open class ProductDisplayLinearBigContentView(context: Context,
             productDL = renderer.deepLinkList!![currentPosition]
         }
         setCustomContentViewBasicKeys()
-        if (renderer.bigTextList!!.isNotEmpty()) setCustomContentViewText(R.id.product_name,productName)
+        if (renderer.bigTextList!!.isNotEmpty()) setCustomContentViewText(R.id.product_name, productName)
         if (renderer.priceList!!.isNotEmpty()) setCustomContentViewText(R.id.product_price, productPrice)
         setCustomContentViewExpandedBackgroundColour(renderer.pt_bg)
-        setCustomContentViewButtonLabel(R.id.product_action,renderer.pt_product_display_action)
-        setCustomContentViewButtonColour(R.id.product_action,renderer.pt_product_display_action_clr)
-        setCustomContentViewButtonText(R.id.product_action,renderer.pt_product_display_action_text_clr)
+        setCustomContentViewButtonLabel(R.id.product_action, renderer.pt_product_display_action)
+        setCustomContentViewButtonColour(R.id.product_action, renderer.pt_product_display_action_clr)
+        setCustomContentViewButtonText(R.id.product_action, renderer.pt_product_display_action_text_clr)
         setImageList(extras)
         remoteView.setDisplayedChild(R.id.carousel_image, currentPosition)
 
@@ -43,17 +49,29 @@ open class ProductDisplayLinearBigContentView(context: Context,
         setCustomContentViewSmallIcon()
 
 
-        remoteView.setOnClickPendingIntent(R.id.small_image1, PendingIntentFactory.getPendingIntent(context,
-            renderer.notificationId, extras,false, PRODUCT_DISPLAY_DL1_PENDING_INTENT,renderer))
+        remoteView.setOnClickPendingIntent(
+            R.id.small_image1, PendingIntentFactory.getPendingIntent(
+                context,
+                renderer.notificationId, extras, false, PRODUCT_DISPLAY_DL1_PENDING_INTENT, renderer
+            )
+        )
 
         if (renderer.deepLinkList!!.size >= 2) {
-            remoteView.setOnClickPendingIntent(R.id.small_image2, PendingIntentFactory.getPendingIntent(context,
-                renderer.notificationId, extras,false, PRODUCT_DISPLAY_DL2_PENDING_INTENT,renderer))
+            remoteView.setOnClickPendingIntent(
+                R.id.small_image2, PendingIntentFactory.getPendingIntent(
+                    context,
+                    renderer.notificationId, extras, false, PRODUCT_DISPLAY_DL2_PENDING_INTENT, renderer
+                )
+            )
         }
 
         if (renderer.deepLinkList!!.size >= 3) {
-            remoteView.setOnClickPendingIntent(R.id.small_image3, PendingIntentFactory.getPendingIntent(context,
-                renderer.notificationId, extras,false, PRODUCT_DISPLAY_DL3_PENDING_INTENT,renderer))
+            remoteView.setOnClickPendingIntent(
+                R.id.small_image3, PendingIntentFactory.getPendingIntent(
+                    context,
+                    renderer.notificationId, extras, false, PRODUCT_DISPLAY_DL3_PENDING_INTENT, renderer
+                )
+            )
         }
 
         val bundleBuyNow = extras.clone() as Bundle
@@ -61,10 +79,13 @@ open class ProductDisplayLinearBigContentView(context: Context,
         bundleBuyNow.putInt(PTConstants.PT_NOTIF_ID, renderer.notificationId)
         bundleBuyNow.putString(PTConstants.PT_BUY_NOW_DL, productDL)
         bundleBuyNow.putBoolean(PTConstants.PT_BUY_NOW, true)
-        remoteView.setOnClickPendingIntent(R.id.product_action, PendingIntentFactory.getCtaLaunchPendingIntent(context,
-            bundleBuyNow,productDL,renderer.notificationId))
+        remoteView.setOnClickPendingIntent(
+            R.id.product_action, PendingIntentFactory.getCtaLaunchPendingIntent(
+                context,
+                bundleBuyNow, productDL, renderer.notificationId
+            )
+        )
     }
-
 
     internal fun setImageList(extras: Bundle) {
         var imageCounter = 0
@@ -111,8 +132,6 @@ open class ProductDisplayLinearBigContentView(context: Context,
         }
     }
 
-
-
     internal fun setCustomContentViewText(resourceId: Int, s: String) {
         if (s.isNotEmpty()) {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
@@ -138,7 +157,6 @@ open class ProductDisplayLinearBigContentView(context: Context,
             }
         }
     }
-
 
     private fun setCustomContentViewButtonColour(resourceID: Int, pt_product_display_action_clr: String?) {
         if (pt_product_display_action_clr != null && pt_product_display_action_clr.isNotEmpty()) {

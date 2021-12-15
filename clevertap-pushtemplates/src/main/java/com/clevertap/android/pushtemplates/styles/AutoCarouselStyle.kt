@@ -5,10 +5,12 @@ import android.content.Context
 import android.os.Bundle
 import android.widget.RemoteViews
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.pushtemplates.content.*
+import com.clevertap.android.pushtemplates.content.AUTO_CAROUSEL_CONTENT_PENDING_INTENT
+import com.clevertap.android.pushtemplates.content.AutoCarouselContentView
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
+import com.clevertap.android.pushtemplates.content.SmallContentView
 
-class AutoCarouselStyle(private var renderer: TemplateRenderer): Style(renderer) {
+class AutoCarouselStyle(private var renderer: TemplateRenderer) : Style(renderer) {
 
     override fun makeSmallContentView(context: Context, renderer: TemplateRenderer): RemoteViews {
         return SmallContentView(context, renderer).remoteView
@@ -23,8 +25,9 @@ class AutoCarouselStyle(private var renderer: TemplateRenderer): Style(renderer)
         extras: Bundle,
         notificationId: Int
     ): PendingIntent? {
-        return PendingIntentFactory.getPendingIntent(context,notificationId,extras,true,
-            AUTO_CAROUSEL_CONTENT_PENDING_INTENT,renderer
+        return PendingIntentFactory.getPendingIntent(
+            context, notificationId, extras, true,
+            AUTO_CAROUSEL_CONTENT_PENDING_INTENT, renderer
         )
     }
 

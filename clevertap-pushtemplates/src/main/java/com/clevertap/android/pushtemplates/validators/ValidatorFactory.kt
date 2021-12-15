@@ -46,7 +46,7 @@ fun Iterable<Checker<out Any>>.and(): Boolean {
 }
 
 internal class ValidatorFactory {
-    companion object{
+    companion object {
 
         private lateinit var keys: Map<String, Checker<out Any>>
 
@@ -55,7 +55,13 @@ internal class ValidatorFactory {
 
             return when (templateType) {
                 BASIC -> BasicTemplateValidator(ContentValidator(keys))
-                AUTO_CAROUSEL, MANUAL_CAROUSEL -> CarouselTemplateValidator(BasicTemplateValidator(ContentValidator(keys)))
+                AUTO_CAROUSEL, MANUAL_CAROUSEL -> CarouselTemplateValidator(
+                    BasicTemplateValidator(
+                        ContentValidator(
+                            keys
+                        )
+                    )
+                )
                 RATING -> RatingTemplateValidator(BasicTemplateValidator(ContentValidator(keys)))
                 FIVE_ICONS -> FiveIconsTemplateValidator(BackgroundValidator(keys))
                 PRODUCT_DISPLAY -> ProductDisplayTemplateValidator(BasicTemplateValidator(ContentValidator(keys)))
@@ -64,7 +70,6 @@ internal class ValidatorFactory {
                 INPUT_BOX -> InputBoxTemplateValidator(ContentValidator(keys))
                 else -> null
             }
-
         }
 
         fun createKeysMap(templateRenderer: TemplateRenderer): Map<String, Checker<out Any>> {
@@ -74,7 +79,8 @@ internal class ValidatorFactory {
             hashMap[PT_MSG] = StringSizeChecker(templateRenderer.pt_msg, 0, "Message is missing or empty")
             hashMap[PT_BG] = StringSizeChecker(templateRenderer.pt_bg, 0, "Background colour is missing or empty")
             //----------CAROUSEL-------------
-            hashMap[PT_DEEPLINK_LIST] = ListSizeChecker(templateRenderer.deepLinkList, 1, "Deeplink is missing or empty")
+            hashMap[PT_DEEPLINK_LIST] =
+                ListSizeChecker(templateRenderer.deepLinkList, 1, "Deeplink is missing or empty")
             hashMap[PT_THREE_IMAGE_LIST] =
                 ListSizeChecker(templateRenderer.imageList, 3, "Three required images not present")
             //----------RATING-------------
@@ -95,9 +101,14 @@ internal class ValidatorFactory {
             hashMap[PT_PRODUCT_DISPLAY_ACTION] =
                 StringSizeChecker(templateRenderer.pt_product_display_action, 0, "Button label is missing or empty")
             hashMap[PT_PRODUCT_DISPLAY_ACTION_CLR] =
-                StringSizeChecker(templateRenderer.pt_product_display_action_clr, 0, "Button colour is missing or empty")
+                StringSizeChecker(
+                    templateRenderer.pt_product_display_action_clr,
+                    0,
+                    "Button colour is missing or empty"
+                )
             //----------ZERO BEZEL----------------
-            hashMap[PT_BIG_IMG] = StringSizeChecker(templateRenderer.pt_big_img, 0, "Display Image is missing or empty")
+            hashMap[PT_BIG_IMG] =
+                StringSizeChecker(templateRenderer.pt_big_img, 0, "Display Image is missing or empty")
             //----------TIMER----------------
             hashMap[PT_TIMER_THRESHOLD] =
                 IntSizeChecker(templateRenderer.pt_timer_threshold, -1, "Timer Threshold or End time not defined")
@@ -105,7 +116,11 @@ internal class ValidatorFactory {
                 IntSizeChecker(templateRenderer.pt_timer_end, -1, "Timer Threshold or End time not defined")
             //----------INPUT BOX----------------
             hashMap[PT_INPUT_FEEDBACK] =
-                StringSizeChecker(templateRenderer.pt_input_feedback, 0, "Feedback Text or Actions is missing or empty")
+                StringSizeChecker(
+                    templateRenderer.pt_input_feedback,
+                    0,
+                    "Feedback Text or Actions is missing or empty"
+                )
             hashMap[PT_ACTIONS] =
                 JsonArraySizeChecker(templateRenderer.actions, 0, "Feedback Text or Actions is missing or empty")
 

@@ -1,6 +1,7 @@
 package com.clevertap.android.pushtemplates;
 
-import android.annotation.SuppressLint;
+import static android.content.Context.NOTIFICATION_SERVICE;
+
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
@@ -26,21 +27,13 @@ import android.text.TextUtils;
 import android.text.format.DateUtils;
 import android.widget.RemoteViews;
 import android.widget.Toast;
-
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
-
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
-import java.util.concurrent.Callable;
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -53,32 +46,17 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.zip.GZIPInputStream;
-
-import static android.content.Context.NOTIFICATION_SERVICE;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 @SuppressWarnings("WeakerAccess")
 public class Utils {
 
-    public static boolean isPNFromCleverTap(Bundle extras) {
-        if (extras == null) return false;
-
-        boolean fromCleverTap = extras.containsKey(PTConstants.NOTIF_TAG);
-        boolean shouldRender = fromCleverTap && extras.containsKey("nm");
-        return fromCleverTap && shouldRender;
-    }
-
-    public static boolean isForPushTemplates(Bundle extras) {
-        if (extras == null) return false;
-        String pt_id = extras.getString(PTConstants.PT_ID);
-        return !(("0").equals(pt_id) || pt_id == null || pt_id.isEmpty());
-    }
-
-
     @SuppressWarnings("unused")
     public static Bitmap getNotificationBitmap(String icoPath, boolean fallbackToAppIcon,
-                                        final Context context)
+            final Context context)
             throws NullPointerException {
         // If the icon path is not specified
         if (icoPath == null || icoPath.equals("")) {
@@ -97,8 +75,9 @@ public class Utils {
         try {
             Drawable logo =
                     context.getPackageManager().getApplicationLogo(context.getApplicationInfo());
-            if (logo == null)
+            if (logo == null) {
                 throw new Exception("Logo is null");
+            }
             return drawableToBitmap(logo);
         } catch (Exception e) {
             // Try to get the app icon now
@@ -110,9 +89,6 @@ public class Utils {
 
     static Bitmap drawableToBitmap(Drawable drawable)
             throws NullPointerException {
-        /*if (drawable instanceof BitmapDrawable) {
-            return ((BitmapDrawable) drawable).getBitmap();
-        }*/
 
         Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
                 drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
@@ -249,16 +225,6 @@ public class Utils {
         return dlList;
     }
 
-    static ArrayList<String> getCustomCTAListFromExtras(Bundle extras) {
-        ArrayList<String> ctaList = new ArrayList<>();
-        for (String key : extras.keySet()) {
-            if (key.contains("pt_custom_cta")) {
-                ctaList.add(extras.getString(key));
-            }
-        }
-        return ctaList;
-    }
-
     static ArrayList<String> getBigTextFromExtras(Bundle extras) {
         ArrayList<String> btList = new ArrayList<>();
         for (String key : extras.keySet()) {
@@ -290,12 +256,12 @@ public class Utils {
     }
 
     public static void loadImageBitmapIntoRemoteView(int imageViewID, Bitmap image,
-                                              RemoteViews remoteViews) {
+            RemoteViews remoteViews) {
         remoteViews.setImageViewBitmap(imageViewID, image);
     }
 
     public static void loadImageURLIntoRemoteView(int imageViewID, String imageUrl,
-                                           RemoteViews remoteViews) {
+            RemoteViews remoteViews) {
 
         Bitmap image = getBitmapFromURL(imageUrl);
         setFallback(false);
@@ -310,7 +276,7 @@ public class Utils {
     }
 
     public static void loadImageURLIntoRemoteView(int imageViewID, String imageUrl,
-                                           RemoteViews remoteViews, Context context) {
+            RemoteViews remoteViews, Context context) {
         Bitmap image = getBitmapFromURL(imageUrl);
         setFallback(false);
         if (image != null) {
@@ -323,7 +289,7 @@ public class Utils {
     }
 
     public static void loadImageRidIntoRemoteView(int imageViewID, int resourceID,
-                                           RemoteViews remoteViews) {
+            RemoteViews remoteViews) {
         remoteViews.setImageViewResource(imageViewID, resourceID);
     }
 
@@ -348,35 +314,22 @@ public class Utils {
             JSONArray arr = s.optJSONArray(key);
             String str = s.optString(key);
 
-            if (arr != null && arr.length() <= 0)
+            if (arr != null && arr.length() <= 0) {
                 bundle.putStringArray(key, new String[]{});
-
-            else if (arr != null && arr.optString(0) != null) {
+            } else if (arr != null && arr.optString(0) != null) {
                 String[] newarr = new String[arr.length()];
-                for (int i = 0; i < arr.length(); i++)
+                for (int i = 0; i < arr.length(); i++) {
                     newarr[i] = arr.optString(i);
+                }
                 bundle.putStringArray(key, newarr);
-            } else if (str != null)
+            } else if (str != null) {
                 bundle.putString(key, str);
-
-            else
+            } else {
                 System.err.println("unable to transform json to bundle " + key);
+            }
         }
 
         return bundle;
-    }
-
-    static String bundleToJSON(Bundle extras) {
-        JSONObject json = new JSONObject();
-        Set<String> keys = extras.keySet();
-        for (String key : keys) {
-            try {
-                json.put(key, extras.get(key));
-            } catch (JSONException e) {
-                //Handle exception here
-            }
-        }
-        return json.toString();
     }
 
     static void cancelNotification(Context ctx, int notifyId) {
@@ -455,7 +408,8 @@ public class Utils {
 
     }
 
-    static void raiseCleverTapEvent(Context context, CleverTapInstanceConfig config, String evtName, HashMap<String, Object> eProps) {
+    static void raiseCleverTapEvent(Context context, CleverTapInstanceConfig config, String evtName,
+            HashMap<String, Object> eProps) {
 
         CleverTapAPI instance;
         if (config != null) {
@@ -478,7 +432,7 @@ public class Utils {
         b.remove("config");
         final HashMap<String, Object> map = new HashMap<>();
         for (String s : b.keySet()) {
-            if (s.contains("wzrk_")||s.equals(PTConstants.PT_ID)) {
+            if (s.contains("wzrk_") || s.equals(PTConstants.PT_ID)) {
                 final Object o = b.get(s);
                 if (o instanceof Bundle) {
                     map.putAll(convertRatingBundleObjectToHashMap((Bundle) o));
@@ -569,7 +523,8 @@ public class Utils {
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     public static boolean isNotificationInTray(Context context, int notificationId) {
-        NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+        NotificationManager mNotificationManager = (NotificationManager) context
+                .getSystemService(NOTIFICATION_SERVICE);
         StatusBarNotification[] notifications = mNotificationManager.getActiveNotifications();
         for (StatusBarNotification notification : notifications) {
             if (notification.getId() == notificationId) {
@@ -581,7 +536,8 @@ public class Utils {
 
     @RequiresApi(api = Build.VERSION_CODES.M)
     public static Notification getNotificationById(Context context, int notificationId) {
-        NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+        NotificationManager mNotificationManager = (NotificationManager) context
+                .getSystemService(NOTIFICATION_SERVICE);
         StatusBarNotification[] notifications = mNotificationManager.getActiveNotifications();
         for (StatusBarNotification notification : notifications) {
             if (notification.getId() == notificationId) {
@@ -594,7 +550,8 @@ public class Utils {
     public static ArrayList<Integer> getNotificationIds(Context context) {
         ArrayList<Integer> ids = new ArrayList<Integer>();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            NotificationManager mNotificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+            NotificationManager mNotificationManager = (NotificationManager) context
+                    .getSystemService(NOTIFICATION_SERVICE);
             StatusBarNotification[] notifications = mNotificationManager.getActiveNotifications();
             for (StatusBarNotification notification : notifications) {
                 if (notification.getPackageName().equalsIgnoreCase(context.getPackageName())) {
@@ -618,19 +575,6 @@ public class Utils {
 
     }
 
-    static void raiseNotificationViewed(Context context, Bundle extras, CleverTapInstanceConfig config) {
-        CleverTapAPI instance;
-        if (config != null) {
-            instance = CleverTapAPI.instanceWithConfig(context, config);
-        } else {
-            instance = CleverTapAPI.getDefaultInstance(context);
-        }
-        if (instance != null) {
-            instance.pushNotificationViewedEvent(extras);
-        }
-
-    }
-
     static JSONArray getActionKeys(Bundle extras) {
         JSONArray actions = null;
 
@@ -647,8 +591,7 @@ public class Utils {
 
     static void showToast(final Context context, final String message,
             final CleverTapInstanceConfig config) {
-        if (config!=null)
-        {
+        if (config != null) {
             Task<Void> task = CTExecutorFactory.executors(config).mainTask();
             task.execute("PushTemplatesUtils#showToast", new Callable<Void>() {
                 @Override
@@ -663,15 +606,25 @@ public class Utils {
     }
 
     static void createSilentNotificationChannel(Context context) {
-        NotificationManager notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
-        if (notificationManager == null) return;
+        NotificationManager notificationManager = (NotificationManager) context
+                .getSystemService(NOTIFICATION_SERVICE);
+        if (notificationManager == null) {
+            return;
+        }
         NotificationChannel notificationChannel;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID) == null || (notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID) != null && !isNotificationChannelEnabled(notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID)))) {
-                Uri soundUri = Uri.parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.getPackageName() + "/raw/" + PTConstants.PT_SOUND_FILE_NAME);
-                notificationChannel = new NotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID, PTConstants.PT_SILENT_CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH);
+            if (notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID) == null || (
+                    notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID) != null
+                            && !isNotificationChannelEnabled(
+                            notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID)))) {
+                Uri soundUri = Uri
+                        .parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.getPackageName() + "/raw/"
+                                + PTConstants.PT_SOUND_FILE_NAME);
+                notificationChannel = new NotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID,
+                        PTConstants.PT_SILENT_CHANNEL_NAME, NotificationManager.IMPORTANCE_HIGH);
                 if (soundUri != null) {
-                    notificationChannel.setSound(soundUri, new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build());
+                    notificationChannel.setSound(soundUri,
+                            new AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_NOTIFICATION).build());
                 }
                 notificationChannel.setDescription(PTConstants.PT_SILENT_CHANNEL_DESC);
                 notificationChannel.setShowBadge(false);
@@ -682,10 +635,15 @@ public class Utils {
     }
 
     static void deleteSilentNotificationChannel(Context context) {
-        NotificationManager notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
-        if (notificationManager == null) return;
+        NotificationManager notificationManager = (NotificationManager) context
+                .getSystemService(NOTIFICATION_SERVICE);
+        if (notificationManager == null) {
+            return;
+        }
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            if (notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID) != null && isNotificationChannelEnabled(notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID))) {
+            if (notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID) != null
+                    && isNotificationChannelEnabled(
+                    notificationManager.getNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID))) {
                 notificationManager.deleteNotificationChannel(PTConstants.PT_SILENT_CHANNEL_ID);
             }
         }
@@ -737,24 +695,10 @@ public class Utils {
                 return Math.max(t, PTConstants.PT_FLIP_INTERVAL_TIME);
             }
         } catch (Exception e) {
-            PTLog.debug("Flip Interval couldn't be converted to number: " + interval + " - Defaulting to base value: " + PTConstants.PT_FLIP_INTERVAL_TIME);
+            PTLog.debug("Flip Interval couldn't be converted to number: " + interval + " - Defaulting to base value: "
+                    + PTConstants.PT_FLIP_INTERVAL_TIME);
         }
         return PTConstants.PT_FLIP_INTERVAL_TIME;
-    }
-
-    static String getImagePathFromList() {
-        return PTConstants.PT_IMAGE_PATH_LIST;
-    }
-
-    static String getImageFileNameFromURL(String URL) {
-        if (URL.lastIndexOf(".") > URL.lastIndexOf("/") + 1) {
-            return URL.substring(URL.lastIndexOf("/") + 1, URL.lastIndexOf("."));
-        } else if (URL.length() > URL.lastIndexOf("/") + 1) {
-            return URL.substring(URL.lastIndexOf("/") + 1);
-        } else {
-            URL = URL.substring(0, URL.length() - 1);
-            return URL.substring(URL.lastIndexOf("/") + 1);
-        }
     }
 
     static void deleteImageFromStorage(Context context, Intent intent) {
@@ -784,29 +728,4 @@ public class Utils {
         }
     }
 
-
-    public static Bundle jsonStringToBundle(String jsonString) {
-        try {
-            JSONObject jsonObject = toJsonObject(jsonString);
-            return jsonToBundle(jsonObject);
-        } catch (JSONException ignored) {
-
-        }
-        return null;
-    }
-
-    public static JSONObject toJsonObject(String jsonString) throws JSONException {
-        return new JSONObject(jsonString);
-    }
-
-    public static Bundle jsonToBundle(JSONObject jsonObject) throws JSONException {
-        Bundle bundle = new Bundle();
-        Iterator iter = jsonObject.keys();
-        while (iter.hasNext()) {
-            String key = (String) iter.next();
-            String value = jsonObject.getString(key);
-            bundle.putString(key, value);
-        }
-        return bundle;
-    }
 }
