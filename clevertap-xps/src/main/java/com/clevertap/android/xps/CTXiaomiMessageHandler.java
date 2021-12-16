@@ -18,6 +18,7 @@ import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.interfaces.INotificationParser;
 import com.clevertap.android.sdk.interfaces.IPushAmpHandler;
 import com.clevertap.android.sdk.pushnotification.PushNotificationHandler;
+import com.clevertap.android.sdk.pushnotification.fcm.IFcmMessageHandler;
 import com.xiaomi.mipush.sdk.ErrorCode;
 import com.xiaomi.mipush.sdk.MiPushClient;
 import com.xiaomi.mipush.sdk.MiPushCommandMessage;
@@ -25,7 +26,7 @@ import com.xiaomi.mipush.sdk.MiPushMessage;
 import java.util.List;
 
 /**
- * Implementation of {@link IMiMessageHandler}
+ * implementation of {@link IFcmMessageHandler} and {@link IPushAmpHandler} for xiaomi push message
  */
 public class CTXiaomiMessageHandler implements IMiMessageHandler, IPushAmpHandler<MiPushMessage> {
 
@@ -41,6 +42,12 @@ public class CTXiaomiMessageHandler implements IMiMessageHandler, IPushAmpHandle
         mParser = parser;
     }
 
+    /**
+     * {@inheritDoc}
+     * <br><br>
+     * Use this method if you have custom implementation of xiaomi push service and wants to create push-template
+     * notification/non push-template notification using CleverTap
+     */
     @Override
     public boolean createNotification(Context context, MiPushMessage message) {
         boolean isSuccess = false;
@@ -59,6 +66,9 @@ public class CTXiaomiMessageHandler implements IMiMessageHandler, IPushAmpHandle
         return isSuccess;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public @XpsConstants.CommandResult
     int onReceiveRegisterResult(Context context, MiPushCommandMessage miPushCommandMessage) {
@@ -90,6 +100,12 @@ public class CTXiaomiMessageHandler implements IMiMessageHandler, IPushAmpHandle
         }
     }
 
+    /**
+     * {@inheritDoc}
+     * <br><br>
+     * Use this method if you are rendering notification by your own and wants to support your custom rendered
+     * notification for push amplification
+     */
     @Override
     public void processPushAmp(final Context context, @NonNull final MiPushMessage message) {
         try {

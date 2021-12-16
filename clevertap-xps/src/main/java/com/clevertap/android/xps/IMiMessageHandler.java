@@ -12,6 +12,7 @@ import com.xiaomi.mipush.sdk.MiPushMessage;
 public interface IMiMessageHandler {
 
     /**
+     * Creates notification from Xiaomi Push message
      * @param context - application context
      * @param message - Xiaomi MiPushMessage
      * @return true if everything is fine & notification is rendered successfully
@@ -19,6 +20,7 @@ public interface IMiMessageHandler {
     boolean createNotification(Context context, MiPushMessage message);
 
     /**
+     * Processes new token from Xiaomi
      * @param context              - application context
      * @param miPushCommandMessage - miCommand Message
      * @return message processed result code after processing, Ref {@link XpsConstants.CommandResult}

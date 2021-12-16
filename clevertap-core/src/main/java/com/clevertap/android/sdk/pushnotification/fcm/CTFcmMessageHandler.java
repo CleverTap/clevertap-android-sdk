@@ -15,7 +15,7 @@ import com.clevertap.android.sdk.pushnotification.PushNotificationHandler;
 import com.google.firebase.messaging.RemoteMessage;
 
 /**
- * implementation of {@link IFcmMessageHandler}
+ * implementation of {@link IFcmMessageHandler} and {@link IPushAmpHandler} for Firebase notification message
  */
 public class CTFcmMessageHandler implements IFcmMessageHandler, IPushAmpHandler<RemoteMessage> {
 
@@ -29,8 +29,17 @@ public class CTFcmMessageHandler implements IFcmMessageHandler, IPushAmpHandler<
         mParser = parser;
     }
 
+    /**
+     * {@inheritDoc}
+     * <br><br>
+     * Use this method if you have custom implementation of messaging service and wants to create push-template
+     * notification/non push-template notification using CleverTap
+     */
     @Override
     public boolean createNotification(final Context context, final RemoteMessage message) {
+        /**
+         * Convert firebase message to bundle and pass to PushNotificationHandler for further processing
+         */
         boolean isSuccess = false;
 
         Bundle messageBundle = mParser.toBundle(message);
@@ -42,6 +51,9 @@ public class CTFcmMessageHandler implements IFcmMessageHandler, IPushAmpHandler<
         return isSuccess;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean onNewToken(final Context applicationContext, final String token) {
         boolean isSuccess = false;
@@ -58,7 +70,12 @@ public class CTFcmMessageHandler implements IFcmMessageHandler, IPushAmpHandler<
         return isSuccess;
     }
 
-
+    /**
+     * {@inheritDoc}
+     * <br><br>
+     * Use this method if you are rendering notification by your own and wants to support your custom rendered
+     * notification for push amplification
+     */
     @Override
     public void processPushAmp(final Context context, @NonNull final RemoteMessage message) {
         Bundle messageBundle = mParser.toBundle(message);

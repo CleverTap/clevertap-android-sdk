@@ -13,10 +13,11 @@ import com.clevertap.android.sdk.interfaces.INotificationParser;
 import com.clevertap.android.sdk.interfaces.IPushAmpHandler;
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.clevertap.android.sdk.pushnotification.PushNotificationHandler;
+import com.clevertap.android.sdk.pushnotification.fcm.IFcmMessageHandler;
 import com.huawei.hms.push.RemoteMessage;
 
 /**
- * Implementation of {@link IHmsMessageHandler}
+ * implementation of {@link IFcmMessageHandler} and {@link IPushAmpHandler} for huawei notification message
  */
 public class CTHmsMessageHandler implements IHmsMessageHandler, IPushAmpHandler<RemoteMessage> {
 
@@ -30,6 +31,12 @@ public class CTHmsMessageHandler implements IHmsMessageHandler, IPushAmpHandler<
         mParser = parser;
     }
 
+    /**
+     * {@inheritDoc}
+     * <br><br>
+     * Use this method if you have custom implementation of huawei messaging service and wants to create push-template
+     * notification/non push-template notification using CleverTap
+     */
     @Override
     public boolean createNotification(Context context, final RemoteMessage remoteMessage) {
         boolean isSuccess = false;
@@ -46,6 +53,9 @@ public class CTHmsMessageHandler implements IHmsMessageHandler, IPushAmpHandler<
         return isSuccess;
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     public boolean onNewToken(Context context, final String token) {
         boolean isSuccess = false;
@@ -61,6 +71,12 @@ public class CTHmsMessageHandler implements IHmsMessageHandler, IPushAmpHandler<
         return isSuccess;
     }
 
+    /**
+     * {@inheritDoc}
+     * <br><br>
+     * Use this method if you are rendering notification by your own and wants to support your custom rendered
+     * notification for push amplification
+     */
     @Override
     public void processPushAmp(final Context context, @NonNull final RemoteMessage message) {
         try {
