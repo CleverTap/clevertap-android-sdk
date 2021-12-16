@@ -88,9 +88,9 @@ internal class ValidatorFactory {
                 StringSizeChecker(templateRenderer.pt_rating_default_dl, 0, "Default deeplink is missing or empty")
             //----------FIVE ICON-------------
             hashMap[PT_FIVE_DEEPLINK_LIST] =
-                ListSizeChecker(templateRenderer.deepLinkList, 5, "Five required deeplinks not present")
+                ListSizeChecker(templateRenderer.deepLinkList, 2, "Three required deeplinks not present")
             hashMap[PT_FIVE_IMAGE_LIST] =
-                ListSizeChecker(templateRenderer.imageList, 3, "Five required images not present")
+                ListSizeChecker(templateRenderer.imageList, 2, "Three required images not present")
             //----------PROD DISPLAY-------------
             hashMap[PT_THREE_DEEPLINK_LIST] =
                 ListSizeChecker(templateRenderer.deepLinkList, 3, "Three required deeplinks not present")
