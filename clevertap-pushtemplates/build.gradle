@@ -1,11 +1,11 @@
 import static de.fayard.refreshVersions.core.Versions.versionFor
 
 ext {
-    libraryName = 'PushTemplateSDK'
-    artifact = 'clevertap-push-template-sdk'
-    libraryDescription = 'The CleverTap Android Push Template SDK'
+    libraryName = 'PushTemplates'
+    artifact = 'clevertap-push-templates-sdk'
+    libraryDescription = 'The CleverTap Android Push Templates SDK'
 
-    libraryVersion = versionFor("version.com.clevertap.android..clevertap-pushTemplate-sdk")
+    libraryVersion = versionFor("version.com.clevertap.android..clevertap-push-templates-sdk")
 
     licenseName = 'MIT License'
     licenseUrl = 'https://opensource.org/licenses/MIT'
