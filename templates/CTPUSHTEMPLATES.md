@@ -195,7 +195,7 @@ Template Key | Required | Value
 ---:|:---:|:---
 pt_event_name | Required | for e.g. `Remind Later`,
 pt_event_property_<property_name_1> | Optional | for e.g. `<property_value>`,
-pt_event_property_<property_name_2> | Required | future epoch timestamp. For e.g., `$D_1592503813`
+pt_event_property_<property_name_2> | Required | future epoch timestamp. For e.g., `\$D_1592503813`
 pt_dismiss_on_click | Optional | Dismisses the notification without opening the app
 
 ![Input_Box_CTA_Remind](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/inputCtaRemind.gif)
@@ -388,7 +388,7 @@ pt_big_img | Optional | Image
 pt_big_img_alt | Optional | Image to show when timer expires
 pt_bg | Required | Background Color in HEX
 pt_timer_threshold | Required | Timer duration in seconds (minimum 10)
-pt_timer_end | Required | Epoch Timestamp to countdown to (for example, $D_1595871380 or 1595871380). Not needed if pt_timer_threshold is specified.
+pt_timer_end | Required | Epoch Timestamp to countdown to (for example, \$D_1595871380 or 1595871380). Not needed if pt_timer_threshold is specified.
 pt_title_clr | Optional | Title Color in HEX
 pt_msg_clr | Optional | Message Color in HEX
 pt_small_icon_clr | Optional | Small Icon Color in HEX

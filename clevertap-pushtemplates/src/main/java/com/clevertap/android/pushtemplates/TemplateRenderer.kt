@@ -85,11 +85,11 @@ class TemplateRenderer : INotificationRenderer {
     }
 
     override fun getMessage(extras: Bundle): String? {
-        return pt_msg // TODO: Check if set properly before caller calls this
+        return pt_msg
     }
 
     override fun getTitle(extras: Bundle, context: Context): String? {
-        return pt_title // TODO: Check if set properly before caller calls this
+        return pt_title
     }
 
     override fun renderNotification(
