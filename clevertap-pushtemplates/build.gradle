@@ -2,7 +2,7 @@ import static de.fayard.refreshVersions.core.Versions.versionFor
 
 ext {
     libraryName = 'PushTemplates'
-    artifact = 'clevertap-push-templates-sdk'
+    artifact = 'push-templates'
     libraryDescription = 'The CleverTap Android Push Templates SDK'
 
     libraryVersion = versionFor("version.com.clevertap.android..clevertap-push-templates-sdk")
