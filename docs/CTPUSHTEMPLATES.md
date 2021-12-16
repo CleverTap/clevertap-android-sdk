@@ -27,7 +27,7 @@ This library is in public beta, for any issues, queries and concerns please open
 
 ```groovy
 implementation "com.clevertap.android:clevertap-push-templates-sdk:1.0.0"
-implementation "com.clevertap.android:clevertap-android-sdk:4.3.0" // 4.4.0 and above
+implementation "com.clevertap.android:clevertap-android-sdk:4.4.0" // 4.4.0 and above
 ```
 
 2. Add the following line to your Application class before the `onCreate()`
