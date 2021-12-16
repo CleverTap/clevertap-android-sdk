@@ -21,9 +21,9 @@ open class ProductDisplayLinearBigContentView(
     ContentView(context, layoutId, renderer) {
 
     protected var productName: String = renderer.bigTextList!![0]
-    protected var productPrice: String = renderer.priceList!![0]
+    private var productPrice: String = renderer.priceList!![0]
     protected var productMessage: String = renderer.smallTextList!![0]
-    protected var productDL: String = renderer.deepLinkList!![0]
+    private var productDL: String = renderer.deepLinkList!![0]
 
     init {
         var currentPosition = 0
