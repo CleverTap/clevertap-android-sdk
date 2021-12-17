@@ -545,7 +545,8 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                     notificationManager.notify(notificationId, notification);
                 }
                 if (VERSION.SDK_INT < VERSION_CODES.S) {
-                    Utils.raiseNotificationClicked(context, extras, this.config);
+                    Utils.raiseCleverTapEvent(context, config, "Rating Submitted",
+                            Utils.convertRatingBundleObjectToHashMap(extras));
                     handleRatingDeepLink(context, extras, notificationId, pt_dl_clicked, this.config);
                 }
             } else {
@@ -555,12 +556,11 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 if (notificationHandler != null) {
                     notificationHandler.onMessageReceived(context, extras, "FCM");
                     clonedExtras.putString(Constants.DEEP_LINK_KEY, pt_dl_clicked);
-                    Utils.raiseNotificationClicked(context, clonedExtras, this.config);
+                    Utils.raiseCleverTapEvent(context, config, "Rating Submitted",
+                            Utils.convertRatingBundleObjectToHashMap(extras));
                     handleRatingDeepLink(context, clonedExtras, notificationId, pt_dl_clicked, this.config);
                 }
             }
-            Utils.raiseCleverTapEvent(context, config, "Rating Submitted",
-                    Utils.convertRatingBundleObjectToHashMap(extras));
         } catch (Throwable t) {
             PTLog.verbose("Error creating rating notification ", t);
         }
