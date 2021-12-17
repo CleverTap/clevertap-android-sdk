@@ -182,6 +182,12 @@ CleverTap Xiaomi Push SDK provides an out of the box service to use the Xiaomi P
 
 CleverTap Huawei Push SDK provides an out of the box service to use the Huawei Messaging Service. Find the integration steps for the CleverTap Huawei Push SDK [here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTHUAWEIPUSH.md)
 
+## 📲 CleverTap Push Templates SDK
+[(Back to top)](#-table-of-contents)
+
+CleverTap Push Templates SDK helps you engage with your users using fancy push notification templates built specifically to work with [CleverTap](https://www.clevertap.com).
+Find the integration steps for the CleverTap Push Templates SDK [here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTPUSHTEMPLATES.md)
+
 ## 📄 License
 [(Back to top)](#-table-of-contents)
 CleverTap Android SDK is MIT licensed, as found in the [LICENSE](https://github.com/CleverTap/clevertap-android-sdk/blob/master/LICENSE) file.
