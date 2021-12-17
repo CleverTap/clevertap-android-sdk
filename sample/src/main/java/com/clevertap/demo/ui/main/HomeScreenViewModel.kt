@@ -298,7 +298,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 )
             }
             "90"-> cleverTapAPI?.pushEvent("Send Basic Push")
-            "91"-> cleverTapAPI?.pushEvent("Send Auto Carousel Push")
+            "91"-> cleverTapAPI?.pushEvent("Send Carousel Push")
             "92"-> cleverTapAPI?.pushEvent("Send Manual Carousel Push")
             "93"-> cleverTapAPI?.pushEvent("Send Filmstrip Carousel Push")
             "94"-> cleverTapAPI?.pushEvent("Send Rating Push")

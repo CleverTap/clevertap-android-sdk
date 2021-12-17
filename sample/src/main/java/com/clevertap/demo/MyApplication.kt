@@ -65,8 +65,12 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                     "${defaultInstance?.cleverTapAttributionIdentifier}"
         )*/
         CleverTapAPI.createNotificationChannel(
-            this, "BRTesting", "Offers",
-            "All Offers", NotificationManager.IMPORTANCE_MAX, true
+            this, "BRTesting", "Core",
+            "Core notifications", NotificationManager.IMPORTANCE_MAX, true
+        )
+        CleverTapAPI.createNotificationChannel(
+            this, "PTTesting", "Push templates",
+            "All push templates", NotificationManager.IMPORTANCE_MAX, true
         )
     }
 

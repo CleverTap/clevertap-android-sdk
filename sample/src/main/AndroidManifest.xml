@@ -31,10 +31,10 @@
         <!-- Add meta data for CleverTap Account Id and Account Token -->
         <meta-data
             android:name="CLEVERTAP_ACCOUNT_ID"
-            android:value="TEST-46W-WWR-R85Z" />
+            android:value="TEST-R78-ZZK-955Z" />
         <meta-data
             android:name="CLEVERTAP_TOKEN"
-            android:value="TEST-200-064" />
+            android:value="TEST-311-ba2" />
 
         <!-- Xiaomi Push -->
         <meta-data
