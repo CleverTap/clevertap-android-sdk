@@ -1,10 +1,7 @@
 [ ![Download](https://api.bintray.com/packages/clevertap/Maven/PushTemplates/images/download.svg) ](https://bintray.com/clevertap/Maven/PushTemplates/_latestVersion)
 # Push Templates by CleverTap
 
-Push Templates SDK helps you engage with your users using fancy push notification templates built specifically to work with [CleverTap](https://www.clevertap.com).
-
-## NOTE
-This library is in public beta, for any issues, queries and concerns please open a new issue [here](https://github.com/CleverTap/PushTemplates/issues)
+CleverTap Push Templates SDK helps you engage with your users using fancy push notification templates built specifically to work with [CleverTap](https://www.clevertap.com).
 
 # Table of contents
 
@@ -14,8 +11,6 @@ This library is in public beta, for any issues, queries and concerns please open
 - [Template Keys](#template-keys)
 - [Developer Notes](#developer-notes)
 - [Sample App](#sample-app)
-- [Contributing](#contributing)
-- [License](#license)
 
 # Installation
 
@@ -32,8 +27,13 @@ implementation "${ext.clevertap_android_sdk}${ext['version.com.clevertap.android
 
 2. Add the following line to your Application class before the `onCreate()`
 
-```java
+#### Kotlin
+```kotlin
 CleverTapAPI.setNotificationHandler(PushTemplateNotificationHandler() as NotificationHandler);
+```
+#### Java
+```java
+CleverTapAPI.setNotificationHandler(new (NotificationHandler)PushTemplateNotificationHandler());
 ```
 
 ### Custom Handling Push Notifications
@@ -53,6 +53,40 @@ public class PushTemplateMessagingService extends FirebaseMessagingService {
     }
 }
 ```
+
+### Migration from v0.0.8 to v1.0.0 and above
+
+Remove the following Receivers and Services from your `AndroidManifest.xml` and follow the steps given above
+
+```xml
+<service
+    android:name="com.clevertap.pushtemplates.PushTemplateMessagingService">
+    <intent-filter>
+        <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+    </intent-filter>
+</service>
+
+<service
+    android:name="com.clevertap.pushtemplates.PTNotificationIntentService"
+    android:exported="false">
+        <intent-filter>
+            <action android:name="com.clevertap.PT_PUSH_EVENT"/>
+        </intent-filter>
+</service>
+
+<receiver
+android:name="com.clevertap.pushtemplates.PTPushNotificationReceiver"
+android:exported="false"
+android:enabled="true">
+</receiver>
+
+<receiver
+android:name="com.clevertap.pushtemplates.PushTemplateReceiver"
+android:exported="false"
+android:enabled="true">
+</receiver>
+```
+
 # Dashboard Usage
 
 [(Back to top)](#table-of-contents)
@@ -120,7 +154,7 @@ pt_manual_carousel_type | Optional | `filmstrip`
 
 ## Rating Template
 
-Rating template lets your users give you feedback, this feedback is captured in the event Notification Clicked with in the property `wzrk_c2a`.<br/>(Expanded and unexpanded example)<br/>
+Rating template lets your users give you feedback, this feedback is captured in the event "Rating Submitted" with in the property `wzrk_c2a`.<br/>(Expanded and unexpanded example)<br/>
 
 ![Rating](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/rating.gif)
 
@@ -361,13 +395,13 @@ pt_id | Required  | Value - `pt_five_icons`
 pt_img1 | Required  | Icon One
 pt_img2 | Required  | Icon Two
 pt_img3 | Required  | Icon Three
-pt_img4 | Required  | Icon Four
-pt_img5 | Required  | Icon Five
+pt_img4 | Optional  | Icon Four
+pt_img5 | Optional  | Icon Five
 pt_dl1 | Required  | Deep Link for first icon
 pt_dl2 | Required  | Deep Link for second icon
 pt_dl3 | Required  | Deep Link for third icon
-pt_dl4 | Required  | Deep Link for fourth icon
-pt_dl5 | Required  | Deep Link for fifth icon
+pt_dl4 | Optional  | Deep Link for fourth icon
+pt_dl5 | Optional  | Deep Link for fifth icon
 pt_bg | Required  | Background Color in HEX
 pt_small_icon_clr | Optional | Small Icon Color in HEX
 pt_json | Optional | Above keys in JSON format
@@ -446,10 +480,27 @@ pt_json | Optional | Above keys in JSON format
 
 [(Back to top)](#table-of-contents)
 
-* Using images of 3 MB or lower are recommended for better performance.
+* Using images of 3 MB or lower are recommended for better performance under Android 11.
 * A silent notification channel with importance: `HIGH` is created every time on an interaction with the Rating, Manual Carousel, and Product Catalog templates with a silent sound file. This prevents the notification sound from playing when the notification is re-rendered.
 * The silent notification channel is deleted whenever the notification is dismissed or clicked.
-* For Android 11, please use images which are less than 100kb else notifications will not be rendered as advertised.
+* For Android 11 and Android 12, please use images which are less than 100kb else notifications will not be rendered as advertised.
+
+## Image Specifications
+
+Template | Aspect Ratios | File Type
+  ---:|:---:|:--- 
+Basic | 4:3 or 2:1 | .JPG
+Auto Carousel | 2:1 (Android 11 & 12) and 4:3 (Below Android 11) | .JPG
+Manual Carousel | 2:1 (Android 11 & 12) and 4:3 (Below Android 11) | .JPG
+Rating | 4:3 (Android 11 & 12) and 2:1 (Below Android 11) | .JPG
+Five Icon | 1:1 | .JPG or .PNG
+Zero Bezel | 4:3 or 2:1 | .JPG
+Timer | 4:3 or 2:1 | .JPG
+Input Box | 4:3 or 2:1 | .JPG
+Product Display | 1:1 | .JPG
+
+* For Auto and Manual Carousel the image dimension should not exceed more than 850x425 for Android 11 and Android 12 devices and with 2:1 image aspect ratio
+* For Product Display image aspect ratio should be 1:1 and and image size should be less than 80kb for Android 11 and Android 12 devices
 
 # Sample App
 
