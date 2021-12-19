@@ -43,7 +43,8 @@ object HomeScreenModel {
             "GEOFENCE" to listOf("Init Geofence", "Trigger Location", "Deactivate Geofence"),
             "DEVICE IDENTIFIERS" to listOf("Fetch CleverTapAttribution Identifier", "Fetch CleverTap ID"),
             "PUSH TEMPLATES" to listOf("Basic Push", "Carousel Push", "Manual Carousel Push", "FilmStrip Carousel Push",
-            "Rating Push","Product Display","Linear Product Display","Five CTA","Zero Bezel","Zero Bezel Text Only","Timer Push","Input Box Push")
+            "Rating Push","Product Display","Linear Product Display","Five CTA","Zero Bezel","Zero Bezel Text Only","Timer Push","Input Box Push",
+            "Input Box Reply with Event")
         )
     }
 }

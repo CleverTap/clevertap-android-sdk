@@ -309,6 +309,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             "99"-> cleverTapAPI?.pushEvent("Send Zero Bezel Text Only Notification")
             "910"-> cleverTapAPI?.pushEvent("Send Timer Notification")
             "911"-> cleverTapAPI?.pushEvent("Send Input Box Notification")
+            "912"-> cleverTapAPI?.pushEvent("Send Input Box Reply with Event Notification")
             //"60" -> webViewClickListener?.onWebViewClick()
 
         }
