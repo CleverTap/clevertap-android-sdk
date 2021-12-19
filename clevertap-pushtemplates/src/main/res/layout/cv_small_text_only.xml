@@ -24,6 +24,10 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_toEndOf="@id/large_icon"
+        android:paddingLeft="@dimen/padding_horizontal"
+        android:paddingStart="@dimen/padding_horizontal"
+        android:paddingRight="@dimen/padding_horizontal"
+        android:paddingEnd="@dimen/padding_horizontal"
         android:layout_toRightOf="@id/large_icon">
 
         <include
@@ -35,8 +39,6 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_below="@+id/metadata"
-            android:layout_marginStart="@dimen/metadata_title_margin_horizontal"
-            android:layout_marginLeft="@dimen/metadata_title_margin_horizontal"
             android:ellipsize="end"
             android:maxLines="2"
             android:layout_marginTop="4dp"
