@@ -17,7 +17,7 @@ import org.robolectric.annotation.Config
 class HmsMessageServiceTest : BaseTestCase() {
 
     private lateinit var service: CTHmsMessageService
-    private lateinit var mockedMessageHandler: HmsMessageHandlerImpl
+    private lateinit var mMockedMessageHandlerCT: CTHmsMessageHandler
 
     @Before
     override fun setUp() {
@@ -26,7 +26,7 @@ class HmsMessageServiceTest : BaseTestCase() {
             CTHmsMessageService
             ::class.java
         )
-        mockedMessageHandler = mock(HmsMessageHandlerImpl::class.java)
+        mMockedMessageHandlerCT = mock(CTHmsMessageHandler::class.java)
         doReturn(application).`when`(service).applicationContext
     }
 
@@ -35,7 +35,7 @@ class HmsMessageServiceTest : BaseTestCase() {
         try {
             service.onNewToken(HMS_TOKEN)
             verify(
-                mockedMessageHandler.onNewToken(
+                mMockedMessageHandlerCT.onNewToken(
                     any(Context::class.java),
                     eq(HMS_TOKEN)
                 ), times(1)
@@ -50,7 +50,7 @@ class HmsMessageServiceTest : BaseTestCase() {
         try {
             service.onMessageReceived(RemoteMessage(Bundle()))
             verify(
-                mockedMessageHandler.createNotification(
+                mMockedMessageHandlerCT.createNotification(
                     any(Context::class.java),
                     any(RemoteMessage::class.java)
                 ), times(1)

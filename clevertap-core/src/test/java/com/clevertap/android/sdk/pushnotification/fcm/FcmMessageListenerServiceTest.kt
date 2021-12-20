@@ -20,7 +20,7 @@ import org.robolectric.annotation.Config
 class FcmMessageListenerServiceTest : BaseTestCase() {
 
     private lateinit var service: FcmMessageListenerService
-    private lateinit var mockedMessageHandler: FcmMessageHandlerImpl
+    private lateinit var mMockedMessageHandlerCT: CTFcmMessageHandler
 
     @Before
     override fun setUp() {
@@ -28,7 +28,7 @@ class FcmMessageListenerServiceTest : BaseTestCase() {
         val serviceController = Robolectric.buildService(FcmMessageListenerService::class.java, Intent())
         serviceController.create().startCommand(0, 1)
         service = serviceController.get()
-        mockedMessageHandler = Mockito.mock(FcmMessageHandlerImpl::class.java)
+        mMockedMessageHandlerCT = Mockito.mock(CTFcmMessageHandler::class.java)
     }
 
     @Test
@@ -36,7 +36,7 @@ class FcmMessageListenerServiceTest : BaseTestCase() {
         try {
             service.onNewToken(FCM_TOKEN)
             Mockito.verify(
-                mockedMessageHandler.onNewToken(
+                mMockedMessageHandlerCT.onNewToken(
                     Mockito.any(Context::class.java),
                     Mockito.eq(FCM_TOKEN)
                 ), Mockito.times(1)
@@ -51,7 +51,7 @@ class FcmMessageListenerServiceTest : BaseTestCase() {
         try {
             service.onMessageReceived(RemoteMessage(Bundle()))
             Mockito.verify(
-                mockedMessageHandler.onMessageReceived(
+                mMockedMessageHandlerCT.createNotification(
                     Mockito.any(Context::class.java),
                     Mockito.any(RemoteMessage::class.java)
                 ), Mockito.times(1)

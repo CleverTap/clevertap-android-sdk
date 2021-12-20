@@ -4,6 +4,8 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.Constants;
@@ -58,6 +60,15 @@ public class CTPushNotificationReceiver extends BroadcastReceiver {
 
             //to prevent calling of pushNotificationClickedEvent(extras) in ActivityLifecycleCallback
             launchIntent.putExtra(Constants.WZRK_FROM_KEY, Constants.WZRK_FROM);
+
+            if (/*VERSION.SDK_INT < VERSION_CODES.S && */extras.containsKey(Constants.CLOSE_SYSTEM_DIALOGS)) {
+                boolean closeNotificationDrawer = extras.getBoolean(Constants.CLOSE_SYSTEM_DIALOGS);
+                if (closeNotificationDrawer)
+                {
+                    context.sendBroadcast(new Intent(Intent.ACTION_CLOSE_SYSTEM_DIALOGS));
+                }
+
+            }
 
             context.startActivity(launchIntent);
 

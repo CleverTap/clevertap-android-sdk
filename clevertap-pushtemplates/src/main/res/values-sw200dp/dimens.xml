@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="big_img_height">128dp</dimen>
+    <dimen name="big_img_marginTop">16dp</dimen>
+
+    <dimen name="rating_big_img">96dp</dimen>
+
+</resources>

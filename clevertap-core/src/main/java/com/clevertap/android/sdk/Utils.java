@@ -5,8 +5,10 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
+import android.content.pm.ServiceInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
@@ -21,10 +23,7 @@ import android.os.Looper;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
-import androidx.annotation.RestrictTo.Scope;
 import androidx.core.content.ContextCompat;
-import com.google.firebase.iid.FirebaseInstanceId;
-import com.google.firebase.messaging.FirebaseMessaging;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -43,6 +42,7 @@ import org.json.JSONObject;
 public final class Utils {
 
     public static boolean haveVideoPlayerSupport;
+
     public static boolean haveDeprecatedFirebaseInstanceId;
 
     public static boolean containsIgnoreCase(Collection<String> collection, String key) {
@@ -277,22 +277,22 @@ public final class Utils {
         }
     }
 
-    @RestrictTo(Scope.LIBRARY)
-    public static String getFcmTokenUsingManifestMetaEntry(Context context, CleverTapInstanceConfig config) {
-        String token = null;
-        try {
-            String senderID = ManifestInfo.getInstance(context).getFCMSenderId();
-            if (senderID != null) {
-                config.getLogger().verbose(config.getAccountId(),
-                        "Requesting an FCM token with Manifest SenderId - " + senderID);
-                token = FirebaseInstanceId.getInstance().getToken(senderID, FirebaseMessaging.INSTANCE_ID_SCOPE);
-            }
-            config.getLogger().info(config.getAccountId(), "FCM token using Manifest SenderId: " + token);
-        } catch (Throwable t) {
-            config.getLogger().verbose(config.getAccountId(), "Error requesting FCM token with Manifest SenderId", t);
-        }
-        return token;
-    }
+//    @RestrictTo(Scope.LIBRARY)
+//    public static String getFcmTokenUsingManifestMetaEntry(Context context, CleverTapInstanceConfig config) {
+//        String token = null;
+//        try {
+//            String senderID = ManifestInfo.getInstance(context).getFCMSenderId();
+//            if (senderID != null) {
+//                config.getLogger().verbose(config.getAccountId(),
+//                        "Requesting an FCM token with Manifest SenderId - " + senderID);
+//                token = FirebaseInstanceId.getInstance().getToken(senderID, FirebaseMessaging.INSTANCE_ID_SCOPE);
+//            }
+//            config.getLogger().info(config.getAccountId(), "FCM token using Manifest SenderId: " + token);
+//        } catch (Throwable t) {
+//            config.getLogger().verbose(config.getAccountId(), "Error requesting FCM token with Manifest SenderId", t);
+//        }
+//        return token;
+//    }
 
     public static long getMemoryConsumption() {
         long free = Runtime.getRuntime().freeMemory();
@@ -349,6 +349,31 @@ public final class Utils {
             isActivityDead = isActivityDead || activity.isDestroyed();
         }
         return isActivityDead;
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static boolean isServiceAvailable(Context context, Class clazz) {
+        if (clazz == null) {
+            return false;
+        }
+
+        PackageManager pm = context.getPackageManager();
+        String packageName = context.getPackageName();
+
+        PackageInfo packageInfo;
+        try {
+            packageInfo = pm.getPackageInfo(packageName, PackageManager.GET_SERVICES);
+            ServiceInfo[] services = packageInfo.services;
+            for (ServiceInfo serviceInfo : services) {
+                if (serviceInfo.name.equals(clazz.getName())) {
+                    Logger.v("Service " + serviceInfo.name + " found");
+                    return true;
+                }
+            }
+        } catch (PackageManager.NameNotFoundException e) {
+            Logger.d("Intent Service name not found exception - " + e.getLocalizedMessage());
+        }
+        return false;
     }
 
     public static String optionalStringKey(JSONObject o, String k)
@@ -478,27 +503,6 @@ public final class Utils {
         return exoPlayerPresent;
     }
 
-    /**
-     * Method to check whether app has upgraded to Firebase Cloud Messaging v22.0.0 or greater.
-     *
-     * @return boolean - true/false depending on app's availability of FirebaseInstanceId in FirebaseMessaging
-     *                   dependencies
-     */
-    @SuppressWarnings("rawtypes")
-    private static boolean checkForFirebaseInstanceId(){
-        boolean isFirebaseInstanceIdPresent = false;
-        Class classname;
-        try {
-            classname = Class.forName("com.google.firebase.iid.FirebaseInstanceId");
-            isFirebaseInstanceIdPresent = true;
-            Logger.d("Firebase Instance Id is available." + classname);
-        }catch (Throwable throwable){
-            Logger.d("It looks like you're using FirebaseMessaging dependency v22.0.0." +
-                    "Ensure your app's version of FCM is v20.2.4");
-        }
-        return isFirebaseInstanceIdPresent;
-    }
-
     private static Bitmap getAppIcon(final Context context) throws NullPointerException {
         // Try to get the app logo first
         try {
@@ -516,6 +520,5 @@ public final class Utils {
 
     static {
         haveVideoPlayerSupport = checkForExoPlayer();
-        haveDeprecatedFirebaseInstanceId  = checkForFirebaseInstanceId();
     }
 }

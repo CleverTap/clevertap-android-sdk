@@ -16,6 +16,7 @@ include ':sample'
 include ':clevertap-geofence'
 include ':clevertap-xps'
 include ':clevertap-hms'
+include ':clevertap-pushtemplates'
 
 refreshVersions {
     enableBuildSrcLibs()

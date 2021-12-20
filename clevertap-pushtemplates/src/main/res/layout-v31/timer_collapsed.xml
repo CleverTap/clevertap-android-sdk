@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/content_view_small"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@android:color/white"
+    android:orientation="vertical">
+
+    <include
+        android:id="@+id/rel_lyt"
+        layout="@layout/content_view_small_single_line_msg" />
+
+    <Chronometer
+        android:id="@+id/chronometer"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:textAlignment="center"
+        android:layout_marginEnd="@dimen/padding_vertical"
+        android:layout_gravity="center_horizontal"
+        android:textSize="@dimen/chronometer_font_size"/>
+
+</RelativeLayout>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="flipper_height">180dp</dimen>
+    <dimen name="metadata_title_margin_vertical">8dp</dimen>
+    <dimen name="auto_carousel_padding_vertical">16dp</dimen>
+    <dimen name="auto_carousel_padding_horizontal">16dp</dimen>
+    <dimen name="metadata_margin_x">8dp</dimen>
+
+    <dimen name="padding_horizontal">16dp</dimen>
+    <dimen name="padding_vertical">16dp</dimen>
+
+    <dimen name="title_font_size">14sp</dimen>
+    <dimen name="msg_font_size">14sp</dimen>
+
+    <dimen name="metadata_font_size">12dp</dimen>
+
+    <dimen name="large_icon">48dp</dimen>
+
+    <dimen name="five_cta_icon_margin">8dp</dimen>
+
+    <dimen name="manual_carousel_arrow">48dp</dimen>
+
+    <dimen name="rating_star">24dp</dimen>
+
+    <dimen name="chronometer_font_size">20sp</dimen>
+
+    <dimen name="product_display_button_height">24dp</dimen>
+    <dimen name="rating_big_img">120dp</dimen>
+
+</resources>

@@ -17,11 +17,6 @@ import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.ServiceInfo;
-import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
@@ -63,7 +58,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.Callable;
-import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -87,6 +81,8 @@ public class PushProviders implements CTPushProviderListener {
     private final CleverTapInstanceConfig config;
 
     private final Context context;
+
+    private INotificationRenderer iNotificationRenderer = new CoreNotificationRenderer();
 
     private final ValidationResultStack validationResultStack;
 
@@ -143,48 +139,55 @@ public class PushProviders implements CTPushProviderListener {
     public void _createNotification(final Context context, final Bundle extras, final int notificationId) {
         if (extras == null || extras.get(Constants.NOTIFICATION_TAG) == null) {
             return;
-        }
+        } // Common
 
         if (config.isAnalyticsOnly()) {
             config.getLogger()
                     .debug(config.getAccountId(), "Instance is set for Analytics only, cannot create notification");
             return;
-        }
+        }// Common
 
         try {
-            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();// Common task
             task.execute("CleverTapAPI#_createNotification", new Callable<Void>() {
                 @Override
                 public Void call() {
                     try {
-                        config.getLogger()
-                                .debug(config.getAccountId(), "Handling notification: " + extras.toString());
-                        if (extras.getString(Constants.WZRK_PUSH_ID) != null) {
-                            if (baseDatabaseManager.loadDBAdapter(context)
-                                    .doesPushNotificationIdExist(extras.getString(Constants.WZRK_PUSH_ID))) {
-                                config.getLogger().debug(config.getAccountId(),
-                                        "Push Notification already rendered, not showing again");
-                                return null;
-                            }
-                        }
-                        String notifMessage = extras.getString(Constants.NOTIF_MSG);
-                        notifMessage = (notifMessage != null) ? notifMessage : "";
-                        if (notifMessage.isEmpty()) {
-                            //silent notification
+                        String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
+                        if (extrasFrom==null || !extrasFrom.equals("PTReceiver")) {
                             config.getLogger()
-                                    .verbose(config.getAccountId(),
-                                            "Push notification message is empty, not rendering");
-                            baseDatabaseManager.loadDBAdapter(context)
-                                    .storeUninstallTimestamp();
-                            String pingFreq = extras.getString("pf", "");
-                            if (!TextUtils.isEmpty(pingFreq)) {
-                                updatePingFrequencyIfNeeded(context, Integer.parseInt(pingFreq));
-                            }
-                            return null;
+                                    .debug(config.getAccountId(), "Handling notification: " + extras.toString());
+                            if (extras.getString(Constants.WZRK_PUSH_ID) != null) {
+                                if (baseDatabaseManager.loadDBAdapter(context)
+                                        .doesPushNotificationIdExist(extras.getString(Constants.WZRK_PUSH_ID))) {
+                                    config.getLogger().debug(config.getAccountId(),
+                                            "Push Notification already rendered, not showing again");
+                                    return null;
+                                }
+                            }// Common
+                            String notifMessage = iNotificationRenderer
+                                    .getMessage(
+                                            extras);//extras.getString(Constants.NOTIF_MSG);// uncommon - getMessage()
+                            notifMessage = (notifMessage != null) ? notifMessage : "";// common
+                            if (notifMessage.isEmpty()) {
+                                //silent notification
+                                config.getLogger()
+                                        .verbose(config.getAccountId(),
+                                                "Push notification message is empty, not rendering");
+                                baseDatabaseManager.loadDBAdapter(context)
+                                        .storeUninstallTimestamp();
+                                String pingFreq = extras.getString("pf", "");
+                                if (!TextUtils.isEmpty(pingFreq)) {
+                                    updatePingFrequencyIfNeeded(context, Integer.parseInt(pingFreq));
+                                }
+                                return null;
+                            }// Common
+                            String notifTitle = iNotificationRenderer.getTitle(extras,
+                                    context);//extras.getString(Constants.NOTIF_TITLE, "");// uncommon - getTitle()
+                            notifTitle = notifTitle.isEmpty() ? context.getApplicationInfo().name
+                                    : notifTitle;//common
                         }
-                        String notifTitle = extras.getString(Constants.NOTIF_TITLE, "");
-                        notifTitle = notifTitle.isEmpty() ? context.getApplicationInfo().name : notifTitle;
-                        triggerNotification(context, extras, notifMessage, notifTitle, notificationId);
+                        triggerNotification(context, extras, notificationId);
                     } catch (Throwable t) {
                         // Occurs if the notification image was null
                         // Let's return, as we couldn't get a handle on the app's icon
@@ -713,31 +716,6 @@ public class PushProviders implements CTPushProviderListener {
         }
     }
 
-    @SuppressWarnings("SameParameterValue")
-    private boolean isServiceAvailable(Context context, Class clazz) {
-        if (clazz == null) {
-            return false;
-        }
-
-        PackageManager pm = context.getPackageManager();
-        String packageName = context.getPackageName();
-
-        PackageInfo packageInfo;
-        try {
-            packageInfo = pm.getPackageInfo(packageName, PackageManager.GET_SERVICES);
-            ServiceInfo[] services = packageInfo.services;
-            for (ServiceInfo serviceInfo : services) {
-                if (serviceInfo.name.equals(clazz.getName())) {
-                    Logger.v("Service " + serviceInfo.name + " found");
-                    return true;
-                }
-            }
-        } catch (PackageManager.NameNotFoundException e) {
-            Logger.d("Intent Service name not found exception - " + e.getLocalizedMessage());
-        }
-        return false;
-    }
-
     private boolean isTimeBetweenDNDTime(Date startTime, Date stopTime, Date currentTime) {
         //Start Time
         Calendar startTimeCalendar = Calendar.getInstance();
@@ -921,6 +899,12 @@ public class PushProviders implements CTPushProviderListener {
         }
     }
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public @NonNull
+    INotificationRenderer getPushNotificationRenderer() {
+        return iNotificationRenderer;
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     private static JobInfo getJobInfo(int jobId, JobScheduler jobScheduler) {
         for (JobInfo jobInfo : jobScheduler.getAllPendingJobs()) {
@@ -931,8 +915,12 @@ public class PushProviders implements CTPushProviderListener {
         return null;
     }
 
-    private void triggerNotification(Context context, Bundle extras, String notifMessage, String notifTitle,
-            int notificationId) {
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public void setPushNotificationRenderer(@NonNull INotificationRenderer iNotificationRenderer) {
+        this.iNotificationRenderer = iNotificationRenderer;
+    }
+
+    private void triggerNotification(Context context, Bundle extras, int notificationId) {
         NotificationManager notificationManager =
                 (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
 
@@ -963,42 +951,6 @@ public class PushProviders implements CTPushProviderListener {
                 return;
             }
         }
-
-        String icoPath = extras.getString(Constants.NOTIF_ICON);
-
-        NotificationCompat.Style style;
-        String bigPictureUrl = extras.getString(Constants.WZRK_BIG_PICTURE);
-        if (bigPictureUrl != null && bigPictureUrl.startsWith("http")) {
-            try {
-                Bitmap bpMap = Utils.getNotificationBitmap(bigPictureUrl, false, context);
-
-                if (bpMap == null) {
-                    throw new Exception("Failed to fetch big picture!");
-                }
-
-                if (extras.containsKey(Constants.WZRK_MSG_SUMMARY)) {
-                    String summaryText = extras.getString(Constants.WZRK_MSG_SUMMARY);
-                    style = new NotificationCompat.BigPictureStyle()
-                            .setSummaryText(summaryText)
-                            .bigPicture(bpMap);
-                } else {
-                    style = new NotificationCompat.BigPictureStyle()
-                            .setSummaryText(notifMessage)
-                            .bigPicture(bpMap);
-                }
-            } catch (Throwable t) {
-                style = new NotificationCompat.BigTextStyle()
-                        .bigText(notifMessage);
-                config.getLogger()
-                        .verbose(config.getAccountId(),
-                                "Falling back to big text notification, couldn't fetch big picture",
-                                t);
-            }
-        } else {
-            style = new NotificationCompat.BigTextStyle()
-                    .bigText(notifMessage);
-        }
-
         int smallIcon;
         try {
             String x = ManifestInfo.getInstance(context).getNotificationIcon();
@@ -1012,6 +964,8 @@ public class PushProviders implements CTPushProviderListener {
         } catch (Throwable t) {
             smallIcon = DeviceInfo.getAppIconAsIntId(context);
         }
+
+        iNotificationRenderer.setSmallIcon(smallIcon, context);
 
         int priorityInt = NotificationCompat.PRIORITY_DEFAULT;
         String priority = extras.getString(Constants.NOTIF_PRIORITY);
@@ -1027,23 +981,28 @@ public class PushProviders implements CTPushProviderListener {
         // if we have no user set notificationID then try collapse key
         if (notificationId == Constants.EMPTY_NOTIFICATION_ID) {
             try {
-                Object collapse_key = extras.get(Constants.WZRK_COLLAPSE);
+                Object collapse_key = iNotificationRenderer
+                        .getCollapseKey(extras);
                 if (collapse_key != null) {
                     if (collapse_key instanceof Number) {
                         notificationId = ((Number) collapse_key).intValue();
                     } else if (collapse_key instanceof String) {
                         try {
                             notificationId = Integer.parseInt(collapse_key.toString());
-                            config.getLogger().debug(config.getAccountId(),
+                            config.getLogger().verbose(config.getAccountId(),
                                     "Converting collapse_key: " + collapse_key + " to notificationId int: "
                                             + notificationId);
                         } catch (NumberFormatException e) {
                             notificationId = (collapse_key.toString().hashCode());
-                            config.getLogger().debug(config.getAccountId(),
+                            config.getLogger().verbose(config.getAccountId(),
                                     "Converting collapse_key: " + collapse_key + " to notificationId int: "
                                             + notificationId);
                         }
                     }
+                    notificationId = Math.abs(notificationId); //Notification Id always needs to be positive
+                    config.getLogger().debug(config.getAccountId(),
+                            "Creating the notification id: " + notificationId + " from collapse_key: "
+                                    + collapse_key);
                 }
             } catch (NumberFormatException e) {
                 // no-op
@@ -1064,7 +1023,8 @@ public class PushProviders implements CTPushProviderListener {
             nb = new NotificationCompat.Builder(context, channelId);
 
             // choices here are Notification.BADGE_ICON_NONE = 0, Notification.BADGE_ICON_SMALL = 1, Notification.BADGE_ICON_LARGE = 2.  Default is  Notification.BADGE_ICON_LARGE
-            String badgeIconParam = extras.getString(Constants.WZRK_BADGE_ICON, null);
+            String badgeIconParam = extras
+                    .getString(Constants.WZRK_BADGE_ICON, null);
             if (badgeIconParam != null) {
                 try {
                     int badgeIconType = Integer.parseInt(badgeIconParam);
@@ -1076,7 +1036,7 @@ public class PushProviders implements CTPushProviderListener {
                 }
             }
 
-            String badgeCountParam = extras.getString(Constants.WZRK_BADGE_COUNT, null);
+            String badgeCountParam = extras.getString(Constants.WZRK_BADGE_COUNT, null);//cbi
             if (badgeCountParam != null) {
                 try {
                     int badgeCount = Integer.parseInt(badgeCountParam);
@@ -1087,29 +1047,13 @@ public class PushProviders implements CTPushProviderListener {
                     // no-op
                 }
             }
-            if (extras.containsKey(Constants.WZRK_SUBTITLE)) {
-                nb.setSubText(extras.getString(Constants.WZRK_SUBTITLE));
-            }
+
         } else {
             // noinspection all
             nb = new NotificationCompat.Builder(context);
         }
 
-        if (extras.containsKey(Constants.WZRK_COLOR)) {
-            int color = Color.parseColor(extras.getString(Constants.WZRK_COLOR));
-            nb.setColor(color);
-            nb.setColorized(true);
-        }
-
-        nb.setContentTitle(notifTitle)
-                .setContentText(notifMessage)
-                .setContentIntent(LaunchPendingIntentFactory.getLaunchPendingIntent(extras, context))
-                .setAutoCancel(true)
-                .setStyle(style)
-                .setPriority(priorityInt)
-                .setSmallIcon(smallIcon);
-
-        nb.setLargeIcon(Utils.getNotificationBitmap(icoPath, true, context));
+        nb.setPriority(priorityInt);
 
         try {
             if (extras.containsKey(Constants.WZRK_SOUND)) {
@@ -1142,139 +1086,34 @@ public class PushProviders implements CTPushProviderListener {
             config.getLogger().debug(config.getAccountId(), "Could not process sound parameter", t);
         }
 
-        // add actions if any
-        JSONArray actions = null;
-        String actionsString = extras.getString(Constants.WZRK_ACTIONS);
-        if (actionsString != null) {
-            try {
-                actions = new JSONArray(actionsString);
-            } catch (Throwable t) {
-                config.getLogger()
-                        .debug(config.getAccountId(),
-                                "error parsing notification actions: " + t.getLocalizedMessage());
-            }
-        }
-
-        String intentServiceName = ManifestInfo.getInstance(context).getIntentServiceName();
-        Class clazz = null;
-        if (intentServiceName != null) {
-            try {
-                clazz = Class.forName(intentServiceName);
-            } catch (ClassNotFoundException e) {
-                try {
-                    clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService");
-                } catch (ClassNotFoundException ex) {
-                    Logger.d("No Intent Service found");
-                }
-            }
-        } else {
-            try {
-                clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService");
-            } catch (ClassNotFoundException ex) {
-                Logger.d("No Intent Service found");
-            }
-        }
-
-        boolean isCTIntentServiceAvailable = isServiceAvailable(context, clazz);
-
-        if (actions != null && actions.length() > 0) {
-            for (int i = 0; i < actions.length(); i++) {
-                try {
-                    JSONObject action = actions.getJSONObject(i);
-                    String label = action.optString("l");
-                    String dl = action.optString("dl");
-                    String ico = action.optString(Constants.NOTIF_ICON);
-                    String id = action.optString("id");
-                    boolean autoCancel = action.optBoolean("ac", true);
-                    if (label.isEmpty() || id.isEmpty()) {
-                        config.getLogger().debug(config.getAccountId(),
-                                "not adding push notification action: action label or id missing");
-                        continue;
-                    }
-                    int icon = 0;
-                    if (!ico.isEmpty()) {
-                        try {
-                            icon = context.getResources().getIdentifier(ico, "drawable", context.getPackageName());
-                        } catch (Throwable t) {
-                            config.getLogger().debug(config.getAccountId(),
-                                    "unable to add notification action icon: " + t.getLocalizedMessage());
-                        }
-                    }
-
-                    boolean sendToCTIntentService = (VERSION.SDK_INT < VERSION_CODES.S && autoCancel
-                            && isCTIntentServiceAvailable);
-
-                    Intent actionLaunchIntent;
-                    if (sendToCTIntentService) {
-                        actionLaunchIntent = new Intent(CTNotificationIntentService.MAIN_ACTION);
-                        actionLaunchIntent.setPackage(context.getPackageName());
-                        actionLaunchIntent.putExtra("ct_type", CTNotificationIntentService.TYPE_BUTTON_CLICK);
-                        if (!dl.isEmpty()) {
-                            actionLaunchIntent.putExtra("dl", dl);
-                        }
-                    } else {
-                        if (!dl.isEmpty()) {
-                            actionLaunchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(dl));
-                        } else {
-                            actionLaunchIntent = context.getPackageManager()
-                                    .getLaunchIntentForPackage(context.getPackageName());
-                        }
-                    }
-
-                    if (actionLaunchIntent != null) {
-                        actionLaunchIntent.putExtras(extras);
-                        actionLaunchIntent.removeExtra(Constants.WZRK_ACTIONS);
-                        actionLaunchIntent.putExtra("actionId", id);
-                        actionLaunchIntent.putExtra("autoCancel", autoCancel);
-                        actionLaunchIntent.putExtra("wzrk_c2a", id);
-                        actionLaunchIntent.putExtra("notificationId", notificationId);
-
-                        actionLaunchIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-                    }
-
-                    PendingIntent actionIntent;
-                    int requestCode = ((int) System.currentTimeMillis()) + i;
-                    int flagsActionLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
-                    if (VERSION.SDK_INT >= VERSION_CODES.M) {
-                        flagsActionLaunchPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
-                    }
-                    if (sendToCTIntentService) {
-                        actionIntent = PendingIntent.getService(context, requestCode,
-                                actionLaunchIntent, flagsActionLaunchPendingIntent);
-                    } else {
-                        actionIntent = PendingIntent.getActivity(context, requestCode,
-                                actionLaunchIntent, flagsActionLaunchPendingIntent);
-                    }
-                    nb.addAction(icon, label, actionIntent);
-
-                } catch (Throwable t) {
-                    config.getLogger()
-                            .debug(config.getAccountId(),
-                                    "error adding notification action : " + t.getLocalizedMessage());
-                }
-            }
+        nb = iNotificationRenderer.renderNotification(extras, context, nb, config, notificationId);
+        if (nb == null) {// template renderer can return null if template type is null
+            return;
         }
 
         Notification n = nb.build();
         notificationManager.notify(notificationId, n);
-        config.getLogger().debug(config.getAccountId(), "Rendered notification: " + n.toString());
+        config.getLogger().debug(config.getAccountId(), "Rendered notification: " + n.toString());//cb
 
-        String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE,
-                (System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL) / 1000 + "");
-        long wzrk_ttl = Long.parseLong(ttl);
-        String wzrk_pid = extras.getString(Constants.WZRK_PUSH_ID);
-        DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
-        config.getLogger().verbose("Storing Push Notification..." + wzrk_pid + " - with ttl - " + ttl);
-        dbAdapter.storePushNotificationId(wzrk_pid, wzrk_ttl);
+        String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
+        if (extrasFrom==null || !extrasFrom.equals("PTReceiver")) {
+            String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE,
+                    (System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL) / 1000 + "");
+            long wzrk_ttl = Long.parseLong(ttl);
+            String wzrk_pid = extras.getString(Constants.WZRK_PUSH_ID);
+            DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
+            config.getLogger().verbose("Storing Push Notification..." + wzrk_pid + " - with ttl - " + ttl);
+            dbAdapter.storePushNotificationId(wzrk_pid, wzrk_ttl);
 
-        boolean notificationViewedEnabled = "true".equals(extras.getString(Constants.WZRK_RNV, ""));
-        if (!notificationViewedEnabled) {
-            ValidationResult notificationViewedError = ValidationResultFactory
-                    .create(512, Constants.NOTIFICATION_VIEWED_DISABLED, extras.toString());
-            config.getLogger().debug(notificationViewedError.getErrorDesc());
-            validationResultStack.pushValidationResult(notificationViewedError);
-            return;
+            boolean notificationViewedEnabled = "true".equals(extras.getString(Constants.WZRK_RNV, ""));
+            if (!notificationViewedEnabled) {
+                ValidationResult notificationViewedError = ValidationResultFactory
+                        .create(512, Constants.NOTIFICATION_VIEWED_DISABLED, extras.toString());
+                config.getLogger().debug(notificationViewedError.getErrorDesc());
+                validationResultStack.pushValidationResult(notificationViewedError);
+                return;
+            }
+            analyticsManager.pushNotificationViewedEvent(extras);
         }
-        analyticsManager.pushNotificationViewedEvent(extras);
     }
 }

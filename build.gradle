@@ -19,7 +19,6 @@ buildscript {
         classpath Libs.org_jacoco_core
         classpath Libs.kotlin_gradle_plugin
         classpath Libs.sonarqube_gradle_plugin
-
     }
 }
 
@@ -56,6 +55,7 @@ task copyTemplates {
     props.put("clevertap_geofence_sdk",Libs.clevertap_geofence_sdk.dropRight(1))
     props.put("clevertap_hms_sdk",Libs.clevertap_hms_sdk.dropRight(1))
     props.put("clevertap_xiaomi_sdk",Libs.clevertap_xiaomi_sdk.dropRight(1))
+    props.put("push_templates",Libs.clevertap_push_templates_sdk.dropRight(1))
     props.put("play_services_location",Libs.play_services_location.dropRight(1))
     props.put("work_runtime",Libs.work_runtime.dropRight(1))
     props.put("concurrent_futures",Libs.concurrent_futures.dropRight(1))

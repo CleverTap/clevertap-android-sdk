@@ -5,6 +5,7 @@ import android.os.Bundle
 import com.clevertap.android.hms.HmsTestConstants.Companion.HMS_TOKEN
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.interfaces.INotificationParser
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType.HPS
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
@@ -19,20 +20,20 @@ import org.robolectric.annotation.Config
 @Config(sdk = [28], application = TestApplication::class)
 class HmsMessageHandlerTest : BaseTestCase() {
 
-    private lateinit var handler: HmsMessageHandlerImpl
-    private lateinit var parser: IHmsNotificationParser
+    private lateinit var mHandlerCT: CTHmsMessageHandler
+    private lateinit var parser: INotificationParser<RemoteMessage>
 
     @Before
     @Throws(Exception::class)
     override fun setUp() {
         super.setUp()
         parser = mock(HmsNotificationParser::class.java)
-        handler = HmsMessageHandlerImpl(parser)
+        mHandlerCT = CTHmsMessageHandler(parser)
     }
 
     @Test
     fun testCreateNotification_Null_Message() {
-        val isSuccess = handler.createNotification(application, null)
+        val isSuccess = mHandlerCT.createNotification(application, null)
         Assert.assertFalse(isSuccess)
     }
 
@@ -44,7 +45,7 @@ class HmsMessageHandlerTest : BaseTestCase() {
             `when`(CleverTapAPI.createNotification(application, bundle)).thenThrow(
                 RuntimeException("Something went wrong")
             )
-            val isSuccess = handler.createNotification(application, RemoteMessage(bundle))
+            val isSuccess = mHandlerCT.createNotification(application, RemoteMessage(bundle))
             Assert.assertFalse(isSuccess)
         }
     }
@@ -52,7 +53,7 @@ class HmsMessageHandlerTest : BaseTestCase() {
     @Test
     fun testCreateNotification_Valid_Message() {
         `when`(parser.toBundle(any(RemoteMessage::class.java))).thenReturn(Bundle())
-        val isSuccess = handler.createNotification(application, RemoteMessage(Bundle()))
+        val isSuccess = mHandlerCT.createNotification(application, RemoteMessage(Bundle()))
         Assert.assertTrue(isSuccess)
     }
 
@@ -61,13 +62,13 @@ class HmsMessageHandlerTest : BaseTestCase() {
         val bundle = Bundle()
         bundle.putString(Constants.WZRK_ACCT_ID_KEY, "Some Value")
         `when`(parser.toBundle(any(RemoteMessage::class.java))).thenReturn(bundle)
-        val isSuccess = handler.createNotification(application, RemoteMessage(Bundle()))
+        val isSuccess = mHandlerCT.createNotification(application, RemoteMessage(Bundle()))
         Assert.assertTrue(isSuccess)
     }
 
     @Test
     fun testOnNewToken_Success() {
-        Assert.assertTrue(handler.onNewToken(application, HMS_TOKEN))
+        Assert.assertTrue(mHandlerCT.onNewToken(application, HMS_TOKEN))
     }
 
     @Test
@@ -75,7 +76,7 @@ class HmsMessageHandlerTest : BaseTestCase() {
         mockStatic(CleverTapAPI::class.java).use {
             `when`(CleverTapAPI.tokenRefresh(any(Context::class.java), eq(HMS_TOKEN), eq(HPS)))
                 .thenThrow(RuntimeException("Something Went Wrong"))
-            Assert.assertFalse(handler.onNewToken(application, HMS_TOKEN))
+            Assert.assertFalse(mHandlerCT.onNewToken(application, HMS_TOKEN))
         }
     }
 }

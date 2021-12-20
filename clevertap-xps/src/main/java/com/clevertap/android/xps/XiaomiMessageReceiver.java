@@ -14,7 +14,7 @@ import com.xiaomi.mipush.sdk.PushMessageReceiver;
  */
 public class XiaomiMessageReceiver extends PushMessageReceiver {
 
-    private IMiMessageHandler handler = new XiaomiMessageHandlerImpl(new XiaomiNotificationParser());
+    private IMiMessageHandler handler = new CTXiaomiMessageHandler(new XiaomiNotificationParser());
 
     @Override
     public void onNotificationMessageArrived(Context context, MiPushMessage miPushMessage) {
