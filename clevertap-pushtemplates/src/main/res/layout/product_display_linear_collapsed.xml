@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content_view_small"
+    android:layout_width="match_parent"
+    android:layout_height="100dp"
+    android:padding="8dp">
+
+
+    <ImageView
+        android:id="@+id/large_icon"
+        android:layout_width="85dp"
+        android:layout_height="85dp"
+        android:layout_marginEnd="95dp"
+        android:scaleType="centerCrop"
+        tools:ignore="RtlCompat" />
+
+    <TextView
+        android:id="@+id/msg"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="-85dp"
+        android:layout_marginLeft="-85dp"
+        android:layout_toEndOf="@+id/large_icon"
+        android:layout_toRightOf="@id/large_icon"
+        android:text="message message "
+        android:textAppearance="@style/PushMessage" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/msg"
+        android:layout_marginStart="-85dp"
+        android:layout_marginLeft="-85dp"
+        android:layout_marginTop="8dp"
+        android:layout_toEndOf="@id/large_icon"
+        android:layout_toRightOf="@id/large_icon"
+        android:orientation="horizontal"
+        android:paddingLeft="4dp"
+        android:paddingRight="4dp">
+
+        <ImageView
+            android:id="@+id/small_image1_collapsed"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginStart="-5dp"
+            android:layout_marginLeft="-5dp"
+            android:layout_marginEnd="2dp"
+            android:layout_marginRight="2dp"
+            android:layout_weight="1"
+            android:visibility="gone"/>
+
+        <ImageView
+            android:id="@+id/small_image2_collapsed"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="2dp"
+            android:layout_marginRight="2dp"
+            android:layout_weight="1"
+            android:visibility="gone"/>
+
+        <ImageView
+            android:id="@+id/small_image3_collapsed"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_marginEnd="-4dp"
+            android:layout_marginRight="-4dp"
+            android:layout_weight="1"
+            android:visibility="gone"/>
+
+    </LinearLayout>
+</RelativeLayout>

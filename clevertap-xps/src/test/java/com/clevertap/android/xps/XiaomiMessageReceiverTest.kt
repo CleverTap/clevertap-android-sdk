@@ -16,32 +16,32 @@ import org.robolectric.annotation.Config
 class XiaomiMessageReceiverTest : BaseTestCase() {
 
     private lateinit var receiver: XiaomiMessageReceiver
-    private lateinit var handler: XiaomiMessageHandlerImpl
+    private lateinit var mHandlerCT: CTXiaomiMessageHandler
 
     @Before
     override fun setUp() {
         super.setUp()
         receiver = XiaomiMessageReceiver()
-        handler = mock(XiaomiMessageHandlerImpl::class.java)
-        receiver.setHandler(handler)
+        mHandlerCT = mock(CTXiaomiMessageHandler::class.java)
+        receiver.setHandler(mHandlerCT)
     }
 
     @Test
     fun testOnReceivePassThroughMessage() {
         receiver.onReceivePassThroughMessage(application, MiPushMessage())
-        verify(handler).createNotification(any(Context::class.java), any(MiPushMessage::class.java))
+        verify(mHandlerCT).createNotification(any(Context::class.java), any(MiPushMessage::class.java))
     }
 
     @Test
     fun testOnReceiveRegisterResult() {
         receiver.onReceiveRegisterResult(application, MiPushCommandMessage())
-        verify(handler)
+        verify(mHandlerCT)
             .onReceiveRegisterResult(any(Context::class.java), any(MiPushCommandMessage::class.java))
     }
 
     @Test
     fun testOnNotificationMessageArrived() {
         receiver.onNotificationMessageArrived(application, MiPushMessage())
-        verify(handler).createNotification(any(Context::class.java), any(MiPushMessage::class.java))
+        verify(mHandlerCT).createNotification(any(Context::class.java), any(MiPushMessage::class.java))
     }
 }

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/content_view_small"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="@dimen/padding_vertical">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/rel_lyt">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="@dimen/metadata_title_margin_horizontal"
+            android:layout_alignParentStart="true"
+            android:layout_toStartOf="@+id/large_icon"
+            android:text="title"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textAppearance="@style/PushTitle" />
+
+        <TextView
+            android:id="@+id/msg"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/title"
+            android:layout_alignStart="@id/title"
+            android:layout_alignParentStart="true"
+            android:layout_toStartOf="@+id/large_icon"
+            android:maxLines="3"
+            android:ellipsize="end"
+            android:text="message message"
+            android:textAppearance="@style/PushMessageMultiLine"/>
+
+
+    <ImageView
+        android:id="@+id/large_icon"
+        android:layout_width="@dimen/large_icon"
+        android:layout_height="@dimen/large_icon"
+        android:layout_marginStart="@dimen/metadata_title_margin_horizontal"
+        android:layout_alignParentEnd="true"
+        android:scaleType="centerCrop" />
+    </RelativeLayout>
+
+</RelativeLayout>

@@ -81,6 +81,8 @@ object Libs {
 
     const val clevertap_xiaomi_sdk: String = "com.clevertap.android:clevertap-xiaomi-sdk:_"
 
+    const val clevertap_push_templates_sdk: String = "com.clevertap.android:push-templates:_"
+
     const val glide: String = "com.github.bumptech.glide:glide:_"
 
     const val exoplayer: String = "com.google.android.exoplayer:exoplayer:_"
@@ -167,6 +169,9 @@ object Libs {
         "org.sonarsource.scanner.gradle:sonarqube-gradle-plugin:_"
 
     const val xmlpull: String = "xmlpull:xmlpull:_"
+
+    const val kotlin_stblib: String = "org.jetbrains.kotlin:kotlin-stdlib:_"
+
 }
 
 object Android {

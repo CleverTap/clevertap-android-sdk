@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="padding_horizontal">16dp</dimen>
+    <dimen name="padding_vertical">4dp</dimen>
+
+    <dimen name="title_font_size">12sp</dimen>
+    <dimen name="msg_font_size">12sp</dimen>
+
+
+
+    <dimen name="big_img_height">144dp</dimen>
+    <dimen name="big_img_marginTop">10dp</dimen>
+    <dimen name="flipper_height">144dp</dimen>
+    <dimen name="auto_carousel_padding_vertical">8dp</dimen>
+    <dimen name="auto_carousel_padding_horizontal">8dp</dimen>
+
+    <dimen name="metadata_title_margin_vertical">4dp</dimen>
+    <dimen name="metadata_title_margin_horizontal">4dp</dimen>
+
+    <dimen name="metadata_font_size">10dp</dimen>
+
+    <dimen name="metadata_small_icon_x">16dp</dimen>
+    <dimen name="metadata_small_icon_y">16dp</dimen>
+    <dimen name="metadata_margin_x">4dp</dimen>
+
+
+    <dimen name="large_icon">36dp</dimen>
+
+    <dimen name="five_cta_icon_margin">4dp</dimen>
+
+    <dimen name="manual_carousel_arrow">30dp</dimen>
+
+    <dimen name="rating_star">20dp</dimen>
+
+    <dimen name="chronometer_font_size">12sp</dimen>
+
+    <dimen name="product_display_button_height">24dp</dimen>
+    <dimen name="rating_big_img">96dp</dimen>
+
+
+</resources>

@@ -12,7 +12,7 @@ import com.huawei.hms.push.RemoteMessage;
  */
 public class CTHmsMessageService extends HmsMessageService {
 
-    private IHmsMessageHandler mHandler = new HmsMessageHandlerImpl(new HmsNotificationParser());
+    private IHmsMessageHandler mHandler = new CTHmsMessageHandler(new HmsNotificationParser());
 
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {

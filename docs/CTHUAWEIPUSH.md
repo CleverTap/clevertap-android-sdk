@@ -52,7 +52,7 @@ allprojects {
 * Add the following to your app’s `build.gradle` file
 
 ```groovy
-implementation "com.clevertap.android:clevertap-hms-sdk:1.1.0"
+implementation "com.clevertap.android:clevertap-hms-sdk:1.2.0"
 implementation "com.huawei.hms:push:6.1.0.300"
 
 //At the bottom of the file add this

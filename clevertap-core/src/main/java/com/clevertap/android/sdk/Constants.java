@@ -190,6 +190,7 @@ public interface Constants {
     String KEY_ALLOWED_PUSH_TYPES = "allowedPushTypes";
     String KEY_IDENTITY_TYPES = "identityTypes";
     String WZRK_PUSH_ID = "wzrk_pid";
+    String EXTRAS_FROM = "extras_from";
     String NOTIF_MSG = "nm";
     String NOTIF_TITLE = "nt";
     String NOTIF_ICON = "ico";
@@ -287,4 +288,9 @@ public interface Constants {
     int MAX_DELAY_FREQUENCY = 1000 * 60 * 10;
 
     String[] NULL_STRING_ARRAY = new String[0];
+    String PT_NOTIF_ID = "notificationId";
+    String CLOSE_SYSTEM_DIALOGS = "close_system_dialogs";
+    String KEY_CT_TYPE = "ct_type";
+    String PT_INPUT_KEY = "pt_input_reply";
+
 }

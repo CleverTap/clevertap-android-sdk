@@ -9,11 +9,11 @@ import com.google.firebase.messaging.RemoteMessage;
  */
 public class FcmMessageListenerService extends FirebaseMessagingService {
 
-    private IFcmMessageHandler mHandler = new FcmMessageHandlerImpl();
+    private IFcmMessageHandler mHandler = new CTFcmMessageHandler();
 
     @Override
     public void onMessageReceived(@NonNull RemoteMessage message) {
-        mHandler.onMessageReceived(getApplicationContext(), message);
+        mHandler.createNotification(getApplicationContext(), message);
     }
 
     @Override

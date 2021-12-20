@@ -1,10 +1,12 @@
 package com.clevertap.demo.ui.main
 
+import android.os.Looper
 import android.util.Log
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.clevertap.android.sdk.CTInboxStyleConfig
 import com.clevertap.android.sdk.CleverTapAPI
+import java.util.ArrayList
 import java.util.Date
 
 class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel() {
@@ -18,7 +20,9 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
         val commandPosition = "$groupPosition$childPosition"
         clickCommand.value = commandPosition
         when (commandPosition) {
-            "00" -> cleverTapAPI?.pushEvent("testEvent")
+            "00" -> {
+                cleverTapAPI?.pushEvent("testEventPushAmp")
+            }
             "01" -> {
                 //Record an event with properties
                 val prodViewedAction = mapOf(
@@ -287,9 +291,31 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             "80" -> println("CleverTapAttribution Identifier = ${cleverTapAPI?.cleverTapAttributionIdentifier}")
             "81" -> cleverTapAPI?.getCleverTapID {
                 println(
-                    "CleverTap DeviceID from Application class= $it"
+                    "CleverTap DeviceID from Application class= $it, thread=${
+                        if (Looper.myLooper() == Looper.getMainLooper()) "mainthread" else "bg thread"
+                        // Current Thread is Main Thread.
+                    }"
                 )
             }
+            "90"-> cleverTapAPI?.pushEvent("Send Basic Push")
+            "91"-> cleverTapAPI?.pushEvent("Send Carousel Push")
+            "92"-> cleverTapAPI?.pushEvent("Send Manual Carousel Push")
+            "93"-> cleverTapAPI?.pushEvent("Send Filmstrip Carousel Push")
+            "94"-> cleverTapAPI?.pushEvent("Send Rating Push")
+            "95"-> cleverTapAPI?.pushEvent("Send Product Display Notification")
+            "96"-> cleverTapAPI?.pushEvent("Send Linear Product Display Push")
+            "97"-> cleverTapAPI?.pushEvent("Send CTA Notification")
+            "98"-> cleverTapAPI?.pushEvent("Send Zero Bezel Notification")
+            "99"-> cleverTapAPI?.pushEvent("Send Zero Bezel Text Only Notification")
+            "910"-> cleverTapAPI?.pushEvent("Send Timer Notification")
+            "911"-> cleverTapAPI?.pushEvent("Send Input Box Notification")
+            "912"-> cleverTapAPI?.pushEvent("Send Input Box Reply with Event Notification")
+            "913"-> cleverTapAPI?.pushEvent("Send Input Box Reply with Auto Open Notification")
+            "914"-> cleverTapAPI?.pushEvent("Send Input Box Remind Notification DOC FALSE")
+            "915"-> cleverTapAPI?.pushEvent("Send Input Box CTA DOC true")
+            "916"-> cleverTapAPI?.pushEvent("Send Input Box CTA DOC false")
+            "917"-> cleverTapAPI?.pushEvent("Send Input Box Reminder DOC true")
+            "918"-> cleverTapAPI?.pushEvent("Send Input Box Reminder DOC false")
             //"60" -> webViewClickListener?.onWebViewClick()
 
         }

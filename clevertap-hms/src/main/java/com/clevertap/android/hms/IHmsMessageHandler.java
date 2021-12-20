@@ -9,6 +9,7 @@ import com.huawei.hms.push.RemoteMessage;
 public interface IHmsMessageHandler {
 
     /**
+     * Creates notification from Huawei Remote message
      * @param context       - application context
      * @param remoteMessage - Huawei Remote Message
      * @return true if everything is fine & notification is rendered successfully
@@ -16,6 +17,7 @@ public interface IHmsMessageHandler {
     boolean createNotification(Context context, RemoteMessage remoteMessage);
 
     /**
+     * Processes new token from Huawei
      * @param context - application context
      * @param token   - fcm token received from Huawei SDK
      * @return true if the token is sent to Clevertap's server

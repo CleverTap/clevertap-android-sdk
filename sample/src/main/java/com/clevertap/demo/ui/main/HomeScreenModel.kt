@@ -15,7 +15,7 @@ object HomeScreenModel {
                 "Update(Add) Single-Value properties", "Update(Remove) Single-Value properties",
                 "Update(Replace) Multi-Value property", "Update(Add) Multi-Value property",
                 "Update(Remove) Multi-Value property", "Update(Add) Increment Value",
-                "Update(Add) Decrement Value","Profile Location", "Get User Profile Property",
+                "Update(Add) Decrement Value", "Profile Location", "Get User Profile Property",
                 "onUserLogin"
             ),
             "INBOX" to listOf(
@@ -41,7 +41,28 @@ object HomeScreenModel {
             "FEATURE FLAGS" to listOf("Get Feature Flag"),
             "WEBVIEW" to listOf("Raise events from WebView"),
             "GEOFENCE" to listOf("Init Geofence", "Trigger Location", "Deactivate Geofence"),
-            "DEVICE IDENTIFIERS" to listOf("Fetch CleverTapAttribution Identifier", "Fetch CleverTap ID")
+            "DEVICE IDENTIFIERS" to listOf("Fetch CleverTapAttribution Identifier", "Fetch CleverTap ID"),
+            "PUSH TEMPLATES" to listOf(
+                "Basic Push",
+                "Carousel Push",
+                "Manual Carousel Push",
+                "FilmStrip Carousel Push",
+                "Rating Push",
+                "Product Display",
+                "Linear Product Display",
+                "Five CTA",
+                "Zero Bezel",
+                "Zero Bezel Text Only",
+                "Timer Push",
+                "Input Box - CTA + reminder Push Campaign - DOC true",
+                "Input Box - Reply with Event",
+                "Input Box - Reply with Intent",
+                "Input Box - CTA + reminder Push Campaign - DOC false",
+                "Input Box - CTA - DOC true",
+                "Input Box - CTA - DOC false",
+                "Input Box - reminder - DOC true",
+                "Input Box - reminder - DOC false",
+            )
         )
     }
 }

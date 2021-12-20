@@ -34,10 +34,10 @@
         <!-- Add meta data for CleverTap Account Id and Account Token -->
         <meta-data
             android:name="CLEVERTAP_ACCOUNT_ID"
-            android:value="TEST-46W-WWR-R85Z" />
+            android:value="TEST-R78-ZZK-955Z" />
         <meta-data
             android:name="CLEVERTAP_TOKEN"
-            android:value="TEST-200-064" />
+            android:value="TEST-311-ba2" />
 
         <!-- Xiaomi Push -->
         <meta-data
@@ -59,7 +59,7 @@
             android:value="0" /> <!-- Add meta data for CleverTap Notification Icon -->
         <meta-data
             android:name="CLEVERTAP_NOTIFICATION_ICON"
-            android:value="ic_launcher_round" />
+            android:value="ic_notification" />
         <meta-data
             android:name="CLEVERTAP_BACKGROUND_SYNC"
             android:value="1" /> <!-- Add meta and set to 1 to raise Notification Viewed for Push Notifications -->
@@ -90,7 +90,6 @@
                 <action android:name="com.clevertap.PUSH_EVENT" />
             </intent-filter>
         </service>
-
         <activity
             android:name=".WebViewActivity"
             android:exported="true"

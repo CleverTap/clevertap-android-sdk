@@ -1,50 +1,35 @@
 {
   "project_info": {
-    "project_number": "112273261716",
-    "firebase_url": "https://bearded-robot-b21a8.firebaseio.com",
-    "project_id": "bearded-robot-b21a8",
-    "storage_bucket": "bearded-robot-b21a8.appspot.com"
+    "project_number": "1098260847210",
+    "firebase_url": "https://templatesapp-7d1a9.firebaseio.com",
+    "project_id": "templatesapp-7d1a9",
+    "storage_bucket": "templatesapp-7d1a9.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:112273261716:android:1da2103af05ede3a",
+        "mobilesdk_app_id": "1:1098260847210:android:ea439bb8d5c4143f8cc813",
         "android_client_info": {
-          "package_name": "com.clevertap.beardedrobot"
+          "package_name": "com.clevertap.demo"
         }
       },
       "oauth_client": [
         {
-          "client_id": "112273261716-12m0pn39nkb4juu01p9jihrujuja6l2c.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.clevertap.beardedrobot",
-            "certificate_hash": "3db5b63c5c9c8efce20d2a8c74c6ec754e7aea9c"
-          }
-        },
-        {
-          "client_id": "112273261716-9vd03s0ivfqgh4q3lklb2i1ksroga18k.apps.googleusercontent.com",
+          "client_id": "1098260847210-nrvga4uu9lvi8akt48rvqerupf0dl7fc.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBbQ8Qu2N_xktuRxIBxzNNoOWIvVB3OXoY"
+          "current_key": "AIzaSyCk3GTx2JW_yShvpMmjGPv03GjrwhK6JK8"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "112273261716-9vd03s0ivfqgh4q3lklb2i1ksroga18k.apps.googleusercontent.com",
+              "client_id": "1098260847210-nrvga4uu9lvi8akt48rvqerupf0dl7fc.apps.googleusercontent.com",
               "client_type": 3
-            },
-            {
-              "client_id": "112273261716-kv2gfoeh8rjmqtbfrv437ppjan06tdll.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.clevertap.BeardedRobot"
-              }
             }
           ]
         }
@@ -52,35 +37,36 @@
     },
     {
       "client_info": {
-        "mobilesdk_app_id": "1:112273261716:android:2c6b3cc8d6c84037066081",
+        "mobilesdk_app_id": "1:1098260847210:android:493da3f787374c1d",
         "android_client_info": {
-          "package_name": "com.clevertap.demo"
+          "package_name": "com.clevertap.templateapp"
         }
       },
       "oauth_client": [
         {
-          "client_id": "112273261716-9vd03s0ivfqgh4q3lklb2i1ksroga18k.apps.googleusercontent.com",
+          "client_id": "1098260847210-3d93hm19berrr857fi9b2eptr7295i9n.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.clevertap.templateapp",
+            "certificate_hash": "3e1746473c0b7350a10627f5646e5dc4ec22f632"
+          }
+        },
+        {
+          "client_id": "1098260847210-nrvga4uu9lvi8akt48rvqerupf0dl7fc.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyBbQ8Qu2N_xktuRxIBxzNNoOWIvVB3OXoY"
+          "current_key": "AIzaSyCk3GTx2JW_yShvpMmjGPv03GjrwhK6JK8"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "112273261716-9vd03s0ivfqgh4q3lklb2i1ksroga18k.apps.googleusercontent.com",
+              "client_id": "1098260847210-nrvga4uu9lvi8akt48rvqerupf0dl7fc.apps.googleusercontent.com",
               "client_type": 3
-            },
-            {
-              "client_id": "112273261716-kv2gfoeh8rjmqtbfrv437ppjan06tdll.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.clevertap.BeardedRobot"
-              }
             }
           ]
         }
