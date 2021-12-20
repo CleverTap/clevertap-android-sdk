@@ -310,6 +310,12 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             "910"-> cleverTapAPI?.pushEvent("Send Timer Notification")
             "911"-> cleverTapAPI?.pushEvent("Send Input Box Notification")
             "912"-> cleverTapAPI?.pushEvent("Send Input Box Reply with Event Notification")
+            "913"-> cleverTapAPI?.pushEvent("Send Input Box Reply with Auto Open Notification")
+            "914"-> cleverTapAPI?.pushEvent("Send Input Box Remind Notification DOC FALSE")
+            "915"-> cleverTapAPI?.pushEvent("Send Input Box CTA DOC true")
+            "916"-> cleverTapAPI?.pushEvent("Send Input Box CTA DOC false")
+            "917"-> cleverTapAPI?.pushEvent("Send Input Box Reminder DOC true")
+            "918"-> cleverTapAPI?.pushEvent("Send Input Box Reminder DOC false")
             //"60" -> webViewClickListener?.onWebViewClick()
 
         }

@@ -77,11 +77,6 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
     override fun onNotificationClickedPayloadReceived(payload: HashMap<String, Any>?) {
 
         Log.i("MyApplication", "onNotificationClickedPayloadReceived = $payload")
-        if (payload?.containsKey("pt_id") == true && payload["pt_id"] =="pt_rating")
-        {
-            val nm = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            nm.cancel(payload["notificationId"] as Int)
-        }
     }
 
     override fun attachBaseContext(base: Context?) {
@@ -98,6 +93,11 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
     override fun onActivityResumed(activity: Activity) {
         val payload = activity.intent?.extras
         if (payload?.containsKey("pt_id") == true && payload["pt_id"] =="pt_rating")
+        {
+            val nm = activity.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            nm.cancel(payload["notificationId"] as Int)
+        }
+        if (payload?.containsKey("pt_id") == true && payload["pt_id"] =="pt_product_display")
         {
             val nm = activity.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             nm.cancel(payload["notificationId"] as Int)
