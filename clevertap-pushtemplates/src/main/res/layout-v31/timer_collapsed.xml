@@ -17,6 +17,7 @@
         android:layout_alignParentEnd="true"
         android:layout_centerVertical="true"
         android:textAlignment="center"
+        android:layout_marginEnd="@dimen/padding_vertical"
         android:layout_gravity="center_horizontal"
         android:textSize="@dimen/chronometer_font_size"/>
 

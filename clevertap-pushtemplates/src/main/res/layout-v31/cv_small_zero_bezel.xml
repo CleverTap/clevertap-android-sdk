@@ -19,19 +19,14 @@
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignBottom="@+id/big_image"
-        android:paddingLeft="@dimen/padding_horizontal"
-        android:paddingStart="@dimen/padding_horizontal"
-        android:paddingRight="@dimen/padding_horizontal"
-        android:paddingEnd="@dimen/padding_horizontal"
-        android:paddingBottom="@dimen/padding_vertical"
-        android:paddingTop="@dimen/padding_vertical">
+        android:layout_centerVertical="true"
+        android:paddingStart="@dimen/padding_vertical"
+        android:paddingEnd="@dimen/padding_vertical">
 
         <TextView
             android:id="@+id/title"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/metadata_title_margin_vertical"
             android:ellipsize="end"
             android:maxLines="1"
             android:text="title"
