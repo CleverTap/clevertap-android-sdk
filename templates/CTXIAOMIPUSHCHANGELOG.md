@@ -1,6 +1,6 @@
 ## CleverTap Xiaomi Push SDK CHANGE LOG
 
-### Version 1.2.0 (December 16, 2021)
+### Version 1.2.0 (December 20, 2021)
 * Adds below new public APIs for smooth and easy integration of Custom Android Push Notifications Handling(XPS),Custom Push Amplification Handling and Push Templates.
   * `CTXiaomiMessageHandler().createNotification(applicationContext,message)`
   * `CTXiaomiMessageHandler().processPushAmp(applicationContext,message)`
