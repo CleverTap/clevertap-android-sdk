@@ -56,6 +56,7 @@ class XiaomiMessageHandlerTest : BaseTestCase() {
         }
     }
 
+    @Ignore
     @Test
     fun testCreateNotification_Valid_Message() {
         `when`(parser.toBundle(any(MiPushMessage::class.java))).thenReturn(Bundle())
@@ -63,6 +64,7 @@ class XiaomiMessageHandlerTest : BaseTestCase() {
         Assert.assertTrue(isSuccess)
     }
 
+    @Ignore
     @Test
     fun testCreateNotification_Valid_Message_With_Account_ID() {
         val bundle = Bundle()
