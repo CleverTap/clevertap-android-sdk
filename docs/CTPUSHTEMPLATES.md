@@ -501,7 +501,7 @@ Input Box | 4:3 or 2:1 | .JPG
 Product Catalog | 1:1 | .JPG
 
 * For Auto and Manual Carousel the image dimensions should not exceed more than 850x425 for Android 11 and Android 12 devices and with 2:1 image aspect ratio
-* For Product Catalog image aspect ratio should be 1:1 and and image size should be less than 80kb for Android 11 and Android 12 devices
+* For Product Catalog image aspect ratio should be 1:1 and image size should be less than 80kb for Android 11 and Android 12 devices
 
 ## Android 12 Trampoline restrictions
 
