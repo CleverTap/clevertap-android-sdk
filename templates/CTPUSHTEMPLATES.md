@@ -20,7 +20,7 @@ CleverTap Push Templates SDK helps you engage with your users using fancy push n
 1. Add the dependencies to the `build.gradle`
 
 ```groovy
-implementation "${ext.clevertap_push_templates_sdk}${ext['version.com.clevertap.android..clevertap-push-templates-sdk']}"
+implementation "${ext.push_templates}${ext['version.com.clevertap.android..push-templates']}"
 implementation "${ext.clevertap_android_sdk}${ext['version.com.clevertap.android..clevertap-android-sdk']}" // 4.4.0 and above
 ```
 
@@ -420,6 +420,7 @@ pt_dl1 | Required | Deep Link
 pt_big_img | Optional | Image
 pt_big_img_alt | Optional | Image to show when timer expires
 pt_bg | Required | Background Color in HEX
+pt_chrono_title_clr | Optional | Color for timer text in HEX
 pt_timer_threshold | Required | Timer duration in seconds (minimum 10)
 pt_timer_end | Required | Epoch Timestamp to countdown to (for example, \$D_1595871380 or 1595871380). Not needed if pt_timer_threshold is specified.
 pt_title_clr | Optional | Title Color in HEX
@@ -497,10 +498,10 @@ Five Icon | 1:1 | .JPG or .PNG
 Zero Bezel | 4:3 or 2:1 | .JPG
 Timer | 4:3 or 2:1 | .JPG
 Input Box | 4:3 or 2:1 | .JPG
-Product Display | 1:1 | .JPG
+Product Catalog | 1:1 | .JPG
 
-* For Auto and Manual Carousel the image dimension should not exceed more than 850x425 for Android 11 and Android 12 devices and with 2:1 image aspect ratio
-* For Product Display image aspect ratio should be 1:1 and and image size should be less than 80kb for Android 11 and Android 12 devices
+* For Auto and Manual Carousel the image dimensions should not exceed more than 850x425 for Android 11 and Android 12 devices and with 2:1 image aspect ratio
+* For Product Catalog image aspect ratio should be 1:1 and and image size should be less than 80kb for Android 11 and Android 12 devices
 
 ## Android 12 Trampoline restrictions
 

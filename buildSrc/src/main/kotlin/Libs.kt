@@ -81,7 +81,7 @@ object Libs {
 
     const val clevertap_xiaomi_sdk: String = "com.clevertap.android:clevertap-xiaomi-sdk:_"
 
-    const val clevertap_push_templates_sdk: String = "com.clevertap.android:clevertap-push-templates-sdk:_"
+    const val clevertap_push_templates_sdk: String = "com.clevertap.android:push-templates:_"
 
     const val glide: String = "com.github.bumptech.glide:glide:_"
 
