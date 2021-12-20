@@ -2,23 +2,19 @@ package com.clevertap.android.pushtemplates.styles
 
 import android.app.PendingIntent
 import android.content.Context
-import android.content.Intent
-import android.net.Uri
-import android.os.Build
-import android.os.Build.VERSION
-import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import androidx.core.app.RemoteInput
-import com.clevertap.android.pushtemplates.*
+import com.clevertap.android.pushtemplates.PTConstants
+import com.clevertap.android.pushtemplates.PTLog
+import com.clevertap.android.pushtemplates.TemplateRenderer
+import com.clevertap.android.pushtemplates.Utils
 import com.clevertap.android.pushtemplates.content.INPUT_BOX_CONTENT_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.INPUT_BOX_REPLY_PENDING_INTENT
 import com.clevertap.android.pushtemplates.content.PendingIntentFactory
-import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
 
-class InputBoxStyle(private var renderer: TemplateRenderer): Style(renderer) {
+class InputBoxStyle(private var renderer: TemplateRenderer) : Style(renderer) {
 
     override fun setNotificationBuilderBasics(
         notificationBuilder: NotificationCompat.Builder,
@@ -28,8 +24,10 @@ class InputBoxStyle(private var renderer: TemplateRenderer): Style(renderer) {
         pIntent: PendingIntent?,
         dIntent: PendingIntent?
     ): NotificationCompat.Builder {
-      return  super.setNotificationBuilderBasics(notificationBuilder, contentViewSmall,
-          contentViewBig, pt_title, pIntent, dIntent).setContentText(renderer.pt_msg)
+        return super.setNotificationBuilderBasics(
+            notificationBuilder, contentViewSmall,
+            contentViewBig, pt_title, pIntent, dIntent
+        ).setContentText(renderer.pt_msg)
     }
 
     override fun makeSmallContentView(context: Context, renderer: TemplateRenderer): RemoteViews? {
@@ -47,51 +45,24 @@ class InputBoxStyle(private var renderer: TemplateRenderer): Style(renderer) {
         nb: NotificationCompat.Builder
     ): NotificationCompat.Builder {
         var inputBoxNotificationBuilder = super.builderFromStyle(context, extras, notificationId, nb)
-        inputBoxNotificationBuilder = setStandardViewBigImageStyle(renderer.pt_big_img, extras,
-            context, inputBoxNotificationBuilder)
+        inputBoxNotificationBuilder = setStandardViewBigImageStyle(
+            renderer.pt_big_img, extras,
+            context, inputBoxNotificationBuilder
+        )
         if (renderer.pt_input_label != null && renderer.pt_input_label!!.isNotEmpty()) {
             //Initialise RemoteInput
             val remoteInput = RemoteInput.Builder(PTConstants.PT_INPUT_KEY)
                 .setLabel(renderer.pt_input_label)
                 .build()
 
-            val replyIntent : PendingIntent
-            /*if (VERSION.SDK_INT < VERSION_CODES.S || (extras.getString(PTConstants.PT_INPUT_AUTO_OPEN) == null && !extras.getBoolean(PTConstants.PT_INPUT_AUTO_OPEN)))
-            {*/
-                replyIntent = PendingIntentFactory.getPendingIntent(context,notificationId,extras,false,
-                    INPUT_BOX_REPLY_PENDING_INTENT,renderer)!!
-            /*} else {
-                    var launchIntent : Intent?
-                    if (extras.containsKey(Constants.DEEP_LINK_KEY) && extras.getString(Constants.DEEP_LINK_KEY)!=null) {
-                        launchIntent = Intent(
-                            Intent.ACTION_VIEW,
-                            Uri.parse(extras.getString(Constants.DEEP_LINK_KEY))
-                        )
-                        com.clevertap.android.sdk.Utils.setPackageNameFromResolveInfoList(context, launchIntent)
-                    } else {
-                        launchIntent = context.packageManager.getLaunchIntentForPackage(context.packageName)
-                    }
-
-                    launchIntent?.flags = (Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
-                        or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-
-                    extras.putInt(PTConstants.PT_NOTIF_ID,notificationId)
-                    // Take all the properties from the notif and add it to the intent
-                    launchIntent?.putExtras(extras)
-                    launchIntent?.removeExtra(Constants.WZRK_ACTIONS)
-
-                    val flagsLaunchPendingIntent = (PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_MUTABLE)
-
-                    replyIntent = PendingIntent.getActivity(
-                        context,
-                        System.currentTimeMillis().toInt(),
-                        launchIntent,
-                        flagsLaunchPendingIntent
-                    )
-                }*/
+            val replyIntent: PendingIntent
+            replyIntent = PendingIntentFactory.getPendingIntent(
+                context, notificationId, extras, false,
+                INPUT_BOX_REPLY_PENDING_INTENT, renderer
+            )!!
             //Notification Action with RemoteInput instance added.
             val replyAction = NotificationCompat.Action.Builder(
-                android.R.drawable.sym_action_chat, renderer.pt_input_label,replyIntent
+                android.R.drawable.sym_action_chat, renderer.pt_input_label, replyIntent
             )
                 .addRemoteInput(remoteInput)
                 .setAllowGeneratedReplies(true)
@@ -100,10 +71,10 @@ class InputBoxStyle(private var renderer: TemplateRenderer): Style(renderer) {
             //Notification.Action instance added to Notification Builder.
             inputBoxNotificationBuilder.addAction(replyAction)
         }
-        if (renderer.pt_dismiss_on_click != null && renderer.pt_dismiss_on_click!!.isNotEmpty()){
+        if (renderer.pt_dismiss_on_click != null && renderer.pt_dismiss_on_click!!.isNotEmpty()) {
             extras.putString(PTConstants.PT_DISMISS_ON_CLICK, renderer.pt_dismiss_on_click)
         }
-        renderer.setActionButtons(context,extras,notificationId,inputBoxNotificationBuilder,renderer.actions)
+        renderer.setActionButtons(context, extras, notificationId, inputBoxNotificationBuilder, renderer.actions)
         return inputBoxNotificationBuilder
     }
 
@@ -149,8 +120,9 @@ class InputBoxStyle(private var renderer: TemplateRenderer): Style(renderer) {
         extras: Bundle,
         notificationId: Int
     ): PendingIntent? {
-        return PendingIntentFactory.getPendingIntent(context,notificationId,extras,true,
-            INPUT_BOX_CONTENT_PENDING_INTENT,renderer
+        return PendingIntentFactory.getPendingIntent(
+            context, notificationId, extras, true,
+            INPUT_BOX_CONTENT_PENDING_INTENT, renderer
         )
     }
 

@@ -8,6 +8,7 @@ import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt
 import static com.clevertap.android.pushtemplates.content.PendingIntentFactoryKt.PRODUCT_DISPLAY_CONTENT_PENDING_INTENT;
 import static com.clevertap.android.sdk.pushnotification.CTNotificationIntentService.TYPE_BUTTON_CLICK;
 
+import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -566,6 +567,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
         }
     }
 
+    @SuppressLint("MissingPermission")
     private void handleRatingDeepLink(final Context context, final Bundle extras, final int notificationId,
             final String pt_dl_clicked, final CleverTapInstanceConfig config) throws InterruptedException {
         Thread.sleep(1000);
