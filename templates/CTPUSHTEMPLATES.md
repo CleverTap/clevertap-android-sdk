@@ -1,4 +1,3 @@
-[ ![Download](https://api.bintray.com/packages/clevertap/Maven/PushTemplates/images/download.svg) ](https://bintray.com/clevertap/Maven/PushTemplates/_latestVersion)
 # Push Templates by CleverTap
 
 CleverTap Push Templates SDK helps you engage with your users using fancy push notification templates built specifically to work with [CleverTap](https://www.clevertap.com).
@@ -33,7 +32,7 @@ CleverTapAPI.setNotificationHandler(PushTemplateNotificationHandler() as Notific
 ```
 #### Java
 ```java
-CleverTapAPI.setNotificationHandler(new (NotificationHandler)PushTemplateNotificationHandler());
+CleverTapAPI.setNotificationHandler((NotificationHandler)new PushTemplateNotificationHandler());
 ```
 
 ### Custom Handling Push Notifications
@@ -45,7 +44,7 @@ public class PushTemplateMessagingService extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         CTFcmMessageHandler()
-                .createNotification(getApplicationContext(), message)
+                .createNotification(getApplicationContext(), message);
     }
     @Override
     public void onNewToken(@NonNull final String s) {
@@ -484,6 +483,7 @@ pt_json | Optional | Above keys in JSON format
 * A silent notification channel with importance: `HIGH` is created every time on an interaction with the Rating, Manual Carousel, and Product Catalog templates with a silent sound file. This prevents the notification sound from playing when the notification is re-rendered.
 * The silent notification channel is deleted whenever the notification is dismissed or clicked.
 * For Android 11 and Android 12, please use images which are less than 100kb else notifications will not be rendered as advertised.
+* Due to Android 12 trampoline restrictions, the Input Box template with auto open of deeplink feature will fallback to simply raising the event for a reply.
 
 ## Image Specifications
 
@@ -501,6 +501,46 @@ Product Display | 1:1 | .JPG
 
 * For Auto and Manual Carousel the image dimension should not exceed more than 850x425 for Android 11 and Android 12 devices and with 2:1 image aspect ratio
 * For Product Display image aspect ratio should be 1:1 and and image size should be less than 80kb for Android 11 and Android 12 devices
+
+## Android 12 Trampoline restrictions
+
+With Android 12, the Rating and Product Display template push notifications do not get dismissed once the deeplink is opened.
+
+To handle this, you'll have to add the following code to the `onActivityResumed` or `onNewIntent` of your app
+
+#### Kotlin
+```kotlin
+        val payload = activity.intent?.extras
+        if (payload?.containsKey("pt_id") == true && payload["pt_id"] =="pt_rating")
+        {
+            val nm = activity.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            nm.cancel(payload["notificationId"] as Int)
+        }
+        if (payload?.containsKey("pt_id") == true && payload["pt_id"] =="pt_product_display")
+        {
+            val nm = activity.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            nm.cancel(payload["notificationId"] as Int)
+        }
+```
+
+#### JAVA
+```java
+    Bundle payload = activity.getIntent().getExtras();
+    if (payload.containsKey("pt_id")&& payload.getString("pt_id").equals("pt_rating"))
+    {
+        NotificationManager nm = (NotificationManager) activity.getSystemService(Context.NOTIFICATION_SERVICE); 
+        nm.cancel(payload.getInt("notificationId"));
+    }
+    if (payload.containsKey("pt_id")&& payload.getString("pt_id").equals("pt_product_display"))
+    {
+        NotificationManager nm = (NotificationManager) activity.getSystemService(Context.NOTIFICATION_SERVICE); 
+        nm.cancel(payload.getInt("notificationId"));
+    }
+```
+
+## Android 12 Screenshots
+
+You can see the renditions of all the Push Templates on an Android 12 devices [here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTPUSHTEMPLATESANDROID12.md)
 
 # Sample App
 
