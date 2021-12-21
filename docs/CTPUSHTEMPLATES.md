@@ -44,7 +44,7 @@ public class PushTemplateMessagingService extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(RemoteMessage remoteMessage) {
         CTFcmMessageHandler()
-                .createNotification(getApplicationContext(), message);
+                .createNotification(getApplicationContext(), remoteMessage);
     }
     @Override
     public void onNewToken(@NonNull final String s) {
