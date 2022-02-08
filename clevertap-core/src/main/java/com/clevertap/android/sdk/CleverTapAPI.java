@@ -1966,6 +1966,19 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * Pushes a Direct Call event to CleverTap with a set of attribute pairs.
+     *
+     * @param eventName    The name of the event
+     * @param eventProperties The {@link JSONObject} object that contains the
+     *                           event properties regarding Direct Call event
+     */
+    @SuppressWarnings("unused")
+    public Future<?> pushDirectCallEvent(String eventName, JSONObject eventProperties) {
+        return coreState.getAnalyticsManager()
+                .raiseEventForDirectCall(eventName, eventProperties);
+    }
+
+    /**
      * Used to record errors of the Geofence module
      *
      * @param errorCode    - int - predefined error code for geofences
