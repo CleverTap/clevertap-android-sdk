@@ -107,6 +107,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     private static NotificationHandler sNotificationHandler;
 
+    private static NotificationHandler sDirectCallNotificationHandler;
+
     private final Context context;
 
     private CoreState coreState;
@@ -2196,6 +2198,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return sNotificationHandler;
     }
 
+    public static NotificationHandler getDirectCallNotificationHandler() {
+        return sDirectCallNotificationHandler;
+    }
+
     /**
      * This method is used to increment the given value
      *
@@ -2670,6 +2676,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     public static void setNotificationHandler(NotificationHandler notificationHandler) {
         sNotificationHandler = notificationHandler;
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public static void setDirectCallNotificationHandler(NotificationHandler notificationHandler) {
+        sDirectCallNotificationHandler = notificationHandler;
     }
 
     public static void handleMessage(String pushType) {
