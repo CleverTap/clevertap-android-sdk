@@ -1,5 +1,8 @@
 ## CleverTap Push Templates SDK CHANGE LOG
 
+### Version 1.0.1 (February xx, 2022)
+* Bug fixes
+
 ### Version 1.0.0 (December 20, 2021)
 * Stable release! 🎉
 * Supports Xiaomi, Huawei notification messages out of the box
