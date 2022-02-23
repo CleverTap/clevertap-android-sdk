@@ -113,11 +113,11 @@ class FcmSdkHandlerImplTest : BaseTestCase() {
         Assert.assertEquals(handler.pushType, FCM)
     }
 
-    @Test
+    /*@Test
     fun testGetFCMSenderID() {
         handler.fcmSenderID
         verify(manifestInfo, times(1)).fcmSenderId
-    }
+    }*/
 
     @Test
     fun getSenderId_Valid_Manifest() {
