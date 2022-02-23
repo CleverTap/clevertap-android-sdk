@@ -490,13 +490,13 @@ pt_json | Optional | Above keys in JSON format
 
 Template | Aspect Ratios | File Type
   ---:|:---:|:--- 
-Basic | 4:3 or 2:1 | .JPG
-Auto Carousel | 2:1 (Android 11 & 12) and 4:3 (Below Android 11) | .JPG
-Manual Carousel | 2:1 (Android 11 & 12) and 4:3 (Below Android 11) | .JPG
+Basic | 4:3 or 3:2 or 2:1 | .JPG
+Auto Carousel | 3:2 (Android 11 & 12) and 4:3 (Below Android 11) | .JPG
+Manual Carousel | 3:2 (Android 11 & 12) and 4:3 (Below Android 11) | .JPG
 Rating | 4:3 (Android 11 & 12) and 2:1 (Below Android 11) | .JPG
 Five Icon | 1:1 | .JPG or .PNG
 Zero Bezel | 4:3 or 2:1 | .JPG
-Timer | 4:3 or 2:1 | .JPG
+Timer | 3:2 (Android 11 & 12) and 4:3 (Below Android 11) | .JPG
 Input Box | 4:3 or 2:1 | .JPG
 Product Catalog | 1:1 | .JPG
 

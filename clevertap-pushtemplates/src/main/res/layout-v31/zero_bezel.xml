@@ -3,7 +3,6 @@
     android:id="@+id/content_view_big"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@android:color/white"
     android:orientation="vertical">
 
     <ImageView
@@ -23,12 +22,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_alignBottom="@+id/big_image"
-        android:paddingStart="@dimen/padding_horizontal"
-        android:paddingLeft="@dimen/padding_horizontal"
-        android:paddingTop="@dimen/padding_vertical"
-        android:paddingEnd="@dimen/padding_horizontal"
-        android:paddingRight="@dimen/padding_horizontal"
-        android:paddingBottom="@dimen/padding_vertical">
+        android:padding="@dimen/padding_vertical">
 
         <TextView
             android:id="@+id/title"
