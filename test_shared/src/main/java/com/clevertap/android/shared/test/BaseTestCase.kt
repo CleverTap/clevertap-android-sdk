@@ -7,6 +7,8 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig
 import org.junit.*
 import org.junit.runner.*
 import org.mockito.*
+import org.robolectric.Robolectric
+import org.robolectric.android.controller.ActivityController
 import org.robolectric.annotation.Config
 
 @Config(manifest = Config.NONE, sdk = [VERSION_CODES.P], application = TestApplication::class)
@@ -26,12 +28,14 @@ abstract class BaseTestCase {
     protected lateinit var application: TestApplication
     protected lateinit var cleverTapAPI: CleverTapAPI
     protected lateinit var cleverTapInstanceConfig: CleverTapInstanceConfig
+    protected lateinit var activityController: ActivityController<TestActivity>
 
     @Before
     open fun setUp() {
         application = TestApplication.application
         cleverTapAPI = Mockito.mock(CleverTapAPI::class.java)
-        cleverTapInstanceConfig =
-            CleverTapInstanceConfig.createInstance(application, Constant.ACC_ID, Constant.ACC_TOKEN)
+        cleverTapInstanceConfig = CleverTapInstanceConfig.createInstance(application, Constant.ACC_ID, Constant.ACC_TOKEN)
+        activityController = Robolectric.buildActivity(TestActivity::class.java)
+
     }
 }
