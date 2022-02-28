@@ -1,5 +1,6 @@
 package com.clevertap.android.pushtemplates.validators
 
+import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.TemplateType
 import com.clevertap.android.pushtemplates.TemplateType.*
@@ -45,30 +46,50 @@ internal class ValidatorFactory {
         ): Validator? {
             keys = createKeysMap(templateRenderer)
 
-            return when (templateType) {
-                BASIC -> BasicTemplateValidator(ContentValidator(keys))
-                AUTO_CAROUSEL, MANUAL_CAROUSEL -> CarouselTemplateValidator(
+
+            if (templateType == BASIC){
+                return BasicTemplateValidator(ContentValidator(keys))
+            }else if (templateType == AUTO_CAROUSEL || templateType == MANUAL_CAROUSEL){
+                return CarouselTemplateValidator(
                     BasicTemplateValidator(
                         ContentValidator(
                             keys
                         )
                     )
                 )
-                RATING -> RatingTemplateValidator(BasicTemplateValidator(ContentValidator(keys)))
-                FIVE_ICONS -> FiveIconsTemplateValidator(BackgroundValidator(keys))
-                PRODUCT_DISPLAY -> ProductDisplayTemplateValidator(
+            }else if (templateType == RATING){
+                return RatingTemplateValidator(BasicTemplateValidator(ContentValidator(keys)))
+            }else if (templateType == FIVE_ICONS){
+                return FiveIconsTemplateValidator(BackgroundValidator(keys))
+            }else if (templateType == PRODUCT_DISPLAY){
+                return ProductDisplayTemplateValidator(
                     BasicTemplateValidator(
                         ContentValidator(keys)
                     )
                 )
-                ZERO_BEZEL -> ZeroBezelTemplateValidator(ContentValidator(keys))
-                TIMER -> TimerTemplateValidator(BasicTemplateValidator(ContentValidator(keys)))
-                INPUT_BOX -> InputBoxTemplateValidator(ContentValidator(keys))
-                else -> null
+            }else if (templateType == ZERO_BEZEL){
+                return ZeroBezelTemplateValidator(ContentValidator(keys))
+            }else if (templateType == TIMER){
+                return when {
+                    templateRenderer.pt_timer_threshold != -1 -> {
+                        TimerTemplateValidator(BasicTemplateValidator(ContentValidator(keys)))
+                    }
+                    templateRenderer.pt_timer_end < System.currentTimeMillis() -> {
+                        TimerEndTemplateValidator(BasicTemplateValidator(ContentValidator(keys)))
+                    }
+                    else -> {
+                        PTLog.debug("Not rendering notification Timer threshold or Timer end value is required")
+                        null
+                    }
+                }
+            }else if (templateType == INPUT_BOX){
+                return InputBoxTemplateValidator(ContentValidator(keys))
+            }else{
+                return null
             }
         }
 
-        fun createKeysMap(templateRenderer: TemplateRenderer): Map<String, Checker<out Any>> {
+        private fun createKeysMap(templateRenderer: TemplateRenderer): Map<String, Checker<out Any>> {
             val hashMap = HashMap<String, Checker<out Any>>()
             //----------BASIC-------------
             hashMap[PT_TITLE] =
@@ -150,13 +171,13 @@ internal class ValidatorFactory {
                 IntSizeChecker(
                     templateRenderer.pt_timer_threshold,
                     -1,
-                    "Timer Threshold or End time not defined"
+                    "Timer threshold not defined"
                 )
             hashMap[PT_TIMER_END] =
                 IntSizeChecker(
                     templateRenderer.pt_timer_end,
                     -1,
-                    "Timer Threshold or End time not defined"
+                    "Timer end time not defined"
                 )
             //----------INPUT BOX----------------
             hashMap[PT_INPUT_FEEDBACK] =
