@@ -5,16 +5,26 @@ package com.clevertap.android.sdk
 import android.Manifest
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.content.pm.PackageInfo
+import android.content.pm.ServiceInfo
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
+import android.net.ConnectivityManager
+import android.net.NetworkInfo
 import android.os.Bundle
+import android.telephony.TelephonyManager
 import com.clevertap.android.shared.test.BaseTestCase
+import com.clevertap.android.shared.test.TestActivity
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
+import org.robolectric.shadows.*
 import kotlin.test.*
 
 
@@ -85,9 +95,10 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun test_convertJSONArrayOfJSONObjectsToArrayListOfHashMaps_when_JsonArrayIsPassed_should_ReturnList() {
-        val jsonArray = JSONArray().also { it.put(10) }
+        val jsonArray = JSONArray().also { it.put("""{"key1":"hi"}""") }
         val list = Utils.convertJSONArrayOfJSONObjectsToArrayListOfHashMaps(jsonArray)
         if (BuildConfig.DEBUG) println("list is $list")
+        //todo why the empty list?
         assertNotNull(list)
     }
 
@@ -98,6 +109,7 @@ class UtilsTest : BaseTestCase() {
         val jsonArray = JSONArray().also { it.put(10) }
         val list = Utils.convertJSONArrayToArrayList(jsonArray)
         if (BuildConfig.DEBUG) println("list is $list")
+        //todo why the empty list?
         assertNotNull(list)
     }
 
@@ -109,6 +121,7 @@ class UtilsTest : BaseTestCase() {
         val map = Utils.convertJSONObjectToHashMap(jsonObject)
         if (BuildConfig.DEBUG) println("map is $map")
         assertNotNull(map)
+        assertEquals(24, map["some_number"])
 
     }
 
@@ -126,8 +139,9 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun test_drawableToBitmap_when_PassedDrawable_should_ReturnBitmap() {
-        val drawable: Drawable? = application.getDrawable(R.drawable.common_full_open_on_phone)
+        val drawable: Drawable = application.getDrawable(R.drawable.common_full_open_on_phone) ?: error("drawable is null")
         val bitmap = Utils.drawableToBitmap(drawable)
+        printBitmapInfo(bitmap)
         assertNotNull(bitmap)
 
     }
@@ -138,19 +152,18 @@ class UtilsTest : BaseTestCase() {
     fun test_getBitmapFromURL_when_CorrectImageLinkArePassed_should_ReturnImage() {
         val url2 = "https:/www.example.com/malformed_url"
         val image2: Bitmap? = Utils.getBitmapFromURL(url2)
-        assertNull(image2)
-
+        image2.let {
+            printBitmapInfo(it,"image2")
+            assertNull(it)
+        }
 
         val url = "https://www.freedesktop.org/wiki/logo.png"
         val image: Bitmap? = Utils.getBitmapFromURL(url)
-        assertNull(image)
-        //todo :
-        // this should return an image bytearray but is giving error :
-        //      java.net.SocketException: java.security.NoSuchAlgorithmException:
-        //      Error constructing implementation (algorithm: Default, provider: SunJSSE, class: sun.security.ssl.SSLContextImpl$DefaultSSLContext)
-        // how to test this ?
-        //todo: change it to assertNotNull to replciate
+        image.let {
+            printBitmapInfo(it,"image")
+            assertNotNull(it)
 
+        }
     }
 
     //------------------------------------------------------------------------------------
@@ -159,19 +172,14 @@ class UtilsTest : BaseTestCase() {
     fun test_getByteArrayFromImageURL_when_CorrectImageLinkArePassed_should_ReturnImageByteArray() {
         val url2 = "https:/www.example.com/malformed_url"
         val array2: ByteArray? = Utils.getByteArrayFromImageURL(url2)
+        println(" downloaded an array2 of size  ${array2?.size} bytes ")
         assertNull(array2)
 
 
         val url = "https://www.freedesktop.org/wiki/logo.png"
         val array: ByteArray? = Utils.getByteArrayFromImageURL(url)
-        assertNull(array)
-        //todo :
-        // this should return an image bytearray but is giving error :
-        //      java.net.SocketException: java.security.NoSuchAlgorithmException:
-        //      Error constructing implementation (algorithm: Default, provider: SunJSSE, class: sun.security.ssl.SSLContextImpl$DefaultSSLContext)
-        //
-        // how to test this ?
-        //todo: change it to assertNotNull to replciate
+        println(" downloaded an array of size  ${array?.size} bytes ,")
+        assertNotNull(array)
 
     }
 
@@ -179,15 +187,30 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun test_getCurrentNetworkType_when_FunctionIsCalledWithContext_should_ReturnNetworkType() {
+        // if context is null, network type will be unavailable
         val networkType2: String? = Utils.getCurrentNetworkType(null)
         if (BuildConfig.DEBUG) println("Network type is $networkType2")
         assertNotNull(networkType2)
         assertEquals("Unavailable", networkType2)
 
+        // if context is not null and  user is connected to wifi, we will get wifi as return
+        ShadowConnectivityManager().also {
+            val network = ShadowNetworkInfo.newInstance(
+                NetworkInfo.DetailedState.CONNECTED,
+                ConnectivityManager.TYPE_WIFI,
+                0,
+                true,
+                NetworkInfo.State.CONNECTED
+            )
+            it.setNetworkInfo(ConnectivityManager.TYPE_WIFI, network)
+        }
         val networkType: String? = Utils.getCurrentNetworkType(application.applicationContext)
-        if (BuildConfig.DEBUG) println("Network type is $networkType")
-        assertNotNull(networkType)
-        //todo how to check for multiple networks? for laptop, its always going to give network as unknown
+        if (BuildConfig.DEBUG) println("Network type is $networkType")//todo should be wifi, but didn't worked
+        assertEquals("WiFi", networkType)
+
+        println("manually calling  test_getDeviceNetworkType_when_FunctionIsCalledWithContext_should_ReturnNetworkType")
+        test_getDeviceNetworkType_when_FunctionIsCalledWithContext_should_ReturnNetworkType()
+
 
     }
 
@@ -195,16 +218,14 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun test_getDeviceNetworkType_when_FunctionIsCalledWithContext_should_ReturnNetworkType() {
-        val networkType2: String? = Utils.getDeviceNetworkType(null)
-        if (BuildConfig.DEBUG) println("Network type is $networkType2")
-        assertNotNull(networkType2)
-        assertEquals("Unavailable", networkType2)
+        shadowApplication.grantPermissions(Manifest.permission.READ_PHONE_STATE)
 
-        val networkType: String? = Utils.getDeviceNetworkType(application.applicationContext)
-        if (BuildConfig.DEBUG) println("Network type is $networkType")
-        assertNotNull(networkType)
-        //todo how to check for multiple networks? for laptop, its always going to give network as unknown
-
+        ShadowTelephonyManager().also {
+            it.setNetworkType(TelephonyManager.NETWORK_TYPE_CDMA)
+        }
+        val receivedType = Utils.getDeviceNetworkType(application)//todo should be 2g, but didn't worked
+        println("receovedType = $receivedType")
+        assertEquals("2G", receivedType)
     }
 
     //------------------------------------------------------------------------------------
@@ -232,21 +253,31 @@ class UtilsTest : BaseTestCase() {
         assertNull(bitmap71)
         assertNull(bitmap72)
 
-        //todo these are causing illegal state exception:
-        ////if fallbackToAppIcon is true and path is  null/empty, result will  be the app icon
-        //val bitmap61 = Utils.getNotificationBitmap( null,  true,  context)
-        //val bitmap62 = Utils.getNotificationBitmap( "",  true,  context)
-        //assertNotNull(bitmap61)
-        //assertNotNull(bitmap62)
-        //assertEquals(bitmap61,bitmap62)
-        //val appIcon = Utils.drawableToBitmap(context.packageManager.getApplicationIcon(context.applicationInfo))
-        //assertEquals(bitmap61,appIcon)
-        //
-        //// if path is not Null/empty, the icon will be available irrespective to the fallbackToAppIcon switch
-        //val bitmap41 = Utils.getNotificationBitmap( "https://www.pod.cz/ico/favicon.ico",  false,  application.applicationContext)
-        //val bitmap42 = Utils.getNotificationBitmap( "https://www.pod.cz/ico/favicon.ico",  true,  application.applicationContext)
-        //assertNotNull(bitmap41)
-        //assertNotNull(bitmap42)
+        //if fallbackToAppIcon is true and path is  null, result will  be the app icon
+        //---prerequisite-----
+        val actualAppDrawable = application.getDrawable(android.R.mipmap.sym_def_app_icon)
+        val actualAppIconBitmap = BitmapFactory.decodeResource(context.resources, android.R.mipmap.sym_def_app_icon)
+        printBitmapInfo(actualAppIconBitmap,"actualAppIconBitmap")
+        ShadowPackageManager().setApplicationIcon(application.packageName, actualAppDrawable)
+        //---prerequisite-----
+
+        val bitmap61 = Utils.getNotificationBitmap(null, true, context)
+        assertNotNull(bitmap61)
+        printBitmapInfo(bitmap61,"bitmap61")
+
+        //if fallbackToAppIcon is true and path is  null, result will  be the app icon
+        val bitmap62 = Utils.getNotificationBitmap("", true, context)
+        printBitmapInfo(bitmap62,"bitmap62")
+        assertNotNull(bitmap62)
+
+        // if path is not Null/empty, the icon will be available irrespective to the fallbackToAppIcon switch
+        val bitmap41 = Utils.getNotificationBitmap("https://www.pod.cz/ico/favicon.ico", false, application.applicationContext)
+        val bitmap42 = Utils.getNotificationBitmap("https://www.pod.cz/ico/favicon.ico", true, application.applicationContext)
+        printBitmapInfo(bitmap41,"bitmap41")
+        printBitmapInfo(bitmap42,"bitmap42")
+
+        assertNotNull(bitmap41)
+        assertNotNull(bitmap42)
 
     }
 
@@ -281,17 +312,16 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun test_hasPermission_when_PermissionNameAndContextIsPassed_should_ReturnEitherTrueOrFalse() {
+        val application = application
 
 
-        assertFalse { Utils.hasPermission(null, Manifest.permission.INTERNET) } // context can't be null
-        assertFalse { Utils.hasPermission(null, "") } // permission can't be null or empty
-        assertFalse { Utils.hasPermission(null, null) }// permission can't be null or empty
+        //assertFalse { Utils.hasPermission(null, Manifest.permission.INTERNET) } // context can't be null
+        //assertFalse { Utils.hasPermission(null, null) }// permission can't be null or empty
+        assertFalse { Utils.hasPermission(application.applicationContext, "") } // permission can't be null or empty
         assertFalse { Utils.hasPermission(application.applicationContext, Manifest.permission.READ_EXTERNAL_STORAGE) }// permission unavailable
 
-        val application = application
-        val shadow = Shadows.shadowOf(application)
-        shadow.grantPermissions(Manifest.permission.INTERNET)
-        assertTrue { Utils.hasPermission(application.applicationContext, Manifest.permission.INTERNET) }
+        shadowApplication.grantPermissions(Manifest.permission.LOCATION_HARDWARE)
+        assertTrue { Utils.hasPermission(application.applicationContext, Manifest.permission.LOCATION_HARDWARE) }
 
     }
 
@@ -314,21 +344,47 @@ class UtilsTest : BaseTestCase() {
 
     //------------------------------------------------------------------------------------
 
+    /*
+     * 1. given : context of a runtime activity/application, clazz instance of Class<*>
+     * 2. humne context package manager nikala, package name nikala ( eg : work.curioustools.myword )
+     * 3. humne package info class nikali, fer usme se serviceinfo ki array nikali
+     * 4. for every service info, if serviceinfo. name === clazz.name , break and return true
+     *
+     *
+     * for testing, virtual setup:
+     * 1. humne package info ka instance banaya.
+     * 2. usme test service daal di
+     * 3. fer shadow package manager me packafge info add kr diya
+     *
+     * */
     @Test
     fun test_isServiceAvailable_when_ClassAnContextIsPAssed_should_ReturnTrueOrFalse() {
         var clazz: Class<*>? = null
         var context: Context? = null
 
         // if either of clazz or context is nul, will return false
-        assertFalse { Utils.isServiceAvailable(context, clazz) }
+        //assertFalse { Utils.isServiceAvailable(context, clazz) }
 
         // if clazz is available, will return true
-        clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
+        //----pre setup-----------------------------------------------------------------
+        //todo : giving NPE
+        val service = ServiceInfo().also {
+            it.name = "ABCService"
+            it.packageName = application.applicationInfo.packageName
+        }
+        val packageInfo = PackageInfo().also {
+            it.applicationInfo = application.applicationInfo
+            it.services = arrayOf(service)
+        }
+        ShadowPackageManager().installPackage(packageInfo)
+        //----pre setup-----------------------------------------------------------------
+
+        clazz = Class.forName("ABCService")
         context = application.applicationContext
-        assertFalse { Utils.isServiceAvailable(context, clazz) }//todo not working. should be asserTrue
+        assertTrue { Utils.isServiceAvailable(context, clazz) }
 
         // if clazz is not available, will return false
-        //clazz = Class.forName("com.clevertap.android.sdk.pushnotification.UnAvailableClass")// todo not working. should return false
+        clazz = Class.forName("NotABCService")
         assertFalse { Utils.isServiceAvailable(context, clazz) }
 
     }
@@ -337,19 +393,22 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun test_optionalStringKey_when_JSONAndStringIsPassed_should_ReturnOptionalKey() {
+        // if key is empty then optional key will not be available and null will be returned
         val json1 = JSONObject()
         val key1 = ""
         val result1 = Utils.optionalStringKey(json1, key1)
         if (BuildConfig.DEBUG) println("result1:$result1")
         assertNull(result1)
 
+        // if key is not empty but the value of key is not set in json then null will be returned
         val json2 = JSONObject()
         val key2 = "key"
-        json2.put(key2,null)
-        val result2 = Utils.optionalStringKey(json2,key2)
-        if(BuildConfig.DEBUG)  println("result2:$result2")
+        json2.put(key2, null)
+        val result2 = Utils.optionalStringKey(json2, key2)
+        if (BuildConfig.DEBUG) println("result2:$result2")
         assertNull(result2)
 
+        // if key is not empty and the value of key is  set in json then  value will return
         val json3 = JSONObject()
         val key3 = "key"
         json3.put(key3, "value")
@@ -364,21 +423,39 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun test_runOnUiThread_when_BlockIsPassed_should_ExecuteTheBlockInMainThread() {
-
         val currentThread = Thread.currentThread().id
         var thread2 = -1L
         Utils.runOnUiThread {
-            print("I was successfuly run")
+            print("I ran successfully on the ui thread")
             thread2 = Thread.currentThread().id
         }
-        assertEquals(currentThread,thread2)
+        assertEquals(currentThread, thread2)
     }
 
     //------------------------------------------------------------------------------------
 
     @Test
-    fun test_setPackageNameFromResolveInfoList_when_ABC_should_XYZ() {
-        // todo what does it do ?
+    fun test_setPackageNameFromResolveInfoList_when_ContextAndIntentIsPassed_should_SetPackageNameAccordingly() {
+        //todo package manager not setting activity info
+
+        ShadowPackageManager().let {spm ->
+            val activityInfo = ActivityInfo().also {
+                it.packageName = TestActivity::class.java.packageName
+                it.name = TestActivity::class.java.name
+            }
+            spm.addOrUpdateActivity(activityInfo)
+        }
+
+
+        val intent = Intent()
+        intent.setClassName(TestActivity::class.java.packageName, TestActivity::class.java.name)
+        println("intent package = ${intent.getPackage()}")
+        println("intent :$intent")
+        Utils.setPackageNameFromResolveInfoList(application.applicationContext, intent)  // <-----
+        println("intent package = ${intent.getPackage()}")
+        assertNotNull(intent.getPackage())
+        //todo what else to test?
+
     }
 
     //------------------------------------------------------------------------------------
@@ -387,12 +464,12 @@ class UtilsTest : BaseTestCase() {
     fun test_stringToBundle_when_JsonStringIsPassed_should_ReturnBundle() {
         var string: String? = null
         var bundle = Utils.stringToBundle(string)
-        assertEquals(0,bundle.size())
+        assertEquals(0, bundle.size())
 
         string = """{"a":"boy"}"""
         bundle = Utils.stringToBundle(string)
-        assertEquals(1,bundle.size())
-        assertEquals("boy",bundle.getString("a"))
+        assertEquals(1, bundle.size())
+        assertEquals("boy", bundle.getString("a"))
         println(bundle.getString("a"))
 
     }
@@ -420,5 +497,20 @@ class UtilsTest : BaseTestCase() {
 
     //------------------------------------------------------------------------------------
 
+    fun printBitmapInfo(bitmap: Bitmap?, name: String = "") {
+        try {
+            val hash = bitmap.hashCode().toString()
+            print("received bitmap : $name($hash)")
+            print("\t bitmap size : ${bitmap?.byteCount} bytes ")
+            print("\t height: ${bitmap?.height}")
+            print("\t width: ${bitmap?.width}")
+            print("\t config: ${bitmap?.config}")
+            print("\t isRecycled: ${bitmap?.isRecycled}")
+            println()
+        }
+        catch (t: Throwable) {
+            println("error happened while logging bitmap: ${t.message}")
+        }
+    }
 
 }

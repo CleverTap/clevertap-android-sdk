@@ -22,7 +22,6 @@ import android.os.Handler;
 import android.os.Looper;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.core.content.ContextCompat;
@@ -164,7 +163,9 @@ public final class Utils {
         } catch (IOException e) {
 
             Logger.v("Couldn't download the notification icon. URL was: " + srcUrl);
+            e.printStackTrace();
             return null;
+            //todo catch other exceptions?
         } finally {
             try {
                 if (connection != null) {
@@ -225,17 +226,17 @@ public final class Utils {
 
             return getDeviceNetworkType(context);
 
+//            else{
+//                return getDeviceNetworkType(context);
+//            }
+
         } catch (Throwable t) {
             return "Unavailable";
         }
     }
 
     @SuppressLint("MissingPermission")
-    public static String getDeviceNetworkType(final Context context) {
-        // null should not be passed as context, otherwise  line context.getSystemService(Context.TELEPHONY_SERVICE) will give NPE
-        if(context == null) {
-            return "Unavailable";
-        }
+    public static String getDeviceNetworkType(@NonNull  final Context context) {
         // Fall back to network type
         TelephonyManager teleMan = (TelephonyManager) context.getSystemService(Context.TELEPHONY_SERVICE);
         if (teleMan == null) {
@@ -338,8 +339,7 @@ public final class Utils {
      * @param context    The Android {@link Context}
      * @param permission The fully qualified Android permission name
      */
-    public static boolean hasPermission(final Context context, String permission) {
-        if(context==null || permission == null || permission.isEmpty()) return false;
+    public static boolean hasPermission(@NonNull final Context context,@NonNull String permission) {
         try {
             return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(context, permission);
         } catch (Throwable t) {
@@ -359,8 +359,8 @@ public final class Utils {
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public static boolean isServiceAvailable(Context context, Class clazz) {
-        if (clazz == null || context == null) {
+    public static boolean isServiceAvailable(@NonNull Context context, Class clazz) {
+        if (clazz == null) {
             return false;
         }
 
@@ -468,7 +468,8 @@ public final class Utils {
         return true;
     }
 
-    static Bitmap drawableToBitmap(Drawable drawable) throws NullPointerException {
+    static Bitmap drawableToBitmap(@NonNull Drawable drawable)
+            throws NullPointerException {
         if (drawable instanceof BitmapDrawable) {
             return ((BitmapDrawable) drawable).getBitmap();
         }
@@ -518,6 +519,7 @@ public final class Utils {
             }
             return drawableToBitmap(logo);
         } catch (Exception e) {
+            e.printStackTrace();
             // Try to get the app icon now
             // No error handling here - handle upstream
             return drawableToBitmap(context.getPackageManager().getApplicationIcon(context.getApplicationInfo()));
