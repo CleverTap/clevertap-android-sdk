@@ -421,8 +421,8 @@ pt_big_img | Optional | Image
 pt_big_img_alt | Optional | Image to show when timer expires
 pt_bg | Required | Background Color in HEX
 pt_chrono_title_clr | Optional | Color for timer text in HEX
-pt_timer_threshold | Required | Timer duration in seconds (minimum 10)
-pt_timer_end | Required | Epoch Timestamp to countdown to (for example, $D_1595871380 or 1595871380). Not needed if pt_timer_threshold is specified.
+pt_timer_threshold | Required | Timer duration in seconds (minimum 10). Will be given higher priority. 
+pt_timer_end | Optional | Epoch Timestamp to countdown to (for example, $D_1595871380 or 1595871380). Not needed if pt_timer_threshold is specified.
 pt_title_clr | Optional | Title Color in HEX
 pt_msg_clr | Optional | Message Color in HEX
 pt_small_icon_clr | Optional | Small Icon Color in HEX
