@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="PinWidget" />
+
+    <style name="PinWidget.DCPinView" parent="Widget.AppCompat.EditText">
+        <item name="android:background">@null</item>
+        <item name="android:minHeight">0dp</item>
+        <item name="android:maxLines">1</item>
+        <item name="android:textCursorDrawable">@drawable/ct_pinview_invisible_image</item>
+        <item name="android:textSelectHandle">@drawable/ct_pinview_invisible_image</item>
+        <item name="android:textSelectHandleLeft">@drawable/ct_pinview_invisible_image</item>
+        <item name="android:textSelectHandleRight">@drawable/ct_pinview_invisible_image</item>
+    </style>
+</resources>

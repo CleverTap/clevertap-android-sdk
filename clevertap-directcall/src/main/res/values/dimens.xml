@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="pv_pin_view_item_size">48dp</dimen>
+    <dimen name="pv_pin_view_item_spacing">5dp</dimen>
+    <dimen name="pv_pin_view_item_line_width">2dp</dimen>
+    <dimen name="pv_pin_view_cursor_width">2dp</dimen>
+</resources>

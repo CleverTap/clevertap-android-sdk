@@ -1,0 +1,95 @@
+<resources>
+    <string name="incomingCall">Incoming Call</string>
+    <string name="outgoingCall">Outgoing Call</string>
+    <string name="calling">Calling…</string>
+    <string name="connecting">Connecting…</string>
+    <string name="ongoing_call">Ongoing Call</string>
+    <string name="decline">Decline</string>
+    <string name="accept">Accept</string>
+    <string name="mute">Mute</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="speaker">Speaker</string>
+
+    <string name="websocket">websocket</string>
+    <string name="platform">platform</string>
+    <string name="android">android</string>
+    <string name="default_background_color">#2E3558</string>
+    <string name="default_font_color">#ffffff</string>
+
+    <string name="jwt">jwt=</string>
+    <string name="s_authenticated">authenticated</string>
+    <string name="s_miss">miss</string>
+    <string name="s_cancel">cancel</string>
+    <string name="s_answer">answer</string>
+    <string name="s_decline">decline</string>
+    <string name="s_incoming_call">incoming_call</string>
+    <string name="s_connection_timeout">connect_timeout</string>
+    <string name="s_authentication">authentication</string>
+    <string name="s_make_call">makecall</string>
+    <string name="s_call_voip">call_voip</string>
+    <string name="s_call_pstn">call_pstn</string>
+    <string name="s_cancel_pstn">cancel_pstn</string>
+    <string name="s_record_call">record_call</string>
+    <string name="s_ios_apf">ios_apf</string>
+    <string name="s_socket_timeout">socket-timeout</string>
+    <string name="s_endpoint_ready">endpoint_ready</string>
+
+    <string name="callStatus">call_status</string>
+    <string name="fcm_notification_ack">fcm-notification-ack</string>
+
+    <string name="callDetails">callDetails</string>
+    <string name="screen">screen</string>
+    <string name="outgoing">outgoing</string>
+    <string name="incoming">incoming</string>
+    <string name="call_screen">callScreen</string>
+
+    <string name="actionType">actionType</string>
+    <string name="sid">sid</string>
+    <string name="pstn">pstn</string>
+    <string name="scontext">context</string>
+    <string name="scall">call</string>
+
+    <string name="shost">host</string>
+
+    <string name="jsurl">file:///android_asset/index.html</string>
+    <string name="id">id</string>
+
+    <string name="poweredBy">Powered by Direct Call</string>
+    <string name="from">from</string>
+    <string name="to">to</string>
+
+    <string name="platform_android">android</string>
+    <string name="microphone_permission_not_granted">microphone permission not granted</string>
+    <string name="client_busy">User Busy</string>
+    <string name="invalid_cuid">Invalid Cuid</string>
+
+    <!--notification channels-->
+    <string name="primary_channel_id">com.clevertap.android.directcall.primary</string>
+    <string name="secondary_channel_id">com.clevertap.directcall.secondary</string>
+    <string name="secondary_channel_name">Call Notifications</string>
+    <string name="secondary_channel_desc">Direct Call Notifications</string>
+
+    <string name="outgoing_fragment_tag">OutgoingFrag</string>
+    <string name="incoming_fragment_tag">incomingFrag</string>
+    <string name="callScreen_fragment_tag">callScreenFrag</string>
+
+    <string name="sUnauthorized">unauthorized</string>
+    <string name="hold">Hold</string>
+    <string name="callType">callType</string>
+    <string name="sHoldUnhold">hold-unhold</string>
+    <string name="call_answer">call_answer</string>
+    <string name="active_template">activeTemplate</string>
+    <string name="template_default">default</string>
+    <string name="template_full_image">img</string>
+    <string name="template_video">video</string>
+    <string name="template_pinview">pinview</string>
+    <string name="template_banner_image">banner-img</string>
+    <string name="template_gif">gif</string>
+    <string name="template_scratchcard">scratchcard</string>
+    <string name="enter_4_digit_pin">Enter 4 digit pin</string>
+    <string name="user_is_busy_on_another_call">User is busy on another call</string>
+    <string name="wrong_pin">Wrong Pin</string>
+    <string name="bad_network">Bad Network</string>
+    <string name="poor_network">Poor Network</string>
+    <string name="call_is_on_hold">Call is on hold</string>
+</resources>

@@ -1,0 +1,252 @@
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root_view_background"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/defaultBackgroundColor">
+
+    <TextView
+        android:id="@+id/tv_callScreen_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="@string/incomingCall"
+        android:textSize="16sp"
+        android:textColor="@android:color/white"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/iv_brand_logo"
+        android:layout_width="214dp"
+        android:layout_height="120dp"
+        android:layout_marginTop="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/banner_placeholder"
+        app:layout_constraintVertical_bias="0.25" />
+
+    <TextView
+        android:id="@+id/tv_callContext"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:text="test call"
+        android:textSize="21sp"
+        android:textColor="@android:color/white"
+        android:maxLines="2"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        app:layout_constraintBottom_toTopOf="@+id/banner_placeholder"
+        app:layout_constraintTop_toBottomOf="@id/iv_brand_logo"
+        app:layout_constraintVertical_bias="0.3" />
+
+    <TextView
+        android:id="@+id/tv_pin_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/enter_4_digit_pin"
+        android:textSize="14sp"
+        android:visibility="gone"
+        android:textColor="@android:color/white"
+        app:layout_constraintTop_toTopOf="@id/tv_callContext"
+        app:layout_constraintBottom_toTopOf="@id/direct_call_pin_view"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" />
+
+    <com.clevertap.android.directcall.custom.DirectCallPinView
+        android:id="@+id/direct_call_pin_view"
+        style="@style/PinWidget.DCPinView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="numberPassword"
+        app:itemCount="4"
+        app:itemHeight="40dp"
+        app:itemWidth="40dp"
+        app:viewType="line"
+        android:textSize="12sp"
+        android:textColor="@android:color/white"
+        android:layout_marginTop="16dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@+id/tv_pin_label"
+        app:layout_constraintBottom_toTopOf="@+id/iv_decline"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <VideoView
+        android:id="@+id/banner_video"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="invisible"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/iv_decline"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintDimensionRatio="16:9"
+        app:layout_constraintWidth_percent="0.8"
+        app:layout_constraintVertical_bias="0.8"/>
+
+    <View
+        android:id="@+id/banner_placeholder"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/iv_decline"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintDimensionRatio="16:9"
+        app:layout_constraintWidth_percent="0.8"
+        app:layout_constraintVertical_bias="0.8"/>
+
+    <ImageView
+        android:id="@+id/iv_banner_image_gif"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:adjustViewBounds="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@+id/iv_decline"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintDimensionRatio="16:9"
+        app:layout_constraintWidth_percent="0.8"
+        app:layout_constraintVertical_bias="0.8" />
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/cl_scratch_card"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@+id/tv_callContext"
+        app:layout_constraintBottom_toTopOf="@+id/iv_decline"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.4"
+        app:layout_constraintWidth_percent="0.55"
+        app:layout_constraintDimensionRatio="1:1">
+
+        <TextView
+            android:id="@+id/tv_scratch_header"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal|top"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:textColor="@android:color/black"
+            android:textSize="15sp"
+            android:textStyle="bold"
+            android:maxLines="2"
+            android:ellipsize="end"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"/>
+
+        <TextView
+            android:id="@+id/tv_scratch_footer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:maxLines="1"
+            android:ellipsize="end"
+            android:textColor="@android:color/black"
+            android:textSize="17sp"
+            android:textStyle="bold"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:layout_marginBottom="8dp"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"/>
+
+        <View
+            android:id="@+id/view_inner_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"/>
+
+        <ImageView
+            android:id="@+id/iv_scratch_inner"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            app:layout_constraintWidth_percent="0.25"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toTopOf="@+id/tv_scratch_inner"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintDimensionRatio="1:1"
+            app:layout_constraintVertical_bias="0.3"
+            app:layout_constraintVertical_chainStyle="packed" />
+
+        <TextView
+            android:id="@+id/tv_scratch_inner"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:textSize="16sp"
+            android:ellipsize="end"
+            android:maxLines="3"
+            android:gravity="center"
+            android:layout_marginStart="8dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="4dp"
+            app:layout_constraintTop_toBottomOf="@+id/iv_scratch_inner"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            android:textColor="@android:color/white" />
+
+        <com.clevertap.android.directcall.custom.DCScratchCard
+            android:id="@+id/scratch_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <androidx.constraintlayout.widget.Group
+            android:id="@+id/scratch_outer_layer"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:constraint_referenced_ids="tv_scratch_header, tv_scratch_footer"/>
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <ImageView
+        android:id="@+id/iv_decline"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginEnd="24dp"
+        android:src="@drawable/ct_call_decline"
+        app:layout_constraintVertical_bias="0.85"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/iv_accept"/>
+
+    <ImageView
+        android:id="@+id/iv_accept"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginStart="24dp"
+        android:src="@drawable/ct_call_receive"
+        app:layout_constraintVertical_bias="0.85"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/iv_decline"
+        app:layout_constraintEnd_toEndOf="parent"/>
+
+    <TextView
+        android:id="@+id/tv_poweredBy"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/poweredBy"
+        android:textSize="12sp"
+        android:textColor="@android:color/white"
+        android:layout_marginBottom="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

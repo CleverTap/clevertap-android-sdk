@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="PinViewTheme">
+        <attr name="pinViewStyle" format="reference" />
+    </declare-styleable>
+
+    <declare-styleable name="DCPinView">
+        <attr name="itemCount" format="integer" />
+        <attr name="itemWidth" format="dimension" />
+        <attr name="itemHeight" format="dimension" />
+        <attr name="itemRadius" format="dimension" />
+        <attr name="itemSpacing" format="dimension" />
+        <attr name="lineWidth" format="dimension" />
+        <attr name="lineColor" format="reference|color" />
+        <attr name="viewType" format="enum">
+            <enum name="rectangle" value="0" />
+            <enum name="line" value="1" />
+            <enum name="none" value="2" />
+        </attr>
+        <attr name="android:cursorVisible" />
+        <attr name="cursorWidth" format="dimension" />
+        <attr name="cursorColor" format="reference|color" />
+        <attr name="android:itemBackground" />
+        <attr name="hideLineWhenFilled" format="boolean" />
+    </declare-styleable>
+
+
+    <declare-styleable name="DCScratchCard">
+        <attr
+            name="scratchDrawable"
+            format="reference|color" />
+        <attr
+            name="scratchWidth"
+            format="dimension" />
+    </declare-styleable>
+</resources>

@@ -1,0 +1,90 @@
+apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
+
+def packageName = 'com.clevertap.android'
+def libraryVersionName = '4.0.5'
+
+// Add sources as an artifact
+task sourceJar(type: Jar) {
+    from android.sourceSets.main.java.srcDirs
+    classifier "source"
+}
+
+android {
+
+    compileSdkVersion 31
+    defaultConfig {
+        minSdkVersion 21
+        targetSdkVersion 31
+        versionCode 2
+        versionName libraryVersionName
+        multiDexEnabled true
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    libraryVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "androidsdk-${variant.name}-${libraryVersionName}.aar"
+        }
+    }
+    buildTypes {
+        release {
+            buildConfigField("long", "VERSION_CODE", "${defaultConfig.versionCode}")
+            buildConfigField("String","VERSION_NAME","\"${defaultConfig.versionName}\"")
+
+            minifyEnabled true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            buildConfigField("long", "VERSION_CODE", "${defaultConfig.versionCode}")
+            buildConfigField("String","VERSION_NAME","\"${defaultConfig.versionName}\"")
+
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+publishing {
+    publications {
+        aar(MavenPublication) {
+            groupId = packageName
+            version = libraryVersionName
+            artifactId = /*project.getName()*/ "androidsdk"
+
+            // It will tell maven to prepare the generated "*.aar" file for publishing
+            artifact("$buildDir/outputs/aar/${/*project.getName()*/ artifactId}-release-${libraryVersionName}.aar")
+
+            pom.withXml {
+                def dependencies = asNode().appendNode('dependencies')
+                configurations.getByName("releaseCompileClasspath").getResolvedConfiguration().getFirstLevelModuleDependencies().each {
+                    def dependency = dependencies.appendNode('dependency')
+                    dependency.appendNode('groupId', it.moduleGroup)
+                    dependency.appendNode('artifactId', it.moduleName)
+                    dependency.appendNode('version', it.moduleVersion)
+                }
+            }
+        }
+    }
+}
+
+dependencies {
+    compileOnly fileTree(dir: 'libs', include: ['*.aar'])
+    implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
+    implementation('io.socket:socket.io-client:1.0.0') {
+        exclude group: 'org.json', module: 'json'
+    }
+    implementation 'com.github.bumptech.glide:glide:4.12.0'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
+
+    //implementation 'com.clevertap.android:clevertap-android-sdk:4.3.1'
+
+}
