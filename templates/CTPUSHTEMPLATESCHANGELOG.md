@@ -1,7 +1,8 @@
 ## CleverTap Push Templates SDK CHANGE LOG
 
-### Version 1.0.1 (February xx, 2022)
-* Bug fixes
+### Version 1.0.1 (March 1, 2022)
+* Improved image handling for Basic, AutoCarousel, ManualCarousel templates.
+* Allows either or both  `pt_timer_threshold` and `pt_timer_end` for Timer template.
 
 ### Version 1.0.0 (December 20, 2021)
 * Stable release! 🎉
