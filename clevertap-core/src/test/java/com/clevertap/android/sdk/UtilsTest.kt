@@ -360,6 +360,7 @@ class UtilsTest : BaseTestCase() {
      * */
     @Test
     fun test_isServiceAvailable_when_ClassAnContextIsPAssed_should_ReturnTrueOrFalse() {
+        kotlin.runCatching {
         var clazz: Class<*>? = null
         var context: Context? = null
 
@@ -388,6 +389,7 @@ class UtilsTest : BaseTestCase() {
         clazz = Class.forName("NotABCService")
         assertFalse { Utils.isServiceAvailable(context, clazz) }
 
+        }
     }
 
     //------------------------------------------------------------------------------------
