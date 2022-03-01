@@ -232,7 +232,7 @@ class TemplateRenderer : INotificationRenderer {
                         basicTemplateBundle
                     )
                 }
-            }, (delay!! - 100).toLong())
+            }, (delay - 100).toLong())
         }
     }
 

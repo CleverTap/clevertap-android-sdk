@@ -25,6 +25,7 @@ import android.os.Bundle;
 import android.service.notification.StatusBarNotification;
 import android.text.TextUtils;
 import android.text.format.DateUtils;
+import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 import androidx.annotation.RequiresApi;
@@ -518,6 +519,9 @@ public class Utils {
         }
         long currentts = System.currentTimeMillis();
         int diff = (int) (Long.parseLong(val) - (currentts / 1000));
+        if (val.equals("-1")){
+            return Integer.MIN_VALUE;
+        }//For empty check in timer_end
         return diff;
     }
 

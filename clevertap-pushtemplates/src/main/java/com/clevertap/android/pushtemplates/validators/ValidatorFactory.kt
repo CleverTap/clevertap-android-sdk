@@ -1,6 +1,5 @@
 package com.clevertap.android.pushtemplates.validators
 
-import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.pushtemplates.TemplateType
 import com.clevertap.android.pushtemplates.TemplateType.*
@@ -27,12 +26,22 @@ const val PT_INPUT_FEEDBACK = "PT_INPUT_FEEDBACK"
 const val PT_ACTIONS = "PT_ACTIONS"
 
 fun Iterable<Checker<out Any>>.and(): Boolean {
-    var and: Boolean = true
+    var and = true
     for (element in this) {
         and =
             element.check() && and // checking first will allow us to execute all checks(for printing errors) instead of short circuiting
     }
     return and
+}
+
+fun Iterable<Checker<out Any>>.or(): Boolean {
+    var or = false
+    for (element in this) {
+        or =
+            element.check() || or
+        if (or) break
+    }
+    return or
 }
 
 internal class ValidatorFactory {
@@ -46,46 +55,26 @@ internal class ValidatorFactory {
         ): Validator? {
             keys = createKeysMap(templateRenderer)
 
-
-            if (templateType == BASIC){
-                return BasicTemplateValidator(ContentValidator(keys))
-            }else if (templateType == AUTO_CAROUSEL || templateType == MANUAL_CAROUSEL){
-                return CarouselTemplateValidator(
+            return when (templateType) {
+                BASIC -> BasicTemplateValidator(ContentValidator(keys))
+                AUTO_CAROUSEL, MANUAL_CAROUSEL -> CarouselTemplateValidator(
                     BasicTemplateValidator(
                         ContentValidator(
                             keys
                         )
                     )
                 )
-            }else if (templateType == RATING){
-                return RatingTemplateValidator(BasicTemplateValidator(ContentValidator(keys)))
-            }else if (templateType == FIVE_ICONS){
-                return FiveIconsTemplateValidator(BackgroundValidator(keys))
-            }else if (templateType == PRODUCT_DISPLAY){
-                return ProductDisplayTemplateValidator(
+                RATING -> RatingTemplateValidator(BasicTemplateValidator(ContentValidator(keys)))
+                FIVE_ICONS -> FiveIconsTemplateValidator(BackgroundValidator(keys))
+                PRODUCT_DISPLAY -> ProductDisplayTemplateValidator(
                     BasicTemplateValidator(
                         ContentValidator(keys)
                     )
                 )
-            }else if (templateType == ZERO_BEZEL){
-                return ZeroBezelTemplateValidator(ContentValidator(keys))
-            }else if (templateType == TIMER){
-                return when {
-                    templateRenderer.pt_timer_threshold != -1 -> {
-                        TimerTemplateValidator(BasicTemplateValidator(ContentValidator(keys)))
-                    }
-                    templateRenderer.pt_timer_end < System.currentTimeMillis() -> {
-                        TimerEndTemplateValidator(BasicTemplateValidator(ContentValidator(keys)))
-                    }
-                    else -> {
-                        PTLog.debug("Not rendering notification Timer threshold or Timer end value is required")
-                        null
-                    }
-                }
-            }else if (templateType == INPUT_BOX){
-                return InputBoxTemplateValidator(ContentValidator(keys))
-            }else{
-                return null
+                ZERO_BEZEL -> ZeroBezelTemplateValidator(ContentValidator(keys))
+                TIMER -> TimerTemplateValidator(BasicTemplateValidator(ContentValidator(keys)))
+                INPUT_BOX -> InputBoxTemplateValidator(ContentValidator(keys))
+                else -> null
             }
         }
 
@@ -177,7 +166,7 @@ internal class ValidatorFactory {
                 IntSizeChecker(
                     templateRenderer.pt_timer_end,
                     -1,
-                    "Timer end time not defined"
+                    "Not rendering notification Timer End value lesser than threshold (10 seconds) from current time"
                 )
             //----------INPUT BOX----------------
             hashMap[PT_INPUT_FEEDBACK] =
