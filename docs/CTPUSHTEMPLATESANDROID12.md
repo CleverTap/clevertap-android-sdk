@@ -6,7 +6,7 @@ Basic Template is the basic push notification received on apps.
 
 (Expanded and unexpanded example)
 
-![Basic with color](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/BasicAndroid12.gif)
+<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/BasicAndroid12.gif" alt="Basic" width="450" height="800"/>
 
 
 ## Auto Carousel Template
@@ -15,7 +15,7 @@ Auto carousel is an automatic revolving carousel push notification.
 
 (Expanded and unexpanded example)
 
-![Auto Carousel](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/AutocarouselAndroid12.gif)
+<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/AutocarouselAndroid12.gif" alt="Auto-Carousel" width="450" height="800"/>
 
 
 ## Manual Carousel Template
@@ -24,7 +24,7 @@ This is the manual version of the carousel. The user can navigate to the next im
 
 (Expanded and unexpanded example)
 
-![Manual Carousel](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/ManualAndroid12.gif)
+<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/ManualAndroid12.gif" alt="Manual-Carousel" width="450" height="800"/>
 
 If only one image can be downloaded, this template falls back to the Basic Template
 
@@ -34,13 +34,13 @@ The manual carousel has an extra variant called `filmstrip`. This can be used by
 
 (Expanded and unexpanded example)
 
-![Manual Carousel](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/FilmstripAndroid12.gif)
+<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/FilmstripAndroid12.gif" alt="Filmstrip-Carousel" width="450" height="800"/>
 
 ## Rating Template
 
 Rating template lets your users give you feedback, this feedback is captured in the event "Rating Submitted" with in the property `wzrk_c2a`.<br/>(Expanded and unexpanded example)<br/>
 
-![Rating](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/RatingAndroid12.gif)
+<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/RatingAndroid12.gif" alt="RatingAndroid12" width="450" height="800"/>
 
 ## Product Catalog Template
 
@@ -50,11 +50,11 @@ Product catalog template lets you show case different images of a product (or a 
 
 (Expanded and unexpanded example)
 
-![Product Display](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/ProductDisplayAndroid12.gif)
+<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/ProductDisplayAndroid12.gif" alt="ProductDisplayAndroid12" width="450" height="800"/>
 
 ### Linear View
 
-![Product Linear Display](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/ProdDisplayLinearAndroid12.gif)
+<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/ProdDisplayLinearAndroid12.gif" alt="ProdDisplayLinearAndroid12" width="450" height="800"/>
 
 ## Five Icons Template
 
@@ -62,7 +62,7 @@ Five icons template is a sticky push notification with no text, just 5 icons and
 
 If at least 3 icons are not retrieved, the library doesn't render any notification. The bifurcation of each CTA is captured in the event Notification Clicked with in the property `wzrk_c2a`.
 
-![Five Icons](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/FiveIconAndroid12.gif)
+<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/FiveIconAndroid12.gif" alt="FiveIconAndroid12" width="450" height="800"/>
 
 ## Timer Template
 
@@ -70,7 +70,7 @@ This template features a live countdown timer. You can even choose to show diffe
 
 Timer notification is only supported for Android N (7) and above. For OS versions below N, the library falls back to the Basic Template.
 
-![Timer](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/TimerAndroid12.gif)
+<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/TimerAndroid12.gif" alt="TimerAndroid12" width="450" height="800"/>
 
 ## Zero Bezel Template
 
@@ -78,7 +78,7 @@ The Zero Bezel template ensures that the background image covers the entire avai
 
 The library will fallback to the Basic Template if the image can't be downloaded.
 
-![Zero Bezel](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/ZeroBezelAndroid12.gif)
+<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/ZeroBezelAndroid12.gif" alt="ZeroBezelAndroid12" width="450" height="800"/>
 
 ## Input Box Template
 
@@ -90,22 +90,22 @@ The CTA variant of the Input Box Template use action buttons on the notification
 
 To set the CTAs use the Advanced Options when setting up the campaign on the dashboard.
 
-![Input_Box_CTAs](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/InputctaBasicDismissAndroid12.gif)
+<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/InputctaBasicDismissAndroid12.gif" alt="InputctaBasicDismissAndroid12" width="450" height="800"/>
 
 ### CTAs with Remind Later option
 
 This variant of the Input Box Template is particularly useful if the user wants to be reminded of the notification after sometime. Clicking on the remind later button raises an event to the user profiles, with a custom user property p2 whose value is a future time stamp. You can have a campaign running on the dashboard that will send a reminder notification at the timestamp in the event property.
 
-![Input_Box_CTA_Remind](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/InputctasRemindAndroid12.gif)
+<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/InputctasRemindAndroid12.gif" alt="InputctasRemindAndroid12" width="450" height="800"/>
 
 ### Reply as an Event
 
 This variant raises an event capturing the user's input as an event property. The app is not opened after the user sends the reply.
 
-![Input_Box_CTA_No_Open](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/InputctasNoOpenAndroid12.gif)
+<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/InputctasNoOpenAndroid12.gif" alt="InputctasNoOpenAndroid12" width="450" height="800"/>
 
 ### Reply as an Intent
 
 This variant passes the reply to the app as an Intent. The app can then process the reply and take appropriate actions.
 
-![Input_Box_CTA_With_Open](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/InputctaWithOpenAndroid12.gif)
+<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/InputctaWithOpenAndroid12.gif" alt="InputctaWithOpenAndroid12" width="450" height="800"/>
