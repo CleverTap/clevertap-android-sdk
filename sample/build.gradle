@@ -60,6 +60,7 @@ dependencies {
     //implementation 'com.clevertap.android:clevertap-xiaomi-sdk:1.1.0'
     implementation project(':clevertap-hms')
     implementation project(':clevertap-pushtemplates')
+    implementation "com.clevertap.android:push-templates:1.0.1"
     // For Huawei Push use
     //implementation 'com.clevertap.android:clevertap-hms-sdk:1.1.0'
     //implementation 'com.huawei.hms:push:6.1.0.300'
