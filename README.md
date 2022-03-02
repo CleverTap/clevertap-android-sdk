@@ -46,7 +46,7 @@ Add the Firebase Messaging library and Android Support Library v4 as dependencie
      dependencies {      
          implementation "com.clevertap.android:clevertap-android-sdk:4.4.0"
          implementation "androidx.core:core:1.3.0"
-         implementation "com.google.firebase:firebase-messaging:22.0.0"
+         implementation "com.google.firebase:firebase-messaging:21.0.0"
          implementation "com.google.android.gms:play-services-ads:19.4.0" // Required only if you enable Google ADID collection in the SDK (turned off by default).
          implementation "com.android.installreferrer:installreferrer:2.2" // Mandatory for v3.6.4 and above
      }
