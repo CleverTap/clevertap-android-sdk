@@ -496,12 +496,12 @@ Manual Carousel | 3:2 (Android 11 & 12) and 4:3 (Below Android 11) | .JPG
 Manual Carousel-FilmStrip| 1:1 | .JPG
 Rating | 4:3 | .JPG
 Five Icon | 1:1 | .JPG or .PNG
-Zero Bezel | 4:3 or 2:1 | .JPG
+Zero Bezel | 4:3 or 3:2 or 2:1 | .JPG
 Timer | 3:2 (Android 11 & 12) and 4:3 (Below Android 11) | .JPG
 Input Box | 4:3 or 2:1 | .JPG
 Product Catalog | 1:1 | .JPG
 
-* For Auto and Manual Carousel the image dimensions should not exceed more than 850x425 for Android 11 and Android 12 devices and with 2:1 image aspect ratio
+* For Auto and Manual Carousel the image dimensions should not exceed more than 840x560 for Android 11 and Android 12 devices and with 3:2 image aspect ratio
 * For Product Catalog image aspect ratio should be 1:1 and image size should be less than 80kb for Android 11 and Android 12 devices
 * For Zero Bezel it's recommended that if your images have any text it should be present in the middle of the image.
 
