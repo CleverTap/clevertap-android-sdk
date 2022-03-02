@@ -518,6 +518,9 @@ public class Utils {
         }
         long currentts = System.currentTimeMillis();
         int diff = (int) (Long.parseLong(val) - (currentts / 1000));
+        if (val.equals("-1")){
+            return Integer.MIN_VALUE;
+        }//For empty check in timer_end
         return diff;
     }
 

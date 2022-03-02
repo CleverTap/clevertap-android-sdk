@@ -136,11 +136,15 @@ class TemplateRenderer : INotificationRenderer {
             TemplateType.TIMER -> if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                 if (ValidatorFactory.getValidator(TemplateType.TIMER, this)?.validate() == true) {
                     val timerEnd = getTimerEnd()
-                    timerRunner(context, extras, notificationId, timerEnd)
-                    return TimerStyle(this, extras).builderFromStyle(context, extras, notificationId, nb)
-                        .setTimeoutAfter(
-                            timerEnd!!.toLong()
-                        )
+                    if (timerEnd != null) {
+                        timerRunner(context, extras, notificationId, timerEnd)
+                        return TimerStyle(this, extras).builderFromStyle(
+                            context,
+                            extras,
+                            notificationId,
+                            nb
+                        ).setTimeoutAfter(timerEnd.toLong())
+                    }
                 }
             } else {
                 PTLog.debug("Push Templates SDK supports Timer Notifications only on or above Android Nougat, reverting to basic template")
@@ -200,34 +204,36 @@ class TemplateRenderer : INotificationRenderer {
             pt_msg = pt_msg_alt
         }
 
-        handler.postDelayed({
-            if (Utils.isNotificationInTray(
-                    context,
-                    notificationId
-                ) && ValidatorFactory.getValidator(TemplateType.BASIC, this)?.validate() == true
-            ) {
-                val applicationContext = context.applicationContext
-                val basicTemplateBundle = extras.clone() as Bundle
-                basicTemplateBundle.putString(Constants.WZRK_PUSH_ID, null) // skip dupe check
-                basicTemplateBundle.putString(PTConstants.PT_ID, "pt_basic") // set to basic
-                // force random id generation
-                basicTemplateBundle.putString(PTConstants.PT_COLLAPSE_KEY, null)
-                basicTemplateBundle.putString(Constants.WZRK_COLLAPSE, null)
-                basicTemplateBundle.remove(Constants.PT_NOTIF_ID)
-                val templateRenderer: INotificationRenderer =
-                    TemplateRenderer(applicationContext, basicTemplateBundle)
-                val cleverTapAPI = CleverTapAPI
-                    .getGlobalInstance(
+        if (delay != null) {
+            handler.postDelayed({
+                if (Utils.isNotificationInTray(
+                        context,
+                        notificationId
+                    ) && ValidatorFactory.getValidator(TemplateType.BASIC, this)?.validate() == true
+                ) {
+                    val applicationContext = context.applicationContext
+                    val basicTemplateBundle = extras.clone() as Bundle
+                    basicTemplateBundle.putString(Constants.WZRK_PUSH_ID, null) // skip dupe check
+                    basicTemplateBundle.putString(PTConstants.PT_ID, "pt_basic") // set to basic
+                    // force random id generation
+                    basicTemplateBundle.putString(PTConstants.PT_COLLAPSE_KEY, null)
+                    basicTemplateBundle.putString(Constants.WZRK_COLLAPSE, null)
+                    basicTemplateBundle.remove(Constants.PT_NOTIF_ID)
+                    val templateRenderer: INotificationRenderer =
+                        TemplateRenderer(applicationContext, basicTemplateBundle)
+                    val cleverTapAPI = CleverTapAPI
+                        .getGlobalInstance(
+                            applicationContext,
+                            PushNotificationUtil.getAccountIdFromNotificationBundle(basicTemplateBundle)
+                        )
+                    cleverTapAPI?.renderPushNotification(
+                        templateRenderer,
                         applicationContext,
-                        PushNotificationUtil.getAccountIdFromNotificationBundle(basicTemplateBundle)
+                        basicTemplateBundle
                     )
-                cleverTapAPI?.renderPushNotification(
-                    templateRenderer,
-                    applicationContext,
-                    basicTemplateBundle
-                )
-            }
-        }, (delay!! - 100).toLong())
+                }
+            }, (delay - 100).toLong())
+        }
     }
 
     override fun setSmallIcon(smallIcon: Int, context: Context) {

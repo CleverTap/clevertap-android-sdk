@@ -20,7 +20,7 @@ CleverTap Push Templates SDK helps you engage with your users using fancy push n
 1. Add the dependencies to the `build.gradle`
 
 ```groovy
-implementation "com.clevertap.android:push-templates:1.0.0"
+implementation "com.clevertap.android:push-templates:1.0.1"
 implementation "com.clevertap.android:clevertap-android-sdk:4.4.0" // 4.4.0 and above
 ```
 
@@ -94,15 +94,15 @@ While creating a Push Notification campaign on CleverTap, just follow the steps 
 
 1. On the "WHAT" section pass the desired values in the "title" and "message" fields (NOTE: We prioritise title and message provided in the key-value pair - as shown in step 2, over these fields)
 
-![Basic](https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/basic.png)
+![Basic](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/basic.png)
 
 2. Click on "Advanced" and then click on "Add pair" to add the [Template Keys](#template-keys)
 
-![KVs](https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/kv.png)
+![KVs](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/kv.png)
 
 3. You can also add the above keys into one JSON object and use the `pt_json` key to fill in the values
 
-![KVs in JSON](https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/json.png)
+![KVs in JSON](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/json.png)
 
 4. Send a test push and schedule!
 
@@ -116,7 +116,7 @@ Basic Template is the basic push notification received on apps.
 
 (Expanded and unexpanded example)
 
-![Basic with color](https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/basic%20color.png)
+![Basic with color](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/basic%20color.png)
 
 
 ## Auto Carousel Template
@@ -125,7 +125,7 @@ Auto carousel is an automatic revolving carousel push notification.
 
 (Expanded and unexpanded example)
 
-<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/autocarouselv0.0.3.gif" alt="Auto-Carousel" width="450" height="800"/>
+<img src="https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/autocarouselv0.0.3.gif" alt="Auto-Carousel" width="450" height="800"/>
 
 
 ## Manual Carousel Template
@@ -134,7 +134,7 @@ This is the manual version of the carousel. The user can navigate to the next im
 
 (Expanded and unexpanded example)
 
-<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/manual.gif" alt="Manual" width="450" height="800"/>
+<img src="https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/manual.gif" alt="Manual" width="450" height="800"/>
 
 If only one image can be downloaded, this template falls back to the Basic Template
 
@@ -149,13 +149,13 @@ pt_manual_carousel_type | Optional | `filmstrip`
 
 (Expanded and unexpanded example)
 
-<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/filmstrip.gif" alt="Filmstrip" width="450" height="800"/>
+<img src="https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/filmstrip.gif" alt="Filmstrip" width="450" height="800"/>
 
 ## Rating Template
 
 Rating template lets your users give you feedback, this feedback is captured in the event "Rating Submitted" with in the property `wzrk_c2a`.<br/>(Expanded and unexpanded example)<br/>
 
-![Rating](https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/rating.gif)
+![Rating](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/rating.gif)
 
 ## Product Catalog Template
 
@@ -165,7 +165,7 @@ Product catalog template lets you show case different images of a product (or a 
 
 (Expanded and unexpanded example)
 
-![Product Display](https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/productdisplay.gif)
+![Product Display](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/productdisplay.gif)
 
 ### Linear View
 
@@ -175,7 +175,7 @@ Template Key | Required | Value
 ---:|:---:|:---
 pt_product_display_linear | Optional | `true`
 
-![Product Display](https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/proddisplaylinear.gif)
+![Product Display](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/proddisplaylinear.gif)
 
 
 ## Five Icons Template
@@ -184,7 +184,7 @@ Five icons template is a sticky push notification with no text, just 5 icons and
 
 If at least 3 icons are not retrieved, the library doesn't render any notification. The bifurcation of each CTA is captured in the event Notification Clicked with in the property `wzrk_c2a`.
 
-<img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/fiveicon.png" width="412" height="100">
+<img src="https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/fiveicon.png" width="412" height="100">
 
 ## Timer Template
 
@@ -192,7 +192,7 @@ This template features a live countdown timer. You can even choose to show diffe
 
 Timer notification is only supported for Android N (7) and above. For OS versions below N, the library falls back to the Basic Template.
 
-![Timer](https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/timer.gif)
+![Timer](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/timer.gif)
 
 ## Zero Bezel Template
 
@@ -200,7 +200,7 @@ The Zero Bezel template ensures that the background image covers the entire avai
 
 The library will fallback to the Basic Template if the image can't be downloaded.
 
-![Zero Bezel](https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/zerobezel.gif)
+![Zero Bezel](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/zerobezel.gif)
 
 ## Input Box Template
 
@@ -212,7 +212,7 @@ The CTA variant of the Input Box Template use action buttons on the notification
 
 To set the CTAs use the Advanced Options when setting up the campaign on the dashboard.
 
-![Input_Box_CTAs](https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/inputctabasicdismiss.gif)
+![Input_Box_CTAs](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/inputctabasicdismiss.gif)
 
 Template Key | Required | Value
 ---:|:---:|:---
@@ -231,7 +231,7 @@ pt_event_property_<property_name_1> | Optional | for e.g. `<property_value>`,
 pt_event_property_<property_name_2> | Required | future epoch timestamp. For e.g., `$D_1592503813`
 pt_dismiss_on_click | Optional | Dismisses the notification without opening the app
 
-![Input_Box_CTA_Remind](https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/inputCtaRemind.gif)
+![Input_Box_CTA_Remind](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/inputCtaRemind.gif)
 
 ### Reply as an Event
 
@@ -247,7 +247,7 @@ pt_event_name | Required | for e.g. `Searched`,
 pt_event_property_<property_name_1> | Optional | for e.g. `<property_value>`,
 pt_event_property_<property_name_2> | Required to capture input | fixed value - `pt_input_reply`
 
-![Input_Box_CTA_No_Open](https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/inputCtaNoOpen.gif)
+![Input_Box_CTA_No_Open](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/inputCtaNoOpen.gif)
 
 ### Reply as an Intent
 
@@ -263,7 +263,7 @@ pt_input_auto_open | Required | fixed value - `true`
 
 <br/> To capture the input, the app can get the `pt_input_reply` key from the Intent extras.
 
-![Input_Box_CTA_With_Open](https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/inputCtaWithOpen.gif)
+![Input_Box_CTA_With_Open](https://github.com/CleverTap/clevertap-android-sdk/tree/master/static/inputCtaWithOpen.gif)
 
 # Template Keys
 
@@ -421,8 +421,8 @@ pt_big_img | Optional | Image
 pt_big_img_alt | Optional | Image to show when timer expires
 pt_bg | Required | Background Color in HEX
 pt_chrono_title_clr | Optional | Color for timer text in HEX
-pt_timer_threshold | Required | Timer duration in seconds (minimum 10)
-pt_timer_end | Required | Epoch Timestamp to countdown to (for example, $D_1595871380 or 1595871380). Not needed if pt_timer_threshold is specified.
+pt_timer_threshold | Required | Timer duration in seconds (minimum 10). Will be given higher priority. 
+pt_timer_end | Optional | Epoch Timestamp to countdown to (for example, $D_1595871380 or 1595871380). Not needed if pt_timer_threshold is specified.
 pt_title_clr | Optional | Title Color in HEX
 pt_msg_clr | Optional | Message Color in HEX
 pt_small_icon_clr | Optional | Small Icon Color in HEX
@@ -490,18 +490,20 @@ pt_json | Optional | Above keys in JSON format
 
 Template | Aspect Ratios | File Type
   ---:|:---:|:--- 
-Basic | 4:3 or 2:1 | .JPG
-Auto Carousel | 2:1 (Android 11 & 12) and 4:3 (Below Android 11) | .JPG
-Manual Carousel | 2:1 (Android 11 & 12) and 4:3 (Below Android 11) | .JPG
-Rating | 4:3 (Android 11 & 12) and 2:1 (Below Android 11) | .JPG
+Basic | 4:3 or 3:2 or 2:1 | .JPG
+Auto Carousel | 3:2 (Android 11 & 12) and 4:3 (Below Android 11) | .JPG
+Manual Carousel | 3:2 (Android 11 & 12) and 4:3 (Below Android 11) | .JPG
+Manual Carousel-FilmStrip| 1:1 | .JPG
+Rating | 4:3 | .JPG
 Five Icon | 1:1 | .JPG or .PNG
-Zero Bezel | 4:3 or 2:1 | .JPG
-Timer | 4:3 or 2:1 | .JPG
+Zero Bezel | 4:3 or 3:2 or 2:1 | .JPG
+Timer | 3:2 (Android 11 & 12) and 4:3 (Below Android 11) | .JPG
 Input Box | 4:3 or 2:1 | .JPG
 Product Catalog | 1:1 | .JPG
 
-* For Auto and Manual Carousel the image dimensions should not exceed more than 850x425 for Android 11 and Android 12 devices and with 2:1 image aspect ratio
+* For Auto and Manual Carousel the image dimensions should not exceed more than 840x560 for Android 11 and Android 12 devices and with 3:2 image aspect ratio
 * For Product Catalog image aspect ratio should be 1:1 and image size should be less than 80kb for Android 11 and Android 12 devices
+* For Zero Bezel it's recommended that if your images have any text it should be present in the middle of the image.
 
 ## Android 12 Trampoline restrictions
 
