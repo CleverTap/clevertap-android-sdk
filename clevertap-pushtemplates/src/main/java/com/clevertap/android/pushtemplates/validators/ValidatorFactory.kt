@@ -26,12 +26,22 @@ const val PT_INPUT_FEEDBACK = "PT_INPUT_FEEDBACK"
 const val PT_ACTIONS = "PT_ACTIONS"
 
 fun Iterable<Checker<out Any>>.and(): Boolean {
-    var and: Boolean = true
+    var and = true
     for (element in this) {
         and =
             element.check() && and // checking first will allow us to execute all checks(for printing errors) instead of short circuiting
     }
     return and
+}
+
+fun Iterable<Checker<out Any>>.or(): Boolean {
+    var or = false
+    for (element in this) {
+        or =
+            element.check() || or
+        if (or) break
+    }
+    return or
 }
 
 internal class ValidatorFactory {
@@ -68,7 +78,7 @@ internal class ValidatorFactory {
             }
         }
 
-        fun createKeysMap(templateRenderer: TemplateRenderer): Map<String, Checker<out Any>> {
+        private fun createKeysMap(templateRenderer: TemplateRenderer): Map<String, Checker<out Any>> {
             val hashMap = HashMap<String, Checker<out Any>>()
             //----------BASIC-------------
             hashMap[PT_TITLE] =
@@ -150,13 +160,13 @@ internal class ValidatorFactory {
                 IntSizeChecker(
                     templateRenderer.pt_timer_threshold,
                     -1,
-                    "Timer Threshold or End time not defined"
+                    "Timer threshold not defined"
                 )
             hashMap[PT_TIMER_END] =
                 IntSizeChecker(
                     templateRenderer.pt_timer_end,
                     -1,
-                    "Timer Threshold or End time not defined"
+                    "Not rendering notification Timer End value lesser than threshold (10 seconds) from current time"
                 )
             //----------INPUT BOX----------------
             hashMap[PT_INPUT_FEEDBACK] =
