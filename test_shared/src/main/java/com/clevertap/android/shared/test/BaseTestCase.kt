@@ -1,5 +1,6 @@
 package com.clevertap.android.shared.test
 
+import android.content.Context
 import android.os.Build.VERSION_CODES
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.clevertap.android.sdk.CleverTapAPI
@@ -31,6 +32,7 @@ abstract class BaseTestCase {
     protected lateinit var cleverTapAPI: CleverTapAPI
     protected lateinit var cleverTapInstanceConfig: CleverTapInstanceConfig
     protected lateinit var activityController: ActivityController<TestActivity>
+    protected lateinit var appCtx:Context
 
     @Before
     open fun setUp() {
@@ -39,6 +41,7 @@ abstract class BaseTestCase {
         cleverTapAPI = Mockito.mock(CleverTapAPI::class.java)
         cleverTapInstanceConfig = CleverTapInstanceConfig.createInstance(application, Constant.ACC_ID, Constant.ACC_TOKEN)
         activityController = Robolectric.buildActivity(TestActivity::class.java)
+        appCtx = application.applicationContext
 
     }
 }
