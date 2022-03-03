@@ -7,7 +7,7 @@ import android.app.Activity
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import android.content.pm.ActivityInfo
+import android.content.IntentFilter
 import android.content.pm.PackageInfo
 import android.content.pm.ServiceInfo
 import android.graphics.Bitmap
@@ -15,18 +15,23 @@ import android.graphics.BitmapFactory
 import android.graphics.drawable.Drawable
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
+import android.os.Build
 import android.os.Bundle
 import android.telephony.TelephonyManager
 import com.clevertap.android.shared.test.BaseTestCase
-import com.clevertap.android.shared.test.TestActivity
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import org.robolectric.RuntimeEnvironment
 import org.robolectric.Shadows
 import org.robolectric.shadows.*
 import kotlin.test.*
+import org.robolectric.util.ReflectionHelpers
+
+
+
 
 
 @RunWith(RobolectricTestRunner::class)
@@ -96,22 +101,22 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun test_convertJSONArrayOfJSONObjectsToArrayListOfHashMaps_when_JsonArrayIsPassed_should_ReturnList() {
-        val jsonArray = JSONArray().also { it.put("""{"key1":"hi"}""") }
+        val jsonArray = JSONArray("""[{"key1":"hi"}]""")
         val list = Utils.convertJSONArrayOfJSONObjectsToArrayListOfHashMaps(jsonArray)
         if (BuildConfig.DEBUG) println("list is $list")
-        //todo why the empty list?
-        assertNotNull(list)
+        //todo why the empty list? =>  DONE (write test case for empty list without JSONException, with JSONException)
+        assertEquals(1,list.size)
     }
 
     //------------------------------------------------------------------------------------
 
     @Test
     fun test_convertJSONArrayToArrayList_when_JsonArrayIsPassed_should_ReturnList() {
-        val jsonArray = JSONArray().also { it.put(10) }
+        val jsonArray = JSONArray().also { it.put("10") }
         val list = Utils.convertJSONArrayToArrayList(jsonArray)
         if (BuildConfig.DEBUG) println("list is $list")
-        //todo why the empty list?
-        assertNotNull(list)
+        //todo why the empty list? => DONE (write test case for empty list without JSONException, with JSONException)
+        assertEquals(1,list.size)
     }
 
     //------------------------------------------------------------------------------------
@@ -123,6 +128,7 @@ class UtilsTest : BaseTestCase() {
         if (BuildConfig.DEBUG) println("map is $map")
         assertNotNull(map)
         assertEquals(24, map["some_number"])
+        // TODO :write test case for empty map without JSONException, with JSONException
 
     }
 
@@ -134,6 +140,7 @@ class UtilsTest : BaseTestCase() {
         val stringConverted = Utils.convertToTitleCase(string)
         if (BuildConfig.DEBUG) println(stringConverted)
         assertEquals("This Is A String", stringConverted)
+        // TODO write remaining cases
     }
 
     //------------------------------------------------------------------------------------
@@ -144,7 +151,7 @@ class UtilsTest : BaseTestCase() {
         val bitmap = Utils.drawableToBitmap(drawable)
         printBitmapInfo(bitmap)
         assertNotNull(bitmap)
-
+        // TODO write remaining cases
     }
 
     //------------------------------------------------------------------------------------
@@ -194,8 +201,10 @@ class UtilsTest : BaseTestCase() {
         assertNotNull(networkType2)
         assertEquals("Unavailable", networkType2)
 
+        val connectivityManager = RuntimeEnvironment.application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        val shadowConnectivityManager = Shadows.shadowOf(connectivityManager)
         // if context is not null and  user is connected to wifi, we will get wifi as return
-        ShadowConnectivityManager().also {
+        shadowConnectivityManager.also {
             val network = ShadowNetworkInfo.newInstance(
                 NetworkInfo.DetailedState.CONNECTED,
                 ConnectivityManager.TYPE_WIFI,
@@ -206,11 +215,11 @@ class UtilsTest : BaseTestCase() {
             it.setNetworkInfo(ConnectivityManager.TYPE_WIFI, network)
         }
         val networkType: String? = Utils.getCurrentNetworkType(application.applicationContext)
-        if (BuildConfig.DEBUG) println("Network type is $networkType")//todo should be wifi, but didn't worked @piyush
+        if (BuildConfig.DEBUG) println("Network type is $networkType")//todo should be wifi, but didn't worked @piyush => DONE write remaining cases
         assertEquals("WiFi", networkType)
 
         println("manually calling  test_getDeviceNetworkType_when_FunctionIsCalledWithContext_should_ReturnNetworkType")
-        test_getDeviceNetworkType_when_FunctionIsCalledWithContext_should_ReturnNetworkType()
+        test_getDeviceNetworkType_when_FunctionIsCalledWithContextAndOSVersionIsM_should_ReturnNetworkType()
 
 
     }
@@ -218,15 +227,33 @@ class UtilsTest : BaseTestCase() {
     //------------------------------------------------------------------------------------
 
     @Test
-    fun test_getDeviceNetworkType_when_FunctionIsCalledWithContext_should_ReturnNetworkType() {
+    fun test_getDeviceNetworkType_when_FunctionIsCalledWithContextAndOSVersionIsM_should_ReturnNetworkType() {
         shadowApplication.grantPermissions(Manifest.permission.READ_PHONE_STATE)
+        val telephonyManager = RuntimeEnvironment.application.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", Build.VERSION_CODES.M)
 
-        ShadowTelephonyManager().also {
-            it.setNetworkType(TelephonyManager.NETWORK_TYPE_CDMA)
-        }
-        val receivedType = Utils.getDeviceNetworkType(application)//todo should be 2g, but didn't worked // @piyush
+        // Fall back to network type
+        val shadowTelephonyManager = Shadows.shadowOf(telephonyManager)
+
+        shadowTelephonyManager.setNetworkType(TelephonyManager.NETWORK_TYPE_NR)
+        val receivedType = Utils.getDeviceNetworkType(application)//todo should be 5g, but didn't worked // @piyush => DONE write remaining cases
         println("receovedType = $receivedType")
-        assertEquals("2G", receivedType)
+        assertEquals("5G", receivedType)
+    }
+
+    @Test
+    fun test_getDeviceNetworkType_when_FunctionIsCalledWithContextAndOSVersionIsS_should_ReturnNetworkType() {
+        shadowApplication.grantPermissions(Manifest.permission.READ_PHONE_STATE)
+        val telephonyManager = RuntimeEnvironment.application.getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        ReflectionHelpers.setStaticField(Build.VERSION::class.java, "SDK_INT", Build.VERSION_CODES.S)
+
+        // Fall back to network type
+        val shadowTelephonyManager = Shadows.shadowOf(telephonyManager)
+
+        shadowTelephonyManager.setDataNetworkType(TelephonyManager.NETWORK_TYPE_NR)
+        val receivedType = Utils.getDeviceNetworkType(application)//todo should be 5g, but didn't worked // @piyush => DONE write remaining cases
+        println("receovedType = $receivedType")
+        assertEquals("5G", receivedType)
     }
 
     //------------------------------------------------------------------------------------
@@ -439,29 +466,41 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun test_setPackageNameFromResolveInfoList_when_ContextAndIntentIsPassed_should_SetPackageNameAccordingly() {
-        //todo package manager not setting activity info // @piyush
+        //todo package manager not setting activity info // @piyush => DONE write remaining cases
 
         ShadowPackageManager().let {spm ->
-            val activityInfo = ActivityInfo().also {
+            /*val activityInfo = ActivityInfo().also {
                 it.packageName = "com.test.package"
                 it.name = "com.test.package.MyActivity"
+
             }
-            spm.addOrUpdateActivity(activityInfo)
+            PackageInfo().let {
+                it.activities = arrayOf(activityInfo)
+                it.packageName = "com.test.package"
+                spm.installPackage(it)
+
+            }*/
+            spm.addActivityIfNotPresent(ComponentName(application.packageName,"${application.packageName}.MyActivity"))
+            spm.addIntentFilterForActivity(ComponentName(application.packageName,"${application.packageName}.MyActivity"),
+                IntentFilter(Intent.ACTION_VIEW)
+            )
         }
 
 
         val intent = Intent()
-        intent.setClassName("com.test.package","MyActivity")
-        intent.`package` ="com.test.package"
-        //intent.component = ComponentName("com.test.package","com.test.package.MyActivity")
+        /*intent.setClassName("com.test.package","MyActivity")
+        intent.`package` ="com.test.package"*/
+        intent.action = Intent.ACTION_VIEW
+        intent.component = ComponentName(application.packageName,"${application.packageName}.MyActivity")
         //println(intent.component)
 
-        println("intent package = ${intent.getPackage()}")
-        println("intent :$intent")
+        //println("intent package = ${intent.getPackage()}")
+        //println("intent :$intent")
         Utils.setPackageNameFromResolveInfoList(application.applicationContext, intent)  // <-----
-        println("intent package = ${intent.getPackage()}")
+        //println("intent package = ${intent.getPackage()}")
 
-        assertNotNull(intent.getPackage())
+        //assertNotNull(intent.getPackage())
+        assertEquals(application.packageName,intent.`package`)
 
         //todo what else to test? // @piyush
 
