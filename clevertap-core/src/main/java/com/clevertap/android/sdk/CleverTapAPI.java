@@ -1165,6 +1165,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         coreState.getBaseEventQueueManager().flush();
     }
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public String getAccountRegion() {
+        return coreState.getConfig().getAccountRegion();
+    }
+
     public String getAccountId() {
         return coreState.getConfig().getAccountId();
     }
