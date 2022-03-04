@@ -226,9 +226,6 @@ public final class Utils {
 
             return getDeviceNetworkType(context);
 
-//            else{
-//                return getDeviceNetworkType(context);
-//            }
 
         } catch (Throwable t) {
             return "Unavailable";
