@@ -201,3 +201,4 @@ afterEvaluate {
 signing {
     sign publishing.publications
 }
+apply from: "${project.rootDir}/gradle-scripts/code_analysers.gradle"

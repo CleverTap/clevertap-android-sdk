@@ -116,17 +116,17 @@ class CTProductConfigControllerTest : BaseTestCase() {
         verify(productConfigSettings).reset(any(FileUtils::class.java))
     }
 
-    @Test
-    fun test_Reset() {
-        mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
-            mProductConfigController.reset()
-            Assert.assertEquals(mProductConfigController.defaultConfigs.size, 0)
-            Assert.assertEquals(mProductConfigController.activatedConfigs.size, 0)
-            verify(productConfigSettings).initDefaults()
-            verify(fileUtils).deleteDirectory(mProductConfigController.productConfigDirName)
-        }
-    }
+//    @Test
+//    fun test_Reset() {
+//        mockStatic(CTExecutorFactory::class.java).use {
+//            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
+//            mProductConfigController.reset()
+//            Assert.assertEquals(mProductConfigController.defaultConfigs.size, 0)
+//            Assert.assertEquals(mProductConfigController.activatedConfigs.size, 0)
+//            verify(productConfigSettings).initDefaults()
+//            verify(fileUtils).deleteDirectory(mProductConfigController.productConfigDirName)
+//        }
+//    }
 
     @Test
     fun test_setArpValue() {

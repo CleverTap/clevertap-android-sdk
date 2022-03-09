@@ -1,4 +1,4 @@
-apply plugin: 'org.sonarqube'
+//apply plugin: 'org.sonarqube'
 
 // Top-level build file where you can add configuration options common to all sub-projects/modules.
 buildscript {
@@ -19,8 +19,10 @@ buildscript {
         classpath Libs.org_jacoco_core
         classpath Libs.kotlin_gradle_plugin
         classpath Libs.sonarqube_gradle_plugin
+        classpath("io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.20.0-RC1")
     }
 }
+apply plugin: 'org.sonarqube'
 
 allprojects {
     repositories {
