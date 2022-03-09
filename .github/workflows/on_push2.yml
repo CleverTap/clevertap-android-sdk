@@ -1,4 +1,4 @@
-name: task - validate commit on b SDK-974
+name: task validate commit on b SDK-974
 on:
   push:
     branches: [ task/cicd/SDK-974 ]
