@@ -32,12 +32,12 @@ jobs:
         with:
           name: lint_results
           path:  |
-            clevertap-core/build/reports/lint-results-debug.html
-            clevertap-hms/build/reports/lint-results-debug.html
-            clevertap-xps/build/reports/lint-results-debug.html
-            clevertap-geofence/build/reports/lint-results-debug.html
-            clevertap-pushTemplates/build/reports/lint-results-debug.html
-            sample/build/reports/lint-results-debug.html
+            clevertap-core/build/reports/lint-results.html
+            clevertap-hms/build/reports/lint-results.html
+            clevertap-xps/build/reports/lint-results.html
+            clevertap-geofence/build/reports/lint-results.html
+            clevertap-pushTemplates/build/reports/lint-results.html
+            sample/build/reports/lint-results.html
 
       - name: CodeAnalysis via  detekt
         if: always()
