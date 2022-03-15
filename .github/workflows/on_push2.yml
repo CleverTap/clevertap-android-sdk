@@ -4,7 +4,7 @@ on:
     branches: [ task/cicd/SDK-974 ]
 
 jobs:
-  lint-staticChecks-test-build:
+  lint-static_checks-test-build:
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -23,7 +23,7 @@ jobs:
 
       - name: Check lint
         if: always()
-        run: ./gradlew :clevertap-core:lint
+        run: ./gradlew lint
         # todo run for all . need to remove the dependency on google services
 
       - name: Upload Lint results
@@ -41,8 +41,7 @@ jobs:
 
       - name: CodeAnalysis via  detekt
         if: always()
-        run: ./gradlew :clevertap-core:detekt
-        # todo run for all . need to remove the dependency on google services
+        run: ./gradlew detekt
 
 
       - name: Upload detekt results
@@ -60,7 +59,7 @@ jobs:
 
       - name: CodeAnalysis via  checkstyle
         if: always()
-        run: ./gradlew :clevertap-core:checkstyle
+        run: ./gradlew checkstyle
 
       - name: Upload checkstyle results
         if: always()
@@ -77,7 +76,7 @@ jobs:
 
       - name: Run Unit Tests
         if: always()
-        run: ./gradlew :clevertap-core:test
+        run: ./gradlew test
 
       - name: Upload Unit tests
         if: always()
@@ -95,17 +94,17 @@ jobs:
 
       - name: Generate AAR files
         if: always()
-        run: ./gradlew :clevertap-core:assembleDebug
+        run: ./gradlew assembleDebug
 
-      - name: Upload AAR files
+      - name: Upload AAR and apk files
         if: always()
         uses: actions/upload-artifact@v2
         with:
-          name: unit-tests-results.zip
+          name: aars_and_apks.zip
           path: |
             clevertap-core/build/outputs/aar
             clevertap-hms/build/outputs/aar
             clevertap-xps/build/outputs/aar
             clevertap-geofence/build/outputs/aar
             clevertap-pushTemplates/build/outputs/aar
-            sample/build/outputs/aar
+            sample/build/outputs
