@@ -4,7 +4,8 @@ on:
     branches: [ task/** ]
 
   pull_request_target:
-    branches: [ develop ]
+    branches: [ task/cicd/SDK-974 ]
+    #branches: [ develop ]
 
 jobs:
   lint-static_checks-test-build:
