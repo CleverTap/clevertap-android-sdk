@@ -1,4 +1,4 @@
-## CHANGE LOG
+## CHANGE LOG.
 
 ### December 20, 2021
 
