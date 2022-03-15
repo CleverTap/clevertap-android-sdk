@@ -1,14 +1,12 @@
 name: validate PR raised from task/** branched to develop branch
 on:
   pull_request:
-    branches: [ task/** ]
-
-  pull_request_target:
-    branches: [ task/cicd/SDK-974 ]
     #branches: [ develop ]
+    branches: [ task/cicd/SDK-974 ]
 
 jobs:
   lint-static_checks-test-build:
+    if: startsWith(github.head_ref, 'task/')
     runs-on: ubuntu-latest
     permissions:
       contents: read
