@@ -47,11 +47,11 @@ jobs:
         with:
           name: detekt_results
           path:  |
-            clevertap-core/build/reports/detekt/detekt.html
-            clevertap-hms/build/reports/detekt/detekt.html
-            clevertap-xps/build/reports/detekt/detekt.html
-            clevertap-geofence/build/reports/detekt/detekt.html
-            clevertap-pushTemplates/build/reports/detekt/detekt.html
+            clevertap-core/build/reports/detekt
+            clevertap-hms/build/reports/detekt
+            clevertap-xps/build/reports/detekt
+            clevertap-geofence/build/reports/detekt
+            clevertap-pushTemplates/build/reports/detekt
 
       - name: CodeAnalysis via  checkstyle
         if: always()
@@ -63,11 +63,11 @@ jobs:
         with:
           name: checkstyle_results
           path: |
-            clevertap-core/build/reports/checkstyle/checkstyle.html
-            clevertap-hms/build/reports/checkstyle/checkstyle.html
-            clevertap-xps/build/reports/checkstyle/checkstyle.html
-            clevertap-geofence/build/reports/checkstyle/checkstyle.html
-            clevertap-pushTemplates/build/reports/checkstyle/checkstyle.html
+            clevertap-core/build/reports/checkstyle
+            clevertap-hms/build/reports/checkstyle
+            clevertap-xps/build/reports/checkstyle
+            clevertap-geofence/build/reports/checkstyle
+            clevertap-pushTemplates/build/reports/checkstyle
 
       - name: Run Unit Tests And Code Coverage
         if: always()
@@ -86,10 +86,13 @@ jobs:
             clevertap-hms/build/reports/jacoco
 
             clevertap-xps/build/reports/tests/testDebugUnitTest
-            clevertap-hms/build/reports/jacoco
+            clevertap-xps/build/reports/jacoco
 
             clevertap-geofence/build/reports/tests/testDebugUnitTest
+            clevertap-geofence/build/reports/jacoco
+
             clevertap-pushTemplates/build/reports/tests/testDebugUnitTest
+            clevertap-pushTemplates/build/reports/jacoco
 
 
       - name: Generate AAR files
