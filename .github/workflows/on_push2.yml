@@ -23,8 +23,7 @@ jobs:
 
       - name: Check lint
         if: always()
-        run: ./gradlew lint
-        # todo run for all . need to remove the dependency on google services
+        run: ./gradlew :clevertap-core:lint :clevertap-geofence:lint  :clevertap-hms:lint  :clevertap-pushTemplates:lint :clevertap-xps:lint
 
       - name: Upload Lint results
         if: always()
@@ -37,12 +36,10 @@ jobs:
             clevertap-xps/build/reports/lint-results.html
             clevertap-geofence/build/reports/lint-results.html
             clevertap-pushTemplates/build/reports/lint-results.html
-            sample/build/reports/lint-results.html
 
       - name: CodeAnalysis via  detekt
         if: always()
-        run: ./gradlew detekt
-
+        run: ./gradlew :clevertap-core:detekt :clevertap-geofence:detekt  :clevertap-hms:detekt  :clevertap-pushTemplates:detekt :clevertap-xps:detekt
 
       - name: Upload detekt results
         if: always()
@@ -55,11 +52,10 @@ jobs:
             clevertap-xps/build/reports/detekt/detekt.html
             clevertap-geofence/build/reports/detekt/detekt.html
             clevertap-pushTemplates/build/reports/detekt/detekt.html
-            sample/build/reports/detekt/detekt.html
 
       - name: CodeAnalysis via  checkstyle
         if: always()
-        run: ./gradlew checkstyle
+        run: ./gradlew :clevertap-core:checkstyle :clevertap-geofence:checkstyle  :clevertap-hms:checkstyle  :clevertap-pushTemplates:checkstyle :clevertap-xps:checkstyle
 
       - name: Upload checkstyle results
         if: always()
@@ -72,11 +68,10 @@ jobs:
             clevertap-xps/build/reports/checkstyle/checkstyle.html
             clevertap-geofence/build/reports/checkstyle/checkstyle.html
             clevertap-pushTemplates/build/reports/checkstyle/checkstyle.html
-            sample/build/reports/checkstyle/checkstyle.html
 
       - name: Run Unit Tests
         if: always()
-        run: ./gradlew test
+        run: ./gradlew :clevertap-core:test :clevertap-geofence:test  :clevertap-hms:test  :clevertap-pushTemplates:test :clevertap-xps:test
 
       - name: Upload Unit tests
         if: always()
@@ -89,12 +84,11 @@ jobs:
             clevertap-xps/build/reports/tests/testDebugUnitTest
             clevertap-geofence/build/reports/tests/testDebugUnitTest
             clevertap-pushTemplates/build/reports/tests/testDebugUnitTest
-            sample/build/reports/tests/testDebugUnitTest
 
 
       - name: Generate AAR files
         if: always()
-        run: ./gradlew assembleDebug
+        run: ./gradlew :clevertap-core:assembleDebug :clevertap-geofence:assembleDebug  :clevertap-hms:assembleDebug  :clevertap-pushTemplates:assembleDebug :clevertap-xps:assembleDebug
 
       - name: Upload AAR and apk files
         if: always()
@@ -107,4 +101,3 @@ jobs:
             clevertap-xps/build/outputs/aar
             clevertap-geofence/build/outputs/aar
             clevertap-pushTemplates/build/outputs/aar
-            sample/build/outputs
