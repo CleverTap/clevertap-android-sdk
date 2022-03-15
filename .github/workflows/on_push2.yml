@@ -69,9 +69,9 @@ jobs:
             clevertap-geofence/build/reports/checkstyle/checkstyle.html
             clevertap-pushTemplates/build/reports/checkstyle/checkstyle.html
 
-      - name: Run Unit Tests
+      - name: Run Unit Tests And Code Coverage
         if: always()
-        run: ./gradlew :clevertap-core:test :clevertap-geofence:test  :clevertap-hms:test  :clevertap-pushTemplates:test :clevertap-xps:test
+        run: ./gradlew :clevertap-core:jacocoTestReportDebug :clevertap-geofence:jacocoTestReportDebug  :clevertap-hms:jacocoTestReportDebug  :clevertap-pushTemplates:jacocoTestReportDebug :clevertap-xps:jacocoTestReportDebug
 
       - name: Upload Unit tests
         if: always()
@@ -80,8 +80,14 @@ jobs:
           name: unit-tests-results.zip
           path: |
             clevertap-core/build/reports/tests/testDebugUnitTest
+            clevertap-core/build/reports/jacoco
+
             clevertap-hms/build/reports/tests/testDebugUnitTest
+            clevertap-hms/build/reports/jacoco
+
             clevertap-xps/build/reports/tests/testDebugUnitTest
+            clevertap-hms/build/reports/jacoco
+
             clevertap-geofence/build/reports/tests/testDebugUnitTest
             clevertap-pushTemplates/build/reports/tests/testDebugUnitTest
 
