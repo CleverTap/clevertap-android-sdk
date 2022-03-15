@@ -6,7 +6,7 @@
 [![Build Status](https://app.bitrise.io/app/09efc6b9404a6341/status.svg?token=TejL3E1NHyTiR5ajHKGJ6Q)](https://app.bitrise.io/app/09efc6b9404a6341)
 [![Download](https://api.bintray.com/packages/clevertap/Maven/CleverTapAndroidSDK/images/download.svg) ](https://bintray.com/clevertap/Maven/CleverTapAndroidSDK/_latestVersion)
 
-## 👋 Introduction
+## 👋 Introduction.
 [(Back to top)](#-table-of-contents)
 
 The CleverTap Android SDK for Mobile Customer Engagement and Analytics solutions
