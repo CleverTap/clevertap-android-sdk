@@ -1,11 +1,11 @@
-name: validate PR raised from task/** branched to develop branch
+name: validate PR raised from develop branched to master branch
 on:
   pull_request:
-    branches: [ develop ]
+    branches: [ master ]
 
 jobs:
   lint-static_checks-test-build:
-    if: startsWith(github.head_ref, 'task/')
+    if: github.head_ref == 'develop'
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -1,11 +1,14 @@
-name: validate PR raised from task/** branched to develop branch
+name: validate master branch after PR is Merged
+
+# using https://stackoverflow.com/a/67833464/7500651
 on:
   pull_request:
-    branches: [ develop ]
+    branches: [master]
+    types: [closed]
 
 jobs:
   lint-static_checks-test-build:
-    if: startsWith(github.head_ref, 'task/')
+    if: ${{ github.event.pull_request.merged }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -111,3 +114,6 @@ jobs:
             clevertap-xps/build/outputs/aar
             clevertap-geofence/build/outputs/aar
             clevertap-pushTemplates/build/outputs/aar
+
+      # todo release tests
+      # todo release to nexus staging
