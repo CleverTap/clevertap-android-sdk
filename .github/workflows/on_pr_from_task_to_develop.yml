@@ -70,9 +70,13 @@ jobs:
             clevertap-geofence/build/reports/checkstyle
             clevertap-pushTemplates/build/reports/checkstyle
 
-      - name: Run Unit Tests And Code Coverage
+      - name: Run Unit Tests And Code Coverage (DEBUG)
         if: always()
         run: ./gradlew :clevertap-core:jacocoTestReportDebug :clevertap-geofence:jacocoTestReportDebug  :clevertap-hms:jacocoTestReportDebug  :clevertap-pushTemplates:jacocoTestReportDebug :clevertap-xps:jacocoTestReportDebug
+
+      - name: Run Unit Tests And Code Coverage (RELEASE)
+        if: always()
+        run: ./gradlew :clevertap-core:jacocoTestReportRelease :clevertap-geofence:jacocoTestReportRelease  :clevertap-hms:jacocoTestReportRelease  :clevertap-pushTemplates:jacocoTestReportRelease :clevertap-xps:jacocoTestReportRelease
 
       - name: Upload Unit tests
         if: always()
@@ -80,19 +84,19 @@ jobs:
         with:
           name: unit-tests-results.zip
           path: |
-            clevertap-core/build/reports/tests/testDebugUnitTest
+            clevertap-core/build/reports/tests
             clevertap-core/build/reports/jacoco
 
-            clevertap-hms/build/reports/tests/testDebugUnitTest
+            clevertap-hms/build/reports/tests
             clevertap-hms/build/reports/jacoco
 
-            clevertap-xps/build/reports/tests/testDebugUnitTest
+            clevertap-xps/build/reports/tests
             clevertap-xps/build/reports/jacoco
 
-            clevertap-geofence/build/reports/tests/testDebugUnitTest
+            clevertap-geofence/build/reports/tests
             clevertap-geofence/build/reports/jacoco
 
-            clevertap-pushTemplates/build/reports/tests/testDebugUnitTest
+            clevertap-pushTemplates/build/reports/tests
             clevertap-pushTemplates/build/reports/jacoco
 
 
@@ -111,3 +115,14 @@ jobs:
             clevertap-xps/build/outputs/aar
             clevertap-geofence/build/outputs/aar
             clevertap-pushTemplates/build/outputs/aar
+
+#      - name: Post to a Slack channel
+#        id: slack
+#        uses: slackapi/slack-github-action@v1.18.0
+#        with:
+#          # Slack channel id, channel name, or user id to post message. See also: https://api.slack.com/methods/chat.postMessage#channels
+#          channel-id: 'CHANNEL_ID'
+#          # For posting a simple plain text message
+#          slack-message: "GitHub build result: ${{ job.status }}\n${{ github.event.pull_request.html_url || github.event.head_commit.url }}"
+#        env:
+#          SLACK_BOT_TOKEN: ${{ secrets.SLACK_BOT_TOKEN }}
