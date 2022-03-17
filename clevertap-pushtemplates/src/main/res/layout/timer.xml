@@ -68,7 +68,7 @@
     <ImageView
         android:id="@+id/big_image"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="196dp"
         android:layout_below="@id/rel_lyt"
         android:layout_alignParentBottom="true"
         android:scaleType="centerCrop" />

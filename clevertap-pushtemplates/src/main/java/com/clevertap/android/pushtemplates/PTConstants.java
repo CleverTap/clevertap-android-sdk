@@ -102,7 +102,7 @@ public class PTConstants {
 
     public static final String PT_TIMER_END = "pt_timer_end";
 
-    public static final String PT_TIMER_SPLIT = "$D_";
+    public static final String PT_TIMER_SPLIT = "\\$D_";
 
     public static final int PT_TIMER_MIN_THRESHOLD = 10;
 
