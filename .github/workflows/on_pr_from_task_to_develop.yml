@@ -14,6 +14,21 @@ jobs:
       packages: write
 
     steps:
+      - name: check if mandatory files are changed
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            md:
+              - 'CHANGELOG.md'
+
+      - name: FAIL if mandatory files are not changed
+        if: ${{ steps.filter.outputs.md == 'false' }}
+        uses: actions/github-script@v3
+        with:
+          script: |
+            core.setFailed('Mandatory markdown files were not changed')
+
       - name: Setup actions.
         uses: actions/checkout@v2
 
@@ -25,7 +40,6 @@ jobs:
           cache: gradle
 
       - name: Check lint
-        if: always()
         run: ./gradlew :clevertap-core:lint :clevertap-geofence:lint  :clevertap-hms:lint  :clevertap-pushTemplates:lint :clevertap-xps:lint
 
       - name: Upload Lint results
@@ -41,7 +55,6 @@ jobs:
             clevertap-pushTemplates/build/reports/lint-results.html
 
       - name: CodeAnalysis via  detekt
-        if: always()
         run: ./gradlew :clevertap-core:detekt :clevertap-geofence:detekt  :clevertap-hms:detekt  :clevertap-pushTemplates:detekt :clevertap-xps:detekt
 
       - name: Upload detekt results
@@ -57,7 +70,6 @@ jobs:
             clevertap-pushTemplates/build/reports/detekt
 
       - name: CodeAnalysis via  checkstyle
-        if: always()
         run: ./gradlew :clevertap-core:checkstyle :clevertap-geofence:checkstyle  :clevertap-hms:checkstyle  :clevertap-pushTemplates:checkstyle :clevertap-xps:checkstyle
 
       - name: Upload checkstyle results
@@ -73,7 +85,6 @@ jobs:
             clevertap-pushTemplates/build/reports/checkstyle
 
       - name: Run Unit Tests And Code Coverage (DEBUG)
-        if: always()
         run: ./gradlew :clevertap-core:jacocoTestReportDebug :clevertap-geofence:jacocoTestReportDebug  :clevertap-hms:jacocoTestReportDebug  :clevertap-pushTemplates:jacocoTestReportDebug :clevertap-xps:jacocoTestReportDebug
 
       - name: Run Unit Tests And Code Coverage (RELEASE)
@@ -103,7 +114,6 @@ jobs:
 
 
       - name: Generate AAR files
-        if: always()
         run: ./gradlew :clevertap-core:assembleDebug :clevertap-geofence:assembleDebug  :clevertap-hms:assembleDebug  :clevertap-pushTemplates:assembleDebug :clevertap-xps:assembleDebug
 
       - name: Upload AAR and apk files
