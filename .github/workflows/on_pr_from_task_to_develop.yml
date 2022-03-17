@@ -1,4 +1,4 @@
-#note : this is the most updated branch
+#note : this is the most up to date action
 name: validate PR raised from task/** branched to develop branch
 on:
   pull_request:
@@ -6,13 +6,16 @@ on:
 
 jobs:
   lint-static_checks-test-build:
+
     if: startsWith(github.head_ref, 'task/')
     runs-on: ubuntu-latest
+
     permissions:
       contents: read
       packages: write
 
     steps:
+
       - name: check if mandatory files are changed
         uses: dorny/paths-filter@v2
         id: filter
@@ -28,7 +31,8 @@ jobs:
           script: |
             core.setFailed('Mandatory markdown files were not changed')
 
-      - name: Setup actions.
+
+      - name: Checkout Code from Source Branch.
         uses: actions/checkout@v2
 
       - name: set up JDK 11
