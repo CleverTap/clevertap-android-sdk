@@ -3,7 +3,6 @@ name: validate PR raised from task/** branched to develop branch
 on:
   pull_request:
     branches: [ develop ]
-    paths: ['/CHANGELOG.md']
 
 jobs:
   lint-static_checks-test-build:
