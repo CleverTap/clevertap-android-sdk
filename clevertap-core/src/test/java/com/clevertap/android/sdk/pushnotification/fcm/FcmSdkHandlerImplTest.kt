@@ -42,15 +42,6 @@ class FcmSdkHandlerImplTest : BaseTestCase() {
     }
 
     @Test
-    fun isAvailable_Valid_Manifest_Returns_True() {
-        mockStatic(PackageUtils::class.java).use {
-            `when`(PackageUtils.isGooglePlayServicesAvailable(application)).thenReturn(true)
-            `when`(manifestInfo.fcmSenderId).thenReturn(FCM_SENDER_ID)
-            Assert.assertTrue(handler.isAvailable)
-        }
-    }
-
-    @Test
     fun isAvailable_InValid_Manifest_Valid_Config_Json_Returns_True() {
         mockStatic(PackageUtils::class.java).use {
             `when`(PackageUtils.isGooglePlayServicesAvailable(application)).thenReturn(true)
@@ -118,12 +109,6 @@ class FcmSdkHandlerImplTest : BaseTestCase() {
         handler.fcmSenderID
         verify(manifestInfo, times(1)).fcmSenderId
     }*/
-
-    @Test
-    fun getSenderId_Valid_Manifest() {
-        `when`(manifestInfo.fcmSenderId).thenReturn(FCM_SENDER_ID)
-        Assert.assertEquals(handler.senderId, FCM_SENDER_ID)
-    }
 
     @Test
     fun getSenderId_Invalid_Manifest_Valid_Config_Json() {
