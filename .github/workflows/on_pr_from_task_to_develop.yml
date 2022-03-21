@@ -37,7 +37,7 @@ jobs:
           pattern: '\[[^]]+\]'
           flags: 'gm'
           error: 'Your  commit must contain `[..]` like "[BUGFIX] or [SDK-974]".'
-          checkAllCommitMessages: 'false' # optional: this checks all commits associated with a pull request
+          #checkAllCommitMessages: 'false' # optional: this checks all commits associated with a pull request
           #accessToken: ${{ secrets.GITHUB_TOKEN }} # github access token is only required if checkAllCommitMessages is true
 
           #pattern: '^[^#].{74}'     error: 'The maximum line length of 74 characters is exceeded.'
