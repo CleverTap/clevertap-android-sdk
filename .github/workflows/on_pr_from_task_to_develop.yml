@@ -34,9 +34,9 @@ jobs:
       - name: validate commit format -- Check if HEAD commit message contains [xyz] or FAIL.
         uses: gsactions/commit-message-checker@v1
         with:
-          pattern: '\[[^]]+\] .+$'
+          pattern: '\[[^]]+\]'
           flags: 'gm'
-          error: 'Your first line has to contain a commit type like "[BUGFIX] or [SDK-974]".'
+          error: 'Your  commit must contain `[..]` like "[BUGFIX] or [SDK-974]".'
           checkAllCommitMessages: 'false' # optional: this checks all commits associated with a pull request
           #accessToken: ${{ secrets.GITHUB_TOKEN }} # github access token is only required if checkAllCommitMessages is true
 
