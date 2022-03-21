@@ -31,6 +31,20 @@ jobs:
             core.setFailed('Mandatory markdown files were not changed')
 
 
+      - name: validate commit format -- Check if HEAD commit message contains [xyz] or FAIL
+        uses: gsactions/commit-message-checker@v1
+        with:
+          pattern: '\[[^]]+\] .+$'
+          flags: 'gm'
+          error: 'Your first line has to contain a commit type like "[BUGFIX] or [SDK-974]".'
+          checkAllCommitMessages: 'false' # optional: this checks all commits associated with a pull request
+          #accessToken: ${{ secrets.GITHUB_TOKEN }} # github access token is only required if checkAllCommitMessages is true
+
+          #pattern: '^[^#].{74}'     error: 'The maximum line length of 74 characters is exceeded.'
+          #excludeDescription: 'true' # optional: this excludes the description body of a pull request
+          #excludeTitle: 'true' # optional: this excludes the title of a pull request
+          #pattern: '^.+(Resolves|Fixes): \#[0-9]+$' #  Check for Resolves / Fixes
+
       - name: Checkout Code from Source Branch.
         uses: actions/checkout@v2
 
