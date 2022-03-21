@@ -9,7 +9,6 @@ jobs:
 
     if: startsWith(github.head_ref, 'task/')
     runs-on: ubuntu-latest
-    name:job_name
     permissions:
       contents: read
       packages: write
