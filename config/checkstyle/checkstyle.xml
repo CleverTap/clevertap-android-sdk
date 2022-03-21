@@ -34,7 +34,7 @@
 
         <module name="MemberName">
             <!-- Private members must use mHungarianNotation -->
-            <property name="format" value="m[A-Z][A-Za-z]*$"/>
+            <property name="format" value="[a-z][A-Za-z0-9]*$"/>
             <property name="applyToPrivate" value="true" />
             <property name="applyToPublic" value="false" />
             <property name="applyToPackage" value="false" />
@@ -42,10 +42,10 @@
         </module>
 
         <module name="ClassTypeParameterName">
-            <property name="format" value="^[A-Z][A-Za-z]*$"/>
+            <property name="format" value="^[A-Z][A-Za-z0-9]*$"/>
         </module>
         <module name="InterfaceTypeParameterName">
-            <property name="format" value="^[A-Z][A-Za-z]*$"/>
+            <property name="format" value="^[A-Z][A-Za-z0-9]*$"/>
         </module>
         <module name="LocalVariableName"/>
 

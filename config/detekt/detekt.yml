@@ -1,5 +1,5 @@
 build:
-  # total number of issues allowed exceeding which the gradle action will fail
+  # total number of issues allowed exceeding which the gradle action will fail. # note: this is overriden by plugin configuration in gradle file via `ignoreFailures = true` key
   maxIssues: 0
 
   excludeCorrectable: false
