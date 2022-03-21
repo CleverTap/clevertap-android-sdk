@@ -31,6 +31,7 @@ jobs:
             core.setFailed('Mandatory markdown files were not changed')
 
 
+      # AS per discussion here : https://github.com/GsActions/commit-message-checker/discussions/61, this feature might not be supported by this plugin. so we will have to github setup secrets for this to work. we will also need to check on the info we get in github context
       - name: validate commit format -- Check if HEAD commit message contains [xyz] or FAIL
         uses: gsactions/commit-message-checker@v1
         with:
