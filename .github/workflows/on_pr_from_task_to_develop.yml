@@ -34,22 +34,20 @@ jobs:
 
       - name: Checkout Code from Source Branch.
         uses: actions/checkout@v2
-
-      # AS per discussion here : https://github.com/GsActions/commit-message-checker/discussions/61, this feature might not be supported by this plugin. so we will have to github setup secrets for this to work. we will also need to check on the info we get in github context
-      - name: validate commit format -- Check if HEAD commit message contains [xyz] or FAIL
-        uses: gsactions/commit-message-checker@v1
-        with:
-          pattern: '\[[^]]+\]'
-          #pattern: '^[^#].{74}'     error: 'The maximum line length of 74 characters is exceeded.'
-          #pattern: '^.+(Resolves|Fixes): \#[0-9]+$' #  Check for Resolves / Fixes
-
-          error: 'Your  commit must contain `[..]` like "[BUGFIX] or [SDK-974]".'
-          #checkAllCommitMessages: 'false' # optional: this checks all commits associated with a pull request
-          #accessToken: ${{ secrets.GITHUB_TOKEN }} # github access token is only required if checkAllCommitMessages is true
-          #flags: 'gm'
-
-          excludeDescription: 'true'                # optional: this excludes the description body of a pull request
-          excludeTitle: 'true'                      # optional: this excludes the title of a pull request
+#
+#      - name: validate commit format -- Check if HEAD commit message contains [xyz] or FAIL
+#        uses: gsactions/commit-message-checker@v1
+#        with:
+#          excludeDescription: 'true'                # optional: this excludes the description body of a pull request
+#          excludeTitle: 'true'                      # optional: this excludes the title of a pull request
+#          pattern: '^\[[^]]+\].+'                   # this pattern will take all commits as input and check weather the head commit have one  [..] block
+#          error: 'Your head commit must contain `[..]` like "[BUGFIX] or [SDK-974]".'
+#          checkAllCommitMessages: 'true' # optional: this checks all commits associated with a pull request
+#          accessToken: ${{ secrets.GITHUB_TOKEN }} # github access token is only required if checkAllCommitMessages is true
+#          #pattern: '^[^#].{74}'     error: 'The maximum line length of 74 characters is exceeded.'
+#          #pattern: '^.+(Resolves|Fixes): \#[0-9]+$' #  Check for Resolves / Fixes
+#          #flags: 'gm' # more discussion here : https://github.com/GsActions/commit-message-checker/discussions/61,
+#
 
 
       - name: set up JDK 11
