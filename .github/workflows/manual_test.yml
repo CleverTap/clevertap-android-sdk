@@ -1,4 +1,4 @@
-name: manually validate any branch
+name: manually validate any branch # note: this will only work after being pushed to master
 on:
   workflow_dispatch:
     inputs:
