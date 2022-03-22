@@ -22,8 +22,7 @@ jobs:
         id: filter
         with:
           filters: |
-            md:
-              - 'CHANGELOG.md'
+            md: ['CHANGELOG.md']
 
       - name: FAIL if mandatory files are not changed
         if: ${{ steps.filter.outputs.md == 'false' }}
