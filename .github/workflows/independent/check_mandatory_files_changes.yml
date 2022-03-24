@@ -11,6 +11,7 @@ jobs:
       packages: write
 
     steps:
+      - uses: actions/checkout@v2
 
       - name: Setup Path Filter task and Execute
         uses: dorny/paths-filter@v2

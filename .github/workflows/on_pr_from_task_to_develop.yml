@@ -16,7 +16,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - uses: ./.github/workflows/independent/check_mandatory_files_changes.yml
-      - uses: ./.github/workflows/independent/lint_codechecks_test_build.yml.yml
+      - uses: ./.github/workflows/independent/lint_codechecks_test_build.yml
 
 
 #
