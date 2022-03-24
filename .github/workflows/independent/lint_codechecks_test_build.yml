@@ -6,7 +6,12 @@ on:
 jobs:
   lint-static_checks-test-build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
     steps:
+      - name: Checkout Code from Source Branch. #mandatory step, must be run before mandatory file check
+        uses: actions/checkout@v2
 
       - name: set up JDK 11
         uses: actions/setup-java@v2
