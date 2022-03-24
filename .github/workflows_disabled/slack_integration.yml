@@ -1,0 +1,66 @@
+name: Send or Update message to slack for  Action Status
+on:
+  pull_request:
+    branches: [ develop ]
+
+
+jobs:
+  slack_notify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Setup actions.
+        uses: actions/checkout@v2
+
+      - name: Send custom JSON data to Slack workflow
+        id: slack
+        if: always()
+        uses: slackapi/slack-github-action@v1.18.0
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }} #todo : add a secret in github secrets and setup a bot via https://github.com/slackapi/slack-github-action#technique-3-slack-incoming-webhook
+          SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+        with:
+          payload: |
+            {
+              "attachments": [
+                {
+                  "blocks": [
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "plain_text",
+                        "text": "GitHub Action build results 🚀🚀🚀️ ️",
+                        "emoji": true
+                      }
+                    },
+                    {
+                      "type": "divider"
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "Action ran for following  commit :  <${{ github.event.head_commit.url }}|${{github.event.head_commit.message}}>"
+                      }
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "• Job Status:  '*${{ job.status }}*'"
+                      }
+                    },
+                    {
+                      "type": "section",
+                      "text": {
+                        "type": "mrkdwn",
+                        "text": "• Full Runner URL: '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
