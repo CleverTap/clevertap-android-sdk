@@ -18,7 +18,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: check if mandatory files are changed
-        uses: ./.github/workflows/independent/check_mandatory_files_changes.yml
+        uses: ./.github/workflows/independent/action
 
 
 #
