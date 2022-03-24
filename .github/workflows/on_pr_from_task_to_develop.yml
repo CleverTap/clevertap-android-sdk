@@ -6,13 +6,7 @@ on:
 
 jobs:
   validate_pr:
-
     if: startsWith(github.head_ref, 'task/')
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
     - uses: ./.github/workflows/independent/check_mandatory_files_changes.yml
     - uses: ./.github/workflows/independent/lint_codechecks_test_build.yml
 
