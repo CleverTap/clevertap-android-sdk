@@ -14,12 +14,13 @@ jobs:
       packages: write
 
     steps:
-
-      - name: check if mandatory files are changed
-        uses: ./.github/workflows/independent/check_mandatory_files_changes
-
       - name: Checkout Code from Source Branch.
         uses: actions/checkout@v2
+
+      - name: check if mandatory files are changed
+        uses: ./.github/workflows/independent/check_mandatory_files_changes.yml
+
+
 #
 #      - name: validate commit format -- Check if HEAD commit message contains [xyz] or FAIL
 #        uses: gsactions/commit-message-checker@v1
