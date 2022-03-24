@@ -17,3 +17,22 @@ runs:
         script: |
           core.setFailed('Mandatory markdown files were not changed')
     #todo : set success/failure as output and use slack action to send message . setting success failure: https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions#outputs-for-composite-actions
+
+
+
+#usage
+
+#jobs:
+#  your_job:
+#    runs-on: ubuntu-latest
+#    permissions:
+#      contents: read
+#      packages: write
+#
+#    steps:
+#      - name: Checkout Code from Source Branch. #mandatory step, must be run before  this action
+#        uses: actions/checkout@v2
+#
+#      - name: check if mandatory files are changed
+#        uses: ./.github/workflows/independent/check_mandatory_files_changes
+#
