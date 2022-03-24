@@ -1,0 +1,101 @@
+name: "lint, codechecks, tests and build" # checkout check_mandatory_files_changes/action.yml for usage info
+description: "run lint checks on code, upload their results. run static codechecks(detekt and checkstyle),upload their results. run unit tests, coverage report generators and upload their results. build code and upload their artifacts"
+runs:
+  using: "composite"
+  steps:
+    - name: set up JDK 11
+      uses: actions/setup-java@v2
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        cache: gradle
+
+      - name: Check lint
+        run: ./gradlew :clevertap-core:lint :clevertap-geofence:lint  :clevertap-hms:lint  :clevertap-pushTemplates:lint :clevertap-xps:lint
+
+      - name: Upload Lint results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: lint_results
+          path:  |
+            clevertap-core/build/reports/lint-results.html
+            clevertap-hms/build/reports/lint-results.html
+            clevertap-xps/build/reports/lint-results.html
+            clevertap-geofence/build/reports/lint-results.html
+            clevertap-pushTemplates/build/reports/lint-results.html
+
+      - name: CodeAnalysis via  detekt
+        run: ./gradlew :clevertap-core:detekt :clevertap-geofence:detekt  :clevertap-hms:detekt  :clevertap-pushTemplates:detekt :clevertap-xps:detekt
+      - name: Upload detekt results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: detekt_results
+          path:  |
+            clevertap-core/build/reports/detekt
+            clevertap-hms/build/reports/detekt
+            clevertap-xps/build/reports/detekt
+            clevertap-geofence/build/reports/detekt
+            clevertap-pushTemplates/build/reports/detekt
+
+
+      - name: CodeAnalysis via  checkstyle
+        run: ./gradlew :clevertap-core:checkstyle :clevertap-geofence:checkstyle  :clevertap-hms:checkstyle  :clevertap-pushTemplates:checkstyle :clevertap-xps:checkstyle
+      - name: Upload checkstyle results
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: checkstyle_results
+          path: |
+            clevertap-core/build/reports/checkstyle
+            clevertap-hms/build/reports/checkstyle
+            clevertap-xps/build/reports/checkstyle
+            clevertap-geofence/build/reports/checkstyle
+            clevertap-pushTemplates/build/reports/checkstyle
+
+
+      - name: Run Unit Tests And Code Coverage (DEBUG)
+        run: ./gradlew :clevertap-core:jacocoTestReportDebug :clevertap-geofence:jacocoTestReportDebug  :clevertap-hms:jacocoTestReportDebug  :clevertap-pushTemplates:jacocoTestReportDebug :clevertap-xps:jacocoTestReportDebug
+      - name: Run Unit Tests And Code Coverage (RELEASE)
+        run: ./gradlew :clevertap-core:jacocoTestReportRelease :clevertap-geofence:jacocoTestReportRelease  :clevertap-hms:jacocoTestReportRelease  :clevertap-pushTemplates:jacocoTestReportRelease :clevertap-xps:jacocoTestReportRelease
+      - name: Upload Unit tests
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: unit-tests-results.zip
+          path: |
+            clevertap-core/build/reports/tests
+            clevertap-core/build/reports/jacoco
+
+            clevertap-hms/build/reports/tests
+            clevertap-hms/build/reports/jacoco
+
+            clevertap-xps/build/reports/tests
+            clevertap-xps/build/reports/jacoco
+
+            clevertap-geofence/build/reports/tests
+            clevertap-geofence/build/reports/jacoco
+
+            clevertap-pushTemplates/build/reports/tests
+            clevertap-pushTemplates/build/reports/jacoco
+
+
+
+      - name: Generate AAR files
+        run: ./gradlew :clevertap-core:assembleDebug :clevertap-geofence:assembleDebug  :clevertap-hms:assembleDebug  :clevertap-pushTemplates:assembleDebug :clevertap-xps:assembleDebug
+
+      - name: Upload AAR and apk files
+        if: always()
+        uses: actions/upload-artifact@v2
+        with:
+          name: aars_and_apks.zip
+          path: |
+            clevertap-core/build/outputs/aar
+            clevertap-hms/build/outputs/aar
+            clevertap-xps/build/outputs/aar
+            clevertap-geofence/build/outputs/aar
+            clevertap-pushTemplates/build/outputs/aar
+
+      #todo : set success/failure as output and use slack action to send message . setting success failure: https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions#outputs-for-composite-actions
+

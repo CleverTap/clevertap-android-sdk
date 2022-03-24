@@ -20,6 +20,8 @@ jobs:
       - name: check if mandatory files are changed
         uses: ./.github/workflows/independent/check_mandatory_files_changes
 
+      - name: lint_codechecks_test_build
+        uses: ./.github/workflows/independent/lint_codechecks_test_build
 
 
 #
@@ -35,112 +37,4 @@ jobs:
 #          #pattern: '^[^#].{74}'     error: 'The maximum line length of 74 characters is exceeded.'
 #          #pattern: '^.+(Resolves|Fixes): \#[0-9]+$' #  Check for Resolves / Fixes
 #          #flags: 'gm' # more discussion here : https://github.com/GsActions/commit-message-checker/discussions/61,
-#
-
-
-      - name: set up JDK 11
-        uses: actions/setup-java@v2
-        with:
-          java-version: '11'
-          distribution: 'temurin'
-          cache: gradle
-
-      - name: Check lint
-        run: ./gradlew :clevertap-core:lint :clevertap-geofence:lint  :clevertap-hms:lint  :clevertap-pushTemplates:lint :clevertap-xps:lint
-
-      - name: Upload Lint results
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: lint_results
-          path:  |
-            clevertap-core/build/reports/lint-results.html
-            clevertap-hms/build/reports/lint-results.html
-            clevertap-xps/build/reports/lint-results.html
-            clevertap-geofence/build/reports/lint-results.html
-            clevertap-pushTemplates/build/reports/lint-results.html
-
-      - name: CodeAnalysis via  detekt
-        run: ./gradlew :clevertap-core:detekt :clevertap-geofence:detekt  :clevertap-hms:detekt  :clevertap-pushTemplates:detekt :clevertap-xps:detekt
-
-      - name: Upload detekt results
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: detekt_results
-          path:  |
-            clevertap-core/build/reports/detekt
-            clevertap-hms/build/reports/detekt
-            clevertap-xps/build/reports/detekt
-            clevertap-geofence/build/reports/detekt
-            clevertap-pushTemplates/build/reports/detekt
-
-      - name: CodeAnalysis via  checkstyle
-        run: ./gradlew :clevertap-core:checkstyle :clevertap-geofence:checkstyle  :clevertap-hms:checkstyle  :clevertap-pushTemplates:checkstyle :clevertap-xps:checkstyle
-
-      - name: Upload checkstyle results
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: checkstyle_results
-          path: |
-            clevertap-core/build/reports/checkstyle
-            clevertap-hms/build/reports/checkstyle
-            clevertap-xps/build/reports/checkstyle
-            clevertap-geofence/build/reports/checkstyle
-            clevertap-pushTemplates/build/reports/checkstyle
-
-      - name: Run Unit Tests And Code Coverage (DEBUG)
-        run: ./gradlew :clevertap-core:jacocoTestReportDebug :clevertap-geofence:jacocoTestReportDebug  :clevertap-hms:jacocoTestReportDebug  :clevertap-pushTemplates:jacocoTestReportDebug :clevertap-xps:jacocoTestReportDebug
-
-      - name: Run Unit Tests And Code Coverage (RELEASE)
-        if: always()
-        run: ./gradlew :clevertap-core:jacocoTestReportRelease :clevertap-geofence:jacocoTestReportRelease  :clevertap-hms:jacocoTestReportRelease  :clevertap-pushTemplates:jacocoTestReportRelease :clevertap-xps:jacocoTestReportRelease
-
-      - name: Upload Unit tests
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: unit-tests-results.zip
-          path: |
-            clevertap-core/build/reports/tests
-            clevertap-core/build/reports/jacoco
-
-            clevertap-hms/build/reports/tests
-            clevertap-hms/build/reports/jacoco
-
-            clevertap-xps/build/reports/tests
-            clevertap-xps/build/reports/jacoco
-
-            clevertap-geofence/build/reports/tests
-            clevertap-geofence/build/reports/jacoco
-
-            clevertap-pushTemplates/build/reports/tests
-            clevertap-pushTemplates/build/reports/jacoco
-
-
-      - name: Generate AAR files
-        run: ./gradlew :clevertap-core:assembleDebug :clevertap-geofence:assembleDebug  :clevertap-hms:assembleDebug  :clevertap-pushTemplates:assembleDebug :clevertap-xps:assembleDebug
-
-      - name: Upload AAR and apk files
-        if: always()
-        uses: actions/upload-artifact@v2
-        with:
-          name: aars_and_apks.zip
-          path: |
-            clevertap-core/build/outputs/aar
-            clevertap-hms/build/outputs/aar
-            clevertap-xps/build/outputs/aar
-            clevertap-geofence/build/outputs/aar
-            clevertap-pushTemplates/build/outputs/aar
-
-
-
-# jacoco #1
-# integration with git tags and git releases #2
-# post to slack #3
-#  support Jira integration
-#  support commit message  rules enforcement
-#
-#  badges on readme for code quality, test coverage and build fail/pass
 #
