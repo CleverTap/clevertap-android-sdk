@@ -1,0 +1,23 @@
+runs:
+  using: "composite"
+  steps:
+    - name: Release on Github.
+      shell: bash
+      run:  echo "hello"
+#      uses: "marvinpinto/action-automatic-releases@latest"
+#      with:
+#        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+#        draft: true
+#        prerelease: false
+#        automatic_release_tag: ${{ github.event.inputs.tag_name }}
+#        title: ${{ github.event.inputs.title }}
+#        files: |
+#          dog_network/build/outputs/aar
+
+    - name: Set Output
+      if: always()
+      uses: actions/github-script@v3 #todo pass fail cancelled ke alag alag status
+      shell: bash
+      run: |
+        echo "slack_msg= xyz: 🔜" >> $GITHUB_ENV
+

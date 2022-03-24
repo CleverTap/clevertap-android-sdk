@@ -1,0 +1,16 @@
+runs:
+  using: "composite"
+  steps:
+    - name: Setup JDK 11
+      uses: actions/setup-java@v2
+      with:
+        java-version: '11'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Set Output
+      if: always()
+      uses: actions/github-script@v3 #todo pass fail cancelled ke alag alag status
+      shell : bash
+      run: |
+        echo "slack_msg=Setup JDK 11  : 🔜" >> $GITHUB_ENV

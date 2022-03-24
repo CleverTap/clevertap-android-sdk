@@ -5,23 +5,114 @@ on:
     branches: [ develop ]
 
 jobs:
-  validate_pr:
+  lint-staticChecks-test-build:
     if: startsWith(github.head_ref, 'task/')
-    - uses: ./.github/workflows/independent/check_mandatory_files_changes.yml
-    - uses: ./.github/workflows/independent/lint_codechecks_test_build.yml
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
 
+    steps:
+      - name: Setup actions
+        uses: actions/checkout@v2
 
-#
-#      - name: validate commit format -- Check if HEAD commit message contains [xyz] or FAIL
-#        uses: gsactions/commit-message-checker@v1
+#      - name: Slack Status Notification
+#        if: always()
+#        uses: ./.github/mini_flows/ss1_slack
 #        with:
-#          excludeDescription: 'true'                # optional: this excludes the description body of a pull request
-#          excludeTitle: 'true'                      # optional: this excludes the title of a pull request
-#          pattern: '^\[[^]]+\].+'                   # this pattern will take all commits as input and check weather the head commit have one  [..] block
-#          error: 'Your head commit must contain `[..]` like "[BUGFIX] or [SDK-974]".'
-#          checkAllCommitMessages: 'true' # optional: this checks all commits associated with a pull request
-#          accessToken: ${{ secrets.GITHUB_TOKEN }} # github access token is only required if checkAllCommitMessages is true
-#          #pattern: '^[^#].{74}'     error: 'The maximum line length of 74 characters is exceeded.'
-#          #pattern: '^.+(Resolves|Fixes): \#[0-9]+$' #  Check for Resolves / Fixes
-#          #flags: 'gm' # more discussion here : https://github.com/GsActions/commit-message-checker/discussions/61,
-#
+#          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Commit Rules Enforcement
+        uses: ./.github/mini_flows/ss2_commit_check
+
+      - name: Mandatory File Changes
+        uses: ./.github/mini_flows/s1_mandatory_filechanges
+
+#      - name: Slack Status Notification
+#        if: always()
+#        uses: ./.github/mini_flows/ss1_slack
+#        with:
+#          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Setup JDK 11.
+        uses: ./.github/mini_flows/s2_setup_jdk
+
+#      - name: Slack Status Notification
+#        if: always()
+#        uses: ./.github/mini_flows/ss1_slack
+#        with:
+#          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+
+      - name: Run lint tests and Upload results
+        uses: ./.github/mini_flows/s3_lint
+
+#      - name: Slack Status Notification
+#        if: always()
+#        uses: ./.github/mini_flows/ss1_slack
+#        with:
+#          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+
+      - name: Static Code Check Via detekt
+        uses: ./.github/mini_flows/s4_detekt
+
+#      - name: Slack Status Notification
+#        if: always()
+#        uses: ./.github/mini_flows/ss1_slack
+#        with:
+#          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+
+      - name: Static Code Check Via checkstyle
+        uses: ./.github/mini_flows/s5_checkstyle
+
+#      - name: Slack Status Notification
+#        if: always()
+#        uses: ./.github/mini_flows/ss1_slack
+#        with:
+#          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+
+      - name: Unit Tests and Jacoco Coverage (DEBUG AND RELEASE)
+        uses: ./.github/mini_flows/s6_test_coverage
+
+#      - name: Slack Status Notification
+#        if: always()
+#        uses: ./.github/mini_flows/ss1_slack
+#        with:
+#          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+
+      - name: Build Code
+        uses: ./.github/mini_flows/s7_build
+
+#      - name: Slack Status Notification
+#        if: always()
+#        uses: ./.github/mini_flows/ss1_slack
+#        with:
+#          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+
+      - name: Release to maven central
+        uses: ./.github/mini_flows/s8_maven_release
+
+#      - name: Slack Status Notification
+#        if: always()
+#        uses: ./.github/mini_flows/ss1_slack
+#        with:
+#          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+
+      - name: Relase to github
+        uses: ./.github/mini_flows/s9_git_release
+
+
+      - name: Slack Status Notification
+        if: always()
+        uses: ./.github/mini_flows/ss1_slack
+        with:
+          SLACK_WEBHOOK_URL: ${{ secrets.GITHUB_TOKEN }}
+
+
+
