@@ -17,11 +17,11 @@ jobs:
       - name: Checkout Code from Source Branch. #mandatory step, must be run before mandatory file check
         uses: actions/checkout@v2
 
-      - name: check if mandatory files are changed
-        uses: ./.github/workflows/independent/check_mandatory_files_changes
+#      - name: check if mandatory files are changed
+#        uses: ./.github/workflows/independent/check_mandatory_files_changes
 
       - name: lint_codechecks_test_build
-        uses: ./.github/workflows/independent/lint_codechecks_test_build
+        uses: ./.github/workflows/independent/lint_codechecks_test_build/action.yml
 
 
 #
