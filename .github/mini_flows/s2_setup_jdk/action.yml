@@ -11,4 +11,4 @@ runs:
     - name: Set Output
       if: always()
       shell: bash
-      run: echo "slack_msg=Setup JDK 11 -- 🔜" >> $GITHUB_ENV"
+      run: echo "slack_msg=Setup JDK 11 -- 🔜" >> $GITHUB_ENV
