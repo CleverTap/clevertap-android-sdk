@@ -14,9 +14,3 @@ runs:
       with:
         script: |
           core.setFailed('Mandatory markdown files were not changed')
-
-    - name: Set Output
-      if: always()
-      shell: bash
-      run: echo "slack_msg=mandatory file changes  --🔜" >> $GITHUB_ENV
-

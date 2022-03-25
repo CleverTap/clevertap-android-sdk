@@ -13,8 +13,4 @@ runs:
 #        SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
 #        SONATYPE_STAGING_PROFILE_ID: ${{ secrets.SONATYPE_STAGING_PROFILE_ID }}
 
-    - name: Set Output
-      if: always()
-      shell: bash
-      run: echo "slack_msg= xyz--🔜" >> $GITHUB_ENV
 

@@ -7,8 +7,3 @@ runs:
         java-version: '11'
         distribution: 'temurin'
         cache: gradle
-
-    - name: Set Output
-      if: always()
-      shell: bash
-      run: echo "slack_msg=Setup JDK 11 -- 🔜" >> $GITHUB_ENV

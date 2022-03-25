@@ -1,14 +1,17 @@
+inputs:
+  SLACK_WEBHOOK_URL:
+    required: false  #todo make madatory
+  LAST_RUN_TASK:
+    required: false #todo make madatory
+
 runs:
   using: "composite"
   steps:
     - name: Release on Github.
       shell: bash
-      run:  echo "hello ${{env.slack_msg}}"
+      run:  echo "${{inputs.LAST_RUN_TASK}} - ${{ job.status }}"
 
-#inputs:
-#  SLACK_WEBHOOK_URL:
-#    required: true
-#
+
 #runs:
 #  using: "composite"
 #  steps:

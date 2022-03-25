@@ -14,8 +14,4 @@ runs:
 #        files: |
 #          dog_network/build/outputs/aar
 
-    - name: Set Output
-      if: always()
-      shell: bash
-      run:  echo "slack_msg= xyz--🔜" >> $GITHUB_ENV
 

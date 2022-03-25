@@ -18,7 +18,7 @@ runs:
           clevertap-geofence/build/outputs/aar
           clevertap-pushTemplates/build/outputs/aar
 
-    - name: Set Output
-      if: always()
-      shell: bash
-      run: echo "slack_msg=build code--🔜" >> $GITHUB_ENV
+#    - name: Set Output
+#      if: always()
+#      shell: bash
+#      run: echo "slack_msg=build code--🔜" >> $GITHUB_ENV

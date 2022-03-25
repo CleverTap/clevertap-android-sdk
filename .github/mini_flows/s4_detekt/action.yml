@@ -17,8 +17,3 @@ runs:
           clevertap-geofence/build/reports/detekt
           clevertap-pushTemplates/build/reports/detekt
 
-    - name: Set Output
-      if: always()
-      shell: bash
-      run: echo "slack_msg=detekt--🔜" >> $GITHUB_ENV
-

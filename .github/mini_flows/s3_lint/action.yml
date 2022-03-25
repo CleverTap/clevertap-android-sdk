@@ -16,9 +16,3 @@ runs:
           clevertap-xps/build/reports/lint-results.html
           clevertap-geofence/build/reports/lint-results.html
           clevertap-pushTemplates/build/reports/lint-results.html
-
-    - name: Set Output
-      if: always()
-      shell: bash
-      run: echo "slack_msg=Check lint --🔜" >> $GITHUB_ENV
-
