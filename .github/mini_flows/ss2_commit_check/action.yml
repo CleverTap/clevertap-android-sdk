@@ -1,17 +1,24 @@
 runs:
   using: "composite"
   steps:
-    - name: check commit.
-      run: echo "hello"
+    - name: check commit..
       shell: bash
+      run:  echo "hello ${{env.slack_msg}}"
 
-    - name: Set Output
-      if: always()
-      uses: actions/github-script@v3
-      run: |
-        echo "slack_msg= xyz: 🔜" >> $GITHUB_ENV
-      shell: bash
-
+#runs:
+#  using: "composite"
+#  steps:
+#    - name: check commit.
+#      run: echo "hello"
+#      shell: bash
+#
+#    - name: Set Output
+#      if: always()
+#      uses: actions/github-script@v3
+#      run: |
+#        echo "slack_msg= xyz: 🔜" >> $GITHUB_ENV
+#      shell: bash
+#
 
 #      - name: validate commit format -- Check if HEAD commit message contains [xyz] or FAIL
 #        uses: gsactions/commit-message-checker@v1
