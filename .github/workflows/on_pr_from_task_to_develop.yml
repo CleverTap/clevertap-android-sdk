@@ -16,11 +16,11 @@ jobs:
       - name: Setup actions
         uses: actions/checkout@v2
 
-#      - name: Slack Status Notification
-#        if: always()
-#        uses: ./.github/mini_flows/ss1_slack
-#        with:
-#          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+        #      - name: Slack Status Notification
+        #        if: always()
+        #        uses: ./.github/mini_flows/ss1_slack
+        #        with:
+        #          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
 
       - name: Commit Rules Enforcement
         uses: ./.github/mini_flows/ss2_commit_check
