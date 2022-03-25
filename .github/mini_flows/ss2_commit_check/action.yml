@@ -5,6 +5,11 @@ runs:
       shell: bash
       run:  echo "hello ${{env.slack_msg}}"
 
+    - name: Set Output
+      if: always()
+      shell: bash
+      run: echo "slack_msg= commits check --🔜" >> $GITHUB_ENV
+
 #runs:
 #  using: "composite"
 #  steps:
@@ -16,7 +21,7 @@ runs:
 #      if: always()
 #      uses: actions/github-script@v3
 #      run: |
-#        echo "slack_msg= xyz: 🔜" >> $GITHUB_ENV
+#        echo "slack_msg= xyz--🔜" >> $GITHUB_ENV
 #      shell: bash
 #
 

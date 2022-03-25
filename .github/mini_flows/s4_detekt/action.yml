@@ -21,6 +21,5 @@ runs:
       if: always()
       uses: actions/github-script@v3 #todo pass fail cancelled ke alag alag status
       shell: bash
-      run: |
-        echo "slack_msg=detekt: 🔜" >> $GITHUB_ENV
+      run: echo "slack_msg=detekt--🔜" >> $GITHUB_ENV
 

@@ -18,11 +18,5 @@ runs:
     - name: Set Output
       if: always()
       shell: bash
-      run: |
-        echo "slack_msg=mandatory file changes  : 🔜" >> $GITHUB_ENV
+      run: echo "slack_msg=mandatory file changes  --🔜" >> $GITHUB_ENV
 
-#  - name: Use the value
-#    id: step_two
-#    shell: bash
-#    run: |
-#      echo "${{ env.action_state }}" # This will output 'yellow'
