@@ -1,8 +1,16 @@
+# Step to call:
+#- name: Slack Status Notification
+#    if: always()
+#    uses: ./.github/mini_flows/ss1_slack
+#    with:
+#      SLACK_WEBHOOK_URL: ${{ secrets.GITHUB_TOKEN }}
+#      LAST_RUN_TASK: "Check out code"
+
 inputs:
   SLACK_WEBHOOK_URL:
-    required: false  #todo make madatory
+    required: false
   LAST_RUN_TASK:
-    required: false #todo make madatory
+    required: false
 
 runs:
   using: "composite"

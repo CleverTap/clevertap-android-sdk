@@ -1,3 +1,7 @@
+# step to call :
+#      - name: Commit Rules Enforcement
+#        uses: ./.github/mini_flows/ss2_commit_check
+
 runs:
   using: "composite"
   steps:

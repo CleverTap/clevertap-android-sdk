@@ -1,3 +1,6 @@
+#step for calling ::
+#      - name: Relase to github
+#        uses: ./.github/mini_flows/s9_git_release
 runs:
   using: "composite"
   steps:
