@@ -1194,8 +1194,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             String domain = networkManager.getDomainFromPrefsOrMetadata(EventGroup.REGULAR);
             if(domain != null) {
                 dcDomainCallback.onDCDomainAvailable("dc-" + domain);
-            }else {
-                dcDomainCallback.onDCDomainUnavailable();
             }
         }
     }
