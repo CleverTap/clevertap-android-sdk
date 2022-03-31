@@ -2,6 +2,7 @@ package com.clevertap.android.sdk;
 
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
+import com.clevertap.android.sdk.interfaces.DCDomainCallback;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
@@ -19,6 +20,8 @@ public abstract class BaseCallbackManager {
     public abstract CTFeatureFlagsListener getFeatureFlagListener();
 
     public abstract GeofenceCallback getGeofenceCallback();
+
+    public abstract DCDomainCallback getDCDomainCallback();
 
     public abstract InAppNotificationButtonListener getInAppNotificationButtonListener();
 
@@ -48,6 +51,8 @@ public abstract class BaseCallbackManager {
     public abstract void setFeatureFlagListener(CTFeatureFlagsListener listener);
 
     public abstract void setGeofenceCallback(GeofenceCallback geofenceCallback);
+
+    public abstract void setDCDomainCallback(DCDomainCallback dcDomainCallback);
 
     public abstract void setInAppNotificationButtonListener(
             InAppNotificationButtonListener inAppNotificationButtonListener);

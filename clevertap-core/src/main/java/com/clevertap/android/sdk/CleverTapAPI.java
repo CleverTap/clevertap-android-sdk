@@ -25,12 +25,15 @@ import androidx.annotation.WorkerThread;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.EventDetail;
+import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.inbox.CTMessageDAO;
+import com.clevertap.android.sdk.interfaces.DCDomainCallback;
 import com.clevertap.android.sdk.interfaces.NotificationHandler;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
+import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
@@ -1163,6 +1166,38 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void flush() {
         coreState.getBaseEventQueueManager().flush();
+    }
+
+    /**
+     * Returns the DCDomainCallback object
+     *
+     * @return The {@link DCDomainCallback} object
+     */
+    @RestrictTo(Scope.LIBRARY_GROUP)
+    public DCDomainCallback getDCDomainCallback() {
+        return coreState.getCallbackManager().getDCDomainCallback();
+    }
+
+    /**
+     * This method is used to set the DCDomain callback
+     * Register to handle geofence responses from CleverTap
+     * This is to be used only by clevertap-directCall-sdk
+     *
+     * @param dcDomainCallback The {@link DCDomainCallback} instance
+     */
+    @RestrictTo(Scope.LIBRARY_GROUP)
+    public void setDCDomainCallback(DCDomainCallback dcDomainCallback) {
+        coreState.getCallbackManager().setDCDomainCallback(dcDomainCallback);
+
+        if(coreState.getNetworkManager() != null) {
+            NetworkManager networkManager = (NetworkManager) coreState.getNetworkManager();
+            String domain = networkManager.getDomainFromPrefsOrMetadata(EventGroup.REGULAR);
+            if(domain != null) {
+                dcDomainCallback.onDCDomainAvailable("dc-" + domain);
+            }else {
+                dcDomainCallback.onDCDomainUnavailable();
+            }
+        }
     }
 
     public String getAccountId() {

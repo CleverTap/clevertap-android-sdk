@@ -237,14 +237,18 @@ public class NetworkManager extends BaseNetworkManager {
     @Override
     public void initHandshake(final EventGroup eventGroup, final Runnable handshakeSuccessCallback) {
         responseFailureCount = 0;
-        setDomain(context, null);
+        //setDomain(context, null);
         performHandshakeForDomain(context, eventGroup, handshakeSuccessCallback);
     }
 
     @Override
     public boolean needsHandshakeForDomain(final EventGroup eventGroup) {
         final String domain = getDomainFromPrefsOrMetadata(eventGroup);
-        return domain == null || responseFailureCount > 5;
+        boolean needHandshakeDueToFailure = responseFailureCount > 5;
+        if(needHandshakeDueToFailure){
+            setDomain(context, null);
+        }
+        return domain == null || needHandshakeDueToFailure;
     }
 
     @SuppressLint("CommitPrefEdits")
@@ -315,7 +319,7 @@ public class NetworkManager extends BaseNetworkManager {
         return domain;
     }
 
-    String getDomainFromPrefsOrMetadata(final EventGroup eventGroup) {
+    public String getDomainFromPrefsOrMetadata(final EventGroup eventGroup) {
 
         try {
             final String region = config.getAccountRegion();
@@ -691,6 +695,14 @@ public class NetworkManager extends BaseNetworkManager {
         logger.verbose(config.getAccountId(), "Setting domain to " + domainName);
         StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_DOMAIN_NAME),
                 domainName);
+
+        if (callbackManager.getDCDomainCallback() != null) {
+            if(domainName != null) {
+                callbackManager.getDCDomainCallback().onDCDomainAvailable("dc-" + domainName);
+            }else {
+                callbackManager.getDCDomainCallback().onDCDomainUnavailable();
+            }
+        }
     }
 
     void setFirstRequestTimestampIfNeeded(int ts) {
