@@ -801,14 +801,14 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
     }
 
-    Future<?> raiseEventForDirectCall(String eventName, JSONObject geofenceProperties) {
+    Future<?> raiseEventForDirectCall(String eventName, JSONObject dcEventProperties) {
 
         Future<?> future = null;
 
         JSONObject event = new JSONObject();
         try {
             event.put("evtName", eventName);
-            event.put("evtData", geofenceProperties);
+            event.put("evtData", dcEventProperties);
 
             future = baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (JSONException e) {
