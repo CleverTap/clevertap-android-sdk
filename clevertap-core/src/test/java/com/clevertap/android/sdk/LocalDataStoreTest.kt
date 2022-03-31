@@ -36,7 +36,7 @@ class LocalDataStoreTest : BaseTestCase() {
     fun test_changeUser_when_ABC_should_XYZ() {
         //localDataStoreWithDefConfig.changeUser()
         // since changeUser() is a void function calls resetLocalProfileSync() which is a private function,
-        // we can't further test it or verify its calling//todo
+        // we can't further test it or verify its calling
         assertTrue { true }
     }
 
@@ -153,13 +153,12 @@ class LocalDataStoreTest : BaseTestCase() {
     @Test
     fun test_removeProfileField_when_KeyIsPassed_should_RemoveKeyFromPROFILE_FIELDS_IN_THIS_SESSION() {
         //this function is a wrapper around private function removeProfileField(String key, Boolean fromUpstream, boolean persist)  and therefore cannot be tested further
-        // todo : is it correcT?
+
         //------
 
         //testing private function removeProfileField(String key, Boolean fromUpstream, boolean persist)  via current function removeProfileField("key")
 
         //1. if null is passed, this will return without changing any value of LocalDataStore.PROFILE_FIELDS_IN_THIS_SESSION
-        // todo how to test ??
 
         //2. if not null key is passed,and key is present in LocalDataStore.PROFILE_FIELDS_IN_THIS_SESSION , it will remove that key
 
@@ -180,13 +179,13 @@ class LocalDataStoreTest : BaseTestCase() {
     @Test
     fun test_removeProfileFields_when_KeysArePassed_should_RemoveKeyFromPROFILE_FIELDS_IN_THIS_SESSION() {
         //this function is a wrapper around private function removeProfileField(String key, Boolean fromUpstream, boolean persist)  and therefore cannot be tested further
-        // todo : is it correcT?
+
         //------
 
         //testing private function removeProfileField(String key, Boolean fromUpstream, boolean persist)  via current function removeProfileField("key")
 
         //1. if null is passed, this will return without changing any value of LocalDataStore.PROFILE_FIELDS_IN_THIS_SESSION
-        // todo how to test ??
+
         var keys: ArrayList<String>? = null
         localDataStoreWithConfig.removeProfileFields(keys)
         //2. if not null keys are passed,and keys are present in LocalDataStore.PROFILE_FIELDS_IN_THIS_SESSION , it will remove those keys
@@ -272,7 +271,7 @@ class LocalDataStoreTest : BaseTestCase() {
 
         //testing private function setProfileField(...)'s limited features
 
-        // when either key or value is null , the internal private function returns without changing PROFILE_FIELDS_IN_THIS_SESSION map// todo possible to test this?
+        // when either key or value is null , the internal private function returns without changing PROFILE_FIELDS_IN_THIS_SESSION map
         localDataStoreWithConfig.setProfileField("key1", null)
         localDataStoreWithConfig.setProfileField(null, "hi")
         assertNull(localDataStoreWithConfig.getProfileProperty("key1"))
@@ -285,12 +284,12 @@ class LocalDataStoreTest : BaseTestCase() {
     }
 
     @Test
-    fun test_setProfileFields_when_ABC_should_XYZ() {
+    fun test_setProfileFields_when_JsonWithKeysArePassed_should_SetTheKeysInPROFILE_FIELDS_IN_THIS_SESSIONMap() {
         val json = JSONObject()
         val jsonSpy = Mockito.spy(json)
 
         // when json is null, it returns without further execution. verified by checking if json.keys() is called
-        //localDataStoreWithConfig.setProfileFields(null) //todo how to test?
+        //localDataStoreWithConfig.setProfileFields(null)
 
         //when json has some keys, it will set the keys in PROFILE_FIELDS_IN_THIS_SESSION map
         json.put("key1", 1).put("key2", "hi").put("key3", true)
@@ -299,5 +298,21 @@ class LocalDataStoreTest : BaseTestCase() {
         assertEquals(1, localDataStoreWithConfig.getProfileProperty("key1"))
         assertEquals("hi", localDataStoreWithConfig.getProfileProperty("key2"))
         assertEquals(true, localDataStoreWithConfig.getProfileProperty("key3"))
+    }
+
+    @Test
+    fun test_syncWithUpstream_when_ABC_should_XYZ(){
+        val ctxSpy = Mockito.spy(appCtx)
+        var json = JSONObject()
+        var jsonSpy = Mockito.spy(json)
+
+        // 1. when json does not have "evpr" key, the function returns without further execution
+        localDataStoreWithConfig.syncWithUpstream(ctxSpy,jsonSpy)
+        Mockito.verify(jsonSpy,Mockito.never()).getJSONObject("evpr")
+
+        json.put("evpr",JSONObject())
+        localDataStoreWithConfig.syncWithUpstream(ctxSpy,jsonSpy)
+        Mockito.verify(jsonSpy,Mockito.atLeastOnce()).getJSONObject("evpr")
+
     }
 }
