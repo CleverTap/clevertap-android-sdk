@@ -1180,7 +1180,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     /**
      * This method is used to set the DCDomain callback
-     * Register to handle geofence responses from CleverTap
+     * Register to handle the domain related events from CleverTap
      * This is to be used only by clevertap-directCall-sdk
      *
      * @param dcDomainCallback The {@link DCDomainCallback} instance
