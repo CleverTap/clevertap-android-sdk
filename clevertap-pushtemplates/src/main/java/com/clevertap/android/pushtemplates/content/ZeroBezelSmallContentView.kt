@@ -13,6 +13,5 @@ open class ZeroBezelSmallContentView(context: Context, layoutId: Int, renderer: 
         setCustomContentViewCollapsedBackgroundColour(renderer.pt_bg)
         setCustomContentViewMessageColour(renderer.pt_msg_clr)
         setCustomContentViewSmallIcon()
-        setCustomContentViewDotSep()
     }
 }

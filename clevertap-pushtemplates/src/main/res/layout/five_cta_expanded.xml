@@ -4,6 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="64dp"
     android:padding="6dp"
+    android:focusable="false"
+    android:clickable="false"
     android:orientation="horizontal">
 
     <ImageView android:id="@+id/cta1"
@@ -12,6 +14,8 @@
         android:layout_weight="1"
         android:layout_margin="4dip"
         android:visibility="gone"
+        android:focusable="true"
+        android:clickable="true"
         android:src="@drawable/pt_image"/>
 
     <ImageView
@@ -21,6 +25,8 @@
         android:layout_weight="1"
         android:layout_margin="4dip"
         android:visibility="gone"
+        android:focusable="true"
+        android:clickable="true"
         android:src="@drawable/pt_image" />
 
     <ImageView
@@ -30,6 +36,8 @@
         android:layout_weight="1"
         android:layout_margin="4dip"
         android:visibility="gone"
+        android:focusable="true"
+        android:clickable="true"
         android:src="@drawable/pt_image" />
 
     <ImageView
@@ -39,6 +47,8 @@
         android:layout_weight="1"
         android:layout_margin="4dip"
         android:visibility="gone"
+        android:focusable="true"
+        android:clickable="true"
         android:src="@drawable/pt_image" />
 
     <ImageView
@@ -48,6 +58,8 @@
         android:layout_weight="1"
         android:layout_margin="4dip"
         android:visibility="gone"
+        android:focusable="true"
+        android:clickable="true"
         android:src="@drawable/pt_image" />
 
     <ImageView
@@ -56,6 +68,8 @@
         android:layout_height="match_parent"
         android:layout_weight="1"
         android:layout_margin="4dip"
+        android:focusable="true"
+        android:clickable="true"
         android:src="@drawable/pt_close" />
 
 </LinearLayout>
