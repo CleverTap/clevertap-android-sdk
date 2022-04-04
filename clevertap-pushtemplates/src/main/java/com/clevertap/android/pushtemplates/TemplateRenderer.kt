@@ -194,15 +194,6 @@ class TemplateRenderer : INotificationRenderer {
     private fun timerRunner(context: Context, extras: Bundle, notificationId: Int, delay: Int?) {
         val handler = Handler(Looper.getMainLooper())
         extras.remove("wzrk_rnv")
-        if (pt_title_alt != null && pt_title_alt!!.isNotEmpty()) {
-            pt_title = pt_title_alt
-        }
-        if (pt_big_img_alt != null && pt_big_img_alt!!.isNotEmpty()) {
-            pt_big_img = pt_big_img_alt
-        }
-        if (pt_msg_alt != null && pt_msg_alt!!.isNotEmpty()) {
-            pt_msg = pt_msg_alt
-        }
 
         if (delay != null) {
             handler.postDelayed({
@@ -215,6 +206,14 @@ class TemplateRenderer : INotificationRenderer {
                     val basicTemplateBundle = extras.clone() as Bundle
                     basicTemplateBundle.putString(Constants.WZRK_PUSH_ID, null) // skip dupe check
                     basicTemplateBundle.putString(PTConstants.PT_ID, "pt_basic") // set to basic
+
+                    if (pt_title_alt != null && pt_title_alt!!.isNotEmpty())
+                        basicTemplateBundle.putString(PTConstants.PT_TITLE, pt_title_alt)//If pt_title_alt is available then use it for Basic template rendering
+                    if (pt_big_img_alt != null && pt_big_img_alt!!.isNotEmpty())
+                        basicTemplateBundle.putString(PTConstants.PT_BIG_IMG, pt_big_img_alt)//If pt_big_img_alt is available then use it for Basic template rendering
+                    if (pt_msg_alt != null && pt_msg_alt!!.isNotEmpty())
+                        basicTemplateBundle.putString(PTConstants.PT_MSG, pt_msg_alt)//If pt_msg_alt is available then use it for Basic template rendering
+
                     // force random id generation
                     basicTemplateBundle.putString(PTConstants.PT_COLLAPSE_KEY, null)
                     basicTemplateBundle.putString(Constants.WZRK_COLLAPSE, null)
