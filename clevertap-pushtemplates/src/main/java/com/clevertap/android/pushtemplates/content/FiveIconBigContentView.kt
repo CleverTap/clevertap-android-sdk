@@ -141,12 +141,12 @@ class FiveIconBigContentView constructor(
             )
         }
 
-//        remoteView.setOnClickPendingIntent(
-//            R.id.close, PendingIntentFactory.getPendingIntent(
-//                context,
-//                renderer.notificationId, extras, false, FIVE_ICON_CLOSE_PENDING_INTENT, renderer
-//            )
-//        )
+        remoteView.setOnClickPendingIntent(
+            R.id.close, PendingIntentFactory.getPendingIntent(
+                context,
+                renderer.notificationId, extras, false, FIVE_ICON_CLOSE_PENDING_INTENT, renderer
+            )
+        )
 
 
         if (imageCounter > 2) {
