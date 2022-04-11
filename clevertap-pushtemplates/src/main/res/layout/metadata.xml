@@ -14,46 +14,50 @@
     <TextView
         android:id="@+id/app_name"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:text="app name"
         android:textAppearance="@style/MetaData" />
 
-
-    <TextView
+    <ImageView
         android:id="@+id/sep_subtitle"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="6dp"
+        android:layout_height="match_parent"
         android:layout_marginStart="2dp"
+        android:layout_marginTop="0dp"
         android:layout_marginEnd="2dp"
-        android:gravity="center_vertical"
-        android:text="@string/notification_header_divider_symbol"/>
+        android:layout_marginBottom="0dp"
+        android:padding="1dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/pt_dot_sep" />
 
     <TextView
         android:id="@+id/subtitle"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:ellipsize="end"
         android:maxWidth="120dp"
         android:maxLines="1"
         android:text="This is a subtitle that will clip"
         android:textAppearance="@style/MetaData" />
 
-    <TextView
-        android:id="@+id/sep_timestamp"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <ImageView
+        android:id="@+id/sep"
+        android:layout_width="6dp"
+        android:layout_height="match_parent"
         android:layout_marginStart="2dp"
         android:layout_marginEnd="2dp"
-        android:gravity="center_vertical"
-        android:text="@string/notification_header_divider_symbol"/>
+        android:layout_marginTop="0dp"
+        android:layout_marginBottom="0dp"
+        android:scaleType="centerInside"
+        android:padding="1dp"
+        android:src="@drawable/pt_dot_sep" />
 
     <TextView
         android:id="@+id/timestamp"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
         android:ellipsize="end"
         android:maxLines="1"
         android:text="timestamp"
         android:textAppearance="@style/MetaData"/>
-
 </LinearLayout>

@@ -3,9 +3,10 @@
     android:id="@+id/content_view_small"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingLeft="@dimen/padding_horizontal"
+    android:background="@android:color/white"
+    android:paddingLeft="@dimen/padding_vertical"
     android:paddingTop="@dimen/padding_vertical"
-    android:paddingRight="@dimen/padding_horizontal"
+    android:paddingRight="@dimen/padding_vertical"
     android:paddingBottom="@dimen/padding_vertical">
 
 

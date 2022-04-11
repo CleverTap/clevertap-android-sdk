@@ -3,7 +3,7 @@
     android:id="@+id/content_view_small"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="@dimen/padding_vertical">
+    android:layout_marginBottom="@dimen/padding_vertical">
 
     <RelativeLayout
         android:layout_width="match_parent"
