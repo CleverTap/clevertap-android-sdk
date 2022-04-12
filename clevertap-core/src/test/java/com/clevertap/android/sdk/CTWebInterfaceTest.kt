@@ -8,6 +8,8 @@ import org.junit.runner.RunWith
 import org.mockito.Mockito
 import org.robolectric.RobolectricTestRunner
 
+//TODO@ansh: replace atleastOnce() by exact number, you can check examples in other classes
+//TODO@ansh: Don't use CleverTapAPI.getDefaultInstance(application), instead use mock to improve test case running time, you can check examples in other classes
 @RunWith(RobolectricTestRunner::class)
 class CTWebInterfaceTest : BaseTestCase() {
     // CTWebInterface is a wrapper around some functions of the clevertap api
@@ -39,6 +41,7 @@ class CTWebInterfaceTest : BaseTestCase() {
 
     }
 
+    // TODO@ansh: Add malformed json case
     @Test
     fun test_addMultiValuesForKey_when_CalledWithKeyAndValue_should_CallAssocClevertapApiFunction() {
         // when ctApi is null, calling this function will do nothing.
@@ -64,6 +67,7 @@ class CTWebInterfaceTest : BaseTestCase() {
 
     }
 
+    // TODO@ansh: Add malformed json case
     @Test
     fun test_pushChargedEvent_when_FunctionIsCalledWithJsonAndJsonArray_should_CallClevertapApiFunctionWithData() {
         var eventName: String? = null
@@ -101,6 +105,7 @@ class CTWebInterfaceTest : BaseTestCase() {
 
     }
 
+    //TODO@ansh: Add ctapi null case, eventActions=null case, malformed json case
     @Test
     fun test_pushEvent_when_FunctionIsCalledWithEventNameAndProperties_should_CallAssocClevertapApiFunctionWithTransformedData() {
         ctApi = CleverTapAPI.getDefaultInstance(application)
@@ -117,6 +122,7 @@ class CTWebInterfaceTest : BaseTestCase() {
 
     }
 
+    //TODO@ansh: Add ctapi null case, malformed json case
     @Test
     fun test_pushProfile_when_CalledWithJsonString_should_CallAssocClevertapApiFunction() {
         // if profile is null, function returns without any changes
@@ -160,6 +166,7 @@ class CTWebInterfaceTest : BaseTestCase() {
         Mockito.verify(ctSpy, Mockito.atLeastOnce())?.removeMultiValueForKey("key2", "value2")
     }
 
+    //TODO@ansh: Add malformed json case
     @Test
     fun test_removeMultiValuesForKey_CalledWithKeyAndValue_should_CallAssocClevertapApiFunction() {
         // when ctApi is null, calling this function will do nothing.
@@ -185,6 +192,7 @@ class CTWebInterfaceTest : BaseTestCase() {
 
     }
 
+    //TODO@ansh: Add ctapi null case
     @Test
     fun test_removeValueForKey_when_CalledWithKey_should_CallAssocClevertapApiFunction() {
         // if key is null, function returns without any changes
@@ -202,6 +210,7 @@ class CTWebInterfaceTest : BaseTestCase() {
 
     }
 
+    //TODO@ansh: Add malformed json case
     @Test
     fun test_setMultiValueForKey_when_ABC_should_XYZ() {
         // when ctApi is null, calling this function will do nothing.
