@@ -16,7 +16,9 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:text="app name"
-        android:textAppearance="@style/MetaData" />
+        android:gravity="center_vertical"
+        android:layout_marginTop="-1dp"
+        android:textAppearance="@style/MetaData"/>
 
     <ImageView
         android:id="@+id/sep_subtitle"
@@ -35,8 +37,10 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:ellipsize="end"
-        android:maxWidth="70dp"
+        android:maxWidth="120dp"
         android:maxLines="1"
+        android:layout_marginTop="-1dp"
+        android:gravity="center_vertical"
         android:text="This is a subtitle that will clip"
         android:textAppearance="@style/MetaData" />
 
@@ -57,7 +61,9 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:ellipsize="end"
+        android:layout_marginTop="-1dp"
         android:maxLines="1"
         android:text="timestamp"
+        android:gravity="center_vertical"
         android:textAppearance="@style/MetaData"/>
 </LinearLayout>
