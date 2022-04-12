@@ -10,7 +10,7 @@ import org.mockito.Mockito
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 
-
+//TODO@ansh: createSession() unit test is missing
 @RunWith(RobolectricTestRunner::class)
 class SessionManagerTest : BaseTestCase() {
 
@@ -38,6 +38,7 @@ class SessionManagerTest : BaseTestCase() {
     @Test
     fun test_checkTimeoutSession_when_FunctionIsCalledAndAppLastSeenIsGreaterThan60Mins_should_DestroySession() {
         //1. when appLastSeen is <= 0 , the function returns without any further execution. this could not be verified since checkTimeoutSession is a void function
+        //TODO@ansh: You can verify by saying destroySession is not called(no interaction)
 
         //2. when appLastSeen is  = timestamp that is older than current time by 60 minutes, then session gets destroyed via destroySession();
         // we verify this by spying the destroySession(); call
@@ -50,7 +51,7 @@ class SessionManagerTest : BaseTestCase() {
         smSpy.appLastSeen = System.currentTimeMillis()
         smSpy.checkTimeoutSession()
         Mockito.verify(smSpy,Mockito.never()).destroySession()
-
+        //TODO@ansh: Also verify CoreMetaData.setCurrentActivity(null);
 
 
     }
@@ -78,18 +79,21 @@ class SessionManagerTest : BaseTestCase() {
 
     }
 
+    //TODO@ansh: setter and getter combine to one.
     @Test
     fun test_getAppLastSeen_when_FunctionIsCalled_should_ReturnAppLastSeenValue() {
         sessionManagerDef.appLastSeen = 10
         assertEquals(10,sessionManagerDef.appLastSeen)
     }
 
+    //TODO@ansh: setter and getter combine to one.
     @Test
     fun test_setAppLastSeen_when_FunctionIsCalled_should_ReturnAppLastSeenValue() {
         sessionManagerDef.appLastSeen = 10
         assertEquals(10,sessionManagerDef.appLastSeen)
     }
 
+    //TODO@ansh: setter and getter combine to one.
     @Test
     fun test_setLastVisitTime_when_FunctionIsCalled_should_SetTimeOfLastAppLaunchEventFireInLocalDataStore() {
         val localDataStoreMockk = Mockito.mock(LocalDataStore::class.java)
@@ -125,9 +129,11 @@ class SessionManagerTest : BaseTestCase() {
         sessionManagerDef.lazyCreateSession(ctxSpy)
         Mockito.verify(coreMetaDataSpy,Mockito.atMostOnce()).isFirstRequestInSession = true
         Mockito.verify(coreMetaDataSpy,Mockito.atLeastOnce()).currentSessionId = Mockito.anyInt()
+        //TODO@ansh: Also verify that createSession() is called.
 
     }
 
+    //TODO@ansh: setter and getter combine to one.
     @Test
     fun test_getLastVisitTime_when_FunctionIsCalled_should_GetValuefLastVisitTime() {
         val localDataStoreMockk = Mockito.mock(LocalDataStore::class.java)
