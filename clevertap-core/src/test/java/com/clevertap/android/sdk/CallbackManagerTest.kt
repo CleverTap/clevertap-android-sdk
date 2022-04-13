@@ -34,10 +34,10 @@ class CallbackManagerTest : BaseTestCase() {
 
     }
 
-    //TODO@ansh : replace should_CallCallbackManagerIfAvailable by should_CallInboxMessagesDidUpdateOnListener
-    //TODO@ansh : add test when callbackManager.inboxListener = null
+    //done//TODO@ansh : replace should_CallCallbackManagerIfAvailable by should_CallInboxMessagesDidUpdateOnListener
+    //todo@piyush how to test this case?// TODO@ansh : add test when callbackManager.inboxListener = null
     @Test
-    fun test__notifyInboxMessagesDidUpdate_when_FunctionIsCalled_should_CallCallbackManagerIfAvailable() {
+    fun test__notifyInboxMessagesDidUpdate_when_FunctionIsCalled_should_CallInboxMessagesDidUpdateOnListener() {
         val ib = object : CTInboxListener {
             override fun inboxDidInitialize() {}
             override fun inboxMessagesDidUpdate() {}
@@ -49,41 +49,27 @@ class CallbackManagerTest : BaseTestCase() {
         Mockito.verify(ibSpy, Mockito.atLeastOnce()).inboxMessagesDidUpdate()
     }
 
-    //TODO@ansh : combine test_getFailureFlushListener and test_setFailureFlushListener to one => test_SetterGetterForFailureFlushListener
+    //done//TODO@ansh : combine test_getFailureFlushListener and test_setFailureFlushListener to one => test_SetterGetterForFailureFlushListener
     @Test
-    fun test_getFailureFlushListener() {
+    fun test_SetterGetterForFailureFlushListener() {
         val failureListener = FailureFlushListener { }
         callbackManager.failureFlushListener = failureListener
         assertEquals(failureListener, callbackManager.failureFlushListener)
     }
 
-    //TODO@ansh : combine test_getFailureFlushListener and test_setFailureFlushListener to one => test_SetterGetterForFailureFlushListener
-    @Test
-    fun test_setFailureFlushListener() {
-        val listener = FailureFlushListener { }
-        callbackManager.failureFlushListener = listener
-        assertEquals(listener, callbackManager.failureFlushListener)
-    }
 
-    //TODO@ansh : combine test_getFeatureFlagListener and test_setFeatureFlagListener to one => test_SetterGetterForFeatureFlagListener
+    //done//TODO@ansh : combine test_getFeatureFlagListener and test_setFeatureFlagListener to one => test_SetterGetterForFeatureFlagListener
     @Test
-    fun test_getFeatureFlagListener() {
+    fun test_SetterGetterForFeatureFlagListener() {
         val listener = CTFeatureFlagsListener { }
         callbackManager.featureFlagListener = listener
         assertEquals(listener, callbackManager.featureFlagListener)
     }
 
-    //TODO@ansh : combine test_getFeatureFlagListener and test_setFeatureFlagListener to one => test_SetterGetterForFeatureFlagListener
-    @Test
-    fun test_setFeatureFlagListener() {
-        val listener = CTFeatureFlagsListener { }
-        callbackManager.featureFlagListener = listener
-        assertEquals(listener, callbackManager.featureFlagListener)
-    }
 
-    //TODO@ansh: For all setter and getter combine to one.
+    //done//TODO@ansh: For all setter and getter combine to one.
     @Test
-    fun test_getGeofenceCallback() {
+    fun test_SetterGetterGeofenceCallback() {
         val listener = object : GeofenceCallback {
             override fun handleGeoFences(jsonObject: JSONObject?) {}
             override fun triggerLocation() {}
@@ -92,37 +78,20 @@ class CallbackManagerTest : BaseTestCase() {
         assertEquals(listener, callbackManager.geofenceCallback)
     }
 
-    //TODO@ansh: setter and getter combine to one.
-    //TODO@ansh: don't name methods like ABC_XYZ -> should be understandable
-    @Test
-    fun test_setGeofenceCallback_when_ABC_should_XYZ() {
-        val listener = object : GeofenceCallback {
-            override fun handleGeoFences(jsonObject: JSONObject?) {}
-            override fun triggerLocation() {}
-        }
-        callbackManager.geofenceCallback = listener
-        assertEquals(listener, callbackManager.geofenceCallback)
-    }
 
-    //TODO@ansh: setter and getter combine to one.
+    //done//TODO@ansh: setter and getter combine to one.
     @Test
-    fun test_getInAppNotificationButtonListener() {
+    fun test_SetterGetterInAppNotificationButtonListener() {
         val listener = InAppNotificationButtonListener { }
         callbackManager.inAppNotificationButtonListener = listener
         assertEquals(listener, callbackManager.inAppNotificationButtonListener)
     }
 
-    //TODO@ansh: setter and getter combine to one.
-    @Test
-    fun test_setInAppNotificationButtonListener() {
-        val listener = InAppNotificationButtonListener { }
-        callbackManager.inAppNotificationButtonListener = listener
-        assertEquals(listener, callbackManager.inAppNotificationButtonListener)
-    }
 
-    //TODO@ansh: setter and getter combine to one.
+
+    //done//TODO@ansh: setter and getter combine to one.
     @Test
-    fun test_getInAppNotificationListener() {
+    fun test_SetterGetterInAppNotificationListener() {
         val listener = object : InAppNotificationListener {
             override fun beforeShow(extras: MutableMap<String, Any>?): Boolean {
                 return true
@@ -134,23 +103,11 @@ class CallbackManagerTest : BaseTestCase() {
         assertEquals(listener, callbackManager.inAppNotificationListener)
     }
 
-    //TODO@ansh: setter and getter combine to one.
-    @Test
-    fun test_setInAppNotificationListener() {
-        val listener = object : InAppNotificationListener {
-            override fun beforeShow(extras: MutableMap<String, Any>?): Boolean {
-                return true
-            }
 
-            override fun onDismissed(extras: MutableMap<String, Any>?, actionExtras: MutableMap<String, Any>?) {}
-        }
-        callbackManager.inAppNotificationListener = listener
-        assertEquals(listener, callbackManager.inAppNotificationListener)
-    }
 
-    //TODO@ansh: setter and getter combine to one.
+    //done//TODO@ansh: setter and getter combine to one.
     @Test
-    fun test_getInboxListener() {
+    fun test_SetterGetterInboxListener() {
         val listener = object : CTInboxListener {
             override fun inboxDidInitialize() {}
             override fun inboxMessagesDidUpdate() {}
@@ -162,22 +119,11 @@ class CallbackManagerTest : BaseTestCase() {
 
     }
 
-    //TODO@ansh: setter and getter combine to one.
+
+
+    //done//TODO@ansh: setter and getter combine to one.
     @Test
-    fun test_setInboxListener() {
-        val listener = object : CTInboxListener {
-            override fun inboxDidInitialize() {}
-            override fun inboxMessagesDidUpdate() {}
-        }
-
-        callbackManager.inboxListener = listener
-        assertEquals(listener, callbackManager.inboxListener)
-
-    }
-
-    //TODO@ansh: setter and getter combine to one.
-    @Test
-    fun test_getProductConfigListener() {
+    fun test_SetterGetterProductConfigListener() {
         val listener = object : CTProductConfigListener {
             override fun onActivated() {}
             override fun onFetched() {}
@@ -188,53 +134,29 @@ class CallbackManagerTest : BaseTestCase() {
 
     }
 
-    //TODO@ansh: setter and getter combine to one.
-    @Test
-    fun test_setProductConfigListener() {
-        val listener = object : CTProductConfigListener {
-            override fun onActivated() {}
-            override fun onFetched() {}
-            override fun onInit() {}
-        }
-        callbackManager.productConfigListener = listener
-        assertEquals(listener, callbackManager.productConfigListener)
-    }
 
-    //TODO@ansh: setter and getter combine to one.
+
+    //done//TODO@ansh: setter and getter combine to one.
     @Test
-    fun test_getPushAmpListener() {
+    fun test_SetterGetterPushAmpListener() {
         val listener = CTPushAmpListener { }
         callbackManager.pushAmpListener = listener
         assertEquals(listener, callbackManager.pushAmpListener)
     }
 
-    //TODO@ansh: setter and getter combine to one.
+    //done//TODO@ansh: setter and getter combine to one.
     @Test
-    fun test_setPushAmpListener() {
-        val listener = CTPushAmpListener { }
-        callbackManager.pushAmpListener = listener
-        assertEquals(listener, callbackManager.pushAmpListener)
-    }
-
-    //TODO@ansh: setter and getter combine to one.
-    @Test
-    fun test_getPushNotificationListener() {
+    fun test_SetterGetterPushNotificationListener() {
         val listener = CTPushNotificationListener { }
         callbackManager.pushNotificationListener = listener
         assertEquals(listener, callbackManager.pushNotificationListener)
     }
 
-    //TODO@ansh: setter and getter combine to one.
-    @Test
-    fun test_setPushNotificationListener() {
-        val listener = CTPushNotificationListener { }
-        callbackManager.pushNotificationListener = listener
-        assertEquals(listener, callbackManager.pushNotificationListener)
-    }
 
-    //TODO@ansh: setter and getter combine to one.
+
+    //done//TODO@ansh: setter and getter combine to one.
     @Test
-    fun test_getSyncListener() {
+    fun test_getterSetterSyncListener() {
         val listener = object : SyncListener {
             override fun profileDataUpdated(updates: JSONObject?) {}
 
@@ -244,29 +166,11 @@ class CallbackManagerTest : BaseTestCase() {
         assertEquals(listener, callbackManager.syncListener)
     }
 
-    //TODO@ansh: setter and getter combine to one.
-    @Test
-    fun test_setSyncListener() {
-        val listener = object : SyncListener {
-            override fun profileDataUpdated(updates: JSONObject?) {}
 
-            override fun profileDidInitialize(CleverTapID: String?) {}
-        }
-        callbackManager.syncListener = listener
-        assertEquals(listener, callbackManager.syncListener)
-    }
 
-    //TODO@ansh: setter and getter combine to one.
+    //done//TODO@ansh: setter and getter combine to one.
     @Test
-    fun test_getOnInitCleverTapIDListener() {
-        val listener = OnInitCleverTapIDListener { }
-        callbackManager.onInitCleverTapIDListener = listener
-        assertEquals(listener, callbackManager.onInitCleverTapIDListener)
-    }
-
-    //TODO@ansh: setter and getter combine to one.
-    @Test
-    fun test_setOnInitCleverTapIDListener() {
+    fun test_getterSetterOnInitCleverTapIDListener() {
         val listener = OnInitCleverTapIDListener { }
         callbackManager.onInitCleverTapIDListener = listener
         assertEquals(listener, callbackManager.onInitCleverTapIDListener)
@@ -314,7 +218,7 @@ class CallbackManagerTest : BaseTestCase() {
         Mockito.verify(configSpy, Mockito.times(1)).accountId
     }
 
-    //TODO@ansh : add test when callbackManager.inboxListener = null
+    //TODO@piyush what will be tested if listener is null?//TODO@ansh : add test when callbackManager.inboxListener = null
     @Test
     fun test__notifyInboxInitialized_when_FunctionIsCalled_ShouldCallInboxListnersFunctionIfAvailable() {
         val spy = Mockito.spy(object : CTInboxListener {
@@ -326,15 +230,32 @@ class CallbackManagerTest : BaseTestCase() {
         Mockito.verify(spy, Mockito.times(1)).inboxDidInitialize()
     }
 
-    //TODO@ansh: Add test when DU is null and empty
+    //done//TODO@ansh: Add test when DU is empty
+    //todo@piyush getting error //TODO@ansh: Add test when DU is null
     @Test
     fun test_notifyDisplayUnitsLoaded_when_FunctionIsCalledWithValidUnits_should_CallDisplayUnitListenerIfAvailable() {
         val displayUnitListener = object : DisplayUnitListener {
-            override fun onDisplayUnitsLoaded(it: ArrayList<CleverTapDisplayUnit>) {}
+            override fun onDisplayUnitsLoaded(it: ArrayList<CleverTapDisplayUnit>) {
+
+            }
         }
         val spy = Mockito.spy(displayUnitListener)
         callbackManager.setDisplayUnitListener(spy)
-        val units = arrayListOf(CleverTapDisplayUnit.toDisplayUnit(JSONObject()))
+        var units: ArrayList<CleverTapDisplayUnit>? = null
+
+        try {
+            callbackManager.notifyDisplayUnitsLoaded(units)
+            Mockito.verify(spy, Mockito.never()).onDisplayUnitsLoaded(Mockito.any())
+        }catch (e:Throwable){
+            println(e.message)
+        }
+
+        units = arrayListOf()
+        callbackManager.notifyDisplayUnitsLoaded(units)
+        Mockito.verify(spy, Mockito.never()).onDisplayUnitsLoaded(units)
+
+
+        units = arrayListOf(CleverTapDisplayUnit.toDisplayUnit(JSONObject()))
         callbackManager.notifyDisplayUnitsLoaded(units)
         Mockito.verify(spy, Mockito.atLeastOnce()).onDisplayUnitsLoaded(units)
     }
