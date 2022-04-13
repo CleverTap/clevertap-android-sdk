@@ -38,43 +38,52 @@ class LocalDataStoreTest : BaseTestCase() {
         // since changeUser() is a void function calls resetLocalProfileSync() which is a private function,
         // we can't further test it or verify its calling
         assertTrue { true }
-        localDataStoreWithConfig.changeUser()
 
     }
 
     @Test
     fun test_getEventDetail_when_EventNameIsPassed_should_ReturnEventDetail() {
+        // if event name is null, exception would occur and we will get null in return
+        localDataStoreWithDefConfig.getEventDetail(null).let { it->
+            println("Event: ${it?.name}|${it?.count}|${it?.firstTime}|${it?.lastTime}")
+            assertNull(it)
+        }
+        println("============================================================")
+
         //if configuration has personalisation disabled, getEventDetail() will return null
         defConfig.enablePersonalization(false)
         localDataStoreWithDefConfig.getEventDetail("eventName").let {
-            println(it)
+            println("Event: ${it?.name}|${it?.count}|${it?.firstTime}|${it?.lastTime}")
             assertNull(it)
         }
+
+        println("============================================================")
+
         //resetting personalisation for further tests :
+        defConfig.enablePersonalization(true)
 
-        //if default config is used, decodeEventDetails/getStringFromPrefs will be called with namespace = eventNamespace
-        // we verify it by ensuring that config.accountId is not called more than 3 times (3 because these are the min no. of times it gets called before this function call)
-        var config = CleverTapInstanceConfig.createDefaultInstance(appCtx, "id", "token", "region").also { it.enablePersonalization(true) }
-        var configSpy = Mockito.spy(config)
-        var lds = LocalDataStore(appCtx, configSpy)
-        lds.getEventDetail("eventName").let {
-            Mockito.verify(configSpy,Mockito.times(3)).accountId
+        // when calling with default config, it will look for event's value in pref named "WizRocket_local_events" with key as <eventname>. when found, it will return the value as EventDetail Object
+        appCtx.getSharedPreferences("WizRocket_local_events",Context.MODE_PRIVATE).edit().putString("eventName","123|456|789").commit()
+        localDataStoreWithDefConfig.getEventDetail("eventName").let {
+            println("Event: ${it?.name}|${it?.count}|${it?.firstTime}|${it?.lastTime}")
+            assertEquals("eventName",it?.name)
+            assertEquals(123,it?.count)
+            assertEquals(456,it?.firstTime)
+            assertEquals(789,it?.lastTime)
+
         }
-        //TODO@ansh: Wrong test case, you can actually assert return values by mocking required objects, same as getEventHistory test case //TODO@piyush , help wanted here
-
-        // if non default config is used,  decodeEventDetails/getStringFromPrefs will be called with namespace = eventNamespace + ":" + this.config.getAccountId();
-        // we verify it by ensuring that config.accountId is not called more than 5 times (5 because 3 gets called before this function call, 1 during and 1 after)
-        config = CleverTapInstanceConfig.createInstance(appCtx,"id","token","region")
-        configSpy = Mockito.spy(config)
-        lds = LocalDataStore(appCtx, configSpy)
-        lds.getEventDetail("event").let {
-            Mockito.verify(configSpy,Mockito.atLeast(3)).accountId
-        } //TODO@ansh: Wrong test case, you can actually assert return values by mocking required objects, same as getEventHistory test case //TODO@piyush , help wanted here
-
+        println("============================================================")
+        // when calling with NON default config, it will look for event's value in pref named "WizRocket_local_events:<id>" with key as <eventname>:<id>. when found, it will return the value as EventDetail Object
+        appCtx.getSharedPreferences("WizRocket_local_events:id",Context.MODE_PRIVATE).edit().putString("eventName22:id","111|222|333").commit()
+        localDataStoreWithConfig.getEventDetail("eventName22").let {
+            println("Event: ${it?.name}|${it?.count}|${it?.firstTime}|${it?.lastTime}")
+            assertEquals("eventName22",it.name)
+            assertEquals(111,it?.count)
+            assertEquals(222,it?.firstTime)
+            assertEquals(333,it?.lastTime)
+        }
     }
 
-    //done//TODO@ansh: Add test case when prference value is empty should return empty Map
-    //done//TODO@ansh: Add test case when some crash happens then it gets handled and returns null
     @Test
     fun test_getEventHistory_when_FunctionIsCalled_should_ReturnAMapOfEventNameAndDetails() {
         // if context is null,exception happens and null is returnd
@@ -135,20 +144,20 @@ class LocalDataStoreTest : BaseTestCase() {
 
     }
 
-    //TODO@??? //TODO@ansh: Wrong test case, you can actually assert persisted values in preference,
-    // for ex. after method stores value in pref, you get same from pref and assert equals
     @Test
     fun test_persistEvent_when_ContextAndJsonAndTypeIsPassed_should_SaveDataToSharedPref() {
         val contextSpy = Mockito.spy(appCtx)
 
-        // when context and null json object is passed, the function is returned without call to the internal function persistEvent(ctx,jsonObject)
-        // note: we are using an internal call to context.sharedpref() to validate this
+        // when context is null, the function is returned without call to the internal function persistEvent(ctx,jsonObject)
+        localDataStoreWithConfig.persistEvent(contextSpy, null, -1)
+        Mockito.verify(contextSpy, Mockito.times(0)).getSharedPreferences("WizRocket_local_events:id", Context.MODE_PRIVATE)
 
+        // when json is null, the function is returned without call to the internal function persistEvent(ctx,jsonObject)
         localDataStoreWithConfig.persistEvent(contextSpy, null, -1)
         Mockito.verify(contextSpy, Mockito.times(0)).getSharedPreferences("WizRocket_local_events:id", Context.MODE_PRIVATE)
 
 
-        // when context and valid json object is passed but type is not  Constants.RAISED_EVENT, the function is returned without call to the internal function persistEvent(ctx,jsonObject)
+        // when  type is not  Constants.RAISED_EVENT, the function is returned without call to the internal function persistEvent(ctx,jsonObject)
         localDataStoreWithConfig.persistEvent(contextSpy, JSONObject(), -1)
         Mockito.verify(contextSpy, Mockito.times(0)).getSharedPreferences("WizRocket_local_events:id", Context.MODE_PRIVATE)
 
@@ -157,15 +166,20 @@ class LocalDataStoreTest : BaseTestCase() {
         var jsonSpy = Mockito.spy(jsonObject)
         localDataStoreWithConfig.persistEvent(contextSpy, jsonSpy, Constants.RAISED_EVENT)
         Mockito.verify(jsonSpy, Mockito.times(1)).getString("evtName")
-        Mockito.verify(contextSpy, Mockito.times(0)).getSharedPreferences("WizRocket_local_events:id", Context.MODE_PRIVATE)
+        val prefs = contextSpy.getSharedPreferences("WizRocket_local_events:id",Context.MODE_PRIVATE)
+        var valueForKey:String? = prefs.getString("someVal:id",null)
+        assertEquals(null,valueForKey)
 
 
         // when context and valid json object is passed type is Constants.RAISED_EVENT, and json  have a value for "evtName" key, then the function calls persistEvent(ctx,jsonObject) and also initiates saving the value
         jsonObject.put("evtName", "someVal")
         jsonSpy = Mockito.spy(jsonObject)
+        val expectedVal = "1|${System.currentTimeMillis() / 1000}|${System.currentTimeMillis() / 1000}"
         localDataStoreWithConfig.persistEvent(contextSpy, jsonSpy, Constants.RAISED_EVENT)
         Mockito.verify(jsonSpy, Mockito.times(1)).getString("evtName")
-        Mockito.verify(contextSpy, Mockito.times(1)).getSharedPreferences("WizRocket_local_events:id", Context.MODE_PRIVATE)
+        valueForKey = prefs.getString("someVal:id","")
+        assertEquals(expectedVal,valueForKey)
+
     }
 
     @Test
