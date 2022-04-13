@@ -33,7 +33,7 @@ class CTWebInterfaceTest : BaseTestCase() {
 
         // when ctApi is not null, calling this function will call ctApi's internal function
         ctApi = CleverTapAPI.getDefaultInstance(application)
-        val ctSpy = Mockito.spy(ctApi)
+        val ctSpy = Mockito.mock(CleverTapAPI::class.java)
         ctWebInterface = CTWebInterface(ctSpy)
         ctWebInterface.addMultiValueForKey("key2","value2")
         Mockito.verify(ctSpy,Mockito.times(1))?.addMultiValueForKey("key2","value2")
@@ -119,7 +119,6 @@ class CTWebInterfaceTest : BaseTestCase() {
 
     }
 
-    //todo@piyush how? if ct api is null, then spy cannot be created //TODO@ansh: Add ctapi null case
     //done//TODO@ansh: eventActions=null case,
     //done//TODO@ansh:  malformed json case
     @Test
@@ -153,7 +152,6 @@ class CTWebInterfaceTest : BaseTestCase() {
 
     }
 
-    //todo@piyush how? if ct api is null, then spy cannot be created //TODO@ansh: Add ctapi null case
     //done//TODO@ansh:  malformed json case
     @Test
     fun test_pushProfile_when_CalledWithJsonString_should_CallAssocClevertapApiFunction() {
@@ -243,7 +241,6 @@ class CTWebInterfaceTest : BaseTestCase() {
 
     }
 
-    //todo@piyush how? if ct api is null, then spi cannot be created //TODO@ansh: Add ctapi null case
     @Test
     fun test_removeValueForKey_when_CalledWithKey_should_CallAssocClevertapApiFunction() {
         // if key is null, function returns without any changes
