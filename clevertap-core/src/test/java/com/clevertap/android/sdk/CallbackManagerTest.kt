@@ -34,8 +34,6 @@ class CallbackManagerTest : BaseTestCase() {
 
     }
 
-    //done//TODO@ansh : replace should_CallCallbackManagerIfAvailable by should_CallInboxMessagesDidUpdateOnListener
-    //todo@piyush how to test this case?// TODO@ansh : add test when callbackManager.inboxListener = null
     @Test
     fun test__notifyInboxMessagesDidUpdate_when_FunctionIsCalled_should_CallInboxMessagesDidUpdateOnListener() {
         val ib = object : CTInboxListener {
@@ -49,7 +47,6 @@ class CallbackManagerTest : BaseTestCase() {
         Mockito.verify(ibSpy, Mockito.atLeastOnce()).inboxMessagesDidUpdate()
     }
 
-    //done//TODO@ansh : combine test_getFailureFlushListener and test_setFailureFlushListener to one => test_SetterGetterForFailureFlushListener
     @Test
     fun test_SetterGetterForFailureFlushListener() {
         val failureListener = FailureFlushListener { }
@@ -58,7 +55,6 @@ class CallbackManagerTest : BaseTestCase() {
     }
 
 
-    //done//TODO@ansh : combine test_getFeatureFlagListener and test_setFeatureFlagListener to one => test_SetterGetterForFeatureFlagListener
     @Test
     fun test_SetterGetterForFeatureFlagListener() {
         val listener = CTFeatureFlagsListener { }
@@ -67,7 +63,6 @@ class CallbackManagerTest : BaseTestCase() {
     }
 
 
-    //done//TODO@ansh: For all setter and getter combine to one.
     @Test
     fun test_SetterGetterGeofenceCallback() {
         val listener = object : GeofenceCallback {
@@ -79,7 +74,6 @@ class CallbackManagerTest : BaseTestCase() {
     }
 
 
-    //done//TODO@ansh: setter and getter combine to one.
     @Test
     fun test_SetterGetterInAppNotificationButtonListener() {
         val listener = InAppNotificationButtonListener { }
@@ -89,7 +83,6 @@ class CallbackManagerTest : BaseTestCase() {
 
 
 
-    //done//TODO@ansh: setter and getter combine to one.
     @Test
     fun test_SetterGetterInAppNotificationListener() {
         val listener = object : InAppNotificationListener {
@@ -105,7 +98,6 @@ class CallbackManagerTest : BaseTestCase() {
 
 
 
-    //done//TODO@ansh: setter and getter combine to one.
     @Test
     fun test_SetterGetterInboxListener() {
         val listener = object : CTInboxListener {
@@ -121,7 +113,6 @@ class CallbackManagerTest : BaseTestCase() {
 
 
 
-    //done//TODO@ansh: setter and getter combine to one.
     @Test
     fun test_SetterGetterProductConfigListener() {
         val listener = object : CTProductConfigListener {
@@ -136,7 +127,6 @@ class CallbackManagerTest : BaseTestCase() {
 
 
 
-    //done//TODO@ansh: setter and getter combine to one.
     @Test
     fun test_SetterGetterPushAmpListener() {
         val listener = CTPushAmpListener { }
@@ -144,7 +134,6 @@ class CallbackManagerTest : BaseTestCase() {
         assertEquals(listener, callbackManager.pushAmpListener)
     }
 
-    //done//TODO@ansh: setter and getter combine to one.
     @Test
     fun test_SetterGetterPushNotificationListener() {
         val listener = CTPushNotificationListener { }
@@ -154,7 +143,6 @@ class CallbackManagerTest : BaseTestCase() {
 
 
 
-    //done//TODO@ansh: setter and getter combine to one.
     @Test
     fun test_getterSetterSyncListener() {
         val listener = object : SyncListener {
@@ -168,7 +156,6 @@ class CallbackManagerTest : BaseTestCase() {
 
 
 
-    //done//TODO@ansh: setter and getter combine to one.
     @Test
     fun test_getterSetterOnInitCleverTapIDListener() {
         val listener = OnInitCleverTapIDListener { }
@@ -218,7 +205,6 @@ class CallbackManagerTest : BaseTestCase() {
         Mockito.verify(configSpy, Mockito.times(1)).accountId
     }
 
-    //TODO@piyush what will be tested if listener is null?//TODO@ansh : add test when callbackManager.inboxListener = null
     @Test
     fun test__notifyInboxInitialized_when_FunctionIsCalled_ShouldCallInboxListnersFunctionIfAvailable() {
         val spy = Mockito.spy(object : CTInboxListener {
@@ -230,8 +216,6 @@ class CallbackManagerTest : BaseTestCase() {
         Mockito.verify(spy, Mockito.times(1)).inboxDidInitialize()
     }
 
-    //done//TODO@ansh: Add test when DU is empty
-    //todo@piyush getting error //TODO@ansh: Add test when DU is null
     @Test
     fun test_notifyDisplayUnitsLoaded_when_FunctionIsCalledWithValidUnits_should_CallDisplayUnitListenerIfAvailable() {
         val displayUnitListener = object : DisplayUnitListener {
@@ -243,12 +227,8 @@ class CallbackManagerTest : BaseTestCase() {
         callbackManager.setDisplayUnitListener(spy)
         var units: ArrayList<CleverTapDisplayUnit>? = null
 
-        try {
-            callbackManager.notifyDisplayUnitsLoaded(units)
-            Mockito.verify(spy, Mockito.never()).onDisplayUnitsLoaded(Mockito.any())
-        }catch (e:Throwable){
-            println(e.message)
-        }
+        callbackManager.notifyDisplayUnitsLoaded(units)
+        Mockito.verify(spy, Mockito.never()).onDisplayUnitsLoaded(Mockito.anyList<CleverTapDisplayUnit>()  as ArrayList<CleverTapDisplayUnit>)
 
         units = arrayListOf()
         callbackManager.notifyDisplayUnitsLoaded(units)
