@@ -38,7 +38,9 @@ class LocalDataStoreTest : BaseTestCase() {
         // since changeUser() is a void function calls resetLocalProfileSync() which is a private function,
         // we can't further test it or verify its calling
         assertTrue { true }
-        //TODO@ansh: add resetLocalProfileSync() tests here since it's a private method which gets called, we get a chance to test it here
+        localDataStoreWithConfig.changeUser()
+        //TODO@piyush: all methods calls in resetLocalProfileSync are private. how to test? //TODO@ansh: add resetLocalProfileSync() tests here since it's a private method which gets called, we get a chance to test it here
+
     }
 
     @Test
@@ -58,7 +60,8 @@ class LocalDataStoreTest : BaseTestCase() {
         var lds = LocalDataStore(appCtx, configSpy)
         lds.getEventDetail("eventName").let {
             Mockito.verify(configSpy,Mockito.times(3)).accountId
-        }//TODO@ansh: Wrong test case, you can actually assert return values by mocking required objects, same as getEventHistory test case
+        } //TODO@ansh: Wrong test case, you can actually assert return values by mocking required objects, same as getEventHistory test case
+        //TODO@piyush , help wanted here
 
         // if non default config is used,  decodeEventDetails/getStringFromPrefs will be called with namespace = eventNamespace + ":" + this.config.getAccountId();
         // we verify it by ensuring that config.accountId is not called more than 5 times (5 because 3 gets called before this function call, 1 during and 1 after)
@@ -68,16 +71,22 @@ class LocalDataStoreTest : BaseTestCase() {
         lds.getEventDetail("event").let {
             Mockito.verify(configSpy,Mockito.atLeast(3)).accountId
         }//TODO@ansh: Wrong test case, you can actually assert return values by mocking required objects, same as getEventHistory test case
+        //TODO@piyush , help wanted here
     }
 
-    //TODO@ansh: Add test case when prference value is empty should return empty Map
-    //TODO@ansh: Add test case when some crash happens then it gets handled and returns null
+    //done//TODO@ansh: Add test case when prference value is empty should return empty Map
+    //done//TODO@ansh: Add test case when some crash happens then it gets handled and returns null
     @Test
     fun test_getEventHistory_when_FunctionIsCalled_should_ReturnAMapOfEventNameAndDetails() {
+        // if context is null,exception happens and null is returnd
+        assertNull(localDataStoreWithDefConfig.getEventHistory(null))
         var results: Map<String, EventDetail> = mutableMapOf()
-        var eventDetail: EventDetail? = null
 
-        //if default config is used, events are stored in local_events file
+        //if default config is used, events are stored in local_events pref file
+        results = localDataStoreWithDefConfig.getEventHistory(appCtx)
+        assertTrue { results.isEmpty() }
+        assertNull(results["event"])
+
         StorageHelper.getPreferences(appCtx, "local_events").edit().putString("event", "2|1648192535|1648627865").commit()
         results = localDataStoreWithDefConfig.getEventHistory(appCtx)
         assertTrue { results.isNotEmpty() }
@@ -88,7 +97,11 @@ class LocalDataStoreTest : BaseTestCase() {
         assertEquals(1648627865, results["event"]?.lastTime)
 
 
-        //if  default instance is not used, events are stored in "local_events:$accountID"
+        //if  default instance is not used, events are stored in "local_events:$accountID" pref file
+        results = localDataStoreWithConfig.getEventHistory(appCtx)
+        assertTrue { results.isEmpty() }
+        assertNull(results["event"])
+
         StorageHelper.getPreferences(appCtx, "local_events:id").edit().putString("event2", "33|1234|2234").commit()
         results = localDataStoreWithConfig.getEventHistory(appCtx)
         assertTrue { results.isNotEmpty() }
@@ -106,7 +119,7 @@ class LocalDataStoreTest : BaseTestCase() {
         Mockito.verify(localDataStoreWithConfigSpy, Mockito.times(1)).getProfileValueForKey("key")
     }
 
-    //TODO@ansh: Add test case when some crash happens then it gets handled and returns null
+    //TODO@piyush how? not sure how to crash map.get?  //TODO@ansh: Add test case when some crash happens then it gets handled and returns null
     @Test
     fun test_getProfileValueForKey_when_FunctionIsCalledWithSomeKey_should_ReturnAssociatedValue() {
         // since getProfileValueForKey() calls _getProfileProperty() which is a private function,
@@ -124,7 +137,7 @@ class LocalDataStoreTest : BaseTestCase() {
 
     }
 
-    //TODO@ansh: Wrong test case, you can actually assert persisted values in preference, for ex. after method stores value in pref, you get same from pref and assert equals
+    //TODO@??? //TODO@ansh: Wrong test case, you can actually assert persisted values in preference, for ex. after method stores value in pref, you get same from pref and assert equals
     @Test
     fun test_persistEvent_when_ContextAndJsonAndTypeIsPassed_should_SaveDataToSharedPref() {
         val contextSpy = Mockito.spy(appCtx)
@@ -156,7 +169,7 @@ class LocalDataStoreTest : BaseTestCase() {
         Mockito.verify(contextSpy, Mockito.times(1)).getSharedPreferences("WizRocket_local_events:id", Context.MODE_PRIVATE)
     }
 
-    //TODO@ansh: Add test cases related to flags persist and fromUpstream
+    //TODO@piyush private function  takes hardcoded params //TODO@ansh: Add test cases related to flags persist and fromUpstream
     @Test
     fun test_removeProfileField_when_KeyIsPassed_should_RemoveKeyFromPROFILE_FIELDS_IN_THIS_SESSION() {
         //this function is a wrapper around private function removeProfileField(String key, Boolean fromUpstream, boolean persist)  and therefore cannot be tested further
@@ -183,7 +196,7 @@ class LocalDataStoreTest : BaseTestCase() {
         assertNotNull(updatedValue)
     }
 
-    //TODO@ansh: Add test cases related to persistLocalProfileAsync()
+    //TODO@piyush private function not exposed for testing //TODO@ansh: Add test cases related to persistLocalProfileAsync()
     @Test
     fun test_removeProfileFields_when_KeysArePassed_should_RemoveKeyFromPROFILE_FIELDS_IN_THIS_SESSION() {
         //this function is a wrapper around private function removeProfileField(String key, Boolean fromUpstream, boolean persist)  and therefore cannot be tested further
@@ -273,7 +286,7 @@ class LocalDataStoreTest : BaseTestCase() {
         assertTrue { json.getBoolean("dsync") }
     }
 
-    //TODO@ansh: Add test cases related to flags persist and fromUpstream
+    //TODO@piyush private function  takes hardcoded params TODO@ansh: Add test cases related to flags persist and fromUpstream
     @Test
     fun test_setProfileField_when_FunctionIsCalledWithKeyAndValue_should_UpdatePROFILE_FIELDS_IN_THIS_SESSIONMap() {
         // since this is a wrapper around a private function, it could not be properly tested.
@@ -292,7 +305,7 @@ class LocalDataStoreTest : BaseTestCase() {
         assertEquals("vvv", localDataStoreWithConfig.getProfileProperty("key1"))
     }
 
-    //TODO@ansh: Add test cases related to persistLocalProfileAsync()
+    //TODO@piyush private function not exposed for testing // TODO@ansh: Add test cases related to persistLocalProfileAsync()
     @Test
     fun test_setProfileFields_when_JsonWithKeysArePassed_should_SetTheKeysInPROFILE_FIELDS_IN_THIS_SESSIONMap() {
         val json = JSONObject()
