@@ -10,7 +10,6 @@ import org.mockito.Mockito
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
 
-//TODO@ansh: createSession() unit test is missing
 @RunWith(RobolectricTestRunner::class)
 class SessionManagerTest : BaseTestCase() {
 
@@ -37,12 +36,15 @@ class SessionManagerTest : BaseTestCase() {
 
     @Test
     fun test_checkTimeoutSession_when_FunctionIsCalledAndAppLastSeenIsGreaterThan60Mins_should_DestroySession() {
-        //1. when appLastSeen is <= 0 , the function returns without any further execution. this could not be verified since checkTimeoutSession is a void function
-        //TODO@ansh: You can verify by saying destroySession is not called(no interaction)
+        //1. when appLastSeen is <= 0 , the function returns without any further execution. this implies that destroySession() Was never called
+        //done//TODO@ansh: You can verify by saying destroySession is not called(no interaction)
+        var smSpy = Mockito.spy(sessionManagerDef)
+        smSpy.appLastSeen = 0
+        Mockito.verify(smSpy,Mockito.never()).destroySession()
 
         //2. when appLastSeen is  = timestamp that is older than current time by 60 minutes, then session gets destroyed via destroySession();
         // we verify this by spying the destroySession(); call
-        var smSpy = Mockito.spy(sessionManagerDef)
+        smSpy = Mockito.spy(sessionManagerDef)
         smSpy.appLastSeen = System.currentTimeMillis() - (Constants.SESSION_LENGTH_MINS * 60 * 1000 )- 1000
         smSpy.checkTimeoutSession()
         Mockito.verify(smSpy,Mockito.atMostOnce()).destroySession()
@@ -51,7 +53,9 @@ class SessionManagerTest : BaseTestCase() {
         smSpy.appLastSeen = System.currentTimeMillis()
         smSpy.checkTimeoutSession()
         Mockito.verify(smSpy,Mockito.never()).destroySession()
-        //TODO@ansh: Also verify CoreMetaData.setCurrentActivity(null);
+        assertEquals(CoreMetaData.getCurrentActivity(),null)
+
+        //done//TODO@ansh: Also verify CoreMetaData.setCurrentActivity(null);
 
 
     }
@@ -79,23 +83,16 @@ class SessionManagerTest : BaseTestCase() {
 
     }
 
-    //TODO@ansh: setter and getter combine to one.
+    //done//TODO@ansh: setter and getter combine to one.
     @Test
-    fun test_getAppLastSeen_when_FunctionIsCalled_should_ReturnAppLastSeenValue() {
+    fun test_getAppLastSeenAndSetAppLastSeen_when_FunctionIsCalled_should_ReturnAppLastSeenValue() {
         sessionManagerDef.appLastSeen = 10
         assertEquals(10,sessionManagerDef.appLastSeen)
     }
 
-    //TODO@ansh: setter and getter combine to one.
+    //done//TODO@ansh: setter and getter combine to one.
     @Test
-    fun test_setAppLastSeen_when_FunctionIsCalled_should_ReturnAppLastSeenValue() {
-        sessionManagerDef.appLastSeen = 10
-        assertEquals(10,sessionManagerDef.appLastSeen)
-    }
-
-    //TODO@ansh: setter and getter combine to one.
-    @Test
-    fun test_setLastVisitTime_when_FunctionIsCalled_should_SetTimeOfLastAppLaunchEventFireInLocalDataStore() {
+    fun test_getLastVisitTimeAndSetLastVisitTime_when_FunctionIsCalled_should_SetTimeOfLastAppLaunchEventFireInLocalDataStore() {
         val localDataStoreMockk = Mockito.mock(LocalDataStore::class.java)
         sessionManagerDef = SessionManager(configDef,coreMetaData,validator,localDataStoreMockk)
 
@@ -129,27 +126,10 @@ class SessionManagerTest : BaseTestCase() {
         sessionManagerDef.lazyCreateSession(ctxSpy)
         Mockito.verify(coreMetaDataSpy,Mockito.atMostOnce()).isFirstRequestInSession = true
         Mockito.verify(coreMetaDataSpy,Mockito.atLeastOnce()).currentSessionId = Mockito.anyInt()
-        //TODO@ansh: Also verify that createSession() is called.
+        //todo@piyush : how?help needed //TODO@ansh: Also verify that createSession() is called.
 
     }
 
-    //TODO@ansh: setter and getter combine to one.
-    @Test
-    fun test_getLastVisitTime_when_FunctionIsCalled_should_GetValuefLastVisitTime() {
-        val localDataStoreMockk = Mockito.mock(LocalDataStore::class.java)
-        sessionManagerDef = SessionManager(configDef,coreMetaData,validator,localDataStoreMockk)
-
-        // when local data store returns null for app launched event, it sets last visit time as -1
-        Mockito.`when`(localDataStoreMockk.getEventDetail(Constants.APP_LAUNCHED_EVENT)).thenReturn(null)
-        sessionManagerDef.setLastVisitTime()
-        assertEquals(-1,sessionManagerDef.lastVisitTime)
-
-        // when local data store returns eventDetails for app launched event, it sets last visit time as eventDetails.lastVisitTime
-
-        Mockito.`when`(localDataStoreMockk.getEventDetail(Constants.APP_LAUNCHED_EVENT)).thenReturn(EventDetail(1,10,20,"hi"))
-        sessionManagerDef.setLastVisitTime()
-        assertEquals(20,sessionManagerDef.lastVisitTime)
-
-    }
+    ////TODO@ansh: createSession() unit test is missing
 
 }
