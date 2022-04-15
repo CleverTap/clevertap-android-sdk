@@ -33,7 +33,7 @@ class LocalDataStoreTest : BaseTestCase() {
     }
 
     @Test
-    fun test_changeUser_when_ABC_should_XYZ() {
+    fun test_changeUser() {
         //localDataStoreWithDefConfig.changeUser()
         // since changeUser() is a void function calls resetLocalProfileSync() which is a private function,
         // we can't further test it or verify its calling
@@ -118,6 +118,13 @@ class LocalDataStoreTest : BaseTestCase() {
         assertEquals(33, results["event2"]?.count)
         assertEquals(1234, results["event2"]?.firstTime)
         assertEquals(2234, results["event2"]?.lastTime)
+
+        // if shared pref is empty, should regturn empty map
+        StorageHelper.getPreferences(appCtx, "local_events:id").edit().clear().commit()
+        results = localDataStoreWithConfig.getEventHistory(appCtx)
+        println("results="+results)
+        assertTrue { results.isEmpty() }
+        assertNull(results["event"])
 
     }
 
