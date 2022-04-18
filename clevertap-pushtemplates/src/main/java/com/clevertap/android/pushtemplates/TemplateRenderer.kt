@@ -6,6 +6,8 @@ import android.graphics.Bitmap
 import android.os.*
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import com.clevertap.android.pushtemplates.content.FiveIconBigContentView
+import com.clevertap.android.pushtemplates.content.FiveIconSmallContentView
 import com.clevertap.android.pushtemplates.styles.*
 import com.clevertap.android.pushtemplates.validators.ValidatorFactory
 import com.clevertap.android.sdk.CleverTapAPI
@@ -121,9 +123,25 @@ class TemplateRenderer : INotificationRenderer {
                     return RatingStyle(this, extras).builderFromStyle(context, extras, notificationId, nb)
 
             TemplateType.FIVE_ICONS ->
-                if (ValidatorFactory.getValidator(TemplateType.FIVE_ICONS, this)?.validate() == true)
-                    return FiveIconStyle(this, extras).builderFromStyle(context, extras, notificationId, nb)
-                        .setOngoing(true)
+                if (ValidatorFactory.getValidator(TemplateType.FIVE_ICONS, this)?.validate() == true) {
+                    val fiveIconStyle  = FiveIconStyle(this, extras)
+                    val fiveIconNotificationBuilder = fiveIconStyle.builderFromStyle(
+                        context,
+                        extras,
+                        notificationId,
+                        nb
+                    ).setOngoing(true)
+
+                    /**
+                     * Checks whether the imageUrls are perfect to download icon's bitmap,
+                     * if not then do not render notification
+                     */
+                    return if ((fiveIconStyle.getSmallContentView() as
+                                FiveIconSmallContentView).getUnloadedFiveIconsCount() > 2 ||
+                        (fiveIconStyle.getBigContentView() as FiveIconBigContentView).getUnloadedFiveIconsCount() > 2){
+                             null
+                    } else fiveIconNotificationBuilder
+                }
 
             TemplateType.PRODUCT_DISPLAY -> if (ValidatorFactory.getValidator(TemplateType.PRODUCT_DISPLAY, this)
                     ?.validate() == true

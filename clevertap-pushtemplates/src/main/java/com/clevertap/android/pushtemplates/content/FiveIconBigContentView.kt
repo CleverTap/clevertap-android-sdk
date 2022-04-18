@@ -17,12 +17,13 @@ class FiveIconBigContentView constructor(
     extras: Bundle
 ) : ContentView(context, R.layout.five_cta_expanded, renderer) {
 
+    private var imageCounter: Int = 0
+
     init {
         if (renderer.pt_title == null || renderer.pt_title!!.isEmpty()) {
             renderer.pt_title = Utils.getApplicationName(context)
         }
         setCustomContentViewExpandedBackgroundColour(renderer.pt_bg)
-        var imageCounter = 0
         for (imageKey in renderer.imageList!!.indices) {
             if (imageKey == 0) {
                 remoteView.setViewVisibility(R.id.cta1, View.VISIBLE)
@@ -152,5 +153,12 @@ class FiveIconBigContentView constructor(
         if (imageCounter > 2) {
             PTLog.debug("More than 2 images were not retrieved in 5CTA Notification, not displaying Notification.")
         }
+    }
+
+    /**
+     * Returns total number of five icon URL's which does not convert to bitmap
+     */
+    internal fun getUnloadedFiveIconsCount(): Int {
+        return imageCounter
     }
 }

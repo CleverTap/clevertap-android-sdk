@@ -14,11 +14,11 @@ import com.clevertap.android.sdk.Constants
 
 class ManualCarouselStyle(private var renderer: TemplateRenderer, private var extras: Bundle) : Style(renderer) {
 
-    override fun makeSmallContentView(context: Context, renderer: TemplateRenderer): RemoteViews {
+    override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
         return SmallContentView(context, renderer).remoteView
     }
 
-    override fun makeBigContentView(context: Context, renderer: TemplateRenderer): RemoteViews {
+    override fun makeBigContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
         return ManualCarouselContentView(context, renderer, extras).remoteView
     }
 
