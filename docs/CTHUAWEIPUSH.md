@@ -52,8 +52,8 @@ allprojects {
 * Add the following to your app’s `build.gradle` file
 
 ```groovy
-implementation "com.clevertap.android:clevertap-hms-sdk:1.2.0"
-implementation "com.huawei.hms:push:6.1.0.300"
+implementation "com.clevertap.android:clevertap-hms-sdk:1.3.0"
+implementation "com.huawei.hms:push:6.3.0.304"
 
 //At the bottom of the file add this
 apply plugin: 'com.huawei.agconnect'
