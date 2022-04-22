@@ -3,7 +3,9 @@
     android:id="@+id/content_view_small"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="@dimen/padding_vertical">
+    android:layout_marginTop="@dimen/padding_micro"
+    android:layout_marginRight="@dimen/padding_micro"
+    android:layout_marginLeft="@dimen/padding_micro">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -41,6 +43,7 @@
         android:layout_width="@dimen/large_icon"
         android:layout_height="@dimen/large_icon"
         android:layout_marginStart="@dimen/metadata_title_margin_horizontal"
+        android:layout_marginBottom="@dimen/padding_micro"
         android:layout_alignParentEnd="true"
         android:scaleType="centerCrop" />
     </RelativeLayout>
