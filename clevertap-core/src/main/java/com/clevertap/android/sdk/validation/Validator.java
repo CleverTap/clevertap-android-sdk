@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.validation;
 
+import androidx.annotation.NonNull;
+
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import java.util.ArrayList;
@@ -120,7 +122,7 @@ public final class Validator {
      * @return The {@link ValidationResult} object containing the value,
      * and the error code(if any)
      */
-    public ValidationResult cleanMultiValuePropertyValue(String value) {
+    public ValidationResult cleanMultiValuePropertyValue(@NonNull String value) {
         ValidationResult vr = new ValidationResult();
 
         // trim whitespace and force lowercase
