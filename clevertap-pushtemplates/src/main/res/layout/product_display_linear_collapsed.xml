@@ -23,7 +23,7 @@
         android:layout_marginLeft="-85dp"
         android:layout_toEndOf="@+id/large_icon"
         android:layout_toRightOf="@id/large_icon"
-        android:text="message message "
+        tools:text="message message "
         android:textAppearance="@style/PushMessage" />
 
     <LinearLayout
