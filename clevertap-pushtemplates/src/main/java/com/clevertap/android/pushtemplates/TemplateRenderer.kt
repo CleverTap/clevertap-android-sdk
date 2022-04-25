@@ -136,9 +136,9 @@ class TemplateRenderer : INotificationRenderer {
                      * Checks whether the imageUrls are perfect to download icon's bitmap,
                      * if not then do not render notification
                      */
-                    return if ((fiveIconStyle.getSmallContentView() as
+                    return if ((fiveIconStyle.fiveIconSmallContentView as
                                 FiveIconSmallContentView).getUnloadedFiveIconsCount() > 2 ||
-                        (fiveIconStyle.getBigContentView() as FiveIconBigContentView).getUnloadedFiveIconsCount() > 2){
+                        (fiveIconStyle.fiveIconBigContentView as FiveIconBigContentView).getUnloadedFiveIconsCount() > 2){
                              null
                     } else fiveIconNotificationBuilder
                 }
@@ -213,19 +213,7 @@ class TemplateRenderer : INotificationRenderer {
     private fun timerRunner(context: Context, extras: Bundle, notificationId: Int, delay: Int?) {
         val handler = Handler(Looper.getMainLooper())
         extras.remove("wzrk_rnv")
-        var pt_basic_title = ""
-        var pt_basic_big_img = ""
-        var pt_basic_msg = ""
 
-        if (pt_title_alt != null && pt_title_alt!!.isNotEmpty()) {
-            pt_basic_title = pt_title_alt as String
-        }
-        if (pt_big_img_alt != null && pt_big_img_alt!!.isNotEmpty()) {
-            pt_basic_big_img = pt_big_img_alt as String
-        }
-        if (pt_msg_alt != null && pt_msg_alt!!.isNotEmpty()) {
-            pt_basic_msg = pt_msg_alt as String
-        }
 
         if (delay != null) {
             handler.postDelayed({
@@ -239,13 +227,46 @@ class TemplateRenderer : INotificationRenderer {
                     basicTemplateBundle.putString(Constants.WZRK_PUSH_ID, null) // skip dupe check
                     basicTemplateBundle.putString(PTConstants.PT_ID, "pt_basic") // set to basic
 
-                    if (pt_basic_title.isNotEmpty())
-                        basicTemplateBundle.putString(PTConstants.PT_TITLE, pt_basic_title)//If pt_title_alt is available then use it for Basic template rendering
-                    if (pt_basic_big_img.isNotEmpty())
-                        basicTemplateBundle.putString(PTConstants.PT_BIG_IMG, pt_basic_big_img)//If pt_big_img_alt is available then use it for Basic template rendering
-                    if (pt_basic_msg.isNotEmpty())
-                        basicTemplateBundle.putString(PTConstants.PT_MSG, pt_basic_msg)//If pt_msg_alt is available then use it for Basic template rendering
 
+                    /**
+                     *  Update existing payload bundle with new title,msg,img for Basic template
+                     */
+                    val ptJsonStr  = basicTemplateBundle.getString(PTConstants.PT_JSON)
+                    var ptJsonObj: JSONObject? = null
+                    if (ptJsonStr != null) {
+                        try {
+                            ptJsonObj = JSONObject(ptJsonStr)
+                        } catch (e: Exception) {
+                            System.err.println("Unable to convert JSON to String")
+                        }
+                    }
+
+                    if (pt_title_alt != null && pt_title_alt!!.isNotEmpty()) {
+                        ptJsonObj?.put(PTConstants.PT_TITLE,pt_title_alt) ?: basicTemplateBundle.putString(
+                            PTConstants.PT_TITLE,
+                            pt_title_alt
+                        )
+                    }
+                    if (pt_big_img_alt != null && pt_big_img_alt!!.isNotEmpty()) {
+                        ptJsonObj?.put(PTConstants.PT_BIG_IMG, pt_big_img_alt) ?: basicTemplateBundle.putString(
+                                PTConstants.PT_BIG_IMG,
+                                pt_big_img_alt
+                            )
+                    }
+                    if (pt_msg_alt != null && pt_msg_alt!!.isNotEmpty()) {
+                        ptJsonObj?.put(PTConstants.PT_MSG, pt_msg_alt) ?: basicTemplateBundle.putString(
+                            PTConstants.PT_MSG,
+                            pt_msg_alt
+                        )
+                    }
+
+
+                    if (ptJsonObj != null) {
+                        basicTemplateBundle.putString(
+                            PTConstants.PT_JSON,
+                            ptJsonObj.toString()
+                        )
+                    }
                     // force random id generation
                     basicTemplateBundle.putString(PTConstants.PT_COLLAPSE_KEY, null)
                     basicTemplateBundle.putString(Constants.WZRK_COLLAPSE, null)
