@@ -1,11 +1,17 @@
 package com.clevertap.android.pushtemplates
 
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.*
+import android.os.Build.VERSION
+import android.os.Build.VERSION_CODES
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationCompat.Builder
 import com.clevertap.android.pushtemplates.content.FiveIconBigContentView
 import com.clevertap.android.pushtemplates.content.FiveIconSmallContentView
 import com.clevertap.android.pushtemplates.styles.*
@@ -13,7 +19,11 @@ import com.clevertap.android.pushtemplates.validators.ValidatorFactory
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ManifestInfo
+import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer
+import com.clevertap.android.sdk.pushnotification.PushNotificationHandler
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
 import org.json.JSONArray
 import org.json.JSONException
@@ -397,6 +407,131 @@ class TemplateRenderer : INotificationRenderer {
         if (pt_collapse_key == null) {
             pt_collapse_key = extras[Constants.WZRK_COLLAPSE]
         }
+    }
+
+    override fun setActionButtons(
+        context: Context,
+        extras: Bundle,
+        notificationId: Int,
+        nb: Builder, actions: JSONArray?
+    ): Builder? {
+        val intentServiceName = ManifestInfo.getInstance(context).intentServiceName
+        var clazz: Class<*>? = null
+        if (intentServiceName != null) {
+            try {
+                clazz = Class.forName(intentServiceName)
+            } catch (e: ClassNotFoundException) {
+                try {
+                    clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
+                } catch (ex: ClassNotFoundException) {
+                    Logger.d("No Intent Service found")
+                }
+            }
+        } else {
+            try {
+                clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
+            } catch (ex: ClassNotFoundException) {
+                Logger.d("No Intent Service found")
+            }
+        }
+        val isCTIntentServiceAvailable = com.clevertap.android.sdk.Utils.isServiceAvailable(context, clazz)
+        if (actions != null && actions.length() > 0) {
+            for (i in 0 until actions.length()) {
+                try {
+                    val action = actions.getJSONObject(i)
+                    val label = action.optString("l")
+                    val dl = action.optString("dl")
+                    val ico = action.optString(actionButtonIconKey)
+                    val id = action.optString("id")
+                    val autoCancel = action.optBoolean("ac", true)
+                    if (label.isEmpty() || id.isEmpty()) {
+                        Logger.d("not adding push notification action: action label or id missing")
+                        continue
+                    }
+                    var icon = 0
+                    if (!ico.isEmpty()) {
+                        try {
+                            icon = context.resources.getIdentifier(ico, "drawable", context.packageName)
+                        } catch (t: Throwable) {
+                            Logger.d("unable to add notification action icon: " + t.localizedMessage)
+                        }
+                    }
+                    var sendToCTIntentService = (VERSION.SDK_INT < VERSION_CODES.S && autoCancel
+                            && isCTIntentServiceAvailable)
+                    val dismissOnClick = extras.getString("pt_dismiss_on_click")
+                    /**
+                     * Send to CTIntentService in case (OS >= S) and notif is for Push templates with remind action
+                     */
+                    if (!sendToCTIntentService && PushNotificationHandler.isForPushTemplates(extras)
+                        && id.contains("remind") && dismissOnClick != null &&
+                        dismissOnClick.equals("true", ignoreCase = true) && autoCancel &&
+                        isCTIntentServiceAvailable
+                    ) {
+                        sendToCTIntentService = true
+                    }
+                    /**
+                     * Send to CTIntentService in case (OS >= S) and notif is for Push templates with pt_dismiss_on_click
+                     * true
+                     */
+                    if (!sendToCTIntentService && PushNotificationHandler.isForPushTemplates(extras)
+                        && dismissOnClick != null && dismissOnClick.equals("true", ignoreCase = true)
+                        && autoCancel && isCTIntentServiceAvailable
+                    ) {
+                        sendToCTIntentService = true
+                    }
+                    var actionLaunchIntent: Intent?
+                    if (sendToCTIntentService) {
+                        actionLaunchIntent = Intent(CTNotificationIntentService.MAIN_ACTION)
+                        actionLaunchIntent.setPackage(context.packageName)
+                        actionLaunchIntent.putExtra(
+                            Constants.KEY_CT_TYPE,
+                            CTNotificationIntentService.TYPE_BUTTON_CLICK
+                        )
+                        if (!dl.isEmpty()) {
+                            actionLaunchIntent.putExtra("dl", dl)
+                        }
+                    } else {
+                        actionLaunchIntent = if (!dl.isEmpty()) {
+                            Intent(Intent.ACTION_VIEW, Uri.parse(dl))
+                        } else {
+                            context.packageManager
+                                .getLaunchIntentForPackage(context.packageName)
+                        }
+                    }
+                    if (actionLaunchIntent != null) {
+                        actionLaunchIntent.putExtras(extras)
+                        actionLaunchIntent.removeExtra(Constants.WZRK_ACTIONS)
+                        actionLaunchIntent.putExtra("actionId", id)
+                        actionLaunchIntent.putExtra("autoCancel", autoCancel)
+                        actionLaunchIntent.putExtra("wzrk_c2a", id)
+                        actionLaunchIntent.putExtra("notificationId", notificationId)
+                        actionLaunchIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    }
+                    var actionIntent: PendingIntent?
+                    val requestCode = System.currentTimeMillis().toInt() + i
+                    var flagsActionLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+                    if (VERSION.SDK_INT >= VERSION_CODES.M) {
+                        flagsActionLaunchPendingIntent =
+                            flagsActionLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
+                    }
+                    actionIntent = if (sendToCTIntentService) {
+                        PendingIntent.getService(
+                            context, requestCode,
+                            actionLaunchIntent!!, flagsActionLaunchPendingIntent
+                        )
+                    } else {
+                        PendingIntent.getActivity(
+                            context, requestCode,
+                            actionLaunchIntent, flagsActionLaunchPendingIntent
+                        )
+                    }
+                    nb.addAction(icon, label, actionIntent)
+                } catch (t: Throwable) {
+                    Logger.d("error adding notification action : " + t.localizedMessage)
+                }
+            }
+        } // Uncommon - END
+        return nb
     }
 
     companion object {
