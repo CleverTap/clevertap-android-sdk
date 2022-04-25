@@ -10,8 +10,8 @@ import com.clevertap.android.pushtemplates.content.PendingIntentFactory
 
 class FiveIconStyle(private var renderer: TemplateRenderer, private var extras: Bundle) : Style(renderer) {
 
-    private lateinit var fiveIconSmallContentView: ContentView
-    private lateinit var fiveIconBigContentView: ContentView
+    lateinit var fiveIconSmallContentView: ContentView
+    lateinit var fiveIconBigContentView: ContentView
 
     override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
         fiveIconSmallContentView = FiveIconSmallContentView(context, renderer, extras)
@@ -21,14 +21,6 @@ class FiveIconStyle(private var renderer: TemplateRenderer, private var extras: 
     override fun makeBigContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
         fiveIconBigContentView = FiveIconBigContentView(context, renderer, extras)
         return fiveIconBigContentView.remoteView
-    }
-
-    fun getSmallContentView(): ContentView{
-       return fiveIconSmallContentView
-    }
-
-    fun getBigContentView(): ContentView {
-        return fiveIconBigContentView
     }
 
     override fun makePendingIntent(
