@@ -8,7 +8,6 @@ import android.text.Html
 import android.widget.RemoteViews
 import androidx.core.app.NotificationCompat
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.pushtemplates.content.ContentView
 
 abstract class Style(private var renderer: TemplateRenderer) {
 

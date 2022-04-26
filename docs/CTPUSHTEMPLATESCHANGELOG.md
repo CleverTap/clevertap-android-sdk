@@ -1,6 +1,6 @@
 ## CleverTap Push Templates SDK CHANGE LOG
 
-### Version 1.0.1 (April 26, 2022)
+### Version 1.0.2 (April 26, 2022)
 * UI bug fixes for Push Notification metadata
 * Timer template fixes for `title`, `title_alt` along with `pt_big_img`, `pt_big_img_alt`
 * Small content view text cropping fixes for Android versions less than 23

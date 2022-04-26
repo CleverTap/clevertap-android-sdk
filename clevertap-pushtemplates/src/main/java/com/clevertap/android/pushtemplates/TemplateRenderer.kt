@@ -247,7 +247,7 @@ class TemplateRenderer : INotificationRenderer {
                         try {
                             ptJsonObj = JSONObject(ptJsonStr)
                         } catch (e: Exception) {
-                            System.err.println("Unable to convert JSON to String")
+                            Logger.v("Unable to convert JSON to String")
                         }
                     }
 

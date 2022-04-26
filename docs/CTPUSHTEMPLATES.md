@@ -184,6 +184,8 @@ Five icons template is a sticky push notification with no text, just 5 icons and
 
 If at least 3 icons are not retrieved, the library doesn't render any notification. The bifurcation of each CTA is captured in the event Notification Clicked with in the property `wzrk_c2a`.
 
+If user clicks on any notification area except the five & close icons, then by default it will launch an activity intent.
+
 <img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/fiveicon.png" width="412" height="100">
 
 ## Timer Template
