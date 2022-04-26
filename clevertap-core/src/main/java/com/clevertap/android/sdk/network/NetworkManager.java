@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.network;
 
+import static com.clevertap.android.sdk.Utils.getDCDomain;
 import static com.clevertap.android.sdk.utils.CTJsonConverter.getRenderedTargetList;
 
 import android.annotation.SuppressLint;
@@ -698,7 +699,7 @@ public class NetworkManager extends BaseNetworkManager {
 
         if (callbackManager.getDCDomainCallback() != null) {
             if(domainName != null) {
-                callbackManager.getDCDomainCallback().onDCDomainAvailable("dc-" + domainName);
+                callbackManager.getDCDomainCallback().onDCDomainAvailable(getDCDomain(domainName));
             }else {
                 callbackManager.getDCDomainCallback().onDCDomainUnavailable();
             }

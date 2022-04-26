@@ -279,6 +279,7 @@ public interface Constants {
     String CLEVERTAP_IDENTIFIER = "CLEVERTAP_IDENTIFIER";
     String SEPARATOR_COMMA = ",";
     String EMPTY_STRING = "";
+    String AUTH = "auth";
     String SP_KEY_PROFILE_IDENTITIES = "SP_KEY_PROFILE_IDENTITIES";
 
     // valid profile identifier keys

@@ -2,6 +2,8 @@ package com.clevertap.android.sdk;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
 
+import static com.clevertap.android.sdk.Utils.getDCDomain;
+
 import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
@@ -1193,7 +1195,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             NetworkManager networkManager = (NetworkManager) coreState.getNetworkManager();
             String domain = networkManager.getDomainFromPrefsOrMetadata(EventGroup.REGULAR);
             if(domain != null) {
-                dcDomainCallback.onDCDomainAvailable("dc-" + domain);
+                dcDomainCallback.onDCDomainAvailable(getDCDomain(domain));
             }
         }
     }
