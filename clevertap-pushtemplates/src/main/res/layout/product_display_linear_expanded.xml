@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/content_view_big"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -41,7 +42,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="2"
                 android:gravity="center"
-                android:text="1234567890123456"
+                tools:text="1234567890123456"
                 android:textAppearance="@style/PushTitle" />
 
             <Button
@@ -50,7 +51,7 @@
                 android:layout_height="match_parent"
                 android:layout_weight="1"
                 android:background="@android:color/holo_red_dark"
-                android:text="Buy Now"
+                tools:text="Buy Now"
                 android:textAppearance="@style/PushMessage"
                 android:textColor="@android:color/white" />
 

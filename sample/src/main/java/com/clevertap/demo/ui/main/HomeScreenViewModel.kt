@@ -316,6 +316,8 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             "916"-> cleverTapAPI?.pushEvent("Send Input Box CTA DOC false")
             "917"-> cleverTapAPI?.pushEvent("Send Input Box Reminder DOC true")
             "918"-> cleverTapAPI?.pushEvent("Send Input Box Reminder DOC false")
+            "919"-> cleverTapAPI?.pushEvent("Send Three CTA Notification")
+
             //"60" -> webViewClickListener?.onWebViewClick()
 
         }

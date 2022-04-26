@@ -3,6 +3,8 @@
 
     <dimen name="padding_horizontal">16dp</dimen>
     <dimen name="padding_vertical">4dp</dimen>
+    <dimen name="padding_micro">3dp</dimen>
+    <dimen name="padding_negative">-1dp</dimen>
 
     <dimen name="title_font_size">12sp</dimen>
     <dimen name="msg_font_size">12sp</dimen>
