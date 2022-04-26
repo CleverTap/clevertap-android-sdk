@@ -1,23 +1,36 @@
 package com.clevertap.android.pushtemplates
 
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
+import android.net.Uri
 import android.os.*
+import android.os.Build.VERSION
+import android.os.Build.VERSION_CODES
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationCompat.Builder
+import com.clevertap.android.pushtemplates.content.FiveIconBigContentView
+import com.clevertap.android.pushtemplates.content.FiveIconSmallContentView
 import com.clevertap.android.pushtemplates.styles.*
 import com.clevertap.android.pushtemplates.validators.ValidatorFactory
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.Logger
+import com.clevertap.android.sdk.ManifestInfo
+import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
 import com.clevertap.android.sdk.pushnotification.INotificationRenderer
+import com.clevertap.android.sdk.pushnotification.PushNotificationHandler
 import com.clevertap.android.sdk.pushnotification.PushNotificationUtil
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
 import java.util.*
 
+@Suppress("LocalVariableName")
 class TemplateRenderer : INotificationRenderer {
 
     private var pt_id: String? = null
@@ -120,9 +133,25 @@ class TemplateRenderer : INotificationRenderer {
                     return RatingStyle(this, extras).builderFromStyle(context, extras, notificationId, nb)
 
             TemplateType.FIVE_ICONS ->
-                if (ValidatorFactory.getValidator(TemplateType.FIVE_ICONS, this)?.validate() == true)
-                    return FiveIconStyle(this, extras).builderFromStyle(context, extras, notificationId, nb)
-                        .setOngoing(true)
+                if (ValidatorFactory.getValidator(TemplateType.FIVE_ICONS, this)?.validate() == true) {
+                    val fiveIconStyle  = FiveIconStyle(this, extras)
+                    val fiveIconNotificationBuilder = fiveIconStyle.builderFromStyle(
+                        context,
+                        extras,
+                        notificationId,
+                        nb
+                    ).setOngoing(true)
+
+                    /**
+                     * Checks whether the imageUrls are perfect to download icon's bitmap,
+                     * if not then do not render notification
+                     */
+                    return if ((fiveIconStyle.fiveIconSmallContentView as
+                                FiveIconSmallContentView).getUnloadedFiveIconsCount() > 2 ||
+                        (fiveIconStyle.fiveIconBigContentView as FiveIconBigContentView).getUnloadedFiveIconsCount() > 2){
+                             null
+                    } else fiveIconNotificationBuilder
+                }
 
             TemplateType.PRODUCT_DISPLAY -> if (ValidatorFactory.getValidator(TemplateType.PRODUCT_DISPLAY, this)
                     ?.validate() == true
@@ -194,15 +223,7 @@ class TemplateRenderer : INotificationRenderer {
     private fun timerRunner(context: Context, extras: Bundle, notificationId: Int, delay: Int?) {
         val handler = Handler(Looper.getMainLooper())
         extras.remove("wzrk_rnv")
-        if (pt_title_alt != null && pt_title_alt!!.isNotEmpty()) {
-            pt_title = pt_title_alt
-        }
-        if (pt_big_img_alt != null && pt_big_img_alt!!.isNotEmpty()) {
-            pt_big_img = pt_big_img_alt
-        }
-        if (pt_msg_alt != null && pt_msg_alt!!.isNotEmpty()) {
-            pt_msg = pt_msg_alt
-        }
+
 
         if (delay != null) {
             handler.postDelayed({
@@ -215,6 +236,47 @@ class TemplateRenderer : INotificationRenderer {
                     val basicTemplateBundle = extras.clone() as Bundle
                     basicTemplateBundle.putString(Constants.WZRK_PUSH_ID, null) // skip dupe check
                     basicTemplateBundle.putString(PTConstants.PT_ID, "pt_basic") // set to basic
+
+
+                    /**
+                     *  Update existing payload bundle with new title,msg,img for Basic template
+                     */
+                    val ptJsonStr  = basicTemplateBundle.getString(PTConstants.PT_JSON)
+                    var ptJsonObj: JSONObject? = null
+                    if (ptJsonStr != null) {
+                        try {
+                            ptJsonObj = JSONObject(ptJsonStr)
+                        } catch (e: Exception) {
+                            Logger.v("Unable to convert JSON to String")
+                        }
+                    }
+
+                    if (pt_title_alt != null && pt_title_alt!!.isNotEmpty()) {
+                        ptJsonObj?.put(PTConstants.PT_TITLE,pt_title_alt) ?: basicTemplateBundle.putString(
+                            PTConstants.PT_TITLE,
+                            pt_title_alt
+                        )
+                    }
+                    if (pt_big_img_alt != null && pt_big_img_alt!!.isNotEmpty()) {
+                        ptJsonObj?.put(PTConstants.PT_BIG_IMG, pt_big_img_alt) ?: basicTemplateBundle.putString(
+                                PTConstants.PT_BIG_IMG,
+                                pt_big_img_alt
+                            )
+                    }
+                    if (pt_msg_alt != null && pt_msg_alt!!.isNotEmpty()) {
+                        ptJsonObj?.put(PTConstants.PT_MSG, pt_msg_alt) ?: basicTemplateBundle.putString(
+                            PTConstants.PT_MSG,
+                            pt_msg_alt
+                        )
+                    }
+
+
+                    if (ptJsonObj != null) {
+                        basicTemplateBundle.putString(
+                            PTConstants.PT_JSON,
+                            ptJsonObj.toString()
+                        )
+                    }
                     // force random id generation
                     basicTemplateBundle.putString(PTConstants.PT_COLLAPSE_KEY, null)
                     basicTemplateBundle.putString(Constants.WZRK_COLLAPSE, null)
@@ -345,6 +407,131 @@ class TemplateRenderer : INotificationRenderer {
         if (pt_collapse_key == null) {
             pt_collapse_key = extras[Constants.WZRK_COLLAPSE]
         }
+    }
+
+    override fun setActionButtons(
+        context: Context,
+        extras: Bundle,
+        notificationId: Int,
+        nb: Builder, actions: JSONArray?
+    ): Builder? {
+        val intentServiceName = ManifestInfo.getInstance(context).intentServiceName
+        var clazz: Class<*>? = null
+        if (intentServiceName != null) {
+            try {
+                clazz = Class.forName(intentServiceName)
+            } catch (e: ClassNotFoundException) {
+                try {
+                    clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
+                } catch (ex: ClassNotFoundException) {
+                    Logger.d("No Intent Service found")
+                }
+            }
+        } else {
+            try {
+                clazz = Class.forName("com.clevertap.android.sdk.pushnotification.CTNotificationIntentService")
+            } catch (ex: ClassNotFoundException) {
+                Logger.d("No Intent Service found")
+            }
+        }
+        val isCTIntentServiceAvailable = com.clevertap.android.sdk.Utils.isServiceAvailable(context, clazz)
+        if (actions != null && actions.length() > 0) {
+            for (i in 0 until actions.length()) {
+                try {
+                    val action = actions.getJSONObject(i)
+                    val label = action.optString("l")
+                    val dl = action.optString("dl")
+                    val ico = action.optString(actionButtonIconKey)
+                    val id = action.optString("id")
+                    val autoCancel = action.optBoolean("ac", true)
+                    if (label.isEmpty() || id.isEmpty()) {
+                        Logger.d("not adding push notification action: action label or id missing")
+                        continue
+                    }
+                    var icon = 0
+                    if (!ico.isEmpty()) {
+                        try {
+                            icon = context.resources.getIdentifier(ico, "drawable", context.packageName)
+                        } catch (t: Throwable) {
+                            Logger.d("unable to add notification action icon: " + t.localizedMessage)
+                        }
+                    }
+                    var sendToCTIntentService = (VERSION.SDK_INT < VERSION_CODES.S && autoCancel
+                            && isCTIntentServiceAvailable)
+                    val dismissOnClick = extras.getString("pt_dismiss_on_click")
+                    /**
+                     * Send to CTIntentService in case (OS >= S) and notif is for Push templates with remind action
+                     */
+                    if (!sendToCTIntentService && PushNotificationHandler.isForPushTemplates(extras)
+                        && id.contains("remind") && dismissOnClick != null &&
+                        dismissOnClick.equals("true", ignoreCase = true) && autoCancel &&
+                        isCTIntentServiceAvailable
+                    ) {
+                        sendToCTIntentService = true
+                    }
+                    /**
+                     * Send to CTIntentService in case (OS >= S) and notif is for Push templates with pt_dismiss_on_click
+                     * true
+                     */
+                    if (!sendToCTIntentService && PushNotificationHandler.isForPushTemplates(extras)
+                        && dismissOnClick != null && dismissOnClick.equals("true", ignoreCase = true)
+                        && autoCancel && isCTIntentServiceAvailable
+                    ) {
+                        sendToCTIntentService = true
+                    }
+                    var actionLaunchIntent: Intent?
+                    if (sendToCTIntentService) {
+                        actionLaunchIntent = Intent(CTNotificationIntentService.MAIN_ACTION)
+                        actionLaunchIntent.setPackage(context.packageName)
+                        actionLaunchIntent.putExtra(
+                            Constants.KEY_CT_TYPE,
+                            CTNotificationIntentService.TYPE_BUTTON_CLICK
+                        )
+                        if (!dl.isEmpty()) {
+                            actionLaunchIntent.putExtra("dl", dl)
+                        }
+                    } else {
+                        actionLaunchIntent = if (!dl.isEmpty()) {
+                            Intent(Intent.ACTION_VIEW, Uri.parse(dl))
+                        } else {
+                            context.packageManager
+                                .getLaunchIntentForPackage(context.packageName)
+                        }
+                    }
+                    if (actionLaunchIntent != null) {
+                        actionLaunchIntent.putExtras(extras)
+                        actionLaunchIntent.removeExtra(Constants.WZRK_ACTIONS)
+                        actionLaunchIntent.putExtra("actionId", id)
+                        actionLaunchIntent.putExtra("autoCancel", autoCancel)
+                        actionLaunchIntent.putExtra("wzrk_c2a", id)
+                        actionLaunchIntent.putExtra("notificationId", notificationId)
+                        actionLaunchIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    }
+                    var actionIntent: PendingIntent?
+                    val requestCode = System.currentTimeMillis().toInt() + i
+                    var flagsActionLaunchPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT
+                    if (VERSION.SDK_INT >= VERSION_CODES.M) {
+                        flagsActionLaunchPendingIntent =
+                            flagsActionLaunchPendingIntent or PendingIntent.FLAG_IMMUTABLE
+                    }
+                    actionIntent = if (sendToCTIntentService) {
+                        PendingIntent.getService(
+                            context, requestCode,
+                            actionLaunchIntent!!, flagsActionLaunchPendingIntent
+                        )
+                    } else {
+                        PendingIntent.getActivity(
+                            context, requestCode,
+                            actionLaunchIntent, flagsActionLaunchPendingIntent
+                        )
+                    }
+                    nb.addAction(icon, label, actionIntent)
+                } catch (t: Throwable) {
+                    Logger.d("error adding notification action : " + t.localizedMessage)
+                }
+            }
+        } // Uncommon - END
+        return nb
     }
 
     companion object {

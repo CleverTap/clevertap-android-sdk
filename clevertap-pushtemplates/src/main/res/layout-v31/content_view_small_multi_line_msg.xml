@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/content_view_small"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="@dimen/padding_vertical">
+    android:layout_marginTop="@dimen/padding_micro"
+    android:layout_marginRight="@dimen/padding_micro"
+    android:layout_marginLeft="@dimen/padding_micro">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -17,7 +20,7 @@
             android:layout_marginEnd="@dimen/metadata_title_margin_horizontal"
             android:layout_alignParentStart="true"
             android:layout_toStartOf="@+id/large_icon"
-            android:text="title"
+            tools:text="title"
             android:maxLines="1"
             android:ellipsize="end"
             android:textAppearance="@style/PushTitle" />
@@ -32,7 +35,7 @@
             android:layout_toStartOf="@+id/large_icon"
             android:maxLines="3"
             android:ellipsize="end"
-            android:text="message message"
+            tools:text="message message"
             android:textAppearance="@style/PushMessageMultiLine"/>
 
 
@@ -41,6 +44,7 @@
         android:layout_width="@dimen/large_icon"
         android:layout_height="@dimen/large_icon"
         android:layout_marginStart="@dimen/metadata_title_margin_horizontal"
+        android:layout_marginBottom="@dimen/padding_micro"
         android:layout_alignParentEnd="true"
         android:scaleType="centerCrop" />
     </RelativeLayout>
