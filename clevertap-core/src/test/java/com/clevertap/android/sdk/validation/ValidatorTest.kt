@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.validation
 
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.shared.test.BaseTestCase
+import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -114,12 +115,60 @@ class ValidatorTest : BaseTestCase() {
         }
     }
 
+
     @Test
-    fun test_cleanMultiValuePropertyValue_when_ABC_should_XYZ() {
+    fun test_cleanMultiValuePropertyValue_when_PropertyValueIsPassed_should_ReturnAppValidationResults() {
+        var propValue:String? = null
+        var result = ValidationResult()
+
+        // when propValue  has whitespaces at start/end, the spaces are trimmed
+        propValue = " \t  table  \n "
+        result = validator.cleanMultiValuePropertyValue(propValue)
+        assertEquals("table",result.`object`)
+
+        // when propValue  has forbidden charaters, those are removed
+        propValue = arrayOf("'", "\"", "\\").joinToString("")+"abc"
+        result = validator.cleanMultiValuePropertyValue(propValue)
+        assertEquals("abc",result.`object`)
+
+
+        // when propValue length > 512, its trimmed to 511 characters
+        propValue = "a".repeat(Constants.MAX_MULTI_VALUE_LENGTH+1)
+        val expectedStr = propValue.substring(0,Constants.MAX_MULTI_VALUE_LENGTH-1)
+        val error = ValidationResultFactory.create(521, Constants.VALUE_CHARS_LIMIT_EXCEEDED, expectedStr, Constants.MAX_MULTI_VALUE_LENGTH.toString() )
+
+        result = validator.cleanMultiValuePropertyValue(propValue)
+        assertEquals(expectedStr,result.`object`)
+        assertEquals(expectedStr.length,(result.`object` as String).length)
+        assertEquals(error.errorCode,result.errorCode)
+        assertEquals(error.errorDesc,result.errorDesc)
+
     }
 
     @Test
-    fun test_mergeMultiValuePropertyForKey_when_ABC_should_XYZ() {
+    fun test__mergeListInternalForKey_when_CalledWithKeyJsonArraysBooleanAndValidationResult_should_ReturnAppropiateValidationResult() {
+        //since mergeMultiValuePropertyForKey only calls _mergeListInternalForKey, we will be testing that function only
+
+        var jLeftCurrent:JSONArray? = null
+        var jRightNew:JSONArray? = null
+        var action : String? = null
+        var key:String? = null
+        var expectedResult:ValidationResult? = null
+        var result:ValidationResult? = null
+
+        // when jleft or jright are null, empty results are returned
+        jLeftCurrent = getSampleJsonArray(1)
+        jRightNew = null
+        expectedResult = ValidationResult()
+        result = validator.mergeMultiValuePropertyForKey(jLeftCurrent,jRightNew,action,key)
+        assertEquals(expectedResult.errorCode,result.errorCode)
+
+        jLeftCurrent = null
+        jRightNew = getSampleJsonArray(1)
+        expectedResult = ValidationResult()
+        result = validator.mergeMultiValuePropertyForKey(jLeftCurrent,jRightNew,action,key)
+        assertEquals(expectedResult.errorCode,result.errorCode)
+
     }
 
 
