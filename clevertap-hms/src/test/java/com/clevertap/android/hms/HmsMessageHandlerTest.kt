@@ -52,8 +52,11 @@ class HmsMessageHandlerTest : BaseTestCase() {
 
     @Test
     fun testCreateNotification_Valid_Message() {
-        `when`(parser.toBundle(any(RemoteMessage::class.java))).thenReturn(Bundle())
-        val isSuccess = mHandlerCT.createNotification(application, RemoteMessage(Bundle()))
+        val bundle = Bundle()
+        bundle.putString(Constants.NOTIFICATION_TAG,"tag")
+        bundle.putString(Constants.NOTIF_MSG,"msg")
+        `when`(parser.toBundle(any(RemoteMessage::class.java))).thenReturn(bundle)
+        val isSuccess = mHandlerCT.createNotification(application, RemoteMessage(bundle))
         Assert.assertTrue(isSuccess)
     }
 
@@ -61,6 +64,8 @@ class HmsMessageHandlerTest : BaseTestCase() {
     fun testCreateNotification_Valid_Message_With_Account_ID() {
         val bundle = Bundle()
         bundle.putString(Constants.WZRK_ACCT_ID_KEY, "Some Value")
+        bundle.putString(Constants.NOTIFICATION_TAG,"tag")
+        bundle.putString(Constants.NOTIF_MSG,"msg")
         `when`(parser.toBundle(any(RemoteMessage::class.java))).thenReturn(bundle)
         val isSuccess = mHandlerCT.createNotification(application, RemoteMessage(Bundle()))
         Assert.assertTrue(isSuccess)
