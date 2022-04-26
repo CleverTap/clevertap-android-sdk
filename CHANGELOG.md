@@ -1,6 +1,6 @@
 ## CHANGE LOG
 
-### March 2, 2022
+### April 26, 2022
 
 * [CleverTap Push Templates SDK v1.0.2](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTPUSHTEMPLATESCHANGELOG.md)
 
