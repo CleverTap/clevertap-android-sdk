@@ -22,6 +22,7 @@ import com.google.android.gms.security.ProviderInstaller
 import com.google.android.gms.security.ProviderInstaller.ProviderInstallListener
 import org.json.JSONObject
 import java.util.HashMap
+import kotlin.system.measureTimeMillis
 
 class MyApplication : MultiDexApplication(), CTPushNotificationListener, ActivityLifecycleCallbacks {
 
@@ -44,8 +45,11 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
 
         CleverTapAPI.setDebugLevel(VERBOSE)
         TemplateRenderer.debugLevel = 3;
-        CleverTapAPI.setNotificationHandler(PushTemplateNotificationHandler() as NotificationHandler);
-        ActivityLifecycleCallback.register(this)
+        CleverTapAPI.setNotificationHandler(PushTemplateNotificationHandler() as NotificationHandler)
+
+        val measureTimeMillis = measureTimeMillis { ActivityLifecycleCallback.register(this) }
+        println("Time taken to execute  ActivityLifecycleCallback.register = $measureTimeMillis milliseconds")
+
         registerActivityLifecycleCallbacks(this)
         super.onCreate()
 

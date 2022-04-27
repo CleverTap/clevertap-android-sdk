@@ -24,7 +24,6 @@ open class BigImageContentView(
         setCustomContentViewMessageColour(renderer.pt_msg_clr)
         setCustomContentViewMessageSummary(renderer.pt_msg_summary)
         setCustomContentViewSmallIcon()
-        setCustomContentViewDotSep()
         setCustomContentViewBigImage(renderer.pt_big_img)
         setCustomContentViewLargeIcon(renderer.pt_large_icon)
     }

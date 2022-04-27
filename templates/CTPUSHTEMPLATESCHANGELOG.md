@@ -1,5 +1,14 @@
 ## CleverTap Push Templates SDK CHANGE LOG
 
+### Version 1.0.2 (April 26, 2022)
+* UI bug fixes for Push Notification metadata
+* Timer template fixes for `title`, `title_alt` along with `pt_big_img`, `pt_big_img_alt`
+* Small content view text cropping fixes for Android versions less than 23
+* Darker arrows for navigation in ManualCarousel & Filmstrip Carousel template
+* Fixes five icon template dismissible on multiple onClickListeners
+* Fixes UI issue when only 3 icons were configured in Five icon template
+* Fix validation for `deepLink(optional)` key in ZeroBezel template
+
 ### Version 1.0.1 (March 2, 2022)
 * Improved image handling for Basic, AutoCarousel, ManualCarousel templates.
 * Allows either or both  `pt_timer_threshold` and `pt_timer_end` for Timer template.

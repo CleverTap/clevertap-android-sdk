@@ -27,7 +27,8 @@
                 android:layout_marginRight="3dp"
                 android:layout_weight="6"
                 android:inAnimation="@anim/fade_in"
-                android:outAnimation="@anim/fade_out" />
+                android:outAnimation="@anim/fade_out"
+                android:layout_marginEnd="3dp" />
 
             <ViewFlipper
                 android:id="@+id/carousel_image"
@@ -48,7 +49,8 @@
                 android:layout_marginLeft="3dp"
                 android:layout_weight="6"
                 android:inAnimation="@anim/fade_in"
-                android:outAnimation="@anim/fade_out" />
+                android:outAnimation="@anim/fade_out"
+                android:layout_marginStart="3dp" />
         </LinearLayout>
 
         <ImageView
