@@ -169,6 +169,60 @@ class ValidatorTest : BaseTestCase() {
         result = validator.mergeMultiValuePropertyForKey(jLeftCurrent,jRightNew,action,key)
         assertEquals(expectedResult.errorCode,result.errorCode)
 
+
+        // the whole function works like this :
+
+
+        //left = current values , right = new values, remove = true/false vr = empty
+        // new vars :
+        // - mergedlist : empty json array
+        // - set : empty set of unique strings
+        // - currValsLength = currentValues.length();
+        // - newValsLength = newValues.length();
+        // - additionBitSet/dupSetForAdd =  null if remove is true , else  BitSet(currValsLength + newValsLength)
+        // - currentValsStartIdx = 0;
+        // - newValsStartIdx = 0;
+
+
+        // 1. newValsStartIdx  = scan(newValues, set, additionBitSet, currValsLength)
+        //                     = 0 if new values are null ,
+        //                     = 0 if bitset is null (which is when remove is true)
+        //                     = 0 if bitset is not null and all objects newValues are either null or already inside set
+        //                     = currentValsLength+index of  object from newVals list where set.size has become 100
+        //
+        //     1.1 also, for each item of newValues from last to first,
+        //         - item gets added to set if item is not null AND  bitset == null (which is when remove is true)
+        //         - item gets added to set if (item is null or set already contains item) is FALSE
+
+        // 2. if remove == false and set.size after previous step < 100,
+        //     2.1  set currentValsStartIdx    = scan(currentValues, set, additionBitSet, 0);
+        //                                     = 0 if currentValues are null ,
+        //                                     = 0 if bitset is null (which is when remove is true)
+        //                                     = 0 if bitset is not null and all objects currentValues are either null or already inside set
+        //                                     = 0+index of  object from currentValues list where set.size has become 100
+        //     2.2 also, for each item of currentValues from last to first,
+        //         - item gets added to set if item is not null AND  bitset == null (which is when remove is true)
+        //         - item gets added to set if (item is null or set already contains item) is FALSE
+
+
+        // 3. for each index i = currentValsStartIdx to currValsLength :
+        //    3.1 if remove == true and  set does not contain currentItem(==currentValues[i] )  ==> add currentItem item to merged list AS STRING
+        //    3.2 if remove == false and additionBitSet.get(i)==false ==>  add currentItem item to merged list AS IT IS
+
+
+        // 4. if (remove is false and mergedList length is less than 100, then
+        //    4.1 for each index i = newValsStartIdx to newValsLength :
+        //         if  additionBitSet.get(icurrValsLength)==false ==>  add new item (== newValues[i] )  item to merged list AS IT IS
+
+
+        // 5 if either newValsStartIdx or currentValsStartIdx > 0  then set error MULTI_VALUE_CHARS_LIMIT_EXCEEDED on vr
+        //   else no changes to  vr
+
+        // 6  set vr.objext as merged list
+
+        // 7  return merged list
+
+
     }
 
 
