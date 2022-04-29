@@ -149,78 +149,171 @@ class ValidatorTest : BaseTestCase() {
     fun test__mergeListInternalForKey_when_CalledWithKeyJsonArraysBooleanAndValidationResult_should_ReturnAppropiateValidationResult() {
         //since mergeMultiValuePropertyForKey only calls _mergeListInternalForKey, we will be testing that function only
 
-        var jLeftCurrent:JSONArray? = null
-        var jRightNew:JSONArray? = null
+        var currentValues:JSONArray? = null
+        var newValues:JSONArray? = null
         var action : String? = null
-        var key:String? = null
+        val key:String? = "anykey" // can be anything. no real usage except when throwing error
         var expectedResult:ValidationResult? = null
         var result:ValidationResult? = null
+        var resultArr: JSONArray? = null;
 
-        // when jleft or jright are null, empty results are returned
-        jLeftCurrent = getSampleJsonArray(1)
-        jRightNew = null
-        expectedResult = ValidationResult()
-        result = validator.mergeMultiValuePropertyForKey(jLeftCurrent,jRightNew,action,key)
-        assertEquals(expectedResult.errorCode,result.errorCode)
+        //case 0.1 when currentValues are null, null is set to empty vr object and returned
+        "case 0.1".let {
+            currentValues = null
+            newValues = getSampleJsonArray(1)
+            expectedResult = ValidationResult()
+            result = validator.mergeMultiValuePropertyForKey(currentValues,newValues,action,key)
+            resultArr = result?.`object` as? JSONArray
+            println("$it - resultArr:$resultArr")
+            assertEquals(expectedResult?.errorCode,result?.errorCode)
+            assertNull(result?.`object`)
+            println("===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ")
+        }
 
-        jLeftCurrent = null
-        jRightNew = getSampleJsonArray(1)
-        expectedResult = ValidationResult()
-        result = validator.mergeMultiValuePropertyForKey(jLeftCurrent,jRightNew,action,key)
-        assertEquals(expectedResult.errorCode,result.errorCode)
+        //case 0.2 when newValues are null, currentValues are set to empty vr object and returned
+        "case 0.2".let {
+            currentValues = getSampleJsonArray(1)
+            newValues = null
+            expectedResult = ValidationResult()
+
+            result = validator.mergeMultiValuePropertyForKey(currentValues,newValues,action,key)
+            resultArr = result?.`object` as? JSONArray
+            println("$it - resultArr:$resultArr")
+            assertEquals(expectedResult?.errorCode,result?.errorCode)
+            assertNotNull(result?.`object`)
+            assertEquals(currentValues, resultArr)
+            println("===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ")
+        }
+
+        // case 1.1 : when remove operation is used, current list == new list . outcome : merged list will be equal to  empty list since all the items from current and new list are same and therefore gets removed
+        "case 1.1".let {
+            currentValues = getSampleJsonArray(2)
+            newValues = getSampleJsonArray(2)
+            action = Validator.REMOVE_VALUES_OPERATION
+            result = validator.mergeMultiValuePropertyForKey(currentValues, newValues, action, key)
+            resultArr = result?.`object` as? JSONArray
+            println("$it : result arr = $resultArr ")
+            assertEquals(0, resultArr?.length())
+            println("=====  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  =====")
+
+        }
+        // todo
+//        // case 1.2 : when remove operation is used, current list == new list . outcome : merged list will be equal to  empty list since all the items from current and new list are same and therefore gets removed
+//        currentValues = getSampleJsonArray(2,1)
+//        newValues = getSampleJsonArray(2,2)
+//        action = Validator.REMOVE_VALUES_OPERATION
+//        result = validator.mergeMultiValuePropertyForKey(currentValues,newValues,action,key)
+//        resultArr = result.`object` as? JSONArray
+//        println("case 1.2 : result arr = $resultArr ")
+//        assertEquals(1, resultArr?.length())
+//        //assertEquals("")
+//        println("=====  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  =====")
+//
+
+        // case 2.1 : when add operation is used, current list == new list . outcome : merged list will be equal to  current/new list
+        "case 2.1".let {
+            currentValues = getSampleJsonArray(2,)
+            newValues = getSampleJsonArray(2,)
+            action = Validator.ADD_VALUES_OPERATION
+            result = validator.mergeMultiValuePropertyForKey(currentValues,newValues,action,key)
+            resultArr = result?.`object` as? JSONArray
+            println("$it: result arr = $resultArr ")
+            assertEquals(2, resultArr?.length())
+            assertEquals(1,(resultArr?.get(0) as JSONObject).get("key1"))
+            assertEquals(2,(resultArr?.get(1) as JSONObject).get("key2"))
+            println("=====  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  =====")
+        }
+
+        // case 2.2 : when add operation is used, current list != new list . outcome : merged list will be equal to union of current and merged list
+        "case 2.2".let {
+            currentValues = getSampleJsonArray(2,1)
+            newValues = getSampleJsonArray(2,2)
+            action = Validator.ADD_VALUES_OPERATION
+            result = validator.mergeMultiValuePropertyForKey(currentValues,newValues,action,key)
+            resultArr = result?.`object` as? JSONArray
+            println("$it : result arr = $resultArr ")
+            assertEquals(3, resultArr?.length())
+            assertEquals(1,(resultArr?.get(0) as JSONObject).get("key1"))
+            assertEquals(2,(resultArr?.get(1) as JSONObject).get("key2"))
+            assertEquals(3,(resultArr?.get(2) as JSONObject).get("key3"))
+            println("=====  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  =====")
+        }
 
 
-        // the whole function works like this :
+        // case 2.2 : same as case 2.2 but with no elements common. outcome merged list with all the elements of both lists
+        "case 2.3".let {
+            currentValues = getSampleJsonArray(2,1)
+            newValues = getSampleJsonArray(3,50)
+            action = Validator.ADD_VALUES_OPERATION
+            result = validator.mergeMultiValuePropertyForKey(currentValues,newValues,action,key)
+            resultArr = result?.`object` as? JSONArray
+            println("$it : result arr = $resultArr ")
+            assertEquals(5, resultArr?.length())
+            assertEquals(1,(resultArr?.get(0) as JSONObject).get("key1"))
+            assertEquals(2,(resultArr?.get(1) as JSONObject).get("key2"))
+            assertEquals(50,(resultArr?.get(2) as JSONObject).get("key50"))
+            assertEquals(51,(resultArr?.get(3) as JSONObject).get("key51"))
+            assertEquals(52,(resultArr?.get(4) as JSONObject).get("key52"))
+            println("=====  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  =====")
+        }
 
 
-        //left = current values , right = new values, remove = true/false vr = empty
-        // new vars :
-        // - mergedlist : empty json array
-        // - set : empty set of unique strings
-        // - currValsLength = currentValues.length();
-        // - newValsLength = newValues.length();
-        // - additionBitSet/dupSetForAdd =  null if remove is true , else  BitSet(currValsLength + newValsLength)
-        // - currentValsStartIdx = 0;
-        // - newValsStartIdx = 0;
 
 
-        // 1. newValsStartIdx  = scan(newValues, set, additionBitSet, currValsLength)
-        //                     = 0 if new values are null ,
-        //                     = 0 if bitset is null (which is when remove is true)
-        //                     = 0 if bitset is not null and all objects newValues are either null or already inside set
-        //                     = currentValsLength+index of  object from newVals list where set.size has become 100
-        //
-        //     1.1 also, for each item of newValues from last to first,
-        //         - item gets added to set if item is not null AND  bitset == null (which is when remove is true)
-        //         - item gets added to set if (item is null or set already contains item) is FALSE
-
-        // 2. if remove == false and set.size after previous step < 100,
-        //     2.1  set currentValsStartIdx    = scan(currentValues, set, additionBitSet, 0);
-        //                                     = 0 if currentValues are null ,
-        //                                     = 0 if bitset is null (which is when remove is true)
-        //                                     = 0 if bitset is not null and all objects currentValues are either null or already inside set
-        //                                     = 0+index of  object from currentValues list where set.size has become 100
-        //     2.2 also, for each item of currentValues from last to first,
-        //         - item gets added to set if item is not null AND  bitset == null (which is when remove is true)
-        //         - item gets added to set if (item is null or set already contains item) is FALSE
+        /*
+        the whole function works like this :
 
 
-        // 3. for each index i = currentValsStartIdx to currValsLength :
-        //    3.1 if remove == true and  set does not contain currentItem(==currentValues[i] )  ==> add currentItem item to merged list AS STRING
-        //    3.2 if remove == false and additionBitSet.get(i)==false ==>  add currentItem item to merged list AS IT IS
+        left = currentValues , right = newValues, remove = true/false vr = empty ValidationObject
+         new variables :
+         - maxValNum = 100
+         - mergedlist : empty json array
+         - set : empty set of unique strings
+         - lsize = currValsLength = currentValues.length();
+         - rsize = newValsLength = newValues.length();
+         - dupSetForAdd =  additionBitSet =  null if remove is true , else  BitSet(currValsLength + newValsLength)
+         - lidx = currentValsStartIdx = 0;
+         - ridx = newValsStartIdx = 0;
 
 
-        // 4. if (remove is false and mergedList length is less than 100, then
-        //    4.1 for each index i = newValsStartIdx to newValsLength :
-        //         if  additionBitSet.get(icurrValsLength)==false ==>  add new item (== newValues[i] )  item to merged list AS IT IS
+         1. newValsStartIdx  = scan(newValues, set, additionBitSet, currValsLength)
+                             = 0 if new values are null ,
+                             = 0 if bitset is null (which is when remove is true)
+                             = 0 if bitset is not null and all objects newValues are either null or already inside set
+                             = currentValsLength+index of  object from newVals list where set.size has become 100
+
+             1.1 also, for each item of newValues from last to first,
+                 - item gets added to set if item is not null AND  bitset == null (which is when remove is true)
+                 - item gets added to set if (item is null or set already contains item) is FALSE
+
+         2. if remove == false and set.size after previous step < 100,
+             2.1  set currentValsStartIdx    = scan(currentValues, set, additionBitSet, 0);
+                                             = 0 if currentValues are null ,
+                                             = 0 if bitset is null (which is when remove is true)
+                                             = 0 if bitset is not null and all objects currentValues are either null or already inside set
+                                             = 0+index of  object from currentValues list where set.size has become 100
+             2.2 also, for each item of currentValues from last to first,
+                 - item gets added to set if item is not null AND  bitset == null (which is when remove is true)
+                 - item gets added to set if (item is null or set already contains item) is FALSE
 
 
-        // 5 if either newValsStartIdx or currentValsStartIdx > 0  then set error MULTI_VALUE_CHARS_LIMIT_EXCEEDED on vr
-        //   else no changes to  vr
+         3. for each index i = currentValsStartIdx to currValsLength :
+            3.1 if remove == true and  set does not contain currentItem(==currentValues[i] )  ==> add currentItem item to merged list AS STRING
+            3.2 if remove == false and additionBitSet.get(i)==false ==>  add currentItem item to merged list AS IT IS
 
-        // 6  set vr.objext as merged list
 
-        // 7  return merged list
+         4. if (remove is false and mergedList length is less than 100, then
+            4.1 for each index i = newValsStartIdx to newValsLength :
+                 if  additionBitSet.get(icurrValsLength)==false ==>  add new item (== newValues[i] )  item to merged list AS IT IS
+
+
+         5 if either newValsStartIdx or currentValsStartIdx > 0  then set error MULTI_VALUE_CHARS_LIMIT_EXCEEDED on vr
+           else no changes to  vr
+
+         6  set vr.objext as merged list
+
+         7  return merged list
+        */
 
 
     }
