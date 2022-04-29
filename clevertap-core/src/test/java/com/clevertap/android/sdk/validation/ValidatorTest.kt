@@ -197,18 +197,19 @@ class ValidatorTest : BaseTestCase() {
             println("=====  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  =====")
 
         }
-        // todo
-//        // case 1.2 : when remove operation is used, current list == new list . outcome : merged list will be equal to  empty list since all the items from current and new list are same and therefore gets removed
-//        currentValues = getSampleJsonArray(2,1)
-//        newValues = getSampleJsonArray(2,2)
-//        action = Validator.REMOVE_VALUES_OPERATION
-//        result = validator.mergeMultiValuePropertyForKey(currentValues,newValues,action,key)
-//        resultArr = result.`object` as? JSONArray
-//        println("case 1.2 : result arr = $resultArr ")
-//        assertEquals(1, resultArr?.length())
-//        //assertEquals("")
-//        println("=====  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  =====")
-//
+        // case 1.2 : when remove operation is used, current list == new list . outcome : merged list will be equal to  empty list since all the items from current and new list are same and therefore gets removed
+
+        //"case 1.2".let { //not working
+        //    currentValues = getSampleJsonArray(2,1)
+        //    newValues = getSampleJsonArray(2,2)
+        //    action = Validator.REMOVE_VALUES_OPERATION
+        //    result = validator.mergeMultiValuePropertyForKey(currentValues, newValues, action, key)
+        //    resultArr = result?.`object` as? JSONArray
+        //    println("$it : result arr = $resultArr ")
+        //    assertEquals(1, resultArr?.length())
+        //    println("=====  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  =====")
+        //
+        //}
 
         // case 2.1 : when add operation is used, current list == new list . outcome : merged list will be equal to  current/new list
         "case 2.1".let {
