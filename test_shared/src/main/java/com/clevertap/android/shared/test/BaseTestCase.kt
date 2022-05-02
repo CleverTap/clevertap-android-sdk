@@ -48,16 +48,24 @@ abstract class BaseTestCase {
     }
 
 
-    fun getSampleJsonArray(totalJsonObjects: Int = 0, start:Int=1): JSONArray {
+    fun getSampleJsonArrayOfJsonObjects(totalJsonObjects: Int = 0, start:Int=1, printGenArray:Boolean=false): JSONArray {
 
         val range = JSONArray()
-        (start..(start+totalJsonObjects-1)).forEach {
+        (start until start+totalJsonObjects).forEach {
             val obj = JSONObject()
             obj.put("key$it", it)
             range.put(obj)
         }
-        return range.also { println("generated : $range") }
+        return range.also { if(printGenArray)println("generated : $range") }
+    }
 
+    fun getSampleJsonArrayOfStrings(totalJsonObjects: Int = 0, start:Int=1, printGenArray:Boolean=false): JSONArray {
+
+        val range = JSONArray()
+        (start until start+totalJsonObjects).forEach {
+            range.put("value$it")
+        }
+        return range.also { if(printGenArray)println("generated : $range") }
     }
 
 }

@@ -157,10 +157,10 @@ class ValidatorTest : BaseTestCase() {
         var result:ValidationResult? = null
         var resultArr: JSONArray? = null;
 
-        //case 0.1 when currentValues are null, null is set to empty vr object and returned
-        "case 0.1".let {
+        //when currentValues are null, null is set to empty vr object and returned
+        "case 1".let {
             currentValues = null
-            newValues = getSampleJsonArray(1)
+            newValues = getSampleJsonArrayOfStrings(1)
             expectedResult = ValidationResult()
             result = validator.mergeMultiValuePropertyForKey(currentValues,newValues,action,key)
             resultArr = result?.`object` as? JSONArray
@@ -170,9 +170,9 @@ class ValidatorTest : BaseTestCase() {
             println("===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ")
         }
 
-        //case 0.2 when newValues are null, currentValues are set to empty vr object and returned
-        "case 0.2".let {
-            currentValues = getSampleJsonArray(1)
+        //when newValues are null, currentValues are set to empty vr object and returned
+        "case 2".let {
+            currentValues = getSampleJsonArrayOfStrings(1)
             newValues = null
             expectedResult = ValidationResult()
 
@@ -185,10 +185,57 @@ class ValidatorTest : BaseTestCase() {
             println("===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ===== ")
         }
 
-        // case 1.1 : when remove operation is used, current list == new list . outcome : merged list will be equal to  empty list since all the items from current and new list are same and therefore gets removed
-        "case 1.1".let {
-            currentValues = getSampleJsonArray(2)
-            newValues = getSampleJsonArray(2)
+        // when add operation is used, current list == new list . outcome : merged list will be equal to  current/new list
+        "case 3".let {
+            currentValues = getSampleJsonArrayOfStrings(2)
+            newValues = getSampleJsonArrayOfStrings(2)
+            action = Validator.ADD_VALUES_OPERATION
+            result = validator.mergeMultiValuePropertyForKey(currentValues,newValues,action,key)
+            resultArr = result?.`object` as? JSONArray
+            println("$it: result arr = $resultArr ")
+            assertEquals(2, resultArr?.length())
+            assertEquals("value"+1,(resultArr?.get(0)))
+            assertEquals("value"+2,(resultArr?.get(1) ))
+            println("=====  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  =====")
+        }
+
+        // when add operation is used, current list != new list with some common elements . outcome : merged list will be equal to union of current and merged list
+        "case 4".let {
+            currentValues = getSampleJsonArrayOfStrings(2,1)
+            newValues = getSampleJsonArrayOfStrings(2,2)
+            action = Validator.ADD_VALUES_OPERATION
+            result = validator.mergeMultiValuePropertyForKey(currentValues,newValues,action,key)
+            resultArr = result?.`object` as? JSONArray
+            println("$it : result arr = $resultArr ")
+            assertEquals(3, resultArr?.length())
+            assertEquals("value"+1,resultArr?.get(0) )
+            assertEquals("value"+2,resultArr?.get(1) )
+            assertEquals("value"+3,resultArr?.get(2) )
+            println("=====  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  =====")
+        }
+
+
+        //  when add operation is used, current list != new list with no common elements. outcome merged list with all the elements of both lists
+        "case 5".let {
+            currentValues = getSampleJsonArrayOfStrings(2, 1)
+            newValues = getSampleJsonArrayOfStrings(3, 50)
+            action = Validator.ADD_VALUES_OPERATION
+            result = validator.mergeMultiValuePropertyForKey(currentValues, newValues, action, key)
+            resultArr = result?.`object` as? JSONArray
+            println("$it : result arr = $resultArr ")
+            assertEquals(5, resultArr?.length())
+            assertEquals("value" + 1, resultArr?.get(0))
+            assertEquals("value" + 2, resultArr?.get(1))
+            assertEquals("value" + 50, resultArr?.get(2))
+            assertEquals("value" + 51, resultArr?.get(3))
+            assertEquals("value" + 52, resultArr?.get(4))
+            println("=====  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  =====")
+        }
+
+        //  when remove operation is used, current list == new list . outcome : merged list will be equal to  empty list since all the items from current and new list are same and therefore gets removed
+        "case 6".let {
+            currentValues = getSampleJsonArrayOfStrings(2)
+            newValues = getSampleJsonArrayOfStrings(2)
             action = Validator.REMOVE_VALUES_OPERATION
             result = validator.mergeMultiValuePropertyForKey(currentValues, newValues, action, key)
             resultArr = result?.`object` as? JSONArray
@@ -197,70 +244,32 @@ class ValidatorTest : BaseTestCase() {
             println("=====  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  =====")
 
         }
-        // case 1.2 : when remove operation is used, current list == new list . outcome : merged list will be equal to  empty list since all the items from current and new list are same and therefore gets removed
 
-        //"case 1.2".let { //not working
-        //    currentValues = getSampleJsonArray(2,1)
-        //    newValues = getSampleJsonArray(2,2)
-        //    action = Validator.REMOVE_VALUES_OPERATION
-        //    result = validator.mergeMultiValuePropertyForKey(currentValues, newValues, action, key)
-        //    resultArr = result?.`object` as? JSONArray
-        //    println("$it : result arr = $resultArr ")
-        //    assertEquals(1, resultArr?.length())
-        //    println("=====  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  =====")
-        //
-        //}
-
-        // case 2.1 : when add operation is used, current list == new list . outcome : merged list will be equal to  current/new list
-        "case 2.1".let {
-            currentValues = getSampleJsonArray(2,)
-            newValues = getSampleJsonArray(2,)
-            action = Validator.ADD_VALUES_OPERATION
-            result = validator.mergeMultiValuePropertyForKey(currentValues,newValues,action,key)
+        //when remove operation is used, current list != new list but with some common elements . outcome : merged list will be equal to current list - (common elements of current and new list )
+        "case 7".let { //not working
+            currentValues = getSampleJsonArrayOfStrings(2,1)
+            newValues = getSampleJsonArrayOfStrings(2,2)
+            action = Validator.REMOVE_VALUES_OPERATION
+            result = validator.mergeMultiValuePropertyForKey(currentValues, newValues, action, key)
             resultArr = result?.`object` as? JSONArray
-            println("$it: result arr = $resultArr ")
+            println("$it : result arr = $resultArr ")
+            assertEquals(1, resultArr?.length())
+            println("=====  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  =====")
+        }
+
+        // when remove operation is used, current list != new list but with no common elements. outcome : merged list will be equal to current list
+        "case 8".let {
+            currentValues = getSampleJsonArrayOfStrings(2,1)
+            newValues = getSampleJsonArrayOfStrings(2,11)
+            action = Validator.REMOVE_VALUES_OPERATION
+            result = validator.mergeMultiValuePropertyForKey(currentValues, newValues, action, key)
+            resultArr = result?.`object` as? JSONArray
+            println("$it : result arr = $resultArr ")
             assertEquals(2, resultArr?.length())
-            assertEquals(1,(resultArr?.get(0) as JSONObject).get("key1"))
-            assertEquals(2,(resultArr?.get(1) as JSONObject).get("key2"))
+            assertEquals("value1",(resultArr?.get(0) as String ))
+            assertEquals("value2",(resultArr?.get(1)  as String))
             println("=====  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  =====")
         }
-
-        // case 2.2 : when add operation is used, current list != new list . outcome : merged list will be equal to union of current and merged list
-        "case 2.2".let {
-            currentValues = getSampleJsonArray(2,1)
-            newValues = getSampleJsonArray(2,2)
-            action = Validator.ADD_VALUES_OPERATION
-            result = validator.mergeMultiValuePropertyForKey(currentValues,newValues,action,key)
-            resultArr = result?.`object` as? JSONArray
-            println("$it : result arr = $resultArr ")
-            assertEquals(3, resultArr?.length())
-            assertEquals(1,(resultArr?.get(0) as JSONObject).get("key1"))
-            assertEquals(2,(resultArr?.get(1) as JSONObject).get("key2"))
-            assertEquals(3,(resultArr?.get(2) as JSONObject).get("key3"))
-            println("=====  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  =====")
-        }
-
-
-        // case 2.2 : same as case 2.2 but with no elements common. outcome merged list with all the elements of both lists
-        "case 2.3".let {
-            currentValues = getSampleJsonArray(2,1)
-            newValues = getSampleJsonArray(3,50)
-            action = Validator.ADD_VALUES_OPERATION
-            result = validator.mergeMultiValuePropertyForKey(currentValues,newValues,action,key)
-            resultArr = result?.`object` as? JSONArray
-            println("$it : result arr = $resultArr ")
-            assertEquals(5, resultArr?.length())
-            assertEquals(1,(resultArr?.get(0) as JSONObject).get("key1"))
-            assertEquals(2,(resultArr?.get(1) as JSONObject).get("key2"))
-            assertEquals(50,(resultArr?.get(2) as JSONObject).get("key50"))
-            assertEquals(51,(resultArr?.get(3) as JSONObject).get("key51"))
-            assertEquals(52,(resultArr?.get(4) as JSONObject).get("key52"))
-            println("=====  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  ==========  =====")
-        }
-
-
-
-
         /*
         the whole function works like this :
 
