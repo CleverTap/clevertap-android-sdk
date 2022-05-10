@@ -5,6 +5,8 @@ import android.os.Build.VERSION_CODES
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
+import org.json.JSONArray
+import org.json.JSONObject
 import org.junit.*
 import org.junit.runner.*
 import org.mockito.*
@@ -44,4 +46,26 @@ abstract class BaseTestCase {
         appCtx = application.applicationContext
 
     }
+
+
+    fun getSampleJsonArrayOfJsonObjects(totalJsonObjects: Int = 0, start:Int=1, printGenArray:Boolean=false): JSONArray {
+
+        val range = JSONArray()
+        (start until start+totalJsonObjects).forEach {
+            val obj = JSONObject()
+            obj.put("key$it", it)
+            range.put(obj)
+        }
+        return range.also { if(printGenArray)println("generated : $range") }
+    }
+
+    fun getSampleJsonArrayOfStrings(totalJsonObjects: Int = 0, start:Int=1, printGenArray:Boolean=false): JSONArray {
+
+        val range = JSONArray()
+        (start until start+totalJsonObjects).forEach {
+            range.put("value$it")
+        }
+        return range.also { if(printGenArray)println("generated : $range") }
+    }
+
 }
