@@ -184,6 +184,13 @@ public class ManifestInfo {
     }
 
     static void changeXiaomiCredentials(String xiaomiAppID, String xiaomiAppKey) {
+        if (ManifestInfo.xiaomiAppID != null || ManifestInfo.xiaomiAppKey != null) {
+            Logger.i("Xiaomi SDK already initialized with AppID:" + ManifestInfo.xiaomiAppID
+                    + " and AppKey:" + ManifestInfo.xiaomiAppKey + ". Cannot change credentials to "
+                    + xiaomiAppID + " and " + xiaomiAppKey);
+            return;
+        }
+
         ManifestInfo.xiaomiAppID = xiaomiAppID;
         ManifestInfo.xiaomiAppKey = xiaomiAppKey;
     }
