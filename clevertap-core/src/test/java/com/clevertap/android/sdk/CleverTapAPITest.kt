@@ -295,6 +295,57 @@ class CleverTapAPITest : BaseTestCase() {
     }
 
     @Test
+    fun test_changeXiaomiCredentials_whenCredsChangedTwice_credentialsMustNotChange() {
+        mockStatic(CleverTapFactory::class.java).use {
+            mockStatic(CTExecutorFactory::class.java).use {
+                `when`(CTExecutorFactory.executors(any())).thenReturn(
+                    MockCTExecutors(cleverTapInstanceConfig)
+                )
+
+                `when`(CleverTapFactory.getCoreState(
+                    ArgumentMatchers.any(),
+                    ArgumentMatchers.any(),
+                    ArgumentMatchers.any()
+                )).thenReturn(corestate)
+            }
+
+            CleverTapAPI.getDefaultInstance(application)
+            CleverTapAPI.changeXiaomiCredentials("appId123", "appKey123")
+            CleverTapAPI.changeXiaomiCredentials("appId234", "appKey234")
+
+            val instance = ManifestInfo.getInstance(application)
+
+            assertNotEquals("appId234", instance.xiaomiAppID)
+            assertNotEquals("appKey234", instance.xiaomiAppKey)
+        }
+    }
+
+    @Test
+    fun test_changeXiaomiCredentials_whenCredsChangedOnce_credentialsMustChange() {
+        mockStatic(CleverTapFactory::class.java).use {
+            mockStatic(CTExecutorFactory::class.java).use {
+                `when`(CTExecutorFactory.executors(any())).thenReturn(
+                    MockCTExecutors(cleverTapInstanceConfig)
+                )
+
+                `when`(CleverTapFactory.getCoreState(
+                    ArgumentMatchers.any(),
+                    ArgumentMatchers.any(),
+                    ArgumentMatchers.any()
+                )).thenReturn(corestate)
+            }
+
+            CleverTapAPI.getDefaultInstance(application)
+            CleverTapAPI.changeXiaomiCredentials("appId123", "appKey123")
+
+            val instance = ManifestInfo.getInstance(application)
+
+            assertEquals("appId123", instance.xiaomiAppID)
+            assertEquals("appKey123", instance.xiaomiAppKey)
+        }
+    }
+
+    @Test
     fun test_createNotification_whenInstancesNull__createNotificationMustBeCalled() {
 
         mockStatic(CTExecutorFactory::class.java).use {
