@@ -265,7 +265,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
     //Profile
     @Override
-    public void pushBasicProfile(JSONObject baseProfile) {
+    public void pushBasicProfile(JSONObject baseProfile, boolean removeFromSharedPrefs) {
         try {
             String guid = getCleverTapID();
 
@@ -296,6 +296,18 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
                         // cache the valid identifier: guid pairs
                         boolean isProfileKey = iProfileHandler.hasIdentity(next);
+
+                        /*If key is present in IdentitySet and removeFromSharedPrefs is true then
+                        proceed to removing PII key(Email) from shared prefs*/
+                        if (isProfileKey && removeFromSharedPrefs){
+                            try{
+                                getLoginInfoProvider().removePIICacheGUIDForIdentifier(guid,next);
+                                return;
+                            } catch (Throwable t){
+                                //no op
+                            }
+                        }
+
                         if (isProfileKey) {
                             try {
                                 getLoginInfoProvider().cacheGUIDForIdentifier(guid, next, value.toString());
@@ -341,7 +353,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                 public Void call() {
                     try {
                         config.getLogger().verbose(config.getAccountId(), "Queuing daily events");
-                        pushBasicProfile(null);
+                        pushBasicProfile(null, false);
                     } catch (Throwable t) {
                         config.getLogger().verbose(config.getAccountId(), "Daily profile sync failed", t);
                     }
