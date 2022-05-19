@@ -2678,7 +2678,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         sNotificationHandler = notificationHandler;
     }
 
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+
     public static void setDirectCallNotificationHandler(NotificationHandler notificationHandler) {
         sDirectCallNotificationHandler = notificationHandler;
     }
