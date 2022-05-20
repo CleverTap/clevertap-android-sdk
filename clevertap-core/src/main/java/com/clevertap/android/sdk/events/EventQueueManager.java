@@ -302,13 +302,10 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                         if (isProfileKey && removeFromSharedPrefs){
                             try{
                                 getLoginInfoProvider().removePIICacheGUIDForIdentifier(guid,next);
-                                return;
                             } catch (Throwable t){
                                 //no op
                             }
-                        }
-
-                        if (isProfileKey) {
+                        }else if (isProfileKey) {
                             try {
                                 getLoginInfoProvider().cacheGUIDForIdentifier(guid, next, value.toString());
                             } catch (Throwable t) {
