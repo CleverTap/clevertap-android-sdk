@@ -1262,6 +1262,14 @@ public class AnalyticsManager extends BaseAnalyticsManager {
                 validationResultStack.pushValidationResult(vr);
             }
 
+            //If key contains "Identity" then do not remove from SQLDb and shared prefs
+            if (key.toLowerCase().contains("identity")) {
+                config.getLogger()
+                        .verbose(config.getAccountId(), "Cannot remove value for key " +
+                                key + " from user profile");
+                return;
+            }
+
             // remove from the local profile
             localDataStore.removeProfileField(key);
 
