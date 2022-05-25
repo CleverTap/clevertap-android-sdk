@@ -11,8 +11,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.verify
+import org.mockito.Mockito.*
 import org.robolectric.RobolectricTestRunner
 import org.skyscreamer.jsonassert.JSONAssert
 
@@ -195,4 +194,24 @@ class AnalyticsManagerTest : BaseTestCase() {
         verify(baseEventQueueManager).pushBasicProfile(captor.capture(),false)
         JSONAssert.assertEquals(updateObj, captor.value, true)
     }
+
+    @Test
+    fun test_removeValueForKey_when_key_identity(){
+
+        //Act
+        analyticsManagerSUT.removeValueForKey("Identity")
+
+        //Assert
+        verify(coreState.localDataStore, never()).removeProfileField("Identity")
+    }
+
+    @Test
+    fun test_removeValueForKey_when_key_identity_is_lowercase(){
+        //Act
+        analyticsManagerSUT.removeValueForKey("identity")
+
+        //Assert
+        verify(coreState.localDataStore, never()).removeProfileField("identity")
+    }
+
 }
