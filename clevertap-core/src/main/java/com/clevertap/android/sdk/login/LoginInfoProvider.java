@@ -61,37 +61,33 @@ public class LoginInfoProvider {
     }
 
     /**
-     * Removes the PII pair of <Email_Value, Guid> for this account
+     * Removes value for PII(Email) pair of <Email_Value, Guid> for this account from shared prefs
      *
      * @param guid       - guid of the user
      * @param key        - Identity Key e.g Email
      */
-    public void removePIICacheGUIDForIdentifier(String guid, String key) {
+    public void removeValueFromCachedGUIDForIdentifier(String guid, String key) {
         if (isErrorDeviceId() || guid == null || key == null) {
             return;
         }
 
-        JSONObject cache = getCachedGUIDs();
+        JSONObject cachedGuidJsonObj = getCachedGUIDs();
         try{
-            Iterator<String> i = cache.keys();
+            Iterator<String> i = cachedGuidJsonObj.keys();
             while (i.hasNext()) {
-                String next = i.next();
-                String actualKey = next.contains(key) ? next : "";
+                String nextJSONObjKey = i.next();
+                String actualKeyInLowerCase = nextJSONObjKey.toLowerCase();
 
-                if (actualKey.isEmpty()) {
-                    return;
-                }
+                if (actualKeyInLowerCase.contains(key.toLowerCase()) &&
+                        cachedGuidJsonObj.getString(nextJSONObjKey).equals(guid)){
 
-                if (cache.getString(actualKey).equals(guid)) {
-                    cache.remove(actualKey);
-                }
+                    cachedGuidJsonObj.remove(nextJSONObjKey);
 
-                /*After removing the specified key if cachedGUIDs is empty then remove the cachedGUIDs
-                key from shared prefs*/
-                if (cache.length() == 0){
-                    removeCachedGUIDs();
-                }else {
-                    setCachedGUIDs(cache);
+                    if (cachedGuidJsonObj.length() == 0){//Removes cachedGUIDs key from shared prefs if cachedGUIDs is empty
+                        removeCachedGuidFromSharedPrefs();
+                    }else {
+                        setCachedGUIDs(cachedGuidJsonObj);
+                    }
                 }
             }
         } catch (Throwable t) {
@@ -137,7 +133,7 @@ public class LoginInfoProvider {
         }
     }
 
-    public void removeCachedGUIDs() {
+    public void removeCachedGuidFromSharedPrefs() {
         try {
             StorageHelper.remove(context, StorageHelper.storageKeyWithSuffix(config, Constants.CACHED_GUIDS_KEY));
             config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,

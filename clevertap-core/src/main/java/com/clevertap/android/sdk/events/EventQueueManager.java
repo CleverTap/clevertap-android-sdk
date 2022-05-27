@@ -301,7 +301,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                         proceed to removing PII key(Email) from shared prefs*/
                         if (isProfileKey && removeFromSharedPrefs){
                             try{
-                                getLoginInfoProvider().removePIICacheGUIDForIdentifier(guid,next);
+                                getLoginInfoProvider().removeValueFromCachedGUIDForIdentifier(guid,next);
                             } catch (Throwable t){
                                 //no op
                             }
