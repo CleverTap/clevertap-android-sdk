@@ -699,7 +699,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 eventQueueManager.pushBasicProfile(inputJson, true)
 
                 //Assert
-                verify(mockLoginInfoProvider).removePIICacheGUIDForIdentifier(
+                verify(mockLoginInfoProvider).removeValueFromCachedGUIDForIdentifier(
                     expectedDeviceID,
                     "Email"
                 )

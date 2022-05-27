@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk
 
 import android.content.Context
-import android.content.SharedPreferences
 import com.clevertap.android.sdk.login.LoginInfoProvider
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
@@ -30,12 +29,6 @@ class LoginInfoProviderTest: BaseTestCase() {
 
         loginInfoProvider = LoginInfoProvider(appCtx,defConfig,deviceInfo)
         loginInfoProviderSpy = Mockito.spy(loginInfoProvider)
-    }
-
-    private fun prepareSP(action : ((pref1: SharedPreferences, prefWithNameSpace: SharedPreferences) -> Unit)? = null){
-        val pref1 = appCtx.getSharedPreferences(Constants.CLEVERTAP_STORAGE_TAG, Context.MODE_PRIVATE);
-        val pref2 = appCtx.getSharedPreferences(Constants.CLEVERTAP_STORAGE_TAG +"_"+"xyz",Context.MODE_PRIVATE)
-        action?.invoke(pref1,pref2)
     }
 
     @Test
@@ -99,7 +92,7 @@ class LoginInfoProviderTest: BaseTestCase() {
     }
 
     @Test
-    fun test_removePIICacheGUIDForIdentifier_when_cache_data_contains_email_and_identity_removes_key() {
+    fun test_removeValueFromCachedGUIDForIdentifier_when_cache_data_contains_email_and_identity_remove_provided_key() {
         val guid = "__1234567"
         val key = "Email"
 
@@ -111,7 +104,7 @@ class LoginInfoProviderTest: BaseTestCase() {
             jsonObj)
 
         //Act
-        loginInfoProviderSpy.removePIICacheGUIDForIdentifier(guid, key)
+        loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
         val sharedPreferences = appCtx.getSharedPreferences("WizRocket", Context.MODE_PRIVATE)
 
         //Assert
@@ -120,7 +113,7 @@ class LoginInfoProviderTest: BaseTestCase() {
     }
 
     @Test
-    fun test_removePIICacheGUIDForIdentifier_when_cache_data_contains_email_removes_cached_shared_prefs_key() {
+    fun test_removeValueFromCachedGUIDForIdentifier_when_cache_data_contains_email_removes_cached_shared_prefs_key() {
         val guid = "__1234567"
         val key = "Email"
 
@@ -131,7 +124,110 @@ class LoginInfoProviderTest: BaseTestCase() {
             jsonObj)
 
         //Act
-        loginInfoProviderSpy.removePIICacheGUIDForIdentifier(guid, key)
+        loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
+        val sharedPreferences = appCtx.getSharedPreferences("WizRocket", Context.MODE_PRIVATE)
+
+        //Assert
+        assertEquals("",
+            sharedPreferences.getString("cachedGUIDsKey:id",""))
+    }
+
+    @Test
+    fun test_removeValueFromCachedGUIDForIdentifier_when_cache_data_contains_lowercase_email_removes_cached_shared_prefs_key() {
+        val guid = "__1234567"
+        val key = "email"
+
+        val jsonObj = JSONObject()
+        jsonObj.put("Email_donjoe2862@gmail.com","__1234567")
+
+        Mockito.`when`(loginInfoProviderSpy.cachedGUIDs).thenReturn(
+            jsonObj)
+
+        //Act
+        loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
+        val sharedPreferences = appCtx.getSharedPreferences("WizRocket", Context.MODE_PRIVATE)
+
+        //Assert
+        assertEquals("",
+            sharedPreferences.getString("cachedGUIDsKey:id",""))
+    }
+
+    @Test
+    fun test_removeValueFromCachedGUIDForIdentifier_when_cache_data_contains_lowercase_email_removes_cached_shared_prefs_lowercase_key() {
+        val guid = "__1234567"
+        val key = "Email"
+
+        val jsonObj = JSONObject()
+        jsonObj.put("email_donjoe2862@gmail.com","__1234567")
+
+        Mockito.`when`(loginInfoProviderSpy.cachedGUIDs).thenReturn(
+            jsonObj)
+
+        //Act
+        loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
+        val sharedPreferences = appCtx.getSharedPreferences("WizRocket", Context.MODE_PRIVATE)
+
+        //Assert
+        assertEquals("",
+            sharedPreferences.getString("cachedGUIDsKey:id",""))
+    }
+
+    @Test
+    fun test_removeValueFromCachedGUIDForIdentifier_when_cache_data_contains_lowercase_email_and_identity_removes_cached_shared_prefs_lowercase_key(){
+        val guid = "__1234567"
+        val key = "Email"
+
+        val jsonObj = JSONObject()
+        jsonObj.put("email_donjoe2862@gmail.com","__1234567")
+        jsonObj.put("identity_00002","__1234567")
+
+        Mockito.`when`(loginInfoProviderSpy.cachedGUIDs).thenReturn(
+            jsonObj)
+
+        //Act
+        loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
+        val sharedPreferences = appCtx.getSharedPreferences("WizRocket", Context.MODE_PRIVATE)
+
+        //Assert
+        assertEquals("{\"identity_00002\":\"__1234567\"}",
+            sharedPreferences.getString("cachedGUIDsKey:id",""))
+    }
+
+    @Test
+    fun test_removeValueFromCachedGUIDForIdentifier_when_cache_data_contains_Email_and_lowercase_identity_removes_cached_shared_prefs_key(){
+        val guid = "__1234567"
+        val key = "Email"
+
+        val jsonObj = JSONObject()
+        jsonObj.put("Email_donjoe2862@gmail.com","__1234567")
+        jsonObj.put("identity_00002","__1234567")
+
+        Mockito.`when`(loginInfoProviderSpy.cachedGUIDs).thenReturn(
+            jsonObj)
+
+        //Act
+        loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
+        val sharedPreferences = appCtx.getSharedPreferences("WizRocket", Context.MODE_PRIVATE)
+
+        //Assert
+        assertEquals("{\"identity_00002\":\"__1234567\"}",
+            sharedPreferences.getString("cachedGUIDsKey:id",""))
+    }
+
+    @Test
+    fun test_removeValueFromCachedGUIDForIdentifier_when_cache_data_contains_random_key_and_Identity_removes_cached_shared_prefs_key(){
+        val guid = "__1234567"
+        val key = "abcxyz"
+
+        val jsonObj = JSONObject()
+        jsonObj.put("Email_donjoe2862@gmail.com","__1234567")
+        jsonObj.put("Identity_00002","__1234567")
+
+        Mockito.`when`(loginInfoProviderSpy.cachedGUIDs).thenReturn(
+            jsonObj)
+
+        //Act
+        loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
         val sharedPreferences = appCtx.getSharedPreferences("WizRocket", Context.MODE_PRIVATE)
 
         //Assert
