@@ -238,7 +238,6 @@ public class NetworkManager extends BaseNetworkManager {
     @Override
     public void initHandshake(final EventGroup eventGroup, final Runnable handshakeSuccessCallback) {
         responseFailureCount = 0;
-        //setDomain(context, null);
         performHandshakeForDomain(context, eventGroup, handshakeSuccessCallback);
     }
 
