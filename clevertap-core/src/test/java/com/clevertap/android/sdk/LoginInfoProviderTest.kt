@@ -220,18 +220,53 @@ class LoginInfoProviderTest: BaseTestCase() {
         val key = "abcxyz"
 
         val jsonObj = JSONObject()
-        jsonObj.put("Email_donjoe2862@gmail.com","__1234567")
         jsonObj.put("Identity_00002","__1234567")
+        jsonObj.put("Email_donjoe2862@gmail.com","__1234567")
 
         Mockito.`when`(loginInfoProviderSpy.cachedGUIDs).thenReturn(
             jsonObj)
 
         //Act
         loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
-        val sharedPreferences = appCtx.getSharedPreferences("WizRocket", Context.MODE_PRIVATE)
 
         //Assert
-        assertEquals("",
-            sharedPreferences.getString("cachedGUIDsKey:id",""))
+        assertEquals("{\"Identity_00002\":\"__1234567\",\"Email_donjoe2862@gmail.com\":\"__1234567\"}",
+            jsonObj.toString())
+    }
+
+    @Test
+    fun test_removeValueFromCachedGUIDForIdentifier_key_is_null_and_guid_has_value_should_do_nothing(){
+        val guid = "__1234567"
+        val key = null
+
+        //Act
+        loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
+
+        //Assert
+        Mockito.verify(loginInfoProviderSpy,Mockito.never()).cachedGUIDs
+    }
+
+    @Test
+    fun test_removeValueFromCachedGUIDForIdentifier_key_has_value_and_guid_is_null_should_do_nothing(){
+        val guid = null
+        val key = "Email"
+
+        //Act
+        loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
+
+        //Assert
+        Mockito.verify(loginInfoProviderSpy,Mockito.never()).cachedGUIDs
+    }
+
+    @Test
+    fun test_removeValueFromCachedGUIDForIdentifier_key_is_null_and_guid_is_null_should_do_nothing(){
+        val guid = null
+        val key = null
+
+        //Act
+        loginInfoProviderSpy.removeValueFromCachedGUIDForIdentifier(guid, key)
+
+        //Assert
+        Mockito.verify(loginInfoProviderSpy,Mockito.never()).cachedGUIDs
     }
 }
