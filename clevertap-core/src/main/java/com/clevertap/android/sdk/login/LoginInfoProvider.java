@@ -81,13 +81,13 @@ public class LoginInfoProvider {
                 if (actualKeyInLowerCase.contains(key.toLowerCase()) &&
                         cachedGuidJsonObj.getString(nextJSONObjKey).equals(guid)){
 
-                    cachedGuidJsonObj.remove(nextJSONObjKey);
+                        cachedGuidJsonObj.remove(nextJSONObjKey);
 
-                    if (cachedGuidJsonObj.length() == 0){//Removes cachedGUIDs key from shared prefs if cachedGUIDs is empty
-                        removeCachedGuidFromSharedPrefs();
-                    }else {
-                        setCachedGUIDs(cachedGuidJsonObj);
-                    }
+                        if (cachedGuidJsonObj.length() == 0){//Removes cachedGUIDs key from shared prefs if cachedGUIDs is empty
+                            removeCachedGuidFromSharedPrefs();
+                        }else {
+                            setCachedGUIDs(cachedGuidJsonObj);
+                        }
                 }
             }
         } catch (Throwable t) {
