@@ -8,7 +8,7 @@ import android.content.BroadcastReceiver;
 import android.content.Intent;
 import android.location.Location;
 import com.google.android.gms.location.LocationResult;
-import edu.emory.mathcs.backport.java.util.Arrays;
+import java.util.Arrays;
 import java.util.concurrent.Callable;
 import org.junit.*;
 import org.junit.runner.*;

@@ -1,4 +1,4 @@
-## CHANGE LOG
+## CHANGE LOG.
 
 
 ### April 26, 2022
