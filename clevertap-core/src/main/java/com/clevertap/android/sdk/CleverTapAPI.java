@@ -1420,7 +1420,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param requestTokenListener The {@link RequestDevicePushTokenListener} object
      */
     @SuppressWarnings("unused")
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    @RestrictTo(Scope.LIBRARY_GROUP)
     public void setRequestDevicePushTokenListener(RequestDevicePushTokenListener requestTokenListener) {
         try {
             Logger.v(LOG_TAG, FCM_LOG_TAG + "Requesting FCM token using googleservices.json");
