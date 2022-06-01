@@ -15,39 +15,42 @@ import org.robolectric.annotation.Config
 @Config(sdk = [28], application = TestApplication::class)
 class HuaweiNotificationParserTest : BaseTestCase() {
 
-//    private lateinit var parser: IHmsNotificationParser
+    private lateinit var parser: HmsNotificationParser
     private lateinit var message: RemoteMessage
 
     @Before
     override fun setUp() {
         super.setUp()
-//        parser = HmsNotificationParser()
+        parser = HmsNotificationParser()
         message = mock(RemoteMessage::class.java)
     }
 
     @Test
-    fun testToBundle_Null_Message_Return_Null() {
-        //Assert.assertNull(parser.toBundle(null))
-        Assert.assertEquals(4,4)
+    fun testToBundle_Message_Invalid_Content_Return_EmptyBundle() {
+        `when`(message.data).thenReturn(null)
+        val returnedBundle = parser.toBundle(message)
+        Assert.assertNotNull(returnedBundle)
+        Assert.assertEquals(0,returnedBundle.keySet().size)
     }
 
-//    @Test
-//    fun testToBundle_Message_Invalid_Content_Return_Null() {
-//        `when`(message.data).thenReturn(null)
-//        Assert.assertNull(parser.toBundle(message))
-//    }
-//
-//    @Test
-//    fun testToBundle_Message_Outside_CleverTap_Return_Null() {
-//        `when`(message.data).thenReturn(getMockJsonStringOutsideNetwork())
-//        Assert.assertNull(parser.toBundle(message))
-//    }
-//
-//    @Test
-//    fun testToBundle_Message_CleverTap_Message_Return_Not_Null() {
-//        `when`(message.data).thenReturn(getMockJsonStringClevertapNetwork())
-//        Assert.assertNotNull(parser.toBundle(message))
-//    }
+    @Test
+    fun testToBundle_Message_Outside_CleverTap_Return_AssocBundle() {
+        val mockJson= getMockJsonStringOutsideNetwork()
+        `when`(message.data).thenReturn(mockJson)
+
+        val returnedBundle = parser.toBundle(message)
+        Assert.assertNotNull(returnedBundle)
+        Assert.assertEquals(2,returnedBundle.keySet().size)
+        Assert.assertEquals("Sample Title",returnedBundle.getString("Title"))
+        Assert.assertEquals("Sample Message Title",returnedBundle.getString("Message"))
+
+    }
+
+    @Test
+    fun testToBundle_Message_CleverTap_Message_Return_Not_Null() {
+        `when`(message.data).thenReturn(getMockJsonStringClevertapNetwork())
+        Assert.assertNotNull(parser.toBundle(message))
+    }
 
     private fun getMockJsonStringOutsideNetwork(): String? {
         val hashMap = HashMap<String, String>()

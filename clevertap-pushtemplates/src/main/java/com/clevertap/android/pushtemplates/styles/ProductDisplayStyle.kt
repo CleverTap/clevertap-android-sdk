@@ -14,11 +14,11 @@ import com.clevertap.android.pushtemplates.content.ProductDisplayNonLinearSmallC
 
 class ProductDisplayStyle(private var renderer: TemplateRenderer, private var extras: Bundle) : Style(renderer) {
 
-    override fun makeSmallContentView(context: Context, renderer: TemplateRenderer): RemoteViews {
+    override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
         return ProductDisplayNonLinearSmallContentView(context, renderer).remoteView
     }
 
-    override fun makeBigContentView(context: Context, renderer: TemplateRenderer): RemoteViews {
+    override fun makeBigContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
         return if (renderer.pt_product_display_linear == null || renderer.pt_product_display_linear!!.isEmpty()) {
             ProductDisplayNonLinearBigContentView(context, renderer, extras).remoteView
         } else {

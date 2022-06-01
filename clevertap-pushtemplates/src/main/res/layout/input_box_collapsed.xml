@@ -48,14 +48,14 @@
             android:id="@+id/title"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Notification Sample App"/>
+            tools:text="Notification Sample App"/>
 
 
         <TextView
             android:id="@+id/msg_summary"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Expand me to see a detailed message!"/>
+            tools:text="Expand me to see a detailed message!"/>
 
     </LinearLayout>
 

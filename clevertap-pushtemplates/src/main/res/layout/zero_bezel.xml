@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/content_view_big"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -42,7 +43,7 @@
             android:layout_alignStart="@id/metadata"
             android:layout_alignLeft="@id/metadata"
             android:layout_marginTop="@dimen/metadata_title_margin_vertical"
-            android:text="title"
+            tools:text="title"
             android:textAppearance="@style/PushTitle"
             android:textColor="@color/white"/>
 
@@ -53,7 +54,7 @@
             android:layout_below="@+id/title"
             android:layout_alignStart="@id/title"
             android:layout_alignLeft="@id/title"
-            android:text="message"
+            tools:text="message"
             android:textAppearance="@style/PushMessageMultiLine"
             android:textColor="@color/white"/>
 
