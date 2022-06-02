@@ -40,12 +40,18 @@ public interface PushConstants {
 
     }
 
+    @IntDef({ALL_DEVICES, XIAOMI_MIUI_DEVICES, NO_DEVICES})
+    @Retention(RetentionPolicy.SOURCE)
+    @interface XiaomiPush {
+
+    }
+
     enum PushType {
-        FCM(FCM_DELIVERY_TYPE, FCM_PROPERTY_REG_ID, CT_FIREBASE_PROVIDER_CLASS, FIREBASE_SDK_CLASS),
-        XPS(XIAOMI_DELIVERY_TYPE, XPS_PROPERTY_REG_ID, CT_XIAOMI_PROVIDER_CLASS, XIAOMI_SDK_CLASS),
-        HPS(HMS_DELIVERY_TYPE, HPS_PROPERTY_REG_ID, CT_HUAWEI_PROVIDER_CLASS, HUAWEI_SDK_CLASS),
-        BPS(BAIDU_DELIVERY_TYPE, BPS_PROPERTY_REG_ID, CT_BAIDU_PROVIDER_CLASS, BAIDU_SDK_CLASS),
-        ADM(ADM_DELIVERY_TYPE, ADM_PROPERTY_REG_ID, CT_ADM_PROVIDER_CLASS, ADM_SDK_CLASS);
+        FCM(FCM_DELIVERY_TYPE, FCM_PROPERTY_REG_ID, CT_FIREBASE_PROVIDER_CLASS, FIREBASE_SDK_CLASS, ALL_DEVICES),
+        XPS(XIAOMI_DELIVERY_TYPE, XPS_PROPERTY_REG_ID, CT_XIAOMI_PROVIDER_CLASS, XIAOMI_SDK_CLASS, ALL_DEVICES),
+        HPS(HMS_DELIVERY_TYPE, HPS_PROPERTY_REG_ID, CT_HUAWEI_PROVIDER_CLASS, HUAWEI_SDK_CLASS, ALL_DEVICES),
+        BPS(BAIDU_DELIVERY_TYPE, BPS_PROPERTY_REG_ID, CT_BAIDU_PROVIDER_CLASS, BAIDU_SDK_CLASS, ALL_DEVICES),
+        ADM(ADM_DELIVERY_TYPE, ADM_PROPERTY_REG_ID, CT_ADM_PROVIDER_CLASS, ADM_SDK_CLASS, ALL_DEVICES);
 
         private final String ctProviderClassName;
 
@@ -55,12 +61,16 @@ public interface PushConstants {
 
         private final String type;
 
+        private @XiaomiPush
+        int runningDevices;
+
         PushType(@DeliveryType String type, @RegKeyType String prefKey, @CTPushProviderClass String className,
-                @PushMessagingClass String messagingSDKClassName) {
+                @PushMessagingClass String messagingSDKClassName, @XiaomiPush int runningDevices) {
             this.type = type;
             this.tokenPrefKey = prefKey;
             this.ctProviderClassName = className;
             this.messagingSDKClassName = messagingSDKClassName;
+            this.runningDevices = runningDevices;
         }
 
         public String getCtProviderClassName() {
@@ -78,6 +88,14 @@ public interface PushConstants {
 
         public String getType() {
             return type;
+        }
+
+        public void setRunningDevices(@XiaomiPush int runningDevices) {
+            this.runningDevices = runningDevices;
+        }
+
+        public @XiaomiPush int getRunningDevices() {
+            return runningDevices;
         }
 
         @NonNull
@@ -129,4 +147,19 @@ public interface PushConstants {
      * Amazon platform type. Only ADM transport will be allowed.
      */
     int AMAZON_PLATFORM = 2;
+
+    /**
+     * Turn on Xiaomi Push on all devices
+     */
+    int ALL_DEVICES = 1;
+
+    /**
+     * Turn on Xiaomi Push on Xiaomi devices running MIUI OS
+     */
+    int XIAOMI_MIUI_DEVICES = 2;
+
+    /**
+     * Turn off Xiaomi Push on all devices
+     */
+    int NO_DEVICES = 3;
 }
