@@ -264,11 +264,11 @@ class EventQueueManagerTest : BaseTestCase() {
                 )
             )
             corestate.coreMetaData.currentSessionId = 10000
-            doNothing().`when`(eventQueueManager).pushBasicProfile(null)
+            doNothing().`when`(eventQueueManager).pushBasicProfile(null,false)
 
             eventQueueManager.pushInitialEventsAsync()
 
-            verify(eventQueueManager, never()).pushBasicProfile(null)
+            verify(eventQueueManager, never()).pushBasicProfile(null,false)
         }
     }
 
@@ -281,11 +281,11 @@ class EventQueueManagerTest : BaseTestCase() {
                 )
             )
             corestate.coreMetaData.currentSessionId = -1
-            doNothing().`when`(eventQueueManager).pushBasicProfile(null)
+            doNothing().`when`(eventQueueManager).pushBasicProfile(null,false)
 
             eventQueueManager.pushInitialEventsAsync()
 
-            verify(eventQueueManager).pushBasicProfile(null)
+            verify(eventQueueManager).pushBasicProfile(null,false)
         }
     }
 
@@ -451,7 +451,7 @@ class EventQueueManagerTest : BaseTestCase() {
             val captorEventType = ArgumentCaptor.forClass(Int::class.java)
 
             // Act
-            eventQueueManager.pushBasicProfile(null)
+            eventQueueManager.pushBasicProfile(null,false)
 
             // Assert
             verify(eventQueueManager).queueEvent(ArgumentMatchers.any(), captor.capture(), captorEventType.capture())
@@ -486,7 +486,7 @@ class EventQueueManagerTest : BaseTestCase() {
             val captorEventType = ArgumentCaptor.forClass(Int::class.java)
 
             // Act
-            eventQueueManager.pushBasicProfile(null)
+            eventQueueManager.pushBasicProfile(null,false)
 
             // Assert
             verify(eventQueueManager).queueEvent(ArgumentMatchers.any(), captor.capture(), captorEventType.capture())
@@ -520,7 +520,7 @@ class EventQueueManagerTest : BaseTestCase() {
             val captorEventType = ArgumentCaptor.forClass(Int::class.java)
 
             // Act
-            eventQueueManager.pushBasicProfile(null)
+            eventQueueManager.pushBasicProfile(null,false)
 
             // Assert
             verify(eventQueueManager).queueEvent(ArgumentMatchers.any(), captor.capture(), captorEventType.capture())
@@ -569,7 +569,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 inputJson.put("details", subInputJson)
 
                 // Act
-                eventQueueManager.pushBasicProfile(inputJson)
+                eventQueueManager.pushBasicProfile(inputJson,false)
 
                 // Assert
                 verify(eventQueueManager).queueEvent(
@@ -629,7 +629,7 @@ class EventQueueManagerTest : BaseTestCase() {
                 `when`(mockIdentityRepo.hasIdentity("name")).thenReturn(true)
 
                 // Act
-                eventQueueManager.pushBasicProfile(inputJson)
+                eventQueueManager.pushBasicProfile(inputJson,false)
 
                 // Assert
                 verify(mockLoginInfoProvider).cacheGUIDForIdentifier(expectedDeviceId, "name", "abc")
@@ -643,6 +643,277 @@ class EventQueueManagerTest : BaseTestCase() {
 
                 assertEquals("abc", actualProfile["name"])
                 assertEquals(70, actualDetails["age"])
+            }
+        }
+    }
+
+    @Test
+    fun test_pushBasicProfile_when_key_is_profile_identifier_and_removeFromSharedPrefs_is_true(){
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(
+                MockCTExecutors(
+                    cleverTapInstanceConfig
+                )
+            )
+
+            mockStatic(IdentityRepoFactory::class.java).use {
+                val mockIdentityRepo = mock(IdentityRepo::class.java)
+                val mockLoginInfoProvider = mock(LoginInfoProvider::class.java)
+                `when`(
+                    IdentityRepoFactory.getRepo(
+                        application,
+                        corestate.config,
+                        corestate.deviceInfo,
+                        corestate.validationResultStack
+                    )
+                ).thenReturn(mockIdentityRepo)
+
+                //Arrange
+                doReturn(null).`when`(eventQueueManager).queueEvent(
+                    ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyInt()
+                )
+
+                val expectedDeviceID = "_12345789"
+                val expectedDeviceCarrier = "Android"
+                val expectedDeviceCC = "us"
+                val expectedDeviceTZ = "Asia/Kolkata"
+                val expectedTZ = TimeZone.getDefault()
+                expectedTZ.id = expectedDeviceTZ
+                TimeZone.setDefault(expectedTZ)
+
+
+                `when`(corestate.deviceInfo.deviceID).thenReturn(expectedDeviceID)
+                `when`(corestate.deviceInfo.carrier).thenReturn(expectedDeviceCarrier)
+                `when`(corestate.deviceInfo.countryCode).thenReturn(expectedDeviceCC)
+
+                val captor = ArgumentCaptor.forClass(JSONObject::class.java)
+                val captorEventType = ArgumentCaptor.forClass(Int::class.java)
+
+                val inputJson = JSONObject()
+                inputJson.put("Email", "abc@xyz.com")
+
+                `when`(eventQueueManager.loginInfoProvider).thenReturn(mockLoginInfoProvider)
+                `when`(mockIdentityRepo.hasIdentity("Email")).thenReturn(true)
+
+                //Act
+                eventQueueManager.pushBasicProfile(inputJson, true)
+
+                //Assert
+                verify(mockLoginInfoProvider).removeValueFromCachedGUIDForIdentifier(
+                    expectedDeviceID,
+                    "Email"
+                )
+                verify(eventQueueManager).queueEvent(
+                    ArgumentMatchers.any(),
+                    captor.capture(),
+                    captorEventType.capture()
+                )
+
+                val actualProfile = captor.value["profile"] as JSONObject
+                assertEquals("abc@xyz.com", actualProfile["Email"])
+                assertEquals(expectedDeviceCarrier, actualProfile["Carrier"])
+                assertEquals(expectedDeviceCC, actualProfile["cc"])
+                assertEquals(expectedDeviceTZ, actualProfile["tz"])
+            }
+        }
+
+    }
+
+    @Test
+    fun test_pushBasicProfile_when_key_is_not_profile_identifier_and_removeFromSharedPrefs_is_false(){
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(
+                MockCTExecutors(cleverTapInstanceConfig)
+            )
+
+            mockStatic(IdentityRepoFactory::class.java).use {
+                val mockIdentityRepo = mock(IdentityRepo::class.java)
+                val mockLoginInfoProvider = mock(LoginInfoProvider::class.java)
+                `when`(
+                    IdentityRepoFactory.getRepo(
+                        application,
+                        corestate.config,
+                        corestate.deviceInfo,
+                        corestate.validationResultStack
+                    )
+                ).thenReturn(mockIdentityRepo)
+
+                //Arrange
+                doReturn(null).`when`(eventQueueManager).queueEvent(
+                    ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyInt()
+                )
+
+                val expectedGUID = "_123456789"
+                val expectedDeviceCarrier = "Android"
+                val expectedDeviceCC = "us"
+                val expectedDeviceTZ = "Asia/Kolkata"
+                val expectedTZ = TimeZone.getDefault()
+                expectedTZ.id = expectedDeviceTZ
+                TimeZone.setDefault(expectedTZ)
+
+                `when`(corestate.deviceInfo.deviceID).thenReturn(expectedGUID)
+                `when`(corestate.deviceInfo.carrier).thenReturn(expectedDeviceCarrier)
+                `when`(corestate.deviceInfo.countryCode).thenReturn(expectedDeviceCC)
+
+                val captor = ArgumentCaptor.forClass(JSONObject::class.java)
+                val captorEventType = ArgumentCaptor.forClass(Int::class.java)
+
+                val inputJson = JSONObject()
+                inputJson.put("Phone", "+919998988767")
+
+                `when`(eventQueueManager.loginInfoProvider).thenReturn(mockLoginInfoProvider)
+                `when`(mockIdentityRepo.hasIdentity("Phone")).thenReturn(false)
+
+                //Act
+                eventQueueManager.pushBasicProfile(inputJson, false)
+
+                //Assert
+                verify(eventQueueManager).queueEvent(
+                    ArgumentMatchers.any(),
+                    captor.capture(),
+                    captorEventType.capture()
+                )
+
+                val actualProfile = captor.value["profile"] as JSONObject
+                assertEquals("+919998988767", actualProfile["Phone"])
+                assertEquals(expectedDeviceCarrier, actualProfile["Carrier"])
+                assertEquals(expectedDeviceCC, actualProfile["cc"])
+                assertEquals(expectedDeviceTZ, actualProfile["tz"])
+            }
+        }
+
+    }
+
+    @Test
+    fun test_pushBasicProfile_when_key_is_profile_identifier_and_removeFromSharedPrefs_is_false(){
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(
+                MockCTExecutors(
+                    cleverTapInstanceConfig
+                )
+            )
+
+            mockStatic(IdentityRepoFactory::class.java).use {
+                val mockIdentityRepo = mock(IdentityRepo::class.java)
+                val mockLoginInfoProvider = mock(LoginInfoProvider::class.java)
+                `when`(
+                    IdentityRepoFactory.getRepo(
+                        application,
+                        corestate.config,
+                        corestate.deviceInfo,
+                        corestate.validationResultStack
+                    )
+                ).thenReturn(mockIdentityRepo)
+
+                //Arrange
+                doReturn(null).`when`(eventQueueManager).queueEvent(
+                    ArgumentMatchers.any(),
+                    ArgumentMatchers.any(),
+                    ArgumentMatchers.anyInt()
+                )
+
+                val expectedDeviceID = "_12345789"
+                val expectedDeviceCarrier = "Android"
+                val expectedDeviceCC = "us"
+                val expectedDeviceTZ = "Asia/Kolkata"
+                val expectedTZ = TimeZone.getDefault()
+                expectedTZ.id = expectedDeviceTZ
+                TimeZone.setDefault(expectedTZ)
+
+                `when`(corestate.deviceInfo.deviceID).thenReturn(expectedDeviceID)
+                `when`(corestate.deviceInfo.carrier).thenReturn(expectedDeviceCarrier)
+                `when`(corestate.deviceInfo.countryCode).thenReturn(expectedDeviceCC)
+
+                val captor = ArgumentCaptor.forClass(JSONObject::class.java)
+                val captorEventType = ArgumentCaptor.forClass(Int::class.java)
+
+                val inputJson = JSONObject()
+                inputJson.put("Email","abc@xyz.com")
+
+                `when`(eventQueueManager.loginInfoProvider).thenReturn(mockLoginInfoProvider)
+                `when`(mockIdentityRepo.hasIdentity("Email")).thenReturn(true)
+
+                //Act
+                eventQueueManager.pushBasicProfile(inputJson,false)
+
+                //Assert
+                verify(mockLoginInfoProvider).cacheGUIDForIdentifier(expectedDeviceID,"Email",
+                    "abc@xyz.com")
+                verify(eventQueueManager).queueEvent(
+                    ArgumentMatchers.any(),
+                    captor.capture(),
+                    captorEventType.capture()
+                )
+
+                val actualProfile = captor.value["profile"] as JSONObject
+                assertEquals("abc@xyz.com", actualProfile["Email"])
+                assertEquals(expectedDeviceCarrier, actualProfile["Carrier"])
+                assertEquals(expectedDeviceCC, actualProfile["cc"])
+                assertEquals(expectedDeviceTZ, actualProfile["tz"])
+            }
+        }
+    }
+
+    @Test
+    fun test_pushBasicProfile_when_key_is_not_profile_identifier_and_removeFromSharedPrefs_is_true(){
+        mockStatic(CTExecutorFactory::class.java).use {
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(
+                MockCTExecutors(cleverTapInstanceConfig)
+            )
+
+            mockStatic(IdentityRepoFactory::class.java).use {
+                val mockIdentityRepo = mock(IdentityRepo::class.java)
+                val mockLoginInfoProvider = mock(LoginInfoProvider::class.java)
+                `when`(
+                    IdentityRepoFactory.getRepo(
+                        application,
+                        corestate.config,
+                        corestate.deviceInfo,
+                        corestate.validationResultStack
+                    )
+                ).thenReturn(mockIdentityRepo)
+
+                //Arrange
+                doReturn(null).`when`(eventQueueManager).queueEvent(
+                    ArgumentMatchers.any(), ArgumentMatchers.any(), ArgumentMatchers.anyInt()
+                )
+
+                val expectedGUID = "_123456789"
+                val expectedDeviceCarrier = "Android"
+                val expectedDeviceCC = "us"
+                val expectedDeviceTZ = "Asia/Kolkata"
+                val expectedTZ = TimeZone.getDefault()
+                expectedTZ.id = expectedDeviceTZ
+                TimeZone.setDefault(expectedTZ)
+
+                `when`(corestate.deviceInfo.deviceID).thenReturn(expectedGUID)
+                `when`(corestate.deviceInfo.carrier).thenReturn(expectedDeviceCarrier)
+                `when`(corestate.deviceInfo.countryCode).thenReturn(expectedDeviceCC)
+
+                val captor = ArgumentCaptor.forClass(JSONObject::class.java)
+                val captorEventType = ArgumentCaptor.forClass(Int::class.java)
+
+                val inputJson = JSONObject()
+                inputJson.put("Phone", "+919998988767")
+
+                `when`(eventQueueManager.loginInfoProvider).thenReturn(mockLoginInfoProvider)
+                `when`(mockIdentityRepo.hasIdentity("Phone")).thenReturn(false)
+
+                //Act
+                eventQueueManager.pushBasicProfile(inputJson, true)
+
+                //Assert
+                verify(eventQueueManager).queueEvent(
+                    ArgumentMatchers.any(),
+                    captor.capture(),
+                    captorEventType.capture()
+                )
+
+                val actualProfile = captor.value["profile"] as JSONObject
+                assertEquals("+919998988767", actualProfile["Phone"])
+                assertEquals(expectedDeviceCarrier, actualProfile["Carrier"])
+                assertEquals(expectedDeviceCC, actualProfile["cc"])
+                assertEquals(expectedDeviceTZ, actualProfile["tz"])
             }
         }
     }

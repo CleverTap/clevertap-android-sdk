@@ -14,7 +14,7 @@ import com.clevertap.android.geofence.fakes.GeofenceJSON;
 import com.clevertap.android.geofence.interfaces.CTGeofenceAdapter;
 import com.clevertap.android.geofence.model.CTGeofence;
 import com.google.android.gms.tasks.OnSuccessListener;
-import edu.emory.mathcs.backport.java.util.Arrays;
+import java.util.Arrays;
 import java.util.List;
 import org.json.JSONObject;
 import org.junit.*;

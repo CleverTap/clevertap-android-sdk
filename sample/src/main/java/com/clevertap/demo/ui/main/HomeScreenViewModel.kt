@@ -103,8 +103,12 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 cleverTapAPI?.pushProfile(profileUpdate)
             }
             "13" -> {
-                //Update(Remove) Single-Value User Profile Properties
+                //Update(Remove) Single-Value User Profile Properties or
+                //Update(Remove) Can be used to remove PII data(for eg. Email,Phone,Name), locally
                 cleverTapAPI?.removeValueForKey("Customer Type")
+//                cleverTapAPI?.removeValueForKey("Email")
+//                cleverTapAPI?.removeValueForKey("Phone")
+//                cleverTapAPI?.removeValueForKey("Name")
             }
             "14" -> {
                 // Update(Replace) Multi-Value property
@@ -143,11 +147,12 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             "111" -> {
                 // onUserLogin
                 val newProfile = HashMap<String, Any>()
-                var n = (0..10_000).random()
-                var p = (10_000..99_999).random()
-                newProfile["Name"] = "Don Joe $n}" // String
+                val n = (0..10_000).random()
+                val p = (10_000..99_999).random()
+                newProfile["Name"] = "Don Joe $n" // String
                 newProfile["Email"] = "donjoe$n@gmail.com" // Email address of the user
                 newProfile["Phone"] = "+141566$p" // Phone (with the country code, starting with +)
+                newProfile["Identity"] = "00002" // Identity of the user
                 // add any other key value pairs.....
                 cleverTapAPI?.onUserLogin(newProfile)
             }
@@ -316,6 +321,8 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             "916"-> cleverTapAPI?.pushEvent("Send Input Box CTA DOC false")
             "917"-> cleverTapAPI?.pushEvent("Send Input Box Reminder DOC true")
             "918"-> cleverTapAPI?.pushEvent("Send Input Box Reminder DOC false")
+            "919"-> cleverTapAPI?.pushEvent("Send Three CTA Notification")
+
             //"60" -> webViewClickListener?.onWebViewClick()
 
         }

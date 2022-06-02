@@ -126,13 +126,6 @@ open class ContentView(
         }
     }
 
-    fun setCustomContentViewDotSep() {
-        if (renderer.pt_dot_sep != null) {
-            Utils.loadImageBitmapIntoRemoteView(R.id.sep, renderer.pt_dot_sep, remoteView)
-            Utils.loadImageBitmapIntoRemoteView(R.id.sep_subtitle, renderer.pt_dot_sep, remoteView)
-        }
-    }
-
     fun setCustomContentViewLargeIcon(pt_large_icon: String?) {
         if (pt_large_icon != null && pt_large_icon.isNotEmpty()) {
             Utils.loadImageURLIntoRemoteView(R.id.large_icon, pt_large_icon, remoteView)

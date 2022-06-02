@@ -1,0 +1,18 @@
+runs:
+  using: "composite"
+  steps:
+    - name: Check lint
+      shell: bash
+      run: ./gradlew :clevertap-core:lint :clevertap-geofence:lint  :clevertap-hms:lint  :clevertap-pushTemplates:lint :clevertap-xps:lint
+
+    - name: Upload Lint results
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: lint_results
+        path:  |
+          clevertap-core/build/reports/lint-results.html
+          clevertap-hms/build/reports/lint-results.html
+          clevertap-xps/build/reports/lint-results.html
+          clevertap-geofence/build/reports/lint-results.html
+          clevertap-pushTemplates/build/reports/lint-results.html

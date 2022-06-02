@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/content_view_small"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:paddingLeft="@dimen/padding_horizontal"
+    android:paddingLeft="@dimen/padding_vertical"
     android:paddingTop="@dimen/padding_vertical"
-    android:paddingRight="@dimen/padding_horizontal"
+    android:paddingRight="@dimen/padding_vertical"
     android:paddingBottom="@dimen/padding_vertical">
 
 
@@ -33,7 +34,7 @@
             android:layout_alignParentLeft="true"
             android:layout_toStartOf="@+id/large_icon"
             android:layout_toLeftOf="@id/large_icon"
-            android:text="title"
+            tools:text="title"
             android:maxLines="1"
             android:ellipsize="end"
             android:textAppearance="@style/PushTitle"/>
@@ -49,7 +50,7 @@
             android:layout_alignParentLeft="true"
             android:layout_toStartOf="@+id/large_icon"
             android:layout_toLeftOf="@id/large_icon"
-            android:text="message message"
+            tools:text="message message"
             android:textAppearance="@style/PushMessage"
             android:maxLines="1"
             android:ellipsize="end"/>

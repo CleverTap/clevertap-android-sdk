@@ -2165,7 +2165,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Remove the user profile property value specified by key from the user profile
+     * Remove the user profile property value specified by key from the user profile. Alternatively this method
+     * can also be used to remove PII data (for eg. Email,Name,Phone), locally from database and shared prefs
      *
      * @param key String
      */

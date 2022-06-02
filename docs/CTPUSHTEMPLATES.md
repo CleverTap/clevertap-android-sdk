@@ -20,7 +20,7 @@ CleverTap Push Templates SDK helps you engage with your users using fancy push n
 1. Add the dependencies to the `build.gradle`
 
 ```groovy
-implementation "com.clevertap.android:push-templates:1.0.0"
+implementation "com.clevertap.android:push-templates:1.0.2"
 implementation "com.clevertap.android:clevertap-android-sdk:4.4.0" // 4.4.0 and above
 ```
 
@@ -183,6 +183,8 @@ pt_product_display_linear | Optional | `true`
 Five icons template is a sticky push notification with no text, just 5 icons and a close button which can help your users go directly to the functionality of their choice with a button's click.
 
 If at least 3 icons are not retrieved, the library doesn't render any notification. The bifurcation of each CTA is captured in the event Notification Clicked with in the property `wzrk_c2a`.
+
+If user clicks on any notification area except the five & close icons, then by default it will launch an activity intent.
 
 <img src="https://github.com/CleverTap/clevertap-android-sdk/blob/master/static/fiveicon.png" width="412" height="100">
 
@@ -421,8 +423,8 @@ pt_big_img | Optional | Image
 pt_big_img_alt | Optional | Image to show when timer expires
 pt_bg | Required | Background Color in HEX
 pt_chrono_title_clr | Optional | Color for timer text in HEX
-pt_timer_threshold | Required | Timer duration in seconds (minimum 10)
-pt_timer_end | Required | Epoch Timestamp to countdown to (for example, $D_1595871380 or 1595871380). Not needed if pt_timer_threshold is specified.
+pt_timer_threshold | Required | Timer duration in seconds (minimum 10). Will be given higher priority. 
+pt_timer_end | Optional | Epoch Timestamp to countdown to (for example, $D_1595871380 or 1595871380). Not needed if pt_timer_threshold is specified.
 pt_title_clr | Optional | Title Color in HEX
 pt_msg_clr | Optional | Message Color in HEX
 pt_small_icon_clr | Optional | Small Icon Color in HEX
@@ -490,18 +492,20 @@ pt_json | Optional | Above keys in JSON format
 
 Template | Aspect Ratios | File Type
   ---:|:---:|:--- 
-Basic | 4:3 or 2:1 | .JPG
-Auto Carousel | 2:1 (Android 11 & 12) and 4:3 (Below Android 11) | .JPG
-Manual Carousel | 2:1 (Android 11 & 12) and 4:3 (Below Android 11) | .JPG
-Rating | 4:3 (Android 11 & 12) and 2:1 (Below Android 11) | .JPG
+Basic | 4:3 or 3:2 or 2:1 | .JPG
+Auto Carousel | 3:2 (Android 11 & 12) and 4:3 (Below Android 11) | .JPG
+Manual Carousel | 3:2 (Android 11 & 12) and 4:3 (Below Android 11) | .JPG
+Manual Carousel-FilmStrip| 1:1 | .JPG
+Rating | 4:3 | .JPG
 Five Icon | 1:1 | .JPG or .PNG
-Zero Bezel | 4:3 or 2:1 | .JPG
-Timer | 4:3 or 2:1 | .JPG
+Zero Bezel | 4:3 or 3:2 or 2:1 | .JPG
+Timer | 3:2 (Android 11 & 12) and 4:3 (Below Android 11) | .JPG
 Input Box | 4:3 or 2:1 | .JPG
 Product Catalog | 1:1 | .JPG
 
-* For Auto and Manual Carousel the image dimensions should not exceed more than 850x425 for Android 11 and Android 12 devices and with 2:1 image aspect ratio
+* For Auto and Manual Carousel the image dimensions should not exceed more than 840x560 for Android 11 and Android 12 devices and with 3:2 image aspect ratio
 * For Product Catalog image aspect ratio should be 1:1 and image size should be less than 80kb for Android 11 and Android 12 devices
+* For Zero Bezel it's recommended that if your images have any text it should be present in the middle of the image.
 
 ## Android 12 Trampoline restrictions
 

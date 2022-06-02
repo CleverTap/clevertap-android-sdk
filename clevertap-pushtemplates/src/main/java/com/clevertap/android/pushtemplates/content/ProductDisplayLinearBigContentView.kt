@@ -45,7 +45,6 @@ open class ProductDisplayLinearBigContentView(
         setImageList(extras)
         remoteView.setDisplayedChild(R.id.carousel_image, currentPosition)
 
-        setCustomContentViewDotSep()
         setCustomContentViewSmallIcon()
 
 

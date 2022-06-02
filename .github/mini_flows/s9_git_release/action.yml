@@ -1,0 +1,20 @@
+#step for calling ::
+#      - name: Relase to github
+#        uses: ./.github/mini_flows/s9_git_release
+runs:
+  using: "composite"
+  steps:
+    - name: Release on Github.
+      shell: bash
+      run:  echo "hello"
+#      uses: "marvinpinto/action-automatic-releases@latest"
+#      with:
+#        repo_token: "${{ secrets.GITHUB_TOKEN }}"
+#        draft: true
+#        prerelease: false
+#        automatic_release_tag: ${{ github.event.inputs.tag_name }}
+#        title: ${{ github.event.inputs.title }}
+#        files: |
+#          dog_network/build/outputs/aar
+
+

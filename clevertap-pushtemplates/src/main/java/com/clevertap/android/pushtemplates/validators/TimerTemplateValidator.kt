@@ -5,7 +5,7 @@ import com.clevertap.android.pushtemplates.checkers.Checker
 class TimerTemplateValidator(private var validator: Validator) : TemplateValidator(validator.keys) {
 
     override fun validate(): Boolean {
-        return validator.validate() && super.validateKeys()// All check must be true
+        return validator.validate() && super.validateORKeys()// All check must be true
     }
 
     override fun loadKeys(): List<Checker<out Any>> {
