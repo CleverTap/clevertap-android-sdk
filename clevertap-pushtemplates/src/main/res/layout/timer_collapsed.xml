@@ -2,19 +2,9 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/content_view_small"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
+    android:layout_height="wrap_content"
     android:background="@android:color/white"
-    android:orientation="vertical"
-    android:paddingStart="@dimen/padding_horizontal"
-    android:paddingLeft="@dimen/padding_horizontal"
-    android:paddingTop="@dimen/padding_vertical"
-    android:paddingEnd="@dimen/padding_horizontal"
-    android:paddingRight="@dimen/padding_horizontal"
-    android:paddingBottom="@dimen/padding_vertical">
-
-    <include
-        android:id="@+id/rel_lyt"
-        layout="@layout/content_view_small_single_line_msg" />
+    android:orientation="vertical">
 
     <Chronometer
         android:id="@+id/chronometer"
@@ -23,8 +13,18 @@
         android:layout_alignParentEnd="true"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
+        android:layout_marginRight="@dimen/padding_vertical"
+        android:layout_marginEnd="@dimen/padding_vertical"
         android:textAlignment="center"
         android:layout_gravity="center_horizontal"
         android:textSize="@dimen/chronometer_font_size"/>
+
+    <include
+        android:id="@+id/rel_lyt"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toStartOf="@id/chronometer"
+        android:layout_toLeftOf="@id/chronometer"
+        layout="@layout/content_view_small_single_line_msg" />
 
 </RelativeLayout>

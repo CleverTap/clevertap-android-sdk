@@ -14,7 +14,7 @@ public abstract class BaseEventQueueManager {
 
     public abstract void flushQueueAsync(final Context context, final EventGroup eventGroup);
 
-    public abstract void pushBasicProfile(JSONObject baseProfile);
+    public abstract void pushBasicProfile(JSONObject baseProfile, boolean removeFromSharedPrefs);
 
     public abstract void pushInitialEventsAsync();
 

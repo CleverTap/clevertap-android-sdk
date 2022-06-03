@@ -32,6 +32,14 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
         return !(("0").equals(pt_id) || pt_id == null || pt_id.isEmpty());
     }
 
+    private boolean isForDirectCall(Bundle extras) {
+        if (extras == null) {
+            return false;
+        }
+        String source = extras.getString("source");
+        return (("directcall").equals(source));
+    }
+
     private PushNotificationHandler() {
         // NO-OP
     }
@@ -55,6 +63,9 @@ public class PushNotificationHandler implements ActionButtonClickHandler {
                 if (isForPushTemplates(message) && CleverTapAPI.getNotificationHandler() != null) {
                     // render push template
                     CleverTapAPI.getNotificationHandler().onMessageReceived(applicationContext, message, pushType);
+                } else if(isForDirectCall(message) && CleverTapAPI.getDirectCallNotificationHandler() != null){
+                    // handle voip push payload
+                    CleverTapAPI.getDirectCallNotificationHandler().onMessageReceived(applicationContext, message, pushType);
                 } else {
                     // render core push
                     cleverTapAPI.renderPushNotification(new CoreNotificationRenderer(), applicationContext, message);

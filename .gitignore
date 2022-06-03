@@ -9,3 +9,4 @@ build/
 .gradle/
 *.exec
 sample/google-services.json
+ct_signing_key.gpg

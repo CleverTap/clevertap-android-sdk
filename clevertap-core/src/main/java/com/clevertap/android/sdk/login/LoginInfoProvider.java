@@ -2,14 +2,19 @@ package com.clevertap.android.sdk.login;
 
 import android.content.Context;
 import android.text.TextUtils;
+
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.utils.CTJsonConverter;
+
 import org.json.JSONObject;
+
+import java.util.Iterator;
 
 /**
  * Handles saving and/or providing login related information.
@@ -55,6 +60,41 @@ public class LoginInfoProvider {
         }
     }
 
+    /**
+     * Removes value for PII(Email) pair of <Email_Value, Guid> for this account from shared prefs
+     *
+     * @param guid       - guid of the user
+     * @param key        - Identity Key e.g Email
+     */
+    public void removeValueFromCachedGUIDForIdentifier(String guid, String key) {
+        if (isErrorDeviceId() || guid == null || key == null) {
+            return;
+        }
+
+        JSONObject cachedGuidJsonObj = getCachedGUIDs();
+        try{
+            Iterator<String> i = cachedGuidJsonObj.keys();
+            while (i.hasNext()) {
+                String nextJSONObjKey = i.next();
+                String actualKeyInLowerCase = nextJSONObjKey.toLowerCase();
+
+                if (actualKeyInLowerCase.contains(key.toLowerCase()) &&
+                        cachedGuidJsonObj.getString(nextJSONObjKey).equals(guid)){
+
+                        cachedGuidJsonObj.remove(nextJSONObjKey);
+
+                        if (cachedGuidJsonObj.length() == 0){//Removes cachedGUIDs key from shared prefs if cachedGUIDs is empty
+                            removeCachedGuidFromSharedPrefs();
+                        }else {
+                            setCachedGUIDs(cachedGuidJsonObj);
+                        }
+                }
+            }
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(), "Error removing cached key: " + t.toString());
+        }
+    }
+
     public boolean deviceIsMultiUser() {
         JSONObject cachedGUIDs = getCachedGUIDs();
         boolean deviceIsMultiUser = cachedGUIDs.length() > 1;
@@ -90,6 +130,16 @@ public class LoginInfoProvider {
                     "setCachedGUIDs:[" + cachedGuid + "]");
         } catch (Throwable t) {
             config.getLogger().verbose(config.getAccountId(), "Error persisting guid cache: " + t.toString());
+        }
+    }
+
+    public void removeCachedGuidFromSharedPrefs() {
+        try {
+            StorageHelper.remove(context, StorageHelper.storageKeyWithSuffix(config, Constants.CACHED_GUIDS_KEY));
+            config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN,
+                    "removeCachedGUIDs:[]");
+        } catch (Throwable t) {
+            config.getLogger().verbose(config.getAccountId(), "Error removing guid cache: " + t.toString());
         }
     }
 

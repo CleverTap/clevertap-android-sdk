@@ -1,0 +1,19 @@
+runs:
+  using: "composite"
+  steps:
+    - name: CodeAnalysis via  detekt
+      shell: bash
+      run: ./gradlew :clevertap-core:detekt :clevertap-geofence:detekt  :clevertap-hms:detekt  :clevertap-pushTemplates:detekt :clevertap-xps:detekt
+
+    - name: Upload detekt results
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: detekt_results
+        path:  |
+          clevertap-core/build/reports/detekt
+          clevertap-hms/build/reports/detekt
+          clevertap-xps/build/reports/detekt
+          clevertap-geofence/build/reports/detekt
+          clevertap-pushTemplates/build/reports/detekt
+

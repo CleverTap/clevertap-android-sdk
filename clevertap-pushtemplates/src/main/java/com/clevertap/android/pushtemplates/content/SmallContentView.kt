@@ -17,7 +17,6 @@ open class SmallContentView(
         setCustomContentViewTitleColour(renderer.pt_title_clr)
         setCustomContentViewMessageColour(renderer.pt_msg_clr)
         setCustomContentViewSmallIcon()
-        setCustomContentViewDotSep()
         setCustomContentViewLargeIcon(renderer.pt_large_icon)
     }
 }

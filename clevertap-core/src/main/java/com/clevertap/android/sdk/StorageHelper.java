@@ -2,6 +2,7 @@ package com.clevertap.android.sdk;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.WorkerThread;
 
@@ -9,7 +10,7 @@ import androidx.annotation.WorkerThread;
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public final class StorageHelper {
 
-    public static SharedPreferences getPreferences(Context context, String namespace) {
+    public static SharedPreferences getPreferences(@NonNull Context context, String namespace) {
         String path = Constants.CLEVERTAP_STORAGE_TAG;
 
         if (namespace != null) {
@@ -18,15 +19,15 @@ public final class StorageHelper {
         return context.getSharedPreferences(path, Context.MODE_PRIVATE);
     }
 
-    public static SharedPreferences getPreferences(Context context) {
+    public static SharedPreferences getPreferences(@NonNull  Context context) {
         return getPreferences(context, null);
     }
 
-    public static String getString(Context context, String key, String defaultValue) {
+    public static String getString(@NonNull Context context, @NonNull String key, String defaultValue) {
         return getPreferences(context).getString(key, defaultValue);
     }
 
-    public static String getStringFromPrefs(Context context, CleverTapInstanceConfig config, String rawKey,
+    public static String getStringFromPrefs(@NonNull Context context,@NonNull CleverTapInstanceConfig config, String rawKey,
             String defaultValue) {
         if (config.isDefaultInstance()) {
             String _new = getString(context, storageKeyWithSuffix(config, rawKey), defaultValue);
@@ -89,7 +90,7 @@ public final class StorageHelper {
     }
 
     //Preferences
-    public static String storageKeyWithSuffix(CleverTapInstanceConfig config, String key) {
+    public static String storageKeyWithSuffix(@NonNull CleverTapInstanceConfig config,@NonNull String key) {
         return key + ":" + config.getAccountId();
     }
 
