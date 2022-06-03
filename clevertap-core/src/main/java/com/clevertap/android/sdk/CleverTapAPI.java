@@ -127,6 +127,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     private static NotificationHandler sNotificationHandler;
 
+    private static NotificationHandler sDirectCallNotificationHandler;
+
     private final Context context;
 
     private CoreState coreState;
@@ -2023,6 +2025,19 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * Pushes a Direct Call event to CleverTap with a set of attribute pairs.
+     *
+     * @param eventName    The name of the event
+     * @param eventProperties The {@link JSONObject} object that contains the
+     *                           event properties regarding Direct Call event
+     */
+    @SuppressWarnings("unused")
+    public Future<?> pushDirectCallEvent(String eventName, JSONObject eventProperties) {
+        return coreState.getAnalyticsManager()
+                .raiseEventForDirectCall(eventName, eventProperties);
+    }
+
+    /**
      * Used to record errors of the Geofence module
      *
      * @param errorCode    - int - predefined error code for geofences
@@ -2220,7 +2235,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Remove the user profile property value specified by key from the user profile
+     * Remove the user profile property value specified by key from the user profile. Alternatively this method
+     * can also be used to remove PII data (for eg. Email,Name,Phone), locally from database and shared prefs
      *
      * @param key String
      */
@@ -2251,6 +2267,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     public static NotificationHandler getNotificationHandler() {
         return sNotificationHandler;
+    }
+
+    public static NotificationHandler getDirectCallNotificationHandler() {
+        return sDirectCallNotificationHandler;
     }
 
     /**
@@ -2727,6 +2747,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     public static void setNotificationHandler(NotificationHandler notificationHandler) {
         sNotificationHandler = notificationHandler;
+    }
+
+
+    public static void setDirectCallNotificationHandler(NotificationHandler notificationHandler) {
+        sDirectCallNotificationHandler = notificationHandler;
     }
 
     public static void handleMessage(String pushType) {

@@ -3,6 +3,8 @@ package com.clevertap.android.sdk
 import android.content.Context
 import com.clevertap.android.sdk.db.DBManager
 import com.clevertap.android.sdk.events.EventMediator
+import com.clevertap.android.sdk.events.EventQueueManager
+import com.clevertap.android.sdk.inapp.InAppController
 import com.clevertap.android.sdk.network.NetworkManager
 import com.clevertap.android.sdk.pushnotification.PushProviders
 import com.clevertap.android.sdk.task.MainLooperHandler
@@ -28,5 +30,7 @@ class MockCoreState(context: Context, cleverTapInstanceConfig: CleverTapInstance
         networkManager = Mockito.mock(NetworkManager::class.java)
         ctLockManager = CTLockManager()
         localDataStore = Mockito.mock(LocalDataStore::class.java)
+        baseEventQueueManager = Mockito.mock(EventQueueManager::class.java)
+        inAppController = Mockito.mock(InAppController::class.java)
     }
 }

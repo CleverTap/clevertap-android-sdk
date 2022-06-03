@@ -63,6 +63,7 @@ public class CTGeofenceBootReceiverTest extends BaseTestCase {
 
         CTGeofenceBootReceiver receiver = new CTGeofenceBootReceiver();
         CTGeofenceBootReceiver spy = Mockito.spy(receiver);
+        // todo useful
 
         spy.onReceive(application, null);
 

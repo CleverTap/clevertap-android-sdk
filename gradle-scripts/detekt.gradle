@@ -1,0 +1,46 @@
+// note : STEP1 in root's build.gradle
+
+// detekt STEP2 applying plugin (detekt = kotlin code's static analyser)
+apply plugin: "io.gitlab.arturbosch.detekt"
+
+// detekt STEP3 plugin configuration
+detekt {
+    parallel = true                                                                    // Builds the AST in parallel. Rules are always executed in parallel.Can lead to speedups in larger projects. `false` by default.
+    allRules = true                                                                    // Turns on all the rules. `false` by default.
+    ignoreFailures = true                                                              // If set to `true` the build does not fail when the maxIssues count was reached. Defaults to `false`.
+    debug = true                                                                       // Adds debug output during task execution. `false` by default.
+
+    //toolVersion = "1.20.0-RC1"                                                      // Version of Detekt that will be used. When unspecified the latest detekt version found will be used. Override to stay on the same version.
+    //source = files("src/main/kotlin", "gensrc/main/kotlin")                         // The directories where detekt looks for source files.Defaults to `files("src/main/java", "src/test/java", "src/main/kotlin", "src/test/kotlin")`.
+    //config = files("path/to/config.yml")                                            // Define the detekt configuration(s) you want to use. Defaults to the default detekt configuration.
+    //buildUponDefaultConfig = false                                                  // Applies the config files on top of detekt's default config file. `false` by default.
+    //baseline = file("path/to/baseline.xml")                                         // Specifying a baseline file. All findings stored in this file in subsequent runs of detekt.
+    //disableDefaultRuleSets = false                                                  // Disables all default detekt rulesets and will only run detekt with custom rules defined in plugins passed in with `detektPlugins` configuration. `false` by default.
+    //ignoredBuildTypes = ["release"]                                                 // Android: Don't create tasks for the specified build types (e.g. "release")
+    //ignoredFlavors = ["production"]                                                 // Android: Don't create tasks for the specified build flavor (e.g. "production")
+    //ignoredVariants = ["productionRelease"]                                         // Android: Don't create tasks for the specified build variants (e.g. "productionRelease")
+    //basePath = projectDir                                                           // Specify the base path for file paths in the formatted reports.If not set, all file paths reported will be absolute file path.
+
+
+}
+
+// detekt STEP4 gradle task configuration
+tasks.named("detekt").configure {
+    reports {
+
+        html.required.set(true)// Enable/Disable HTML report (default: true)
+        //html.outputLocation.set(file("$buildDir/reports/detekt/detekt.html"))
+        html.outputLocation.set(file("${buildDir}/reports/detekt/detekt-${project.name}.html"))
+
+        sarif.required.set(false)
+        xml.required.set(false)
+        txt.required.set(false)
+        //xml.outputLocation.set(file("build/reports/detekt.xml"))
+        //txt.outputLocation.set(file(rootProject.buildDir.toString()+"/reports/detekt-app.txt"))
+        //sarif.outputLocation.set(file("build/reports/detekt.sarif"))
+        //custom {// The simple class name of your custom report.
+        //    reportId = "CustomJsonReport"
+        //    outputLocation.set(file("build/reports/detekt.json"))
+        //}
+    }
+}

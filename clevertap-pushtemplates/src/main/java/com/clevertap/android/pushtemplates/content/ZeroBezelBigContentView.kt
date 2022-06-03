@@ -21,7 +21,6 @@ class ZeroBezelBigContentView(context: Context, renderer: TemplateRenderer) :
         setCustomContentViewMessageColour(renderer.pt_msg_clr)
         setCustomContentViewBigImage(renderer.pt_big_img)
         setCustomContentViewSmallIcon()
-        setCustomContentViewDotSep()
     }
 
     private fun setCustomContentViewMessageSummary(pt_msg_summary: String?) {

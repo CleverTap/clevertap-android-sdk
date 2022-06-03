@@ -1,0 +1,87 @@
+# Step to call:
+#- name: Slack Status Notification
+#    if: always()
+#    uses: ./.github/mini_flows/ss1_slack
+#    with:
+#      SLACK_WEBHOOK_URL: ${{ secrets.GITHUB_TOKEN }}
+#      LAST_RUN_TASK: "Check out code"
+
+inputs:
+  SLACK_WEBHOOK_URL:
+    required: false
+  LAST_RUN_TASK:
+    required: false
+
+runs:
+  using: "composite"
+  steps:
+    - name: Release on Github.
+      shell: bash
+      run:  echo "${{inputs.LAST_RUN_TASK}} - ${{ job.status }}"
+
+
+#runs:
+#  using: "composite"
+#  steps:
+#    - name: Send custom JSON data to Slack workflow.
+#      id: slack
+#
+#      uses: slackapi/slack-github-action@v1.18.0
+#      env:
+#        SLACK_WEBHOOK_URL: ${{ inputs.SLACK_WEBHOOK_URL }} #${{ secrets.SLACK_WEBHOOK_URL }}
+#        SLACK_WEBHOOK_TYPE: INCOMING_WEBHOOK
+#      with:
+#        payload: |
+#          {
+#            "attachments": [
+#              {
+#                "color": "#4ddbff",
+#                "blocks": [
+#                  {
+#                    "type": "section",
+#                    "text": {
+#                      "type": "mrkdwn",
+#                      "text": "*GitHub Action build results*  ℹ️️"
+#                    }
+#                  },
+#                  {
+#                    "type": "section",
+#                    "text": {
+#                      "type": "mrkdwn",
+#                      "text": "• step info ${{env.slack_msg}}"
+#                    }
+#                  },
+#                  {
+#                    "type": "divider"
+#                  },
+#                  {
+#                    "type": "section",
+#                    "text": {
+#                      "type": "mrkdwn",
+#                      "text": "• commit info :  <${{ github.event.pull_request.html_url || github.event.head_commit.url }}|${{github.event.head_commit.message}}>"
+#                    }
+#                  },
+#
+#                  {
+#                    "type": "section",
+#                    "text": {
+#                      "type": "mrkdwn",
+#                      "text": "• Job Status:  '${{ job.status }}'"
+#                    }
+#                  },
+#
+#                  {
+#                    "type": "section",
+#                    "text": {
+#                      "type": "mrkdwn",
+#                      "text": "• Full Runner URL: '${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'"
+#                    }
+#                  }
+#
+#                ]
+#              }
+#            ]
+#          }
+#
+#
+#
