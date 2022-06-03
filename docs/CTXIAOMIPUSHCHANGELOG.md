@@ -1,5 +1,9 @@
 ## CleverTap Xiaomi Push SDK CHANGE LOG
 
+### Version 1.4.0 (June 3, 2022)
+* Supports the `enableXiaomiPushOn` method in the core SDK. CleverTap Xiaomi Push SDK can now be enabled/disabled for `ALL_DEVICES`, `XIAOMI_MIUI_DEVICES` and `NO_DEVICES`
+* Supports CleverTap Android SDK v4.5.0
+
 ### Version 1.3.0 (March 2, 2022)
 * Updated Xiaomi Push SDK to v4.8.6
 

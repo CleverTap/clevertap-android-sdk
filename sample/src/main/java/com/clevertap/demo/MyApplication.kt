@@ -47,7 +47,8 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         )*/
 
         CleverTapAPI.setDebugLevel(VERBOSE)
-        CleverTapAPI.enableXiaomiPushOn(XIAOMI_MIUI_DEVICES)
+        //CleverTapAPI.changeXiaomiCredentials("your xiaomi app id","your xiaomi app key")
+        //CleverTapAPI.enableXiaomiPushOn(XIAOMI_MIUI_DEVICES)
         TemplateRenderer.debugLevel = 3;
         CleverTapAPI.setNotificationHandler(PushTemplateNotificationHandler() as NotificationHandler)
 
