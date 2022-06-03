@@ -1,10 +1,15 @@
 package com.clevertap.android.sdk.utils;
 
+import android.annotation.SuppressLint;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailabilityLight;
+import java.lang.reflect.Method;
 
 public class PackageUtils {
 
@@ -42,5 +47,44 @@ public class PackageUtils {
         } catch (PackageManager.NameNotFoundException e) {
             return false;
         }
+    }
+
+    private static boolean isIntentResolved(Context context, Intent intent) {
+        return (intent != null
+                && context.getPackageManager().resolveActivity(intent, PackageManager.MATCH_DEFAULT_ONLY) != null);
+    }
+
+    /**
+     * Check if device is xiaomi, running MIUI OS
+     * @param context application context
+     * @return true if device is xiaomi, running MIUI OS or false
+     */
+    public static boolean isXiaomiDeviceRunningMiui(Context context) {
+        try {
+            String manufacturer = "xiaomi";
+            if (!manufacturer.equalsIgnoreCase(android.os.Build.MANUFACTURER)) {
+                return false;
+            }
+
+            @SuppressLint("PrivateApi")
+            Class<?> c = Class.forName("android.os.SystemProperties");
+            Method get = c.getMethod("get", String.class);
+            String miui = (String) get.invoke(c, "ro.miui.ui.version.code");
+            if (miui!=null && !TextUtils.isEmpty(miui.trim()))
+            {
+                return true;
+            }
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+
+        return isIntentResolved(context,
+                new Intent("miui.intent.action.OP_AUTO_START").addCategory(Intent.CATEGORY_DEFAULT))
+                || isIntentResolved(context, new Intent().setComponent(new ComponentName("com.miui.securitycenter",
+                "com.miui.permcenter.autostart.AutoStartManagementActivity")))
+                || isIntentResolved(context,
+                new Intent("miui.intent.action.POWER_HIDE_MODE_APP_LIST").addCategory(Intent.CATEGORY_DEFAULT))
+                || isIntentResolved(context, new Intent()
+                .setComponent(new ComponentName("com.miui.securitycenter", "com.miui.powercenter.PowerSettings")));
     }
 }

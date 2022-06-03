@@ -1,5 +1,6 @@
 package com.clevertap.android.xps;
 
+import android.content.Context;
 import androidx.annotation.RestrictTo;
 
 /**
@@ -27,4 +28,9 @@ public interface IMiSdkHandler {
      * @return Xiaomi Message token
      */
     String onNewToken();
+
+    /**
+     * Turn off the MiPush push service
+     */
+    void unregisterPush(Context context);
 }

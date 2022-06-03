@@ -18,6 +18,9 @@ import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
 import com.clevertap.android.sdk.SyncListener
 import com.clevertap.android.sdk.interfaces.NotificationHandler
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
+import com.clevertap.android.sdk.pushnotification.PushConstants.ALL_DEVICES
+import com.clevertap.android.sdk.pushnotification.PushConstants.NO_DEVICES
+import com.clevertap.android.sdk.pushnotification.PushConstants.XIAOMI_MIUI_DEVICES
 import com.google.android.gms.security.ProviderInstaller
 import com.google.android.gms.security.ProviderInstaller.ProviderInstallListener
 import org.json.JSONObject
@@ -44,6 +47,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         )*/
 
         CleverTapAPI.setDebugLevel(VERBOSE)
+        CleverTapAPI.enableXiaomiPushOn(XIAOMI_MIUI_DEVICES)
         TemplateRenderer.debugLevel = 3;
         CleverTapAPI.setNotificationHandler(PushTemplateNotificationHandler() as NotificationHandler)
 

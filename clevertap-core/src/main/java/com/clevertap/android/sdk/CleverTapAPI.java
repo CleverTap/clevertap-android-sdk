@@ -48,6 +48,7 @@ import com.clevertap.android.sdk.pushnotification.INotificationRenderer;
 import com.clevertap.android.sdk.pushnotification.NotificationInfo;
 import com.clevertap.android.sdk.pushnotification.PushConstants;
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
+import com.clevertap.android.sdk.pushnotification.PushConstants.XiaomiPush;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
@@ -2692,14 +2693,15 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             return;
         }
 
-        try{
-            for(String accountId : CleverTapAPI.instances.keySet()){
+        try {
+            for (String accountId : CleverTapAPI.instances.keySet()) {
                 CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
-                if(instance != null){
-                    instance.coreState.getActivityLifeCycleManager().onActivityCreated(notification, deepLink, _accountId);
+                if (instance != null) {
+                    instance.coreState.getActivityLifeCycleManager()
+                            .onActivityCreated(notification, deepLink, _accountId);
                 }
             }
-        }catch (Throwable t){
+        } catch (Throwable t) {
             Logger.v("Throwable - " + t.getLocalizedMessage());
         }
     }
@@ -2835,15 +2837,34 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             Bundle extras) {
         coreState.getPushProviders().setPushNotificationRenderer(iNotificationRenderer);
 
-        if (extras!=null && extras.containsKey(Constants.PT_NOTIF_ID))
-        {
+        if (extras != null && extras.containsKey(Constants.PT_NOTIF_ID)) {
             coreState.getPushProviders()._createNotification(context, extras, extras.getInt(Constants.PT_NOTIF_ID));
         } else {
             coreState.getPushProviders()._createNotification(context, extras, Constants.EMPTY_NOTIFICATION_ID);
         }
     }
 
-   /* public @NonNull INotificationRenderer getPushNotificationRenderer(){
-        return coreState.getPushProviders().getPushNotificationRenderer();
-    }*/
+    /**
+     * Use this method if you want to run xiaomi sdk all devices, xiaomi only devices or turn off push on all devices.
+     * Default value is {@link PushConstants#ALL_DEVICES}
+     * @param xpsRunningDevices can be one of the following,<br>
+     *                          1. {@link PushConstants#ALL_DEVICES} (int value = 1)<br>
+     *                          2. {@link PushConstants#XIAOMI_MIUI_DEVICES} (int value = 2)<br>
+     *                          3. {@link PushConstants#NO_DEVICES} (int value = 3)<br>
+     */
+    public static void enableXiaomiPushOn(@XiaomiPush int xpsRunningDevices) {
+        PushType.XPS.setRunningDevices(xpsRunningDevices);
+    }
+
+    /**
+     *
+     * @return one of the following,<br>
+     *                          1. {@link XiaomiPush#ALL_DEVICES} (int value = 1)<br>
+     *                          2. {@link XiaomiPush#XIAOMI_MIUI_DEVICES} (int value = 2)<br>
+     *                          3. {@link XiaomiPush#NO_DEVICES} (int value = 3)<br>
+     */
+    public static @XiaomiPush int getEnableXiaomiPushOn() {
+        return PushType.XPS.getRunningDevices();
+    }
 }
+
