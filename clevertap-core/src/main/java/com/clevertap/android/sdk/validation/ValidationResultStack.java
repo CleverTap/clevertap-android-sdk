@@ -49,4 +49,9 @@ public class ValidationResultStack {
         }
         return vr;
     }
+
+    @RestrictTo(Scope.LIBRARY)
+    public ArrayList<ValidationResult> getPendingValidationResults() {
+        return pendingValidationResults;
+    }
 }

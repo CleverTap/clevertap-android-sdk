@@ -9,6 +9,6 @@ class ZeroBezelTemplateValidator(private var validator: Validator) : TemplateVal
     }
 
     override fun loadKeys(): List<Checker<out Any>> {
-        return listOf(keys[PT_DEEPLINK_LIST]!!, keys[PT_BIG_IMG]!!)
+        return listOf(keys[PT_BIG_IMG]!!)
     }
 }

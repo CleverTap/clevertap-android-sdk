@@ -4,6 +4,10 @@ import static android.content.Context.NOTIFICATION_SERVICE;
 
 import static com.clevertap.android.sdk.Utils.getDCDomain;
 
+import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM_LOG_TAG;
+import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
+import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM;
+
 import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
@@ -50,6 +54,9 @@ import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ManifestValidator;
 import com.clevertap.android.sdk.validation.ValidationResult;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.firebase.messaging.FirebaseMessaging;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -77,6 +84,19 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
          * @param type  the token type com.clevertap.android.sdk.PushType (FCM)
          */
         void devicePushTokenDidRefresh(String token, PushType type);
+    }
+
+    /**
+     * Implement to get called back when the device push token is received
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public interface RequestDevicePushTokenListener {
+
+        /**
+         * @param token the device token
+         * @param type  the token type com.clevertap.android.sdk.PushType (FCM)
+         */
+        void onDevicePushToken(String token, PushType type);
     }
 
     @SuppressWarnings({"unused"})
@@ -111,6 +131,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     private static String sdkVersion;  // For Google Play Store/Android Studio analytics
 
     private static NotificationHandler sNotificationHandler;
+
+    private static NotificationHandler sDirectCallNotificationHandler;
 
     private final Context context;
 
@@ -1429,6 +1451,43 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     }
 
+    /**
+     * This method is used to set the RequestDevicePushTokenListener object
+     *
+     * @param requestTokenListener The {@link RequestDevicePushTokenListener} object
+     */
+    @SuppressWarnings("unused")
+    @RestrictTo(Scope.LIBRARY_GROUP)
+    public void setRequestDevicePushTokenListener(RequestDevicePushTokenListener requestTokenListener) {
+        try {
+            Logger.v(LOG_TAG, FCM_LOG_TAG + "Requesting FCM token using googleservices.json");
+            FirebaseMessaging
+                    .getInstance()
+                    .getToken()
+                    .addOnCompleteListener
+                            (new OnCompleteListener<String>() {
+                                 @Override
+                                 public void onComplete(@NonNull final com.google.android.gms.tasks.Task<String> task) {
+                                     if (!task.isSuccessful()) {
+                                         Logger.v(LOG_TAG,
+                                                 FCM_LOG_TAG + "FCM token using googleservices.json failed",
+                                                 task.getException());
+                                         requestTokenListener.onDevicePushToken(null, FCM);
+                                         return;
+                                     }
+                                     String token = task.getResult() != null ? task.getResult() : null;
+                                     Logger.v(LOG_TAG,
+                                             FCM_LOG_TAG + "FCM token using googleservices.json - " + token);
+                                     requestTokenListener.onDevicePushToken(token, FCM);
+                                 }
+                             }
+                            );
+        } catch (Throwable t) {
+            Logger.v(LOG_TAG, FCM_LOG_TAG + "Error requesting FCM token", t);
+            requestTokenListener.onDevicePushToken(null, FCM);
+        }
+    }
+
     //Util
 
     /**
@@ -2001,6 +2060,19 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * Pushes a Direct Call event to CleverTap with a set of attribute pairs.
+     *
+     * @param eventName    The name of the event
+     * @param eventProperties The {@link JSONObject} object that contains the
+     *                           event properties regarding Direct Call event
+     */
+    @SuppressWarnings("unused")
+    public Future<?> pushDirectCallEvent(String eventName, JSONObject eventProperties) {
+        return coreState.getAnalyticsManager()
+                .raiseEventForDirectCall(eventName, eventProperties);
+    }
+
+    /**
      * Used to record errors of the Geofence module
      *
      * @param errorCode    - int - predefined error code for geofences
@@ -2198,7 +2270,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Remove the user profile property value specified by key from the user profile
+     * Remove the user profile property value specified by key from the user profile. Alternatively this method
+     * can also be used to remove PII data (for eg. Email,Name,Phone), locally from database and shared prefs
      *
      * @param key String
      */
@@ -2229,6 +2302,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     public static NotificationHandler getNotificationHandler() {
         return sNotificationHandler;
+    }
+
+    public static NotificationHandler getDirectCallNotificationHandler() {
+        return sDirectCallNotificationHandler;
     }
 
     /**
@@ -2705,6 +2782,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     public static void setNotificationHandler(NotificationHandler notificationHandler) {
         sNotificationHandler = notificationHandler;
+    }
+
+
+    public static void setDirectCallNotificationHandler(NotificationHandler notificationHandler) {
+        sDirectCallNotificationHandler = notificationHandler;
     }
 
     public static void handleMessage(String pushType) {
