@@ -38,9 +38,9 @@ abstract class Style(private var renderer: TemplateRenderer) {
             .setOnlyAlertOnce(true)
     }
 
-    protected abstract fun makeSmallContentView(context: Context, renderer: TemplateRenderer): RemoteViews?
+    protected abstract fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews?
 
-    protected abstract fun makeBigContentView(context: Context, renderer: TemplateRenderer): RemoteViews?
+    protected abstract fun makeBigContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews?
 
     protected abstract fun makePendingIntent(context: Context, extras: Bundle, notificationId: Int): PendingIntent?
 
@@ -51,7 +51,7 @@ abstract class Style(private var renderer: TemplateRenderer) {
         nb: NotificationCompat.Builder
     ): NotificationCompat.Builder {
         return setNotificationBuilderBasics(
-            nb, makeSmallContentView(context, renderer), makeBigContentView(context, renderer),
+            nb, makeSmallContentRemoteView(context, renderer), makeBigContentRemoteView(context, renderer),
             renderer.pt_title, makePendingIntent(context, extras, notificationId),
             makeDismissIntent(context, extras, notificationId)
         )

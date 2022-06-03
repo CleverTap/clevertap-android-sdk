@@ -30,11 +30,11 @@ class InputBoxStyle(private var renderer: TemplateRenderer) : Style(renderer) {
         ).setContentText(renderer.pt_msg)
     }
 
-    override fun makeSmallContentView(context: Context, renderer: TemplateRenderer): RemoteViews? {
+    override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews? {
         return null
     }
 
-    override fun makeBigContentView(context: Context, renderer: TemplateRenderer): RemoteViews? {
+    override fun makeBigContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews? {
         return null
     }
 

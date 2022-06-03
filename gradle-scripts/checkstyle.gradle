@@ -1,0 +1,30 @@
+// checkstyle STEP1 applying plugin (checkstyle = java code's static analyser)
+apply plugin: "checkstyle"
+
+// checkstyle STEP2 plugin configuration
+checkstyle {
+    //configFile rootProject.file('checkstyle.xml') // will automatically take from /config/checkstyle/checkstyle.xml
+    ignoreFailures false
+    showViolations true
+    toolVersion = "7.8.1"
+}
+
+// checkstyle STEP3 gradle task configuration
+task Checkstyle(type: Checkstyle) {
+    //configFile rootProject.file('checkstyle.xml') // will automatically take from /config/checkstyle/checkstyle.xml
+    source 'src/main/java'
+    ignoreFailures true
+    showViolations true
+    include '**/*.java'
+    classpath = files()
+    reports{
+        html.enabled(true)
+        html.destination = file("${buildDir}/reports/checkstyle/checkstyle-${project.name}.html")
+        xml.enabled(false)
+    }
+}
+
+// checkstyle STEP4 (optional) add the checkstyle task manually to  `gradle check` command. for detekt, it automatically adds itself
+tasks.named("check").configure {
+    dependsOn "Checkstyle"
+}

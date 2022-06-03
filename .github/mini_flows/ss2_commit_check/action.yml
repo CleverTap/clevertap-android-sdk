@@ -1,0 +1,38 @@
+# step to call :
+#      - name: Commit Rules Enforcement
+#        uses: ./.github/mini_flows/ss2_commit_check
+
+runs:
+  using: "composite"
+  steps:
+    - name: check commit..
+      shell: bash
+      run:  echo "hello ${{env.slack_msg}}"
+
+#runs:
+#  using: "composite"
+#  steps:
+#    - name: check commit.
+#      run: echo "hello"
+#      shell: bash
+#
+#    - name: Set Output
+#      if: always()
+#      uses: actions/github-script@v3
+#      run: |
+#        echo "slack_msg= xyz--🔜" >> $GITHUB_ENV
+#      shell: bash
+#
+
+#      - name: validate commit format -- Check if HEAD commit message contains [xyz] or FAIL
+#        uses: gsactions/commit-message-checker@v1
+#        with:
+#          excludeDescription: 'true'                # optional: this excludes the description body of a pull request
+#          excludeTitle: 'true'                      # optional: this excludes the title of a pull request
+#          pattern: '^\[[^]]+\].+'                   # this pattern will take all commits as input and check weather the head commit have one  [..] block
+#          flags: 'g' # more discussion here : https://github.com/GsActions/commit-message-checker/discussions/61,
+#          error: 'Your head commit must contain `[..]` like "[BUGFIX] or [SDK-974]".'
+#          checkAllCommitMessages: 'true' # optional: this checks all commits associated with a pull request
+#          accessToken: ${{ secrets.GITHUB_TOKEN }} # github access token is only required if checkAllCommitMessages is true
+#          #pattern: '^[^#].{74}'     error: 'The maximum line length of 74 characters is exceeded.'
+#          #pattern: '^.+(Resolves|Fixes): \#[0-9]+$' #  Check for Resolves / Fixes

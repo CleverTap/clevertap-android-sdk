@@ -15,6 +15,11 @@ public class PTPushNotificationReceiver extends CTPushNotificationReceiver {
 
     @Override
     public void onReceive(final Context context, final Intent intent) {
+        //Removes the deeplink key from bundle if deepLink is not present and launch activity.
+        if (intent.getStringExtra(Constants.DEEP_LINK_KEY) == null){
+            intent.removeExtra(Constants.DEEP_LINK_KEY);
+        }
+
         super.onReceive(context, intent);
 
         Bundle extras = intent.getExtras();

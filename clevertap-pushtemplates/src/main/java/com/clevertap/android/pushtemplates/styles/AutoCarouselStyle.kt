@@ -12,11 +12,11 @@ import com.clevertap.android.pushtemplates.content.SmallContentView
 
 class AutoCarouselStyle(private var renderer: TemplateRenderer) : Style(renderer) {
 
-    override fun makeSmallContentView(context: Context, renderer: TemplateRenderer): RemoteViews {
+    override fun makeSmallContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
         return SmallContentView(context, renderer).remoteView
     }
 
-    override fun makeBigContentView(context: Context, renderer: TemplateRenderer): RemoteViews {
+    override fun makeBigContentRemoteView(context: Context, renderer: TemplateRenderer): RemoteViews {
         return AutoCarouselContentView(context, renderer).remoteView
     }
 
