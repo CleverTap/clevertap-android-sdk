@@ -15,9 +15,6 @@ jobs:
       - name: Checkout the code from Repo
         uses: actions/checkout@v2
 
-      - name: Mandatory File Changes
-        uses: ./.github/mini_flows/s1_mandatory_filechanges
-
       - name: Setup JDK 11.
         uses: ./.github/mini_flows/s2_setup_jdk
 
