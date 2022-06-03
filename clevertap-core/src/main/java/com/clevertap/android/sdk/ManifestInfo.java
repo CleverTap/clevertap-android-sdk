@@ -91,11 +91,11 @@ public class ManifestInfo {
             intentServiceName = _getManifestStringValueForKey(metaData, Constants.LABEL_INTENT_SERVICE);
         }
 
-        if (xiaomiAppKey != null) {
+        if (xiaomiAppKey == null) {
             xiaomiAppKey = _getManifestStringValueForKey(metaData, Constants.LABEL_XIAOMI_APP_KEY);
         }
 
-        if (xiaomiAppID != null) {
+        if (xiaomiAppID == null) {
             xiaomiAppID = _getManifestStringValueForKey(metaData, Constants.LABEL_XIAOMI_APP_ID);
         }
 
