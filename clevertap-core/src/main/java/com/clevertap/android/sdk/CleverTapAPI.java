@@ -171,6 +171,16 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * This method is used to change the credentials of Xiaomi app id and key programmatically.
+     *
+     * @param xiaomiAppID  Xiaomi App Id
+     * @param xiaomiAppKey Xiaomi App Key
+     */
+    public static void changeXiaomiCredentials(String xiaomiAppID, String xiaomiAppKey) {
+        ManifestInfo.changeXiaomiCredentials(xiaomiAppID, xiaomiAppKey);
+    }
+
+    /**
      * Launches an asynchronous task to download the notification icon from CleverTap,
      * and create the Android notification.
      * <p>
