@@ -42,7 +42,7 @@ Click on [Mi Push Console](http://admin.xmpush.global.xiaomi.com/) and click on 
 * Add the CleverTap Xiaomi Push dependency in app’s `build.gradle`
 
 ```groovy
-    implementation "com.clevertap.android:clevertap-xiaomi-sdk:1.3.0"
+    implementation "com.clevertap.android:clevertap-xiaomi-sdk:1.4.0"
 ```
 
 * Add the following to your app’s `AndroidManifest.xml` file
@@ -67,3 +67,18 @@ Click on [Mi Push Console](http://admin.xmpush.global.xiaomi.com/) and click on 
 <string name="xiaomi_app_id">Your Xiaomi App ID</string>
  
 ```
+
+* From CleverTap Android SDK v4.5.0 and CleverTap Xiaomi Push SDK v1.4.0 onwards
+    * Method to change credentials for the CleverTap Xiaomi Push SDK `CleverTapAPI.changeXiaomiCredentials(String xiaomiAppID, String xiaomiAppKey)`. This needs to be added before `CleverTapAPI` instance creation.
+
+    * Method to run Xiaomi Push SDK on all devices, Xiaomi only devices or turn off push on all devices.
+
+    ```java
+
+    // possible values are PushConstants.ALL_DEVICES, PushConstants.XIAOMI_MIUI_DEVICES, PushConstants.NO_DEVICES
+    // default is PushConstants.ALL_DEVICES
+    CleverTapAPI.enableXiaomiPushOn(PushConstants.XIAOMI_MIUI_DEVICES);
+
+    ```
+
+    This needs to be added before `CleverTapAPI` instance creation.

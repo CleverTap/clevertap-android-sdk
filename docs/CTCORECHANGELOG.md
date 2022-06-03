@@ -1,5 +1,13 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 4.5.0 (June 3, 2022)
+* `removeValueForKey()` in `CleverTapAPI` can now remove PII data like Email, Phone and Date Of Birth.
+* Improved the `ActivityLifecycleCallback`’s `onPaused` logic so that it runs on the background thread to avoid any runtime issues. Fixes #221.
+* Adds support to change credentials for the CleverTap Xiaomi Push SDK using `changeXiaomiCredentials`. Contribution PR #269.
+* Adds support to enable/disable the CleverTap Xiaomi Push SDK using `enableXiaomiPushOn` method. CleverTap Xiaomi Push SDK can now be enabled/disabled for `ALL_DEVICES`, `XIAOMI_MIUI_DEVICES` and `NO_DEVICES`.
+* Adds analytics support for upcoming CleverTap Direct Call Android SDK.
+* Sets up CI/CD using Github Actions.
+
 ### Version 4.4.0 (December 20, 2021)
 * Adds below new public APIs for smooth and easy integration of Custom Android Push Notifications Handling(FCM),Custom Push Amplification Handling and Push Templates
   * `CTFcmMessageHandler().createNotification(applicationContext, message)`
