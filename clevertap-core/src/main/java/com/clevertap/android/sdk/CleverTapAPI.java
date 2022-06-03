@@ -2,6 +2,10 @@ package com.clevertap.android.sdk;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
 
+import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM_LOG_TAG;
+import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
+import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM;
+
 import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
@@ -45,6 +49,9 @@ import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ManifestValidator;
 import com.clevertap.android.sdk.validation.ValidationResult;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.firebase.messaging.FirebaseMessaging;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -72,6 +79,19 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
          * @param type  the token type com.clevertap.android.sdk.PushType (FCM)
          */
         void devicePushTokenDidRefresh(String token, PushType type);
+    }
+
+    /**
+     * Implement to get called back when the device push token is received
+     */
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public interface RequestDevicePushTokenListener {
+
+        /**
+         * @param token the device token
+         * @param type  the token type com.clevertap.android.sdk.PushType (FCM)
+         */
+        void onDevicePushToken(String token, PushType type);
     }
 
     @SuppressWarnings({"unused"})
@@ -1394,6 +1414,43 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public void setDevicePushTokenRefreshListener(DevicePushTokenRefreshListener tokenRefreshListener) {
         coreState.getPushProviders().setDevicePushTokenRefreshListener(tokenRefreshListener);
 
+    }
+
+    /**
+     * This method is used to set the RequestDevicePushTokenListener object
+     *
+     * @param requestTokenListener The {@link RequestDevicePushTokenListener} object
+     */
+    @SuppressWarnings("unused")
+    @RestrictTo(Scope.LIBRARY_GROUP)
+    public void setRequestDevicePushTokenListener(RequestDevicePushTokenListener requestTokenListener) {
+        try {
+            Logger.v(LOG_TAG, FCM_LOG_TAG + "Requesting FCM token using googleservices.json");
+            FirebaseMessaging
+                    .getInstance()
+                    .getToken()
+                    .addOnCompleteListener
+                            (new OnCompleteListener<String>() {
+                                 @Override
+                                 public void onComplete(@NonNull final com.google.android.gms.tasks.Task<String> task) {
+                                     if (!task.isSuccessful()) {
+                                         Logger.v(LOG_TAG,
+                                                 FCM_LOG_TAG + "FCM token using googleservices.json failed",
+                                                 task.getException());
+                                         requestTokenListener.onDevicePushToken(null, FCM);
+                                         return;
+                                     }
+                                     String token = task.getResult() != null ? task.getResult() : null;
+                                     Logger.v(LOG_TAG,
+                                             FCM_LOG_TAG + "FCM token using googleservices.json - " + token);
+                                     requestTokenListener.onDevicePushToken(token, FCM);
+                                 }
+                             }
+                            );
+        } catch (Throwable t) {
+            Logger.v(LOG_TAG, FCM_LOG_TAG + "Error requesting FCM token", t);
+            requestTokenListener.onDevicePushToken(null, FCM);
+        }
     }
 
     //Util
