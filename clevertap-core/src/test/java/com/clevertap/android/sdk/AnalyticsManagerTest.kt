@@ -78,7 +78,7 @@ class AnalyticsManagerTest : BaseTestCase() {
         analyticsManagerSUT.incrementValue("int_score",10)
 
         verify(coreState.localDataStore).setProfileField("int_score",20)
-        verify(baseEventQueueManager).pushBasicProfile(captor.capture(),false)
+        verify(baseEventQueueManager).pushBasicProfile(captor.capture(), any())
         JSONAssert.assertEquals(updateObj, captor.value, true)
     }
 
@@ -100,7 +100,7 @@ class AnalyticsManagerTest : BaseTestCase() {
         analyticsManagerSUT.incrementValue("double_score",10.25)
 
         verify(coreState.localDataStore).setProfileField("double_score",20.5)
-        verify(baseEventQueueManager).pushBasicProfile(captor.capture(),false)
+        verify(baseEventQueueManager).pushBasicProfile(captor.capture(), any())
         JSONAssert.assertEquals(updateObj, captor.value, true)
     }
 
@@ -122,7 +122,7 @@ class AnalyticsManagerTest : BaseTestCase() {
         analyticsManagerSUT.incrementValue("float_score",10.25f)
 
         verify(coreState.localDataStore).setProfileField("float_score",20.5f)
-        verify(baseEventQueueManager).pushBasicProfile(captor.capture(),false)
+        verify(baseEventQueueManager).pushBasicProfile(captor.capture(), any())
         JSONAssert.assertEquals(updateObj, captor.value, true)
     }
 
@@ -145,7 +145,7 @@ class AnalyticsManagerTest : BaseTestCase() {
         analyticsManagerSUT.decrementValue("decr_int_score",10)
 
         verify(coreState.localDataStore).setProfileField("decr_int_score",20)
-        verify(baseEventQueueManager).pushBasicProfile(captor.capture(),false)
+        verify(baseEventQueueManager).pushBasicProfile(captor.capture(), any())
         JSONAssert.assertEquals(updateObj, captor.value, true)
     }
 
@@ -168,7 +168,7 @@ class AnalyticsManagerTest : BaseTestCase() {
         analyticsManagerSUT.decrementValue("decr_double_score",10.50)
 
         verify(coreState.localDataStore).setProfileField("decr_double_score",9.75)
-        verify(baseEventQueueManager).pushBasicProfile(captor.capture(),false)
+        verify(baseEventQueueManager).pushBasicProfile(captor.capture(), any())
         JSONAssert.assertEquals(updateObj, captor.value, true)
     }
 
@@ -191,7 +191,7 @@ class AnalyticsManagerTest : BaseTestCase() {
         analyticsManagerSUT.decrementValue("decr_float_score",10.50f)
 
         verify(coreState.localDataStore).setProfileField("decr_float_score",9.75f)
-        verify(baseEventQueueManager).pushBasicProfile(captor.capture(),false)
+        verify(baseEventQueueManager).pushBasicProfile(captor.capture(), any())
         JSONAssert.assertEquals(updateObj, captor.value, true)
     }
 
