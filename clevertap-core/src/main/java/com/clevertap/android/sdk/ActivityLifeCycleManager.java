@@ -60,19 +60,25 @@ class ActivityLifeCycleManager {
         CoreMetaData.setAppForeground(false);
         sessionManager.setAppLastSeen(System.currentTimeMillis());
         config.getLogger().verbose(config.getAccountId(), "App in background");
-        final int now = (int) (System.currentTimeMillis() / 1000);
-        if (coreMetaData.inCurrentSession()) {
-            try {
-                StorageHelper
-                        .putInt(context,
-                                StorageHelper.storageKeyWithSuffix(config, Constants.LAST_SESSION_EPOCH),
-                                now);
-                config.getLogger().verbose(config.getAccountId(), "Updated session time: " + now);
-            } catch (Throwable t) {
-                config.getLogger()
-                        .verbose(config.getAccountId(), "Failed to update session time time: " + t.getMessage());
-            }
-        }
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        task.execute(
+                "activityPaused",
+                new Callable<Void>() {
+                    @Override
+                    public Void call() throws Exception {
+                        final int now = (int) (System.currentTimeMillis() / 1000);
+                        if (coreMetaData.inCurrentSession()) {
+                            try {
+                                StorageHelper.putInt(context, StorageHelper.storageKeyWithSuffix(config, Constants.LAST_SESSION_EPOCH), now);
+                                config.getLogger().verbose(config.getAccountId(), "Updated session time: " + now);
+                            } catch (Throwable t) {
+                                config.getLogger().verbose(config.getAccountId(), "Failed to update session time time: " + t.getMessage());
+                            }
+                        }
+                        return null;
+                    }
+                }
+        );
     }
 
     //Lifecycle

@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.validation;
 
+import androidx.annotation.NonNull;
+
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import java.util.ArrayList;
@@ -39,7 +41,8 @@ public final class Validator {
     private static final String[] restrictedNames = {"Stayed", "Notification Clicked",
             "Notification Viewed", "UTM Visited", "Notification Sent", "App Launched", "wzrk_d",
             "App Uninstalled", "Notification Bounced", Constants.GEOFENCE_ENTERED_EVENT_NAME,
-            Constants.GEOFENCE_EXITED_EVENT_NAME};
+            Constants.GEOFENCE_EXITED_EVENT_NAME, Constants.DC_OUTGOING_EVENT_NAME,
+            Constants.DC_INCOMING_EVENT_NAME, Constants.DC_END_EVENT_NAME};
 
     private ArrayList<String> discardedEvents;
 
@@ -120,7 +123,7 @@ public final class Validator {
      * @return The {@link ValidationResult} object containing the value,
      * and the error code(if any)
      */
-    public ValidationResult cleanMultiValuePropertyValue(String value) {
+    public ValidationResult cleanMultiValuePropertyValue(@NonNull String value) {
         ValidationResult vr = new ValidationResult();
 
         // trim whitespace and force lowercase
@@ -371,21 +374,20 @@ public final class Validator {
      * scans right to left until max to maintain latest max values for the multi-value property specified by key.
      *
      * @param key    the property key
-     * @param left   original list
-     * @param right  new list
+     * @param currentValues   original list
+     * @param newValues  new list
      * @param remove if remove new list from original
      * @param vr     ValidationResult for error and merged list return
      */
-    private ValidationResult _mergeListInternalForKey(String key, JSONArray left,
-            JSONArray right, boolean remove, ValidationResult vr) {
+    private ValidationResult _mergeListInternalForKey(String key, JSONArray currentValues, JSONArray newValues, boolean remove, ValidationResult vr) {
 
-        if (left == null) {
+        if (currentValues == null) {
             vr.setObject(null);
             return vr;
         }
 
-        if (right == null) {
-            vr.setObject(left);
+        if (newValues == null) {
+            vr.setObject(currentValues);
             return vr;
         }
 
@@ -395,32 +397,32 @@ public final class Validator {
 
         HashSet<String> set = new HashSet<>();
 
-        int lsize = left.length(), rsize = right.length();
+        int currentValsLength = currentValues.length(), newValsLength = newValues.length();
 
-        BitSet dupSetForAdd = null;
+        BitSet additionBitSet = null;
 
         if (!remove) {
-            dupSetForAdd = new BitSet(lsize + rsize);
+            additionBitSet = new BitSet(currentValsLength + newValsLength);
         }
 
-        int lidx = 0;
+        int currentValsStartIdx = 0;
 
-        int ridx = scan(right, set, dupSetForAdd, lsize);
+        int newValsStartIdx = scan(newValues, set, additionBitSet, currentValsLength);
 
         if (!remove && set.size() < maxValNum) {
-            lidx = scan(left, set, dupSetForAdd, 0);
+            currentValsStartIdx = scan(currentValues, set, additionBitSet, 0);
         }
 
-        for (int i = lidx; i < lsize; i++) {
+        for (int i = currentValsStartIdx; i < currentValsLength; i++) {
             try {
                 if (remove) {
-                    String _j = (String) left.get(i);
+                    String currentValue = (String) currentValues.get(i);
 
-                    if (!set.contains(_j)) {
-                        mergedList.put(_j);
+                    if (!set.contains(currentValue)) {
+                        mergedList.put(currentValue);
                     }
-                } else if (!dupSetForAdd.get(i)) {
-                    mergedList.put(left.get(i));
+                } else if (!additionBitSet.get(i)) {
+                    mergedList.put(currentValues.get(i));
                 }
 
             } catch (Throwable t) {
@@ -430,11 +432,11 @@ public final class Validator {
 
         if (!remove && mergedList.length() < maxValNum) {
 
-            for (int i = ridx; i < rsize; i++) {
+            for (int i = newValsStartIdx; i < newValsLength; i++) {
 
                 try {
-                    if (!dupSetForAdd.get(i + lsize)) {
-                        mergedList.put(right.get(i));
+                    if (!additionBitSet.get(i + currentValsLength)) {
+                        mergedList.put(newValues.get(i));
                     }
                 } catch (Throwable t) {
                     //no-op
@@ -443,9 +445,8 @@ public final class Validator {
         }
 
         // check to see if the list got trimmed in the merge
-        if (ridx > 0 || lidx > 0) {
-            ValidationResult error = ValidationResultFactory
-                    .create(521, Constants.MULTI_VALUE_CHARS_LIMIT_EXCEEDED, key, maxValNum + "");
+        if (newValsStartIdx > 0 || currentValsStartIdx > 0) {
+            ValidationResult error = ValidationResultFactory.create(521, Constants.MULTI_VALUE_CHARS_LIMIT_EXCEEDED, key, maxValNum + "");
             vr.setErrorCode(error.getErrorCode());
             vr.setErrorDesc(error.getErrorDesc());
         }
@@ -465,7 +466,7 @@ public final class Validator {
         this.discardedEvents = discardedEvents;
     }
 
-    private int scan(JSONArray list, Set<String> set, BitSet dupSetForAdd, int off) {
+    private int scan(JSONArray list, Set<String> set, BitSet additionBitSet, int off) {
 
         if (list != null) {
 
@@ -478,13 +479,13 @@ public final class Validator {
 
                     String n = obj != null ? obj.toString() : null;
 
-                    if (dupSetForAdd == null) { /* remove */
+                    if (additionBitSet == null) { /* remove */
                         if (n != null) {
                             set.add(n);
                         }
                     } else {
                         if (n == null || set.contains(n)) {
-                            dupSetForAdd.set(i + off, true);
+                            additionBitSet.set(i + off, true);
                         } else {
                             set.add(n);
 

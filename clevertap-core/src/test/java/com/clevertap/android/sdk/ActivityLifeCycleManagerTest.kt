@@ -68,6 +68,7 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
         assertFalse(CoreMetaData.isAppForeground())
     }
 
+    @Ignore
     @Test
     fun test_activityPaused_whenInCurrentSession_LastSessionEpochMustBeSavedInPreference() {
         coreState.coreMetaData.currentSessionId = 100

@@ -6,6 +6,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
+import com.clevertap.android.sdk.interfaces.DCDomainCallback;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
@@ -19,6 +20,8 @@ public class CallbackManager extends BaseCallbackManager {
     private WeakReference<DisplayUnitListener> displayUnitListenerWeakReference;
 
     private GeofenceCallback geofenceCallback;
+
+    private DCDomainCallback dcDomainCallback;
 
     private WeakReference<InAppNotificationButtonListener> inAppNotificationButtonListener;
 
@@ -94,6 +97,16 @@ public class CallbackManager extends BaseCallbackManager {
     @Override
     public void setGeofenceCallback(final GeofenceCallback geofenceCallback) {
         this.geofenceCallback = geofenceCallback;
+    }
+
+    @Override
+    public DCDomainCallback getDCDomainCallback() {
+        return dcDomainCallback;
+    }
+
+    @Override
+    public void setDCDomainCallback(DCDomainCallback dcDomainCallback) {
+        this.dcDomainCallback = dcDomainCallback;
     }
 
     @Override

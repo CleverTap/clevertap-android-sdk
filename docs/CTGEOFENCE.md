@@ -17,7 +17,7 @@ Add the following dependencies to the `build.gradle`
 
 ```Groovy
 implementation "com.clevertap.android:clevertap-geofence-sdk:1.1.0"
-implementation "com.clevertap.android:clevertap-android-sdk:4.4.0" // 3.9.0 and above
+implementation "com.clevertap.android:clevertap-android-sdk:4.5.0" // 3.9.0 and above
 implementation "com.google.android.gms:play-services-location:18.0.0"
 implementation "androidx.work:work-runtime:2.7.0" // required for FETCH_LAST_LOCATION_PERIODIC
 implementation "androidx.concurrent:concurrent-futures:1.1.0" // required for FETCH_LAST_LOCATION_PERIODIC

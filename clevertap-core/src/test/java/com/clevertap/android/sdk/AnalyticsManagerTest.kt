@@ -11,8 +11,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito
-import org.mockito.Mockito.`when`
-import org.mockito.Mockito.verify
+import org.mockito.Mockito.*
 import org.robolectric.RobolectricTestRunner
 import org.skyscreamer.jsonassert.JSONAssert
 
@@ -79,7 +78,7 @@ class AnalyticsManagerTest : BaseTestCase() {
         analyticsManagerSUT.incrementValue("int_score",10)
 
         verify(coreState.localDataStore).setProfileField("int_score",20)
-        verify(baseEventQueueManager).pushBasicProfile(captor.capture())
+        verify(baseEventQueueManager).pushBasicProfile(captor.capture(), anyBoolean())
         JSONAssert.assertEquals(updateObj, captor.value, true)
     }
 
@@ -101,7 +100,7 @@ class AnalyticsManagerTest : BaseTestCase() {
         analyticsManagerSUT.incrementValue("double_score",10.25)
 
         verify(coreState.localDataStore).setProfileField("double_score",20.5)
-        verify(baseEventQueueManager).pushBasicProfile(captor.capture())
+        verify(baseEventQueueManager).pushBasicProfile(captor.capture(), anyBoolean())
         JSONAssert.assertEquals(updateObj, captor.value, true)
     }
 
@@ -123,7 +122,7 @@ class AnalyticsManagerTest : BaseTestCase() {
         analyticsManagerSUT.incrementValue("float_score",10.25f)
 
         verify(coreState.localDataStore).setProfileField("float_score",20.5f)
-        verify(baseEventQueueManager).pushBasicProfile(captor.capture())
+        verify(baseEventQueueManager).pushBasicProfile(captor.capture(), anyBoolean())
         JSONAssert.assertEquals(updateObj, captor.value, true)
     }
 
@@ -146,7 +145,7 @@ class AnalyticsManagerTest : BaseTestCase() {
         analyticsManagerSUT.decrementValue("decr_int_score",10)
 
         verify(coreState.localDataStore).setProfileField("decr_int_score",20)
-        verify(baseEventQueueManager).pushBasicProfile(captor.capture())
+        verify(baseEventQueueManager).pushBasicProfile(captor.capture(), anyBoolean())
         JSONAssert.assertEquals(updateObj, captor.value, true)
     }
 
@@ -169,7 +168,7 @@ class AnalyticsManagerTest : BaseTestCase() {
         analyticsManagerSUT.decrementValue("decr_double_score",10.50)
 
         verify(coreState.localDataStore).setProfileField("decr_double_score",9.75)
-        verify(baseEventQueueManager).pushBasicProfile(captor.capture())
+        verify(baseEventQueueManager).pushBasicProfile(captor.capture(), anyBoolean())
         JSONAssert.assertEquals(updateObj, captor.value, true)
     }
 
@@ -192,7 +191,27 @@ class AnalyticsManagerTest : BaseTestCase() {
         analyticsManagerSUT.decrementValue("decr_float_score",10.50f)
 
         verify(coreState.localDataStore).setProfileField("decr_float_score",9.75f)
-        verify(baseEventQueueManager).pushBasicProfile(captor.capture())
+        verify(baseEventQueueManager).pushBasicProfile(captor.capture(), anyBoolean())
         JSONAssert.assertEquals(updateObj, captor.value, true)
     }
+
+    @Test
+    fun test_removeValueForKey_when_key_identity(){
+
+        //Act
+        analyticsManagerSUT.removeValueForKey("Identity")
+
+        //Assert
+        verify(coreState.localDataStore, never()).removeProfileField("Identity")
+    }
+
+    @Test
+    fun test_removeValueForKey_when_key_identity_is_lowercase(){
+        //Act
+        analyticsManagerSUT.removeValueForKey("identity")
+
+        //Assert
+        verify(coreState.localDataStore, never()).removeProfileField("identity")
+    }
+
 }

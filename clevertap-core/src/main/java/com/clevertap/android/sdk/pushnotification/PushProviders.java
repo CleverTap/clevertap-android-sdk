@@ -26,6 +26,7 @@ import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
@@ -47,6 +48,7 @@ import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundIntentService;
 import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundJobService;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
+import com.clevertap.android.sdk.utils.PackageUtils;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
@@ -69,6 +71,8 @@ import org.json.JSONObject;
 public class PushProviders implements CTPushProviderListener {
 
     private final ArrayList<PushConstants.PushType> allEnabledPushTypes = new ArrayList<>();
+
+    private final ArrayList<PushConstants.PushType> allDisabledPushTypes = new ArrayList<>();
 
     private final ArrayList<CTPushProvider> availableCTPushProviders = new ArrayList<>();
 
@@ -154,7 +158,7 @@ public class PushProviders implements CTPushProviderListener {
                 public Void call() {
                     try {
                         String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
-                        if (extrasFrom==null || !extrasFrom.equals("PTReceiver")) {
+                        if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
                             config.getLogger()
                                     .debug(config.getAccountId(), "Handling notification: " + extras.toString());
                             if (extras.getString(Constants.WZRK_PUSH_ID) != null) {
@@ -591,24 +595,7 @@ public class PushProviders implements CTPushProviderListener {
         List<CTPushProvider> providers = new ArrayList<>();
 
         for (PushConstants.PushType pushType : allEnabledPushTypes) {
-            String className = pushType.getCtProviderClassName();
-            CTPushProvider pushProvider = null;
-            try {
-                Class<?> providerClass = Class.forName(className);
-                Constructor<?> constructor = providerClass
-                        .getConstructor(CTPushProviderListener.class, Context.class, CleverTapInstanceConfig.class);
-                pushProvider = (CTPushProvider) constructor.newInstance(this, context, config);
-                config.log(PushConstants.LOG_TAG, "Found provider:" + className);
-            } catch (InstantiationException e) {
-                config.log(PushConstants.LOG_TAG, "Unable to create provider InstantiationException" + className);
-            } catch (IllegalAccessException e) {
-                config.log(PushConstants.LOG_TAG, "Unable to create provider IllegalAccessException" + className);
-            } catch (ClassNotFoundException e) {
-                config.log(PushConstants.LOG_TAG, "Unable to create provider ClassNotFoundException" + className);
-            } catch (Exception e) {
-                config.log(PushConstants.LOG_TAG,
-                        "Unable to create provider " + className + " Exception:" + e.getClass().getName());
-            }
+            CTPushProvider pushProvider = getCTPushProviderFromPushType(pushType, true);
 
             if (pushProvider == null) {
                 continue;
@@ -617,7 +604,62 @@ public class PushProviders implements CTPushProviderListener {
             providers.add(pushProvider);
         }
 
+        for (PushConstants.PushType pushType : allDisabledPushTypes) {
+            // only for XPS, if for disabled push cached token already exists then unregister xiaomi push
+            // for case like user enables xps on all devices first then in next app version disables on all devices
+
+            if (pushType == PushType.XPS) {
+                String cachedTokenXps = getCachedToken(PushType.XPS);
+                if (!TextUtils.isEmpty(cachedTokenXps)) {
+                    CTPushProvider pushProvider = getCTPushProviderFromPushType(pushType, false);
+
+                    if (pushProvider instanceof UnregistrableCTPushProvider) {
+                        ((UnregistrableCTPushProvider) pushProvider).unregisterPush(context);
+                        config.log(PushConstants.LOG_TAG, "unregistering existing token for disabled " + pushType);
+                    }
+                }
+            }
+
+        }
+
         return providers;
+    }
+
+    /**
+     * This code can be moved to {@link PushType} but this is creating new instance of CTPushProvider for each
+     * execution,
+     * and to prevent multiple instance of same CTPushProvider not moving this to {@link PushType}
+     */
+    @Nullable
+    private CTPushProvider getCTPushProviderFromPushType(final PushType pushType, final boolean isInit) {
+        String className = pushType.getCtProviderClassName();
+        CTPushProvider pushProvider = null;
+        try {
+            Class<?> providerClass = Class.forName(className);
+
+            if (isInit) {
+                Constructor<?> constructor = providerClass
+                        .getConstructor(CTPushProviderListener.class, Context.class, CleverTapInstanceConfig.class);
+                pushProvider = (CTPushProvider) constructor.newInstance(this, context, config);
+
+            } else {
+                Constructor<?> constructor = providerClass
+                        .getConstructor(CTPushProviderListener.class, Context.class, CleverTapInstanceConfig.class,
+                                Boolean.class);
+                pushProvider = (CTPushProvider) constructor.newInstance(this, context, config, false);
+            }
+            config.log(PushConstants.LOG_TAG, "Found provider:" + className);
+        } catch (InstantiationException e) {
+            config.log(PushConstants.LOG_TAG, "Unable to create provider InstantiationException" + className);
+        } catch (IllegalAccessException e) {
+            config.log(PushConstants.LOG_TAG, "Unable to create provider IllegalAccessException" + className);
+        } catch (ClassNotFoundException e) {
+            config.log(PushConstants.LOG_TAG, "Unable to create provider ClassNotFoundException" + className);
+        } catch (Exception e) {
+            config.log(PushConstants.LOG_TAG,
+                    "Unable to create provider " + className + " Exception:" + e.getClass().getName());
+        }
+        return pushProvider;
     }
 
     //Push
@@ -672,6 +714,24 @@ public class PushProviders implements CTPushProviderListener {
                 Class.forName(className);
                 allEnabledPushTypes.add(pushType);
                 config.log(PushConstants.LOG_TAG, "SDK Class Available :" + className);
+
+                // if push is off on all devices then remove xps
+                if (pushType.getRunningDevices() == PushConstants.NO_DEVICES) {
+                    allEnabledPushTypes.remove(pushType);
+                    allDisabledPushTypes.add(pushType);
+                    config.log(PushConstants.LOG_TAG,
+                            "disabling " + pushType + " due to flag set as PushConstants.NO_DEVICES");
+                }
+                // if push is off for non-xiaomi devices then remove xps
+                if (pushType.getRunningDevices() == PushConstants.XIAOMI_MIUI_DEVICES) {
+                    if (!PackageUtils.isXiaomiDeviceRunningMiui(context)) {
+                        allEnabledPushTypes.remove(pushType);
+                        allDisabledPushTypes.add(pushType);
+                        config.log(PushConstants.LOG_TAG,
+                                "disabling " + pushType + " due to flag set as PushConstants.XIAOMI_MIUI_DEVICES");
+                    }
+                }
+
             } catch (Exception e) {
                 config.log(PushConstants.LOG_TAG,
                         "SDK class Not available " + className + " Exception:" + e.getClass().getName());
@@ -1096,7 +1156,7 @@ public class PushProviders implements CTPushProviderListener {
         config.getLogger().debug(config.getAccountId(), "Rendered notification: " + n.toString());//cb
 
         String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
-        if (extrasFrom==null || !extrasFrom.equals("PTReceiver")) {
+        if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
             String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE,
                     (System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL) / 1000 + "");
             long wzrk_ttl = Long.parseLong(ttl);

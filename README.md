@@ -4,6 +4,8 @@
 
 # CleverTap Android SDKs
 [![Build Status](https://app.bitrise.io/app/09efc6b9404a6341/status.svg?token=TejL3E1NHyTiR5ajHKGJ6Q)](https://app.bitrise.io/app/09efc6b9404a6341)
+[![build - pr raised against develop](https://github.com/CleverTap/clevertap-android-sdk/actions/workflows/on_pr_from_task_to_develop.yml/badge.svg)](https://github.com/CleverTap/clevertap-android-sdk/actions/workflows/on_pr_from_task_to_develop.yml)
+[![build - master](https://github.com/CleverTap/clevertap-android-sdk/actions/workflows/on_pr_merged_in_master.yml/badge.svg)](https://github.com/CleverTap/clevertap-android-sdk/actions/workflows/on_pr_merged_in_master.yml)
 [![Download](https://api.bintray.com/packages/clevertap/Maven/CleverTapAndroidSDK/images/download.svg) ](https://bintray.com/clevertap/Maven/CleverTapAndroidSDK/_latestVersion)
 
 ## 👋 Introduction
@@ -24,7 +26,7 @@ We publish the SDK to `mavenCentral` as an `AAR` file. Just declare it as depend
 
 ```groovy
     dependencies {      
-         implementation "com.clevertap.android:clevertap-android-sdk:4.4.0"
+         implementation "com.clevertap.android:clevertap-android-sdk:4.5.0"
     }
 ```
 
@@ -32,7 +34,7 @@ Alternatively, you can download and add the AAR file included in this repo in yo
     
  ```groovy
     dependencies {      
-        implementation (name: "clevertap-android-sdk-4.4.0", ext: 'aar')
+        implementation (name: "clevertap-android-sdk-4.5.0", ext: 'aar')
     }
 ```
 
@@ -44,7 +46,7 @@ Add the Firebase Messaging library and Android Support Library v4 as dependencie
 
 ```groovy
      dependencies {      
-         implementation "com.clevertap.android:clevertap-android-sdk:4.4.0"
+         implementation "com.clevertap.android:clevertap-android-sdk:4.5.0"
          implementation "androidx.core:core:1.3.0"
          implementation "com.google.firebase:firebase-messaging:21.0.0"
          implementation "com.google.android.gms:play-services-ads:19.4.0" // Required only if you enable Google ADID collection in the SDK (turned off by default).

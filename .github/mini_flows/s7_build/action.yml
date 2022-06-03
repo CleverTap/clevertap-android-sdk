@@ -1,0 +1,24 @@
+runs:
+  using: "composite"
+  steps:
+
+    - name: Generate AAR files
+      shell: bash
+      run: ./gradlew :clevertap-core:assembleDebug :clevertap-geofence:assembleDebug  :clevertap-hms:assembleDebug  :clevertap-pushTemplates:assembleDebug :clevertap-xps:assembleDebug
+
+    - name: Upload AAR and apk files
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: aars_and_apks.zip
+        path: |
+          clevertap-core/build/outputs/aar
+          clevertap-hms/build/outputs/aar
+          clevertap-xps/build/outputs/aar
+          clevertap-geofence/build/outputs/aar
+          clevertap-pushTemplates/build/outputs/aar
+
+#    - name: Set Output
+#      if: always()
+#      shell: bash
+#      run: echo "slack_msg=build code--🔜" >> $GITHUB_ENV

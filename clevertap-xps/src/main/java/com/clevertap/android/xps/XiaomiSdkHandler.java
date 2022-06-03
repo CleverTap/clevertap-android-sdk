@@ -10,6 +10,8 @@ import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.ManifestInfo;
+import com.clevertap.android.sdk.pushnotification.PushConstants;
+import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.xiaomi.mipush.sdk.MiPushClient;
 import java.util.List;
 
@@ -27,10 +29,16 @@ class XiaomiSdkHandler implements IMiSdkHandler {
     private ManifestInfo manifestInfo;
 
     XiaomiSdkHandler(final Context context, final CleverTapInstanceConfig config) {
+        this(context, config, true);
+    }
+
+    XiaomiSdkHandler(final Context context, final CleverTapInstanceConfig config, final boolean isInit) {
         this.context = context.getApplicationContext();
         mConfig = config;
         this.manifestInfo = ManifestInfo.getInstance(context);
-        init();
+        if (isInit) {
+            init();
+        }
     }
 
     @Override
@@ -66,6 +74,16 @@ class XiaomiSdkHandler implements IMiSdkHandler {
         }
 
         return token;
+    }
+
+    @Override
+    public void unregisterPush(final Context context) {
+        try {
+            MiPushClient.unregisterPush(context);
+            mConfig.log(LOG_TAG, XIAOMI_LOG_TAG + "Xiaomi Unregister Success");
+        } catch (Throwable t) {
+            mConfig.log(LOG_TAG, XIAOMI_LOG_TAG + "Xiaomi Unregister Failed");
+        }
     }
 
     @RestrictTo(value = RestrictTo.Scope.LIBRARY)

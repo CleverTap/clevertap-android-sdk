@@ -10,7 +10,7 @@ import android.location.Location;
 import com.clevertap.android.geofence.interfaces.CTGeofenceTask;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.google.android.gms.location.LocationResult;
-import edu.emory.mathcs.backport.java.util.Arrays;
+import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import org.junit.*;
