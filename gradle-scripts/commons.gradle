@@ -49,11 +49,12 @@ android {
 
     buildTypes {
         debug {
-            testCoverageEnabled true //To get coverage reports for instrumentation tests
+            testCoverageEnabled true //To get coverage reports for instrumentation tests #TODO IMP
             buildConfigField "String", "SDK_VERSION_STRING",
                     "\"!SDK-VERSION-STRING!:$publishedGroupId:$artifact:$major.$minor.$patch.0\""
         }
         release {
+            testCoverageEnabled true //To get coverage reports for instrumentation tests
             buildConfigField "String", "SDK_VERSION_STRING",
                     "\"!SDK-VERSION-STRING!:$publishedGroupId:$artifact:$major.$minor.$patch.0\""
             minifyEnabled false// keep it false we will supply proguard through consumerProguardFiles
@@ -85,33 +86,6 @@ android {
             }
         }
     }
-}
-
-jacoco {
-    toolVersion = SDKTest.jacocoToolVersion
-}
-
-tasks.withType(Test) {
-    jacoco.includeNoLocationClasses = true
-    jacoco.excludes = ['jdk.internal.*']//https://github.com/gradle/gradle/issues/5184
-}
-
-task jacocoTestReport(type: JacocoReport, dependsOn: ['testDebugUnitTest', 'createDebugCoverageReport']) {
-
-    reports {
-        xml.enabled = true
-        html.enabled = true
-    }
-
-    def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*', '**/*Test*.*', 'android/**/*.*']
-    def debugTree = fileTree(dir: "$project.buildDir/intermediates/javac/debug", excludes: fileFilter)
-    def mainSrc = "$project.projectDir/src/main/java"
-
-    sourceDirectories.setFrom(files([mainSrc]))
-    classDirectories.setFrom(files([debugTree]))
-    executionData.setFrom(fileTree(dir: project.buildDir, includes: [
-            'jacoco/testDebugUnitTest.exec', 'outputs/code_coverage/debugAndroidTest/connected/**/*.ec'
-    ]))
 }
 
 Properties properties = new Properties()
@@ -201,3 +175,6 @@ afterEvaluate {
 signing {
     sign publishing.publications
 }
+apply from: "${project.rootDir}/gradle-scripts/jacoco.gradle"
+apply from: "${project.rootDir}/gradle-scripts/checkstyle.gradle"
+apply from: "${project.rootDir}/gradle-scripts/detekt.gradle"

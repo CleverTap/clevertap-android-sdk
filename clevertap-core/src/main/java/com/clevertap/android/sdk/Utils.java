@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk;
 
+import static com.clevertap.android.sdk.Constants.AUTH;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -521,6 +523,11 @@ public final class Utils {
             // No error handling here - handle upstream
             return drawableToBitmap(context.getPackageManager().getApplicationIcon(context.getApplicationInfo()));
         }
+    }
+
+    public static String getDCDomain(String domain) {
+        String[] parts = domain.split("\\.", 2);
+        return parts[0] + "." + AUTH + "." + parts[1];
     }
 
     static {

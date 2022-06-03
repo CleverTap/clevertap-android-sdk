@@ -1,0 +1,23 @@
+# step for calling :
+#     - name: Release to maven central
+#        uses: ./.github/mini_flows/s8_maven_release
+runs:
+  using: "composite"
+  steps:
+    - name: check commit..
+      shell: bash
+      run: echo "hello ${{env.slack_msg}}"
+
+#    - name: Publish to MavenCentral
+#      if: ${{ contains(github.event.head_commit.message, '[UPLOAD]') }}
+#      shell: bash
+#      run: ./gradlew publishToSonatype --max-workers 1 closeAndReleaseSonatypeStagingRepository
+#      env:
+#        OSSRH_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+#        OSSRH_PASSWORD: ${{ secrets.OSSRH_PASSWORD }}
+#        SIGNING_KEY_ID: ${{ secrets.SIGNING_KEY_ID }}
+#        SIGNING_PASSWORD: ${{ secrets.SIGNING_PASSWORD }}
+#        SIGNING_KEY: ${{ secrets.SIGNING_KEY }}
+#        SONATYPE_STAGING_PROFILE_ID: ${{ secrets.SONATYPE_STAGING_PROFILE_ID }}
+
+

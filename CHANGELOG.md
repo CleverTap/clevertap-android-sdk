@@ -1,4 +1,4 @@
-## CHANGE LOG
+## CHANGE LOG.
 
 ### June 3, 2022
 

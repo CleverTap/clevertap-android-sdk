@@ -1,0 +1,20 @@
+runs:
+  using: "composite"
+  steps:
+
+    - name: CodeAnalysis via  checkstyle
+      shell: bash
+      run: ./gradlew :clevertap-core:checkstyle :clevertap-geofence:checkstyle  :clevertap-hms:checkstyle  :clevertap-pushTemplates:checkstyle :clevertap-xps:checkstyle
+
+    - name: Upload checkstyle results
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: checkstyle_results
+        path: |
+          clevertap-core/build/reports/checkstyle
+          clevertap-hms/build/reports/checkstyle
+          clevertap-xps/build/reports/checkstyle
+          clevertap-geofence/build/reports/checkstyle
+          clevertap-pushTemplates/build/reports/checkstyle
+
