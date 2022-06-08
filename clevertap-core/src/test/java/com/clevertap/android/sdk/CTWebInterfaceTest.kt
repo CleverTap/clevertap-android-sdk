@@ -53,7 +53,7 @@ class CTWebInterfaceTest : BaseTestCase() {
         val ctMock = Mockito.mock(CleverTapAPI::class.java)
         ctWebInterface = CTWebInterface(ctMock)
         ctWebInterface.incrementValue("key2",2.5)
-        Mockito.verify(ctMock,Mockito.times(1))?.incrementValue("key2",2)
+        Mockito.verify(ctMock,Mockito.times(1))?.incrementValue("key2",2.5)
     }
 
 
@@ -71,7 +71,7 @@ class CTWebInterfaceTest : BaseTestCase() {
         val ctMock = Mockito.mock(CleverTapAPI::class.java)
         ctWebInterface = CTWebInterface(ctMock)
         ctWebInterface.decrementValue("key2",2.5)
-        Mockito.verify(ctMock,Mockito.times(1))?.decrementValue("key2",2)
+        Mockito.verify(ctMock,Mockito.times(1))?.decrementValue("key2",2.5)
     }
 
 
