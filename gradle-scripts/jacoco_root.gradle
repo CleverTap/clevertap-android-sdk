@@ -1,1 +1,1 @@
-apply plugin: "com.vanniktech.android.junit.jacoco"
+//apply plugin: "com.vanniktech.android.junit.jacoco"

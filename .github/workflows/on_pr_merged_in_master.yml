@@ -30,8 +30,8 @@ jobs:
       - name: Static Code Check Via checkstyle
         uses: ./.github/mini_flows/s5_checkstyle
 
-      - name: Unit Tests and Jacoco Coverage (DEBUG AND RELEASE)
-        uses: ./.github/mini_flows/s6_test_coverage
+      - name: Unit Tests (DEBUG AND RELEASE)
+        uses: ./.github/mini_flows/s6_test
 
       - name: Build Code
         uses: ./.github/mini_flows/s7_build

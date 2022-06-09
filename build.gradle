@@ -14,11 +14,12 @@ buildscript {
         classpath Libs.google_services// Google Services plugin
         //classpath "com.github.dcendents:android-maven-gradle-plugin:$mavenPluginVersion"
         classpath Libs.agcp// Huawei Push Plugin
-        classpath Libs.org_jacoco_core
         classpath Libs.kotlin_gradle_plugin
         classpath Libs.sonarqube_gradle_plugin
         classpath("io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.20.0-RC1")
-        classpath("com.vanniktech:gradle-android-junit-jacoco-plugin:0.16.0")
+        //classpath("com.vanniktech:gradle-android-junit-jacoco-plugin:0.16.0")
+        //classpath Libs.org_jacoco_core
+
     }
 }
 allprojects {
@@ -43,7 +44,7 @@ sonarqube {
     }
 }
 
-apply from: "${project.rootDir}/gradle-scripts/jacoco_root.gradle"
+//apply from: "${project.rootDir}/gradle-scripts/jacoco_root.gradle"
 
 task clean(type: Delete) {
     delete rootProject.buildDir
