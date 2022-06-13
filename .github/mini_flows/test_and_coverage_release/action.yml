@@ -24,8 +24,8 @@ runs:
           clevertap-geofence/build/reports/tests
           clevertap-geofence/build/reports/jacoco
 
-          clevertap-pushTemplates/build/reports/tests
-          clevertap-pushTemplates/build/reports/jacoco
+          clevertap-pushtemplates/build/reports/tests
+          clevertap-pushtemplates/build/reports/jacoco
 
 
 

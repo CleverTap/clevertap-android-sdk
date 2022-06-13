@@ -16,5 +16,5 @@ runs:
           clevertap-hms/build/reports/checkstyle
           clevertap-xps/build/reports/checkstyle
           clevertap-geofence/build/reports/checkstyle
-          clevertap-pushTemplates/build/reports/checkstyle
+          clevertap-pushtemplates/build/reports/checkstyle
 
