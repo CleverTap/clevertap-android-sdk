@@ -10,7 +10,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: unit-tests-results.zip
+        name: code-coverage-results
         path: |
           clevertap-core/build/reports/tests
           clevertap-core/build/reports/jacoco

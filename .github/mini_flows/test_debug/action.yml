@@ -14,7 +14,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: unit-tests-results.zip
+        name: unit-tests-results
         path: |
           clevertap-core/build/reports/tests
 
