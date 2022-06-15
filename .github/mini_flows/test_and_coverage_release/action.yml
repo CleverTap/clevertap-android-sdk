@@ -2,10 +2,6 @@ runs:
   using: "composite"
   steps:
 
-    - name: Run Unit Tests And Code Coverage (DEBUG)
-      shell: bash
-      run: ./gradlew :clevertap-core:jacocoTestReportDebug :clevertap-geofence:jacocoTestReportDebug  :clevertap-hms:jacocoTestReportDebug  :clevertap-pushTemplates:jacocoTestReportDebug :clevertap-xps:jacocoTestReportDebug
-
     - name: Run Unit Tests And Code Coverage (RELEASE)
       shell: bash
       run: ./gradlew :clevertap-core:jacocoTestReportRelease :clevertap-geofence:jacocoTestReportRelease  :clevertap-hms:jacocoTestReportRelease  :clevertap-pushTemplates:jacocoTestReportRelease :clevertap-xps:jacocoTestReportRelease
@@ -14,7 +10,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: unit-tests-results.zip
+        name: code-coverage-results
         path: |
           clevertap-core/build/reports/tests
           clevertap-core/build/reports/jacoco
@@ -28,8 +24,8 @@ runs:
           clevertap-geofence/build/reports/tests
           clevertap-geofence/build/reports/jacoco
 
-          clevertap-pushTemplates/build/reports/tests
-          clevertap-pushTemplates/build/reports/jacoco
+          clevertap-pushtemplates/build/reports/tests
+          clevertap-pushtemplates/build/reports/jacoco
 
 
 

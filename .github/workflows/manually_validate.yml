@@ -1,0 +1,119 @@
+name: Manually validate any branch
+on:
+  workflow_dispatch:
+    inputs:
+      check_mandatory:
+        description: Check for mandatory filechanges
+        type: boolean
+        default: false
+        required: false
+
+      lint:
+        description: Check lint
+        type: boolean
+        default: true
+        required: false
+
+      detekt:
+        description: Run codecheck :detekt
+        type: boolean
+        default: true
+        required: false
+
+      checkstyle:
+        description: Run codecheck :checkstyle
+        type: boolean
+        default: true
+        required: false
+
+      jacoco_debug:
+        description: Run tests and code coverage :debug
+        type: boolean
+        default: true
+        required: false
+
+      jacoco_release:
+        description: Run tests and code coverage :release
+        type: boolean
+        default: false
+        required: false
+
+      test_debug:
+        description: Run just code tests :debug
+        type: boolean
+        default: false
+        required: false
+
+      test_release:
+        description: Run just code tests :release
+        type: boolean
+        default: false
+        required: false
+
+      build_debug:
+        description: Build AARs :debug
+        type: boolean
+        default: false
+        required: false
+
+      build_release:
+        description: Build AARs :release
+        type: boolean
+        default: false
+        required: false
+
+jobs:
+  lint-static_checks-test-build:
+    if: github.head_ref == 'develop'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout the code from Repo
+        uses: actions/checkout@v2
+
+      - name: Mandatory File Changes
+        if: ${{ github.event.inputs.check_mandatory }}
+        uses: ./.github/mini_flows/mandatory_filechanges
+
+      - name: Setup JDK 11.
+        uses: ./.github/mini_flows/setup_jdk
+
+      - name: Run lint tests and Upload results
+        if: ${{ github.event.inputs.lint }}
+        uses: ./.github/mini_flows/lint
+
+      - name: Static Code Check Via detekt
+        if: ${{ github.event.inputs.detekt }}
+        uses: ./.github/mini_flows/codechecks_detekt
+
+      - name: Static Code Check Via checkstyle
+        if: ${{ github.event.inputs.checkstyle }}
+        uses: ./.github/mini_flows/codechecks_checkstyle
+
+      - name: Unit Tests and Jacoco Coverage (DEBUG)
+        if: ${{ github.event.inputs.jacoco_debug }}
+        uses: ./.github/mini_flows/test_and_coverage_debug
+
+      - name: Unit Tests and Jacoco Coverage (RELEASE)
+        if: ${{ github.event.inputs.jacoco_release }}
+        uses: ./.github/mini_flows/test_and_coverage_release
+
+      - name: Unit Tests(DEBUG)
+        if: ${{ github.event.inputs.test_debug }}
+        uses: ./.github/mini_flows/test_debug
+
+      - name: Unit Tests(RELEASE)
+        if: ${{ github.event.inputs.test_release }}
+        uses: ./.github/mini_flows/test_release
+
+
+      - name: Build AARs (DEBUG)
+        if: ${{ github.event.inputs.build_debug }}
+        uses: ./.github/mini_flows/build_code_debug
+
+      - name: Build AARs (RELEASE)
+        if: ${{ github.event.inputs.build_release }}
+        uses: ./.github/mini_flows/build_code_release
