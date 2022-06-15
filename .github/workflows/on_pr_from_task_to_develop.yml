@@ -16,19 +16,24 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Setup JDK 11.
-        uses: ./.github/mini_flows/s2_setup_jdk
+        uses: ./.github/mini_flows/setup_jdk
 
       - name: Run lint tests and Upload results
-        uses: ./.github/mini_flows/s3_lint
+        uses: ./.github/mini_flows/lint
 
       - name: Static Code Check Via detekt
-        uses: ./.github/mini_flows/s4_detekt
+        uses: ./.github/mini_flows/codechecks_detekt
 
       - name: Static Code Check Via checkstyle
-        uses: ./.github/mini_flows/s5_checkstyle
+        uses: ./.github/mini_flows/codechecks_checkstyle
 
-      - name: Unit Tests and Jacoco Coverage (DEBUG AND RELEASE)
-        uses: ./.github/mini_flows/s6_test_coverage
+      - name: Unit Tests and Jacoco Coverage (DEBUG)
+        uses: ./.github/mini_flows/test_and_coverage_debug
 
-      - name: Build Code
-        uses: ./.github/mini_flows/s7_build
+      #        #disabling for now . checkout pr #281 for more details
+      #      - name: Unit Tests and Jacoco Coverage (RELEASE)
+      #        uses: ./.github/mini_flows/test_and_coverage_release
+
+      - name: Build AARs (RELEASE)
+        uses: ./.github/mini_flows/build_code_release
+
