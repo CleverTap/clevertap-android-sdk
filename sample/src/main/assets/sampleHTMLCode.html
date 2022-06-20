@@ -24,6 +24,22 @@
 <br /><br />
 <button onclick='invokeSetMultiValue()'>Set Multivalues</button>
 <br /><br />
+<button onclick='invokeOnUserLogin()'>On User Login</button>
+<br /><br />
+
+<button onclick='invokeIncrementValue()'>Increment value for key 'cars'</button>
+<br /><br />
+<button onclick='invokeDecrementValue()'>Decrement value for key 'cars'</button>
+<br /><br />
+
+
+<button onclick='invokeIncrementValueDouble()'>Increment value for key 'temperature'</button>
+<br /><br />
+<button onclick='invokeDecrementValueDouble()'>Decrement value for key 'temperature'</button>
+<br /><br />
+
+
+
 <script>
         console.log('LOG')
         function invokeEvent() {
@@ -42,6 +58,24 @@
             var props = {foo: 'xyz', lang: 'French'};
             CleverTap.pushProfile(JSON.stringify(props))
         }
+        function invokeOnUserLogin() {
+            var props = {foo: 'zyx', lang: 'German'};
+            CleverTap.onUserLogin(JSON.stringify(props))
+        }
+        function invokeIncrementValue() {
+            CleverTap.incrementValue('cars',2)
+        }
+        function invokeDecrementValue() {
+            CleverTap.decrementValue('cars',2)
+        }
+
+        function invokeIncrementValueDouble() {
+            CleverTap.incrementValue('temperature',12.5)
+        }
+        function invokeDecrementValueDouble() {
+            CleverTap.decrementValue('temperature',12.5)
+        }
+
         function invokeAddProp(){
             CleverTap.addMultiValueForKey('bar', 'abcd');
         }

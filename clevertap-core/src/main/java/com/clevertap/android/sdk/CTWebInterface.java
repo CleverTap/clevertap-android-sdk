@@ -37,6 +37,43 @@ public class CTWebInterface {
     }
 
     /**
+     * Method to be called from WebView Javascript to increase the value of a particular property.
+     * The key must hold numeric value
+     * @param key   {@link String} value of profile property key
+     * @param value {@link Double} value of increment
+     */
+    @JavascriptInterface
+    public void incrementValue(String key, double value) {
+        CleverTapAPI cleverTapAPI = weakReference.get();
+        if (cleverTapAPI == null) {
+            Logger.d("CleverTap Instance is null.");
+        } else {
+            cleverTapAPI.incrementValue(key, value);
+        }
+    }
+
+    /**
+     * Method to be called from WebView Javascript to decrease the value of a particular property.
+     * The key must hold numeric value
+     * @param key   {@link String} value of profile property key
+     * @param value {@link Double} value of decrement
+     */
+    @JavascriptInterface
+    public void decrementValue(String key, double value) {
+        CleverTapAPI cleverTapAPI = weakReference.get();
+        if (cleverTapAPI == null) {
+            Logger.d("CleverTap Instance is null.");
+        } else {
+            cleverTapAPI.decrementValue(key, value);
+        }
+    }
+
+
+
+
+
+
+    /**
      * Method to be called from WebView Javascript to add profile properties in CleverTap
      *
      * @param key    {@link String} value of profile property key
@@ -272,6 +309,32 @@ public class CTWebInterface {
                 }
             } else {
                 Logger.v("values passed to CTWebInterface is null");
+            }
+        }
+    }
+
+
+    /**
+     * Method to be called from WebView Javascript to push profile/properties in CleverTap after
+     * User Login
+     *
+     * @param profile Stringified {@link JSONObject} of profile properties
+     */
+    @JavascriptInterface
+    public void onUserLogin(String profile) {
+        CleverTapAPI cleverTapAPI = weakReference.get();
+        if (cleverTapAPI == null) {
+            Logger.d("CleverTap Instance is null.");
+        } else {
+            if (profile != null) {
+                try {
+                    JSONObject profileObject = new JSONObject(profile);
+                    cleverTapAPI.onUserLogin(Utils.convertJSONObjectToHashMap(profileObject));
+                } catch (JSONException e) {
+                    Logger.v("Unable to parse profile from WebView " + e.getLocalizedMessage());
+                }
+            } else {
+                Logger.v("profile passed to CTWebInterface is null");
             }
         }
     }
