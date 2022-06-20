@@ -13,6 +13,12 @@ class CTWebInterfaceTest : BaseTestCase() {
     // CTWebInterface is a wrapper around some functions of the clevertap api
     private lateinit var ctWebInterface: CTWebInterface
     private var ctApi:CleverTapAPI? = null
+    private  val inputs: List<Number> = listOf(
+        1,Int.MAX_VALUE,Int.MIN_VALUE,-1,0,
+        2.5f, Float.MAX_VALUE,Float.MIN_VALUE,-2.5f,0f,
+        1.5,Double.MAX_VALUE,Double.MIN_VALUE,-1.5,0.0,
+        50L,Long.MAX_VALUE,Long.MIN_VALUE,-50L,0L
+    )
     override fun setUp() {
         super.setUp()
 
@@ -50,10 +56,14 @@ class CTWebInterfaceTest : BaseTestCase() {
 
         // when ctApi is not null, calling this function will call ctApi's internal function
         ctApi = CleverTapAPI.getDefaultInstance(application)
-        val ctMock = Mockito.mock(CleverTapAPI::class.java)
-        ctWebInterface = CTWebInterface(ctMock)
-        ctWebInterface.incrementValue("key2",2.5)
-        Mockito.verify(ctMock,Mockito.times(1))?.incrementValue("key2",2.5)
+
+        inputs.forEach  {
+            val ctMock = Mockito.mock(CleverTapAPI::class.java)
+            ctWebInterface = CTWebInterface(ctMock)
+
+            ctWebInterface.incrementValue("key2",it.toDouble())
+            Mockito.verify(ctMock,Mockito.times(1))?.incrementValue("key2",it.toDouble())
+        }
     }
 
 
@@ -68,10 +78,14 @@ class CTWebInterfaceTest : BaseTestCase() {
 
         // when ctApi is not null, calling this function will call ctApi's internal function
         ctApi = CleverTapAPI.getDefaultInstance(application)
-        val ctMock = Mockito.mock(CleverTapAPI::class.java)
-        ctWebInterface = CTWebInterface(ctMock)
-        ctWebInterface.decrementValue("key2",2.5)
-        Mockito.verify(ctMock,Mockito.times(1))?.decrementValue("key2",2.5)
+
+        inputs.forEach {
+            val ctMock = Mockito.mock(CleverTapAPI::class.java)
+            ctWebInterface = CTWebInterface(ctMock)
+
+            ctWebInterface.decrementValue("key2",it.toDouble())
+            Mockito.verify(ctMock,Mockito.times(1))?.decrementValue("key2",it.toDouble())
+        }
     }
 
 
