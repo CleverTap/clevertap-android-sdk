@@ -2,12 +2,14 @@ package com.clevertap.android.sdk.db
 
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.db.DBAdapter.Table
 import com.clevertap.android.sdk.inbox.CTMessageDAO
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import java.util.concurrent.TimeUnit
 import kotlin.test.*
 
 @RunWith(RobolectricTestRunner::class)
@@ -181,9 +183,9 @@ class DBAdapterTest : BaseTestCase() {
     fun test_cleanUpPushNotifications_when_Called_should_ClearAllStoredPNsThatHaventExpired() {
 
         //assume (storing 2 notifications that will expire after 10 seconds and 1 that is already expired. this will not get removed)
-        dbAdapter.storePushNotificationId("pn1", 10000)
-        dbAdapter.storePushNotificationId("pn2", 10000)
-        dbAdapter.storePushNotificationId("pn3", -10)
+        dbAdapter.storePushNotificationId("pn1", (System.currentTimeMillis() + TimeUnit.DAYS.toMillis(2))/1000)
+        dbAdapter.storePushNotificationId("pn2", (System.currentTimeMillis() + TimeUnit.DAYS.toMillis(2))/1000)
+        dbAdapter.storePushNotificationId("pn3", (System.currentTimeMillis() - TimeUnit.DAYS.toMillis(2))/1000)
         dbAdapter.fetchPushNotificationIds().let {
             assertEquals(3, it.size)
         }
@@ -193,8 +195,10 @@ class DBAdapterTest : BaseTestCase() {
 
         //validate
         dbAdapter.fetchPushNotificationIds().let {
-            assertEquals(1, it.size)
-            assertEquals("pn3", it[0])
+            println(it.toList())
+            assertEquals(2, it.size)
+            assertEquals("pn1", it[0])
+            assertEquals("pn2", it[1])
         }
     }
 
@@ -234,26 +238,163 @@ class DBAdapterTest : BaseTestCase() {
 
     }
 
-    @Test//todo
-    fun test_cleanupEventsFromLastId_when_ABC_should_XYZ() {
-        //??
-        assertTrue(true)
+    @Test
+    fun test_fetchEvents_when_Called_should_ReturnAListOfEntriesAsJsonObject() {
+        //when calling this function, it will return all the entries fro the given table less than or equal to passed limit.
+        // the returned list of entries will be of format {'key' : <jsonArray> } where key is the last index of entries
+
+        arrayOf(
+            Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED,
+            //Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS,//todo not working for these tables
+        ).forEach { table->
+            println("table:$table")
+
+            //assertion
+            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}1") },table)
+            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}2") },table)
+            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}3") },table)
+            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}4") },table)
+
+            //test
+            dbAdapter.fetchEvents(table,2).let {
+
+                //validation
+                println("jsonObject = $it")
+                val arr = it.getJSONArray("2")
+                assertEquals(2,arr.length())
+                assertTrue(arr[0] is JSONObject)
+                assertEquals("${table.getName()}1",(arr[0] as JSONObject).getString("name"))
+                assertEquals("${table.getName()}2",(arr[1] as JSONObject).getString("name"))
+            }
+        }
+
+    }
+    @Test
+    fun test_removeEvents_when_called_should_RemoveAllEntries() {
+        arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED,
+            //Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS,//todo not working for these tables
+        ).forEach { table->
+            println("table:$table")
+            //assertion
+            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}1") },table)
+            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}2") },table)
+            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}3") },table)
+            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}4") },table)
+            dbAdapter.fetchEvents(table, Int.MAX_VALUE).let { println("jsonObject = $it") }
+
+            //test
+            dbAdapter.removeEvents(table)
+
+            //validation
+            dbAdapter.fetchEvents(table, Int.MAX_VALUE).let {
+                println("jsonObject = $it")
+               assertNull(it)
+            }
+        }
 
     }
 
-    @Test//todo
+    @Test
+    fun test_storeObject_when_called_should_storeTheObjectInGivenTable() {
+        //when calling this function, it will store all the entries in the given table
+
+        arrayOf(
+            Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED,
+            //Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS,//todo not working for these tables
+        ).forEach { table->
+            println("table:$table")
+
+            //test
+            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}1") },table)
+            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}2") },table)
+            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}3") },table)
+            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}4") },table)
+
+            //validation
+            dbAdapter.fetchEvents(table,Int.MAX_VALUE).let {
+
+
+                println("jsonObject = $it")
+                val arr = it.getJSONArray("4")
+                assertEquals(4,arr.length())
+                assertTrue(arr[0] is JSONObject)
+                assertEquals("${table.getName()}1",(arr[0] as JSONObject).getString("name"))
+                assertEquals("${table.getName()}2",(arr[1] as JSONObject).getString("name"))
+            }
+        }
+
+
+    }
+
+    @Test
+    fun test_cleanupEventsFromLastId_when_called_should_removeAllEntriesWithIdLesserThanPassedId() {
+
+        arrayOf(
+            Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED,
+            //Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS,//todo not working for these tables
+        ).forEach { table->
+            println("table:$table")
+
+            //assert
+            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}1") },table)
+            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}2") },table)
+            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}3") },table)
+            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}4") },table)
+            dbAdapter.fetchEvents(table,Int.MAX_VALUE).let { println("jsonObject = $it")}
+
+            //test
+            dbAdapter.cleanupEventsFromLastId("2",table)//will remove ids 1 & 2 , and will save ids 3 & 4
+
+            //validation
+            println("after")
+            dbAdapter.fetchEvents(table,Int.MAX_VALUE).let {
+                println("jsonObject = $it")
+                val arr = it.getJSONArray("4")
+                assertEquals(2,arr.length())
+                assertTrue(arr[0] is JSONObject)
+                assertEquals("${table.getName()}3",(arr[0] as JSONObject).getString("name"))
+                assertEquals("${table.getName()}4",(arr[1] as JSONObject).getString("name"))
+
+            }
+        }
+
+    }
+
+    @Test //todo //todo not working
     fun test_cleanupStaleEvents_when_ABC_should_XYZ() {
-        //??
+        arrayOf(
+            Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED,
+            //Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS,//todo not working for these tables
+        ).forEach { table ->
+            println("table:$table")
+            //assert
+            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}1") },table)
+            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}2") },table)
+            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}3") },table)
+            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}4") },table)
+            dbAdapter.fetchEvents(table,Int.MAX_VALUE).let { println("before call = $it")}
+
+            //test
+            dbAdapter.cleanupStaleEvents(table) //todo not working
+
+            //validate
+            println("after")
+            dbAdapter.fetchEvents(table,Int.MAX_VALUE).let {
+                println("jsonObject = $it")
+                //??? same object
+                assertTrue { true }
+
+            }
+
+
+        }
+
         assertTrue(true)
+        dbAdapter.cleanupStaleEvents(Table.PUSH_NOTIFICATIONS)
 
     }
 
-    @Test//todo
-    fun test_fetchEvents_when_ABC_should_XYZ() {
-        //?
-        assertTrue(true)
 
-    }
 
     @Test//todo
     fun test_updatePushNotificationIds_when_ABC_should_XYZ() {
@@ -262,26 +403,14 @@ class DBAdapterTest : BaseTestCase() {
         dbAdapter.storePushNotificationId("pn3", -10)
         dbAdapter.fetchPushNotificationIds().let { println(it.toList()) }//[pn1,pn2,pn3]
 
-        dbAdapter.updatePushNotificationIds(arrayOf("pn1", "p2", "pn3"))
+        dbAdapter.updatePushNotificationIds(arrayOf("pn1", "pn3"))
 
         dbAdapter.fetchPushNotificationIds().let { println(it.toList()) }// [] //todo why?
         assertTrue(true)
-
     }
 
-    @Test//todo
-    fun test_storeObject_when_ABC_should_XYZ() {
-        //dbAdapter.storeObject(??,??)
-        assertTrue(true)
 
-    }
 
-    @Test//todo
-    fun test_removeEvents_when_ABC_should_XYZ() {
-        //dbAdapter.removeEvents()
-        assertTrue(true)
-
-    }
 
 
     fun getCtMsgDao(id: String, userId: String, read: Boolean, jsonData: JSONObject = JSONObject(), date: Long = System.currentTimeMillis(), expires: Long = (System.currentTimeMillis() * 10), tags: List<String> = listOf(), campaignId: String = "campaignID", wzrkParams: JSONObject = JSONObject()): CTMessageDAO {

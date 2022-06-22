@@ -208,7 +208,7 @@ public class DBAdapter {
 
     private static final String KEY_CREATED_AT = "created_at";
 
-    private static final long DATA_EXPIRATION = 1000L * 60 * 60 * 24 * 5;
+    private static final long DATA_EXPIRATION = 1000L * 60 * 60 * 24 * 5;//5days
 
     //Notification Inbox Messages Table fields
     private static final String _ID = "_id";
@@ -654,7 +654,7 @@ public class DBAdapter {
         }
     }
 
-    public synchronized void storePushNotificationId(String id, long ttl) {
+    public synchronized void storePushNotificationId(String id, long ttlInSeconds) { // in seconds from now ( eg+2 days ,-2days)
 
         if (id == null) {
             return;
@@ -666,19 +666,19 @@ public class DBAdapter {
         }
         final String tableName = Table.PUSH_NOTIFICATIONS.getName();
 
-        if (ttl <= 0) {
-            ttl = System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL;
+        if (ttlInSeconds <= 0) {
+            ttlInSeconds = System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL; //current day + 4 days //todo : this variable should also be converted to seconds
         }
 
         try {
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
             final ContentValues cv = new ContentValues();
             cv.put(KEY_DATA, id);
-            cv.put(KEY_CREATED_AT, ttl);
+            cv.put(KEY_CREATED_AT, ttlInSeconds);
             cv.put(IS_READ, 0);
             db.insert(tableName, null, cv);
             rtlDirtyFlag = true;
-            Logger.v("Stored PN - " + id + " with TTL - " + ttl);
+            Logger.v("Stored PN - " + id + " with TTL - " + ttlInSeconds);
         } catch (final SQLiteException e) {
             getConfigLogger().verbose("Error adding data to table " + tableName + " Recreating DB");
             dbHelper.deleteDatabase();
