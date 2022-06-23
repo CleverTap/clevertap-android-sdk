@@ -1,12 +1,11 @@
 package com.clevertap.android.sdk.pushnotification;
 
-import android.app.PendingIntent;
+import android.content.ContentResolver;
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.media.RingtoneManager;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
@@ -16,14 +15,12 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationCompat.Builder;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.ManifestInfo;
 import com.clevertap.android.sdk.Utils;
+import com.clevertap.android.sdk.interfaces.AudibleNotification;
 import org.json.JSONArray;
-import org.json.JSONObject;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
-public class CoreNotificationRenderer implements INotificationRenderer {
+public class CoreNotificationRenderer implements INotificationRenderer, AudibleNotification {
 
     private String notifMessage;
 
@@ -51,7 +48,7 @@ public class CoreNotificationRenderer implements INotificationRenderer {
     }
 
     @Override
-    public NotificationCompat.Builder renderNotification(final Bundle extras, final Context context,
+    public Builder renderNotification(final Bundle extras, final Context context,
             final Builder nb, final CleverTapInstanceConfig config, final int notificationId) {
         String icoPath = extras.getString(Constants.NOTIF_ICON);// uncommon
 
@@ -89,7 +86,7 @@ public class CoreNotificationRenderer implements INotificationRenderer {
                     .bigText(notifMessage);
         }
 
-        boolean requiresChannelId = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
+        boolean requiresChannelId = VERSION.SDK_INT >= VERSION_CODES.O;
         if (requiresChannelId && extras.containsKey(Constants.WZRK_SUBTITLE)) {
             nb.setSubText(extras.getString(Constants.WZRK_SUBTITLE));
         }
@@ -141,4 +138,40 @@ public class CoreNotificationRenderer implements INotificationRenderer {
         return Constants.NOTIF_ICON;
     }
 
+    @Override
+    public Builder setSound(final Context context, final Bundle extras, final Builder nb,CleverTapInstanceConfig config
+            ) {
+        try {
+            if (extras.containsKey(Constants.WZRK_SOUND)) {
+                Uri soundUri = null;
+
+                Object o = extras.get(Constants.WZRK_SOUND);
+
+                if ((o instanceof Boolean && (Boolean) o)) {
+                    soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                } else if (o instanceof String) {
+                    String s = (String) o;
+                    if (s.equals("true")) {
+                        soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+                    } else if (!s.isEmpty()) {
+                        if (s.contains(".mp3") || s.contains(".ogg") || s.contains(".wav")) {
+                            s = s.substring(0, (s.length() - 4));
+                        }
+                        soundUri = Uri
+                                .parse(ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.getPackageName()
+                                        + "/raw/" + s);
+
+                    }
+                }
+
+                if (soundUri != null) {
+                    nb.setSound(soundUri);
+                }
+            }
+        } catch (Throwable t) {
+            config.getLogger().debug(config.getAccountId(), "Could not process sound parameter", t);
+        }
+
+        return nb;
+    }
 }

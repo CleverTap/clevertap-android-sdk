@@ -1,9 +1,7 @@
 package com.clevertap.android.sdk;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
-
 import static com.clevertap.android.sdk.Utils.getDCDomain;
-
 import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM_LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM;
@@ -38,6 +36,7 @@ import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.inbox.CTMessageDAO;
 import com.clevertap.android.sdk.interfaces.DCDomainCallback;
 import com.clevertap.android.sdk.interfaces.NotificationHandler;
+import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
@@ -57,7 +56,6 @@ import com.clevertap.android.sdk.validation.ManifestValidator;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.messaging.FirebaseMessaging;
-
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -90,7 +88,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     /**
      * Implement to get called back when the device push token is received
      */
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    @RestrictTo(Scope.LIBRARY)
     public interface RequestDevicePushTokenListener {
 
         /**
@@ -122,7 +120,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings("unused")
     public static final String NOTIFICATION_TAG = "wzrk_pn";
 
-    private static int debugLevel = CleverTapAPI.LogLevel.INFO.intValue();
+    private static int debugLevel = LogLevel.INFO.intValue();
 
     static CleverTapInstanceConfig defaultConfig;
 
@@ -132,6 +130,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     private static String sdkVersion;  // For Google Play Store/Android Studio analytics
 
     private static NotificationHandler sNotificationHandler;
+
+    private static NotificationRenderedListener sNotificationRenderedListener;
 
     private static NotificationHandler sDirectCallNotificationHandler;
 
@@ -647,7 +647,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     in the presence of Custom FCM Sender ID present in the AndroidManifest.xml.
     Deprecated now as we can directly call tokenRefresh method from onNewToken implementation
      */
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @RestrictTo(Scope.LIBRARY_GROUP)
     @Deprecated
     public static void fcmTokenRefresh(Context context, String token) {
 
@@ -663,7 +663,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     /**
      * Returns the log level set for CleverTapAPI
      *
-     * @return The {@link CleverTapAPI.LogLevel} int value
+     * @return The {@link LogLevel} int value
      */
     @SuppressWarnings("WeakerAccess")
     public static int getDebugLevel() {
@@ -779,7 +779,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     // other static handlers
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    @RestrictTo(Scope.LIBRARY)
     public static void handleNotificationClicked(Context context, Bundle notification) {
         if (notification == null) {
             return;
@@ -953,7 +953,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return fromAccountId(context, _accountId);
     }
 
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    @RestrictTo(Scope.LIBRARY)
     public static void runBackgroundIntentService(Context context) {
         if (instances == null) {
             CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
@@ -983,7 +983,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    @RestrictTo(Scope.LIBRARY)
     public static void runJobWork(Context context, JobParameters parameters) {
         if (instances == null) {
             CleverTapAPI instance = CleverTapAPI.getDefaultInstance(context);
@@ -1010,7 +1010,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    @RestrictTo(Scope.LIBRARY_GROUP)
     public static void tokenRefresh(Context context, String token, PushType pushType) {
         for (CleverTapAPI instance : getAvailableInstances(context)) {
             instance.coreState.getPushProviders().doTokenRefresh(token, pushType);
@@ -1710,7 +1710,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     /**
      * Returns the token for a particular push type
      */
-    public String getPushToken(@NonNull PushConstants.PushType pushType) {
+    public String getPushToken(@NonNull PushType pushType) {
         return coreState.getPushProviders().getCachedToken(pushType);
     }
 
@@ -2865,6 +2865,14 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     public static @XiaomiPush int getEnableXiaomiPushOn() {
         return PushType.XPS.getRunningDevices();
+    }
+    public static void setNotificationRenderedListener(NotificationRenderedListener notificationRenderedListener)
+    {
+        sNotificationRenderedListener = notificationRenderedListener;
+    }
+
+    public static NotificationRenderedListener getNotificationRenderedListener() {
+        return sNotificationRenderedListener;
     }
 }
 
