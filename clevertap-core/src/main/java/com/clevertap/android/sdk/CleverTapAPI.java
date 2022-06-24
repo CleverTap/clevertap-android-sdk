@@ -2542,6 +2542,16 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
+    @RestrictTo(Scope.LIBRARY_GROUP)
+    public int getCustomSdkVersion(String customSdkName) {
+        return coreState.getCoreMetaData().getCustomSdkVersion(customSdkName);
+    }
+
+    @RestrictTo(Scope.LIBRARY_GROUP)
+    public void setCustomSdkVersion(String customSdkName,int customSdkVersion) {
+        coreState.getCoreMetaData().setCustomSdkVersion(customSdkName,customSdkVersion);
+    }
+
     //To be called from DeviceInfo AdID GUID generation
     void deviceIDCreated(String deviceId) {
 

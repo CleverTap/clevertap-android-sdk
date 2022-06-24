@@ -299,14 +299,14 @@ public interface Constants {
     String PT_INPUT_KEY = "pt_input_reply";
 
     // ==========Fallback keys=========
-    public static final String NOTIFICATION_HEALTH = "wzrk_pn_h";
-    public static final String WZRK_TSR_FB = "wzrk_tsr_fb";
-    public static final String NOTIFICATION_RENDER_FALLBACK = "wzrk_fallback";
+    String NOTIFICATION_HEALTH = "wzrk_pn_h";
+    String WZRK_TSR_FB = "wzrk_tsr_fb";
+    String NOTIFICATION_RENDER_FALLBACK = "wzrk_fallback";
 
     /**
      * Device app bucket when notification is rendered
      */
-    public static final String WZRK_HEALTH_STATE_GOOD = "true";
-    public static final String WZRK_HEALTH_STATE_BAD = "false";
+    String WZRK_HEALTH_STATE_GOOD = "true";
+    String WZRK_HEALTH_STATE_BAD = "false";
 
 }
