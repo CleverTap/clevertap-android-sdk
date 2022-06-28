@@ -91,6 +91,11 @@ public class CTJsonConverter {
             if (deviceInfo.getLibrary() != null) {
                 evtData.put("lib", deviceInfo.getLibrary());
             }
+            boolean sslPinning = ManifestInfo.getInstance(deviceInfo.getContext()).isSSLPinningEnabled();
+            if(sslPinning){
+                evtData.put("sslpin", true);
+            }
+
             String fcmSenderId = ManifestInfo.getInstance(deviceInfo.getContext()).getFCMSenderId();
             if (!TextUtils.isEmpty(fcmSenderId)) {//only for 4.3.0 for tracking custom sender ID users.
                 evtData.put("fcmsid", true);
