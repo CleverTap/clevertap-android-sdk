@@ -157,6 +157,10 @@ public class PushProviders implements CTPushProviderListener {
                 @Override
                 public Void call() {
                     try {
+                        if(extras.getBoolean("wzrk_pn_s")){
+                            analyticsManager.pushNotificationViewedEvent(extras);
+                            return null;
+                        }
                         String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
                         if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
                             config.getLogger()
@@ -1173,7 +1177,7 @@ public class PushProviders implements CTPushProviderListener {
                 validationResultStack.pushValidationResult(notificationViewedError);
                 return;
             }
-            analyticsManager.pushNotificationViewedEvent(extras);
+            analyticsManager.pushNotificationViewedEvent(extras);//
         }
     }
 }

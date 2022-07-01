@@ -20,7 +20,6 @@ public class XiaomiMessageReceiver extends PushMessageReceiver {
     public void onNotificationMessageArrived(Context context, MiPushMessage miPushMessage) {
         super.onNotificationMessageArrived(context, miPushMessage);
         Logger.d(LOG_TAG, XIAOMI_LOG_TAG + "onNotificationMessageArrived is called");
-        handler.createNotification(context, miPushMessage);
     }
 
     @Override
