@@ -52,7 +52,7 @@ dependencies {
 
     //CleverTap Android SDK, make sure the AAR file is in the libs folder
     implementation project(':clevertap-core')
-    //implementation "com.clevertap.android:clevertap-android-sdk:4.5.0"
+    //implementation "com.clevertap.android:clevertap-android-sdk:4.5.1"
     implementation project(':clevertap-geofence')
     //implementation "com.clevertap.android:clevertap-geofence-sdk:1.1.0"
     implementation project(':clevertap-xps')
