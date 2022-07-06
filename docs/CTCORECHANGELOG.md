@@ -2,7 +2,7 @@
 
 ### Version 4.5.1 (July 11, 2022)
 * New Feature : You can now call `onUserLogin`, `incrementValue` and `decrementValue` method via WebView Interface.
-* Improvement : Updated SSL Pinning Certificates and SSL Ping Payload
+* Improvement : Updated SSL Pinning Certificates
 
 ### Version 4.5.0 (June 3, 2022)
 * `removeValueForKey()` in `CleverTapAPI` can now remove PII data like Email, Phone and Date Of Birth.
