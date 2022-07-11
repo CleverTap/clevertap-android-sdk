@@ -242,11 +242,9 @@ class DBAdapterTest : BaseTestCase() {
     fun test_fetchEvents_when_Called_should_ReturnAListOfEntriesAsJsonObject() {
         //when calling this function, it will return all the entries fro the given table less than or equal to passed limit.
         // the returned list of entries will be of format {'key' : <jsonArray> } where key is the last index of entries
+        //note : will not work with Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
 
-        arrayOf(
-            Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED,
-            //Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS,//todo not working for these tables
-        ).forEach { table->
+        arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED, ).forEach { table->
             println("table:$table")
 
             //assertion
@@ -271,9 +269,9 @@ class DBAdapterTest : BaseTestCase() {
     }
     @Test
     fun test_removeEvents_when_called_should_RemoveAllEntries() {
-        arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED,
-            //Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS,//todo not working for these tables
-        ).forEach { table->
+        //note : will not work with Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
+
+        arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED, ).forEach { table->
             println("table:$table")
             //assertion
             dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}1") },table)
@@ -297,11 +295,10 @@ class DBAdapterTest : BaseTestCase() {
     @Test
     fun test_storeObject_when_called_should_storeTheObjectInGivenTable() {
         //when calling this function, it will store all the entries in the given table
+        //note : will not work with Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
 
-        arrayOf(
-            Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED,
-            //Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS,//todo not working for these tables
-        ).forEach { table->
+
+        arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED, ).forEach { table->
             println("table:$table")
 
             //test
@@ -328,11 +325,9 @@ class DBAdapterTest : BaseTestCase() {
 
     @Test
     fun test_cleanupEventsFromLastId_when_called_should_removeAllEntriesWithIdLesserThanPassedId() {
+        //note : will not work with Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
 
-        arrayOf(
-            Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED,
-            //Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS,//todo not working for these tables
-        ).forEach { table->
+        arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED, ).forEach { table->
             println("table:$table")
 
             //assert
@@ -362,10 +357,9 @@ class DBAdapterTest : BaseTestCase() {
 
     @Test //todo //todo not working
     fun test_cleanupStaleEvents_when_ABC_should_XYZ() {
-        arrayOf(
-            Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED,
-            //Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS,//todo not working for these tables
-        ).forEach { table ->
+        //note : will not work with Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
+
+        arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED, ).forEach { table ->
             println("table:$table")
             //assert
             dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}1") },table)
