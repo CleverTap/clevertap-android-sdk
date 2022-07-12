@@ -390,17 +390,34 @@ class DBAdapterTest : BaseTestCase() {
 
 
 
-    @Test//todo
-    fun test_updatePushNotificationIds_when_ABC_should_XYZ() {
-        dbAdapter.storePushNotificationId("pn1", 10000)
-        dbAdapter.storePushNotificationId("pn2", 10000)
-        dbAdapter.storePushNotificationId("pn3", -10)
+    @Test
+    fun test_updatePushNotificationIds_when_CalledWithAListOfIds_should_MarkAssociatedEntriesInTableAsRead() {
+
+        //assert: adding unread notifications to database. fetchPushNotificationIds returns the list of unread notifications
+        val notifPairs = listOf(
+            "pn1" to TimeUnit.DAYS.toMillis(1),
+            "pn2" to TimeUnit.DAYS.toMillis(2),
+            "pn3" to TimeUnit.DAYS.toMillis(0),
+            "pn4" to TimeUnit.DAYS.toMillis(-1),
+            "pn5" to TimeUnit.DAYS.toMillis(-2),
+        )
+        notifPairs.forEach { dbAdapter.storePushNotificationId(it.first,it.second) }
         dbAdapter.fetchPushNotificationIds().let { println(it.toList()) }//[pn1,pn2,pn3]
 
+        //test: calling updatePushNotificationIds with 2 notif ids
         dbAdapter.updatePushNotificationIds(arrayOf("pn1", "pn3"))
 
-        dbAdapter.fetchPushNotificationIds().let { println(it.toList()) }// [] //todo why?
-        assertTrue(true)
+
+        //validate: those 2 ids will now not be part of list of notifs that are unread implying that these are now marked as read
+        // note the flag rtlDirtyFlag impacts the list of data returned by fetchPushNotificationIds.
+        // so for the sake of testing the database, we enforce rtlDirtyFlag=true for no impacts
+        dbAdapter.updateRtlDirtyFlag(true)
+        dbAdapter.fetchPushNotificationIds().let {
+            println(it.toList())
+            assertFalse (it.contains("pn1"))
+            assertFalse (it.contains("pn3"))
+        }
+
     }
 
 

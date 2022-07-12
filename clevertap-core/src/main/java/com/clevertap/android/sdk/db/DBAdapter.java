@@ -312,6 +312,11 @@ public class DBAdapter {
 
     private boolean rtlDirtyFlag = true;
 
+    @RestrictTo(Scope.LIBRARY)
+    public void updateRtlDirtyFlag(boolean state){
+        rtlDirtyFlag = state;
+    }
+
     public DBAdapter(Context context, CleverTapInstanceConfig config) {
         this(context, getDatabaseName(config));
         this.config = config;
