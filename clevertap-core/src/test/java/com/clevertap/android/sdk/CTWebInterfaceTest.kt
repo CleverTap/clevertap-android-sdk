@@ -13,6 +13,12 @@ class CTWebInterfaceTest : BaseTestCase() {
     // CTWebInterface is a wrapper around some functions of the clevertap api
     private lateinit var ctWebInterface: CTWebInterface
     private var ctApi:CleverTapAPI? = null
+    private  val inputs: List<Number> = listOf(
+        1,Int.MAX_VALUE,Int.MIN_VALUE,-1,0,
+        2.5f, Float.MAX_VALUE,Float.MIN_VALUE,-2.5f,0f,
+        1.5,Double.MAX_VALUE,Double.MIN_VALUE,-1.5,0.0,
+        50L,Long.MAX_VALUE,Long.MIN_VALUE,-50L,0L
+    )
     override fun setUp() {
         super.setUp()
 
@@ -38,6 +44,51 @@ class CTWebInterfaceTest : BaseTestCase() {
 
 
     }
+
+
+    @Test
+    fun test_incrementValue_when_CalledWithKeyAndValue_should_CallAssocClevertapApiFunction() {
+        // when ctApi is null, calling this function will do nothing.
+        ctApi = null
+        ctWebInterface = CTWebInterface(ctApi)
+        ctWebInterface.incrementValue("key",1.5)
+
+
+        // when ctApi is not null, calling this function will call ctApi's internal function
+        ctApi = CleverTapAPI.getDefaultInstance(application)
+
+        inputs.forEach  {
+            val ctMock = Mockito.mock(CleverTapAPI::class.java)
+            ctWebInterface = CTWebInterface(ctMock)
+
+            ctWebInterface.incrementValue("key2",it.toDouble())
+            Mockito.verify(ctMock,Mockito.times(1))?.incrementValue("key2",it.toDouble())
+        }
+    }
+
+
+
+    @Test
+    fun test_decrementValue_when_CalledWithKeyAndValue_should_CallAssocClevertapApiFunction() {
+        // when ctApi is null, calling this function will do nothing.
+        ctApi = null
+        ctWebInterface = CTWebInterface(ctApi)
+        ctWebInterface.decrementValue("key",1.5)
+
+
+        // when ctApi is not null, calling this function will call ctApi's internal function
+        ctApi = CleverTapAPI.getDefaultInstance(application)
+
+        inputs.forEach {
+            val ctMock = Mockito.mock(CleverTapAPI::class.java)
+            ctWebInterface = CTWebInterface(ctMock)
+
+            ctWebInterface.decrementValue("key2",it.toDouble())
+            Mockito.verify(ctMock,Mockito.times(1))?.decrementValue("key2",it.toDouble())
+        }
+    }
+
+
 
     @Test
     fun test_addMultiValuesForKey_when_CalledWithKeyAndValue_should_CallAssocClevertapApiFunction() {
@@ -170,9 +221,34 @@ class CTWebInterfaceTest : BaseTestCase() {
         ctWebInterface.pushProfile(":'value1'}")
         Mockito.verify(ctApiMock, Mockito.times(0))?.pushProfile(Utils.convertJSONObjectToHashMap(JSONObject(profile)))
 
-
-
     }
+
+    @Test
+    fun test_onUserLogin_when_CalledWithJsonString_should_CallAssocClevertapApiFunction() {
+        // if profile is null, function returns without any changes
+        ctApi = CleverTapAPI.getDefaultInstance(application)
+        var ctApiMock = Mockito.mock(CleverTapAPI::class.java)
+        ctWebInterface = CTWebInterface(ctApiMock)
+        var profile:String? = null
+        ctWebInterface.onUserLogin(profile)
+        Mockito.verify(ctApiMock, Mockito.never())?.onUserLogin(Mockito.anyMap())
+
+        // if profile is not null, function calls associated CT api function
+        ctApiMock = Mockito.mock(CleverTapAPI::class.java)
+        ctWebInterface = CTWebInterface(ctApiMock)
+        profile = "{'key1':'value1'}"
+        ctWebInterface.onUserLogin(profile)
+        Mockito.verify(ctApiMock, Mockito.times(1))?.onUserLogin(Utils.convertJSONObjectToHashMap(JSONObject(profile)))
+
+        // if json is malformed, not assoc api function will be called
+        ctApiMock = Mockito.mock(CleverTapAPI::class.java)
+        ctWebInterface = CTWebInterface(ctApiMock)
+        profile = "{'key2':'value2'}"
+        ctWebInterface.onUserLogin(":'value1'}")
+        Mockito.verify(ctApiMock, Mockito.times(0))?.onUserLogin(Utils.convertJSONObjectToHashMap(JSONObject(profile)))
+    }
+
+
 
     @Test
     fun test_removeMultiValueForKey_when_CalledWithKeyAndValue_should_CallAssocClevertapApiFunction() {
