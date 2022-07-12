@@ -19,6 +19,7 @@ import com.clevertap.android.sdk.inbox.CTMessageDAO;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import org.jetbrains.annotations.TestOnly;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -208,7 +209,7 @@ public class DBAdapter {
 
     private static final String KEY_CREATED_AT = "created_at";
 
-    private static final long DATA_EXPIRATION = 1000L * 60 * 60 * 24 * 5;//5days
+    private static final long DATA_EXPIRATION = 1000L * 60 * 60 * 24 * 5;
 
     //Notification Inbox Messages Table fields
     private static final String _ID = "_id";
@@ -311,11 +312,6 @@ public class DBAdapter {
     private final DatabaseHelper dbHelper;
 
     private boolean rtlDirtyFlag = true;
-
-    @RestrictTo(Scope.LIBRARY)
-    public void updateRtlDirtyFlag(boolean state){
-        rtlDirtyFlag = state;
-    }
 
     public DBAdapter(Context context, CleverTapInstanceConfig config) {
         this(context, getDatabaseName(config));
@@ -659,7 +655,7 @@ public class DBAdapter {
         }
     }
 
-    public synchronized void storePushNotificationId(String id, long ttlInSeconds) { // in seconds from now ( eg+2 days ,-2days)
+    public synchronized void storePushNotificationId(String id, long ttl) {
 
         if (id == null) {
             return;
@@ -671,19 +667,19 @@ public class DBAdapter {
         }
         final String tableName = Table.PUSH_NOTIFICATIONS.getName();
 
-        if (ttlInSeconds <= 0) {
-            ttlInSeconds = System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL; //current day + 4 days //todo : this variable should also be converted to seconds
+        if (ttl <= 0) {
+            ttl = System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL;
         }
 
         try {
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
             final ContentValues cv = new ContentValues();
             cv.put(KEY_DATA, id);
-            cv.put(KEY_CREATED_AT, ttlInSeconds);
+            cv.put(KEY_CREATED_AT, ttl);
             cv.put(IS_READ, 0);
             db.insert(tableName, null, cv);
             rtlDirtyFlag = true;
-            Logger.v("Stored PN - " + id + " with TTL - " + ttlInSeconds);
+            Logger.v("Stored PN - " + id + " with TTL - " + ttl);
         } catch (final SQLiteException e) {
             getConfigLogger().verbose("Error adding data to table " + tableName + " Recreating DB");
             dbHelper.deleteDatabase();
@@ -848,7 +844,8 @@ public class DBAdapter {
         return dbHelper.belowMemThreshold();
     }
 
-    private void cleanInternal(Table table, long expiration) {
+    @TestOnly
+    void cleanInternal(Table table, long expiration) {
 
         final long time = (System.currentTimeMillis() - expiration) / 1000;
         final String tName = table.getName();
