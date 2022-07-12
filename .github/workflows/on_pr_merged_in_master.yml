@@ -33,9 +33,8 @@ jobs:
       - name: Unit Tests and Jacoco Coverage (DEBUG)
         uses: ./.github/mini_flows/test_and_coverage_debug
 
-      #        #disabling for now . checkout pr #281 for more details
-      #      - name: Unit Tests and Jacoco Coverage (RELEASE)
-      #        uses: ./.github/mini_flows/test_and_coverage_release
+      - name: Unit Tests and Jacoco Coverage (RELEASE)
+        uses: ./.github/mini_flows/test_and_coverage_release
 
       - name: Build AARs (RELEASE)
         uses: ./.github/mini_flows/build_code_release
