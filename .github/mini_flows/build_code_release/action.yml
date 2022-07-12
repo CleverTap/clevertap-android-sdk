@@ -1,0 +1,19 @@
+runs:
+  using: "composite"
+  steps:
+
+    - name: Generate AAR files
+      shell: bash
+      run: ./gradlew :clevertap-core:assembleRelease :clevertap-geofence:assembleRelease  :clevertap-hms:assembleRelease  :clevertap-pushTemplates:assembleRelease :clevertap-xps:assembleRelease
+
+    - name: Upload AAR and apk files
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: aars_and_apks.zip
+        path: |
+          clevertap-core/build/outputs/aar
+          clevertap-hms/build/outputs/aar
+          clevertap-xps/build/outputs/aar
+          clevertap-geofence/build/outputs/aar
+          clevertap-pushtemplates/build/outputs/aar

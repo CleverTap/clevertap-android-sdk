@@ -15,5 +15,5 @@ runs:
           clevertap-hms/build/reports/detekt
           clevertap-xps/build/reports/detekt
           clevertap-geofence/build/reports/detekt
-          clevertap-pushTemplates/build/reports/detekt
+          clevertap-pushtemplates/build/reports/detekt
 

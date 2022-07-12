@@ -15,4 +15,4 @@ runs:
           clevertap-hms/build/reports/lint-results.html
           clevertap-xps/build/reports/lint-results.html
           clevertap-geofence/build/reports/lint-results.html
-          clevertap-pushTemplates/build/reports/lint-results.html
+          clevertap-pushtemplates/build/reports/lint-results.html
