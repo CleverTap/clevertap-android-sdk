@@ -11,6 +11,7 @@
 * Adds support to enable/disable the CleverTap Xiaomi Push SDK using `enableXiaomiPushOn` method. CleverTap Xiaomi Push SDK can now be enabled/disabled for `ALL_DEVICES`, `XIAOMI_MIUI_DEVICES` and `NO_DEVICES`.
 * Adds analytics support for upcoming CleverTap Direct Call Android SDK.
 * Sets up CI/CD using Github Actions.
+Note : If you are facing `ClassNotFoundException` "org.jacoco.agent.rt.internal_28bab1d.Offline" after updating to 4.5.0, Please update the SDK to v4.5.1
 
 ### Version 4.4.0 (December 20, 2021)
 * Adds below new public APIs for smooth and easy integration of Custom Android Push Notifications Handling(FCM),Custom Push Amplification Handling and Push Templates
