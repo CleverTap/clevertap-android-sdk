@@ -48,12 +48,16 @@ android {
 
     buildTypes {
         debug {
-            testCoverageEnabled true //To get coverage reports for instrumentation tests
+            Boolean coverage = project.hasProperty('coverage') //only true when a command is run with argument, like this : `gradle <command>  -Pcoverage='true'`
+            System.out.println("coverage="+coverage)
+            testCoverageEnabled (coverage) //To get coverage reports for instrumentation tests
             buildConfigField "String", "SDK_VERSION_STRING",
                     "\"!SDK-VERSION-STRING!:$publishedGroupId:$artifact:$major.$minor.$patch.0\""
         }
         release {
-            testCoverageEnabled false //To get coverage reports for instrumentation tests //todo enable when AGP version 7.3 is stable and used within this project (check value of   "plugin.android" in in version.properties)
+            Boolean coverage = project.hasProperty('coverage') //only true when a command is run with argument, like this : `gradle <command>  -Pcoverage='true'`
+            System.out.println("coverage="+coverage)
+            testCoverageEnabled (coverage) //To get coverage reports for instrumentation tests
             buildConfigField "String", "SDK_VERSION_STRING",
                     "\"!SDK-VERSION-STRING!:$publishedGroupId:$artifact:$major.$minor.$patch.0\""
             minifyEnabled false// keep it false we will supply proguard through consumerProguardFiles
@@ -174,6 +178,5 @@ afterEvaluate {
 signing {
     sign publishing.publications
 }
-apply from: "${project.rootDir}/gradle-scripts/jacoco.gradle"
 apply from: "${project.rootDir}/gradle-scripts/checkstyle.gradle"
 apply from: "${project.rootDir}/gradle-scripts/detekt.gradle"

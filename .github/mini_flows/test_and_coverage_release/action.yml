@@ -4,7 +4,7 @@ runs:
 
     - name: Run Unit Tests And Code Coverage (RELEASE)
       shell: bash
-      run: ./gradlew :clevertap-core:jacocoTestReportRelease :clevertap-geofence:jacocoTestReportRelease  :clevertap-hms:jacocoTestReportRelease  :clevertap-pushTemplates:jacocoTestReportRelease :clevertap-xps:jacocoTestReportRelease
+      run: ./gradlew :clevertap-core:jacocoTestReportRelease -Pcoverage='true' :clevertap-geofence:jacocoTestReportRelease -Pcoverage='true'  :clevertap-hms:jacocoTestReportRelease -Pcoverage='true'  :clevertap-pushTemplates:jacocoTestReportRelease -Pcoverage='true' :clevertap-xps:jacocoTestReportRelease -Pcoverage='true'
 
     - name: Upload Unit tests
       if: always()
