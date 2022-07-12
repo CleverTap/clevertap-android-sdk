@@ -178,6 +178,5 @@ afterEvaluate {
 signing {
     sign publishing.publications
 }
-apply from: "${project.rootDir}/gradle-scripts/jacoco.gradle"
 apply from: "${project.rootDir}/gradle-scripts/checkstyle.gradle"
 apply from: "${project.rootDir}/gradle-scripts/detekt.gradle"
