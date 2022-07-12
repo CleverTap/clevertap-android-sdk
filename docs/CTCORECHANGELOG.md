@@ -1,6 +1,6 @@
 ## CleverTap Android SDK CHANGE LOG
 
-### Version 4.5.1 (July 11, 2022)
+### Version 4.5.1 (July 12, 2022)
 * New Feature : You can now call `onUserLogin`, `incrementValue` and `decrementValue` method via WebView Interface.
 * Improvement : Updated SSL Pinning Certificates
 
