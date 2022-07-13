@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.db
 
+import android.os.SystemClock
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.db.DBAdapter.Table
@@ -180,29 +181,6 @@ class DBAdapterTest : BaseTestCase() {
 
 
     @Test
-    fun test_cleanUpPushNotifications_when_Called_should_ClearAllStoredPNsThatHaventExpired() {
-
-        //assume (storing 2 notifications that will expire after 10 seconds and 1 that is already expired. this will not get removed)
-        dbAdapter.storePushNotificationId("pn1", (System.currentTimeMillis() + TimeUnit.DAYS.toMillis(2))/1000)
-        dbAdapter.storePushNotificationId("pn2", (System.currentTimeMillis() + TimeUnit.DAYS.toMillis(2))/1000)
-        dbAdapter.storePushNotificationId("pn3", (System.currentTimeMillis() - TimeUnit.DAYS.toMillis(2))/1000)
-        dbAdapter.fetchPushNotificationIds().let {
-            assertEquals(3, it.size)
-        }
-
-        //test
-        dbAdapter.cleanUpPushNotifications()
-
-        //validate
-        dbAdapter.fetchPushNotificationIds().let {
-            println(it.toList())
-            assertEquals(2, it.size)
-            assertEquals("pn1", it[0])
-            assertEquals("pn2", it[1])
-        }
-    }
-
-    @Test
     fun test_storePushNotificationId_when_Called_should_storePushNotificationId() {
         //test
         dbAdapter.storePushNotificationId("pn1", 1)
@@ -364,17 +342,14 @@ class DBAdapterTest : BaseTestCase() {
             //assert
             dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}1") },table)
             dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}2") },table)
-            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}3") },table)
-            dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}4") },table)
             dbAdapter.fetchEvents(table,Int.MAX_VALUE).let { println("before call = $it")}
-
+            Thread.sleep(5)
             //test
-            dbAdapter.cleanupStaleEvents(table) //todo not working
+            dbAdapter.cleanInternal(table,-5)
 
             //validate
-            println("after")
             dbAdapter.fetchEvents(table,Int.MAX_VALUE).let {
-                println("jsonObject = $it")
+                println("after call = $it")
                 //??? same object
                 assertTrue { true }
 
@@ -384,8 +359,31 @@ class DBAdapterTest : BaseTestCase() {
         }
 
         assertTrue(true)
-        dbAdapter.cleanupStaleEvents(Table.PUSH_NOTIFICATIONS)
 
+    }
+
+    @Test
+    fun test_cleanUpPushNotifications_when_Called_should_ClearAllStoredPNsThatHaventExpired() {
+
+        //assume (storing 2 notifications that will expire after 10 seconds and 1 that is already expired. this will not get removed)
+        dbAdapter.storePushNotificationId("pn1", (System.currentTimeMillis() + TimeUnit.DAYS.toMillis(2))/1000)
+        dbAdapter.storePushNotificationId("pn2", (System.currentTimeMillis() + TimeUnit.DAYS.toMillis(2))/1000)
+        dbAdapter.storePushNotificationId("pn3", (System.currentTimeMillis() - TimeUnit.DAYS.toMillis(2))/1000)
+        dbAdapter.fetchPushNotificationIds().let {
+            assertEquals(3, it.size)
+        }
+
+        //test
+        dbAdapter.cleanUpPushNotifications()
+
+
+        //validate
+        dbAdapter.fetchPushNotificationIds().let {
+            println(it.toList())
+            assertEquals(2, it.size)
+            assertEquals("pn1", it[0])
+            assertEquals("pn2", it[1])
+        }
     }
 
 
@@ -410,12 +408,17 @@ class DBAdapterTest : BaseTestCase() {
 
         //validate: those 2 ids will now not be part of list of notifs that are unread implying that these are now marked as read
         // note the flag rtlDirtyFlag impacts the list of data returned by fetchPushNotificationIds.
-        // so for the sake of testing the database, we enforce rtlDirtyFlag=true for no impacts
-        dbAdapter.updateRtlDirtyFlag(true)
+        // so for the sake of testing the database, we add another notification to set rtlDirtyFlag to true
+        dbAdapter.storePushNotificationId("temp",TimeUnit.DAYS.toMillis(1))
+
         dbAdapter.fetchPushNotificationIds().let {
             println(it.toList())
             assertFalse (it.contains("pn1"))
+            assertTrue (it.contains("pn2"))
             assertFalse (it.contains("pn3"))
+            assertTrue (it.contains("pn4"))
+            assertTrue (it.contains("pn5"))
+            assertTrue (it.contains("temp"))
         }
 
     }
