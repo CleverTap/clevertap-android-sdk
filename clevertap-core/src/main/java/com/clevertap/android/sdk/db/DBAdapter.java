@@ -852,12 +852,68 @@ public class DBAdapter {
 
         try {
             final SQLiteDatabase db = dbHelper.getWritableDatabase();
+            logDBState(db,tName,"db before cleanInternal("+tName+","+expiration+")");
+            logPossibleDeleteionsViaQuery(db,tName,time);
             db.delete(tName, KEY_CREATED_AT + " <= " + time, null);
+            logDBState(db,tName,"db after cleanInternal("+tName+","+expiration+")");
         } catch (final SQLiteException e) {
             getConfigLogger().verbose("Error removing stale event records from " + tName + ". Recreating DB.", e);
             deleteDB();
         } finally {
             dbHelper.close();
+        }
+
+    }
+
+    @SuppressLint("Range")
+    private void logDBState(SQLiteDatabase db, String tName,String msg) {
+        System.out.println("<"+msg+">");
+
+        try (Cursor cursor = db.query(tName, null, null, null, null, null, KEY_CREATED_AT + " ASC", "1000")) {
+            final JSONArray events = new JSONArray();
+            while (cursor.moveToNext()) {
+                final JSONObject j = new JSONObject();
+                j.put("data",cursor.getString(cursor.getColumnIndex(KEY_DATA)));
+                j.put("createdAt",cursor.getString(cursor.getColumnIndex(KEY_CREATED_AT)));
+                events.put(j);
+            }
+            for (int i = 0; i < events.length(); i++) {
+                JSONObject j = events.getJSONObject(i);
+                System.out.println("\t"+j);
+            }
+
+        } catch (final SQLiteException e) {
+            getConfigLogger().verbose("Could not fetch records out of database " + tName + ".", e);
+        } catch (final Throwable t) {
+            getConfigLogger().verbose("Could not fetch records out of database " + tName + ".", t);
+        }
+        System.out.println("</"+msg+">");
+
+
+
+
+    }
+
+    @SuppressLint("Range")
+    private void logPossibleDeleteionsViaQuery(SQLiteDatabase db, String tName, long time) {
+        System.out.println("deleting entries that are less than time::"+time);
+        try (Cursor cursor = db.query(tName, null, KEY_CREATED_AT + " <= ?" , new String[]{String.valueOf(time)}, null, null, null)) {
+            final JSONArray events = new JSONArray();
+            while (cursor.moveToNext()) {
+                final JSONObject j = new JSONObject();
+                j.put("data",cursor.getString(cursor.getColumnIndex(KEY_DATA)));
+                j.put("createdAt",cursor.getString(cursor.getColumnIndex(KEY_CREATED_AT)));
+                events.put(j);
+            }
+            for (int i = 0; i < events.length(); i++) {
+                JSONObject j = events.getJSONObject(i);
+                System.out.println("\t\t"+j);
+            }
+
+        } catch (final SQLiteException e) {
+            getConfigLogger().verbose("Could not fetch records out of database " + tName + ".", e);
+        } catch (final Throwable t) {
+            getConfigLogger().verbose("Could not fetch records out of database " + tName + ".", t);
         }
 
     }
