@@ -19,6 +19,7 @@ import com.clevertap.android.sdk.inbox.CTMessageDAO;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import org.jetbrains.annotations.TestOnly;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -843,7 +844,8 @@ public class DBAdapter {
         return dbHelper.belowMemThreshold();
     }
 
-    private void cleanInternal(Table table, long expiration) {
+    @TestOnly
+    void cleanInternal(Table table, long expiration) {
 
         final long time = (System.currentTimeMillis() - expiration) / 1000;
         final String tName = table.getName();
