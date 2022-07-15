@@ -1,7 +1,5 @@
 package com.clevertap.android.sdk.db
 
-import android.os.SystemClock
-import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.db.DBAdapter.Table
 import com.clevertap.android.sdk.inbox.CTMessageDAO
@@ -220,9 +218,11 @@ class DBAdapterTest : BaseTestCase() {
     fun test_fetchEvents_when_Called_should_ReturnAListOfEntriesAsJsonObject() {
         //when calling this function, it will return all the entries fro the given table less than or equal to passed limit.
         // the returned list of entries will be of format {'key' : <jsonArray> } where key is the last index of entries
-        //note : will not work with Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
 
-        arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED, ).forEach { table->
+        //note : this function is not supposed to work with following tables as they have seperate functions with different insertion rules :
+        // Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
+
+        arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED).forEach { table->
             println("table:$table")
 
             //assertion
@@ -232,7 +232,7 @@ class DBAdapterTest : BaseTestCase() {
             dbAdapter.storeObject(JSONObject().also {it.put("name","${table.getName()}4") },table)
 
             //test
-            dbAdapter.fetchEvents(table,2).let {
+            dbAdapter.fetchEvents(table,2).let {  /// {2: ["__","__"]}
 
                 //validation
                 println("jsonObject = $it")
@@ -273,7 +273,8 @@ class DBAdapterTest : BaseTestCase() {
     @Test
     fun test_storeObject_when_called_should_storeTheObjectInGivenTable() {
         //when calling this function, it will store all the entries in the given table
-        //note : will not work with Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
+        //note : this function is not supposed to work with following tables as they have seperate functions with different insertion rules :
+        // Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
 
 
         arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED, ).forEach { table->
@@ -303,7 +304,8 @@ class DBAdapterTest : BaseTestCase() {
 
     @Test
     fun test_cleanupEventsFromLastId_when_called_should_removeAllEntriesWithIdLesserThanPassedId() {
-        //note : will not work with Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
+        //note : this function is not supposed to work with following tables as they have seperate functions with different insertion rules :
+        // Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
 
         arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED, ).forEach { table->
             println("table:$table")
@@ -347,8 +349,9 @@ class DBAdapterTest : BaseTestCase() {
     }
 
     @Test
-    fun test_cleanupStaleEvents_when_CalledWithTableNameAndAnExpiryTime_should_ClearAllEntriesInThatTableBeforeCurrentTimeMinusExpiryTime() {
-        //note : will not work with Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
+    fun test_cleanInternal_when_CalledWithTableNameAndAnExpiryTime_should_ClearAllEntriesInThatTableBeforeCurrentTimeMinusExpiryTime() {
+        //note : this function is not supposed to work with following tables as they have seperate functions with different insertion rules :
+        // Table.USER_PROFILES,Table.PUSH_NOTIFICATIONS,  Table.INBOX_MESSAGES,Table.UNINSTALL_TS
 
         arrayOf(Table.EVENTS, Table.PROFILE_EVENTS, Table.PUSH_NOTIFICATION_VIEWED ).forEach { table ->
             //assert : storing 2 objects at current time( say 13-7-22 2.23.05.100 pm) and waiting for 200 millis before running the actual function
@@ -413,7 +416,7 @@ class DBAdapterTest : BaseTestCase() {
 
 
 
-    fun getCtMsgDao(id: String, userId: String, read: Boolean, jsonData: JSONObject = JSONObject(), date: Long = System.currentTimeMillis(), expires: Long = (System.currentTimeMillis() * 10), tags: List<String> = listOf(), campaignId: String = "campaignID", wzrkParams: JSONObject = JSONObject()): CTMessageDAO {
+    fun getCtMsgDao(id: String = "1", userId: String = "1", read: Boolean= false, jsonData: JSONObject = JSONObject(), date: Long = System.currentTimeMillis(), expires: Long = (System.currentTimeMillis() * 10), tags: List<String> = listOf(), campaignId: String = "campaignID", wzrkParams: JSONObject = JSONObject()): CTMessageDAO {
         return CTMessageDAO().also {
             it.id = id
             it.jsonData = jsonData
