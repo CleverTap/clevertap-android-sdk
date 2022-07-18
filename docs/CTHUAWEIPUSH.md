@@ -37,7 +37,7 @@ buildscript {
     }
     dependencies {
         // FOR HUAWEI ADD THIS
-        classpath "com.huawei.agconnect:agcp:1.4.2.300"
+        classpath "com.huawei.agconnect:agcp:1.6.5.300"
     }
 }
 
