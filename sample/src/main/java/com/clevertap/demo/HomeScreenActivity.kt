@@ -1,5 +1,7 @@
 package com.clevertap.demo
 
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
@@ -107,6 +109,14 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
 
     override fun onDisplayUnitsLoaded(units: ArrayList<CleverTapDisplayUnit>?) {
         Log.i(TAG, "onDisplayUnitsLoaded() called")
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        Log.i("Playground", "onNewIntent()")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            cleverTapDefaultInstance?.pushNotificationClickedEvent(intent!!.extras)
+        }
     }
 
     override fun onInit() {
