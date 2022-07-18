@@ -17,6 +17,7 @@ import com.clevertap.android.sdk.displayunits.DisplayUnitListener
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import com.clevertap.android.sdk.product_config.CTProductConfigListener
 import com.clevertap.demo.ui.main.HomeScreenFragment
+import com.clevertap.demo.ui.main.NotificationUtils
 import org.json.JSONObject
 import java.util.ArrayList
 
@@ -120,19 +121,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
             cleverTapDefaultInstance?.pushNotificationClickedEvent(intent!!.extras)
         }
 
-        //Require to close notification on action button click
-        intent?.extras?.apply {
-            getString("actionId")?.let {
-                Log.d("ACTION_ID", it)
-                val autoCancel = getBoolean("autoCancel", true)
-                val notificationId = getInt("notificationId", -1)
-                if (autoCancel && notificationId > -1) {
-                    val notifyMgr: NotificationManager =
-                        applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-                    notifyMgr.cancel(notificationId)
-                }
-            }
-        }
+        NotificationUtils.dismissNotification(intent,applicationContext)
     }
 
     override fun onInit() {
