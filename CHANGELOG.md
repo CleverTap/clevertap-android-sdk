@@ -272,7 +272,7 @@ Note: To support multi-value user profile properties, `CleverTap.profile.getProp
 * Fixed InApp Activity exclude feature
 
 ### Version 2.0.3 (December 09, 2015)
-* Added SyncListener to notify application code of User Profile synchronization updates
+* Added SyncListener to notify application code of User Profile synchronization updates.
 * Added ability to push custom error events: `clevertap.event.pushError(String, int)`
 * Removed `clevertap.profile.pushGraphUser(com.facebook...)`
 * Requires update to Android Support Library, revision 23.1.1

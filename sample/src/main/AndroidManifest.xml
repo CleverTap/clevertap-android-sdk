@@ -24,6 +24,18 @@
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <!-- If a user clicks on a shared link that uses the "http" scheme, your
+                     app should be able to delegate that traffic to "https". -->
+                <data
+                    android:host="${applicationId}"
+                    android:pathPrefix="/HomeScreenActivity"
+                    android:scheme="ctdemo" />
+
             </intent-filter>
         </activity>
 
