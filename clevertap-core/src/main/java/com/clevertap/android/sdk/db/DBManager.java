@@ -112,6 +112,7 @@ public class DBManager extends BaseDatabaseManager {
         }
     }
 
+    // note : only works with  Queue Cursor of Events table. for other cursors, will override its data with Event table's data
     @Override
     QueueCursor getQueuedDBEvents(final Context context, final int batchSize, final QueueCursor previousCursor) {
 
@@ -153,6 +154,14 @@ public class DBManager extends BaseDatabaseManager {
         queueEventInternal(context, event, DBAdapter.Table.PUSH_NOTIFICATION_VIEWED);
     }
 
+    /* calling this function Will set items from jsonObject to queue cursor.
+     * if jsonObject is null, will return the queue cursor as it is
+     * else
+     *  - it will try taking the first key and set it at as cursor's Last Id
+     *  - it will try taking the value of first key, cast it as jsonArray and set it as cursor's data
+     *
+     * therefore, the json must be of format : {string : jsonArray }
+     * */
     @Override
     QueueCursor updateCursorForDBObject(final JSONObject dbObject, final QueueCursor cursor) {
         if (dbObject == null) {
