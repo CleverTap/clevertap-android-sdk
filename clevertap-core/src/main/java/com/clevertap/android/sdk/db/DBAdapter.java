@@ -843,7 +843,7 @@ public class DBAdapter {
         return dbHelper.belowMemThreshold();
     }
 
-    void cleanInternal(Table table, long expiration) {
+    private void cleanInternal(Table table, long expiration) {
 
         final long time = (System.currentTimeMillis() - expiration) / 1000;
         final String tName = table.getName();
