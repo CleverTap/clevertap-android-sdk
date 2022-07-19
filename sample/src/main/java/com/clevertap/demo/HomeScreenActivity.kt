@@ -1,5 +1,7 @@
 package com.clevertap.demo
 
+import android.content.Intent
+import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
@@ -13,8 +15,8 @@ import com.clevertap.android.sdk.displayunits.DisplayUnitListener
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import com.clevertap.android.sdk.product_config.CTProductConfigListener
 import com.clevertap.demo.ui.main.HomeScreenFragment
+import com.clevertap.demo.ui.main.NotificationUtils
 import org.json.JSONObject
-import java.util.ArrayList
 
 private const val TAG = "HomeScreenActivity"
 
@@ -107,6 +109,25 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
 
     override fun onDisplayUnitsLoaded(units: ArrayList<CleverTapDisplayUnit>?) {
         Log.i(TAG, "onDisplayUnitsLoaded() called")
+    }
+
+    override fun onNewIntent(intent: Intent?) {
+        super.onNewIntent(intent)
+        Log.i("Playground", "onNewIntent()")
+
+        /**
+         * On Android 12, Raise notification clicked event when Activity is already running in activity backstack
+         */
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            cleverTapDefaultInstance?.pushNotificationClickedEvent(intent!!.extras)
+        }
+
+        /**
+        * On Android 12, clear notification on CTA click when Activity is already running in activity backstack
+        */
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            NotificationUtils.dismissNotification(intent, applicationContext)
+        }
     }
 
     override fun onInit() {
