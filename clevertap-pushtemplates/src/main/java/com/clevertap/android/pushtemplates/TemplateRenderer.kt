@@ -487,14 +487,18 @@ class TemplateRenderer : INotificationRenderer {
                             Constants.KEY_CT_TYPE,
                             CTNotificationIntentService.TYPE_BUTTON_CLICK
                         )
-                        if (!dl.isEmpty()) {
+                        if (dl.isNotEmpty()) {
                             actionLaunchIntent.putExtra("dl", dl)
                         }
                     } else {
-                        actionLaunchIntent = if (!dl.isEmpty()) {
-                            Intent(Intent.ACTION_VIEW, Uri.parse(dl))
+                        if (dl.isNotEmpty()) {
+                            actionLaunchIntent = Intent(Intent.ACTION_VIEW, Uri.parse(dl))
+                            Utils.setPackageNameFromResolveInfoList(
+                                context,
+                                actionLaunchIntent
+                            )
                         } else {
-                            context.packageManager
+                            actionLaunchIntent = context.packageManager
                                 .getLaunchIntentForPackage(context.packageName)
                         }
                     }
