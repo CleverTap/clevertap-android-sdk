@@ -119,6 +119,7 @@ public interface INotificationRenderer {
                     } else {
                         if (!dl.isEmpty()) {
                             actionLaunchIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(dl));
+                            Utils.setPackageNameFromResolveInfoList(context, actionLaunchIntent);
                         } else {
                             actionLaunchIntent = context.getPackageManager()
                                     .getLaunchIntentForPackage(context.getPackageName());
