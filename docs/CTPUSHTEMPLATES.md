@@ -20,8 +20,8 @@ CleverTap Push Templates SDK helps you engage with your users using fancy push n
 1. Add the dependencies to the `build.gradle`
 
 ```groovy
-implementation "com.clevertap.android:push-templates:1.0.2"
-implementation "com.clevertap.android:clevertap-android-sdk:4.5.1" // 4.4.0 and above
+implementation "com.clevertap.android:push-templates:1.0.3"
+implementation "com.clevertap.android:clevertap-android-sdk:4.5.2" // 4.4.0 and above
 ```
 
 2. Add the following line to your Application class before the `onCreate()`
@@ -219,6 +219,34 @@ To set the CTAs use the Advanced Options when setting up the campaign on the das
 Template Key | Required | Value
 ---:|:---:|:---
 pt_dismiss_on_click | Optional | Dismisses the notification without opening the app
+
+*Note If `pt_dismiss_on_click` is false we'll have to add the below code to not dismiss the
+notification for Android 12 and above
+
+    fun dismissNotification(intent: Intent?, applicationContext: Context){
+        intent?.extras?.apply {
+            var autoCancel = true
+            var notificationId = -1
+
+            getString("actionId")?.let {
+                Log.d("ACTION_ID", it)
+                autoCancel = getBoolean("autoCancel", true)
+                notificationId = getInt("notificationId", -1)
+            }
+            /**
+             * If using InputBox template, add ptDismissOnClick flag to not dismiss notification
+             * if pt_dismiss_on_click is false in InputBox template payload. Alternatively if normal
+             * notification is raised then we dismiss notification.
+             */
+            val ptDismissOnClick = intent.extras!!.getString(PTConstants.PT_DISMISS_ON_CLICK,"")
+
+            if (autoCancel && notificationId > -1 && ptDismissOnClick.isNullOrEmpty()) {
+                val notifyMgr: NotificationManager =
+                    applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                notifyMgr.cancel(notificationId)
+            }
+        }
+    }
 
 ### CTAs with Remind Later option
 
