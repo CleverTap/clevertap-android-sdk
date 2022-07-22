@@ -222,7 +222,6 @@ class TemplateRenderer : INotificationRenderer {
     @RequiresApi(Build.VERSION_CODES.M)
     private fun timerRunner(context: Context, extras: Bundle, notificationId: Int, delay: Int?) {
         val handler = Handler(Looper.getMainLooper())
-        extras.remove("wzrk_rnv")
 
 
         if (delay != null) {
@@ -234,6 +233,7 @@ class TemplateRenderer : INotificationRenderer {
                 ) {
                     val applicationContext = context.applicationContext
                     val basicTemplateBundle = extras.clone() as Bundle
+                    basicTemplateBundle.remove("wzrk_rnv")
                     basicTemplateBundle.putString(Constants.WZRK_PUSH_ID, null) // skip dupe check
                     basicTemplateBundle.putString(PTConstants.PT_ID, "pt_basic") // set to basic
 
