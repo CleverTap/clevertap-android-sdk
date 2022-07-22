@@ -1,7 +1,7 @@
 ## CleverTap Push Templates SDK CHANGE LOG
 
-### Version 1.0.3 (July 21, 2022)
-* Fixes a bug for notification CTA deeplink - On clicking notification CTA, deeplink launches third party app instead of X app even though X app is capable of handling deeplink. For example, if X app is capable of handling https://google.com(sample link) but deeplink launches browser instead of X app.
+### Version 1.0.3 (July 22, 2022)
+* Fixes a bug for notification CTA deeplink for Android 12 and above devices - On clicking notification CTA, deeplink launches third party app instead of X app even though X app is capable of handling deeplink. For example, if X app is capable of handling https://google.com(sample link) but deeplink launches browser instead of X app.
 
 ### Version 1.0.2 (April 26, 2022)
 * UI bug fixes for Push Notification metadata
