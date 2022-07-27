@@ -90,6 +90,7 @@ public class PushProviders implements CTPushProviderListener {
     private final ValidationResultStack validationResultStack;
 
     private final Object tokenLock = new Object();
+    private final Object pushRenderingLock = new Object();
 
     private DevicePushTokenRefreshListener tokenRefreshListener;
 
@@ -142,67 +143,53 @@ public class PushProviders implements CTPushProviderListener {
     public void _createNotification(final Context context, final Bundle extras, final int notificationId) {
         if (extras == null || extras.get(Constants.NOTIFICATION_TAG) == null) {
             return;
-        } // Common
+        }
 
         if (config.isAnalyticsOnly()) {
             config.getLogger()
-                    .debug(config.getAccountId(), "Instance is set for Analytics only, cannot create notification");
+                    .debug(config.getAccountId(),
+                            "Instance is set for Analytics only, cannot create notification");
             return;
-        }// Common
+        }
 
         try {
-            Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();// Common task
-            task.execute("CleverTapAPI#_createNotification", new Callable<Void>() {
-                @Override
-                public Void call() {
-                    try {
-                        String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
-                        if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
-                            config.getLogger()
-                                    .debug(config.getAccountId(), "Handling notification: " + extras.toString());
-                            if (extras.getString(Constants.WZRK_PUSH_ID) != null) {
-                                if (baseDatabaseManager.loadDBAdapter(context)
-                                        .doesPushNotificationIdExist(extras.getString(Constants.WZRK_PUSH_ID))) {
-                                    config.getLogger().debug(config.getAccountId(),
-                                            "Push Notification already rendered, not showing again");
-                                    return null;
-                                }
-                            }// Common
-                            String notifMessage = iNotificationRenderer
-                                    .getMessage(
-                                            extras);//extras.getString(Constants.NOTIF_MSG);// uncommon - getMessage()
-                            notifMessage = (notifMessage != null) ? notifMessage : "";// common
-                            if (notifMessage.isEmpty()) {
-                                //silent notification
-                                config.getLogger()
-                                        .verbose(config.getAccountId(),
-                                                "Push notification message is empty, not rendering");
-                                baseDatabaseManager.loadDBAdapter(context)
-                                        .storeUninstallTimestamp();
-                                String pingFreq = extras.getString("pf", "");
-                                if (!TextUtils.isEmpty(pingFreq)) {
-                                    updatePingFrequencyIfNeeded(context, Integer.parseInt(pingFreq));
-                                }
-                                return null;
-                            }// Common
-                            String notifTitle = iNotificationRenderer.getTitle(extras,
-                                    context);//extras.getString(Constants.NOTIF_TITLE, "");// uncommon - getTitle()
-                            notifTitle = notifTitle.isEmpty() ? context.getApplicationInfo().name
-                                    : notifTitle;//common
-                        }
-                        triggerNotification(context, extras, notificationId);
-                    } catch (Throwable t) {
-                        // Occurs if the notification image was null
-                        // Let's return, as we couldn't get a handle on the app's icon
-                        // Some devices throw a PackageManager* exception too
-                        config.getLogger()
-                                .debug(config.getAccountId(), "Couldn't render notification: ", t);
+            String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
+            if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
+                config.getLogger()
+                        .debug(config.getAccountId(),
+                                "Handling notification: " + extras);
+                if (extras.getString(Constants.WZRK_PUSH_ID) != null) {
+                    if (baseDatabaseManager.loadDBAdapter(context)
+                            .doesPushNotificationIdExist(
+                                    extras.getString(Constants.WZRK_PUSH_ID))) {
+                        config.getLogger().debug(config.getAccountId(),
+                                "Push Notification already rendered, not showing again");
+                        return;
                     }
-                    return null;
                 }
-            });
+                String notifMessage = iNotificationRenderer.getMessage(extras);
+                notifMessage = (notifMessage != null) ? notifMessage : "";
+                if (notifMessage.isEmpty()) {
+                    //silent notification
+                    config.getLogger()
+                            .verbose(config.getAccountId(),
+                                    "Push notification message is empty, not rendering");
+                    baseDatabaseManager.loadDBAdapter(context)
+                            .storeUninstallTimestamp();
+                    String pingFreq = extras.getString("pf", "");
+                    if (!TextUtils.isEmpty(pingFreq)) {
+                        updatePingFrequencyIfNeeded(context, Integer.parseInt(pingFreq));
+                    }
+                    return;
+                }
+            }
+            triggerNotification(context, extras, notificationId);
         } catch (Throwable t) {
-            config.getLogger().debug(config.getAccountId(), "Failed to process push notification", t);
+            // Occurs if the notification image was null
+            // Let's return, as we couldn't get a handle on the app's icon
+            // Some devices throw a PackageManager* exception too
+            config.getLogger()
+                    .debug(config.getAccountId(), "Couldn't render notification: ", t);
         }
     }
 
@@ -964,6 +951,12 @@ public class PushProviders implements CTPushProviderListener {
         return iNotificationRenderer;
     }
 
+    @RestrictTo(Scope.LIBRARY)
+    public @NonNull
+    Object getPushRenderingLock() {
+        return pushRenderingLock;
+    }
+
     @RequiresApi(api = VERSION_CODES.LOLLIPOP)
     private static JobInfo getJobInfo(int jobId, JobScheduler jobScheduler) {
         for (JobInfo jobInfo : jobScheduler.getAllPendingJobs()) {
@@ -1116,9 +1109,8 @@ public class PushProviders implements CTPushProviderListener {
 
         //remove sound for fallback notif
 
-        if (iNotificationRenderer instanceof AudibleNotification)
-        {
-            nb = ((AudibleNotification)iNotificationRenderer).setSound(context,extras,nb,config);
+        if (iNotificationRenderer instanceof AudibleNotification) {
+            nb = ((AudibleNotification) iNotificationRenderer).setSound(context, extras, nb, config);
         }
 
         nb = iNotificationRenderer.renderNotification(extras, context, nb, config, notificationId);
@@ -1147,12 +1139,6 @@ public class PushProviders implements CTPushProviderListener {
                 config.getLogger().debug(notificationViewedError.getErrorDesc());
                 validationResultStack.pushValidationResult(notificationViewedError);
                 return;
-            }
-
-            if (Utils.isGoodState(context)) {
-                extras.putString(Constants.NOTIFICATION_HEALTH, Constants.WZRK_HEALTH_STATE_GOOD);
-            } else {
-                extras.putString(Constants.NOTIFICATION_HEALTH, Constants.WZRK_HEALTH_STATE_BAD);
             }
 
             analyticsManager.pushNotificationViewedEvent(extras);
