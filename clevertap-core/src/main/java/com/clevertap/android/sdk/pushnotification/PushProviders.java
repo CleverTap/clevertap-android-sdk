@@ -158,6 +158,9 @@ public class PushProviders implements CTPushProviderListener {
                 config.getLogger()
                         .debug(config.getAccountId(),
                                 "Handling notification: " + extras);
+                config.getLogger()
+                        .debug(config.getAccountId(),
+                                "Handling notification::nh source = " + extras.getString("nh source"));
                 if (extras.getString(Constants.WZRK_PUSH_ID) != null) {
                     if (baseDatabaseManager.loadDBAdapter(context)
                             .doesPushNotificationIdExist(
@@ -1147,6 +1150,8 @@ public class PushProviders implements CTPushProviderListener {
             if (notificationRenderedListener != null) {
                 notificationRenderedListener.onNotificationRendered(true);
             }
+            config.getLogger()
+                    .verbose("Rendered Push Notification... from nh source = " + extras.getString("nh source"));
         }
     }
 }
