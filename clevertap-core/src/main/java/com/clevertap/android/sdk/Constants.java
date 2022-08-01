@@ -300,7 +300,7 @@ public interface Constants {
 
     // ==========Fallback keys=========
     String NOTIFICATION_HEALTH = "wzrk_pn_h";
-    String WZRK_TSR_FB = "wzrk_tsr_fb";
+    String WZRK_TSR_FB = "wzrk_tsr_fb";// terminate and stay resident
     String NOTIFICATION_RENDER_FALLBACK = "wzrk_fallback";
 
     /**
