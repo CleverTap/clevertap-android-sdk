@@ -28,7 +28,6 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.core.app.NotificationCompat;
 import com.clevertap.android.sdk.AnalyticsManager;
-import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapAPI.DevicePushTokenRefreshListener;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
@@ -41,7 +40,6 @@ import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.DBAdapter;
 import com.clevertap.android.sdk.interfaces.AudibleNotification;
-import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundIntentService;
 import com.clevertap.android.sdk.pushnotification.amp.CTBackgroundJobService;
@@ -186,6 +184,10 @@ public class PushProviders implements CTPushProviderListener {
                     return;
                 }
             }
+            String notifTitle = iNotificationRenderer.getTitle(extras,
+                    context);//extras.getString(Constants.NOTIF_TITLE, "");// uncommon - getTitle()
+            notifTitle = notifTitle.isEmpty() ? context.getApplicationInfo().name
+                    : notifTitle;//common
             triggerNotification(context, extras, notificationId);
         } catch (Throwable t) {
             // Occurs if the notification image was null
@@ -1145,11 +1147,6 @@ public class PushProviders implements CTPushProviderListener {
             }
 
             analyticsManager.pushNotificationViewedEvent(extras);
-            NotificationRenderedListener notificationRenderedListener = CleverTapAPI
-                    .getNotificationRenderedListener();
-            if (notificationRenderedListener != null) {
-                notificationRenderedListener.onNotificationRendered(true);
-            }
             config.getLogger()
                     .verbose("Rendered Push Notification... from nh source = " + extras.getString("nh source"));
         }

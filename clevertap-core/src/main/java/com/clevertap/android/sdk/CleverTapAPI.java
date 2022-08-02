@@ -131,8 +131,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     private static NotificationHandler sNotificationHandler;
 
-    private static NotificationRenderedListener sNotificationRenderedListener;
-
     private static NotificationHandler sDirectCallNotificationHandler;
 
     private final Context context;
@@ -2389,6 +2387,16 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         this.inboxMessageButtonListener = new WeakReference<>(listener);
     }
 
+    @RestrictTo(Scope.LIBRARY_GROUP)
+    public void setNotificationRenderedListener(final NotificationRenderedListener notificationRenderedListener) {
+        coreState.getCallbackManager().setNotificationRenderedListener(notificationRenderedListener);
+    }
+
+    @RestrictTo(Scope.LIBRARY_GROUP)
+    public NotificationRenderedListener getNotificationRenderedListener() {
+        return coreState.getCallbackManager().getNotificationRenderedListener();
+    }
+
     /**
      * Not to be used by developers. This is used internally to help CleverTap know which library is wrapping the
      * native SDK
@@ -2909,14 +2917,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     public static @XiaomiPush int getEnableXiaomiPushOn() {
         return PushType.XPS.getRunningDevices();
-    }
-    public static void setNotificationRenderedListener(NotificationRenderedListener notificationRenderedListener)
-    {
-        sNotificationRenderedListener = notificationRenderedListener;
-    }
-
-    public static NotificationRenderedListener getNotificationRenderedListener() {
-        return sNotificationRenderedListener;
     }
 }
 

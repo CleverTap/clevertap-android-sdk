@@ -23,6 +23,7 @@ import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.QueueCursor;
 import com.clevertap.android.sdk.events.EventGroup;
+import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.response.ARPResponse;
 import com.clevertap.android.sdk.response.BaseResponse;
@@ -674,6 +675,14 @@ public class NetworkManager extends BaseNetworkManager {
             setLastRequestTimestamp(getCurrentRequestTimestamp());
             setFirstRequestTimestampIfNeeded(getCurrentRequestTimestamp());
 
+            if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
+                NotificationRenderedListener notificationRenderedListener
+                        = callbackManager.getNotificationRenderedListener();
+                logger.verbose(config.getAccountId(), "push notification viewed event sent successfully");
+                if (notificationRenderedListener != null) {
+                    notificationRenderedListener.onNotificationRendered(true);
+                }
+            }
             logger.debug(config.getAccountId(), "Queue sent successfully");
 
             responseFailureCount = 0;
