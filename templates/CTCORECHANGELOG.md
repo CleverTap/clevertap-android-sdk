@@ -1,5 +1,8 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 4.6.0 (August 4, 2022)
+* Improved push synchronization for multiple push services
+
 ### Version 4.5.0 (June 3, 2022)
 * `removeValueForKey()` in `CleverTapAPI` can now remove PII data like Email, Phone and Date Of Birth.
 * Improved the `ActivityLifecycleCallback`’s `onPaused` logic so that it runs on the background thread to avoid any runtime issues. Fixes #221.
