@@ -7,8 +7,8 @@
     <string name="inbox">Inbox</string>
     <string name="webview">WebView</string>
 
-    <string name="xiaomi_app_key">5321833060115</string>
-    <string name="xiaomi_app_id">2882303761518330115</string>
+    <string name="xiaomi_app_key">Your Xiaomi App Key</string>
+    <string name="xiaomi_app_id">Your Xiaomi App ID</string>
 
     <!-- Geofence -->
     <string name="ok">OK</string>

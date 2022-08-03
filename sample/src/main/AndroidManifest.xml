@@ -34,10 +34,10 @@
         <!-- Add meta data for CleverTap Account Id and Account Token -->
         <meta-data
             android:name="CLEVERTAP_ACCOUNT_ID"
-            android:value="R7R-66K-K56Z" />
+            android:value="YOUR ACCT ID" />
         <meta-data
             android:name="CLEVERTAP_TOKEN"
-            android:value="366-2a2" />
+            android:value="YOUR ACCT TOKEN" />
         <meta-data
             android:name="CLEVERTAP_REGION"
             android:value="eu1"/>
