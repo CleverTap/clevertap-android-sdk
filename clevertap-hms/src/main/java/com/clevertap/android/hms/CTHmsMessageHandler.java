@@ -43,9 +43,6 @@ public class CTHmsMessageHandler implements IHmsMessageHandler, IPushAmpHandler<
         Bundle messageBundle = mParser.toBundle(remoteMessage);
         if (messageBundle != null) {
             try {
-                if (!messageBundle.containsKey("nh source")) {
-                    messageBundle.putString("nh source", "HuaweiMessageListenerService");
-                }
                 isSuccess = PushNotificationHandler
                         .getPushNotificationHandler().onMessageReceived(context, messageBundle, HPS.toString());
             } catch (Throwable e) {

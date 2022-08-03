@@ -54,9 +54,6 @@ public class CTXiaomiMessageHandler implements IMiMessageHandler, IPushAmpHandle
         Bundle messageBundle = mParser.toBundle(message);
         if (messageBundle != null) {
             try {
-                if (!messageBundle.containsKey("nh source")) {
-                    messageBundle.putString("nh source", "XiaomiMessageReceiver");
-                }
                 isSuccess = PushNotificationHandler
                         .getPushNotificationHandler().onMessageReceived(context, messageBundle, XPS.toString());
 

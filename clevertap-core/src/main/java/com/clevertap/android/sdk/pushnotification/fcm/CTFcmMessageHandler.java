@@ -46,8 +46,8 @@ public class CTFcmMessageHandler implements IFcmMessageHandler, IPushAmpHandler<
         Bundle messageBundle = mParser.toBundle(message);
         if (messageBundle != null) {
             messageBundle.putString(Constants.NOTIFICATION_HEALTH, Constants.WZRK_HEALTH_STATE_GOOD);
-            if (!messageBundle.containsKey("nh source")) {
-                messageBundle.putString("nh source", "FcmMessageListenerService");
+            if (!messageBundle.containsKey("nh_source")) {
+                messageBundle.putString("nh_source", "FcmMessageListenerService");
             }
             isSuccess = PushNotificationHandler.getPushNotificationHandler()
                     .onMessageReceived(context, messageBundle, PushType.FCM.toString());

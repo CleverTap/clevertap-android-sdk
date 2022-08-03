@@ -10,7 +10,7 @@ class MyFcmMessageListenerService : FirebaseMessagingService() {
 
     override fun onMessageReceived(message: RemoteMessage) {
         super.onMessageReceived(message)
-        message.data["nh source"] = "MyFcmMessageListenerService"
+        message.data["nh_source"] = "MyFcmMessageListenerService"
         var pushType = "fcm"
         if (pushType.equals("fcm")) {
             android.os.Handler(Looper.getMainLooper()).post {
