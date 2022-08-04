@@ -20,8 +20,8 @@ CleverTap Push Templates SDK helps you engage with your users using fancy push n
 1. Add the dependencies to the `build.gradle`
 
 ```groovy
-implementation "com.clevertap.android:push-templates:1.0.3"
-implementation "com.clevertap.android:clevertap-android-sdk:4.5.2" // 4.4.0 and above
+implementation "com.clevertap.android:push-templates:1.0.4"
+implementation "com.clevertap.android:clevertap-android-sdk:4.6.0" // 4.4.0 and above
 ```
 
 2. Add the following line to your Application class before the `onCreate()`
@@ -369,6 +369,7 @@ Rating Template Keys | Required | Description
 pt_id | Required  | Value - `pt_rating`
 pt_title | Required  | Title
 pt_msg | Required  | Message
+pt_big_img | Optional | Image
 pt_msg_summary | Optional | Message line when Notification is expanded
 pt_subtitle | Optional | Subtitle
 pt_default_dl | Required  | Default Deep Link for Push Notification

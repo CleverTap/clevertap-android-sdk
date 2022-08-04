@@ -16,21 +16,49 @@ import android.graphics.drawable.Drawable
 import android.net.ConnectivityManager
 import android.net.NetworkInfo
 import android.os.Build
-import android.os.Build.VERSION_CODES.*
+import android.os.Build.VERSION_CODES.KITKAT
+import android.os.Build.VERSION_CODES.LOLLIPOP
+import android.os.Build.VERSION_CODES.M
+import android.os.Build.VERSION_CODES.N
+import android.os.Build.VERSION_CODES.O
+import android.os.Build.VERSION_CODES.P
+import android.os.Build.VERSION_CODES.Q
+import android.os.Build.VERSION_CODES.R
+import android.os.Build.VERSION_CODES.S
 import android.os.Bundle
 import android.telephony.TelephonyManager
-import android.telephony.TelephonyManager.*
+import android.telephony.TelephonyManager.NETWORK_TYPE_1xRTT
+import android.telephony.TelephonyManager.NETWORK_TYPE_CDMA
+import android.telephony.TelephonyManager.NETWORK_TYPE_EDGE
+import android.telephony.TelephonyManager.NETWORK_TYPE_EHRPD
+import android.telephony.TelephonyManager.NETWORK_TYPE_EVDO_0
+import android.telephony.TelephonyManager.NETWORK_TYPE_EVDO_A
+import android.telephony.TelephonyManager.NETWORK_TYPE_EVDO_B
+import android.telephony.TelephonyManager.NETWORK_TYPE_GPRS
+import android.telephony.TelephonyManager.NETWORK_TYPE_HSDPA
+import android.telephony.TelephonyManager.NETWORK_TYPE_HSPA
+import android.telephony.TelephonyManager.NETWORK_TYPE_HSPAP
+import android.telephony.TelephonyManager.NETWORK_TYPE_HSUPA
+import android.telephony.TelephonyManager.NETWORK_TYPE_IDEN
+import android.telephony.TelephonyManager.NETWORK_TYPE_LTE
+import android.telephony.TelephonyManager.NETWORK_TYPE_NR
+import android.telephony.TelephonyManager.NETWORK_TYPE_UMTS
 import com.clevertap.android.shared.test.BaseTestCase
+import com.google.firebase.messaging.RemoteMessage
 import org.json.JSONArray
 import org.json.JSONObject
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.*
+import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
 import org.robolectric.shadows.ShadowNetworkInfo
 import org.robolectric.shadows.ShadowPackageManager
 import org.robolectric.util.ReflectionHelpers
-import kotlin.test.*
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import com.clevertap.android.sdk.R as R1
 
 @RunWith(RobolectricTestRunner::class)
@@ -380,14 +408,47 @@ class UtilsTest : BaseTestCase() {
         assertNotNull(bitmap62)
 
         // if path is not Null/empty, the icon will be available irrespective to the fallbackToAppIcon switch
-        val bitmap41 = Utils.getNotificationBitmap("https://www.pod.cz/ico/favicon.ico", false, application.applicationContext)
-        val bitmap42 = Utils.getNotificationBitmap("https://www.pod.cz/ico/favicon.ico", true, application.applicationContext)
+        val bitmap41 =
+            Utils.getNotificationBitmap("https://www.pod.cz/ico/favicon.ico", false, application.applicationContext)
+        val bitmap42 =
+            Utils.getNotificationBitmap("https://www.pod.cz/ico/favicon.ico", true, application.applicationContext)
         printBitmapInfo(bitmap41, "bitmap41")
         printBitmapInfo(bitmap42, "bitmap42")
 
         assertNotNull(bitmap41)
         assertNotNull(bitmap42)
+    }
 
+    @Test
+    fun test_getNotificationBitmapWithSizeConstraints_when_BitmapSizeIsLargerThanGivenSize_should_ReturnNull() {
+        val context = application.applicationContext
+
+        // if path is not Null/empty, the icon will be available irrespective to the fallbackToAppIcon switch
+        val bitmap41 = Utils.getNotificationBitmapWithSizeConstraints(
+            "https://www.pod.cz/ico/favicon.ico",
+            false,
+            application.applicationContext,
+            10
+        )
+        printBitmapInfo(bitmap41, "bitmap41")
+
+        assertNull(bitmap41)
+    }
+
+    @Test
+    fun test_getNotificationBitmapWithSizeConstraints_when_BitmapSizeIsSamllerThanGivenSize_should_ReturnBitmap() {
+        val context = application.applicationContext
+
+        // if path is not Null/empty, the icon will be available irrespective to the fallbackToAppIcon switch
+        val bitmap41 = Utils.getNotificationBitmapWithSizeConstraints(
+            "https://www.pod.cz/ico/favicon.ico",
+            false,
+            application.applicationContext,
+            10 * 1024 * 1024
+        )
+        printBitmapInfo(bitmap41, "bitmap41")
+
+        assertNotNull(bitmap41)
     }
 
     //------------------------------------------------------------------------------------
@@ -630,12 +691,83 @@ class UtilsTest : BaseTestCase() {
 
         val id5 = "abcd_1234_!!_::_$" + "@@_---"
         assertTrue { Utils.validateCTID(id5) }
+    }
 
+    @Test
+    fun test_isRenderFallback_when_wzrk_tsr_fbIsAbsent_and_wzrk_fallbackIsTrue_should_ReturnTrue() {
+        assertTrue {
+            Utils.isRenderFallback(RemoteMessage(Bundle().let {
+                it.putString(Constants.NOTIFICATION_RENDER_FALLBACK, "true")
+                it
+            }), application)
+        }
+    }
+
+    @Test
+    fun test_isRenderFallback_when_wzrk_fallbackIsAbsent_and_wzrk_tsr_fbIsFalse_should_ReturnFalse() {
+        assertFalse {
+            Utils.isRenderFallback(RemoteMessage(Bundle().let {
+                it.putString(Constants.WZRK_TSR_FB, "false")
+                it
+            }), application)
+        }
+    }
+
+    @Test
+    fun test_isRenderFallback_when_wzrk_fallbackIsAbsent_and_wzrk_tsr_fbIsAbsent_should_ReturnFalse() {
+        assertFalse { Utils.isRenderFallback(RemoteMessage(Bundle()), application) }
+    }
+
+    @Test
+    fun test_isRenderFallback_when_wzrk_fallbackIsTrue_and_wzrk_tsr_fbIsFalse_should_ReturnTrue() {
+        assertTrue {
+            Utils.isRenderFallback(RemoteMessage(Bundle().let {
+                it.putString(Constants.WZRK_TSR_FB, "false")
+                it.putString(Constants.NOTIFICATION_RENDER_FALLBACK, "TRUE")
+                it
+            }), application)
+        }
+    }
+
+    @Test
+    fun test_isRenderFallback_when_wzrk_fallbackIsFalse_and_wzrk_tsr_fbIsTrue_should_ReturnFalse() {
+        assertFalse {
+            Utils.isRenderFallback(RemoteMessage(Bundle().let {
+                it.putString(Constants.WZRK_TSR_FB, "true")
+                it.putString(Constants.NOTIFICATION_RENDER_FALLBACK, "FaLsE")
+                it
+            }), application)
+        }
+    }
+
+    @Test
+    fun test_isRenderFallback_when_wzrk_fallbackIsTrue_and_wzrk_tsr_fbIsTrue_should_ReturnFalse() {
+        assertFalse {
+            Utils.isRenderFallback(RemoteMessage(Bundle().let {
+                it.putString(Constants.WZRK_TSR_FB, "true")
+                it.putString(Constants.NOTIFICATION_RENDER_FALLBACK, "TrUE")
+                it
+            }), application)
+        }
+    }
+
+    @Test
+    fun test_isRenderFallback_when_wzrk_fallbackIsFalse_and_wzrk_tsr_fbIsFalse_should_ReturnFalse() {
+        assertFalse {
+            Utils.isRenderFallback(RemoteMessage(Bundle().let {
+                it.putString(Constants.WZRK_TSR_FB, "false")
+                it.putString(Constants.NOTIFICATION_RENDER_FALLBACK, "FALSE")
+                it
+            }), application)
+        }
     }
 
     //------------------------------------------------------------------------------------
 
-    private fun prepareForWifiConnectivityTest(isConnected: Boolean, networkType: Int = ConnectivityManager.TYPE_WIFI) {
+    private fun prepareForWifiConnectivityTest(
+        isConnected: Boolean,
+        networkType: Int = ConnectivityManager.TYPE_WIFI
+    ) {
         val connectivityManager = application.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
         val shadowConnectivityManager = Shadows.shadowOf(connectivityManager)
         shadowConnectivityManager.also {

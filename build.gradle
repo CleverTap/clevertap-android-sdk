@@ -16,6 +16,7 @@ buildscript {
         classpath Libs.agcp// Huawei Push Plugin
         classpath Libs.kotlin_gradle_plugin
         classpath Libs.sonarqube_gradle_plugin
+        classpath 'com.google.firebase:firebase-crashlytics-gradle:2.8.1'
         classpath("io.gitlab.arturbosch.detekt:detekt-gradle-plugin:1.20.0-RC1")
         classpath("com.vanniktech:gradle-android-junit-jacoco-plugin:0.16.0")
 

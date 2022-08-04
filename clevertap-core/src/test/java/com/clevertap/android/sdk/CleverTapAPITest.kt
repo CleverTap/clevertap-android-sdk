@@ -2,6 +2,7 @@ package com.clevertap.android.sdk
 
 import android.location.Location
 import android.os.Bundle
+import com.clevertap.android.sdk.pushnotification.CoreNotificationRenderer
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
 import com.clevertap.android.shared.test.BaseTestCase
@@ -369,9 +370,12 @@ class CleverTapAPITest : BaseTestCase() {
                 )
                         .thenReturn(corestate)
                 val bundle = Bundle()
+                val lock = Object()
                 //CleverTapAPI.getDefaultInstance(application)
                 //CleverTapAPI.setInstances(null)
+                `when`(corestate.pushProviders.pushRenderingLock).thenReturn(lock)
                 CleverTapAPI.createNotification(application, bundle)
+                verify(corestate.pushProviders).pushNotificationRenderer = any(CoreNotificationRenderer::class.java)
                 verify(corestate.pushProviders)._createNotification(
                         application,
                         bundle,
@@ -392,20 +396,24 @@ class CleverTapAPITest : BaseTestCase() {
             mockStatic(CleverTapFactory::class.java).use {
                 `when`(
                         CleverTapFactory.getCoreState(
-                                ArgumentMatchers.any(),
-                                ArgumentMatchers.any(),
-                                ArgumentMatchers.any()
+                            ArgumentMatchers.any(),
+                            ArgumentMatchers.any(),
+                            ArgumentMatchers.any()
                         )
                 )
-                        .thenReturn(corestate)
+                    .thenReturn(corestate)
                 val bundle = Bundle()
+                val lock = Object()
                 bundle.putString(Constants.WZRK_ACCT_ID_KEY, Constant.ACC_ID)
                 CleverTapAPI.instanceWithConfig(application, cleverTapInstanceConfig)
+
+                `when`(corestate.pushProviders.pushRenderingLock).thenReturn(lock)
                 CleverTapAPI.createNotification(application, bundle)
+                verify(corestate.pushProviders).pushNotificationRenderer = any(CoreNotificationRenderer::class.java)
                 verify(corestate.pushProviders)._createNotification(
-                        application,
-                        bundle,
-                        Constants.EMPTY_NOTIFICATION_ID
+                    application,
+                    bundle,
+                    Constants.EMPTY_NOTIFICATION_ID
                 )
             }
         }

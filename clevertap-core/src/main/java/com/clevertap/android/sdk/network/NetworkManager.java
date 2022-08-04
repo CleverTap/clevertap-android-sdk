@@ -23,6 +23,7 @@ import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.db.BaseDatabaseManager;
 import com.clevertap.android.sdk.db.QueueCursor;
 import com.clevertap.android.sdk.events.EventGroup;
+import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.login.IdentityRepoFactory;
 import com.clevertap.android.sdk.response.ARPResponse;
 import com.clevertap.android.sdk.response.BaseResponse;
@@ -46,6 +47,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.security.SecureRandom;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -417,6 +419,12 @@ public class NetworkManager extends BaseNetworkManager {
             JSONObject appFields = deviceInfo.getAppLaunchedFields();
             header.put("af", appFields);
 
+            HashMap<String, Integer> allCustomSdkVersions = coreMetaData.getAllCustomSdkVersions();
+            for (Entry<String, Integer> entries :allCustomSdkVersions.entrySet())
+            {
+                header.put(entries.getKey(),entries.getValue());
+            }
+
             long i = getI();
             if (i > 0) {
                 header.put("_i", i);
@@ -667,6 +675,14 @@ public class NetworkManager extends BaseNetworkManager {
             setLastRequestTimestamp(getCurrentRequestTimestamp());
             setFirstRequestTimestampIfNeeded(getCurrentRequestTimestamp());
 
+            if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
+                NotificationRenderedListener notificationRenderedListener
+                        = callbackManager.getNotificationRenderedListener();
+                logger.verbose(config.getAccountId(), "push notification viewed event sent successfully");
+                if (notificationRenderedListener != null) {
+                    notificationRenderedListener.onNotificationRendered(true);
+                }
+            }
             logger.debug(config.getAccountId(), "Queue sent successfully");
 
             responseFailureCount = 0;
