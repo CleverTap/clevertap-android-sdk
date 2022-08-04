@@ -31,6 +31,7 @@ dependencies {
     testImplementation Libs.androidx_test_core
     testImplementation Libs.androidx_test_ext_junit
     testImplementation Libs.appcompat
+    testImplementation Libs.firebase_messaging
 
     // AndroidJUnitRunner and JUnit Rules
     androidTestImplementation Libs.androidx_test_runner
