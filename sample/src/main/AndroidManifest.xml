@@ -10,7 +10,7 @@
 
     <application
         android:name=".MyApplication"
-        android:allowBackup="true"
+        android:allowBackup="false"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
@@ -46,10 +46,13 @@
         <!-- Add meta data for CleverTap Account Id and Account Token -->
         <meta-data
             android:name="CLEVERTAP_ACCOUNT_ID"
-            android:value="TEST-R78-ZZK-955Z" />
+            android:value="YOUR ACCT ID" />
         <meta-data
             android:name="CLEVERTAP_TOKEN"
-            android:value="TEST-311-ba2" />
+            android:value="YOUR ACCT TOKEN" />
+        <meta-data
+            android:name="CLEVERTAP_REGION"
+            android:value="eu1"/>
 
         <!-- Xiaomi Push -->
         <meta-data
@@ -95,6 +98,13 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+        <!--        <service
+                    android:name="com.clevertap.demo.MyFcmMessageListenerService"
+                    android:exported="true">
+                    <intent-filter>
+                        <action android:name="com.google.firebase.MESSAGING_EVENT" />
+                    </intent-filter>
+                </service>-->
         <service
             android:name="com.clevertap.android.sdk.pushnotification.CTNotificationIntentService"
             android:exported="false">

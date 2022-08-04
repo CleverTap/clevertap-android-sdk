@@ -5,6 +5,8 @@ import static com.clevertap.android.sdk.Constants.AUTH;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.ActivityManager.RunningAppProcessInfo;
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageInfo;
@@ -22,11 +24,18 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Process;
+import android.os.SystemClock;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.core.content.ContextCompat;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
+import com.clevertap.android.sdk.task.Task;
+import com.google.android.gms.common.util.PlatformVersion;
+import com.google.firebase.messaging.RemoteMessage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,6 +46,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
 import javax.net.ssl.HttpsURLConnection;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -179,6 +189,94 @@ public final class Utils {
         }
     }
 
+    public static Bitmap getBitmapFromURLWithSizeConstraint(String srcUrl, int size) {
+        // Safe bet, won't have more than three /s
+        srcUrl = srcUrl.replace("///", "/");
+        srcUrl = srcUrl.replace("//", "/");
+        srcUrl = srcUrl.replace("http:/", "http://");
+        srcUrl = srcUrl.replace("https:/", "https://");
+        HttpURLConnection connection = null;
+        try {
+            URL url = new URL(srcUrl);
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setDoInput(true);
+            connection.setUseCaches(true);
+            connection.addRequestProperty("Accept-Encoding", "gzip, deflate");
+            connection.connect();
+            // expect HTTP 200 OK, so we don't mistakenly save error report
+            // instead of the file
+            if (connection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                Logger.d("File not loaded completely not going forward. URL was: " + srcUrl);
+                return null;
+            }
+
+            // might be -1: server did not report the length
+            long fileLength = connection.getContentLength();
+            boolean isGZipEncoded = (connection.getContentEncoding() != null &&
+                    connection.getContentEncoding().contains("gzip"));
+
+            // download the file
+            InputStream input = connection.getInputStream();
+
+            byte[] buffer = new byte[16384];
+            ByteArrayOutputStream finalData = new ByteArrayOutputStream();
+
+            Logger.v("Downloading " + srcUrl + "....");
+            long total = 0;
+            int count;
+            while ((count = input.read(buffer)) != -1) {
+                total += count;
+                finalData.write(buffer, 0, count);
+                if (total > size) {
+                    Logger.v("Image size is larger than " + size + " bytes. Cancelling download!");
+                    return null;
+                }
+                Logger.v("Downloaded " + total + " bytes");
+            }
+
+            byte[] tmpByteArray = new byte[16384];
+            long totalDownloaded = total;
+
+            Logger.v("Total download size for bitmap = " + totalDownloaded);
+
+            if (isGZipEncoded) {
+                InputStream is = new ByteArrayInputStream(finalData.toByteArray());
+                ByteArrayOutputStream decompressedFile = new ByteArrayOutputStream();
+                GZIPInputStream gzipInputStream = new GZIPInputStream(is);
+                total = 0;
+                int counter;
+                while ((counter = gzipInputStream.read(tmpByteArray)) != -1) {
+                    total += counter;
+                    decompressedFile.write(tmpByteArray, 0, counter);
+                }
+                Logger.v("Total decompressed download size for bitmap = " + total);
+                if (fileLength != -1 && fileLength != totalDownloaded) {
+                    Logger.d("File not loaded completely not going forward. URL was: " + srcUrl);
+                    return null;
+                }
+                return BitmapFactory.decodeByteArray(decompressedFile.toByteArray(), 0, (int) total);
+            }
+
+            if (fileLength != -1 && fileLength != totalDownloaded) {
+                Logger.d("File not loaded completely not going forward. URL was: " + srcUrl);
+                return null;
+            }
+            return BitmapFactory.decodeByteArray(finalData.toByteArray(), 0, (int) totalDownloaded);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Logger.v("Couldn't download the file. URL was: " + srcUrl);
+            return null;
+        } finally {
+            try {
+                if (connection != null) {
+                    connection.disconnect();
+                }
+            } catch (Throwable t) {
+                Logger.v("Couldn't close connection!", t);
+            }
+        }
+    }
+
     public static byte[] getByteArrayFromImageURL(String srcUrl) {
         srcUrl = srcUrl.replace("///", "/");
         srcUrl = srcUrl.replace("//", "/");
@@ -308,6 +406,12 @@ public final class Utils {
 
     public static Bitmap getNotificationBitmap(String icoPath, boolean fallbackToAppIcon, final Context context)
             throws NullPointerException {
+        return getNotificationBitmapWithSizeConstraints(icoPath,fallbackToAppIcon,context,-1);
+    }
+
+    public static Bitmap getNotificationBitmapWithSizeConstraints(String icoPath, boolean fallbackToAppIcon,
+            final Context context, int size)
+            throws NullPointerException {
         // If the icon path is not specified
         if (icoPath == null || icoPath.equals("")) {
             return fallbackToAppIcon ? getAppIcon(context) : null;
@@ -316,8 +420,26 @@ public final class Utils {
         if (!icoPath.startsWith("http")) {
             icoPath = Constants.ICON_BASE_URL + "/" + icoPath;
         }
-        Bitmap ic = getBitmapFromURL(icoPath);
+        Bitmap ic;
+        if (size == -1) {
+            ic = getBitmapFromURL(icoPath);
+        } else {
+            ic = getBitmapFromURLWithSizeConstraint(icoPath, size);
+        }
         return (ic != null) ? ic : ((fallbackToAppIcon) ? getAppIcon(context) : null);
+    }
+
+    /**
+     * get bitmap from url within defined timeoutMillis bound and sizeBytes bound or else return null or app icon
+     * based on fallbackToAppIcon param
+     */
+    public static Bitmap getNotificationBitmapWithTimeoutAndSize(String icoPath, boolean fallbackToAppIcon,
+            final Context context, final CleverTapInstanceConfig config, long timeoutMillis, int sizeBytes)
+            throws NullPointerException {
+        Task<Bitmap> task = CTExecutorFactory.executors(config).ioTask();
+        return task.submitAndGetResult("getNotificationBitmap",
+                () -> getNotificationBitmapWithSizeConstraints(icoPath, fallbackToAppIcon, context, sizeBytes)
+                , timeoutMillis);
     }
 
     public static int getNow() {
@@ -528,6 +650,16 @@ public final class Utils {
     public static String getDCDomain(String domain) {
         String[] parts = domain.split("\\.", 2);
         return parts[0] + "." + AUTH + "." + parts[1];
+    }
+
+    public static boolean isRenderFallback(RemoteMessage remoteMessage, Context context) {
+        boolean renderRateKillSwitch = Boolean
+                .parseBoolean(remoteMessage.getData().get(Constants.WZRK_TSR_FB));//tsrfb
+        boolean renderRateFallback = Boolean
+                .parseBoolean(remoteMessage.getData().get(Constants.NOTIFICATION_RENDER_FALLBACK));
+
+        return !renderRateKillSwitch && renderRateFallback;
+
     }
 
     static {
