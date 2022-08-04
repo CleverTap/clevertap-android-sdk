@@ -5,6 +5,9 @@ import android.app.Application.ActivityLifecycleCallbacks
 import android.app.NotificationManager
 import android.content.Context
 import android.content.Intent
+
+import android.os.Build
+
 import android.os.Bundle
 import android.util.Log
 import androidx.multidex.MultiDex
@@ -17,13 +20,10 @@ import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
 import com.clevertap.android.sdk.SyncListener
 import com.clevertap.android.sdk.interfaces.NotificationHandler
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
-import com.clevertap.android.sdk.pushnotification.PushConstants.ALL_DEVICES
-import com.clevertap.android.sdk.pushnotification.PushConstants.NO_DEVICES
-import com.clevertap.android.sdk.pushnotification.PushConstants.XIAOMI_MIUI_DEVICES
+import com.clevertap.demo.ui.main.NotificationUtils
 import com.google.android.gms.security.ProviderInstaller
 import com.google.android.gms.security.ProviderInstaller.ProviderInstallListener
 import org.json.JSONObject
-import java.util.HashMap
 import kotlin.system.measureTimeMillis
 
 class MyApplication : MultiDexApplication(), CTPushNotificationListener, ActivityLifecycleCallbacks {
@@ -109,6 +109,11 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
     }
 
     override fun onActivityCreated(activity: Activity, savedInstanceState: Bundle?) {
+
+        // On Android 12, clear notification on CTA click when Activity is already running in activity backstack
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            NotificationUtils.dismissNotification(activity.intent, applicationContext)
+        }
     }
 
     override fun onActivityStarted(activity: Activity) {

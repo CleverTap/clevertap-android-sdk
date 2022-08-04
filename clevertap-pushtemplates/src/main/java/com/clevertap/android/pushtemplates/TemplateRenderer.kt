@@ -224,7 +224,6 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
     @RequiresApi(Build.VERSION_CODES.M)
     private fun timerRunner(context: Context, extras: Bundle, notificationId: Int, delay: Int?) {
         val handler = Handler(Looper.getMainLooper())
-        extras.remove("wzrk_rnv")
 
 
         if (delay != null) {
@@ -236,6 +235,7 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                 ) {
                     val applicationContext = context.applicationContext
                     val basicTemplateBundle = extras.clone() as Bundle
+                    basicTemplateBundle.remove("wzrk_rnv")
                     basicTemplateBundle.putString(Constants.WZRK_PUSH_ID, null) // skip dupe check
                     basicTemplateBundle.putString(PTConstants.PT_ID, "pt_basic") // set to basic
 
@@ -523,14 +523,18 @@ class TemplateRenderer : INotificationRenderer, AudibleNotification {
                             Constants.KEY_CT_TYPE,
                             CTNotificationIntentService.TYPE_BUTTON_CLICK
                         )
-                        if (!dl.isEmpty()) {
+                        if (dl.isNotEmpty()) {
                             actionLaunchIntent.putExtra("dl", dl)
                         }
                     } else {
-                        actionLaunchIntent = if (!dl.isEmpty()) {
-                            Intent(Intent.ACTION_VIEW, Uri.parse(dl))
+                        if (dl.isNotEmpty()) {
+                            actionLaunchIntent = Intent(Intent.ACTION_VIEW, Uri.parse(dl))
+                            Utils.setPackageNameFromResolveInfoList(
+                                context,
+                                actionLaunchIntent
+                            )
                         } else {
-                            context.packageManager
+                            actionLaunchIntent = context.packageManager
                                 .getLaunchIntentForPackage(context.packageName)
                         }
                     }
