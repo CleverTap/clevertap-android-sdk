@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.inbox;
 
+import android.util.Log;
+
 import androidx.annotation.AnyThread;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
@@ -126,6 +128,8 @@ public class CTInboxController {
     // always call async
     @WorkerThread
     public boolean updateMessages(final JSONArray inboxMessages) {
+        Log.e("CleverTapTest", "CTInboxController:updateMessages() called");
+
         boolean haveUpdates = false;
         ArrayList<CTMessageDAO> newMessages = new ArrayList<>();
 
@@ -222,6 +226,7 @@ public class CTInboxController {
 
     @AnyThread
     private void trimMessages() {
+        Log.e("CleverTapTest", "CTInboxController:trimMessages() called");
         ArrayList<CTMessageDAO> toDelete = new ArrayList<>();
         synchronized (messagesLock) {
             for (CTMessageDAO message : this.messages) {
