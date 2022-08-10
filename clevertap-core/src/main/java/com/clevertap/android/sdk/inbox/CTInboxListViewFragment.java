@@ -96,6 +96,12 @@ public class CTInboxListViewFragment extends Fragment {
         }
     }
 
+    void updateAdapterContent(){
+        updateInboxMessages();
+        if(inboxMessageAdapter==null || inboxMessages==null || config ==null ) return;
+        inboxMessageAdapter.updateInboxMessages(inboxMessages);
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
@@ -212,7 +218,7 @@ public class CTInboxListViewFragment extends Fragment {
     }
 
     void didClick(Bundle data, int position, HashMap<String, String> keyValuePayload) {
-        CTInboxListViewFragment.InboxListener listener = getListener();
+        CTInboxListViewFragment.InboxListener listener =  getListener();
         if (listener != null) {
             //noinspection ConstantConditions
             listener.messageDidClick(getActivity().getBaseContext(), inboxMessages.get(position), data,
@@ -227,8 +233,6 @@ public class CTInboxListViewFragment extends Fragment {
             Log.d("CleverTapTest", "CTInboxListViewFragment:didShow() called with: data = [" + data + "], position = [" + position + "]");
             //noinspection ConstantConditions
             listener.messageDidShow(getActivity().getBaseContext(), inboxMessages.get(position), data);
-            updateInboxMessages();
-            inboxMessageAdapter.updateInboxMessages(inboxMessages);
         }
     }
 

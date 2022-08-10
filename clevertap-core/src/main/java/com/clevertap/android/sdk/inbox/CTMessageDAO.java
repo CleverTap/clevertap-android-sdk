@@ -56,7 +56,7 @@ public class CTMessageDAO {
     }
 
     boolean containsVideoOrAudio() {
-        Log.e("CleverTapTest", "CTMessageDAO:containsVideoOrAudio() called");
+        Logger.d("CTMessageDAO:containsVideoOrAudio() called");
         CTInboxMessageContent content = new CTInboxMessage(this.toJSON()).getInboxMessageContents().get(0);
         return (content.mediaIsVideo() || content.mediaIsAudio());
     }

@@ -1147,7 +1147,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public void deleteInboxMessage(String messageId) {
-        Log.e("CleverTapTest", "CleverTapAPI:deleteInboxMessage() called with: messageId = [" + messageId + "]");
         CTInboxMessage message = getInboxMessageForId(messageId);
         deleteInboxMessage(message);
     }
@@ -1276,7 +1275,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public ArrayList<CTInboxMessage> getAllInboxMessages() {
-        Log.e("CleverTapTest", "CleverTapAPI:getAllInboxMessages: called" );
+        Logger.d("CleverTapAPI:getAllInboxMessages: called" );
         ArrayList<CTInboxMessage> inboxMessageArrayList = new ArrayList<>();
         synchronized (coreState.getCTLockManager().getInboxControllerLock()) {
             if (coreState.getControllerManager().getCTInboxController() != null) {
@@ -1630,7 +1629,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public CTInboxMessage getInboxMessageForId(String messageId) {
-        Log.e("CleverTapTest", "CleverTapAPI:getInboxMessageForId() called with: messageId = [" + messageId + "]");
+        Logger.d("CleverTapAPI:getInboxMessageForId() called with: messageId = [" + messageId + "]");
         synchronized (coreState.getCTLockManager().getInboxControllerLock()) {
             if (coreState.getControllerManager().getCTInboxController() != null) {
                 CTMessageDAO message = coreState.getControllerManager().getCTInboxController()
@@ -1883,7 +1882,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         task.execute("handleMessageDidShow", new Callable<Void>() {
             @Override
             public Void call() {
-                Log.e("CleverTapTest", "CleverTapAPI:messageDidShow() called  in async with: messageId = [" + inboxMessage.getMessageId() + "]");
+                Logger.d("CleverTapAPI:messageDidShow() called  in async with: messageId = [" + inboxMessage.getMessageId() + "]");
 
                 CTInboxMessage message = getInboxMessageForId(inboxMessage.getMessageId());
                 if (!message.isRead()) {
@@ -2158,7 +2157,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public void pushInboxNotificationClickedEvent(String messageId) {
-        Log.e("CleverTapTest", "CleverTapAPI:pushInboxNotificationClickedEvent() called with: messageId = [" +messageId + "]");
+        Logger.d("CleverTapTest", "CleverTapAPI:pushInboxNotificationClickedEvent() called with: messageId = [" +messageId + "]");
 
         CTInboxMessage message = getInboxMessageForId(messageId);
         coreState.getAnalyticsManager().pushInboxMessageStateEvent(true, message, null);
@@ -2171,7 +2170,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public void pushInboxNotificationViewedEvent(String messageId) {
-        Log.e("CleverTapTest", "CleverTapAPI:pushInboxNotificationViewedEvent() called with: messageId = [" +messageId + "]");
+        Logger.d("CleverTapTest", "CleverTapAPI:pushInboxNotificationViewedEvent() called with: messageId = [" +messageId + "]");
         CTInboxMessage message = getInboxMessageForId(messageId);
         coreState.getAnalyticsManager().pushInboxMessageStateEvent(false, message, null);
     }

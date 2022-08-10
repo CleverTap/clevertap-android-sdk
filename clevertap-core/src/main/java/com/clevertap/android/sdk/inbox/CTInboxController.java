@@ -200,6 +200,9 @@ public class CTInboxController {
             messageDAO.setRead(1);
         }
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        task.addOnSuccessListener(unused -> callbackManager._notifyInboxMessagesDidUpdate() );//  //OR callbackManager.getInboxListener().inboxMessagesDidUpdate();//todo
+        task.addOnFailureListener(e -> Logger.d("Failed to update message read state for id:"+messageId,e));
+
         task.execute("RunMarkMessageRead", new Callable<Void>() {
             @Override
             @WorkerThread
