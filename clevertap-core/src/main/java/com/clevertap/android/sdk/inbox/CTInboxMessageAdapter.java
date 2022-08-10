@@ -1,12 +1,16 @@
 package com.clevertap.android.sdk.inbox;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.R;
 import java.util.ArrayList;
+import java.util.Date;
 
 
 @SuppressWarnings("rawtypes")
@@ -25,8 +29,16 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
     private ArrayList<CTInboxMessage> inboxMessages;
 
     CTInboxMessageAdapter(ArrayList<CTInboxMessage> inboxMessages, CTInboxListViewFragment fragment) {
+        Logger.d( "CTInboxMessageAdapter:  called at "+new Date());
+        Logger.d("CTInboxMessageAdapter: messages="+inboxMessages);
         this.inboxMessages = inboxMessages;
         this.fragment = fragment;
+    }
+
+    protected synchronized void updateInboxMessages(ArrayList<CTInboxMessage> newList) {
+        this.inboxMessages.clear();
+        this.inboxMessages.addAll(newList);
+        this.notifyDataSetChanged();
     }
 
     @Override

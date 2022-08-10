@@ -5,6 +5,7 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -16,6 +17,8 @@ import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager.widget.ViewPager;
+
+import com.clevertap.android.sdk.CTInboxListener;
 import com.clevertap.android.sdk.CTInboxStyleConfig;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -31,7 +34,7 @@ import java.util.List;
  * This activity shows the {@link CTInboxMessage} objects as per {@link CTInboxStyleConfig} style parameters
  */
 @RestrictTo(Scope.LIBRARY)
-public class CTInboxActivity extends FragmentActivity implements CTInboxListViewFragment.InboxListener {
+public class CTInboxActivity extends FragmentActivity implements CTInboxListViewFragment.InboxListener, CTInboxListener {
 
     public interface InboxActivityListener {
 
@@ -54,10 +57,11 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     private CleverTapInstanceConfig config;
 
     private WeakReference<InboxActivityListener> listenerWeakReference;
+    private CleverTapAPI cleverTapAPI;
+    private CTInboxListener inboxContentUpdatedListener = null;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        CleverTapAPI cleverTapAPI;
         try {
             Bundle extras = getIntent().getExtras();
             if (extras == null) {
@@ -71,6 +75,8 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             cleverTapAPI = CleverTapAPI.instanceWithConfig(getApplicationContext(), config);
             if (cleverTapAPI != null) {
                 setListener(cleverTapAPI);
+                inboxContentUpdatedListener = cleverTapAPI.getCTNotificationInboxListener();
+                cleverTapAPI.setCTNotificationInboxListener(this);
             }
             orientation = getResources().getConfiguration().orientation;
         } catch (Throwable t) {
@@ -206,6 +212,31 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         super.onDestroy();
     }
 
+
+    @Override
+    public void inboxDidInitialize() {
+
+        Logger.d("CTInboxActivity: called inboxDidInitialize");
+        if(inboxContentUpdatedListener !=null) {
+            inboxContentUpdatedListener.inboxDidInitialize();
+        }
+
+
+    }
+
+    @Override
+    public void inboxMessagesDidUpdate() {
+        Logger.d("CTInboxActivity: called inboxMessagesDidUpdate");
+        if (inboxContentUpdatedListener != null) {
+            inboxContentUpdatedListener.inboxMessagesDidUpdate();
+        }
+
+        int position = viewPager.getCurrentItem();
+        CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter.getItem(position);
+        fragment.updateAdapterContent();
+
+    }
+
     @Override
     public void messageDidClick(Context baseContext, CTInboxMessage inboxMessage, Bundle data,
             HashMap<String, String> keyValue) {
@@ -214,6 +245,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
     @Override
     public void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data) {
+        Log.e("CleverTapTest", "CTInboxActivity:messageDidShow() called with: data = [" + data + "], inboxMessage = [" + inboxMessage .getMessageId()+ "]");
         didShow(data, inboxMessage);
     }
 
@@ -225,6 +257,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     }
 
     void didShow(Bundle data, CTInboxMessage inboxMessage) {
+        Log.e("CleverTapTest", "CTInboxActivity:didShow() called with: data = [" + data + "], inboxMessage = [" + inboxMessage.getMessageId() + "]");
         InboxActivityListener listener = getListener();
         if (listener != null) {
             listener.messageDidShow(this, inboxMessage, data);

@@ -74,7 +74,7 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
 
     private final ImageView readDot;
 
-    private ImageView carouselReadDot;
+    private ImageView carouselReadDot;//todo WARNING : isn't this undefined?
 
     private final LinearLayout sliderDots;
 
@@ -160,14 +160,14 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
                                     parentWeak.didShow(null, position);
                                 }
                             }
-                            carouselReadDot.setVisibility(View.GONE);
+                            //carouselReadDot.setVisibility(View.GONE);
                         } else {
                             if (readDot.getVisibility() == View.VISIBLE) {
                                 if (parentWeak != null) {
                                     parentWeak.didShow(null, position);
                                 }
                             }
-                            readDot.setVisibility(View.GONE);
+                            //readDot.setVisibility(View.GONE);
                         }
                     }
                 });

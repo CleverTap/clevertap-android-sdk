@@ -136,7 +136,7 @@ class CTCarouselImageViewHolder extends CTInboxBaseMessageViewHolder {
                                 parentWeak.didShow(null, position);
                             }
                         }
-                        carouselReadDot.setVisibility(View.GONE);
+                        //carouselReadDot.setVisibility(View.GONE);
                     }
                 });
             }
