@@ -20,7 +20,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -1865,18 +1864,15 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     @Override
     public void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue, boolean isBodyClick) {
-        Log.e("CleverTap", "CleverTapApi.java|messageDidClick()  called with: ctInboxActivity = [" + ctInboxActivity + "], inboxMessage = [" + inboxMessage + "], data = [" + data + "], keyValue = [" + keyValue + "], isBodyClick = [" + isBodyClick + "]");
 
         coreState.getAnalyticsManager().pushInboxMessageStateEvent(true, inboxMessage, data);
 
         if (keyValue != null && !keyValue.isEmpty()) {
-            Log.e("CleverTap", "CleverTapApi.java|messageDidClick: keyvalue is not null, therefore this function is called via button click. calling inboxMessageButtonListener if not empty" );
             if (inboxMessageButtonListener != null && inboxMessageButtonListener.get() != null) {
                 inboxMessageButtonListener.get().onInboxButtonClick(keyValue);
             }
         }
         else{
-            Log.e("CleverTap", "CleverTapApi.java|messageDidClick: keyvalue is  null, therefore this function is called via view click. calling inboxMessageListener if not empty" );
             if (isBodyClick && inboxMessageListener != null && inboxMessageListener.get() != null) {
                 inboxMessageListener.get().onInboxItemClicked(inboxMessage);
             }
@@ -2936,57 +2932,3 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return PushType.XPS.getRunningDevices();
     }
 }
-
-/* full message click
-
-inboxMessage = {CTInboxMessage@43330}
- actionUrl = null
- bgColor = "#ffffff"
- body = null
- campaignId = "1660721033_20220817"
- customData = null
- data = {JSONObject@43340} "{"id":"1660721033_1660721899","msg":{"type":"simple","bg":"#ffffff","orientation":"p","content":[{"key":3688751294,"message":{"text":"message message message","color":"#434761","replacements":"message message message","og":""},"title":{"text":"title title title","color":"#434761","replacements":"title title title","og":""},"action":{"hasUrl":true,"hasLinks":true,"url":{"android":{"text":"https:\/\/www.google.com\/search?q=you+clicked+onMessage+androidUrl","replacements":"https:\/\/www.google.com\/search?q=you+clicked+onMessage+androidUrl","og":""},"ios":{"text":"https:\/\/www.google.com\/search?q=you+clicked+onMessage+iosUrl","replacements":"https:\/\/www.google.com\/search?q=you+clicked+onMessage+iosUrl","og":""}},"links":[{"type":"url","text":"url button","color":"#007bff","bg":"#ffffff","copyText":{"text":"","replacements":"","og":""},"url":{"android":{"text":"https:\/\/www.google.com\/search?q=you+clicked+onLink+androidUrl","replacements":"https:\/\/www.google.com\/search?q=you+cli"
- date = 1660721899
- expires = 0
- imageUrl = null
- inboxMessageContents = {ArrayList@43341}  size = 1
- isRead = false
- messageId = "1660721033_1660721899"
- orientation = "p"
- tags = {ArrayList@43344}  size = 1
- title = null
- type = {CTInboxMessageType@43345} "simple"
- wzrkParams = {JSONObject@43346} "{"wzrk_ttl":"0","wzrk_id":"1660721033_20220817","wzrk_pivot":"wzrk_default","wzrk_c2a":"url button"}"
- shadow$_klass_ = {Class@42885} "class com.clevertap.android.sdk.inbox.CTInboxMessage"
- shadow$_monitor_ = 0
-
-* */
-
-
-
-/*   btn click
-
-inboxMessage = {CTInboxMessage@43330}
- actionUrl = null
- bgColor = "#ffffff"
- body = null
- campaignId = "1660721033_20220817"
- customData = null
- data = {JSONObject@43340} "{"id":"1660721033_1660721899","msg":{"type":"simple","bg":"#ffffff","orientation":"p","content":[{"key":3688751294,"message":{"text":"message message message","color":"#434761","replacements":"message message message","og":""},"title":{"text":"title title title","color":"#434761","replacements":"title title title","og":""},"action":{"hasUrl":true,"hasLinks":true,"url":{"android":{"text":"https:\/\/www.google.com\/search?q=you+clicked+onMessage+androidUrl","replacements":"https:\/\/www.google.com\/search?q=you+clicked+onMessage+androidUrl","og":""},"ios":{"text":"https:\/\/www.google.com\/search?q=you+clicked+onMessage+iosUrl","replacements":"https:\/\/www.google.com\/search?q=you+clicked+onMessage+iosUrl","og":""}},"links":[{"type":"url","text":"url button","color":"#007bff","bg":"#ffffff","copyText":{"text":"","replacements":"","og":""},"url":{"android":{"text":"https:\/\/www.google.com\/search?q=you+clicked+onLink+androidUrl","replacements":"https:\/\/www.google.com\/search?q=you+cli"
- date = 1660721899
- expires = 0
- imageUrl = null
- inboxMessageContents = {ArrayList@43341}  size = 1
- isRead = false
- messageId = "1660721033_1660721899"
- orientation = "p"
- tags = {ArrayList@43344}  size = 1
- title = null
- type = {CTInboxMessageType@43345} "simple"
- wzrkParams = {JSONObject@43346} "{"wzrk_ttl":"0","wzrk_id":"1660721033_20220817","wzrk_pivot":"wzrk_default","wzrk_c2a":"url button"}"
- shadow$_klass_ = {Class@42885} "class com.clevertap.android.sdk.inbox.CTInboxMessage"
- shadow$_monitor_ = 0
-data = {Bundle@43509} "Bundle[{wzrk_pivot=wzrk_default, wzrk_c2a=url button, wzrk_ttl=0, wzrk_id=1660721033_20220817}]"
-keyValue = null
-
-* */
