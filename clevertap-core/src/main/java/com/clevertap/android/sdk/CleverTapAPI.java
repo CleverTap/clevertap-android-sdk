@@ -20,6 +20,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -138,6 +140,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     private CoreState coreState;
 
     private WeakReference<InboxMessageButtonListener> inboxMessageButtonListener;
+
+    private WeakReference<InboxMessageListener> inboxMessageListener;
 
     /**
      * This method is used to change the credentials of CleverTap account Id and token programmatically
@@ -1860,12 +1864,21 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     @Override
-    public void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data,
-            HashMap<String, String> keyValue) {
+    public void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue) {
+        Log.d("CleverTap", "CleverTapApi.java|messageDidClick() called with: ctInboxActivity = [" + ctInboxActivity + "], inboxMessage = [" + inboxMessage + "], data = [" + data + "], keyValue = [" + keyValue + "]");
+
         coreState.getAnalyticsManager().pushInboxMessageStateEvent(true, inboxMessage, data);
+
         if (keyValue != null && !keyValue.isEmpty()) {
+            Log.e("CleverTap", "CleverTapApi.java|messageDidClick: keyvalue is not null, therefore this function is called via button click. calling inboxMessageButtonListener if not empty" );
             if (inboxMessageButtonListener != null && inboxMessageButtonListener.get() != null) {
                 inboxMessageButtonListener.get().onInboxButtonClick(keyValue);
+            }
+        }
+        else{
+            Log.e("CleverTap", "CleverTapApi.java|messageDidClick: keyvalue is  null, therefore this function is called via view click. calling inboxMessageListener if not empty" );
+            if (inboxMessageListener != null && inboxMessageListener.get() != null) {
+                inboxMessageListener.get().onInboxItemClicked(inboxMessage);
             }
         }
     }
@@ -1873,8 +1886,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     //Session
 
     @Override
-    public void messageDidShow(CTInboxActivity ctInboxActivity, final CTInboxMessage inboxMessage,
-            final Bundle data) {
+    public void messageDidShow(CTInboxActivity ctInboxActivity, final CTInboxMessage inboxMessage, final Bundle data) {
         Task<Void> task = CTExecutorFactory.executors(coreState.getConfig()).postAsyncSafelyTask();
         task.execute("handleMessageDidShow", new Callable<Void>() {
             @Override
@@ -2385,6 +2397,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings("unused")
     public void setInboxMessageButtonListener(InboxMessageButtonListener listener) {
         this.inboxMessageButtonListener = new WeakReference<>(listener);
+    }
+
+    @SuppressWarnings("unused")
+    public void setInboxMessageListener(InboxMessageListener listener){
+        this.inboxMessageListener = new WeakReference<>(listener);
     }
 
     @RestrictTo(Scope.LIBRARY_GROUP)
