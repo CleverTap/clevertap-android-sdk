@@ -127,7 +127,7 @@ class SessionManagerTest : BaseTestCase() {
     @Test
     fun testCreateSession() {
         // when current session has ended (i.e when currentSessionId<=0 ) session is  created .
-        // we verify by verifying coreMetaDataSpy calls
+        // we verify by verifying coreMetaDataSpy calls.
         var coreMetaDataSpy = Mockito.spy(coreMetaData).also { it.currentSessionId = 0 }
         var ctxSpy = Mockito.spy(application)
         sessionManagerDef = SessionManager(configDef,coreMetaDataSpy,validator,localDataStoreDef)
