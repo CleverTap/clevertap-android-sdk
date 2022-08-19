@@ -91,8 +91,10 @@ public class CTXiaomiMessageHandler implements IMiMessageHandler, IPushAmpHandle
                 Logger.d(LOG_TAG, "onReceiveRegisterResult() : Token is null or empty");
                 return INVALID_TOKEN;
             }
-            PushNotificationHandler.getPushNotificationHandler().onNewToken(context, token, XPS
-                    .getType());
+            String region = MiPushClient.getAppRegion(context);
+            XPS.setServerRegion(region);
+            PushNotificationHandler.getPushNotificationHandler().onNewToken(context, token, XPS.getType());
+
             return TOKEN_SUCCESS;
         } catch (Throwable t) {
             Logger.d(LOG_TAG, "onReceiveRegisterResult() : Exception: ", t);

@@ -14,8 +14,12 @@ ext {
 
 apply from: "../gradle-scripts/commons.gradle"
 
+//todo :needed? ----v
+//android{repositories {flatDir {dirs 'libs'}}}
+
 dependencies {
     implementation fileTree('libs')
+    //todo needed :   implementation (name: 'MiPush_SDK_Client_xxx', ext: 'aar')  ?
 
     compileOnly project(':clevertap-core')
     compileOnly Libs.androidx_annotation

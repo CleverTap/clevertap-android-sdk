@@ -309,4 +309,6 @@ public interface Constants {
     String WZRK_HEALTH_STATE_GOOD = "true";
     String WZRK_HEALTH_STATE_BAD = "false";
 
+    String REGION_INDIA = "in1";
+
 }

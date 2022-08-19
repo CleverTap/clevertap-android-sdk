@@ -61,6 +61,8 @@ public interface PushConstants {
 
         private final String type;
 
+        private String serverRegion = "";
+
         private @XiaomiPush
         int runningDevices;
 
@@ -71,6 +73,7 @@ public interface PushConstants {
             this.ctProviderClassName = className;
             this.messagingSDKClassName = messagingSDKClassName;
             this.runningDevices = runningDevices;
+            this.serverRegion = "";
         }
 
         public String getCtProviderClassName() {
@@ -90,12 +93,20 @@ public interface PushConstants {
             return type;
         }
 
-        public void setRunningDevices(@XiaomiPush int runningDevices) {
+        public void setRunningDevices(@XiaomiPush int runningDevices) {//
             this.runningDevices = runningDevices;
         }
 
         public @XiaomiPush int getRunningDevices() {
             return runningDevices;
+        }
+
+        public void  setServerRegion(String region){
+            this.serverRegion = region;
+        }
+
+        public String getServerRegion(){
+            return  this.serverRegion;
         }
 
         @NonNull

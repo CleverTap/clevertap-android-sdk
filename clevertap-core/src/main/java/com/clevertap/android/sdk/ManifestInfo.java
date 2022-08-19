@@ -138,7 +138,8 @@ public class ManifestInfo {
         return beta;
     }
 
-    String getAccountRegion() {
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public String getAccountRegion() {
         return accountRegion;
     }
 

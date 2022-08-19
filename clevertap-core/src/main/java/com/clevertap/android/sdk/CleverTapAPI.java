@@ -2235,7 +2235,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      *                 and false to not receive any messages from CleverTap.
      */
     @SuppressWarnings("unused")
-    public void pushXiaomiRegistrationId(String regId, boolean register) {
+    public void pushXiaomiRegistrationId(String regId, String region, boolean register) {
+        PushType.XPS.setServerRegion(region);
         coreState.getPushProviders().handleToken(regId, PushType.XPS, register);
     }
 
