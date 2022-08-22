@@ -11,8 +11,6 @@ import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ManifestInfo;
-import com.clevertap.android.sdk.pushnotification.PushConstants;
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
 import com.xiaomi.channel.commonutils.android.Region;
 import com.xiaomi.mipush.sdk.MiPushClient;
 import java.util.List;
@@ -91,8 +89,9 @@ class XiaomiSdkHandler implements IMiSdkHandler {
     @RestrictTo(value = RestrictTo.Scope.LIBRARY)
     public void register(String appId, String appKey) throws RegistrationException {
         try {
-            String region = ManifestInfo.getInstance(context).getAccountRegion();
-            Region xiaomiRegion = region.equalsIgnoreCase( Constants.REGION_INDIA) ? Region.India : Region.Global;
+            String region = manifestInfo.getAccountRegion();
+            region =  (region==null || region.isEmpty())? Constants.REGION_EUROPE : region;
+            Region xiaomiRegion =  region.equalsIgnoreCase( Constants.REGION_INDIA) ? Region.India : Region.Global;
             MiPushClient.setRegion(xiaomiRegion);
             MiPushClient.registerPush(context, appId, appKey);
             isRegistered = true;
