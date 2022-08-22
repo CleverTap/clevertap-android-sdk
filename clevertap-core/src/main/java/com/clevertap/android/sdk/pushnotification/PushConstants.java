@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.pushnotification;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.StringDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -101,8 +102,8 @@ public interface PushConstants {
             return runningDevices;
         }
 
-        public void  setServerRegion(String region){
-            this.serverRegion = region;
+        public void  setServerRegion(@Nullable String region){
+            this.serverRegion = (region==null) ? "" : null;
         }
 
         public String getServerRegion(){
