@@ -88,10 +88,17 @@ class XiaomiSdkHandler implements IMiSdkHandler {
 
     @RestrictTo(value = RestrictTo.Scope.LIBRARY)
     public void register(String appId, String appKey) throws RegistrationException {
+        android.util.Log.e("CleverTap_XPS_150","XiaomiSDKHandler: register | called with appid = "+appId + ", appkey="+appKey);
+
         try {
             String region = manifestInfo.getAccountRegion();
             region =  (region==null || region.isEmpty())? Constants.REGION_EUROPE : region;
+            android.util.Log.e("CleverTap_XPS_150","XiaomiSDKHandler: register | final region from manifest = "+region);
             Region xiaomiRegion =  region.equalsIgnoreCase( Constants.REGION_INDIA) ? Region.India : Region.Global;
+            android.util.Log.e("CleverTap_XPS_150","XiaomiSDKHandler: register | final xiaomi region as per manifest = "+xiaomiRegion.name());
+
+            android.util.Log.e("CleverTap_XPS_150","XiaomiSDKHandler: register | final xiaomi setting xiaomi region via  MiPushClient.setRegion(xiaomiRegion) and calling MiPushClient.registerPush(context, appId, appKey);");
+
             MiPushClient.setRegion(xiaomiRegion);
             MiPushClient.registerPush(context, appId, appKey);
             isRegistered = true;

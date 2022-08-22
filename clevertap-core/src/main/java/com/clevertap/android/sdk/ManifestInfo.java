@@ -140,6 +140,7 @@ public class ManifestInfo {
 
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     public String getAccountRegion() {
+        android.util.Log.e("CleverTap_XPS_150","ManifestInfo: getAccountRegion called, returning region:"+accountRegion);
         return accountRegion;
     }
 

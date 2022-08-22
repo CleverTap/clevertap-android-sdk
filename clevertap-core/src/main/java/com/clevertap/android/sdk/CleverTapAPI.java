@@ -2236,6 +2236,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public void pushXiaomiRegistrationId(String regId, String region, boolean register) {
+        android.util.Log.e("CleverTap_XPS_150","CleverTapAPI: client called pushXiaomiRegistrationId called with region:"+region);
         PushType.XPS.setServerRegion(region);
         coreState.getPushProviders().handleToken(regId, PushType.XPS, register);
     }

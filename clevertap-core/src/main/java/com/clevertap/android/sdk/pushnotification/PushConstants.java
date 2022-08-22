@@ -94,7 +94,7 @@ public interface PushConstants {
             return type;
         }
 
-        public void setRunningDevices(@XiaomiPush int runningDevices) {//
+        public void setRunningDevices(@XiaomiPush int runningDevices) {
             this.runningDevices = runningDevices;
         }
 
@@ -103,10 +103,13 @@ public interface PushConstants {
         }
 
         public void  setServerRegion(@Nullable String region){
+            android.util.Log.e("CleverTap_XPS_150","PushConstants: setServerRegion called with region:"+region);
+
             this.serverRegion = (region==null) ? "" : null;
         }
 
         public String getServerRegion(){
+            android.util.Log.e("CleverTap_XPS_150","PushConstants: getServerRegion called, returning region:"+serverRegion);
             return  this.serverRegion;
         }
 
