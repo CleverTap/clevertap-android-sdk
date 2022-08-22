@@ -9,6 +9,7 @@ import com.clevertap.android.shared.test.TestApplication
 import com.clevertap.android.xps.XpsConstants.MIN_CT_ANDROID_SDK_VERSION
 import com.clevertap.android.xps.XpsTestConstants.Companion.MI_APP_ID
 import com.clevertap.android.xps.XpsTestConstants.Companion.MI_APP_KEY
+import com.clevertap.android.xps.XpsTestConstants.Companion.MI_REGION_EU
 import com.clevertap.android.xps.XpsTestConstants.Companion.MI_TOKEN
 import com.xiaomi.mipush.sdk.MiPushClient
 import org.junit.*
@@ -34,6 +35,10 @@ class XiaomiPushProviderTest : BaseTestCase() {
         manifestInfo = Mockito.mock(ManifestInfo::class.java)
         Mockito.`when`(manifestInfo.xiaomiAppKey).thenReturn(MI_APP_KEY)
         Mockito.`when`(manifestInfo.xiaomiAppID).thenReturn(MI_APP_ID)
+        Mockito.`when`(manifestInfo.accountRegion).thenReturn(MI_REGION_EU)
+        Mockito.mockStatic(ManifestInfo::class.java).use {
+            Mockito.`when`(ManifestInfo.getInstance(Mockito.any())).thenReturn(manifestInfo)
+        }
 
         //init provider listener
         ctPushProviderListener = Mockito.mock(CTPushProviderListener::class.java)
