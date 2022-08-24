@@ -4,6 +4,7 @@ import androidx.annotation.IntDef;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringDef;
+import com.clevertap.android.sdk.Logger;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -103,13 +104,13 @@ public interface PushConstants {
         }
 
         public void  setServerRegion(@Nullable String region){
-            android.util.Log.e("CleverTap_XPS_150","PushConstants: setServerRegion called with region:"+region);
+            Logger.v("PushConstants: setServerRegion called with region:"+region);
 
             this.serverRegion = (region==null) ? "" : region;
         }
 
         public String getServerRegion(){
-            android.util.Log.e("CleverTap_XPS_150","PushConstants: getServerRegion called, returning region:"+serverRegion);
+            Logger.v("PushConstants: getServerRegion called, returning region:"+serverRegion);
             return  this.serverRegion;
         }
 

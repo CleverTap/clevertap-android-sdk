@@ -848,7 +848,7 @@ public class PushProviders implements CTPushProviderListener {
                 data.put("id", token);
                 data.put("type", pushType.getType());
                 if(pushType== PushType.XPS){
-                    android.util.Log.e("CleverTap_XPS_150","PushProviders: pushDeviceTokenEvent requesting device region");
+                    Logger.v("PushProviders: pushDeviceTokenEvent requesting device region");
                     data.put("region",pushType.getServerRegion());
                 }
                 event.put("data", data);

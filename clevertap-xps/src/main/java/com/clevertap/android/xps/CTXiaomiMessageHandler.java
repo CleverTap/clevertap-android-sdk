@@ -92,7 +92,7 @@ public class CTXiaomiMessageHandler implements IMiMessageHandler, IPushAmpHandle
                 return INVALID_TOKEN;
             }
             String region = MiPushClient.getAppRegion(context);
-            android.util.Log.e("CleverTap_XPS_150","default CTXiaomiMessageHandler: onReceiveRegisterResult | MiPushClient.getAppRegion(context) returns region="+region);
+            Logger.v("default CTXiaomiMessageHandler: onReceiveRegisterResult | MiPushClient.getAppRegion(context) returns region="+region);
             XPS.setServerRegion(region);
             PushNotificationHandler.getPushNotificationHandler().onNewToken(context, token, XPS.getType());
 
