@@ -105,7 +105,7 @@ public interface PushConstants {
         public void  setServerRegion(@Nullable String region){
             android.util.Log.e("CleverTap_XPS_150","PushConstants: setServerRegion called with region:"+region);
 
-            this.serverRegion = (region==null) ? "" : null;
+            this.serverRegion = (region==null) ? "" : region;
         }
 
         public String getServerRegion(){
