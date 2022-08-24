@@ -2,6 +2,7 @@
 
 ### Version 1.5.0 (August 31, 2022)
 * Supporting Xiaomi Regions
+* note : the client must add the additional xiaomi SDK from this release. Checkout the integration doc for more information.
 
 ### Version 1.4.0 (June 3, 2022)
 * Supports the `enableXiaomiPushOn` method in the core SDK. CleverTap Xiaomi Push SDK can now be enabled/disabled for `ALL_DEVICES`, `XIAOMI_MIUI_DEVICES` and `NO_DEVICES`
