@@ -23,7 +23,7 @@ android{
 }
 
 dependencies {
-    implementation fileTree(include: ["*.jar", "*.aar"], dir: "libs")
+    compileOnly fileTree(include: ["*.jar", "*.aar"], dir: "libs")
 
     compileOnly project(':clevertap-core')
     compileOnly Libs.androidx_annotation
