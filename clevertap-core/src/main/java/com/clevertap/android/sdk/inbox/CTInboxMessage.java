@@ -2,7 +2,6 @@ package com.clevertap.android.sdk.inbox;
 
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.util.Log;
 
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;

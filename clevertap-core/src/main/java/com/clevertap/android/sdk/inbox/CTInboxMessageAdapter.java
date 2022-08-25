@@ -1,6 +1,5 @@
 package com.clevertap.android.sdk.inbox;
 
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,8 +28,8 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
     private ArrayList<CTInboxMessage> inboxMessages;
 
     CTInboxMessageAdapter(ArrayList<CTInboxMessage> inboxMessages, CTInboxListViewFragment fragment) {
-        Logger.d( "CTInboxMessageAdapter:  called at "+new Date());
-        Logger.d("CTInboxMessageAdapter: messages="+inboxMessages);
+        Logger.v( "CTInboxMessageAdapter:  called at "+new Date());
+        Logger.v("CTInboxMessageAdapter: messages="+inboxMessages);
         this.inboxMessages = inboxMessages;
         this.fragment = fragment;
     }

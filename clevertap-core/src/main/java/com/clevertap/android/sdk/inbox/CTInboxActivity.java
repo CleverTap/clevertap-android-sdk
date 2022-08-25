@@ -5,7 +5,6 @@ import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
@@ -245,7 +244,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
     @Override
     public void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data) {
-        Log.e("CleverTapTest", "CTInboxActivity:messageDidShow() called with: data = [" + data + "], inboxMessage = [" + inboxMessage .getMessageId()+ "]");
+        Logger.v("CTInboxActivity:messageDidShow() called with: data = [" + data + "], inboxMessage = [" + inboxMessage .getMessageId()+ "]");
         didShow(data, inboxMessage);
     }
 
@@ -257,7 +256,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     }
 
     void didShow(Bundle data, CTInboxMessage inboxMessage) {
-        Log.e("CleverTapTest", "CTInboxActivity:didShow() called with: data = [" + data + "], inboxMessage = [" + inboxMessage.getMessageId() + "]");
+        Logger.v( "CTInboxActivity:didShow() called with: data = [" + data + "], inboxMessage = [" + inboxMessage.getMessageId() + "]");
         InboxActivityListener listener = getListener();
         if (listener != null) {
             listener.messageDidShow(this, inboxMessage, data);

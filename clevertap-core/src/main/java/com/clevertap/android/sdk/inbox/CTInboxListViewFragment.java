@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.Parcelable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -90,7 +89,7 @@ public class CTInboxListViewFragment extends Fragment {
         final String filter = bundle.getString("filter", null);
         CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(getActivity(), config);
         if (cleverTapAPI != null) {
-            Log.e("CleverTapTest", "CTInboxListViewFragment:onAttach() called with: tabPosition = [" + tabPosition + "], filter = [" + filter + "]");
+            Logger.v( "CTInboxListViewFragment:onAttach() called with: tabPosition = [" + tabPosition + "], filter = [" + filter + "]");
             ArrayList<CTInboxMessage> allMessages = cleverTapAPI.getAllInboxMessages();
             inboxMessages = filter != null ? filterMessages(allMessages, filter) : allMessages;
         }
@@ -230,7 +229,7 @@ public class CTInboxListViewFragment extends Fragment {
     void didShow(Bundle data, int position) {
         CTInboxListViewFragment.InboxListener listener = getListener();
         if (listener != null) {
-            Log.d("CleverTapTest", "CTInboxListViewFragment:didShow() called with: data = [" + data + "], position = [" + position + "]");
+            Logger.v("CTInboxListViewFragment:didShow() called with: data = [" + data + "], position = [" + position + "]");
             //noinspection ConstantConditions
             listener.messageDidShow(getActivity().getBaseContext(), inboxMessages.get(position), data);
         }

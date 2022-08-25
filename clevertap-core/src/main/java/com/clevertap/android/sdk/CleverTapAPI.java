@@ -20,7 +20,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -2157,7 +2156,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public void pushInboxNotificationClickedEvent(String messageId) {
-        Logger.d("CleverTapTest", "CleverTapAPI:pushInboxNotificationClickedEvent() called with: messageId = [" +messageId + "]");
+        Logger.v( "CleverTapAPI:pushInboxNotificationClickedEvent() called with: messageId = [" +messageId + "]");
 
         CTInboxMessage message = getInboxMessageForId(messageId);
         coreState.getAnalyticsManager().pushInboxMessageStateEvent(true, message, null);
@@ -2170,7 +2169,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public void pushInboxNotificationViewedEvent(String messageId) {
-        Logger.d("CleverTapTest", "CleverTapAPI:pushInboxNotificationViewedEvent() called with: messageId = [" +messageId + "]");
+        Logger.v( "CleverTapAPI:pushInboxNotificationViewedEvent() called with: messageId = [" +messageId + "]");
         CTInboxMessage message = getInboxMessageForId(messageId);
         coreState.getAnalyticsManager().pushInboxMessageStateEvent(false, message, null);
     }

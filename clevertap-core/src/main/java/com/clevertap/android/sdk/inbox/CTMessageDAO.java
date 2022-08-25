@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk.inbox;
 
 import android.text.TextUtils;
-import android.util.Log;
 
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;

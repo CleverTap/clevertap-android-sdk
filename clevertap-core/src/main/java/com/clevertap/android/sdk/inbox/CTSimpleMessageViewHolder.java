@@ -378,7 +378,6 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                             if (readDot.getVisibility() == View.VISIBLE) {
                                 parent.didShow(null, position);
                             }
-                            //readDot.setVisibility(View.GONE);
                         }
                     });
                 }
