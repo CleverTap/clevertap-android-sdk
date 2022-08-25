@@ -1177,7 +1177,7 @@ public class PushProviders implements CTPushProviderListener {
                 validationResultStack.pushValidationResult(notificationViewedError);
                 return;
             }
-            analyticsManager.pushNotificationViewedEvent(extras);//
+            analyticsManager.pushNotificationViewedEvent(extras);
         }
     }
 }
