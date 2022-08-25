@@ -4,6 +4,8 @@
 
 # CleverTap Android SDKs
 [![Build Status](https://app.bitrise.io/app/09efc6b9404a6341/status.svg?token=TejL3E1NHyTiR5ajHKGJ6Q)](https://app.bitrise.io/app/09efc6b9404a6341)
+[![build - pr raised against develop](https://github.com/CleverTap/clevertap-android-sdk/actions/workflows/on_pr_from_task_to_develop.yml/badge.svg)](https://github.com/CleverTap/clevertap-android-sdk/actions/workflows/on_pr_from_task_to_develop.yml)
+[![build - master](https://github.com/CleverTap/clevertap-android-sdk/actions/workflows/on_pr_merged_in_master.yml/badge.svg)](https://github.com/CleverTap/clevertap-android-sdk/actions/workflows/on_pr_merged_in_master.yml)
 [![Download](https://api.bintray.com/packages/clevertap/Maven/CleverTapAndroidSDK/images/download.svg) ](https://bintray.com/clevertap/Maven/CleverTapAndroidSDK/_latestVersion)
 
 ## 👋 Introduction
