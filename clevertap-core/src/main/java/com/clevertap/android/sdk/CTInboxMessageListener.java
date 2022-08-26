@@ -2,7 +2,7 @@ package com.clevertap.android.sdk;
 
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
 
-public interface InboxMessageListener {
+public interface CTInboxMessageListener {
     /**
      * callback to transfer payload when inbox button is clicked
      */

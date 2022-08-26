@@ -20,7 +20,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -140,7 +139,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     private WeakReference<InboxMessageButtonListener> inboxMessageButtonListener;
 
-    private WeakReference<InboxMessageListener> inboxMessageListener;
+    private WeakReference<CTInboxMessageListener> inboxMessageListener;
 
     /**
      * This method is used to change the credentials of CleverTap account Id and token programmatically
@@ -2396,7 +2395,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     @SuppressWarnings("unused")
-    public void setInboxMessageListener(InboxMessageListener listener){
+    public void setCTInboxMessageListener(CTInboxMessageListener listener){
         this.inboxMessageListener = new WeakReference<>(listener);
     }
 
