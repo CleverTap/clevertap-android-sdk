@@ -103,12 +103,21 @@ public interface PushConstants {
             return runningDevices;
         }
 
+
+        /**
+         * Sets the Server Room Region for various push providers. This info will be passed onto
+         * CleverTap Servers which will then access the 3rd party push providers from appropriate
+         * region to push notifications.
+         * @param region   The Server Room region
+         */
         public void  setServerRegion(@Nullable String region){
             Logger.v("PushConstants: setServerRegion called with region:"+region);
 
             this.serverRegion = (region==null) ? "" : region;
         }
-
+        /**
+         * Get Server Room Region for various push providers
+         */
         public String getServerRegion(){
             Logger.v("PushConstants: getServerRegion called, returning region:"+serverRegion);
             return  this.serverRegion;

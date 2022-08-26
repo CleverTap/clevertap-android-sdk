@@ -2229,6 +2229,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Sends the Xiaomi registration ID to CleverTap.
      *
      * @param regId    The Xiaomi registration ID
+     * @param region   The Server room region provided by Xiaomi.
      * @param register Boolean indicating whether to register
      *                 or not for receiving push messages from CleverTap.
      *                 Set this to true to receive push messages from CleverTap,
