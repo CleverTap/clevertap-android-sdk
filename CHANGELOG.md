@@ -1,8 +1,19 @@
 ## CHANGE LOG.
 
-### July,19, 2022
+### August 31, 2022
 
+* [CleverTap Xiaomi Push SDK v1.5.0](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTXIAOMIPUSHCHANGELOG.md)
 * [CleverTap Huawei Push SDK v1.3.1](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTHUAWEIPUSHCHANGELOG.md)
+
+### August 4, 2022
+
+* [CleverTap Android SDK v4.6.0](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md)
+* [CleverTap Push Templates SDK v1.0.4](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTPUSHTEMPLATESCHANGELOG.md)
+
+### July 22, 2022
+
+* [CleverTap Android SDK v4.5.2](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md)
+* [CleverTap Push Templates SDK v1.0.3](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTPUSHTEMPLATESCHANGELOG.md)
 
 ### July 12, 2022
 
@@ -276,7 +287,7 @@ Note: To support multi-value user profile properties, `CleverTap.profile.getProp
 * Fixed InApp Activity exclude feature
 
 ### Version 2.0.3 (December 09, 2015)
-* Added SyncListener to notify application code of User Profile synchronization updates
+* Added SyncListener to notify application code of User Profile synchronization updates.
 * Added ability to push custom error events: `clevertap.event.pushError(String, int)`
 * Removed `clevertap.profile.pushGraphUser(com.facebook...)`
 * Requires update to Android Support Library, revision 23.1.1

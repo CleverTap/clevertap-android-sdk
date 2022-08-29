@@ -1,15 +1,23 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
+// Apply the Crashlytics Gradle plugin
+apply plugin: 'com.google.firebase.crashlytics'
+
+allprojects {
+    repositories {
+        maven { url 'https://jitpack.io' }
+    }
+}
 
 android {
     compileSdkVersion 31
     defaultConfig {
         applicationId "com.clevertap.demo"
-        minSdkVersion 19
+        minSdkVersion 21
         targetSdkVersion 31
-        versionCode 1
-        versionName "1.0"
+        versionCode 10406
+        versionName "1.4.6-push-plus"
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -50,17 +58,30 @@ dependencies {
     implementation "androidx.fragment:fragment-ktx:1.3.6"
     testImplementation 'junit:junit:4.13'
 
+    // Material Dialog Library
+    implementation 'dev.shreyaspatil.MaterialDialog:MaterialDialog:2.2.3'
+
+    // Material Design Library
+    implementation 'com.google.android.material:material:1.0.0'
+
+    // Lottie Animation Library
+    implementation 'com.airbnb.android:lottie:4.2.2'
+    implementation 'com.github.khirr:Android-Privacy-Policy:1.0.3'
+
     //CleverTap Android SDK, make sure the AAR file is in the libs folder
     implementation project(':clevertap-core')
-    //implementation "com.clevertap.android:clevertap-android-sdk:4.5.1"
+
+    implementation fileTree(include: ['*.aar'], dir: 'libs')
+    //implementation "com.clevertap.android:clevertap-android-sdk:4.6.0"
+
     implementation project(':clevertap-geofence')
     //implementation "com.clevertap.android:clevertap-geofence-sdk:1.1.0"
     implementation project(':clevertap-xps')
     // For Xiaomi Push use
-    //implementation 'com.clevertap.android:clevertap-xiaomi-sdk:1.4.0'
+    //implementation 'com.clevertap.android:clevertap-xiaomi-sdk:1.5.0'
     implementation project(':clevertap-hms')
     implementation project(':clevertap-pushtemplates')
-//    implementation "com.clevertap.android:push-templates:1.0.2"
+//    implementation "com.clevertap.android:push-templates:1.0.4"
     // For Huawei Push use
     //implementation 'com.clevertap.android:clevertap-hms-sdk:1.3.1'
     //implementation 'com.huawei.hms:push:6.5.0.300'
@@ -89,6 +110,13 @@ dependencies {
     // Mandatory for v3.6.4 and above
 
     implementation 'androidx.multidex:multidex:2.0.1'
+
+    // Import the BoM for the Firebase platform
+    implementation platform('com.google.firebase:firebase-bom:30.0.2')
+
+    // Declare the dependency for the Analytics library
+    // When using the BoM, you don't specify versions in Firebase library dependencies
+    implementation 'com.google.firebase:firebase-crashlytics'
 /*
     implementation "com.android.tools.build:gradle:4.2.1"
     implementation "com.google.gms:google-services:4.3.3"// Google Services plugin

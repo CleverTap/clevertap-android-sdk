@@ -9,9 +9,10 @@ import android.os.Process;
 import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
-import com.clevertap.android.sdk.pushnotification.PushConstants;
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType;
+import com.xiaomi.channel.commonutils.android.Region;
 import com.xiaomi.mipush.sdk.MiPushClient;
 import java.util.List;
 
@@ -88,7 +89,19 @@ class XiaomiSdkHandler implements IMiSdkHandler {
 
     @RestrictTo(value = RestrictTo.Scope.LIBRARY)
     public void register(String appId, String appKey) throws RegistrationException {
+        Logger.v("XiaomiSDKHandler: register | called with appid = "+appId + ", appkey="+appKey);
+
         try {
+            String region = manifestInfo.getAccountRegion();
+            region =  (region==null || region.isEmpty())? Constants.REGION_EUROPE : region;
+            Logger.v("XiaomiSDKHandler: register | final region from manifest = "+region);
+
+            Region xiaomiRegion =  region.equalsIgnoreCase( Constants.REGION_INDIA) ? Region.India : Region.Global;
+            Logger.v("XiaomiSDKHandler: register | final xiaomi region as per manifest = "+xiaomiRegion.name());
+
+            Logger.v("XiaomiSDKHandler: register | final xiaomi setting xiaomi region via  MiPushClient.setRegion(xiaomiRegion) and calling MiPushClient.registerPush(context, appId, appKey);");
+
+            MiPushClient.setRegion(xiaomiRegion);
             MiPushClient.registerPush(context, appId, appKey);
             isRegistered = true;
             mConfig
