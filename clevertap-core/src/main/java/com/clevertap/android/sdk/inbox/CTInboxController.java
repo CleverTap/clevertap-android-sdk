@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inbox;
 
+
 import androidx.annotation.AnyThread;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
@@ -126,6 +127,8 @@ public class CTInboxController {
     // always call async
     @WorkerThread
     public boolean updateMessages(final JSONArray inboxMessages) {
+        Logger.v( "CTInboxController:updateMessages() called");
+
         boolean haveUpdates = false;
         ArrayList<CTMessageDAO> newMessages = new ArrayList<>();
 
@@ -196,6 +199,9 @@ public class CTInboxController {
             messageDAO.setRead(1);
         }
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
+        task.addOnSuccessListener(unused -> callbackManager._notifyInboxMessagesDidUpdate() );//  //OR callbackManager.getInboxListener().inboxMessagesDidUpdate();
+        task.addOnFailureListener(e -> Logger.d("Failed to update message read state for id:"+messageId,e));
+
         task.execute("RunMarkMessageRead", new Callable<Void>() {
             @Override
             @WorkerThread
@@ -222,6 +228,7 @@ public class CTInboxController {
 
     @AnyThread
     private void trimMessages() {
+        Logger.v( "CTInboxController:trimMessages() called");
         ArrayList<CTMessageDAO> toDelete = new ArrayList<>();
         synchronized (messagesLock) {
             for (CTMessageDAO message : this.messages) {
