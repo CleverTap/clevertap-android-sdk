@@ -151,6 +151,10 @@ public class PushProviders implements CTPushProviderListener {
         }
 
         try {
+            if(extras.getBoolean("wzrk_pn_s")){
+                analyticsManager.pushNotificationViewedEvent(extras);
+                return ;
+            }
             String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
             if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
                 config.getLogger()
