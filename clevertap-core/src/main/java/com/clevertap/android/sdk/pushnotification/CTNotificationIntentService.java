@@ -109,7 +109,9 @@ public class CTNotificationIntentService extends IntentService {
             launchIntent.putExtras(extras);
             launchIntent.removeExtra("dl");
 
-            if (autoCancel && notificationId > -1) {
+            String ptDismissOnClick = extras.getString("pt_dismiss_on_click","");
+
+            if (autoCancel && notificationId > -1 && ptDismissOnClick.isEmpty()) {
                 NotificationManager notificationManager =
                         (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
                 if (notificationManager != null) {

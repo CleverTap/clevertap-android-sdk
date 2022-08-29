@@ -298,4 +298,18 @@ public interface Constants {
     String KEY_CT_TYPE = "ct_type";
     String PT_INPUT_KEY = "pt_input_reply";
 
+    // ==========Fallback keys=========
+    String NOTIFICATION_HEALTH = "wzrk_pn_h";
+    String WZRK_TSR_FB = "wzrk_tsr_fb";// terminate and stay resident
+    String NOTIFICATION_RENDER_FALLBACK = "wzrk_fallback";
+
+    /**
+     * Device app bucket when notification is rendered
+     */
+    String WZRK_HEALTH_STATE_GOOD = "true";
+    String WZRK_HEALTH_STATE_BAD = "false";
+
+    String REGION_INDIA = "in1";
+    String REGION_EUROPE = "eu1";
+
 }

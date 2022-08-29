@@ -3,6 +3,7 @@ package com.clevertap.android.sdk;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.interfaces.DCDomainCallback;
+import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
@@ -74,4 +75,8 @@ public abstract class BaseCallbackManager {
     public abstract OnInitCleverTapIDListener getOnInitCleverTapIDListener();
 
     public abstract void setOnInitCleverTapIDListener(OnInitCleverTapIDListener onInitCleverTapIDListener);
+
+    public abstract void setNotificationRenderedListener(NotificationRenderedListener notificationRenderedListener);
+
+    public abstract NotificationRenderedListener getNotificationRenderedListener();
 }

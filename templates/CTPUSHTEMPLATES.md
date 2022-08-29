@@ -220,6 +220,34 @@ Template Key | Required | Value
 ---:|:---:|:---
 pt_dismiss_on_click | Optional | Dismisses the notification without opening the app
 
+*Note If `pt_dismiss_on_click` is false we'll have to add the below code to not dismiss the
+notification for Android 12 and above
+
+    fun dismissNotification(intent: Intent?, applicationContext: Context){
+        intent?.extras?.apply {
+            var autoCancel = true
+            var notificationId = -1
+
+            getString("actionId")?.let {
+                Log.d("ACTION_ID", it)
+                autoCancel = getBoolean("autoCancel", true)
+                notificationId = getInt("notificationId", -1)
+            }
+            /**
+             * If using InputBox template, add ptDismissOnClick flag to not dismiss notification
+             * if pt_dismiss_on_click is false in InputBox template payload. Alternatively if normal
+             * notification is raised then we dismiss notification.
+             */
+            val ptDismissOnClick = intent.extras!!.getString(PTConstants.PT_DISMISS_ON_CLICK,"")
+
+            if (autoCancel && notificationId > -1 && ptDismissOnClick.isNullOrEmpty()) {
+                val notifyMgr: NotificationManager =
+                    applicationContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+                notifyMgr.cancel(notificationId)
+            }
+        }
+    }
+
 ### CTAs with Remind Later option
 
 This variant of the Input Box Template is particularly useful if the user wants to be reminded of the notification after sometime. Clicking on the remind later button raises an event to the user profiles, with a custom user property p2 whose value is a future time stamp. You can have a campaign running on the dashboard that will send a reminder notification at the timestamp in the event property.
@@ -341,6 +369,7 @@ Rating Template Keys | Required | Description
 pt_id | Required  | Value - `pt_rating`
 pt_title | Required  | Title
 pt_msg | Required  | Message
+pt_big_img | Optional | Image
 pt_msg_summary | Optional | Message line when Notification is expanded
 pt_subtitle | Optional | Subtitle
 pt_default_dl | Required  | Default Deep Link for Push Notification

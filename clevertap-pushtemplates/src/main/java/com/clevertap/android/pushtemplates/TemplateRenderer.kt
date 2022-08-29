@@ -1,10 +1,12 @@
 package com.clevertap.android.pushtemplates
 
 import android.app.NotificationManager
+import android.content.ContentResolver
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.media.RingtoneManager
 import android.net.Uri
 import android.os.*
 import android.os.Build.VERSION
@@ -19,6 +21,7 @@ import com.clevertap.android.pushtemplates.validators.ValidatorFactory
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.interfaces.AudibleNotification
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.ManifestInfo
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
@@ -30,8 +33,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.util.*
 
-@Suppress("LocalVariableName")
-class TemplateRenderer : INotificationRenderer {
+class TemplateRenderer : INotificationRenderer, AudibleNotification {
 
     private var pt_id: String? = null
     private var templateType: TemplateType? = null
@@ -149,7 +151,7 @@ class TemplateRenderer : INotificationRenderer {
                     return if ((fiveIconStyle.fiveIconSmallContentView as
                                 FiveIconSmallContentView).getUnloadedFiveIconsCount() > 2 ||
                         (fiveIconStyle.fiveIconBigContentView as FiveIconBigContentView).getUnloadedFiveIconsCount() > 2){
-                             null
+                        null
                     } else fiveIconNotificationBuilder
                 }
 
@@ -222,7 +224,6 @@ class TemplateRenderer : INotificationRenderer {
     @RequiresApi(Build.VERSION_CODES.M)
     private fun timerRunner(context: Context, extras: Bundle, notificationId: Int, delay: Int?) {
         val handler = Handler(Looper.getMainLooper())
-        extras.remove("wzrk_rnv")
 
 
         if (delay != null) {
@@ -234,6 +235,7 @@ class TemplateRenderer : INotificationRenderer {
                 ) {
                     val applicationContext = context.applicationContext
                     val basicTemplateBundle = extras.clone() as Bundle
+                    basicTemplateBundle.remove("wzrk_rnv")
                     basicTemplateBundle.putString(Constants.WZRK_PUSH_ID, null) // skip dupe check
                     basicTemplateBundle.putString(PTConstants.PT_ID, "pt_basic") // set to basic
 
@@ -259,9 +261,9 @@ class TemplateRenderer : INotificationRenderer {
                     }
                     if (pt_big_img_alt != null && pt_big_img_alt!!.isNotEmpty()) {
                         ptJsonObj?.put(PTConstants.PT_BIG_IMG, pt_big_img_alt) ?: basicTemplateBundle.putString(
-                                PTConstants.PT_BIG_IMG,
-                                pt_big_img_alt
-                            )
+                            PTConstants.PT_BIG_IMG,
+                            pt_big_img_alt
+                        )
                     }
                     if (pt_msg_alt != null && pt_msg_alt!!.isNotEmpty()) {
                         ptJsonObj?.put(PTConstants.PT_MSG, pt_msg_alt) ?: basicTemplateBundle.putString(
@@ -313,6 +315,40 @@ class TemplateRenderer : INotificationRenderer {
 
     override fun getCollapseKey(extras: Bundle): Any? {
         return pt_collapse_key
+    }
+
+    override fun setSound(
+        context: Context, extras: Bundle, nb: Builder, config: CleverTapInstanceConfig
+    ): Builder {
+        try {
+            if (extras.containsKey(Constants.WZRK_SOUND)) {
+                var soundUri: Uri? = null
+                val o = extras[Constants.WZRK_SOUND]
+                if (o is Boolean && o) {
+                    soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                } else if (o is String) {
+                    var s = o
+                    if (s == "true") {
+                        soundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+                    } else if (!s.isEmpty()) {
+                        if (s.contains(".mp3") || s.contains(".ogg") || s.contains(".wav")) {
+                            s = s.substring(0, s.length - 4)
+                        }
+                        soundUri = Uri
+                            .parse(
+                                ContentResolver.SCHEME_ANDROID_RESOURCE + "://" + context.packageName
+                                        + "/raw/" + s
+                            )
+                    }
+                }
+                if (soundUri != null) {
+                    nb.setSound(soundUri)
+                }
+            }
+        } catch (t: Throwable) {
+            config.logger.debug(config.accountId, "Could not process sound parameter", t)
+        }
+        return nb
     }
 
     private fun setUp(context: Context, extras: Bundle, config: CleverTapInstanceConfig?) {
@@ -487,14 +523,18 @@ class TemplateRenderer : INotificationRenderer {
                             Constants.KEY_CT_TYPE,
                             CTNotificationIntentService.TYPE_BUTTON_CLICK
                         )
-                        if (!dl.isEmpty()) {
+                        if (dl.isNotEmpty()) {
                             actionLaunchIntent.putExtra("dl", dl)
                         }
                     } else {
-                        actionLaunchIntent = if (!dl.isEmpty()) {
-                            Intent(Intent.ACTION_VIEW, Uri.parse(dl))
+                        if (dl.isNotEmpty()) {
+                            actionLaunchIntent = Intent(Intent.ACTION_VIEW, Uri.parse(dl))
+                            Utils.setPackageNameFromResolveInfoList(
+                                context,
+                                actionLaunchIntent
+                            )
                         } else {
-                            context.packageManager
+                            actionLaunchIntent = context.packageManager
                                 .getLaunchIntentForPackage(context.packageName)
                         }
                     }

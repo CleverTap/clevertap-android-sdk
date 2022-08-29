@@ -1,9 +1,9 @@
 package com.clevertap.android.sdk.task;
 
 import androidx.annotation.NonNull;
-
+import androidx.annotation.Nullable;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
-
+import com.clevertap.android.sdk.Logger;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -11,11 +11,10 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Definition of task is to execute some work & return success or failure callbacks
- *
- * @param <TResult>
  */
 public class Task<TResult> {
 
@@ -37,7 +36,7 @@ public class Task<TResult> {
     private final String taskName;
 
     Task(final CleverTapInstanceConfig config, Executor executor,
-         final Executor defaultCallbackExecutor, final String taskName) {
+            final Executor defaultCallbackExecutor, final String taskName) {
         this.executor = executor;
         this.defaultCallbackExecutor = defaultCallbackExecutor;
         this.config = config;
@@ -53,7 +52,7 @@ public class Task<TResult> {
      */
     @NonNull
     public synchronized Task<TResult> addOnFailureListener(@NonNull final Executor executor,
-                                                           final OnFailureListener<Exception> listener) {
+            final OnFailureListener<Exception> listener) {
         if (listener != null) {
             failureExecutables.add(new FailureExecutable<>(executor, listener));
         }
@@ -80,7 +79,7 @@ public class Task<TResult> {
      */
     @NonNull
     public Task<TResult> addOnSuccessListener(@NonNull final Executor executor,
-                                              final OnSuccessListener<TResult> listener) {
+            final OnSuccessListener<TResult> listener) {
         if (listener != null) {
             successExecutables.add(new SuccessExecutable<>(executor, listener, config));
         }
@@ -111,8 +110,6 @@ public class Task<TResult> {
     /**
      * Returns the state of task
      * Ref{@link STATE}
-     *
-     * @return
      */
     public boolean isSuccess() {
         return taskState == STATE.SUCCESS;
@@ -169,6 +166,33 @@ public class Task<TResult> {
         return ((ExecutorService) executor).submit(newRunnableForTask(logTag, callable));
     }
 
+    /**
+     * Submits piece of code to executor and returns result if code executes successfully within timeout or returns null
+     *
+     * @param logTag tag name to identify logs.
+     * @param callable - piece of code to run
+     * @param timeoutMillis - timeout for piece of code to run
+     * @return result of callable or null
+     */
+    public @Nullable TResult submitAndGetResult(final String logTag, final Callable<TResult> callable, long timeoutMillis) {
+        if (!(executor instanceof ExecutorService)) {
+            throw new UnsupportedOperationException(
+                    "Can't use this method without ExecutorService, Use Execute alternatively ");
+        }
+        Future<TResult> tResultFuture = null;
+        try {
+            tResultFuture = ((ExecutorService) executor).submit(callable);
+            return tResultFuture.get(timeoutMillis, TimeUnit.MILLISECONDS);
+        } catch (Exception e) {
+            e.printStackTrace();
+            if (tResultFuture != null && !tResultFuture.isCancelled()) {
+                tResultFuture.cancel(true);
+            }
+        }
+        Logger.v("submitAndGetResult :: " + logTag + " task timed out");
+        return null;
+    }
+
     void onFailure(final Exception e) {
         setState(STATE.FAILED);
         for (Executable<Exception> failureExecutable : failureExecutables) {
@@ -205,15 +229,18 @@ public class Task<TResult> {
             public void run() {
                 try {
                     config.getLogger()
-                            .verbose(taskName + " Task: " + logTag + " starting on..." + Thread.currentThread().getName());
+                            .verbose(taskName + " Task: " + logTag + " starting on..." + Thread.currentThread()
+                                    .getName());
                     TResult result = callable.call();
                     config.getLogger().verbose(
-                            taskName + " Task: " + logTag + " executed successfully on..." + Thread.currentThread().getName());
+                            taskName + " Task: " + logTag + " executed successfully on..." + Thread.currentThread()
+                                    .getName());
                     onSuccess(result);
                 } catch (Exception e) {
                     onFailure(e);
                     config.getLogger().verbose(
-                            taskName + " Task: " + logTag + " failed to execute on..." + Thread.currentThread().getName(), e);
+                            taskName + " Task: " + logTag + " failed to execute on..." + Thread.currentThread()
+                                    .getName(), e);
                     e.printStackTrace();
                 }
             }

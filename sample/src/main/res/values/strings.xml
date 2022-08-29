@@ -15,4 +15,37 @@
     <string name="permission_rationale">All the time location permission required for core functionality</string>
     <string name="permission_denied_explanation">Please provide All time Precise location Permission from settings.</string>
     <string name="settings">Settings</string>
+    <string name="policy_line_1">This Application collects personal information like your Email ID, Name, Address, Mobile Number, Gender, Date of birth and employment status to show case features of clevertap like user profile.
+    </string>
+    <string name="policy_line_2">
+        This Application collects non-personal information like custom events to show case features of clevertap like events analytics.
+    </string>
+    <string name="policy_line_3">
+        This Application collects location related information to showcase geofencing feature.
+    </string>
+    <string name="policy_line_4">
+        We may collect and use technical data and related information, including but not limited to, technical information about your device, system and application software, and peripherals, that is gathered periodically to facilitate the provision of software updates, product support and other services to you (if any) related to such Mobile Applications.
+    </string>
+    <string name="policy_line_5">
+        When you use any of our Mobile Applications, the Mobile Application may automatically collect and store some or all of the following information from your mobile device (“Mobile Device Information”), in addition to the Device Information, including without limitation:
+
+        Your preferred language and country site (if applicable),
+
+        The manufacturer and model of your mobile device,
+
+        Your mobile operating system,
+
+        The type of mobile internet browsers you are using,
+
+        Your geolocation
+    </string>
+    <string name="policy_line_6">
+        We store your information to showcase CleverTap dashboard features like analytics.
+    </string>
+    <string name="policy_line_7">
+        We send data to third party for analytics purpose.
+    </string>
+    <string name="location_policy_message">
+        Android Starter collects location data to enable geofence tracking even when the app is closed or not in use or in background.\n Accepting this location policy related to background(when the app is closed or not in use) and foreground will enable us to showcase our geofence feature.
+    </string>
 </resources>

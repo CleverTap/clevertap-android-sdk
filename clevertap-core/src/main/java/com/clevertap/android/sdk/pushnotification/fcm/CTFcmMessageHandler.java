@@ -7,6 +7,7 @@ import android.content.Context;
 import android.os.Bundle;
 import androidx.annotation.NonNull;
 import com.clevertap.android.sdk.CleverTapAPI;
+import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.interfaces.INotificationParser;
 import com.clevertap.android.sdk.interfaces.IPushAmpHandler;
@@ -44,6 +45,10 @@ public class CTFcmMessageHandler implements IFcmMessageHandler, IPushAmpHandler<
 
         Bundle messageBundle = mParser.toBundle(message);
         if (messageBundle != null) {
+            messageBundle.putString(Constants.NOTIFICATION_HEALTH, Constants.WZRK_HEALTH_STATE_GOOD);
+            if (!messageBundle.containsKey("nh_source")) {
+                messageBundle.putString("nh_source", "FcmMessageListenerService");
+            }
             isSuccess = PushNotificationHandler.getPushNotificationHandler()
                     .onMessageReceived(context, messageBundle, PushType.FCM.toString());
         }

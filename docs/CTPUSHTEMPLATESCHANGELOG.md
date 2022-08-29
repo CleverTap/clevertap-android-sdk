@@ -1,5 +1,12 @@
 ## CleverTap Push Templates SDK CHANGE LOG
 
+### Version 1.0.4 (August 4, 2022)
+* Supports CleverTap Android SDK v4.6.0
+
+### Version 1.0.3 (July 22, 2022)
+* Fixes a bug for notification CTA deeplink for Android 12 and above devices - On clicking notification CTA, deeplink launches third party app instead of X app even though X app is capable of handling deeplink. For example, if X app is capable of handling https://google.com(sample link) but deeplink launches browser instead of X app.
+* Fixes push impression not raised bug for Timer template
+
 ### Version 1.0.2 (April 26, 2022)
 * UI bug fixes for Push Notification metadata
 * Timer template fixes for `title`, `title_alt` along with `pt_big_img`, `pt_big_img_alt`
