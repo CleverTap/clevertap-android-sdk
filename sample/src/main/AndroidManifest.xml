@@ -8,6 +8,9 @@
     <!--Enable below line to test for Android GO devices-->
     <!--<uses-feature android:name="android.hardware.ram.low" android:required="true"/>-->
 
+    <!-- Required runtime permission to display notifications on Android 13 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
     <application
         android:name=".MyApplication"
         android:allowBackup="false"
@@ -46,13 +49,10 @@
         <!-- Add meta data for CleverTap Account Id and Account Token -->
         <meta-data
             android:name="CLEVERTAP_ACCOUNT_ID"
-            android:value="YOUR ACCT ID" />
+            android:value="TEST-449-68K-8Z6Z" />
         <meta-data
             android:name="CLEVERTAP_TOKEN"
-            android:value="YOUR ACCT TOKEN" />
-        <meta-data
-            android:name="CLEVERTAP_REGION"
-            android:value="eu1"/>
+            android:value="TEST-3b6-c44" />
 
         <!-- Xiaomi Push -->
         <meta-data

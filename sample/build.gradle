@@ -11,11 +11,11 @@ allprojects {
 }
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 33
     defaultConfig {
         applicationId "com.clevertap.demo"
         minSdkVersion 21
-        targetSdkVersion 31
+        targetSdkVersion 33
         versionCode 10406
         versionName "1.4.6-push-plus"
         multiDexEnabled true
