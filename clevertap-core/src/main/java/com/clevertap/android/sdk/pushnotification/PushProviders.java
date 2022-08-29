@@ -847,6 +847,10 @@ public class PushProviders implements CTPushProviderListener {
                 data.put("action", action);
                 data.put("id", token);
                 data.put("type", pushType.getType());
+                if(pushType== PushType.XPS){
+                    config.getLogger().verbose("PushProviders: pushDeviceTokenEvent requesting device region");
+                    data.put("region",pushType.getServerRegion());
+                }
                 event.put("data", data);
                 config.getLogger().verbose(config.getAccountId(), pushType + action + " device token " + token);
                 analyticsManager.sendDataEvent(event);
