@@ -140,6 +140,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     private WeakReference<InboxMessageButtonListener> inboxMessageButtonListener;
 
+    private WeakReference<CTInboxMessageListener> inboxMessageListener;
+
     /**
      * This method is used to change the credentials of CleverTap account Id and token programmatically
      *
@@ -1863,12 +1865,18 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     @Override
-    public void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data,
-            HashMap<String, String> keyValue) {
+    public void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue, boolean isBodyClick) {
+
         coreState.getAnalyticsManager().pushInboxMessageStateEvent(true, inboxMessage, data);
+
         if (keyValue != null && !keyValue.isEmpty()) {
             if (inboxMessageButtonListener != null && inboxMessageButtonListener.get() != null) {
                 inboxMessageButtonListener.get().onInboxButtonClick(keyValue);
+            }
+        }
+        else{
+            if (isBodyClick && inboxMessageListener != null && inboxMessageListener.get() != null) {
+                inboxMessageListener.get().onInboxItemClicked(inboxMessage);
             }
         }
     }
@@ -2392,6 +2400,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings("unused")
     public void setInboxMessageButtonListener(InboxMessageButtonListener listener) {
         this.inboxMessageButtonListener = new WeakReference<>(listener);
+    }
+
+    @SuppressWarnings("unused")
+    public void setCTInboxMessageListener(CTInboxMessageListener listener){
+        this.inboxMessageListener = new WeakReference<>(listener);
     }
 
     @RestrictTo(Scope.LIBRARY_GROUP)
@@ -2926,4 +2939,3 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return PushType.XPS.getRunningDevices();
     }
 }
-

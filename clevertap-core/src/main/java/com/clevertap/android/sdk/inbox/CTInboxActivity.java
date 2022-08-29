@@ -38,7 +38,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     public interface InboxActivityListener {
 
         void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data,
-                HashMap<String, String> keyValue);
+                HashMap<String, String> keyValue,boolean isBodyClick);
 
         void messageDidShow(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data);
     }
@@ -238,8 +238,8 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
     @Override
     public void messageDidClick(Context baseContext, CTInboxMessage inboxMessage, Bundle data,
-            HashMap<String, String> keyValue) {
-        didClick(data, inboxMessage, keyValue);
+            HashMap<String, String> keyValue, boolean isBodyClick) {
+        didClick(data, inboxMessage, keyValue,isBodyClick);
     }
 
     @Override
@@ -248,10 +248,10 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         didShow(data, inboxMessage);
     }
 
-    void didClick(Bundle data, CTInboxMessage inboxMessage, HashMap<String, String> keyValue) {
+    void didClick(Bundle data, CTInboxMessage inboxMessage, HashMap<String, String> keyValue, boolean isBodyClick) {
         InboxActivityListener listener = getListener();
         if (listener != null) {
-            listener.messageDidClick(this, inboxMessage, data, keyValue);
+            listener.messageDidClick(this, inboxMessage, data, keyValue,isBodyClick);
         }
     }
 
