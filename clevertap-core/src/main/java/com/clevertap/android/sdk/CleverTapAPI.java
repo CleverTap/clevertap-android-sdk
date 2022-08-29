@@ -2229,17 +2229,22 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Sends the Xiaomi registration ID to CleverTap.
      *
      * @param regId    The Xiaomi registration ID
-     * @param region   The Server room region provided by Xiaomi.
+     * @param region   The Server room region provided by Xiaomi. Value must be not null or empty
      * @param register Boolean indicating whether to register
      *                 or not for receiving push messages from CleverTap.
      *                 Set this to true to receive push messages from CleverTap,
      *                 and false to not receive any messages from CleverTap.
      */
     @SuppressWarnings("unused")
-    public void pushXiaomiRegistrationId(String regId, String region, boolean register) {
-        Logger.v("CleverTapAPI: client called pushXiaomiRegistrationId called with region:"+region);
-        PushType.XPS.setServerRegion(region);
-        coreState.getPushProviders().handleToken(regId, PushType.XPS, register);
+    public void pushXiaomiRegistrationId(String regId,@NonNull String region, boolean register)  {
+        if(TextUtils.isEmpty(region)){
+            Logger.d("CleverTapApi : region must not be null or empty , use  MiPushClient.getAppRegion(context) to provide appropriate region");
+        }else{
+            Logger.d("CleverTapAPI: client called pushXiaomiRegistrationId called with region:"+region);
+            PushType.XPS.setServerRegion(region);
+            coreState.getPushProviders().handleToken(regId, PushType.XPS, register);
+        }
+
     }
 
     /**

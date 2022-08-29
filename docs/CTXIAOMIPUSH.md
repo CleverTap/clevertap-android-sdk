@@ -45,8 +45,7 @@ Click on [Mi Push Console](http://admin.xmpush.global.xiaomi.com/) and click on 
 
 ```groovy
     implementation "com.clevertap.android:clevertap-xiaomi-sdk:1.5.0"
-    implementation fileTree(include: ["*.jar", "*.aar"], dir: "libs")
-    implementation files("libs/MiPush_SDK_Client_5_0_6-G_3rd.aar")
+    implementation fileTree(include: ["*.jar", "*.aar"], dir: "libs")// or implementation files("libs/MiPush_SDK_Client_5_0_6-G_3rd.aar") for including only MiPush_SDK_Client_5_0_6 aar file
 ```
 
 * Add the following to your app’s `AndroidManifest.xml` file

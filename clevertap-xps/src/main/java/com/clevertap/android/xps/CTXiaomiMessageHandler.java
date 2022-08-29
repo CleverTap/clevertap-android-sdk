@@ -19,6 +19,7 @@ import com.clevertap.android.sdk.interfaces.INotificationParser;
 import com.clevertap.android.sdk.interfaces.IPushAmpHandler;
 import com.clevertap.android.sdk.pushnotification.PushNotificationHandler;
 import com.clevertap.android.sdk.pushnotification.fcm.IFcmMessageHandler;
+import com.xiaomi.channel.commonutils.android.Region;
 import com.xiaomi.mipush.sdk.ErrorCode;
 import com.xiaomi.mipush.sdk.MiPushClient;
 import com.xiaomi.mipush.sdk.MiPushCommandMessage;
@@ -92,6 +93,7 @@ public class CTXiaomiMessageHandler implements IMiMessageHandler, IPushAmpHandle
                 return INVALID_TOKEN;
             }
             String region = MiPushClient.getAppRegion(context);
+            region =TextUtils.isEmpty(region)? Region.Global.name() : region;
             Logger.v("default CTXiaomiMessageHandler: onReceiveRegisterResult | MiPushClient.getAppRegion(context) returns region="+region);
             XPS.setServerRegion(region);
             PushNotificationHandler.getPushNotificationHandler().onNewToken(context, token, XPS.getType());
