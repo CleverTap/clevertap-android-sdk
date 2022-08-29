@@ -3,6 +3,7 @@
 ### August 31, 2022
 
 * [CleverTap Xiaomi Push SDK v1.5.0](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTXIAOMIPUSHCHANGELOG.md)
+* [CleverTap Huawei Push SDK v1.3.1](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTHUAWEIPUSHCHANGELOG.md)
 
 ### August 4, 2022
 
