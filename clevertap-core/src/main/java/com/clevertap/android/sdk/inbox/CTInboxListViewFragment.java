@@ -58,6 +58,8 @@ public class CTInboxListViewFragment extends Fragment {
     MediaPlayerRecyclerView mediaRecyclerView;
 
     RecyclerView recyclerView;
+    private  CTInboxMessageAdapter inboxMessageAdapter;
+
 
     CTInboxStyleConfig styleConfig;
 
@@ -75,16 +77,28 @@ public class CTInboxListViewFragment extends Fragment {
             config = bundle.getParcelable("config");
             styleConfig = bundle.getParcelable("styleConfig");
             tabPosition = bundle.getInt("position", -1);
-            final String filter = bundle.getString("filter", null);
+            updateInboxMessages();
             if (context instanceof CTInboxActivity) {
                 setListener((CTInboxListViewFragment.InboxListener) getActivity());
             }
-            CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(getActivity(), config);
-            if (cleverTapAPI != null) {
-                ArrayList<CTInboxMessage> allMessages = cleverTapAPI.getAllInboxMessages();
-                inboxMessages = filter != null ? filterMessages(allMessages, filter) : allMessages;
-            }
         }
+    }
+    private void updateInboxMessages(){
+        Bundle bundle = getArguments();
+        if(bundle==null) return;
+        final String filter = bundle.getString("filter", null);
+        CleverTapAPI cleverTapAPI = CleverTapAPI.instanceWithConfig(getActivity(), config);
+        if (cleverTapAPI != null) {
+            Logger.v( "CTInboxListViewFragment:onAttach() called with: tabPosition = [" + tabPosition + "], filter = [" + filter + "]");
+            ArrayList<CTInboxMessage> allMessages = cleverTapAPI.getAllInboxMessages();
+            inboxMessages = filter != null ? filterMessages(allMessages, filter) : allMessages;
+        }
+    }
+
+    void updateAdapterContent(){
+        updateInboxMessages();
+        if(inboxMessageAdapter==null || inboxMessages==null || config ==null ) return;
+        inboxMessageAdapter.updateInboxMessages(inboxMessages);
     }
 
     @Nullable
@@ -106,7 +120,7 @@ public class CTInboxListViewFragment extends Fragment {
         noMessageView.setVisibility(View.GONE);
 
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
-        final CTInboxMessageAdapter inboxMessageAdapter = new CTInboxMessageAdapter(inboxMessages, this);
+        inboxMessageAdapter= new CTInboxMessageAdapter(inboxMessages, this);
 
         if (haveVideoPlayerSupport) {
             mediaRecyclerView = new MediaPlayerRecyclerView(getActivity());
@@ -203,7 +217,7 @@ public class CTInboxListViewFragment extends Fragment {
     }
 
     void didClick(Bundle data, int position, HashMap<String, String> keyValuePayload) {
-        CTInboxListViewFragment.InboxListener listener = getListener();
+        CTInboxListViewFragment.InboxListener listener =  getListener();
         if (listener != null) {
             //noinspection ConstantConditions
             listener.messageDidClick(getActivity().getBaseContext(), inboxMessages.get(position), data,
@@ -215,6 +229,7 @@ public class CTInboxListViewFragment extends Fragment {
     void didShow(Bundle data, int position) {
         CTInboxListViewFragment.InboxListener listener = getListener();
         if (listener != null) {
+            Logger.v("CTInboxListViewFragment:didShow() called with: data = [" + data + "], position = [" + position + "]");
             //noinspection ConstantConditions
             listener.messageDidShow(getActivity().getBaseContext(), inboxMessages.get(position), data);
         }

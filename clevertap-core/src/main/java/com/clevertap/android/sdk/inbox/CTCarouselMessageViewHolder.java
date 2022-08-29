@@ -160,14 +160,12 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
                                     parentWeak.didShow(null, position);
                                 }
                             }
-                            carouselReadDot.setVisibility(View.GONE);
                         } else {
                             if (readDot.getVisibility() == View.VISIBLE) {
                                 if (parentWeak != null) {
                                     parentWeak.didShow(null, position);
                                 }
                             }
-                            readDot.setVisibility(View.GONE);
                         }
                     }
                 });
