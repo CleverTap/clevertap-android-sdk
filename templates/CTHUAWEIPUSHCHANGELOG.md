@@ -1,5 +1,8 @@
 ## CleverTap Huawei Push SDK CHANGE LOG
 
+### Version 1.3.1 (August 31,2022)
+* Updated Huawei Push SDK to v6.5.0.300
+
 ### Version 1.3.0 (April 26, 2022)
 * Updated Huawei Push SDK to v6.3.0.304
 
