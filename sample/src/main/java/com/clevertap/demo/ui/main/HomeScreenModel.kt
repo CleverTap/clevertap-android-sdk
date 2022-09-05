@@ -63,6 +63,10 @@ object HomeScreenModel {
                 "Input Box - reminder - DOC true",
                 "Input Box - reminder - DOC false",
                 "Three CTA"
+            ),
+            "PROMPT LOCAL IN-APP" to listOf(
+                "Generate Half-Interstitial Local InApp",
+                "Generate Alert Local InApp"
             )
         )
     }

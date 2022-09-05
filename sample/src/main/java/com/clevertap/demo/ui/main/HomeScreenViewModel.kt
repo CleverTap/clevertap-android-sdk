@@ -6,8 +6,9 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.clevertap.android.sdk.CTInboxStyleConfig
 import com.clevertap.android.sdk.CleverTapAPI
-import java.util.ArrayList
-import java.util.Date
+import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.inapp.CTLocalInAppSettings
+import java.util.*
 
 class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel() {
 
@@ -322,6 +323,25 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
             "917"-> cleverTapAPI?.pushEvent("Send Input Box Reminder DOC true")
             "918"-> cleverTapAPI?.pushEvent("Send Input Box Reminder DOC false")
             "919"-> cleverTapAPI?.pushEvent("Send Three CTA Notification")
+            "100"-> {
+                val builder = CTLocalInAppSettings.Builder().setTitleText("Get Notified")
+                    .setInAppAlertType("half-interstitial")
+                    .setBodyText("Please enable notifications on your device to use Push Notifications.")
+                    .setPositiveConfirmationBtnText("Allow")
+                    .setNegativeConfirmationBtnText("Cancel")
+                    .setPositiveConfirmationBtnColor(Constants.LIGHT_BLUE).build()//Add image,inapp type
+                cleverTapAPI?.promptPushPrimer(builder)
+            }
+
+            "101"->{
+                val builder = CTLocalInAppSettings.Builder().setTitleText("Get Notified")
+                    .setInAppAlertType("alert-template")
+                    .setBodyText("Please enable notifications on your device to use Push Notifications.")
+                    .setPositiveConfirmationBtnText("Allow")
+                    .setNegativeConfirmationBtnText("Cancel")
+                    .setPositiveConfirmationBtnColor(Constants.LIGHT_BLUE).build()//Add image,inapp type
+                cleverTapAPI?.promptPushPrimer(builder)
+            }
 
             //"60" -> webViewClickListener?.onWebViewClick()
 
