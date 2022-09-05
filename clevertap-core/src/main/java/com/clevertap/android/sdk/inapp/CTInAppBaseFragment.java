@@ -140,6 +140,9 @@ public abstract class CTInAppBaseFragment extends Fragment {
 
             didClick(data, button.getKeyValues());
 
+//            check API and toolsSDK version, inapp type, whether the btn was meant for PN.
+//            requestPermissions()
+
             String actionUrl = button.getActionUrl();
             if (actionUrl != null) {
                 fireUrlThroughIntent(actionUrl, data);

@@ -31,6 +31,7 @@ import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.EventDetail;
 import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
+import com.clevertap.android.sdk.inapp.CTLocalInAppSettings;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.inbox.CTMessageDAO;
@@ -1026,6 +1027,23 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public static void tokenRefresh(Context context, String token, PushType pushType) {
         for (CleverTapAPI instance : getAvailableInstances(context)) {
             instance.coreState.getPushProviders().doTokenRefresh(token, pushType);
+        }
+    }
+
+    public void promptPushPrimer(CTLocalInAppSettings builder){
+        if (instances == null) {
+            return;
+        }
+
+        for (String accountId : CleverTapAPI.instances.keySet()) {
+            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+            try {
+                if (instance != null) {
+                    instance.coreState.getInAppController().promptPushPrimer(builder);
+                }
+            } catch (Throwable t) {
+                // Ignore
+            }
         }
     }
 

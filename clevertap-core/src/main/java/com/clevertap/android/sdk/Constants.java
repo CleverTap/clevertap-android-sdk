@@ -215,6 +215,8 @@ public interface Constants {
     String BLACK = "#000000";
     String WHITE = "#FFFFFF";
     String BLUE = "#0000FF";
+    String GREEN = "#00FF00";
+    String LIGHT_BLUE = "#818ce5";
     /**
      * Profile command constants.
      */

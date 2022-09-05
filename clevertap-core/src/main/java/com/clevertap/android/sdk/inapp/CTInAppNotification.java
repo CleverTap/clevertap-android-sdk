@@ -572,6 +572,47 @@ public class CTInAppNotification implements Parcelable {
         listener.notificationReady(this);
     }
 
+    public CTInAppNotification configureWithLocalData(CTLocalInAppSettings ctLocalInAppSettings){
+        this.id = "";//
+        this.campaignId = "";//
+        this.type = ctLocalInAppSettings.getInAppAlertType();//alert-template
+        this.excludeFromCaps = false;//
+        this.totalLifetimeCount =  -1;//
+        this.totalDailyCount =  -1;//
+        this.inAppType = CTInAppType.fromString(this.type);
+        this.isTablet = false;//
+        this.backgroundColor = Constants.WHITE;
+        this.isPortrait = true;//
+        this.isLandscape = true;//
+        this.timeToLive = System.currentTimeMillis() + 2 * Constants.ONE_DAY_IN_MILLIS;
+
+
+        this.title = ctLocalInAppSettings.getTitleText();
+        this.titleColor = Constants.BLACK;
+
+        this.message = ctLocalInAppSettings.getBodyText();
+        this.messageColor = Constants.BLACK;
+
+        this.hideCloseButton = true;
+
+        //CTINAPPNOTIFMedia obj
+
+        //Positive Button
+        CTInAppNotificationButton inAppNotificationPositiveButton = new CTInAppNotificationButton()
+                .initWithLocalData(ctLocalInAppSettings.getPositiveConfirmationBtnText(),ctLocalInAppSettings.getPositiveConfirmationBtnColor());
+        if (inAppNotificationPositiveButton != null) {
+            this.buttons.add(inAppNotificationPositiveButton);
+        }
+
+        //Negative Button
+        CTInAppNotificationButton inAppNotificationNegativeButton = new CTInAppNotificationButton()
+                .initWithLocalData(ctLocalInAppSettings.getNegativeConfirmationBtnText(),ctLocalInAppSettings.getPositiveConfirmationBtnColor());
+        if (inAppNotificationNegativeButton != null) {
+            this.buttons.add(inAppNotificationNegativeButton);
+        }
+        return this;
+    }
+
     private void configureWithJson(JSONObject jsonObject) {
         try {
             this.id = jsonObject.has(Constants.INAPP_ID_IN_PAYLOAD) ? jsonObject

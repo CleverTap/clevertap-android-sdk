@@ -20,6 +20,9 @@ public class CTWebInterface {
         this.weakReference = new WeakReference<>(instance);
     }
 
+
+    //Handle push primer click and directly call requestPermissions() inside InAppActivity
+
     /**
      * Method to be called from WebView Javascript to add profile properties in CleverTap
      *

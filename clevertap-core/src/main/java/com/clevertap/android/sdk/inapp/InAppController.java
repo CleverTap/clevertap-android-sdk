@@ -42,7 +42,9 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
         private final WeakReference<InAppController> inAppControllerWeakReference;
 
-        private final JSONObject jsonObject;
+        private JSONObject jsonObject;
+
+        private CTLocalInAppSettings ctLocalInAppSettings;
 
         private final boolean videoSupport = Utils.haveVideoPlayerSupport;
 
@@ -51,10 +53,22 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             this.jsonObject = jsonObject;
         }
 
+        NotificationPrepareRunnable(InAppController inAppController, CTLocalInAppSettings ctLocalInAppSettings) {
+            this.inAppControllerWeakReference = new WeakReference<>(inAppController);
+            this.ctLocalInAppSettings = ctLocalInAppSettings;
+        }
+
         @Override
         public void run() {
-            final CTInAppNotification inAppNotification = new CTInAppNotification()
-                    .initWithJSON(jsonObject, videoSupport);
+            final CTInAppNotification inAppNotification;
+            if (jsonObject != null) {//If jsonObj is available then render in-app via JSON
+                inAppNotification = new CTInAppNotification()
+                        .initWithJSON(jsonObject, videoSupport);
+            }else {//render in-app via local in-app builder
+                inAppNotification = new CTInAppNotification()
+                        .configureWithLocalData(ctLocalInAppSettings);
+            }
+
             if (inAppNotification.getError() != null) {
                 logger
                         .debug(config.getAccountId(),
@@ -165,6 +179,10 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             Logger.d("In-app notifications will not be shown for this activity ("
                     + (activity != null ? activity.getLocalClassName() : "") + ")");
         }
+    }
+
+    public void promptPushPrimer(CTLocalInAppSettings ctLocalInAppSettings) {//Change method name here to avoid confusion
+        prepareNotificationForDisplay(ctLocalInAppSettings);
     }
 
     public void discardInApps() {
@@ -413,6 +431,18 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             @Override
             public Void call() {
                 new NotificationPrepareRunnable(InAppController.this, jsonObject).run();
+                return null;
+            }
+        });
+    }
+
+    private void prepareNotificationForDisplay(final CTLocalInAppSettings ctLocalInAppSettings) {
+        logger.debug(config.getAccountId(), "Preparing local In-App using CTLocalInAppSettings for display");//Need correct error mssg
+        Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
+        task.execute("InappController#prepareNotificationForDisplay", new Callable<Void>() {
+            @Override
+            public Void call() {
+                new NotificationPrepareRunnable(InAppController.this, ctLocalInAppSettings).run();
                 return null;
             }
         });
