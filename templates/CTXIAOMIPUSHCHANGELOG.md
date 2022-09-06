@@ -1,6 +1,6 @@
 ## CleverTap Xiaomi Push SDK CHANGE LOG
 
-### Version 1.5.0 (August 31, 2022)  
+### Version 1.5.0 (September 6, 2022)
 * Supporting Xiaomi Regions
   * This Release makes the CT XPS SDK compatible with the latest [Xiaomi Privacy Upgrades](https://dev.mi.com/console/doc/detail?pId=2761)
   * **[Breaking Change]** This release makes it mandatory for Clients to include the Xiaomi Push Library as a part of their gradle dependencies. Check the [integration doc](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTXIAOMIPUSH.md)for more info
