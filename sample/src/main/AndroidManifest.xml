@@ -20,10 +20,16 @@
             android:name=".HomeScreenActivity"
             android:exported="true"
             android:theme="@style/AppTheme.NoActionBar">
+
+            <!-- This intent filter handles app launch -->
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+            <!-- This intent filter used for handling deep link -->
+            <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
@@ -35,7 +41,6 @@
                     android:host="${applicationId}"
                     android:pathPrefix="/HomeScreenActivity"
                     android:scheme="ctdemo" />
-
             </intent-filter>
         </activity>
 

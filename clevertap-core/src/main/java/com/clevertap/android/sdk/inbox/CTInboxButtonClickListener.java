@@ -26,23 +26,27 @@ class CTInboxButtonClickListener implements View.OnClickListener {
     private final int position;
 
     private ViewPager viewPager;
+    private boolean isBodyClick;
 
     CTInboxButtonClickListener(int position, CTInboxMessage inboxMessage, String buttonText, JSONObject jsonObject,
-            CTInboxListViewFragment fragment) {
+            CTInboxListViewFragment fragment, boolean isInboxMessageBodyClick) {
         this.position = position;
         this.inboxMessage = inboxMessage;
         this.buttonText = buttonText;
         this.fragment = fragment; // be sure to pass this as a Weak Ref
         this.buttonObject = jsonObject;
+        this.isBodyClick = isInboxMessageBodyClick;
     }
 
     CTInboxButtonClickListener(int position, CTInboxMessage inboxMessage, String buttonText,
-            CTInboxListViewFragment fragment, ViewPager viewPager) {
+            CTInboxListViewFragment fragment, ViewPager viewPager, boolean isInboxMessageBodyClick) {
         this.position = position;
         this.inboxMessage = inboxMessage;
         this.buttonText = buttonText;
         this.fragment = fragment; // be sure to pass this as a Weak Ref
         this.viewPager = viewPager;
+        this.isBodyClick = isInboxMessageBodyClick;
+
     }
 
 
@@ -50,7 +54,7 @@ class CTInboxButtonClickListener implements View.OnClickListener {
     public void onClick(View v) {
         if (viewPager != null) {//Handles viewpager clicks
             if (fragment != null) {
-                fragment.handleViewPagerClick(position, viewPager.getCurrentItem());
+                fragment.handleViewPagerClick(position, viewPager.getCurrentItem(),isBodyClick);
             }
         } else {//Handles button clicks
             if (buttonText != null && buttonObject != null) {
@@ -62,11 +66,11 @@ class CTInboxButtonClickListener implements View.OnClickListener {
                         }
                     }
 
-                    fragment.handleClick(this.position, buttonText, buttonObject, getKeyValues(inboxMessage));
+                    fragment.handleClick(this.position, buttonText, buttonObject, getKeyValues(inboxMessage),isBodyClick);
                 }
             } else {
                 if (fragment != null) {
-                    fragment.handleClick(this.position, null, null, null);
+                    fragment.handleClick(this.position, null, null, null,isBodyClick);
                 }
             }
         }

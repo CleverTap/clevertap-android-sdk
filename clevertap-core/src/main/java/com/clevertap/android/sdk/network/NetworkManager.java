@@ -247,7 +247,7 @@ public class NetworkManager extends BaseNetworkManager {
     public boolean needsHandshakeForDomain(final EventGroup eventGroup) {
         final String domain = getDomainFromPrefsOrMetadata(eventGroup);
         boolean needHandshakeDueToFailure = responseFailureCount > 5;
-        if(needHandshakeDueToFailure){
+        if (needHandshakeDueToFailure) {
             setDomain(context, null);
         }
         return domain == null || needHandshakeDueToFailure;
@@ -420,9 +420,8 @@ public class NetworkManager extends BaseNetworkManager {
             header.put("af", appFields);
 
             HashMap<String, Integer> allCustomSdkVersions = coreMetaData.getAllCustomSdkVersions();
-            for (Entry<String, Integer> entries :allCustomSdkVersions.entrySet())
-            {
-                header.put(entries.getKey(),entries.getValue());
+            for (Entry<String, Integer> entries : allCustomSdkVersions.entrySet()) {
+                header.put(entries.getKey(), entries.getValue());
             }
 
             long i = getI();
@@ -676,12 +675,34 @@ public class NetworkManager extends BaseNetworkManager {
             setFirstRequestTimestampIfNeeded(getCurrentRequestTimestamp());
 
             if (eventGroup == EventGroup.PUSH_NOTIFICATION_VIEWED) {
-                NotificationRenderedListener notificationRenderedListener
-                        = callbackManager.getNotificationRenderedListener();
-                logger.verbose(config.getAccountId(), "push notification viewed event sent successfully");
-                if (notificationRenderedListener != null) {
-                    notificationRenderedListener.onNotificationRendered(true);
+                // get last push id from queue
+
+                JSONObject notification = queue.getJSONObject(queue.length() - 1).optJSONObject("evtData");
+                if (notification != null) {
+                    String lastPushInQueue = notification.optString(Constants.WZRK_PUSH_ID);
+                    /**
+                     * Check if, sent push notification viewed event is for latest push notification or older
+                     * If it's for latest push which just came on device then give render callback to listeners
+                     * This will make sure that callback will be given only when viewed event for latest push on device is
+                     * sent to BE.
+                     */
+                    if (coreMetaData.getLastNotificationId() != null && coreMetaData.getLastNotificationId()
+                            .equals(lastPushInQueue)) {
+                        NotificationRenderedListener notificationRenderedListener
+                                = callbackManager.getNotificationRenderedListener();
+
+                        logger.verbose(config.getAccountId(),
+                                "push notification viewed event sent successfully for push id = " + lastPushInQueue);
+                        if (notificationRenderedListener != null) {
+                            notificationRenderedListener.onNotificationRendered(true);
+                        }
+
+                    }
                 }
+
+                logger.verbose(config.getAccountId(),
+                        "push notification viewed event sent successfully");
+
             }
             logger.debug(config.getAccountId(), "Queue sent successfully");
 
@@ -713,9 +734,9 @@ public class NetworkManager extends BaseNetworkManager {
                 domainName);
 
         if (callbackManager.getDCDomainCallback() != null) {
-            if(domainName != null) {
+            if (domainName != null) {
                 callbackManager.getDCDomainCallback().onDCDomainAvailable(getDCDomain(domainName));
-            }else {
+            } else {
                 callbackManager.getDCDomainCallback().onDCDomainUnavailable();
             }
         }
