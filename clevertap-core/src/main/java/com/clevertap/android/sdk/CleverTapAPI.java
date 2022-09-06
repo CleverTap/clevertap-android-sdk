@@ -140,7 +140,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     private WeakReference<InboxMessageButtonListener> inboxMessageButtonListener;
 
-    private WeakReference<CTInboxMessageListener> inboxMessageListener;
+    private WeakReference<InboxMessageListener> inboxMessageListener;
 
     /**
      * This method is used to change the credentials of CleverTap account Id and token programmatically
@@ -2411,7 +2411,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     @SuppressWarnings("unused")
-    public void setCTInboxMessageListener(CTInboxMessageListener listener){
+    public void setCTInboxMessageListener(InboxMessageListener listener){
         this.inboxMessageListener = new WeakReference<>(listener);
     }
 
