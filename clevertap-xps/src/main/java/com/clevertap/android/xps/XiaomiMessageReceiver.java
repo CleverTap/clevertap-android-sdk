@@ -46,18 +46,18 @@ public class XiaomiMessageReceiver extends PushMessageReceiver {
 
     private void pushNotificationViewedEvent(Context context, MiPushMessage miPushMessage, XiaomiNotificationParser xpsParser) {
         try {
-            Objects.requireNonNull(miPushMessage);
-            Objects.requireNonNull(xpsParser);
+            Objects.requireNonNull(miPushMessage,"MiPushMessage must not be null");
+            Objects.requireNonNull(xpsParser, "XiaomiNotificationParser must not be null");
             Bundle data = xpsParser.toBundle(miPushMessage);
 
-            Objects.requireNonNull(data);
+            Objects.requireNonNull(data , "Bundle data must not be null");
             String acc = PushNotificationUtil.getAccountIdFromNotificationBundle(data);
 
-            Objects.requireNonNull(context);
-            Objects.requireNonNull(acc);
+            Objects.requireNonNull(context,"Context must not be null");
+            Objects.requireNonNull(acc, "acc must not be null");
             CleverTapAPI ct = CleverTapAPI.getGlobalInstance(context, acc);
 
-            Objects.requireNonNull(ct);
+            Objects.requireNonNull(ct,"CleverTapAPI must not be null");
             ct.pushNotificationViewedEvent(data);
         }
         catch (Throwable t){

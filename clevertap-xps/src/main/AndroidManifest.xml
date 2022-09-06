@@ -15,6 +15,13 @@
     <uses-permission android:name="${applicationId}.permission.MIPUSH_RECEIVE" />
 
     <application>
+        <activity
+            android:name="com.xiaomi.mipush.sdk.NotificationClickedActivity"
+            android:theme="@android:style/Theme.Translucent.NoTitleBar"
+            android:launchMode="singleInstance"
+            android:exported="true"
+            android:enabled="true">
+        </activity>
         <service
             android:name="com.xiaomi.push.service.XMPushService"
             android:enabled="true"

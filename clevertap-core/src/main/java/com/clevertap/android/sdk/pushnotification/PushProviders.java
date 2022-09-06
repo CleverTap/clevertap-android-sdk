@@ -151,7 +151,8 @@ public class PushProviders implements CTPushProviderListener {
         }
 
         try {
-            if(extras.getBoolean("wzrk_pn_s")){
+            boolean isSilent = extras.getString(Constants.WZRK_PUSH_SILENT,"").equalsIgnoreCase("true");
+            if(isSilent){
                 analyticsManager.pushNotificationViewedEvent(extras);
                 return ;
             }

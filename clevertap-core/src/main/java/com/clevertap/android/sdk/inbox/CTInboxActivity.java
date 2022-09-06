@@ -179,6 +179,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
                 public void onTabSelected(TabLayout.Tab tab) {
                     CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter
                             .getItem(tab.getPosition());
+                    fragment.updateAdapterContent();
                     if (fragment.getMediaRecyclerView() != null) {
                         fragment.getMediaRecyclerView().onRestartPlayer();
                     }
