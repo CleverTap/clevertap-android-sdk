@@ -9,6 +9,7 @@ import android.app.ActivityManager;
 import android.app.ActivityManager.RunningAppProcessInfo;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -660,6 +661,23 @@ public final class Utils {
 
         return !renderRateKillSwitch && renderRateFallback;
 
+    }
+
+    public static boolean isAndroid13(Context context){
+        return  Build.VERSION.SDK_INT > 32 && getTargetSdkVersion(context) > 32;
+    }
+
+    public static int getTargetSdkVersion(Context context) {
+        String packageName = context.getPackageName();
+        PackageManager packageManager = context.getPackageManager();
+        try {
+            ApplicationInfo applicationInfo = packageManager.getApplicationInfo(packageName, 0);
+            return applicationInfo.targetSdkVersion;
+        } catch (PackageManager.NameNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        return Build.VERSION_CODES.JELLY_BEAN;
     }
 
     static {

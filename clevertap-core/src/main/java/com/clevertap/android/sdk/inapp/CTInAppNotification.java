@@ -220,6 +220,8 @@ public class CTInAppNotification implements Parcelable {
 
     private int widthPercentage;
 
+    private boolean isLocalInApp = false;
+
     CTInAppNotification() {
     }
 
@@ -267,6 +269,7 @@ public class CTInAppNotification implements Parcelable {
             jsEnabled = in.readByte() != 0x00;
             isPortrait = in.readByte() != 0x00;
             isLandscape = in.readByte() != 0x00;
+            isLocalInApp = in.readByte() != 0x00;
             landscapeImageUrl = in.readString();
             _landscapeImageCacheKey = in.readString();
             timeToLive = in.readLong();
@@ -354,6 +357,7 @@ public class CTInAppNotification implements Parcelable {
         dest.writeByte((byte) (jsEnabled ? 0x01 : 0x00));
         dest.writeByte((byte) (isPortrait ? 0x01 : 0x00));
         dest.writeByte((byte) (isLandscape ? 0x01 : 0x00));
+        dest.writeByte((byte) (isLocalInApp ? 0x01 : 0x00));
         dest.writeString(landscapeImageUrl);
         dest.writeString(_landscapeImageCacheKey);
         dest.writeLong(timeToLive);
@@ -389,6 +393,10 @@ public class CTInAppNotification implements Parcelable {
 
     String getError() {
         return error;
+    }
+
+    public boolean isLocalInApp() {
+        return isLocalInApp;
     }
 
     byte[] getGifByteArray(CTInAppNotificationMedia inAppMedia) {
@@ -584,6 +592,7 @@ public class CTInAppNotification implements Parcelable {
         this.backgroundColor = Constants.WHITE;
         this.isPortrait = true;//
         this.isLandscape = true;//
+        this.isLocalInApp = true;
         this.timeToLive = System.currentTimeMillis() + 2 * Constants.ONE_DAY_IN_MILLIS;
 
 

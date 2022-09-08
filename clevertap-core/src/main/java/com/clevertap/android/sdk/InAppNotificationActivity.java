@@ -1,14 +1,23 @@
 package com.clevertap.android.sdk;
 
+import static com.clevertap.android.sdk.Utils.isAndroid13;
+
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.WindowManager;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
+
+import com.clevertap.android.sdk.inapp.AlertDialogPromptForSettings;
 import com.clevertap.android.sdk.inapp.CTInAppBaseFullFragment;
 import com.clevertap.android.sdk.inapp.CTInAppHtmlCoverFragment;
 import com.clevertap.android.sdk.inapp.CTInAppHtmlHalfInterstitialFragment;
@@ -22,6 +31,8 @@ import com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialImageFragment;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inapp.CTInAppType;
 import com.clevertap.android.sdk.inapp.InAppListener;
+import com.clevertap.android.sdk.inapp.NavigateToAndroidSettingsForNotifications;
+
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 
@@ -34,6 +45,13 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     private CTInAppNotification inAppNotification;
 
     private WeakReference<InAppListener> listenerWeakReference;
+
+    private static boolean neverAskAgainClicked;
+
+    private static final int PERMISSION_REQUEST_CODE = 2;
+
+    private static final String ANDROID_PERMISSION_STRING = "android.permission.POST_NOTIFICATIONS";
+
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -144,6 +162,56 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         if (listener != null) {
             listener.inAppNotificationDidClick(inAppNotification, data, keyValueMap);
         }
+    }
+
+    public void prompt(){
+        if (isAndroid13(InAppNotificationActivity.this)){
+            requestPermission();
+        }
+    }
+
+    public void requestPermission() {
+        neverAskAgainClicked = !ActivityCompat.shouldShowRequestPermissionRationale(
+                InAppNotificationActivity.this, ANDROID_PERMISSION_STRING);
+
+        if (neverAskAgainClicked) {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{ANDROID_PERMISSION_STRING}, PERMISSION_REQUEST_CODE);
+        }else{
+            showFallbackAlertDialog();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            boolean granted = grantResults.length > 0 && grantResults[0] ==
+                    PackageManager.PERMISSION_GRANTED;
+            if (granted) {
+//                callback.onAccept();//Give callback when permission is granted
+                Toast.makeText(InAppNotificationActivity.this,
+                        "Notification Permission is granted", Toast.LENGTH_SHORT).show();
+            }else {
+//                callback.onReject(shouldShowSettings());//Give callback when permission is rejected
+            }
+            didDismiss(null);
+        }
+    }
+
+    public void showFallbackAlertDialog() {
+        AlertDialogPromptForSettings.INSTANCE.show(this, new AlertDialogPromptForSettings.Callback() {
+            @Override
+            public void onAccept() {
+                NavigateToAndroidSettingsForNotifications.INSTANCE.show(getBaseContext());
+                didDismiss(null);
+            }
+
+            @Override
+            public void onDecline() {
+                didDismiss(null);
+            }
+        });
     }
 
     void didDismiss(Bundle data) {
@@ -257,7 +325,11 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                                     fireUrlThroughIntent(actionUrl, data);
                                                     return;
                                                 }
-                                                didDismiss(data);
+                                               if (inAppNotification.isLocalInApp()) {
+                                                   prompt();
+                                               }else {
+                                                   didDismiss(data);
+                                               }
                                             }
                                         })
                                 .create();
@@ -304,6 +376,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                                     return;
                                                 }
                                                 didDismiss(data);
+
                                             }
                                         }).create();
                         if (inAppNotification.getButtons().size() == 2) {

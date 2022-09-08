@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.customviews.CloseImageView;
 import java.lang.ref.WeakReference;
@@ -143,12 +144,16 @@ public abstract class CTInAppBaseFragment extends Fragment {
 //            check API and toolsSDK version, inapp type, whether the btn was meant for PN.
 //            requestPermissions()
 
-            String actionUrl = button.getActionUrl();
-            if (actionUrl != null) {
-                fireUrlThroughIntent(actionUrl, data);
-                return;
+            if (index == 0 && inAppNotification.isLocalInApp()) {
+                ((InAppNotificationActivity) context).prompt();
+            }else {
+                String actionUrl = button.getActionUrl();
+                if (actionUrl != null) {
+                    fireUrlThroughIntent(actionUrl, data);
+                    return;
+                }
+                didDismiss(data);
             }
-            didDismiss(data);
         } catch (Throwable t) {
             config.getLogger().debug("Error handling notification button click: " + t.getCause());
             didDismiss(null);
