@@ -36,25 +36,8 @@ import java.util.concurrent.Callable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class InAppController implements CTInAppNotification.CTInAppNotificationListener, InAppListener, InAppNotificationActivity.PermissionCallback {
-
-    @Override
-    public void onAccept() {
-        Logger.i("OnAccept called");
-        final PushPermissionNotificationResponseListener listener = callbackManager.getPushPermissionNotificationResponseListener();
-        if (listener != null){
-            listener.response(true);
-        }
-    }
-
-    @Override
-    public void onReject() {
-        Logger.i("onReject Called");
-        final PushPermissionNotificationResponseListener listener = callbackManager.getPushPermissionNotificationResponseListener();
-        if (listener != null){
-            listener.response(false);
-        }
-    }
+public class InAppController implements CTInAppNotification.CTInAppNotificationListener, InAppListener,
+        InAppNotificationActivity.PermissionCallback {
 
     //InApp
     private final class NotificationPrepareRunnable implements Runnable {
@@ -303,6 +286,22 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         }
         logger.debug(config.getAccountId(), "Notification ready: " + inAppNotification.getJsonDescription());
         displayNotification(inAppNotification);
+    }
+
+    @Override
+    public void onAccept() {
+        final PushPermissionNotificationResponseListener listener = callbackManager.getPushPermissionNotificationResponseListener();
+        if (listener != null){
+            listener.response(true);
+        }
+    }
+
+    @Override
+    public void onReject() {
+        final PushPermissionNotificationResponseListener listener = callbackManager.getPushPermissionNotificationResponseListener();
+        if (listener != null){
+            listener.response(false);
+        }
     }
 
     public void resumeInApps() {

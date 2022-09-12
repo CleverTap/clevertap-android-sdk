@@ -72,7 +72,11 @@ public class CTLocalInAppSettings {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CTLocalInAppSettings that = (CTLocalInAppSettings) o;
-        return Objects.equals(inAppAlertType, that.inAppAlertType) && Objects.equals(titleText, that.titleText) && Objects.equals(bodyText, that.bodyText) && Objects.equals(positiveConfirmationBtnText, that.positiveConfirmationBtnText) && Objects.equals(negativeConfirmationBtnText, that.negativeConfirmationBtnText) && Objects.equals(positiveConfirmationBtnColor, that.positiveConfirmationBtnColor);
+        return Objects.equals(inAppAlertType, that.inAppAlertType) && Objects.equals(titleText, that.titleText)
+                && Objects.equals(bodyText, that.bodyText) &&
+                Objects.equals(positiveConfirmationBtnText, that.positiveConfirmationBtnText)
+                && Objects.equals(negativeConfirmationBtnText, that.negativeConfirmationBtnText)
+                && Objects.equals(positiveConfirmationBtnColor, that.positiveConfirmationBtnColor);
     }
 
     @Override
