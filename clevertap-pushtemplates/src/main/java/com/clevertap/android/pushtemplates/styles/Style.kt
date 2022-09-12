@@ -3,6 +3,7 @@ package com.clevertap.android.pushtemplates.styles
 import android.app.PendingIntent
 import android.content.Context
 import android.graphics.Color
+import android.os.Build
 import android.os.Bundle
 import android.text.Html
 import android.widget.RemoteViews
@@ -28,6 +29,11 @@ abstract class Style(private var renderer: TemplateRenderer) {
         if (contentViewBig != null) {
             notificationBuilder.setCustomBigContentView(contentViewBig)
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            notificationBuilder.setSubText(renderer.pt_subtitle)
+        }
+
         return notificationBuilder.setSmallIcon(renderer.smallIcon)
             .setContentTitle(Html.fromHtml(pt_title))
             .setContentIntent(pIntent)
