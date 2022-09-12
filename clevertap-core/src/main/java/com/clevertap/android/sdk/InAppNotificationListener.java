@@ -1,6 +1,9 @@
 package com.clevertap.android.sdk;
 
 import androidx.annotation.Nullable;
+
+import com.clevertap.android.sdk.inapp.CTInAppNotification;
+
 import java.util.Map;
 
 /**
@@ -18,6 +21,14 @@ public interface InAppNotificationListener {
      * @return True to show this notification immediately, false to not show this notification
      */
     boolean beforeShow(Map<String, Object> extras);
+
+    /**
+     * This is called when an in-app notification is rendered.
+     *
+     * @param ctInAppNotification The CTInAppNotification object for this notification.
+     * {@link CTInAppNotification} object
+     */
+    void onShow(CTInAppNotification  ctInAppNotification);
 
     /**
      * When an in-app notification is dismissed (either by the close button, or a call to action),

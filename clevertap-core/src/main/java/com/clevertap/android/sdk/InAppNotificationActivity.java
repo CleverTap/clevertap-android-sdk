@@ -46,12 +46,16 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     private WeakReference<InAppListener> listenerWeakReference;
 
-    private static boolean neverAskAgainClicked;
+    private WeakReference<PermissionCallback> permissionCallbackWeakReference;
 
     private static final int PERMISSION_REQUEST_CODE = 2;
 
     private static final String ANDROID_PERMISSION_STRING = "android.permission.POST_NOTIFICATIONS";
 
+    public interface PermissionCallback {
+        void onAccept();
+        void onReject();
+    }
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,6 +74,8 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                 config = configBundle.getParcelable("config");
             }
             setListener(CleverTapAPI.instanceWithConfig(this, config).getCoreState().getInAppController());
+
+            setPermissionCallback(CleverTapAPI.instanceWithConfig(this, config).getCoreState().getInAppController());
         } catch (Throwable t) {
             Logger.v("Cannot find a valid notification bundle to show!", t);
             finish();
@@ -171,13 +177,14 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     }
 
     public void requestPermission() {
-        neverAskAgainClicked = !ActivityCompat.shouldShowRequestPermissionRationale(
+        boolean neverAskAgainClicked = !ActivityCompat.shouldShowRequestPermissionRationale(
                 InAppNotificationActivity.this, ANDROID_PERMISSION_STRING);
 
         if (neverAskAgainClicked) {
             ActivityCompat.requestPermissions(this,
                     new String[]{ANDROID_PERMISSION_STRING}, PERMISSION_REQUEST_CODE);
         }else{
+            permissionCallbackWeakReference.get().onReject();
             showFallbackAlertDialog();
         }
     }
@@ -189,11 +196,9 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             boolean granted = grantResults.length > 0 && grantResults[0] ==
                     PackageManager.PERMISSION_GRANTED;
             if (granted) {
-//                callback.onAccept();//Give callback when permission is granted
-                Toast.makeText(InAppNotificationActivity.this,
-                        "Notification Permission is granted", Toast.LENGTH_SHORT).show();
+                permissionCallbackWeakReference.get().onAccept();
             }else {
-//                callback.onReject(shouldShowSettings());//Give callback when permission is rejected
+                permissionCallbackWeakReference.get().onReject();
             }
             didDismiss(null);
         }
@@ -258,6 +263,10 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     void setListener(InAppListener listener) {
         listenerWeakReference = new WeakReference<>(listener);
+    }
+
+    public void setPermissionCallback(PermissionCallback callback){
+        permissionCallbackWeakReference = new WeakReference<>(callback);
     }
 
     private CTInAppBaseFullFragment createContentFragment() {

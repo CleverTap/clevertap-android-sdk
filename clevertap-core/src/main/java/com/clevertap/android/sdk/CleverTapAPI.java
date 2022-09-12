@@ -1597,8 +1597,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return coreState.getLocalDataStore().getEventHistory(context);
     }
 
-    //DeepLink
-
     /**
      * Returns the InAppNotificationListener object
      *
@@ -1617,6 +1615,26 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings({"unused"})
     public void setInAppNotificationListener(InAppNotificationListener inAppNotificationListener) {
         coreState.getCallbackManager().setInAppNotificationListener(inAppNotificationListener);
+    }
+
+    /**
+     * Returns the PushPermissionNotificationResponseListener object
+     *
+     * @return An {@link PushPermissionNotificationResponseListener} object
+     */
+    @SuppressWarnings({"unused", "WeakerAccess"})
+    public PushPermissionNotificationResponseListener getPushPermissionNotificationResponseListener() {
+        return coreState.getCallbackManager().getPushPermissionNotificationResponseListener();
+    }
+
+    /**
+     * This method sets the PushPermissionNotificationResponseListener
+     *
+     * @param pushPermissionNotificationResponseListener An {@link PushPermissionNotificationResponseListener} object
+     */
+    @SuppressWarnings({"unused"})
+    public void setPushPermissionNotificationResponseListener(PushPermissionNotificationResponseListener pushPermissionNotificationResponseListener) {
+        coreState.getCallbackManager().setPushPermissionNotificationResponseListener(pushPermissionNotificationResponseListener);
     }
 
     /**

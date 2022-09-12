@@ -19,6 +19,7 @@ import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.InAppNotificationListener;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
+import com.clevertap.android.sdk.PushPermissionNotificationResponseListener;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
@@ -35,7 +36,25 @@ import java.util.concurrent.Callable;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class InAppController implements CTInAppNotification.CTInAppNotificationListener, InAppListener {
+public class InAppController implements CTInAppNotification.CTInAppNotificationListener, InAppListener, InAppNotificationActivity.PermissionCallback {
+
+    @Override
+    public void onAccept() {
+        Logger.i("OnAccept called");
+        final PushPermissionNotificationResponseListener listener = callbackManager.getPushPermissionNotificationResponseListener();
+        if (listener != null){
+            listener.response(true);
+        }
+    }
+
+    @Override
+    public void onReject() {
+        Logger.i("onReject Called");
+        final PushPermissionNotificationResponseListener listener = callbackManager.getPushPermissionNotificationResponseListener();
+        if (listener != null){
+            listener.response(false);
+        }
+    }
 
     //InApp
     private final class NotificationPrepareRunnable implements Runnable {
@@ -251,6 +270,16 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     @Override
     public void inAppNotificationDidShow(CTInAppNotification inAppNotification, Bundle formData) {
         analyticsManager.pushInAppNotificationStateEvent(false, inAppNotification, formData);
+
+        //Fire onShow() callback when InApp is shown.
+        try {
+            final InAppNotificationListener listener = callbackManager.getInAppNotificationListener();
+            if (listener != null) {
+                listener.onShow(inAppNotification);
+            }
+        } catch (Throwable t) {
+            Logger.v(config.getAccountId(), "Failed to call the in-app notification listener", t);
+        }
     }
 
     //InApp

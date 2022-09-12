@@ -10,13 +10,11 @@ import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commitNow
-import com.clevertap.android.sdk.CTFeatureFlagsListener
-import com.clevertap.android.sdk.CTInboxListener
-import com.clevertap.android.sdk.CleverTapAPI
+import com.clevertap.android.sdk.*
 import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
-import com.clevertap.android.sdk.SyncListener
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
+import com.clevertap.android.sdk.inapp.CTInAppNotification
 import com.clevertap.android.sdk.product_config.CTProductConfigListener
 import com.clevertap.demo.ui.main.HomeScreenFragment
 
@@ -31,7 +29,7 @@ import org.json.JSONObject
 private const val TAG = "HomeScreenActivity"
 
 class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitListener, CTProductConfigListener,
-    CTFeatureFlagsListener, SyncListener {
+    CTFeatureFlagsListener, SyncListener, InAppNotificationListener, PushPermissionNotificationResponseListener {
 
     var cleverTapDefaultInstance: CleverTapAPI? = null
 
@@ -142,6 +140,11 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
             setCTFeatureFlagsListener(this@HomeScreenActivity)
             //Initialize the inbox and wait for callbacks on overridden methods
             initializeInbox()
+
+            inAppNotificationListener = this@HomeScreenActivity
+
+            pushPermissionNotificationResponseListener = this@HomeScreenActivity
+
         }
 
         //With CleverTap Android SDK v3.2.0 you can create additional instances to send data to multiple CleverTap accounts
@@ -233,5 +236,25 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
 
         // Show Dialog
         mDialog.show()
+    }
+
+    override fun beforeShow(extras: MutableMap<String, Any>?): Boolean {
+        Log.i(TAG, "InApp---> beforeShow() called")
+        return true
+    }
+
+    override fun onShow(ctInAppNotification: CTInAppNotification?) {
+        Log.i(TAG, "InApp---> onShow() called")
+    }
+
+    override fun onDismissed(
+        extras: MutableMap<String, Any>?,
+        actionExtras: MutableMap<String, Any>?
+    ) {
+        Log.i(TAG, "InApp---> onDismissed() called")
+    }
+
+    override fun response(accepted: Boolean) {
+        Log.i(TAG, "InApp---> response() called  $accepted")
     }
 }
