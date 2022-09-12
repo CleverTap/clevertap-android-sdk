@@ -53,6 +53,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
         @Override
         public void run() {
+            Logger.v("InAppController|run : support for video player = "+videoSupport);
             final CTInAppNotification inAppNotification = new CTInAppNotification()
                     .initWithJSON(jsonObject, videoSupport);
             if (inAppNotification.getError() != null) {

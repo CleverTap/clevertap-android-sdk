@@ -145,6 +145,7 @@ public class ControllerManager {
                 callbackManager._notifyInboxInitialized();
                 return;
             }
+            Logger.v("ControllerManager|_initializeInbox: support for video player = "+Utils.haveVideoPlayerSupport);
             if (deviceInfo.getDeviceID() != null) {
                 setCTInboxController(new CTInboxController(config, deviceInfo.getDeviceID(),
                         baseDatabaseManager.loadDBAdapter(context),
