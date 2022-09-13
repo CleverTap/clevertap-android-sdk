@@ -1,5 +1,8 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 4.6.2 (September 13, 2022)
+* Support for exoplayer [`v2.17.1`](https://github.com/google/ExoPlayer/releases/tag/r2.17.1) . Note : this upgrade will result in minor ui changes for interstitial in app and inbox notifications that uses exoplayer
+
 ### Version 4.6.1 (September 6, 2022)
 * App inbox blue dot fix :  This release fixes the bug where new entries in inbox would continue showing blue dot when scrolled up and down . expected behaviour is to stop showing blue dot after 2 seconds.
 * App inbox onMessage Click Callback : user can now pass an `InboxMessageListener` in addition to `InboxMessageButtonListener` to receive inbox item click
