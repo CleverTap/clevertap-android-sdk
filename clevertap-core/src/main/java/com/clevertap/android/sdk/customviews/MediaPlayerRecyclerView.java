@@ -1,5 +1,4 @@
 package com.clevertap.android.sdk.customviews;
-
 import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Color;
@@ -18,26 +17,26 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxBaseMessageViewHolder;
+import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.Player;
-import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.ExoTrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.ui.AspectRatioFrameLayout;
-import com.google.android.exoplayer2.ui.PlayerView;
+import com.google.android.exoplayer2.ui.StyledPlayerView;
 
 @RestrictTo(Scope.LIBRARY)
 public class MediaPlayerRecyclerView extends RecyclerView {
 
-    SimpleExoPlayer player;
+    ExoPlayer player;
 
     private Context appContext;
 
     private CTInboxBaseMessageViewHolder playingHolder;
 
     //surface view for playing video
-    private PlayerView videoSurfaceView;
+    private StyledPlayerView videoSurfaceView;
 
     /**
      * {@inheritDoc}
@@ -125,6 +124,7 @@ public class MediaPlayerRecyclerView extends RecyclerView {
         videoSurfaceView = null;
     }
 
+    @SuppressWarnings("unused")
     public void removePlayer() {
         if (videoSurfaceView != null) {
             removeVideoView();
@@ -172,7 +172,7 @@ public class MediaPlayerRecyclerView extends RecyclerView {
 
     private void initialize(Context context) {
         appContext = context.getApplicationContext();
-        videoSurfaceView = new PlayerView(appContext);
+        videoSurfaceView = new StyledPlayerView(appContext);
         videoSurfaceView.setBackgroundColor(Color.TRANSPARENT);
         if (CTInboxActivity.orientation == Configuration.ORIENTATION_LANDSCAPE) {
             videoSurfaceView.setResizeMode(AspectRatioFrameLayout.RESIZE_MODE_FILL);
@@ -188,7 +188,7 @@ public class MediaPlayerRecyclerView extends RecyclerView {
         TrackSelector trackSelector =
                 new DefaultTrackSelector(appContext, videoTrackSelectionFactory);
 
-        player = new SimpleExoPlayer.Builder(context).setTrackSelector(trackSelector).build();
+        player = new ExoPlayer.Builder(context).setTrackSelector(trackSelector).build();
         player.setVolume(0f); // start off muted
         videoSurfaceView.setUseController(true);
         videoSurfaceView.setControllerAutoShow(false);
