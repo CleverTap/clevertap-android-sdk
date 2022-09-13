@@ -1047,6 +1047,23 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
+    public void promptForNotificationPermission(){
+        if (instances == null) {
+            return;
+        }
+
+        for (String accountId : CleverTapAPI.instances.keySet()) {
+            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+            try {
+                if (instance != null) {
+                    instance.coreState.getInAppController().promptPermission();
+                }
+            } catch (Throwable t) {
+                // Ignore
+            }
+        }
+    }
+
     // Initialize
     private CleverTapAPI(final Context context, final CleverTapInstanceConfig config, String cleverTapID) {
         this.context = context;

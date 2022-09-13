@@ -2,6 +2,7 @@ package com.clevertap.android.sdk;
 
 import static com.clevertap.android.sdk.Utils.isAndroid13;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -11,7 +12,6 @@ import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
 import android.view.WindowManager;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.core.app.ActivityCompat;
@@ -69,6 +69,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                 throw new IllegalArgumentException();
             }
             inAppNotification = notif.getParcelable("inApp");
+            boolean displayHardNotificationDialog = notif.getBoolean("displayHardPermissionDialog",false);
             Bundle configBundle = notif.getBundle("configBundle");
             if (configBundle != null) {
                 config = configBundle.getParcelable("config");
@@ -76,6 +77,10 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             setListener(CleverTapAPI.instanceWithConfig(this, config).getCoreState().getInAppController());
 
             setPermissionCallback(CleverTapAPI.instanceWithConfig(this, config).getCoreState().getInAppController());
+            if (displayHardNotificationDialog){
+                prompt();
+                return;
+            }
         } catch (Throwable t) {
             Logger.v("Cannot find a valid notification bundle to show!", t);
             finish();
@@ -219,13 +224,25 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         });
     }
 
+    public static void startPrompt(Activity activity, CleverTapInstanceConfig config){
+        if (!activity.getClass().equals(InAppNotificationActivity.class)) {
+            Intent intent = new Intent(activity, InAppNotificationActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            Bundle configBundle = new Bundle();
+            configBundle.putParcelable("config", config);
+            intent.putExtra("configBundle", configBundle);
+            intent.putExtra("displayHardPermissionDialog", true);
+            activity.startActivity(intent);
+        }
+    }
+
     void didDismiss(Bundle data) {
         if (isAlertVisible) {
             isAlertVisible = false;
         }
         finish();
         InAppListener listener = getListener();
-        if (listener != null && getBaseContext() != null) {
+        if (listener != null && getBaseContext() != null && inAppNotification != null && data != null) {
             listener.inAppNotificationDidDismiss(getBaseContext(), inAppNotification, data);
         }
     }

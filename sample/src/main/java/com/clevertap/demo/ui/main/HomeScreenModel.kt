@@ -66,7 +66,8 @@ object HomeScreenModel {
             ),
             "PROMPT LOCAL IN-APP" to listOf(
                 "Generate Half-Interstitial Local InApp",
-                "Generate Alert Local InApp"
+                "Generate Alert Local InApp",
+                "Generate hard permission dialog"
             )
         )
     }

@@ -343,6 +343,10 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 cleverTapAPI?.promptPushPrimer(builder)
             }
 
+            "102"->{
+                cleverTapAPI?.promptForNotificationPermission()
+            }
+
             //"60" -> webViewClickListener?.onWebViewClick()
 
         }
