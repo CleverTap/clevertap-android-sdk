@@ -1,6 +1,6 @@
 ## CleverTap Android SDK CHANGE LOG
 
-### Version 4.6.1 (September 19, 2022)
+### Version 4.6.2 (September 13, 2022)
 * Support for exoplayer [`v2.17.1`](https://github.com/google/ExoPlayer/releases/tag/r2.17.1) . Note : this upgrade will result in minor ui changes for interstitial in app and inbox notifications that uses exoplayer
 
 ### Version 4.6.1 (September 6, 2022)
