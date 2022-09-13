@@ -122,7 +122,6 @@ public class CTInboxListViewFragment extends Fragment {
         final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(getActivity());
         inboxMessageAdapter= new CTInboxMessageAdapter(inboxMessages, this);
 
-        Logger.v("CTInboxListViewFragment|onCreateView : support for video player = "+haveVideoPlayerSupport);
         if (haveVideoPlayerSupport) {
             mediaRecyclerView = new MediaPlayerRecyclerView(getActivity());
             setMediaRecyclerView(mediaRecyclerView);
