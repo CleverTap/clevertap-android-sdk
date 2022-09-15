@@ -227,7 +227,6 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     public static void startPrompt(Activity activity, CleverTapInstanceConfig config){
         if (!activity.getClass().equals(InAppNotificationActivity.class)) {
             Intent intent = new Intent(activity, InAppNotificationActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
             Bundle configBundle = new Bundle();
             configBundle.putParcelable("config", config);
             intent.putExtra("configBundle", configBundle);
@@ -242,7 +241,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         }
         finish();
         InAppListener listener = getListener();
-        if (listener != null && getBaseContext() != null && inAppNotification != null && data != null) {
+        if (listener != null && getBaseContext() != null && inAppNotification != null) {
             listener.inAppNotificationDidDismiss(getBaseContext(), inAppNotification, data);
         }
     }

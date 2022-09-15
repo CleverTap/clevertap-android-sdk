@@ -20,8 +20,19 @@ public class CTWebInterface {
         this.weakReference = new WeakReference<>(instance);
     }
 
-
-    //Handle push primer click and directly call requestPermissions() inside InAppActivity
+    /**
+     * Method to be called from WebView Javascript to request permission for notification
+     * for Android 13 and above
+     */
+    @JavascriptInterface
+    public void promptForNotificationPermission() {
+        CleverTapAPI cleverTapAPI = weakReference.get();
+        if (cleverTapAPI == null) {
+            Logger.d("CleverTap Instance is null.");
+        } else {
+            cleverTapAPI.promptForNotificationPermission();
+        }
+    }
 
     /**
      * Method to be called from WebView Javascript to add profile properties in CleverTap
