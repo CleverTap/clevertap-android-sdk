@@ -7,7 +7,6 @@ import android.content.Context;
 import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
-
 import androidx.annotation.NonNull;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.BaseEventQueueManager;
@@ -629,6 +628,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         } catch (Throwable ignored) {
             //no-op
         }
+        coreMetaData.setLastNotificationId(extras.getString(Constants.WZRK_PUSH_ID));
         baseEventQueueManager.queueEvent(context, event, Constants.NV_EVENT);
     }
 

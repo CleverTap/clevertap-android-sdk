@@ -328,6 +328,11 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                     repliedNotification = new NotificationCompat.Builder(context);
                 }
                 setSmallIcon(context);
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                    repliedNotification.setSubText(pt_subtitle);
+                }
+
                 repliedNotification.setSmallIcon(smallIcon)
                         .setContentTitle(pt_title)
                         .setContentText(extras.getString(PTConstants.PT_INPUT_FEEDBACK))
@@ -473,7 +478,7 @@ public class PushTemplateReceiver extends BroadcastReceiver {
                 if (notification != null) {
                     contentViewRating = notification.bigContentView;
                     contentViewSmall = notification.contentView;
-                }
+                } // why null check just return if no notification exist in drawer
 
                 if (1 == extras.getInt(PTConstants.KEY_CLICKED_STAR, 0)) {
                     contentViewRating.setImageViewResource(R.id.star1, R.drawable.pt_star_filled);

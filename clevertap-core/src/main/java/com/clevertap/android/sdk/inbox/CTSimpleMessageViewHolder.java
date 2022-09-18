@@ -101,7 +101,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         hideTwoButtons(this.cta1, this.cta2, this.cta3);
                         if (parentWeak != null) {
                             this.cta1.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage,
-                                    this.cta1.getText().toString(), cta1Object, parentWeak));
+                                    this.cta1.getText().toString(), cta1Object, parentWeak,false));
                         }
                         break;
                     case 2:
@@ -118,9 +118,9 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         hideOneButton(this.cta1, this.cta2, this.cta3);
                         if (parentWeak != null) {
                             this.cta1.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage,
-                                    this.cta1.getText().toString(), cta1Object, parentWeak));
+                                    this.cta1.getText().toString(), cta1Object, parentWeak,false));
                             this.cta2.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage,
-                                    this.cta2.getText().toString(), cta2Object, parentWeak));
+                                    this.cta2.getText().toString(), cta2Object, parentWeak,false));
                         }
                         break;
                     case 3:
@@ -141,11 +141,11 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                         this.cta3.setBackgroundColor(Color.parseColor(content.getLinkBGColor(cta3Object)));
                         if (parentWeak != null) {
                             this.cta1.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage,
-                                    this.cta1.getText().toString(), cta1Object, parentWeak));
+                                    this.cta1.getText().toString(), cta1Object, parentWeak,false));
                             this.cta2.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage,
-                                    this.cta2.getText().toString(), cta2Object, parentWeak));
+                                    this.cta2.getText().toString(), cta2Object, parentWeak,false));
                             this.cta3.setOnClickListener(new CTInboxButtonClickListener(position, inboxMessage,
-                                    this.cta3.getText().toString(), cta3Object, parentWeak));
+                                    this.cta3.getText().toString(), cta3Object, parentWeak,false));
                         }
                         break;
                 }
@@ -378,7 +378,6 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
                             if (readDot.getVisibility() == View.VISIBLE) {
                                 parent.didShow(null, position);
                             }
-                            readDot.setVisibility(View.GONE);
                         }
                     });
                 }
@@ -389,7 +388,7 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
         simpleHandler.postDelayed(simpleRunnable, 2000);
         if (parentWeak != null) {
             this.clickLayout.setOnClickListener(
-                    new CTInboxButtonClickListener(position, inboxMessage, null, null, parentWeak));
+                    new CTInboxButtonClickListener(position, inboxMessage, null, null, parentWeak,true));
         }
 
     }

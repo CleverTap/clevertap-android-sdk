@@ -1,15 +1,15 @@
 package com.clevertap.android.sdk.inapp;
 
-import static com.google.android.exoplayer2.ui.PlayerView.SHOW_BUFFERING_WHEN_PLAYING;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.Dialog;
+import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.graphics.drawable.Drawable;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.TypedValue;
@@ -24,6 +24,7 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -32,18 +33,20 @@ import androidx.core.content.res.ResourcesCompat;
 import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.customviews.CloseImageView;
 import com.clevertap.android.sdk.gif.GifImageView;
+import com.google.android.exoplayer2.ExoPlayer;
+import com.google.android.exoplayer2.MediaItem;
 import com.google.android.exoplayer2.Player;
-import com.google.android.exoplayer2.SimpleExoPlayer;
 import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.ExoTrackSelection;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
-import com.google.android.exoplayer2.ui.PlayerView;
+import com.google.android.exoplayer2.ui.StyledPlayerView;
 import com.google.android.exoplayer2.upstream.BandwidthMeter;
 import com.google.android.exoplayer2.upstream.DataSource;
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
-import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory;
+import com.google.android.exoplayer2.upstream.DefaultDataSource;
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
 import com.google.android.exoplayer2.upstream.TransferListener;
 import com.google.android.exoplayer2.util.Util;
 import java.util.ArrayList;
@@ -60,9 +63,9 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
 
     private GifImageView gifImageView;
 
-    private SimpleExoPlayer player;
+    private ExoPlayer player;
 
-    private PlayerView playerView;
+    private StyledPlayerView playerView;
 
     private RelativeLayout relativeLayout;
 
@@ -73,15 +76,15 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     @RequiresApi(api = Build.VERSION_CODES.JELLY_BEAN_MR1)
     @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-            Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, Bundle savedInstanceState) {
 
         ArrayList<Button> inAppButtons = new ArrayList<>();
 
         View inAppView;
         if (inAppNotification.isTablet() && isTablet()) {
             inAppView = inflater.inflate(R.layout.tab_inapp_interstitial, container, false);
-        } else {
+        }
+        else {
             inAppView = inflater.inflate(R.layout.inapp_interstitial, container, false);
         }
 
@@ -213,16 +216,13 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
 
         fl.setBackground(new ColorDrawable(0xBB000000));
 
-        closeImageView.setOnClickListener(new View.OnClickListener() {
-            @SuppressWarnings("ConstantConditions")
-            @Override
-            public void onClick(View v) {
-                didDismiss(null);
-                if (gifImageView != null) {
-                    gifImageView.clear();
-                }
-                getActivity().finish();
+        closeImageView.setOnClickListener(v -> {
+            didDismiss(null);
+            if (gifImageView != null) {
+                gifImageView.clear();
             }
+            Activity activity  = getActivity();
+            if(activity!=null) activity.finish();
         });
 
         if (!inAppNotification.isHideCloseButton()) {
@@ -247,8 +247,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
     public void onResume() {
         super.onResume();
         if (!inAppNotification.getMediaList().isEmpty()) {
-            if (player == null && (inAppNotification.getMediaList().get(0).isVideo() || inAppNotification
-                    .getMediaList().get(0).isAudio())) {
+            if (player == null && (inAppNotification.getMediaList().get(0).isVideo() || inAppNotification.getMediaList().get(0).isAudio())) {
                 prepareMedia();
                 playMedia();
             }
@@ -339,8 +338,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         ((ViewGroup) playerView.getParent()).removeView(playerView);
         ((ViewGroup) fullScreenIcon.getParent()).removeView(fullScreenIcon);
         ((ViewGroup) videoFrameLayout.getParent()).removeView(videoFrameLayout);
-        fullScreenDialog.addContentView(playerView,
-                new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+        fullScreenDialog.addContentView(playerView, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
         exoPlayerFullscreen = true;
         fullScreenDialog.show();
     }
@@ -356,18 +354,15 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         videoFrameLayout = relativeLayout.findViewById(R.id.video_frame);
         videoFrameLayout.setVisibility(View.VISIBLE);
 
-        playerView = new PlayerView(this.context);
+        playerView = new StyledPlayerView(this.context);
         fullScreenIcon = new ImageView(this.context);
         fullScreenIcon.setImageDrawable(
                 ResourcesCompat.getDrawable(this.context.getResources(), R.drawable.ct_ic_fullscreen_expand, null));
-        fullScreenIcon.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                if (!exoPlayerFullscreen) {
-                    openFullscreenDialog();
-                } else {
-                    closeFullscreenDialog();
-                }
+        fullScreenIcon.setOnClickListener(v -> {
+            if (!exoPlayerFullscreen) {
+                openFullscreenDialog();
+            } else {
+                closeFullscreenDialog();
             }
         });
         if (inAppNotification.isTablet() && isTablet()) {
@@ -410,7 +405,7 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
             layoutParams.setMargins(0, iconTop, iconRight, 0);
             fullScreenIcon.setLayoutParams(layoutParams);
         }
-        playerView.setShowBuffering(SHOW_BUFFERING_WHEN_PLAYING);
+        playerView.setShowBuffering(StyledPlayerView.SHOW_BUFFERING_WHEN_PLAYING);
         playerView.setUseArtwork(true);
         playerView.setControllerAutoShow(false);
         videoFrameLayout.addView(playerView);
@@ -424,16 +419,19 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
         TrackSelector trackSelector = new DefaultTrackSelector(this.context,
                 videoTrackSelectionFactory);
         // 2. Create the player
-        player = new SimpleExoPlayer.Builder(this.context).setTrackSelector(trackSelector).build();
+        player = new ExoPlayer.Builder(this.context).setTrackSelector(trackSelector).build();
         // 3. Produces DataSource instances through which media data is loaded.
-        DataSource.Factory dataSourceFactory = new DefaultDataSourceFactory(this.context,
-                Util.getUserAgent(this.context, this.context.getApplicationContext().getPackageName()),
-                (TransferListener) bandwidthMeter);
-        HlsMediaSource hlsMediaSource;
-        hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory)
-                .createMediaSource(Uri.parse(inAppNotification.getMediaList().get(0).getMediaUrl()));
+        Context ctx = this.context;
+        String userAgent = Util.getUserAgent(ctx,ctx.getPackageName());
+        String url = inAppNotification.getMediaList().get(0).getMediaUrl();
+        TransferListener listener = bandwidthMeter.getTransferListener();
+        DefaultHttpDataSource.Factory  dsf = new DefaultHttpDataSource.Factory().setUserAgent(userAgent).setTransferListener(listener);
+        DataSource.Factory dataSourceFactory = new DefaultDataSource.Factory(ctx,dsf);
+        MediaItem mediaItem = MediaItem.fromUri(url);
+        HlsMediaSource hlsMediaSource = new HlsMediaSource.Factory(dataSourceFactory).createMediaSource(mediaItem);
+        player.setMediaSource(hlsMediaSource);
         // 4. Prepare the player with the source.
-        player.prepare(hlsMediaSource);
+        player.prepare();
         player.setRepeatMode(Player.REPEAT_MODE_ONE);
         player.seekTo(mediaPosition);
     }

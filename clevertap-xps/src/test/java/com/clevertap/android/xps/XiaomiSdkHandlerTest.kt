@@ -3,6 +3,7 @@ package com.clevertap.android.xps
 import com.clevertap.android.sdk.ManifestInfo
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
+import com.xiaomi.channel.commonutils.android.Region
 import com.xiaomi.mipush.sdk.MiPushClient
 import org.junit.*
 import org.junit.runner.*
@@ -21,6 +22,13 @@ class XiaomiSdkHandlerTest : BaseTestCase() {
     override fun setUp() {
         super.setUp()
         manifestInfo = Mockito.mock(ManifestInfo::class.java)
+        Mockito.`when`(manifestInfo.xiaomiAppID).thenReturn(XpsTestConstants.MI_APP_ID)
+        Mockito.`when`(manifestInfo.xiaomiAppKey).thenReturn(XpsTestConstants.MI_APP_KEY)
+        Mockito.`when`(manifestInfo.accountRegion).thenReturn(XpsTestConstants.MI_REGION_EU)
+        Mockito.mockStatic(ManifestInfo::class.java).use {
+            Mockito.`when`(ManifestInfo.getInstance(Mockito.any())).thenReturn(manifestInfo)
+        }
+
         handler = XiaomiSdkHandler(application, cleverTapInstanceConfig)
         handler.setManifestInfo(manifestInfo)
     }
@@ -36,9 +44,7 @@ class XiaomiSdkHandlerTest : BaseTestCase() {
 
     @Test
     fun testOnNewToken_After_Registration() {
-        Mockito.`when`(manifestInfo.xiaomiAppKey).thenReturn(XpsTestConstants.MI_APP_KEY)
-        Mockito.`when`(manifestInfo.xiaomiAppID).thenReturn(XpsTestConstants.MI_APP_ID)
-        handler.register(manifestInfo.xiaomiAppID, manifestInfo.xiaomiAppKey)
+        handler.register(manifestInfo.xiaomiAppID,manifestInfo.xiaomiAppKey)
         Mockito.mockStatic(MiPushClient::class.java).use {
             Mockito.`when`(MiPushClient.getRegId(application)).thenReturn("abc")
             val token = handler.onNewToken()

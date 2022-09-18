@@ -157,9 +157,9 @@ implementation "com.google.android.material:material:1.4.0"//MANDATORY for App I
 implementation "com.github.bumptech.glide:glide:4.12.0"//MANDATORY for App Inbox
 
 //Optional ExoPlayer Libraries for Audio/Video Inbox Messages. Audio/Video messages will be dropped without these dependencies
-implementation "com.google.android.exoplayer:exoplayer:2.15.1"
-implementation "com.google.android.exoplayer:exoplayer-hls:2.15.1"
-implementation "com.google.android.exoplayer:exoplayer-ui:2.15.1"
+implementation "com.google.android.exoplayer:exoplayer:2.17.1"
+implementation "com.google.android.exoplayer:exoplayer-hls:2.17.1"
+implementation "com.google.android.exoplayer:exoplayer-ui:2.17.1"
 ```
 #### Initializing the Inbox
 
