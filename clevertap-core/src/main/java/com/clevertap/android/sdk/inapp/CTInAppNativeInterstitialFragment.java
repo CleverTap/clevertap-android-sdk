@@ -30,6 +30,8 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
+
+import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.customviews.CloseImageView;
 import com.clevertap.android.sdk.gif.GifImageView;
@@ -40,6 +42,7 @@ import com.google.android.exoplayer2.source.hls.HlsMediaSource;
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection;
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector;
 import com.google.android.exoplayer2.trackselection.ExoTrackSelection;
+import com.google.android.exoplayer2.trackselection.MappingTrackSelector;
 import com.google.android.exoplayer2.trackselection.TrackSelector;
 import com.google.android.exoplayer2.ui.StyledPlayerView;
 import com.google.android.exoplayer2.upstream.BandwidthMeter;
@@ -48,6 +51,7 @@ import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter;
 import com.google.android.exoplayer2.upstream.DefaultDataSource;
 import com.google.android.exoplayer2.upstream.DefaultHttpDataSource;
 import com.google.android.exoplayer2.upstream.TransferListener;
+import com.google.android.exoplayer2.util.EventLogger;
 import com.google.android.exoplayer2.util.Util;
 import java.util.ArrayList;
 
@@ -420,6 +424,10 @@ public class CTInAppNativeInterstitialFragment extends CTInAppBaseFullNativeFrag
                 videoTrackSelectionFactory);
         // 2. Create the player
         player = new ExoPlayer.Builder(this.context).setTrackSelector(trackSelector).build();
+        //if (CleverTapAPI.getDebugLevel()>= CleverTapAPI.LogLevel.DEBUG.intValue()){
+        //    EventLogger logger = new EventLogger((MappingTrackSelector) trackSelector);
+        //    player.addAnalyticsListener(logger);
+        //}
         // 3. Produces DataSource instances through which media data is loaded.
         Context ctx = this.context;
         String userAgent = Util.getUserAgent(ctx,ctx.getPackageName());
