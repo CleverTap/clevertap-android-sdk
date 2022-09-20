@@ -157,7 +157,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                 cleverTapAPI?.onUserLogin(newProfile)
             }
             "20" -> {
-                // Open Inbox
+                // Open Inbox(Customised, with tabs)
                 val inboxTabs =
                     arrayListOf("Promotions", "Offers", "Others")//Anything after the first 2 will be ignored
                 CTInboxStyleConfig().apply {
@@ -175,18 +175,35 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     cleverTapAPI?.showAppInbox(this) //Opens activity With Tabs
                 }
             }
-            "21" -> println("Total inbox message count = ${cleverTapAPI?.inboxMessageCount}") // show total inbox message count
-            "22" -> println("Unread inbox message count = ${cleverTapAPI?.inboxMessageUnreadCount}") // show unread inbox message count
-            "23" ->  // All inbox messages
+            "21" -> {
+                // Open Inbox(Customised, without tabs)
+                CTInboxStyleConfig().apply {
+                    tabBackgroundColor = "#FF0000"
+                    selectedTabIndicatorColor = "#0000FF"
+                    selectedTabColor = "#000000"
+                    unselectedTabColor = "#FFFFFF"
+                    backButtonColor = "#FF0000"
+                    navBarTitleColor = "#FF0000"
+                    navBarTitle = "MY INBOX"
+                    navBarColor = "#FFFFFF"
+                    inboxBackgroundColor = "#00FF00"
+                    cleverTapAPI?.showAppInbox(this) //Opens activity Without Tabs
+                }
+            }
+
+
+            "22" -> println("Total inbox message count = ${cleverTapAPI?.inboxMessageCount}") // show total inbox message count
+            "23" -> println("Unread inbox message count = ${cleverTapAPI?.inboxMessageUnreadCount}") // show unread inbox message count
+            "24" ->  // All inbox messages
                 cleverTapAPI?.allInboxMessages?.forEach {
                     println("All inbox messages ID = ${it.messageId}")
                 }
 
-            "24" ->  // All unread inbox messages
+            "25" ->  // All unread inbox messages
                 cleverTapAPI?.unreadInboxMessages?.forEach {
                     println("All unread inbox messages ID = ${it.messageId}")
                 }
-            "25" -> {
+            "26" -> {
                 val firstMessageId = cleverTapAPI?.allInboxMessages?.firstOrNull()?.messageId
                 //Get message object belonging to the given message id only. Message id should be a String
                 firstMessageId?.also {
@@ -194,7 +211,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     println("inboxMessage For Id $it = ${inboxMessageForId?.data}")
                 } ?: println("inboxMessage Id is null")
             }
-            "26" -> {
+            "27" -> {
                 val firstMessageId = cleverTapAPI?.allInboxMessages?.firstOrNull()?.messageId
                 //Delete message object belonging to the given message id only. Message id should be a String
                 firstMessageId?.also {
@@ -202,7 +219,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     println("Deleted inboxMessage For Id = $it")
                 } ?: println("inboxMessage Id is null")
             }
-            "27" -> {
+            "28" -> {
                 val firstMessage = cleverTapAPI?.allInboxMessages?.firstOrNull()
                 //Delete message object belonging to the given CTInboxMessage.
                 firstMessage?.also {
@@ -210,7 +227,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     println("Deleted inboxMessage = ${it.messageId}")
                 } ?: println("inboxMessage is null")
             }
-            "28" -> {
+            "29" -> {
                 val firstMessageId = cleverTapAPI?.unreadInboxMessages?.firstOrNull()?.messageId
                 //Mark Message as Read. Message id should be a String
                 firstMessageId?.also {
@@ -218,7 +235,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     println("Marked Message as Read For Id = $it")
                 } ?: println("inboxMessage Id is null")
             }
-            "29" -> {
+            "210" -> {
                 val firstMessage = cleverTapAPI?.unreadInboxMessages?.firstOrNull()
                 //Mark message as Read. Message should object of CTInboxMessage
                 firstMessage?.also {
@@ -226,7 +243,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     println("Marked Message as Read = ${it.messageId}")
                 } ?: println("inboxMessage is null")
             }
-            "210" -> {
+            "211" -> {
                 val firstMessageId = cleverTapAPI?.allInboxMessages?.firstOrNull()?.messageId
                 //Raise Notification Viewed event for Inbox Message. Message id should be a String
                 firstMessageId?.also {
@@ -234,7 +251,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
                     println("Raised Notification Viewed event For Id = $it")
                 } ?: println("inboxMessage Id is null")
             }
-            "211" -> {
+            "212" -> {
                 val firstMessageId = cleverTapAPI?.allInboxMessages?.firstOrNull()?.messageId
                 //Raise Notification Clicked event for Inbox Message. Message id should be a String
                 firstMessageId?.also {

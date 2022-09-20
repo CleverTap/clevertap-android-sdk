@@ -226,14 +226,38 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
     @Override
     public void inboxMessagesDidUpdate() {
-        Logger.d("CTInboxActivity: called inboxMessagesDidUpdate");
-        if (inboxContentUpdatedListener != null) {
-            inboxContentUpdatedListener.inboxMessagesDidUpdate();
+        Logger.v("CTInboxActivity|inboxMessagesDidUpdate called");
+        try {
+            boolean isCUListenerAvailable = inboxContentUpdatedListener != null;
+            Logger.v("CTInboxActivity|inboxMessagesDidUpdate: inboxContentUpdatedListener available:" + isCUListenerAvailable);
+
+            boolean isUsingMultipleTabs = styleConfig.isUsingTabs();
+            Logger.v("CTInboxActivity|inboxMessagesDidUpdate: isUsingMultipleTabs : " + isUsingMultipleTabs);
+
+            if (isCUListenerAvailable) {
+                inboxContentUpdatedListener.inboxMessagesDidUpdate();
+            }
+            if (isUsingMultipleTabs) {
+                int position = viewPager.getCurrentItem();
+                CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter.getItem(position);
+                fragment.updateAdapterContent();
+            }
+            else {
+                List<Fragment> fragments = getSupportFragmentManager().getFragments();
+                String singleTabTag = getFragmentTag();
+                for (Fragment f : fragments) {
+                    String currentFTag = f.getTag();
+                    if (f instanceof CTInboxListViewFragment && currentFTag != null && currentFTag.equalsIgnoreCase(singleTabTag)) {
+                        ((CTInboxListViewFragment) f).updateAdapterContent();
+                    }
+                }
+
+            }
+
+        } catch (Throwable t) {
+            Logger.i("Something Went Wrong", t);
         }
 
-        int position = viewPager.getCurrentItem();
-        CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter.getItem(position);
-        fragment.updateAdapterContent();
 
     }
 
