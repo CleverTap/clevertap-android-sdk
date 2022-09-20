@@ -1,7 +1,11 @@
 ## CHANGE LOG.
 
+### September 20, 2022
+* [CleverTap Android SDK v4.6.3](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md)
+
 ### September 13, 2022
 * [CleverTap Android SDK v4.6.2](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md)
+
 * [CleverTap Push Templates SDK v1.0.5](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTPUSHTEMPLATESCHANGELOG.md)
 
 
