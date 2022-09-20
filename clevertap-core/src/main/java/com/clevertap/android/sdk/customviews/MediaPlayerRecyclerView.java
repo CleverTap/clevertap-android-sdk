@@ -190,10 +190,6 @@ public class MediaPlayerRecyclerView extends RecyclerView {
 
         player = new ExoPlayer.Builder(context).setTrackSelector(trackSelector).build();
         player.setVolume(0f); // start off muted
-        //if (CleverTapAPI.getDebugLevel()>= CleverTapAPI.LogLevel.DEBUG.intValue()){
-        //    EventLogger logger = new EventLogger((MappingTrackSelector) trackSelector);
-        //    player.addAnalyticsListener(logger);
-        //}
         videoSurfaceView.setUseController(true);
         videoSurfaceView.setControllerAutoShow(false);
         videoSurfaceView.setPlayer(player);
