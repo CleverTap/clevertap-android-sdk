@@ -119,7 +119,7 @@ class CTCarouselImageViewHolder extends CTInboxBaseMessageViewHolder {
         this.imageViewPager.addOnPageChangeListener(carouselPageChangeListener);
 
         this.clickLayout.setOnClickListener(
-                new CTInboxButtonClickListener(position, inboxMessage, null, parentWeak, this.imageViewPager));
+                new CTInboxButtonClickListener(position, inboxMessage, null, parentWeak, this.imageViewPager,true));
 
         Runnable carouselRunnable = new Runnable() {
             @Override
@@ -136,7 +136,6 @@ class CTCarouselImageViewHolder extends CTInboxBaseMessageViewHolder {
                                 parentWeak.didShow(null, position);
                             }
                         }
-                        carouselReadDot.setVisibility(View.GONE);
                     }
                 });
             }

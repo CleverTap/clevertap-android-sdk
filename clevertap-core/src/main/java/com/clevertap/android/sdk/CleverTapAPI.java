@@ -20,6 +20,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -140,6 +141,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     private CoreState coreState;
 
     private WeakReference<InboxMessageButtonListener> inboxMessageButtonListener;
+
+    private WeakReference<InboxMessageListener> inboxMessageListener;
 
     /**
      * This method is used to change the credentials of CleverTap account Id and token programmatically
@@ -1301,6 +1304,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public ArrayList<CTInboxMessage> getAllInboxMessages() {
+        Logger.d("CleverTapAPI:getAllInboxMessages: called" );
         ArrayList<CTInboxMessage> inboxMessageArrayList = new ArrayList<>();
         synchronized (coreState.getCTLockManager().getInboxControllerLock()) {
             if (coreState.getControllerManager().getCTInboxController() != null) {
@@ -1672,6 +1676,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public CTInboxMessage getInboxMessageForId(String messageId) {
+        Logger.d("CleverTapAPI:getInboxMessageForId() called with: messageId = [" + messageId + "]");
         synchronized (coreState.getCTLockManager().getInboxControllerLock()) {
             if (coreState.getControllerManager().getCTInboxController() != null) {
                 CTMessageDAO message = coreState.getControllerManager().getCTInboxController()
@@ -1906,12 +1911,18 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     @Override
-    public void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data,
-            HashMap<String, String> keyValue) {
+    public void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue, boolean isBodyClick) {
+
         coreState.getAnalyticsManager().pushInboxMessageStateEvent(true, inboxMessage, data);
+
         if (keyValue != null && !keyValue.isEmpty()) {
             if (inboxMessageButtonListener != null && inboxMessageButtonListener.get() != null) {
                 inboxMessageButtonListener.get().onInboxButtonClick(keyValue);
+            }
+        }
+        else{
+            if (isBodyClick && inboxMessageListener != null && inboxMessageListener.get() != null) {
+                inboxMessageListener.get().onInboxItemClicked(inboxMessage);
             }
         }
     }
@@ -1919,12 +1930,13 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     //Session
 
     @Override
-    public void messageDidShow(CTInboxActivity ctInboxActivity, final CTInboxMessage inboxMessage,
-            final Bundle data) {
+    public void messageDidShow(CTInboxActivity ctInboxActivity, final CTInboxMessage inboxMessage, final Bundle data) {
         Task<Void> task = CTExecutorFactory.executors(coreState.getConfig()).postAsyncSafelyTask();
         task.execute("handleMessageDidShow", new Callable<Void>() {
             @Override
             public Void call() {
+                Logger.d("CleverTapAPI:messageDidShow() called  in async with: messageId = [" + inboxMessage.getMessageId() + "]");
+
                 CTInboxMessage message = getInboxMessageForId(inboxMessage.getMessageId());
                 if (!message.isRead()) {
                     markReadInboxMessage(inboxMessage);
@@ -2198,6 +2210,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public void pushInboxNotificationClickedEvent(String messageId) {
+        Logger.v( "CleverTapAPI:pushInboxNotificationClickedEvent() called with: messageId = [" +messageId + "]");
+
         CTInboxMessage message = getInboxMessageForId(messageId);
         coreState.getAnalyticsManager().pushInboxMessageStateEvent(true, message, null);
     }
@@ -2209,6 +2223,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings("unused")
     public void pushInboxNotificationViewedEvent(String messageId) {
+        Logger.v( "CleverTapAPI:pushInboxNotificationViewedEvent() called with: messageId = [" +messageId + "]");
         CTInboxMessage message = getInboxMessageForId(messageId);
         coreState.getAnalyticsManager().pushInboxMessageStateEvent(false, message, null);
     }
@@ -2275,14 +2290,22 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Sends the Xiaomi registration ID to CleverTap.
      *
      * @param regId    The Xiaomi registration ID
+     * @param region   The Server room region provided by Xiaomi. Value must be not null or empty
      * @param register Boolean indicating whether to register
      *                 or not for receiving push messages from CleverTap.
      *                 Set this to true to receive push messages from CleverTap,
      *                 and false to not receive any messages from CleverTap.
      */
     @SuppressWarnings("unused")
-    public void pushXiaomiRegistrationId(String regId, boolean register) {
-        coreState.getPushProviders().handleToken(regId, PushType.XPS, register);
+    public void pushXiaomiRegistrationId(String regId,@NonNull String region, boolean register)  {
+        if(TextUtils.isEmpty(region)){
+            Logger.d("CleverTapApi : region must not be null or empty , use  MiPushClient.getAppRegion(context) to provide appropriate region");
+        }else{
+            Logger.d("CleverTapAPI: client called pushXiaomiRegistrationId called with region:"+region);
+            PushType.XPS.setServerRegion(region);
+            coreState.getPushProviders().handleToken(regId, PushType.XPS, register);
+        }
+
     }
 
     /**
@@ -2431,6 +2454,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings("unused")
     public void setInboxMessageButtonListener(InboxMessageButtonListener listener) {
         this.inboxMessageButtonListener = new WeakReference<>(listener);
+    }
+
+    @SuppressWarnings("unused")
+    public void setCTInboxMessageListener(InboxMessageListener listener){
+        this.inboxMessageListener = new WeakReference<>(listener);
     }
 
     @RestrictTo(Scope.LIBRARY_GROUP)
@@ -2965,4 +2993,3 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return PushType.XPS.getRunningDevices();
     }
 }
-
