@@ -15,6 +15,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
+import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.InAppNotificationListener;
 import com.clevertap.android.sdk.Logger;
@@ -47,7 +48,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
         private JSONObject jsonObject;
 
-        private CTLocalInAppSettings ctLocalInAppSettings;
+        private CTHalfInterstitialLocalInAppBuilder halfInterstitialLocalInAppBuilder;
+        private CTAlertLocalInAppBuilder alertLocalInAppBuilder;
 
         private final boolean videoSupport = Utils.haveVideoPlayerSupport;
 
@@ -56,9 +58,16 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             this.jsonObject = jsonObject;
         }
 
-        NotificationPrepareRunnable(InAppController inAppController, CTLocalInAppSettings ctLocalInAppSettings) {
+        NotificationPrepareRunnable(InAppController inAppController,
+                                    CTHalfInterstitialLocalInAppBuilder halfInterstitialLocalInAppBuilder) {
             this.inAppControllerWeakReference = new WeakReference<>(inAppController);
-            this.ctLocalInAppSettings = ctLocalInAppSettings;
+            this.halfInterstitialLocalInAppBuilder = halfInterstitialLocalInAppBuilder;
+        }
+
+        NotificationPrepareRunnable(InAppController inAppController,
+                                    CTAlertLocalInAppBuilder alertLocalInAppBuilder) {
+            this.inAppControllerWeakReference = new WeakReference<>(inAppController);
+            this.alertLocalInAppBuilder = alertLocalInAppBuilder;
         }
 
         @Override
@@ -68,8 +77,12 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 inAppNotification = new CTInAppNotification()
                         .initWithJSON(jsonObject, videoSupport);
             }else {//render in-app via local in-app builder
-                inAppNotification = new CTInAppNotification()
-                        .configureWithLocalData(ctLocalInAppSettings);
+                inAppNotification = halfInterstitialLocalInAppBuilder != null ? new CTInAppNotification()
+                        .configureHalfInterstitialLocalInApp(halfInterstitialLocalInAppBuilder,
+                                DeviceInfo.getDeviceType(context)) :
+                        new CTInAppNotification()
+                        .configureAlertLocalInApp(alertLocalInAppBuilder,
+                                DeviceInfo.getDeviceType(context));
             }
 
             if (inAppNotification.getError() != null) {
@@ -184,8 +197,12 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         }
     }
 
-    public void promptPushPrimer(CTLocalInAppSettings ctLocalInAppSettings) {//Change method name here to avoid confusion
-        prepareNotificationForDisplay(ctLocalInAppSettings);
+    public void promptPushPrimer(CTHalfInterstitialLocalInAppBuilder halfInterstitialLocalInAppBuilder){
+        prepareNotificationForDisplay(halfInterstitialLocalInAppBuilder,null);
+    }
+
+    public void promptPushPrimer(CTAlertLocalInAppBuilder alertLocalInAppBuilder){
+        prepareNotificationForDisplay(null,alertLocalInAppBuilder);
     }
 
     public void promptPermission(){
@@ -470,13 +487,20 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         });
     }
 
-    private void prepareNotificationForDisplay(final CTLocalInAppSettings ctLocalInAppSettings) {
-        logger.debug(config.getAccountId(), "Preparing local In-App using CTLocalInAppSettings for display");//Need correct error mssg
+    private void prepareNotificationForDisplay(CTHalfInterstitialLocalInAppBuilder
+               halfInterstitialLocalInAppBuilder, CTAlertLocalInAppBuilder alertLocalInAppBuilder){
+        logger.debug(config.getAccountId(), "Preparing local In-App for display");
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask(Constants.TAG_FEATURE_IN_APPS);
-        task.execute("InappController#prepareNotificationForDisplay", new Callable<Void>() {
+        task.execute("InappController#prepareLocalNotificationForDisplay", new Callable<Void>() {
             @Override
             public Void call() {
-                new NotificationPrepareRunnable(InAppController.this, ctLocalInAppSettings).run();
+                if (halfInterstitialLocalInAppBuilder != null) {
+                    new NotificationPrepareRunnable(InAppController.this,
+                            halfInterstitialLocalInAppBuilder).run();
+                }else if (alertLocalInAppBuilder != null){
+                    new NotificationPrepareRunnable(InAppController.this,
+                            alertLocalInAppBuilder).run();
+                }
                 return null;
             }
         });

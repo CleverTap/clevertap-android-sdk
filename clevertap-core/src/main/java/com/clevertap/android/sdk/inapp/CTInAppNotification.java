@@ -9,6 +9,7 @@ import android.util.LruCache;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.utils.ImageCache;
@@ -221,6 +222,9 @@ public class CTInAppNotification implements Parcelable {
     private int widthPercentage;
 
     private boolean isLocalInApp = false;
+
+    private static final String HALF_INTERSTITIAL_LOCAL_IN_APP = "half-interstitial";
+    private static final String ALERT_LOCAL_IN_APP = "alert-template";
 
     CTInAppNotification() {
     }
@@ -579,47 +583,104 @@ public class CTInAppNotification implements Parcelable {
         }
         listener.notificationReady(this);
     }
+    public CTInAppNotification configureAlertLocalInApp(CTAlertLocalInAppBuilder alertLocalInAppBuilder,
+                                                        int deviceInfo){
+        this.id = "";
+        this.campaignId = "";
+        this.type = ALERT_LOCAL_IN_APP;
+        this.inAppType = CTInAppType.fromString(this.type);
+        this.isTablet = deviceInfo == DeviceInfo.TABLET;
+        this.isPortrait = true;
+        this.isLandscape = alertLocalInAppBuilder.followDeviceOrientation();
+        this.isLocalInApp = true;
+        this.timeToLive = System.currentTimeMillis() + 2 * Constants.ONE_DAY_IN_MILLIS;
+        this.title = alertLocalInAppBuilder.titleText() != null ? alertLocalInAppBuilder.titleText() : "";
+        this.message = alertLocalInAppBuilder.bodyText() != null ? alertLocalInAppBuilder.bodyText() : "";
 
-    public CTInAppNotification configureWithLocalData(CTLocalInAppSettings ctLocalInAppSettings){
-        this.id = "";//
-        this.campaignId = "";//
-        this.type = ctLocalInAppSettings.getInAppAlertType();//alert-template
-        this.excludeFromCaps = false;//
+        setupInAppActionButtons(alertLocalInAppBuilder.positiveBtnText(),
+                alertLocalInAppBuilder.negativeBtnText(),
+                null,null,null,null);
+
+        return this;
+    }
+
+    public CTInAppNotification configureHalfInterstitialLocalInApp (CTHalfInterstitialLocalInAppBuilder
+                                                              halfInterstitialLocalInAppBuilder, int deviceInfo){
+        //check how many times have they called via local builder.
+//        boolean,count TODO
+
+        this.id = "";
+        this.campaignId = "";
+        this.type = HALF_INTERSTITIAL_LOCAL_IN_APP;
+
+
+        this.excludeFromCaps = false;//Check this withInAppFC Manager
         this.totalLifetimeCount =  -1;//
         this.totalDailyCount =  -1;//
+
         this.inAppType = CTInAppType.fromString(this.type);
-        this.isTablet = false;//
-        this.backgroundColor = Constants.WHITE;
-        this.isPortrait = true;//
-        this.isLandscape = true;//
+        this.isTablet = deviceInfo == DeviceInfo.TABLET;
+
+        this.backgroundColor = halfInterstitialLocalInAppBuilder.backgroundColor() != null ?
+                halfInterstitialLocalInAppBuilder.backgroundColor() : Constants.WHITE;
+
+        this.isPortrait = true;
+        this.isLandscape = halfInterstitialLocalInAppBuilder.followDeviceOrientation();
+
         this.isLocalInApp = true;
         this.timeToLive = System.currentTimeMillis() + 2 * Constants.ONE_DAY_IN_MILLIS;
 
+        this.title = halfInterstitialLocalInAppBuilder.titleText() != null ?
+                halfInterstitialLocalInAppBuilder.titleText() : "";
+        this.titleColor = halfInterstitialLocalInAppBuilder.titleTextColor() !=null ?
+                halfInterstitialLocalInAppBuilder.titleTextColor()
+                : Constants.BLACK;
 
-        this.title = ctLocalInAppSettings.getTitleText();
-        this.titleColor = Constants.BLACK;
-
-        this.message = ctLocalInAppSettings.getBodyText();
-        this.messageColor = Constants.BLACK;
+        this.message = halfInterstitialLocalInAppBuilder.bodyText() != null ?
+                halfInterstitialLocalInAppBuilder.bodyText() : "";
+        this.messageColor = halfInterstitialLocalInAppBuilder.bodyTextColor() != null ?
+                halfInterstitialLocalInAppBuilder.bodyTextColor()
+                : Constants.BLACK;
 
         this.hideCloseButton = true;
 
-        //CTINAPPNOTIFMedia obj
 
+        //CTINAPPNOTIFMedia obj//1.local image in case of offline//TODO
+        //2.support for URI
+        //3. In case of failure in loading img should we load a placeholder img in layout.
+
+        setupInAppActionButtons(halfInterstitialLocalInAppBuilder.positiveBtnText(),
+                halfInterstitialLocalInAppBuilder.negativeBtnText(),
+                halfInterstitialLocalInAppBuilder.btnBackgroundColor(),
+                halfInterstitialLocalInAppBuilder.btnTextColor(),
+                halfInterstitialLocalInAppBuilder.btnBorderColor(),
+                halfInterstitialLocalInAppBuilder.btnBorderRadius());
+
+        return this;
+    }
+
+    private void setupInAppActionButtons(String positiveBtnText, String negativeBtnText,
+                                         String btnBackgroundColor,
+                                         String btnTextColor, String btnBorderColor,
+                                         String btnBorderRadius){
         //Positive Button
         CTInAppNotificationButton inAppNotificationPositiveButton = new CTInAppNotificationButton()
-                .initWithLocalData(ctLocalInAppSettings.getPositiveConfirmationBtnText(),ctLocalInAppSettings.getPositiveConfirmationBtnColor());
+                .initWithLocalData(positiveBtnText,
+                        btnBackgroundColor,btnTextColor,btnBorderColor,btnBorderRadius);
+
         if (inAppNotificationPositiveButton != null) {
             this.buttons.add(inAppNotificationPositiveButton);
         }
 
         //Negative Button
         CTInAppNotificationButton inAppNotificationNegativeButton = new CTInAppNotificationButton()
-                .initWithLocalData(ctLocalInAppSettings.getNegativeConfirmationBtnText(),ctLocalInAppSettings.getPositiveConfirmationBtnColor());
+                .initWithLocalData(negativeBtnText,
+                        btnBackgroundColor,btnTextColor,
+                        btnBorderColor,btnBorderRadius);
+
         if (inAppNotificationNegativeButton != null) {
             this.buttons.add(inAppNotificationNegativeButton);
         }
-        return this;
     }
 
     private void configureWithJson(JSONObject jsonObject) {

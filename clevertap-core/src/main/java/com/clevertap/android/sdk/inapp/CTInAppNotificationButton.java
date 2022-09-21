@@ -207,20 +207,26 @@ public class CTInAppNotificationButton implements Parcelable {
                     }
                 }
             }
+
+            //check if action is request for permission(rfp) and innit variable here.
         } catch (JSONException e) {
             this.error = "Invalid JSON";
         }
         return this;
     }
 
-    CTInAppNotificationButton initWithLocalData(String text, String btnBackgroundColor) {
-        this.text = text;
-        this.textColor = Constants.WHITE;
-        this.backgroundColor = btnBackgroundColor.isEmpty() ? btnBackgroundColor
-                : Constants.LIGHT_BLUE;
-        this.borderColor = Constants.GREEN;
-        this.borderRadius = "4";//From sample payload
+    CTInAppNotificationButton initWithLocalData(String btnText, String btnBackgroundColor,
+                                                String btnTextColor, String btnBorderColor,
+                                                String btnBorderRadius) {
 
+        this.text = btnText != null ? btnText : "";
+        this.backgroundColor = btnBackgroundColor != null ? btnBackgroundColor
+                : Constants.BLUE;
+
+        this.textColor = btnTextColor != null ? btnTextColor : Constants.BLUE;
+        this.borderColor = btnBorderColor !=null ? btnBorderColor : Constants.WHITE;
+        this.borderRadius = btnBorderRadius != null ? btnBorderRadius : "2";//Adding default value as 2 instead of an empty value.
+        // If the value is empty then action btn defaults to standard btn without any customizations
         return this;
     }
 

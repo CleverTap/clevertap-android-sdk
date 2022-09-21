@@ -31,7 +31,8 @@ import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.EventDetail;
 import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
-import com.clevertap.android.sdk.inapp.CTLocalInAppSettings;
+import com.clevertap.android.sdk.inapp.CTAlertLocalInAppBuilder;
+import com.clevertap.android.sdk.inapp.CTHalfInterstitialLocalInAppBuilder;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.inbox.CTMessageDAO;
@@ -1030,21 +1031,13 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
-    public void promptPushPrimer(CTLocalInAppSettings builder){
-        if (instances == null) {
-            return;
-        }
+    public void promptHalfInterstitialPushPrimer(CTHalfInterstitialLocalInAppBuilder
+                                                         halfInterstitialLocalInAppBuilder){
+        coreState.getInAppController().promptPushPrimer(halfInterstitialLocalInAppBuilder);
+    }
 
-        for (String accountId : CleverTapAPI.instances.keySet()) {
-            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
-            try {
-                if (instance != null) {
-                    instance.coreState.getInAppController().promptPushPrimer(builder);
-                }
-            } catch (Throwable t) {
-                // Ignore
-            }
-        }
+    public void promptAlertPushPrimer(CTAlertLocalInAppBuilder alertLocalInAppBuilder){
+        coreState.getInAppController().promptPushPrimer(alertLocalInAppBuilder);
     }
 
     public void promptForNotificationPermission(){

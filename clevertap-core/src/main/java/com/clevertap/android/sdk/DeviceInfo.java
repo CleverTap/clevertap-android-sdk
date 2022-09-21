@@ -391,12 +391,12 @@ public class DeviceInfo {
     /**
      * Device is a smart phone
      */
-    static final int SMART_PHONE = 1;
+    public static final int SMART_PHONE = 1;
 
     /**
      * Device is a tablet
      */
-    static final int TABLET = 2;
+    public static final int TABLET = 2;
 
     /**
      * Device is a television
