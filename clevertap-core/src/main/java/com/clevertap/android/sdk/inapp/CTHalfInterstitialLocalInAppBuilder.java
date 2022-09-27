@@ -19,31 +19,32 @@ public class CTHalfInterstitialLocalInAppBuilder {
     private final String btnBackgroundColor;
     private final String btnBorderColor;// Optional
     private final String btnBorderRadius;// Optional
-    private boolean doesSupportTablet;
+    private final String image;// Optional
 
-    CTHalfInterstitialLocalInAppBuilder(Builder.Builder1 builder) {
-        this.titleText = builder.titleText;
-        this.titleTextColor = builder.titleTextColor;
-        this.bodyText = builder.bodyText;
-        this.bodyTextColor = builder.bodyTextColor;
-        this.backgroundColor = builder.backgroundColor;
-        this.followDeviceOrientation = builder.followDeviceOrientation;
-        this.positiveBtnText = builder.positiveBtnText;
-        this.negativeBtnText = builder.negativeBtnText;
-        this.btnTextColor = builder.btnTextColor;
-        this.btnBackgroundColor = builder.btnBackgroundColor;
-        this.btnBorderColor = builder.btnBorderColor;
-        this.btnBorderRadius = builder.btnBorderRadius;
+    CTHalfInterstitialLocalInAppBuilder(Builder.LocalInAppBuilder localInAppBuilder) {
+        this.titleText = localInAppBuilder.titleText;
+        this.titleTextColor = localInAppBuilder.titleTextColor;
+        this.bodyText = localInAppBuilder.bodyText;
+        this.bodyTextColor = localInAppBuilder.bodyTextColor;
+        this.backgroundColor = localInAppBuilder.backgroundColor;
+        this.followDeviceOrientation = localInAppBuilder.followDeviceOrientation;
+        this.positiveBtnText = localInAppBuilder.positiveBtnText;
+        this.negativeBtnText = localInAppBuilder.negativeBtnText;
+        this.btnTextColor = localInAppBuilder.btnTextColor;
+        this.btnBackgroundColor = localInAppBuilder.btnBackgroundColor;
+        this.btnBorderColor = localInAppBuilder.btnBorderColor;
+        this.btnBorderRadius = localInAppBuilder.btnBorderRadius;
+        this.image = localInAppBuilder.image;
     }
     public static Builder builder() {
         return new Builder();
     }
 
     public static final class Builder {
-        public Builder1 titleText(String titleText) {
-            return new Builder1(titleText);
+        public LocalInAppBuilder titleText(String titleText) {
+            return new LocalInAppBuilder(titleText);
         }
-        public static final class Builder1 {
+        public static final class LocalInAppBuilder {
             final String titleText;
             String titleTextColor;
             String bodyText;
@@ -56,114 +57,119 @@ public class CTHalfInterstitialLocalInAppBuilder {
             String btnBackgroundColor;
             String btnBorderColor;
             String btnBorderRadius;
+            String image;
 
-            private Builder1(String titleText) {
+            private LocalInAppBuilder(String titleText) {
                 this.titleText = titleText;
             }
-            public Builder2 titleTextColor(String titleTextColor) {
+            public TitleTextColorBuilder titleTextColor(String titleTextColor) {
                 this.titleTextColor = titleTextColor;
-                return new Builder2(Builder1.this);
+                return new TitleTextColorBuilder(LocalInAppBuilder.this);
             }
         }
-        public static final class Builder2 {
-            final Builder1 builder;
+        public static final class TitleTextColorBuilder {
+            final LocalInAppBuilder builder;
 
-            private Builder2(Builder1 builder) {
+            private TitleTextColorBuilder(LocalInAppBuilder builder) {
                 this.builder = builder;
             }
-            public Builder3 bodyText(String bodyText) {
+            public BodyTextBuilder bodyText(String bodyText) {
                 this.builder.bodyText = bodyText;
-                return new Builder3(this.builder);
+                return new BodyTextBuilder(this.builder);
             }
         }
-        public static final class Builder3 {
-            final Builder1 builder;
+        public static final class BodyTextBuilder {
+            final LocalInAppBuilder builder;
 
-            private Builder3(Builder1 builder) {
+            private BodyTextBuilder(LocalInAppBuilder builder) {
                 this.builder = builder;
             }
-            public Builder4 bodyTextColor(String bodyTextColor) {
+            public BodyTextColorBuilder bodyTextColor(String bodyTextColor) {
                 this.builder.bodyTextColor = bodyTextColor;
-                return new Builder4(this.builder);
+                return new BodyTextColorBuilder(this.builder);
             }
         }
-        public static final class Builder4 {
-            final Builder1 builder;
+        public static final class BodyTextColorBuilder {
+            final LocalInAppBuilder builder;
 
-            private Builder4(Builder1 builder) {
+            private BodyTextColorBuilder(LocalInAppBuilder builder) {
                 this.builder = builder;
             }
-            public Builder5 backgroundColor(String backgroundColor) {
+            public BackgroundColorBuilder backgroundColor(String backgroundColor) {
                 this.builder.backgroundColor = backgroundColor;
-                return new Builder5(this.builder);
+                return new BackgroundColorBuilder(this.builder);
             }
         }
-        public static final class Builder5 {
-            final Builder1 builder;
+        public static final class BackgroundColorBuilder {
+            final LocalInAppBuilder builder;
 
-            private Builder5(Builder1 builder) {
+            private BackgroundColorBuilder(LocalInAppBuilder builder) {
                 this.builder = builder;
             }
-            public Builder6 followDeviceOrientation(boolean followDeviceOrientation) {
+            public FollowDeviceOrientationBuilder followDeviceOrientation(boolean followDeviceOrientation) {
                 this.builder.followDeviceOrientation = followDeviceOrientation;
-                return new Builder6(this.builder);
+                return new FollowDeviceOrientationBuilder(this.builder);
             }
         }
-        public static final class Builder6 {
-            final Builder1 builder;
+        public static final class FollowDeviceOrientationBuilder {
+            final LocalInAppBuilder builder;
 
-            private Builder6(Builder1 builder) {
+            private FollowDeviceOrientationBuilder(LocalInAppBuilder builder) {
                 this.builder = builder;
             }
-            public Builder7 positiveBtnText(String positiveBtnText) {
+            public PositiveBtnTextBuilder positiveBtnText(String positiveBtnText) {
                 this.builder.positiveBtnText = positiveBtnText;
-                return new Builder7(this.builder);
+                return new PositiveBtnTextBuilder(this.builder);
             }
         }
-        public static final class Builder7 {
-            final Builder1 builder;
+        public static final class PositiveBtnTextBuilder {
+            final LocalInAppBuilder builder;
 
-            private Builder7(Builder1 builder) {
+            private PositiveBtnTextBuilder(LocalInAppBuilder builder) {
                 this.builder = builder;
             }
-            public Builder8 negativeBtnText(String negativeBtnText) {
+            public NegativeBtnTextBuilder negativeBtnText(String negativeBtnText) {
                 this.builder.negativeBtnText = negativeBtnText;
-                return new Builder8(this.builder);
+                return new NegativeBtnTextBuilder(this.builder);
             }
         }
-        public static final class Builder8 {
-            final Builder1 builder;
+        public static final class NegativeBtnTextBuilder {
+            final LocalInAppBuilder builder;
 
-            private Builder8(Builder1 builder) {
+            private NegativeBtnTextBuilder(LocalInAppBuilder builder) {
                 this.builder = builder;
             }
-            public Builder9 btnTextColor(String btnTextColor) {
+            public BtnTextColorBuilder btnTextColor(String btnTextColor) {
                 this.builder.btnTextColor = btnTextColor;
-                return new Builder9(this.builder);
+                return new BtnTextColorBuilder(this.builder);
             }
         }
-        public static final class Builder9 {
-            final Builder1 builder;
+        public static final class BtnTextColorBuilder {
+            final LocalInAppBuilder builder;
 
-            private Builder9(Builder1 builder) {
+            private BtnTextColorBuilder(LocalInAppBuilder builder) {
                 this.builder = builder;
             }
-            public Builder10 btnBackgroundColor(String btnBackgroundColor) {
+            public LocalInAppOptionalBuilder btnBackgroundColor(String btnBackgroundColor) {
                 this.builder.btnBackgroundColor = btnBackgroundColor;
-                return new Builder10(this.builder);
+                return new LocalInAppOptionalBuilder(this.builder);
             }
         }
-        public static final class Builder10 {
-            final Builder1 builder;
+        public static final class LocalInAppOptionalBuilder {
+            final LocalInAppBuilder builder;
 
-            private Builder10(Builder1 builder) {
+            private LocalInAppOptionalBuilder(LocalInAppBuilder builder) {
                 this.builder = builder;
             }
-            public Builder10 btnBorderColor(String btnBorderColor){
+            public LocalInAppOptionalBuilder image(String image){
+                this.builder.image = image;
+                return this;
+            }
+            public LocalInAppOptionalBuilder btnBorderColor(String btnBorderColor){
                 this.builder.btnBorderColor = btnBorderColor;
                 return this;
             }
-            public Builder10 btnBorderRadius(String btnBorderRadius){
+            public LocalInAppOptionalBuilder btnBorderRadius(String btnBorderRadius){
                 this.builder.btnBorderRadius = btnBorderRadius;
                 return this;
             }
@@ -203,6 +209,9 @@ public class CTHalfInterstitialLocalInAppBuilder {
     public String btnBackgroundColor() {
         return this.btnBackgroundColor;
     }
+    public String image() {
+        return this.image;
+    }
     public String btnBorderColor() {
         return this.btnBorderColor;
     }
@@ -219,7 +228,8 @@ public class CTHalfInterstitialLocalInAppBuilder {
                 this.followDeviceOrientation + ", positiveBtnText=" + this.positiveBtnText +
                 ", negativeBtnText=" + this.negativeBtnText + ", btnTextColor=" +
                 this.btnTextColor + ", btnBackgroundColor=" + this.btnBackgroundColor +
-                ", btnBorderColor=" + this.btnBorderColor + ", btnBorderRadius=" + this.btnBorderRadius + ")";
+                ", image=" + this.image + ", btnBorderColor=" + this.btnBorderColor +
+                ", btnBorderRadius=" + this.btnBorderRadius + ")";
     }
 
     @Override
@@ -235,6 +245,7 @@ public class CTHalfInterstitialLocalInAppBuilder {
                 Objects.equals(negativeBtnText, that.negativeBtnText) &&
                 Objects.equals(btnTextColor, that.btnTextColor) &&
                 Objects.equals(btnBackgroundColor, that.btnBackgroundColor) &&
+                Objects.equals(image, that.image) &&
                 Objects.equals(btnBorderColor, that.btnBorderColor) &&
                 Objects.equals(btnBorderRadius, that.btnBorderRadius);
     }
@@ -243,6 +254,6 @@ public class CTHalfInterstitialLocalInAppBuilder {
     public int hashCode() {
         return Objects.hash(titleText, titleTextColor, bodyText, bodyTextColor, backgroundColor,
                 followDeviceOrientation, positiveBtnText, negativeBtnText, btnTextColor,
-                btnBackgroundColor, btnBorderColor, btnBorderRadius);
+                btnBackgroundColor, image, btnBorderColor, btnBorderRadius);
     }
 }

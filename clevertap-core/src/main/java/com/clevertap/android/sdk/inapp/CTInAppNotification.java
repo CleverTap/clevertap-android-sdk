@@ -606,9 +606,6 @@ public class CTInAppNotification implements Parcelable {
 
     public CTInAppNotification configureHalfInterstitialLocalInApp (CTHalfInterstitialLocalInAppBuilder
                                                               halfInterstitialLocalInAppBuilder, int deviceInfo){
-        //check how many times have they called via local builder.
-//        boolean,count TODO
-
         this.id = "";
         this.campaignId = "";
         this.type = HALF_INTERSTITIAL_LOCAL_IN_APP;
@@ -644,10 +641,9 @@ public class CTInAppNotification implements Parcelable {
 
         this.hideCloseButton = true;
 
-
-        //CTINAPPNOTIFMedia obj//1.local image in case of offline//TODO
-        //2.support for URI
-        //3. In case of failure in loading img should we load a placeholder img in layout.
+        if (halfInterstitialLocalInAppBuilder.image() != null){
+            setupInAppMediaImage(halfInterstitialLocalInAppBuilder.image());
+        }
 
         setupInAppActionButtons(halfInterstitialLocalInAppBuilder.positiveBtnText(),
                 halfInterstitialLocalInAppBuilder.negativeBtnText(),
@@ -657,6 +653,20 @@ public class CTInAppNotification implements Parcelable {
                 halfInterstitialLocalInAppBuilder.btnBorderRadius());
 
         return this;
+    }
+
+    private void setupInAppMediaImage(String imageUrl) {
+        CTInAppNotificationMedia portraitMedia = new CTInAppNotificationMedia()
+                .initWithLocalData(imageUrl, Configuration.ORIENTATION_PORTRAIT);
+        if (portraitMedia != null) {
+            mediaList.add(portraitMedia);
+        }
+
+        CTInAppNotificationMedia landscapeMedia = new CTInAppNotificationMedia()
+                .initWithLocalData(imageUrl, Configuration.ORIENTATION_LANDSCAPE);
+        if (landscapeMedia != null) {
+            mediaList.add(landscapeMedia);
+        }
     }
 
     private void setupInAppActionButtons(String positiveBtnText, String negativeBtnText,
