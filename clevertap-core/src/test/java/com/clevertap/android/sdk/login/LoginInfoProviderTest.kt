@@ -1,7 +1,9 @@
-package com.clevertap.android.sdk
+package com.clevertap.android.sdk.login
 
 import android.content.Context
-import com.clevertap.android.sdk.login.LoginInfoProvider
+import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.CoreMetaData
+import com.clevertap.android.sdk.DeviceInfo
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
 import org.junit.Test
@@ -23,7 +25,7 @@ class LoginInfoProviderTest: BaseTestCase() {
     override fun setUp() {
         super.setUp()
         coreMetaData = CoreMetaData()
-        defConfig = CleverTapInstanceConfig.createDefaultInstance(appCtx, "id", "token", "region")
+        defConfig =  CleverTapInstanceConfig.createInstance(appCtx, "id", "token", "region")
         deviceInfo = Mockito.spy(DeviceInfo(appCtx,defConfig,"clevertap_id",coreMetaData))
 
 

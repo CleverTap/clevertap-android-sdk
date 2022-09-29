@@ -38,6 +38,41 @@ public final class StorageHelper {
         }
     }
 
+    /*
+
+       public static String getStringFromPrefs(@NonNull Context context,@NonNull CleverTapInstanceConfig config, String rawKey,
+            String defaultValue) {
+        // 2a1.1: config is default , we get  string from rawkey+config_suffix
+        // 2a1.2: config is default , we get  string from rawkey
+        // 2a1.3: config is default, we don't get string and return null ,
+        // 2a1.4: config is non default , we get  string from  rawkey+config_suffix
+        // 2a1.5: config is nondefault, we don't get string and return null ,
+
+        String finalData = "";
+        if (config.isDefaultInstance()) {
+            System.out.println("StorageHelper|getStringFromPrefs: config is default, case 1 or 2 or 3 will run");
+
+            String _new = getString(context, storageKeyWithSuffix(config, rawKey), defaultValue);
+
+            if(_new==null){
+                System.out.println("StorageHelper|getStringFromPrefs: rawkey+config_suffix returned null, case 2 or 3 will run");
+            }
+            else {
+                System.out.println("StorageHelper|getStringFromPrefs: rawkey+config_suffix returned string, case 1 has  run");
+            }
+
+            finalData = _new != null ? _new : getString(context, rawKey, defaultValue);
+        } else {
+            System.out.println("StorageHelper|getStringFromPrefs: config is not default, case 4 or 5 will run");
+
+            finalData = getString(context, storageKeyWithSuffix(config, rawKey), defaultValue);
+        }
+        System.out.println("StorageHelper|getStringFromPrefs: final data(1 or 2 or 3 or 4 or 5)='"+finalData+"'");
+        return finalData;
+    }
+
+    * */
+
     public static void persist(final SharedPreferences.Editor editor) {
         try {
             editor.apply();
