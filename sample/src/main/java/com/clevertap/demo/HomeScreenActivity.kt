@@ -25,11 +25,13 @@ import net.khirr.android.privacypolicy.PrivacyPolicyDialog.OnClickListener
 import com.clevertap.demo.ui.main.NotificationUtils
 
 import org.json.JSONObject
+import java.util.HashMap
 
 private const val TAG = "HomeScreenActivity"
 
 class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitListener, CTProductConfigListener,
-    CTFeatureFlagsListener, SyncListener, InAppNotificationListener, PushPermissionNotificationResponseListener {
+    CTFeatureFlagsListener, SyncListener, InAppNotificationListener, PushPermissionNotificationResponseListener,
+    InAppNotificationButtonListener, PushPrimerButtonListener {
 
     var cleverTapDefaultInstance: CleverTapAPI? = null
 
@@ -145,6 +147,8 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
 
             pushPermissionNotificationResponseListener = this@HomeScreenActivity
 
+            setPushPrimerButtonListener(this@HomeScreenActivity)
+
         }
 
         //With CleverTap Android SDK v3.2.0 you can create additional instances to send data to multiple CleverTap accounts
@@ -256,5 +260,17 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
 
     override fun response(accepted: Boolean) {
         Log.i(TAG, "InApp---> response() called  $accepted")
+    }
+
+    override fun onInAppButtonClick(payload: HashMap<String, String>?) {
+        TODO("Not yet implemented")
+    }
+
+    override fun onPositiveButtonClick(ctInAppNotification: CTInAppNotification?) {
+        Log.v(TAG, "onPositiveButtonClick() called")
+    }
+
+    override fun onNegativeButtonClick(ctInAppNotification: CTInAppNotification?) {
+        Log.v(TAG, "onNegativeButtonClick() called")
     }
 }

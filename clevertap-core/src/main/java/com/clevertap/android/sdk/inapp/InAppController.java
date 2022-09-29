@@ -227,8 +227,20 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     @Override
     public void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData,
-            HashMap<String, String> keyValueMap) {
+            HashMap<String, String> keyValueMap, int btnClickIndex) {
         analyticsManager.pushInAppNotificationStateEvent(true, inAppNotification, formData);
+        if (inAppNotification.isLocalInApp()){
+            if (btnClickIndex == 0){
+                if (callbackManager.getPushPrimerButtonListener() != null) {
+                    callbackManager.getPushPrimerButtonListener().onPositiveButtonClick(inAppNotification);
+                }
+            }else if (btnClickIndex == 1){
+                if (callbackManager.getPushPrimerButtonListener() != null) {
+                    callbackManager.getPushPrimerButtonListener().onNegativeButtonClick(inAppNotification);
+                }
+            }
+        }
+
         if (keyValueMap != null && !keyValueMap.isEmpty()) {
             if (callbackManager.getInAppNotificationButtonListener() != null) {
                 callbackManager.getInAppNotificationButtonListener().onInAppButtonClick(keyValueMap);

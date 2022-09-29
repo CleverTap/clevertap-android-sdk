@@ -7,7 +7,7 @@ import java.util.HashMap;
 public interface InAppListener {
 
     void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData,
-            HashMap<String, String> keyValueMap);
+            HashMap<String, String> keyValueMap, int btnClickIndex);
 
     void inAppNotificationDidDismiss(Context context, CTInAppNotification inAppNotification, Bundle formData);
 

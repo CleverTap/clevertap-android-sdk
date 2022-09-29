@@ -61,10 +61,10 @@ public abstract class CTInAppBaseFragment extends Fragment {
 
     abstract void cleanup();
 
-    void didClick(Bundle data, HashMap<String, String> keyValueMap) {
+    void didClick(int index, Bundle data, HashMap<String, String> keyValueMap) {
         InAppListener listener = getListener();
         if (listener != null) {
-            listener.inAppNotificationDidClick(inAppNotification, data, keyValueMap);
+            listener.inAppNotificationDidClick(inAppNotification, data, keyValueMap,index);
         }
     }
 
@@ -139,13 +139,12 @@ public abstract class CTInAppBaseFragment extends Fragment {
             data.putString(Constants.NOTIFICATION_ID_TAG, inAppNotification.getCampaignId());
             data.putString(Constants.KEY_C2A, button.getText());
 
-            didClick(data, button.getKeyValues());
-
-//            check API and toolsSDK version, inapp type, whether the btn was meant for PN.
-//            requestPermissions()
+            didClick(index,data, button.getKeyValues());
 
             if (index == 0 && inAppNotification.isLocalInApp()) {
                 ((InAppNotificationActivity) context).prompt();
+            }else if (index == 1 && inAppNotification.isLocalInApp()){
+                didDismiss(null);
             }else {
                 String actionUrl = button.getActionUrl();
                 if (actionUrl != null) {
@@ -154,6 +153,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
                 }
                 didDismiss(data);
             }
+
         } catch (Throwable t) {
             config.getLogger().debug("Error handling notification button click: " + t.getCause());
             didDismiss(null);

@@ -25,6 +25,7 @@ public class CallbackManager extends BaseCallbackManager {
     private DCDomainCallback dcDomainCallback;
 
     private WeakReference<InAppNotificationButtonListener> inAppNotificationButtonListener;
+    private WeakReference<PushPrimerButtonListener> pushPrimerButtonListener;
 
     private InAppNotificationListener inAppNotificationListener;
 
@@ -123,9 +124,22 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     @Override
+    public PushPrimerButtonListener getPushPrimerButtonListener() {
+        if (pushPrimerButtonListener != null && pushPrimerButtonListener.get() != null){
+            return pushPrimerButtonListener.get();
+        }
+        return null;
+    }
+
+    @Override
     public void setInAppNotificationButtonListener(
             InAppNotificationButtonListener inAppNotificationButtonListener) {
         this.inAppNotificationButtonListener = new WeakReference<>(inAppNotificationButtonListener);
+    }
+
+    @Override
+    public void setPushPrimerButtonListener(PushPrimerButtonListener pushPrimerButtonListener) {
+        this.pushPrimerButtonListener = new WeakReference<>(pushPrimerButtonListener);
     }
 
     @Override
