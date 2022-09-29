@@ -2,6 +2,7 @@ package com.clevertap.android.sdk;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
 import static com.clevertap.android.sdk.Utils.getDCDomain;
+import static com.clevertap.android.sdk.Utils.isAndroid13;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM_LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM;
@@ -1034,29 +1035,36 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
+    public boolean isNotificationPermissionGranted(){
+        if (isAndroid13(context)) {
+            return coreState.getInAppController().isNotificationPermissionGranted();
+        }else{
+            return false;
+        }
+    }
+
     public void promptHalfInterstitialPushPrimer(CTHalfInterstitialLocalInAppBuilder
                                                          halfInterstitialLocalInAppBuilder){
-        coreState.getInAppController().promptPushPrimer(halfInterstitialLocalInAppBuilder);
+        if (isAndroid13(context)) {
+            coreState.getInAppController().promptPushPrimer(halfInterstitialLocalInAppBuilder);
+        }else{
+            Logger.v("Ensure your app support Android 13 to verify permission access for notifications.");
+        }
     }
 
     public void promptAlertPushPrimer(CTAlertLocalInAppBuilder alertLocalInAppBuilder){
-        coreState.getInAppController().promptPushPrimer(alertLocalInAppBuilder);
+        if (isAndroid13(context)) {
+            coreState.getInAppController().promptPushPrimer(alertLocalInAppBuilder);
+        }else{
+            Logger.v("Ensure your app support Android 13 to verify permission access for notifications.");
+        }
     }
 
     public void promptForNotificationPermission(){
-        if (instances == null) {
-            return;
-        }
-
-        for (String accountId : CleverTapAPI.instances.keySet()) {
-            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
-            try {
-                if (instance != null) {
-                    instance.coreState.getInAppController().promptPermission();
-                }
-            } catch (Throwable t) {
-                // Ignore
-            }
+        if (isAndroid13(context)){//TODO check for multi instance support
+            coreState.getInAppController().promptPermission();
+        }else{
+            Logger.v("Ensure your app support Android 13 to verify permission access for notifications.");
         }
     }
 

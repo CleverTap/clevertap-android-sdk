@@ -2,6 +2,7 @@ package com.clevertap.android.sdk;
 
 import static com.clevertap.android.sdk.Utils.isAndroid13;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -14,7 +15,9 @@ import android.os.Bundle;
 import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import com.clevertap.android.sdk.inapp.AlertDialogPromptForSettings;
@@ -233,6 +236,12 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             intent.putExtra("displayHardPermissionDialog", true);
             activity.startActivity(intent);
         }
+    }
+
+    @RequiresApi(api = 33)
+    public static int isNotificationPermissionGranted(Activity activity){
+        return ContextCompat.checkSelfPermission(
+                activity, Manifest.permission.POST_NOTIFICATIONS);
     }
 
     void didDismiss(Bundle data) {

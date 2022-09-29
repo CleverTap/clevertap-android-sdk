@@ -4,8 +4,11 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Looper;
+
+import androidx.annotation.RequiresApi;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
@@ -208,6 +211,13 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     public void promptPermission(){
         InAppNotificationActivity.startPrompt(Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
                 config);
+    }
+
+    @RequiresApi(api = 33)
+    public boolean isNotificationPermissionGranted(){
+        int permissionStatus = InAppNotificationActivity.isNotificationPermissionGranted(
+                Objects.requireNonNull(CoreMetaData.getCurrentActivity()));
+        return permissionStatus == PackageManager.PERMISSION_GRANTED;
     }
 
     public void discardInApps() {
