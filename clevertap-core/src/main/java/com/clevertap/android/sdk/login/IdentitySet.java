@@ -94,7 +94,6 @@ public class IdentitySet {
      * @param keysArrays - String array containing identities.
      */
     private void init(final String[] keysArrays) {
-        System.out.println("IdentitySet:init received keys='"+ Arrays.toString(keysArrays)+"'");
         if (keysArrays != null && keysArrays.length > 0) {
             for (String key : keysArrays) {
                 if (Utils.containsIgnoreCase(Constants.ALL_IDENTITY_KEYS, key)) {
@@ -102,7 +101,6 @@ public class IdentitySet {
                 }
             }
         }
-        System.out.println("IdentitySet:init final identities='"+ identities+"'");
     }
 
     /**

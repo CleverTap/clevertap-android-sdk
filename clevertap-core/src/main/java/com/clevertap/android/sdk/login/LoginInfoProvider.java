@@ -147,13 +147,8 @@ public class LoginInfoProvider {
      * @return - Cached Identity Keys for the account
      */
     public String getCachedIdentityKeysForAccount() {
-        System.out.println("LoginInfoProvider:getCachedIdentityKeysForAccount()");
-
         String cachedKeys = StorageHelper.getStringFromPrefs(context, config, Constants.SP_KEY_PROFILE_IDENTITIES, "");
-
         config.log(LoginConstants.LOG_TAG_ON_USER_LOGIN, "getCachedIdentityKeysForAccount:" + cachedKeys);
-        System.out.println("LoginInfoProvider:getCachedIdentityKeysForAccount() cached keys = '"+cachedKeys+"'");
-
         return cachedKeys;
     }
 
