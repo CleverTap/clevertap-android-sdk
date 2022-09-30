@@ -5,6 +5,7 @@ import android.os.Build.VERSION_CODES
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapInstanceConfig
+import com.clevertap.android.sdk.DeviceInfo
 import org.json.JSONArray
 import org.json.JSONObject
 import org.junit.*

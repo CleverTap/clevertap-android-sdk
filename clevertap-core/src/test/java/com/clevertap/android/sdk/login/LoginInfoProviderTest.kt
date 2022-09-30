@@ -26,7 +26,7 @@ class LoginInfoProviderTest: BaseTestCase() {
         super.setUp()
         coreMetaData = CoreMetaData()
         defConfig =  CleverTapInstanceConfig.createInstance(appCtx, "id", "token", "region")
-        deviceInfo = Mockito.spy(DeviceInfo(appCtx,defConfig,"clevertap_id",coreMetaData))
+        deviceInfo = Mockito.mock(DeviceInfo::class.java)
 
 
         loginInfoProvider = LoginInfoProvider(appCtx,defConfig,deviceInfo)

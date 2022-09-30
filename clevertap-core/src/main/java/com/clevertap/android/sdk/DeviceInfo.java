@@ -487,8 +487,7 @@ public class DeviceInfo {
         return sDeviceType;
     }
 
-    @RestrictTo(Scope.LIBRARY)
-    public DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID,
+    DeviceInfo(Context context, CleverTapInstanceConfig config, String cleverTapID,
             CoreMetaData coreMetaData) {
         this.context = context;
         this.config = config;

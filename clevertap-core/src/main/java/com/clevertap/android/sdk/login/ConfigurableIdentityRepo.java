@@ -12,6 +12,7 @@ import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.validation.ValidationResultFactory;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public class ConfigurableIdentityRepo implements IdentityRepo {
 
     private static final String TAG = "ConfigurableIdentityRepo";
@@ -25,14 +26,10 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
     private final ValidationResultStack validationResultStack;
 
     public ConfigurableIdentityRepo(Context context, CleverTapInstanceConfig config, DeviceInfo deviceInfo, ValidationResultStack mValidationResultStack) {
-        this.config = config;
-        this.infoProvider = new LoginInfoProvider(context, config, deviceInfo);
-        this.validationResultStack = mValidationResultStack;
-        loadIdentitySet(); // <--1
+       this(config,new LoginInfoProvider(context, config, deviceInfo),mValidationResultStack);
     }
 
-    @RestrictTo(RestrictTo.Scope.LIBRARY)
-    public ConfigurableIdentityRepo(Context context, CleverTapInstanceConfig config,LoginInfoProvider loginInfoProvider, ValidationResultStack mValidationResultStack) {
+    public ConfigurableIdentityRepo( CleverTapInstanceConfig config,LoginInfoProvider loginInfoProvider, ValidationResultStack mValidationResultStack) {
         this.config = config;
         this.infoProvider = loginInfoProvider;
         this.validationResultStack = mValidationResultStack;
@@ -56,38 +53,41 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
     }
 
     /**
-     * Loads the identity set:
+     * Loads the identity set . It executes 5 steps:
      *
-     * 1. create IdentitySet1 : 'prefKeySet'
-     * |-- 1.1. A string is provided by loginInfoProvider.getCachedIdentityKeysForAccount()
-     * |    |-- 1.1.1-5 the above function gets either string or null from storage based on 5 scenarios: whether keyvalue are coming from sp of default/nondefault config, etc
-     * |-- 1.2 This string is of format "__,__,__etc" and is split by ',' .the new list is filtered for wrong keys and finally used to create 'prefKeySet'
+     * 1. creating : 'prefKeySet'
+     *    1.1. A string is provided by loginInfoProvider.getCachedIdentityKeysForAccount()
+     *       1.1.1  the above function gets either string or null from storage based on 5 scenarios:
+     *              whether keyvalue are coming from sp of default/nondefault config, etc
+     *   1.2 This string is of format "__,__,__etc" and is split by ',' .the new list is filtered for
+     *      wrong keys and finally used to create 'prefKeySet'
      *
-     * 2. create IdentitySet2 : 'configKeySet'
-     * |-- 2.1 A string array is provided by config.getIdentityKeys()
-     *      |-- 2.1.0 config is a dependency passed to ConfigurableIdentityRepo . it can be default or non default
-     *      |-- 2.1.1 for default config instance identitiyKeys =manifest.getProfileKeys()
-     *      |-- 2.1.2 for nondefault config instance , identitiyKeys = either null keys array or array of strings that are set post creation via config.setIdentityKeys(Constants.TYPE_EMAIL,Constants.TYPE_PHONE,..etc)
-     * |-- 2.2 this array is filtered for wrong keys and finally used to create 'configKeySet'
+     * 2. creating : 'configKeySet'
+     *   2.1 A string array is provided by config.getIdentityKeys() . note that config is a
+     *      dependency passed to ConfigurableIdentityRepo . it can be default or non default
+     *      2.1.1 for default config instance identityKeys =manifest.getProfileKeys()
+     *      2.1.2 for nondefault config instance , identityKeys = either null keys array or array
+     *            of strings that are set post creation via config.setIdentityKeys(
+     *            Constants.TYPE_EMAIL,Constants.TYPE_PHONE,..etc)
+     *   2.2 this array is filtered for wrong keys and finally used to create 'configKeySet'
      *
-     * <note>: the validation critieria is that keyset must not be empty</note>
-     *
-     * 3. validate sets  : handleError(prefKeySet, configKeySet);
-     * |-- 3.1 : if prefKeySet.isValid() && configKeySet.isValid() && !prefKeySet.equals(configKeySet), it will generate a validation error on vr stack passed via external dependency
-     *
+     * 3. validate sets  : handleError(prefKeySet, configKeySet)
+     *   3.1 note that : the validation criteria is simply that KeySet must not be empty
+     *   3.2 if prefKeySet.isValid() AND configKeySet.isValid() AND !prefKeySet.equals(configKeySet),
+     *      it will generate a validation error on vr stack passed via external dependency
      *
      * 4. setting identity set
-     * |-- 4.1  identitySet = prefkeyset(if prefKeySet.isValid())
-     * |-- 4.2  identitySet = configkeyset(if configKeySet.isValid()) or
-     * |-- 4.3  (if above 2 doesn't apply) identitySet =IdentitySet.getDefault()  = ['Identity','Email']
+     *   4.1  if prefKeySet is Valid, identitySet will be set as prefKeySet
+     *   4.2  if above doesn't apply and configKeySet is Valid, identitySet will be set as configKeySet
+     *   4.3  if above 2 doesn't apply identitySet will be set as defaultSet = ['Identity','Email']
      *
-     * 5. if (!prefKeySet.isValid() ) loginInfoProvider.saveIdentityKeysForAccount(identitySet) is also called on the newly initialised identitySet
+     * 5. Saving Identity Keys For Account
+     *   5.1 if prefKeySet was not valid, loginInfoProvider.saveIdentityKeysForAccount(identitySet)
+     *       is also called on the newly initialised identitySet
      */
     void loadIdentitySet() {
-        System.out.println("loadIdentitySet===called");
         // Read from Pref
         IdentitySet prefKeySet = IdentitySet.from(infoProvider.getCachedIdentityKeysForAccount());
-        System.out.println("ConfigurableIdentityRepo|loadIdentitySet : prefKeySet='"+prefKeySet.toString()+"'");
 
         config.log(LOG_TAG_ON_USER_LOGIN, TAG + "PrefIdentitySet [" + prefKeySet + "]");
 
@@ -97,7 +97,6 @@ public class ConfigurableIdentityRepo implements IdentityRepo {
          * ---------------------------------------------------------------- */
         IdentitySet configKeySet = IdentitySet.from(config.getIdentityKeys());
 
-        System.out.println("ConfigurableIdentityRepo|loadIdentitySet : configKeySet='"+configKeySet.toString()+"'");
         config.log(LOG_TAG_ON_USER_LOGIN, TAG + "ConfigIdentitySet [" + configKeySet + "]");
 
         /* ---------------------------------------------------

@@ -83,7 +83,7 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
         Mockito.`when`(config.identityKeys).thenReturn(commonKeys)
 
         //test call
-        configurableIdentityRepo = ConfigurableIdentityRepo(appCtx,config,loginInfoProvider,validationStack)
+        configurableIdentityRepo = ConfigurableIdentityRepo(config,loginInfoProvider,validationStack)
         val result = configurableIdentityRepo.identitySet
 
         //validations
@@ -108,7 +108,7 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
         Mockito.`when`(config.identityKeys).thenReturn(configKeys)
 
         //test call
-        configurableIdentityRepo = ConfigurableIdentityRepo(appCtx,config,loginInfoProvider,validationStack)
+        configurableIdentityRepo = ConfigurableIdentityRepo(config,loginInfoProvider,validationStack)
         val result = configurableIdentityRepo.identitySet
 
         //validations
@@ -135,7 +135,7 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
         Mockito.`when`(config.identityKeys).thenReturn(configKeys)
 
         //test call
-        configurableIdentityRepo = ConfigurableIdentityRepo(appCtx,config,loginInfoProvider,validationStack)
+        configurableIdentityRepo = ConfigurableIdentityRepo(config,loginInfoProvider,validationStack)
         val result = configurableIdentityRepo.identitySet
 
         //validations
@@ -160,7 +160,7 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
         Mockito.`when`(config.identityKeys).thenReturn(configKeys)
 
         //test call
-        configurableIdentityRepo = ConfigurableIdentityRepo(appCtx,config,loginInfoProvider,validationStack)
+        configurableIdentityRepo = ConfigurableIdentityRepo(config,loginInfoProvider,validationStack)
         val result = configurableIdentityRepo.identitySet
 
         //validations
@@ -181,7 +181,7 @@ class ConfigurableIdentityRepoTest:BaseTestCase() {
         Mockito.`when`(config.identityKeys).thenReturn(commonKeys)
 
         //test call
-        configurableIdentityRepo = ConfigurableIdentityRepo(appCtx,config,loginInfoProvider,validationStack)
+        configurableIdentityRepo = ConfigurableIdentityRepo(config,loginInfoProvider,validationStack)
 
         //validations
         Assert.assertEquals(true,configurableIdentityRepo.hasIdentity(Constants.TYPE_IDENTITY))
