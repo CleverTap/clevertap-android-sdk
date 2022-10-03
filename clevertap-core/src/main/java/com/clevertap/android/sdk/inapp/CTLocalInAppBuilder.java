@@ -12,6 +12,10 @@ import java.util.Objects;
 
 public class CTLocalInAppBuilder {
 
+    public static final String HALF_INTERSTITIAL_INAPP = "half-interstitial";
+    public static final String ALERT_INAPP = "alert-template";
+    protected static final String IS_LOCAL_INAPP = "isLocalInApp";
+
     private final String localInAppType;//Required
     private final JSONObject titleObj;// Required
     private final JSONObject messageObj;// Required
@@ -52,7 +56,7 @@ public class CTLocalInAppBuilder {
 
             private Builder1(String inAppType, Context context) throws JSONException {
                 this.jsonObject.put(Constants.KEY_TYPE, inAppType);
-                this.jsonObject.put("isLocalInApp",true);
+                this.jsonObject.put(IS_LOCAL_INAPP,true);
                 this.jsonObject.put(Constants.KEY_HIDE_CLOSE,true);
                 this.jsonObject.put(Constants.KEY_IS_TABLET,
                         DeviceInfo.getDeviceType(context) == DeviceInfo.TABLET);

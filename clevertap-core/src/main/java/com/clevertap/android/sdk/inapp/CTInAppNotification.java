@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inapp;
 
+import static com.clevertap.android.sdk.inapp.CTLocalInAppBuilder.IS_LOCAL_INAPP;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -590,7 +591,7 @@ public class CTInAppNotification implements Parcelable {
             this.campaignId = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject
                     .getString(Constants.NOTIFICATION_ID_TAG) : "";
             this.type = jsonObject.getString(Constants.KEY_TYPE);
-            this.isLocalInApp = jsonObject.has("isLocalInApp") && jsonObject.getBoolean("isLocalInApp");
+            this.isLocalInApp = jsonObject.has(IS_LOCAL_INAPP) && jsonObject.getBoolean(IS_LOCAL_INAPP);
             this.excludeFromCaps = jsonObject.has(Constants.KEY_EFC) && jsonObject.getInt(Constants.KEY_EFC) == 1;
             this.totalLifetimeCount = jsonObject.has(Constants.KEY_TLC) ? jsonObject.getInt(Constants.KEY_TLC) : -1;
             this.totalDailyCount = jsonObject.has(Constants.KEY_TDC) ? jsonObject.getInt(Constants.KEY_TDC) : -1;

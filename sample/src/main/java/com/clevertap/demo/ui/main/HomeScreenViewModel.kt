@@ -10,6 +10,8 @@ import com.clevertap.android.sdk.CTInboxStyleConfig
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.CTLocalInAppBuilder
+import com.clevertap.android.sdk.inapp.CTLocalInAppBuilder.ALERT_INAPP
+import com.clevertap.android.sdk.inapp.CTLocalInAppBuilder.HALF_INTERSTITIAL_INAPP
 import java.util.*
 
 class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?, @SuppressLint("StaticFieldLeak")
@@ -329,7 +331,7 @@ private val activity:FragmentActivity?) : ViewModel() {
             "100"-> {
                 if (cleverTapAPI?.isNotificationPermissionGranted == false){
                     val builder = CTLocalInAppBuilder.builder()
-                        .inAppType("half-interstitial",activity)
+                        .inAppType(HALF_INTERSTITIAL_INAPP,activity)
                         .titleText("Get Notified")
                         .messageText("Please enable notifications on your device to use Push Notifications.")
                         .followDeviceOrientation(true)
@@ -353,7 +355,7 @@ private val activity:FragmentActivity?) : ViewModel() {
             "101"->{
                     if (cleverTapAPI?.isNotificationPermissionGranted == false) {
                         val builder = CTLocalInAppBuilder.builder()
-                            .inAppType("alert-template",activity)
+                            .inAppType(ALERT_INAPP,activity)
                             .titleText("Get Notified")
                             .messageText("Enable Notification permission")
                             .followDeviceOrientation(true)
