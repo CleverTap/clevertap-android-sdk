@@ -9,7 +9,6 @@ import android.util.LruCache;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.utils.ImageCache;
@@ -583,115 +582,6 @@ public class CTInAppNotification implements Parcelable {
         }
         listener.notificationReady(this);
     }
-    public CTInAppNotification configureAlertLocalInApp(CTAlertLocalInAppBuilder alertLocalInAppBuilder,
-                                                        int deviceInfo){
-        this.id = "";
-        this.campaignId = "";
-        this.type = ALERT_LOCAL_IN_APP;
-        this.inAppType = CTInAppType.fromString(this.type);
-        this.isTablet = deviceInfo == DeviceInfo.TABLET;
-        this.isPortrait = true;
-        this.isLandscape = alertLocalInAppBuilder.followDeviceOrientation();
-        this.isLocalInApp = true;
-        this.timeToLive = System.currentTimeMillis() + 2 * Constants.ONE_DAY_IN_MILLIS;
-        this.title = alertLocalInAppBuilder.titleText() != null ? alertLocalInAppBuilder.titleText() : "";
-        this.message = alertLocalInAppBuilder.bodyText() != null ? alertLocalInAppBuilder.bodyText() : "";
-
-        setupInAppActionButtons(alertLocalInAppBuilder.positiveBtnText(),
-                alertLocalInAppBuilder.negativeBtnText(),
-                null,null,null,null);
-
-        return this;
-    }
-
-    public CTInAppNotification configureHalfInterstitialLocalInApp (CTHalfInterstitialLocalInAppBuilder
-                                                              halfInterstitialLocalInAppBuilder, int deviceInfo){
-        this.id = "";
-        this.campaignId = "";
-        this.type = HALF_INTERSTITIAL_LOCAL_IN_APP;
-
-
-        this.excludeFromCaps = false;//Check this withInAppFC Manager
-        this.totalLifetimeCount =  -1;//
-        this.totalDailyCount =  -1;//
-
-        this.inAppType = CTInAppType.fromString(this.type);
-        this.isTablet = deviceInfo == DeviceInfo.TABLET;
-
-        this.backgroundColor = halfInterstitialLocalInAppBuilder.backgroundColor() != null ?
-                halfInterstitialLocalInAppBuilder.backgroundColor() : Constants.WHITE;
-
-        this.isPortrait = true;
-        this.isLandscape = halfInterstitialLocalInAppBuilder.followDeviceOrientation();
-
-        this.isLocalInApp = true;
-        this.timeToLive = System.currentTimeMillis() + 2 * Constants.ONE_DAY_IN_MILLIS;
-
-        this.title = halfInterstitialLocalInAppBuilder.titleText() != null ?
-                halfInterstitialLocalInAppBuilder.titleText() : "";
-        this.titleColor = halfInterstitialLocalInAppBuilder.titleTextColor() !=null ?
-                halfInterstitialLocalInAppBuilder.titleTextColor()
-                : Constants.BLACK;
-
-        this.message = halfInterstitialLocalInAppBuilder.bodyText() != null ?
-                halfInterstitialLocalInAppBuilder.bodyText() : "";
-        this.messageColor = halfInterstitialLocalInAppBuilder.bodyTextColor() != null ?
-                halfInterstitialLocalInAppBuilder.bodyTextColor()
-                : Constants.BLACK;
-
-        this.hideCloseButton = true;
-
-        if (halfInterstitialLocalInAppBuilder.image() != null){
-            setupInAppMediaImage(halfInterstitialLocalInAppBuilder.image());
-        }
-
-        setupInAppActionButtons(halfInterstitialLocalInAppBuilder.positiveBtnText(),
-                halfInterstitialLocalInAppBuilder.negativeBtnText(),
-                halfInterstitialLocalInAppBuilder.btnBackgroundColor(),
-                halfInterstitialLocalInAppBuilder.btnTextColor(),
-                halfInterstitialLocalInAppBuilder.btnBorderColor(),
-                halfInterstitialLocalInAppBuilder.btnBorderRadius());
-
-        return this;
-    }
-
-    private void setupInAppMediaImage(String imageUrl) {
-        CTInAppNotificationMedia portraitMedia = new CTInAppNotificationMedia()
-                .initWithLocalData(imageUrl, Configuration.ORIENTATION_PORTRAIT);
-        if (portraitMedia != null) {
-            mediaList.add(portraitMedia);
-        }
-
-        CTInAppNotificationMedia landscapeMedia = new CTInAppNotificationMedia()
-                .initWithLocalData(imageUrl, Configuration.ORIENTATION_LANDSCAPE);
-        if (landscapeMedia != null) {
-            mediaList.add(landscapeMedia);
-        }
-    }
-
-    private void setupInAppActionButtons(String positiveBtnText, String negativeBtnText,
-                                         String btnBackgroundColor,
-                                         String btnTextColor, String btnBorderColor,
-                                         String btnBorderRadius){
-        //Positive Button
-        CTInAppNotificationButton inAppNotificationPositiveButton = new CTInAppNotificationButton()
-                .initWithLocalData(positiveBtnText,
-                        btnBackgroundColor,btnTextColor,btnBorderColor,btnBorderRadius);
-
-        if (inAppNotificationPositiveButton != null) {
-            this.buttons.add(inAppNotificationPositiveButton);
-        }
-
-        //Negative Button
-        CTInAppNotificationButton inAppNotificationNegativeButton = new CTInAppNotificationButton()
-                .initWithLocalData(negativeBtnText,
-                        btnBackgroundColor,btnTextColor,
-                        btnBorderColor,btnBorderRadius);
-
-        if (inAppNotificationNegativeButton != null) {
-            this.buttons.add(inAppNotificationNegativeButton);
-        }
-    }
 
     private void configureWithJson(JSONObject jsonObject) {
         try {
@@ -700,6 +590,7 @@ public class CTInAppNotification implements Parcelable {
             this.campaignId = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject
                     .getString(Constants.NOTIFICATION_ID_TAG) : "";
             this.type = jsonObject.getString(Constants.KEY_TYPE);
+            this.isLocalInApp = jsonObject.has("isLocalInApp") && jsonObject.getBoolean("isLocalInApp");
             this.excludeFromCaps = jsonObject.has(Constants.KEY_EFC) && jsonObject.getInt(Constants.KEY_EFC) == 1;
             this.totalLifetimeCount = jsonObject.has(Constants.KEY_TLC) ? jsonObject.getInt(Constants.KEY_TLC) : -1;
             this.totalDailyCount = jsonObject.has(Constants.KEY_TDC) ? jsonObject.getInt(Constants.KEY_TDC) : -1;

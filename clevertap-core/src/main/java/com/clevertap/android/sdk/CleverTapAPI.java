@@ -33,8 +33,6 @@ import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.EventDetail;
 import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
-import com.clevertap.android.sdk.inapp.CTAlertLocalInAppBuilder;
-import com.clevertap.android.sdk.inapp.CTHalfInterstitialLocalInAppBuilder;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.inbox.CTMessageDAO;
@@ -1043,20 +1041,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
-    public void promptHalfInterstitialPushPrimer(CTHalfInterstitialLocalInAppBuilder
-                                                         halfInterstitialLocalInAppBuilder){
+    public void promptPushPrimer(JSONObject jsonObject) {
         if (isAndroid13(context)) {
-            coreState.getInAppController().promptPushPrimer(halfInterstitialLocalInAppBuilder);
+            coreState.getInAppController().promptPushPrimer(jsonObject);
         }else{
-            Logger.v("Ensure your app support Android 13 to verify permission access for notifications.");
-        }
-    }
-
-    public void promptAlertPushPrimer(CTAlertLocalInAppBuilder alertLocalInAppBuilder){
-        if (isAndroid13(context)) {
-            coreState.getInAppController().promptPushPrimer(alertLocalInAppBuilder);
-        }else{
-            Logger.v("Ensure your app support Android 13 to verify permission access for notifications.");
+            Logger.v("Ensure your app supports Android 13 to verify permission access for notifications.");
         }
     }
 
@@ -1064,7 +1053,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         if (isAndroid13(context)){//TODO check for multi instance support
             coreState.getInAppController().promptPermission();
         }else{
-            Logger.v("Ensure your app support Android 13 to verify permission access for notifications.");
+            Logger.v("Ensure your app supports Android 13 to verify permission access for notifications.");
         }
     }
 
