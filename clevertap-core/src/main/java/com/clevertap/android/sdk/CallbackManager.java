@@ -29,7 +29,7 @@ public class CallbackManager extends BaseCallbackManager {
 
     private InAppNotificationListener inAppNotificationListener;
 
-    private PushPermissionNotificationResponseListener pushPermissionNotificationResponseListener;
+    private PushPermissionResponseListener pushPermissionNotificationResponseListener;
 
     private CTInboxListener inboxListener;
 
@@ -148,7 +148,7 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     @Override
-    public PushPermissionNotificationResponseListener getPushPermissionNotificationResponseListener() {
+    public PushPermissionResponseListener getPushPermissionNotificationResponseListener() {
         return pushPermissionNotificationResponseListener;
     }
 
@@ -158,7 +158,7 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     @Override
-    public void setPushPermissionNotificationResponseListener(PushPermissionNotificationResponseListener pushPermissionNotificationResponseListener) {
+    public void setPushPermissionNotificationResponseListener(PushPermissionResponseListener pushPermissionNotificationResponseListener) {
         this.pushPermissionNotificationResponseListener = pushPermissionNotificationResponseListener;
     }
 

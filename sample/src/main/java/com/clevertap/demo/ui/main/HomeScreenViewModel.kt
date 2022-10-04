@@ -386,7 +386,11 @@ private val activity:FragmentActivity?) : ViewModel() {
             }
 
             "102"->{
-                cleverTapAPI?.promptForNotificationPermission()
+                if (cleverTapAPI?.isNotificationPermissionGranted == false) {
+                    cleverTapAPI.promptForNotificationPermission()
+                }else{
+                    Log.v("HomeScreenViewModel","Notification permission is already granted.")
+                }
             }
 
             //"60" -> webViewClickListener?.onWebViewClick()

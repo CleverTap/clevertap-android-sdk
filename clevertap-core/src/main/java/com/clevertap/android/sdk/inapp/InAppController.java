@@ -22,7 +22,7 @@ import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.InAppNotificationListener;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.ManifestInfo;
-import com.clevertap.android.sdk.PushPermissionNotificationResponseListener;
+import com.clevertap.android.sdk.PushPermissionResponseListener;
 import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
@@ -178,8 +178,19 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     public void promptPermission(){
-        InAppNotificationActivity.startPrompt(Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
+        startPrompt(Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
                 config);
+    }
+
+    public void startPrompt(Activity activity, CleverTapInstanceConfig config){
+        if (!activity.getClass().equals(InAppNotificationActivity.class)) {
+            Intent intent = new Intent(activity, InAppNotificationActivity.class);
+            Bundle configBundle = new Bundle();
+            configBundle.putParcelable("config", config);
+            intent.putExtra("configBundle", configBundle);
+            intent.putExtra("displayHardPermissionDialog", true);
+            activity.startActivity(intent);
+        }
     }
 
     @RequiresApi(api = 33)
@@ -304,17 +315,17 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     @Override
     public void onAccept() {
-        final PushPermissionNotificationResponseListener listener = callbackManager.getPushPermissionNotificationResponseListener();
+        final PushPermissionResponseListener listener = callbackManager.getPushPermissionNotificationResponseListener();
         if (listener != null){
-            listener.response(true);
+            listener.onPushPermissionResponse(true);
         }
     }
 
     @Override
     public void onReject() {
-        final PushPermissionNotificationResponseListener listener = callbackManager.getPushPermissionNotificationResponseListener();
+        final PushPermissionResponseListener listener = callbackManager.getPushPermissionNotificationResponseListener();
         if (listener != null){
-            listener.response(false);
+            listener.onPushPermissionResponse(false);
         }
     }
 

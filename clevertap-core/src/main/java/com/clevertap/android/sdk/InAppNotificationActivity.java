@@ -34,7 +34,6 @@ import com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialImageFragment;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
 import com.clevertap.android.sdk.inapp.CTInAppType;
 import com.clevertap.android.sdk.inapp.InAppListener;
-import com.clevertap.android.sdk.inapp.NavigateToAndroidSettingsForNotifications;
 
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
@@ -216,7 +215,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         AlertDialogPromptForSettings.INSTANCE.show(this, new AlertDialogPromptForSettings.Callback() {
             @Override
             public void onAccept() {
-                NavigateToAndroidSettingsForNotifications.INSTANCE.show(getBaseContext());
+                Utils.navigateToAndroidSettingsForNotifications(InAppNotificationActivity.this);
                 didDismiss(null);
             }
 
@@ -225,17 +224,6 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                 didDismiss(null);
             }
         });
-    }
-
-    public static void startPrompt(Activity activity, CleverTapInstanceConfig config){
-        if (!activity.getClass().equals(InAppNotificationActivity.class)) {
-            Intent intent = new Intent(activity, InAppNotificationActivity.class);
-            Bundle configBundle = new Bundle();
-            configBundle.putParcelable("config", config);
-            intent.putExtra("configBundle", configBundle);
-            intent.putExtra("displayHardPermissionDialog", true);
-            activity.startActivity(intent);
-        }
     }
 
     @RequiresApi(api = 33)

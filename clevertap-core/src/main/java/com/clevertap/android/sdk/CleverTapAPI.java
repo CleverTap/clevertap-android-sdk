@@ -1631,21 +1631,23 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     /**
      * Returns the PushPermissionNotificationResponseListener object
      *
-     * @return An {@link PushPermissionNotificationResponseListener} object
+     * @return An {@link PushPermissionResponseListener} object
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
-    public PushPermissionNotificationResponseListener getPushPermissionNotificationResponseListener() {
+    public PushPermissionResponseListener getPushPermissionNotificationResponseListener() {
         return coreState.getCallbackManager().getPushPermissionNotificationResponseListener();
     }
 
     /**
      * This method sets the PushPermissionNotificationResponseListener
      *
-     * @param pushPermissionNotificationResponseListener An {@link PushPermissionNotificationResponseListener} object
+     * @param pushPermissionResponseListener An {@link PushPermissionResponseListener} object
      */
     @SuppressWarnings({"unused"})
-    public void setPushPermissionNotificationResponseListener(PushPermissionNotificationResponseListener pushPermissionNotificationResponseListener) {
-        coreState.getCallbackManager().setPushPermissionNotificationResponseListener(pushPermissionNotificationResponseListener);
+    public void setPushPermissionNotificationResponseListener(PushPermissionResponseListener
+                                                                          pushPermissionResponseListener) {
+        coreState.getCallbackManager().
+                setPushPermissionNotificationResponseListener(pushPermissionResponseListener);
     }
 
     /**

@@ -172,51 +172,42 @@ public class CTLocalInAppBuilder {
             }
 
             public Builder6 btnTextColor(String btnTextColor) throws JSONException {
-                this.builder.positiveButtonObject.put(Constants.KEY_COLOR, btnTextColor);
-                this.builder.negativeButtonObject.put(Constants.KEY_COLOR, btnTextColor);
-
-                this.builder.buttonArray.put(0, this.builder.positiveButtonObject);
-                this.builder.buttonArray.put(1, this.builder.negativeButtonObject);
-
-                this.builder.jsonObject.put(Constants.KEY_BUTTONS, this.builder.buttonArray);
+                this.builder.jsonObject.put(Constants.KEY_BUTTONS,
+                        getActionButtonJSONArray(Constants.KEY_COLOR, btnTextColor));
                 return this;
             }
 
             public Builder6 btnBackgroundColor(String btnBackgroundColor) throws JSONException {
-                this.builder.positiveButtonObject.put(Constants.KEY_BG, btnBackgroundColor);
-                this.builder.negativeButtonObject.put(Constants.KEY_BG, btnBackgroundColor);
-
-                this.builder.buttonArray.put(0, this.builder.positiveButtonObject);
-                this.builder.buttonArray.put(1, this.builder.negativeButtonObject);
-
-                this.builder.jsonObject.put(Constants.KEY_BUTTONS, this.builder.buttonArray);
+                this.builder.jsonObject.put(Constants.KEY_BUTTONS,
+                        getActionButtonJSONArray(Constants.KEY_BG, btnBackgroundColor));
                 return this;
             }
 
             public Builder6 btnBorderColor(String btnBorderColor) throws JSONException {
-                this.builder.positiveButtonObject.put(Constants.KEY_BORDER, btnBorderColor);
-                this.builder.negativeButtonObject.put(Constants.KEY_BORDER, btnBorderColor);
-
-                this.builder.buttonArray.put(0, this.builder.positiveButtonObject);
-                this.builder.buttonArray.put(1, this.builder.negativeButtonObject);
-
-                this.builder.jsonObject.put(Constants.KEY_BUTTONS, this.builder.buttonArray);
+                this.builder.jsonObject.put(Constants.KEY_BUTTONS,
+                        getActionButtonJSONArray(Constants.KEY_BORDER, btnBorderColor));
                 return this;
             }
 
             public Builder6 btnBorderRadius(String btnBorderRadius) throws JSONException {
                 this.builder.btnBorderRadius = btnBorderRadius;
-                this.builder.positiveButtonObject.put(Constants.KEY_RADIUS, btnBorderRadius);
-                this.builder.negativeButtonObject.put(Constants.KEY_RADIUS, btnBorderRadius);
+                this.builder.jsonObject.put(Constants.KEY_BUTTONS,
+                        getActionButtonJSONArray(Constants.KEY_RADIUS, btnBorderRadius));
+                return this;
+            }
+            public JSONObject build() {
+                return this.builder.jsonObject;
+            }
+
+
+            private JSONArray getActionButtonJSONArray(String key, String value) throws JSONException{
+                this.builder.positiveButtonObject.put(key, value);
+                this.builder.negativeButtonObject.put(key, value);
 
                 this.builder.buttonArray.put(0, this.builder.positiveButtonObject);
                 this.builder.buttonArray.put(1, this.builder.negativeButtonObject);
 
-                this.builder.jsonObject.put(Constants.KEY_BUTTONS, this.builder.buttonArray);
-                return this;
-            }
-            public JSONObject build() throws JSONException {
-                return this.builder.jsonObject;
+                return this.builder.buttonArray;
             }
         }
     }

@@ -30,7 +30,8 @@ import java.util.HashMap
 private const val TAG = "HomeScreenActivity"
 
 class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitListener, CTProductConfigListener,
-    CTFeatureFlagsListener, SyncListener, InAppNotificationListener, PushPermissionNotificationResponseListener,
+    CTFeatureFlagsListener, SyncListener, InAppNotificationListener,
+    PushPermissionResponseListener,
     InAppNotificationButtonListener, PushPrimerButtonListener {
 
     var cleverTapDefaultInstance: CleverTapAPI? = null
@@ -258,7 +259,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
         Log.i(TAG, "InApp---> onDismissed() called")
     }
 
-    override fun response(accepted: Boolean) {
+    override fun onPushPermissionResponse(accepted: Boolean) {
         Log.i(TAG, "InApp---> response() called  $accepted")
     }
 
