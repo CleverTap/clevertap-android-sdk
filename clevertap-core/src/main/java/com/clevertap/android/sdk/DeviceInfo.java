@@ -40,6 +40,7 @@ import java.util.concurrent.Callable;
 import org.json.JSONObject;
 
 import static android.content.Context.USAGE_STATS_SERVICE;
+import static com.clevertap.android.sdk.inapp.InAppController.LOCAL_INAPP_COUNT;
 
 @RestrictTo(Scope.LIBRARY)
 public class DeviceInfo {
@@ -723,6 +724,10 @@ public class DeviceInfo {
 
     int getWidthPixels() {
         return getDeviceCachedInfo().widthPixels;
+    }
+
+    public int getLocalInAppCount(){
+        return StorageHelper.getInt(context,LOCAL_INAPP_COUNT,0);
     }
 
     void onInitDeviceInfo(final String cleverTapID) {

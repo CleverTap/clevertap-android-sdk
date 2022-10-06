@@ -113,6 +113,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     private final MainLooperHandler mainLooperHandler;
 
+    public final static String LOCAL_INAPP_COUNT = "local_in_app_count";
+
     public InAppController(Context context,
             CleverTapInstanceConfig config,
             MainLooperHandler mainLooperHandler,
@@ -473,7 +475,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             return;
         }
         showInApp(context, inAppNotification, config, this);
-
+        incrementLocalInAppCountInPersistentStore(context, inAppNotification);
     }
 
     //InApp
@@ -548,6 +550,14 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 .equals(inAppNotification.getCampaignId()))) {
             currentlyDisplayingInApp = null;
             checkPendingNotifications(context, config, inAppController);
+        }
+    }
+
+    private void incrementLocalInAppCountInPersistentStore(Context context, CTInAppNotification inAppNotification) {
+        if (inAppNotification.isLocalInApp()){
+            int localInAppCount = StorageHelper.getInt(context,LOCAL_INAPP_COUNT,0);
+            ++localInAppCount;
+            StorageHelper.putInt(context,LOCAL_INAPP_COUNT,localInAppCount);
         }
     }
 

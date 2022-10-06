@@ -223,9 +223,6 @@ public class CTInAppNotification implements Parcelable {
 
     private boolean isLocalInApp = false;
 
-    private static final String HALF_INTERSTITIAL_LOCAL_IN_APP = "half-interstitial";
-    private static final String ALERT_LOCAL_IN_APP = "alert-template";
-
     CTInAppNotification() {
     }
 
