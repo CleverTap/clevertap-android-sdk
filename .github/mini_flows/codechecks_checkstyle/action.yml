@@ -11,7 +11,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-core-checkstyle.zip
+        name: clevertap-core-checkstyle
         path: clevertap-core/build/reports/checkstyle
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
@@ -25,7 +25,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-geofence-checkstyle.zip
+        name: clevertap-geofence-checkstyle
         path: clevertap-geofence/build/reports/checkstyle
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
@@ -39,7 +39,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-hms-checkstyle.zip
+        name: clevertap-hms-checkstyle
         path: clevertap-hms/build/reports/checkstyle
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
@@ -53,7 +53,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-pushTemplates-checkstyle.zip
+        name: clevertap-pushTemplates-checkstyle
         path:  clevertap-pushtemplates/build/reports/checkstyle
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
@@ -66,5 +66,5 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-xps-checkstyle.zip
+        name: clevertap-xps-checkstyle
         path: clevertap-xps/build/reports/checkstyle

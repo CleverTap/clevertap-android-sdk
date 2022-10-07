@@ -11,7 +11,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-core-detekt.zip
+        name: clevertap-core-detekt
         path: clevertap-core/build/reports/detekt
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
@@ -25,7 +25,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-geofence-detekt.zip
+        name: clevertap-geofence-detekt
         path: clevertap-geofence/build/reports/detekt
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
@@ -39,7 +39,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-hms-detekt.zip
+        name: clevertap-hms-detekt
         path: clevertap-hms/build/reports/detekt
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
@@ -53,7 +53,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-pushTemplates-detekt.zip
+        name: clevertap-pushTemplates-detekt
         path:  clevertap-pushtemplates/build/reports/detekt
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
@@ -66,5 +66,5 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-xps-detekt.zip
+        name: clevertap-xps-detekt
         path: clevertap-xps/build/reports/detekt

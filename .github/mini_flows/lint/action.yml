@@ -11,7 +11,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-core-lint.zip
+        name: clevertap-core-lint
         path: clevertap-core/build/reports/lint-results-debug.html
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
@@ -25,7 +25,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-geofence-lint.zip
+        name: clevertap-geofence-lint
         path: clevertap-geofence/build/reports/lint-results-debug.html
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
@@ -39,7 +39,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-hms-lint.zip
+        name: clevertap-hms-lint
         path: clevertap-hms/build/reports/lint-results-debug.html
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
@@ -53,7 +53,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-pushTemplates-lint.zip
+        name: clevertap-pushTemplates-lint
         path:  clevertap-pushtemplates/build/reports/lint-results-debug.html
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
@@ -66,5 +66,5 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-xps-lint.zip
+        name: clevertap-xps-lint
         path: clevertap-xps/build/reports/lint-results-debug.html

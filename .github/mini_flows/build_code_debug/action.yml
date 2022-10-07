@@ -11,7 +11,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-core-assembleDebug.zip
+        name: clevertap-core-assembleDebug
         path: clevertap-core/build/outputs/aar
 
 ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
@@ -25,7 +25,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-geofence-assembleDebug.zip
+        name: clevertap-geofence-assembleDebug
         path: clevertap-geofence/build/outputs/aar
 
 ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
@@ -39,7 +39,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-hms-assembleDebug.zip
+        name: clevertap-hms-assembleDebug
         path: clevertap-hms/build/outputs/aar
 
 ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
@@ -53,7 +53,7 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-pushTemplates-assembleDebug.zip
+        name: clevertap-pushTemplates-assembleDebug
         path:  clevertap-pushtemplates/build/outputs/aar
 
 ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
@@ -66,5 +66,5 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-xps-assembleDebug.zip
+        name: clevertap-xps-assembleDebug
         path: clevertap-xps/build/outputs/aar
