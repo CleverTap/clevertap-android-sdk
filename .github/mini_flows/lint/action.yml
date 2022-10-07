@@ -1,18 +1,70 @@
 runs:
   using: "composite"
   steps:
-    - name: Check lint
-      shell: bash
-      run: ./gradlew :clevertap-core:lint :clevertap-geofence:lint  :clevertap-hms:lint  :clevertap-pushTemplates:lint :clevertap-xps:lint
 
-    - name: Upload Lint results
+    - name: clevertap-core-lint
+      if: always()
+      shell: bash
+      run: ./gradlew :clevertap-core:lint
+
+    - name: Upload AAR and apk files
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: lint_results
-        path:  |
-          clevertap-core/build/reports/lint-results.html
-          clevertap-hms/build/reports/lint-results.html
-          clevertap-xps/build/reports/lint-results.html
-          clevertap-geofence/build/reports/lint-results.html
-          clevertap-pushtemplates/build/reports/lint-results.html
+        name: clevertap-core-lint.zip
+        path: clevertap-core/build/reports/lint-results.html
+
+    ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
+
+    - name: clevertap-geofence-lint
+      if: always()
+      shell: bash
+      run: ./gradlew :clevertap-geofence:lint
+
+    - name: Upload AAR and apk files
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: clevertap-geofence-lint.zip
+        path: clevertap-geofence/build/reports/lint-results.html
+
+    ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
+
+    - name: clevertap-hms-lint
+      if: always()
+      shell: bash
+      run: ./gradlew :clevertap-hms:lint
+
+    - name: Upload AAR and apk files
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: clevertap-hms-lint.zip
+        path: clevertap-hms/build/reports/lint-results.html
+
+    ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
+
+    - name: clevertap-pushTemplates-lint
+      if: always()
+      shell: bash
+      run: ./gradlew :clevertap-pushtemplates:lint
+
+    - name: Upload AAR and apk files
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: clevertap-pushTemplates-lint.zip
+        path:  clevertap-pushtemplates/build/reports/lint-results.html
+
+    ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
+
+    - name: clevertap-xps-lint
+      shell: bash
+      run: ./gradlew :clevertap-xps:lint
+
+    - name: Upload AAR and apk files
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: clevertap-xps-lint.zip
+        path: clevertap-xps/build/reports/lint-results.html

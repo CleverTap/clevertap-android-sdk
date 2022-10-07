@@ -2,19 +2,69 @@ runs:
   using: "composite"
   steps:
 
-    - name: CodeAnalysis via  checkstyle
+    - name: clevertap-core-checkstyle
+      if: always()
       shell: bash
-      run: ./gradlew :clevertap-core:checkstyle :clevertap-geofence:checkstyle  :clevertap-hms:checkstyle  :clevertap-pushTemplates:checkstyle :clevertap-xps:checkstyle
+      run: ./gradlew :clevertap-core:checkstyle
 
-    - name: Upload checkstyle results
+    - name: Upload AAR and apk files
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: checkstyle_results
-        path: |
-          clevertap-core/build/reports/checkstyle
-          clevertap-hms/build/reports/checkstyle
-          clevertap-xps/build/reports/checkstyle
-          clevertap-geofence/build/reports/checkstyle
-          clevertap-pushtemplates/build/reports/checkstyle
+        name: clevertap-core-checkstyle.zip
+        path: clevertap-core/build/reports/checkstyle
 
+    ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
+
+    - name: clevertap-geofence-checkstyle
+      if: always()
+      shell: bash
+      run: ./gradlew :clevertap-geofence:checkstyle
+
+    - name: Upload AAR and apk files
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: clevertap-geofence-checkstyle.zip
+        path: clevertap-geofence/build/reports/checkstyle
+
+    ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
+
+    - name: clevertap-hms-checkstyle
+      if: always()
+      shell: bash
+      run: ./gradlew :clevertap-hms:checkstyle
+
+    - name: Upload AAR and apk files
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: clevertap-hms-checkstyle.zip
+        path: clevertap-hms/build/reports/checkstyle
+
+    ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
+
+    - name: clevertap-pushTemplates-checkstyle
+      if: always()
+      shell: bash
+      run: ./gradlew :clevertap-pushtemplates:checkstyle
+
+    - name: Upload AAR and apk files
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: clevertap-pushTemplates-checkstyle.zip
+        path:  clevertap-pushtemplates/build/reports/checkstyle
+
+    ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
+
+    - name: clevertap-xps-checkstyle
+      shell: bash
+      run: ./gradlew :clevertap-xps:checkstyle
+
+    - name: Upload AAR and apk files
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: clevertap-xps-checkstyle.zip
+        path: clevertap-xps/build/reports/checkstyle
