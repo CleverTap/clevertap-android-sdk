@@ -12,7 +12,7 @@ runs:
       uses: actions/upload-artifact@v2
       with:
         name: clevertap-core-lint.zip
-        path: clevertap-core/build/reports/lint-results.html
+        path: clevertap-core/build/reports/lint-results-debug.html
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
 
@@ -26,7 +26,7 @@ runs:
       uses: actions/upload-artifact@v2
       with:
         name: clevertap-geofence-lint.zip
-        path: clevertap-geofence/build/reports/lint-results.html
+        path: clevertap-geofence/build/reports/lint-results-debug.html
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
 
@@ -40,7 +40,7 @@ runs:
       uses: actions/upload-artifact@v2
       with:
         name: clevertap-hms-lint.zip
-        path: clevertap-hms/build/reports/lint-results.html
+        path: clevertap-hms/build/reports/lint-results-debug.html
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
 
@@ -54,7 +54,7 @@ runs:
       uses: actions/upload-artifact@v2
       with:
         name: clevertap-pushTemplates-lint.zip
-        path:  clevertap-pushtemplates/build/reports/lint-results.html
+        path:  clevertap-pushtemplates/build/reports/lint-results-debug.html
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
 
@@ -67,4 +67,4 @@ runs:
       uses: actions/upload-artifact@v2
       with:
         name: clevertap-xps-lint.zip
-        path: clevertap-xps/build/reports/lint-results.html
+        path: clevertap-xps/build/reports/lint-results-debug.html
