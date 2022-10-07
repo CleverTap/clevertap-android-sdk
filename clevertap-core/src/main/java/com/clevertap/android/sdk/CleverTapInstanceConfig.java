@@ -274,12 +274,15 @@ public class CleverTapInstanceConfig implements Parcelable {
 
     @SuppressWarnings({"unused"})
     public void setDebugLevel(CleverTapAPI.LogLevel debugLevel) {
-        this.debugLevel = debugLevel.intValue();
+        setDebugLevel(debugLevel.intValue());
     }
 
     @SuppressWarnings({"unused"})
     public void setDebugLevel(int debugLevel) {
         this.debugLevel = debugLevel;
+        if (logger != null) {
+            logger.setDebugLevel(debugLevel);
+        }
     }
 
     @SuppressWarnings({"unused", "WeakerAccess"})
