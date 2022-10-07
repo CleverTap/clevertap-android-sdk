@@ -20,10 +20,9 @@ final class SSLContextBuilder {
             keyStore.load(null, null);//Use null inputstream & password to create empty key store
 
             //noinspection ConstantConditions
-            InputStream inputStream3 = new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("com/clevertap/android/sdk/certificates/AmazonRootCA1.cer"));
+            InputStream inputStream3 = new BufferedInputStream(getClass().getClassLoader().getResourceAsStream("com/clevertap/android/sdk/certificates/AmazonRootCA.cer"));
             X509Certificate x509Certificate3 = (X509Certificate) certificateFactory.generateCertificate(inputStream3);
-            keyStore.setCertificateEntry("AmazonRootCA1", x509Certificate3);
-
+            keyStore.setCertificateEntry("AmazonRootCA", x509Certificate3);
             trustManagerFactory.init(keyStore);
             SSLContext sslContext = SSLContext.getInstance("TLS");
             sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
