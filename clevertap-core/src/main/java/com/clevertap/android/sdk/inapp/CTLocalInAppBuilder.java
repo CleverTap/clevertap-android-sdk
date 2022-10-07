@@ -15,6 +15,7 @@ public class CTLocalInAppBuilder {
     public static final String HALF_INTERSTITIAL_INAPP = "half-interstitial";
     public static final String ALERT_INAPP = "alert-template";
     protected static final String IS_LOCAL_INAPP = "isLocalInApp";
+    protected static final String FALLBACK_TO_NOTIFICATION_SETTINGS = "fallbackToNotificationSettings";
 
     private final String localInAppType;//Required
     private final JSONObject titleObj;// Required
@@ -139,6 +140,11 @@ public class CTLocalInAppBuilder {
 
             private Builder6(Builder1 builder) {
                 this.builder = builder;
+            }
+
+            public Builder6 fallbackToSettings(boolean fallbackToSettings) throws JSONException {
+                this.builder.jsonObject.put(FALLBACK_TO_NOTIFICATION_SETTINGS, fallbackToSettings);
+                return this;
             }
 
             public Builder6 backgroundColor(String backgroundColor) throws JSONException {

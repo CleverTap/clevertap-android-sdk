@@ -346,48 +346,103 @@ private val activity:FragmentActivity?) : ViewModel() {
             "918"-> cleverTapAPI?.pushEvent("Send Input Box Reminder DOC false")
             "919"-> cleverTapAPI?.pushEvent("Send Three CTA Notification")
             "100"-> {
-                if (cleverTapAPI?.isNotificationPermissionGranted == false){
-                    val builder = CTLocalInAppBuilder.builder()
-                        .inAppType(HALF_INTERSTITIAL_INAPP,activity)
-                        .titleText("Get Notified")
-                        .messageText("Please enable notifications on your device to use Push Notifications.")
-                        .followDeviceOrientation(true)
-                        .positiveBtnText("Allow")
-                        .negativeBtnText("Cancel")
-                        .backgroundColor(Constants.WHITE)
-                        .btnBorderColor(Constants.BLUE)
-                        .titleTextColor(Constants.BLUE)
-                        .messageTextColor(Constants.BLACK)
-                        .btnTextColor(Constants.WHITE)
-                        .btnBackgroundColor(Constants.BLUE)
-                        .imageUrl("https://icons.iconarchive.com/icons/treetog/junior/64/camera-icon.png")
-                        .build()
-                    cleverTapAPI.promptPushPrimer(builder)
-
-                }else{
-                    Log.v("HomeScreenViewModel","Notification permission is already granted.")
-                }
+                val builder = CTLocalInAppBuilder.builder()
+                    .inAppType(HALF_INTERSTITIAL_INAPP,activity)
+                    .titleText("Get Notified")
+                    .messageText("Please enable notifications on your device to use Push Notifications.")
+                    .followDeviceOrientation(true)
+                    .positiveBtnText("Allow")
+                    .negativeBtnText("Cancel")
+                    .backgroundColor(Constants.WHITE)
+                    .btnBorderColor(Constants.BLUE)
+                    .titleTextColor(Constants.BLUE)
+                    .messageTextColor(Constants.BLACK)
+                    .btnTextColor(Constants.WHITE)
+                    .btnBackgroundColor(Constants.BLUE)
+                    .build()
+                cleverTapAPI?.promptPushPrimer(builder)
             }
 
             "101"->{
-                    if (cleverTapAPI?.isNotificationPermissionGranted == false) {
-                        val builder = CTLocalInAppBuilder.builder()
-                            .inAppType(ALERT_INAPP,activity)
-                            .titleText("Get Notified")
-                            .messageText("Enable Notification permission")
-                            .followDeviceOrientation(true)
-                            .positiveBtnText("Allow")
-                            .negativeBtnText("Cancel")
-                            .build()
-                    cleverTapAPI.promptPushPrimer(builder)
-                }else{
-                    Log.v("HomeScreenViewModel","Notification permission is already granted.")
-                }
+                val builder = CTLocalInAppBuilder.builder()
+                    .inAppType(HALF_INTERSTITIAL_INAPP,activity)
+                    .titleText("Get Notified")
+                    .messageText("Please enable notifications on your device to use Push Notifications.")
+                    .followDeviceOrientation(true)
+                    .positiveBtnText("Allow")
+                    .negativeBtnText("Cancel")
+                    .backgroundColor(Constants.WHITE)
+                    .btnBorderColor(Constants.BLUE)
+                    .titleTextColor(Constants.BLUE)
+                    .messageTextColor(Constants.BLACK)
+                    .btnTextColor(Constants.WHITE)
+                    .btnBackgroundColor(Constants.BLUE)
+                    .imageUrl("https://icons.iconarchive.com/icons/treetog/junior/64/camera-icon.png")
+                    .build()
+                cleverTapAPI?.promptPushPrimer(builder)
             }
 
             "102"->{
-                if (cleverTapAPI?.isNotificationPermissionGranted == false) {
-                    cleverTapAPI.promptForNotificationPermission()
+                val builder = CTLocalInAppBuilder.builder()
+                    .inAppType(HALF_INTERSTITIAL_INAPP,activity)
+                    .titleText("Get Notified")
+                    .messageText("Please enable notifications on your device to use Push Notifications.")
+                    .followDeviceOrientation(true)
+                    .positiveBtnText("Allow")
+                    .negativeBtnText("Cancel")
+                    .backgroundColor(Constants.WHITE)
+                    .btnBorderColor(Constants.BLUE)
+                    .titleTextColor(Constants.BLUE)
+                    .messageTextColor(Constants.BLACK)
+                    .btnTextColor(Constants.WHITE)
+                    .btnBackgroundColor(Constants.BLUE)
+                    .fallbackToSettings(true)
+                    .build()
+                cleverTapAPI?.promptPushPrimer(builder)
+
+            }
+
+            "103"->{
+                val builder = CTLocalInAppBuilder.builder()
+                    .inAppType(ALERT_INAPP,activity)
+                    .titleText("Get Notified")
+                    .messageText("Enable Notification permission")
+                    .followDeviceOrientation(true)
+                    .positiveBtnText("Allow")
+                    .negativeBtnText("Cancel")
+                    .build()
+                cleverTapAPI?.promptPushPrimer(builder)
+            }
+
+            "104"->{
+                val builder = CTLocalInAppBuilder.builder()
+                    .inAppType(ALERT_INAPP,activity)
+                    .titleText("Get Notified")
+                    .messageText("Enable Notification permission")
+                    .followDeviceOrientation(false)
+                    .positiveBtnText("Allow")
+                    .negativeBtnText("Cancel")
+                    .fallbackToSettings(true)
+                    .build()
+                cleverTapAPI?.promptPushPrimer(builder)
+            }
+
+            "105"->{
+                val builder = CTLocalInAppBuilder.builder()
+                    .inAppType(ALERT_INAPP,activity)
+                    .titleText("Get Notified")
+                    .messageText("Enable Notification permission")
+                    .followDeviceOrientation(false)
+                    .positiveBtnText("Allow")
+                    .negativeBtnText("Cancel")
+                    .fallbackToSettings(true)
+                    .build()
+                cleverTapAPI?.promptPushPrimer(builder)
+            }
+
+            "106"->{
+                if (cleverTapAPI?.isPushPermissionGranted == false) {
+                    cleverTapAPI.promptForPushPermission()
                 }else{
                     Log.v("HomeScreenViewModel","Notification permission is already granted.")
                 }

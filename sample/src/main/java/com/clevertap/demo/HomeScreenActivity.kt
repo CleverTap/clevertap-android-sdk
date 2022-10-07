@@ -8,6 +8,7 @@ import android.os.Build
 
 import android.os.Bundle
 import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commitNow
 import com.clevertap.android.sdk.*
@@ -261,6 +262,11 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
 
     override fun onPushPermissionResponse(accepted: Boolean) {
         Log.i(TAG, "InApp---> response() called  $accepted")
+        if(accepted){
+            Toast.makeText(this, "Permission granted!", Toast.LENGTH_SHORT).show()
+        }else{
+            Toast.makeText(this, "Permission denied!", Toast.LENGTH_SHORT).show()
+        }
     }
 
     override fun onInAppButtonClick(payload: HashMap<String, String>?) {
@@ -268,10 +274,10 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
     }
 
     override fun onPositiveButtonClick(ctInAppNotification: CTInAppNotification?) {
-        Log.v(TAG, "onPositiveButtonClick() called")
+        Log.i(TAG, "onPositiveButtonClick() called")
     }
 
     override fun onNegativeButtonClick(ctInAppNotification: CTInAppNotification?) {
-        Log.v(TAG, "onNegativeButtonClick() called")
+        Log.i(TAG, "onNegativeButtonClick() called")
     }
 }

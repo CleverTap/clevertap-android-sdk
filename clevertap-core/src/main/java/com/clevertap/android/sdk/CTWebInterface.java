@@ -30,7 +30,7 @@ public class CTWebInterface {
         if (cleverTapAPI == null) {
             Logger.d("CleverTap Instance is null.");
         } else {
-            cleverTapAPI.promptForNotificationPermission();
+            cleverTapAPI.promptForPushPermission();
         }
     }
 

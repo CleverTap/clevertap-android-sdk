@@ -183,16 +183,26 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         }
     }
 
+    @RequiresApi(api = 33)
     public void requestPermission() {
-        boolean neverAskAgainClicked = !ActivityCompat.shouldShowRequestPermissionRationale(
-                InAppNotificationActivity.this, ANDROID_PERMISSION_STRING);
+        int permissionStatus = ContextCompat.checkSelfPermission(this,
+                Manifest.permission.POST_NOTIFICATIONS);
 
-        if (neverAskAgainClicked) {
+        if (permissionStatus == PackageManager.PERMISSION_DENIED){
+            boolean neverAskAgainClicked = !ActivityCompat.shouldShowRequestPermissionRationale(
+            InAppNotificationActivity.this, ANDROID_PERMISSION_STRING);
+
+            if (neverAskAgainClicked && inAppNotification.fallBackToNotificationSettings()) {
+                showFallbackAlertDialog();
+                return;
+            }
+
             ActivityCompat.requestPermissions(this,
-                    new String[]{ANDROID_PERMISSION_STRING}, PERMISSION_REQUEST_CODE);
-        }else{
-            permissionCallbackWeakReference.get().onReject();
-            showFallbackAlertDialog();
+                        new String[]{ANDROID_PERMISSION_STRING}, PERMISSION_REQUEST_CODE);
+
+        }else if (permissionStatus == PackageManager.PERMISSION_GRANTED){
+            permissionCallbackWeakReference.get().onAccept();
+            didDismiss(null);
         }
     }
 
@@ -224,12 +234,6 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                 didDismiss(null);
             }
         });
-    }
-
-    @RequiresApi(api = 33)
-    public static int isNotificationPermissionGranted(Activity activity){
-        return ContextCompat.checkSelfPermission(
-                activity, Manifest.permission.POST_NOTIFICATIONS);
     }
 
     void didDismiss(Bundle data) {

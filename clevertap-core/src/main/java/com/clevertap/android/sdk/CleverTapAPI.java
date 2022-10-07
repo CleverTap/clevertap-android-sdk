@@ -1033,9 +1033,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
-    public boolean isNotificationPermissionGranted(){
+    public boolean isPushPermissionGranted(){
         if (isAndroid13(context)) {
-            return coreState.getInAppController().isNotificationPermissionGranted();
+            return coreState.getInAppController().isPushPermissionGranted();
         }else{
             return false;
         }
@@ -1049,8 +1049,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
-    public void promptForNotificationPermission(){
-        if (isAndroid13(context)){//TODO check for multi instance support
+    public void promptForPushPermission(){
+        if (isAndroid13(context)){
             coreState.getInAppController().promptPermission();
         }else{
             Logger.v("Ensure your app supports Android 13 to verify permission access for notifications.");

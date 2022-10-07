@@ -66,7 +66,11 @@ object HomeScreenModel {
             ),
             "PROMPT LOCAL IN-APP" to listOf(
                 "Generate Half-Interstitial Local InApp",
+                "Generate Half-Interstitial Local InApp with image URL",
+                "Generate Half-Interstitial Local InApp with fallbackToSettings - true",
                 "Generate Alert Local InApp",
+                "Generate Alert Local InApp with followDeviceOrientation - false",
+                "Generate Alert Local InApp with fallbackToSettings - true",
                 "Generate hard permission dialog"
             )
         )

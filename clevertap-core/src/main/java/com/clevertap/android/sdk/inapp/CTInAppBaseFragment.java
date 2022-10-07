@@ -144,7 +144,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
             if (index == 0 && inAppNotification.isLocalInApp()) {
                 ((InAppNotificationActivity) context).prompt();
             }else if (index == 1 && inAppNotification.isLocalInApp()){
-                didDismiss(null);
+                didDismiss(data);
             }else {
                 String actionUrl = button.getActionUrl();
                 if (actionUrl != null) {

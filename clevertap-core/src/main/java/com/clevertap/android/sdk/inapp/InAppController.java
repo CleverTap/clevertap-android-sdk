@@ -1,5 +1,6 @@
 package com.clevertap.android.sdk.inapp;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -9,6 +10,7 @@ import android.os.Bundle;
 import android.os.Looper;
 
 import androidx.annotation.RequiresApi;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
@@ -196,9 +198,10 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     @RequiresApi(api = 33)
-    public boolean isNotificationPermissionGranted(){
-        int permissionStatus = InAppNotificationActivity.isNotificationPermissionGranted(
-                Objects.requireNonNull(CoreMetaData.getCurrentActivity()));
+    public boolean isPushPermissionGranted(){
+        int permissionStatus = ContextCompat.checkSelfPermission(
+                Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
+                Manifest.permission.POST_NOTIFICATIONS);
         return permissionStatus == PackageManager.PERMISSION_GRANTED;
     }
 
