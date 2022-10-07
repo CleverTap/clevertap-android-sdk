@@ -94,7 +94,7 @@ class XiaomiSdkHandler implements IMiSdkHandler {
         try {
             String region = mConfig.getAccountRegion();
             region =  (region==null || region.isEmpty())? Constants.REGION_EUROPE : region;
-            Logger.v("XiaomiSDKHandler: register | final region from manifest = "+region);
+            Logger.v("XiaomiSDKHandler: register | final region from mConfig = "+region);
 
             Region xiaomiRegion =  region.equalsIgnoreCase( Constants.REGION_INDIA) ? Region.India : Region.Global;
             Logger.v("XiaomiSDKHandler: register | final xiaomi region as per manifest = "+xiaomiRegion.name());
