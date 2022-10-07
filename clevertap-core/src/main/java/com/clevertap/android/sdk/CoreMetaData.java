@@ -39,7 +39,7 @@ public class CoreMetaData extends CleverTapMetaData {
 
     private int geofenceSDKVersion = 0;
 
-    private int directCallSDKVersion = 0;
+    private String signedCallSDKVersion = null;
 
     private boolean installReferrerDataSent = false;
 
@@ -198,12 +198,13 @@ public class CoreMetaData extends CleverTapMetaData {
         return customSdkVersions;
     }
 
-    public int getDirectCallSDKVersion() {
-        return directCallSDKVersion;
+    public String getSignedCallSDKVersion() {
+        return signedCallSDKVersion;
     }
 
-    public void setDirectCallSDKVersion(int directCallSDKVersion) {
-        this.directCallSDKVersion = directCallSDKVersion;
+    @RestrictTo(Scope.LIBRARY_GROUP)
+    public void setSignedCallSDKVersion(String signedCallSDKVersion) {
+        this.signedCallSDKVersion = signedCallSDKVersion;
     }
 
     void setLastSessionLength(final int lastSessionLength) {
