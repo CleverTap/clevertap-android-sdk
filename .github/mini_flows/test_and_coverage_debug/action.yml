@@ -2,7 +2,7 @@ runs:
   using: "composite"
   steps:
 
-    - name: clevertap-core-jacocoTestReportDebug
+    - name: jacocoTestReportDebug-clevertap-core
       if: always()
       shell: bash
       run: ./gradlew :clevertap-core:jacocoTestReportDebug  -Pcoverage='true'
@@ -11,19 +11,19 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-core-TestReportDebug
+        name: TestReportDebug-clevertap-core
         path: clevertap-core/build/reports/tests
 
     - name: Upload2
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-core-JacocoReportDebug
+        name: JacocoReportDebug-clevertap-core
         path: clevertap-core/build/reports/jacoco
 
 
     #-----#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#-----
-    - name: clevertap-geofence-jacocoTestReportDebug
+    - name: jacocoTestReportDebug-clevertap-geofence
       if: always()
       shell: bash
       run: ./gradlew :clevertap-geofence:jacocoTestReportDebug  -Pcoverage='true'
@@ -32,19 +32,19 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-geofence-TestReportDebug
+        name: TestReportDebug-clevertap-geofence
         path: clevertap-geofence/build/reports/tests
 
     - name: Upload2
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-geofence-JacocoReportDebug
+        name: JacocoReportDebug-clevertap-geofence
         path: clevertap-geofence/build/reports/jacoco
 
 
     #-----#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#-----
-    - name: clevertap-hms-jacocoTestReportDebug
+    - name: jacocoTestReportDebug-clevertap-hms
       if: always()
       shell: bash
       run: ./gradlew :clevertap-hms:jacocoTestReportDebug  -Pcoverage='true'
@@ -53,19 +53,19 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-hms-TestReportDebug
+        name: TestReportDebug-clevertap-hms
         path: clevertap-hms/build/reports/tests
 
     - name: Upload2
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-hms-JacocoReportDebug
+        name: JacocoReportDebug-clevertap-hms
         path: clevertap-hms/build/reports/jacoco
 
 
     #-----#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#-----
-    - name: clevertap-xps-jacocoTestReportDebug
+    - name: jacocoTestReportDebug-clevertap-xps
       if: always()
       shell: bash
       run: ./gradlew :clevertap-xps:jacocoTestReportDebug  -Pcoverage='true'
@@ -74,20 +74,20 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-xps-TestReportDebug
+        name: TestReportDebug-clevertap-xps
         path: clevertap-xps/build/reports/tests
 
     - name: Upload2
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-xps-JacocoReportDebug
+        name: JacocoReportDebug-clevertap-xps
         path: clevertap-xps/build/reports/jacoco
 
 
 
     #-----#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#-----
-    - name: clevertap-pushtemplates-jacocoTestReportDebug
+    - name: jacocoTestReportDebug-clevertap-pushtemplates
       if: always()
       shell: bash
       run: ./gradlew :clevertap-pushtemplates:jacocoTestReportDebug  -Pcoverage='true'
@@ -96,12 +96,12 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-pushtemplates-TestReportDebug
+        name: TestReportDebug-clevertap-pushtemplates
         path: clevertap-pushtemplates/build/reports/tests
 
     - name: Upload2
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-pushtemplates-JacocoReportDebug
+        name: JacocoReportDebug-clevertap-pushtemplates
         path: clevertap-pushtemplates/build/reports/jacoco

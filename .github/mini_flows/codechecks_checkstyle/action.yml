@@ -2,7 +2,7 @@ runs:
   using: "composite"
   steps:
 
-    - name: clevertap-core-checkstyle
+    - name: checkstyle-clevertap-core
       if: always()
       shell: bash
       run: ./gradlew :clevertap-core:checkstyle
@@ -11,12 +11,12 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-core-checkstyle
+        name: checkstyle-clevertap-core
         path: clevertap-core/build/reports/checkstyle
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
 
-    - name: clevertap-geofence-checkstyle
+    - name: checkstyle-clevertap-geofence
       if: always()
       shell: bash
       run: ./gradlew :clevertap-geofence:checkstyle
@@ -25,12 +25,12 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-geofence-checkstyle
+        name: checkstyle-clevertap-geofence
         path: clevertap-geofence/build/reports/checkstyle
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
 
-    - name: clevertap-hms-checkstyle
+    - name: checkstyle-clevertap-hms
       if: always()
       shell: bash
       run: ./gradlew :clevertap-hms:checkstyle
@@ -39,12 +39,12 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-hms-checkstyle
+        name: checkstyle-clevertap-hms
         path: clevertap-hms/build/reports/checkstyle
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
 
-    - name: clevertap-pushTemplates-checkstyle
+    - name: checkstyle-clevertap-pushTemplates
       if: always()
       shell: bash
       run: ./gradlew :clevertap-pushtemplates:checkstyle
@@ -53,12 +53,12 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-pushTemplates-checkstyle
+        name: checkstyle-clevertap-pushTemplates
         path:  clevertap-pushtemplates/build/reports/checkstyle
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
 
-    - name: clevertap-xps-checkstyle
+    - name: checkstyle-clevertap-xps
       shell: bash
       run: ./gradlew :clevertap-xps:checkstyle
 
@@ -66,5 +66,5 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-xps-checkstyle
+        name: checkstyle-clevertap-xps
         path: clevertap-xps/build/reports/checkstyle

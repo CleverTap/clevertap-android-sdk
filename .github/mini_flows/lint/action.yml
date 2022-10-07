@@ -2,7 +2,7 @@ runs:
   using: "composite"
   steps:
 
-    - name: clevertap-core-lint
+    - name: lint-clevertap-core
       if: always()
       shell: bash
       run: ./gradlew :clevertap-core:lint
@@ -11,12 +11,12 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-core-lint
+        name: lint-clevertap-core
         path: clevertap-core/build/reports/lint-results-debug.html
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
 
-    - name: clevertap-geofence-lint
+    - name: lint-clevertap-geofence
       if: always()
       shell: bash
       run: ./gradlew :clevertap-geofence:lint
@@ -25,12 +25,12 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-geofence-lint
+        name: lint-clevertap-geofence
         path: clevertap-geofence/build/reports/lint-results-debug.html
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
 
-    - name: clevertap-hms-lint
+    - name: lint-clevertap-hms
       if: always()
       shell: bash
       run: ./gradlew :clevertap-hms:lint
@@ -39,12 +39,12 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-hms-lint
+        name: lint-clevertap-hms
         path: clevertap-hms/build/reports/lint-results-debug.html
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
 
-    - name: clevertap-pushTemplates-lint
+    - name: lint-clevertap-pushTemplates
       if: always()
       shell: bash
       run: ./gradlew :clevertap-pushtemplates:lint
@@ -53,12 +53,12 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-pushTemplates-lint
+        name: lint-clevertap-pushTemplates
         path:  clevertap-pushtemplates/build/reports/lint-results-debug.html
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
 
-    - name: clevertap-xps-lint
+    - name: lint-clevertap-xps
       shell: bash
       run: ./gradlew :clevertap-xps:lint
 
@@ -66,5 +66,5 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-xps-lint
+        name: lint-clevertap-xps
         path: clevertap-xps/build/reports/lint-results-debug.html

@@ -2,7 +2,7 @@ runs:
   using: "composite"
   steps:
 
-    - name: clevertap-core-detekt
+    - name: detekt-clevertap-core
       if: always()
       shell: bash
       run: ./gradlew :clevertap-core:detekt
@@ -11,12 +11,12 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-core-detekt
+        name: detekt-clevertap-core
         path: clevertap-core/build/reports/detekt
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
 
-    - name: clevertap-geofence-detekt
+    - name: detekt-clevertap-geofence
       if: always()
       shell: bash
       run: ./gradlew :clevertap-geofence:detekt
@@ -25,12 +25,12 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-geofence-detekt
+        name: detekt-clevertap-geofence
         path: clevertap-geofence/build/reports/detekt
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
 
-    - name: clevertap-hms-detekt
+    - name: detekt-clevertap-hms
       if: always()
       shell: bash
       run: ./gradlew :clevertap-hms:detekt
@@ -39,12 +39,12 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-hms-detekt
+        name: detekt-clevertap-hms
         path: clevertap-hms/build/reports/detekt
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
 
-    - name: clevertap-pushTemplates-detekt
+    - name: detekt-clevertap-pushTemplates
       if: always()
       shell: bash
       run: ./gradlew :clevertap-pushtemplates:detekt
@@ -53,12 +53,12 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-pushTemplates-detekt
+        name: detekt-clevertap-pushTemplates
         path:  clevertap-pushtemplates/build/reports/detekt
 
     ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
 
-    - name: clevertap-xps-detekt
+    - name: detekt-clevertap-xps
       shell: bash
       run: ./gradlew :clevertap-xps:detekt
 
@@ -66,5 +66,5 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-xps-detekt
+        name: detekt-clevertap-xps
         path: clevertap-xps/build/reports/detekt

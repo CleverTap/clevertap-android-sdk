@@ -2,7 +2,7 @@ runs:
   using: "composite"
   steps:
 
-    - name: clevertap-core-assembleDebug
+    - name: assembleDebug-clevertap-core
       if: always()
       shell: bash
       run: ./gradlew :clevertap-core:assembleDebug
@@ -11,12 +11,12 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-core-assembleDebug
+        name: assembleDebug-clevertap-core
         path: clevertap-core/build/outputs/aar
 
 ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
 
-    - name: clevertap-geofence-assembleDebug
+    - name: assembleDebug-clevertap-geofence
       if: always()
       shell: bash
       run: ./gradlew :clevertap-geofence:assembleDebug
@@ -25,12 +25,12 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-geofence-assembleDebug
+        name: assembleDebug-clevertap-geofence
         path: clevertap-geofence/build/outputs/aar
 
 ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
 
-    - name: clevertap-hms-assembleDebug
+    - name: assembleDebug-clevertap-hms
       if: always()
       shell: bash
       run: ./gradlew :clevertap-hms:assembleDebug
@@ -39,12 +39,12 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-hms-assembleDebug
+        name: assembleDebug-clevertap-hms
         path: clevertap-hms/build/outputs/aar
 
 ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
 
-    - name: clevertap-pushTemplates-assembleDebug
+    - name: assembleDebug-clevertap-pushTemplates
       if: always()
       shell: bash
       run: ./gradlew :clevertap-pushtemplates:assembleDebug
@@ -53,12 +53,12 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-pushTemplates-assembleDebug
+        name: assembleDebug-clevertap-pushTemplates
         path:  clevertap-pushtemplates/build/outputs/aar
 
 ###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
 
-    - name: clevertap-xps-assembleDebug
+    - name: assembleDebug-clevertap-xps
       shell: bash
       run: ./gradlew :clevertap-xps:assembleDebug
 
@@ -66,5 +66,5 @@ runs:
       if: always()
       uses: actions/upload-artifact@v2
       with:
-        name: clevertap-xps-assembleDebug
+        name: assembleDebug-clevertap-xps
         path: clevertap-xps/build/outputs/aar
