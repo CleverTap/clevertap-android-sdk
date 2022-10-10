@@ -425,7 +425,7 @@ class ValidatorTest : BaseTestCase() {
 
         // when event name is one of the restricted names, should give restricted names error
         val restrictedNames = arrayOf("Stayed", "Notification Clicked",
-            "Notification Viewed", "UTM Visited", "Notification Sent", "App Launched", "wzrk_d",
+            "Notification Viewed", "Notification Sent", "App Launched", "wzrk_d",
             "App Uninstalled", "Notification Bounced", Constants.GEOFENCE_ENTERED_EVENT_NAME,
             Constants.GEOFENCE_EXITED_EVENT_NAME)
 
