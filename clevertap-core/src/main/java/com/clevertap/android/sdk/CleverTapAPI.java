@@ -2851,10 +2851,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         sSignedCallNotificationHandler = notificationHandler;
     }
 
-    public static void handleMessage(String pushType) {
-
-    }
-
     /**
      * Returns a unique identifier by which CleverTap identifies this user, on Main thread Callback.
      *
