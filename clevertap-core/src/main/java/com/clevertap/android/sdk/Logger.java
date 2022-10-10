@@ -184,6 +184,10 @@ public final class Logger {
         return debugLevel;
     }
 
+    public void setDebugLevel(int level){
+        this.debugLevel = level;
+    }
+
     private static int getStaticDebugLevel() {
         return CleverTapAPI.getDebugLevel();
     }
