@@ -27,6 +27,18 @@ public final class StorageHelper {
         return getPreferences(context).getString(key, defaultValue);
     }
 
+    /**
+     * returns a String From Local Storage.
+     * The key used for getting the value depends upon a few factors:
+     * A) When config is default instance:
+     *      1. we search for the value for key "[rawKey]:[account_id]" and return it
+     *      2. if no value is found for key "[rawKey]:[account_id]", we search for just key "[rawKey]" and return it
+     *      3. if no value is found for key "[rawKey]", we return default value
+     *
+     * B) When config is NOT default instance:
+     *      1. we search for the value for key "[rawKey]:[account_id]" and return it
+     *      2. if no value is found for key "[rawKey]:[account_id]", we return default value
+     */
     public static String getStringFromPrefs(@NonNull Context context,@NonNull CleverTapInstanceConfig config, String rawKey,
             String defaultValue) {
         if (config.isDefaultInstance()) {

@@ -1,5 +1,8 @@
 ## CleverTap Xiaomi Push SDK CHANGE LOG
 
+### Version 1.5.1 (October 11, 2022)
+* Support for providing region to MiPushClient via MultiInstance too
+
 ### Version 1.5.0 (September 6, 2022)
 * Supporting Xiaomi Regions
   * This Release makes the CT XPS SDK compatible with the latest [Xiaomi Privacy Upgrades](https://dev.mi.com/console/doc/detail?pId=2761)
