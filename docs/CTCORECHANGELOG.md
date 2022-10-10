@@ -1,7 +1,7 @@
 ## CleverTap Android SDK CHANGE LOG
 
 ### Version 4.6.4 (October 11, 2022)
-* Improvement : Updated SSL Pinning Certificates
+* Bug fixes and improvements
 
 ### Version 4.6.3 (September 20, 2022)
 * Fix crash in App inbox when No additional tabs are used .
