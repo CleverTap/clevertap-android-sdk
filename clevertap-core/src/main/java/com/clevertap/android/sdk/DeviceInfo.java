@@ -40,7 +40,6 @@ import java.util.concurrent.Callable;
 import org.json.JSONObject;
 
 import static android.content.Context.USAGE_STATS_SERVICE;
-import static com.clevertap.android.sdk.Constants.KEY_SIGNED_CALL_SDK_VERSION;
 
 @RestrictTo(Scope.LIBRARY)
 public class DeviceInfo {
@@ -540,12 +539,8 @@ public class DeviceInfo {
             if (getGoogleAdID() != null) {
                 deviceIsMultiUser = new LoginInfoProvider(context, config, this).deviceIsMultiUser();
             }
-            JSONObject appLaunchFields = CTJsonConverter.from(this, mCoreMetaData.getLocationFromUser(), enableNetworkInfoReporting,
+            return CTJsonConverter.from(this, mCoreMetaData.getLocationFromUser(), enableNetworkInfoReporting,
                     deviceIsMultiUser);
-            if(mCoreMetaData.getSignedCallSDKVersion() != null) {
-                appLaunchFields.put(KEY_SIGNED_CALL_SDK_VERSION, mCoreMetaData.getSignedCallSDKVersion());
-            }
-            return appLaunchFields;
         } catch (Throwable t) {
             config.getLogger().verbose(config.getAccountId(), "Failed to construct App Launched event", t);
             return new JSONObject();
