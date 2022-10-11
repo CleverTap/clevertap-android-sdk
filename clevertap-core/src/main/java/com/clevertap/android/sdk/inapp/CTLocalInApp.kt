@@ -17,7 +17,7 @@ class CTLocalInApp private constructor() {
 
         @JvmStatic
         fun builder(context: Context): Builder = Builder(context)
-        const val IS_LOCAL_INAPP = "    isLocalInApp"
+        const val IS_LOCAL_INAPP = "isLocalInApp"
     }
 
     class Builder internal constructor(private val context: Context) {
