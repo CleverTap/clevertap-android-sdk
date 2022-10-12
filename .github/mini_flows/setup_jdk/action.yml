@@ -2,7 +2,7 @@ runs:
   using: "composite"
   steps:
     - name: Setup JDK 11
-      uses: actions/setup-java@v2
+      uses: actions/setup-java@v3
       with:
         java-version: '11'
         distribution: 'temurin'

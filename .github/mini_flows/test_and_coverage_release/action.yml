@@ -1,32 +1,106 @@
 runs:
   using: "composite"
   steps:
-
-    - name: Run Unit Tests And Code Coverage (RELEASE)
-      shell: bash
-      run: ./gradlew :clevertap-core:jacocoTestReportRelease -Pcoverage='true' :clevertap-geofence:jacocoTestReportRelease -Pcoverage='true'  :clevertap-hms:jacocoTestReportRelease -Pcoverage='true'  :clevertap-pushTemplates:jacocoTestReportRelease -Pcoverage='true' :clevertap-xps:jacocoTestReportRelease -Pcoverage='true'
-
-    - name: Upload Unit tests
+    - name: jacocoTestReportRelease-clevertap-core
       if: always()
-      uses: actions/upload-artifact@v2
+      shell: bash
+      run: ./gradlew :clevertap-core:jacocoTestReportRelease  -Pcoverage='true'
+
+    - name: Upload1
+      if: always()
+      uses: actions/upload-artifact@v3
       with:
-        name: code-coverage-results
-        path: |
-          clevertap-core/build/reports/tests
-          clevertap-core/build/reports/jacoco
+        name: TestReportRelease-clevertap-core
+        path: clevertap-core/build/reports/tests
 
-          clevertap-hms/build/reports/tests
-          clevertap-hms/build/reports/jacoco
-
-          clevertap-xps/build/reports/tests
-          clevertap-xps/build/reports/jacoco
-
-          clevertap-geofence/build/reports/tests
-          clevertap-geofence/build/reports/jacoco
-
-          clevertap-pushtemplates/build/reports/tests
-          clevertap-pushtemplates/build/reports/jacoco
+    - name: Upload2
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: JacocoReportRelease-clevertap-core
+        path: clevertap-core/build/reports/jacoco
 
 
+    #-----#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#-----
+    - name: jacocoTestReportRelease-clevertap-geofence
+      if: always()
+      shell: bash
+      run: ./gradlew :clevertap-geofence:jacocoTestReportRelease  -Pcoverage='true'
 
-      #todo : set success/failure as output and use slack action to send message . setting success failure: https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions#outputs-for-composite-actions
+    - name: Upload1
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: TestReportRelease-clevertap-geofence
+        path: clevertap-geofence/build/reports/tests
+
+    - name: Upload2
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: JacocoReportRelease-clevertap-geofence
+        path: clevertap-geofence/build/reports/jacoco
+
+
+    #-----#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#-----
+    - name: jacocoTestReportRelease-clevertap-hms
+      if: always()
+      shell: bash
+      run: ./gradlew :clevertap-hms:jacocoTestReportRelease  -Pcoverage='true'
+
+    - name: Upload1
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: TestReportRelease-clevertap-hms
+        path: clevertap-hms/build/reports/tests
+
+    - name: Upload2
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: JacocoReportRelease-clevertap-hms
+        path: clevertap-hms/build/reports/jacoco
+
+
+    #-----#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#-----
+    - name: jacocoTestReportRelease-clevertap-xps
+      if: always()
+      shell: bash
+      run: ./gradlew :clevertap-xps:jacocoTestReportRelease  -Pcoverage='true'
+
+    - name: Upload1
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: TestReportRelease-clevertap-xps
+        path: clevertap-xps/build/reports/tests
+
+    - name: Upload2
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: JacocoReportRelease-clevertap-xps
+        path: clevertap-xps/build/reports/jacoco
+
+
+
+    #-----#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#----------#-----
+    - name: jacocoTestReportRelease-clevertap-pushtemplates
+      if: always()
+      shell: bash
+      run: ./gradlew :clevertap-pushtemplates:jacocoTestReportRelease  -Pcoverage='true'
+
+    - name: Upload1
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: TestReportRelease-clevertap-pushtemplates
+        path: clevertap-pushtemplates/build/reports/tests
+
+    - name: Upload2
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: JacocoReportRelease-clevertap-pushtemplates
+        path: clevertap-pushtemplates/build/reports/jacoco
