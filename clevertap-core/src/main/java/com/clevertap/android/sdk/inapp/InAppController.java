@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.inapp;
 
+import static com.clevertap.android.sdk.InAppNotificationActivity.ANDROID_PERMISSION_STRING;
+import static com.clevertap.android.sdk.inapp.CTLocalInApp.FALLBACK_TO_NOTIFICATION_SETTINGS;
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
@@ -10,6 +12,7 @@ import android.os.Bundle;
 import android.os.Looper;
 
 import androidx.annotation.RequiresApi;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
@@ -117,6 +120,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     public final static String LOCAL_INAPP_COUNT = "local_in_app_count";
 
+    public final static String IS_FIRST_TIME_PERMISSION_REQUEST = "firstTimeRequest";
+
     public InAppController(Context context,
             CleverTapInstanceConfig config,
             MainLooperHandler mainLooperHandler,
@@ -177,13 +182,51 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         }
     }
 
+    @RequiresApi(api = 33)
     public void promptPushPrimer(JSONObject jsonObject){
-        prepareNotificationForDisplay(jsonObject);
+        int permissionStatus = ContextCompat.checkSelfPermission(context,
+                Manifest.permission.POST_NOTIFICATIONS);
+
+        if (permissionStatus == PackageManager.PERMISSION_DENIED){
+            //Checks whether permission request is asked for the first time.
+            boolean isFirstTimeRequest = StorageHelper.getBoolean(context,IS_FIRST_TIME_PERMISSION_REQUEST,true);
+            if (!isFirstTimeRequest) {
+                //If permission is already denied and FALLBACK_TO_NOTIFICATION_SETTINGS is false
+                if (ActivityCompat.shouldShowRequestPermissionRationale(
+                        Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
+                        ANDROID_PERMISSION_STRING) && !jsonObject.has(FALLBACK_TO_NOTIFICATION_SETTINGS)) {
+                    Logger.v("Notification permission is denied. Please grant notification permission access" +
+                            " in your app's settings to send notifications");
+                    return;
+                }
+            }
+            prepareNotificationForDisplay(jsonObject);
+        }else{
+            Logger.v("Notification permission is granted.");
+        }
     }
 
+    @RequiresApi(api = 33)
     public void promptPermission(){
-        startPrompt(Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
-                config);
+        int permissionStatus = ContextCompat.checkSelfPermission(context,
+                Manifest.permission.POST_NOTIFICATIONS);
+
+        if (permissionStatus == PackageManager.PERMISSION_DENIED) {
+            boolean isFirstTimeRequest = StorageHelper.getBoolean(context,IS_FIRST_TIME_PERMISSION_REQUEST,true);
+            if (!isFirstTimeRequest) {
+                if (ActivityCompat.shouldShowRequestPermissionRationale(
+                        Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
+                        ANDROID_PERMISSION_STRING)){
+                    Logger.v("Notification permission is denied. Please grant notification permission access" +
+                            " in your app's settings to send notifications");
+                    return;
+                }
+            }
+            startPrompt(Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
+                    config);
+        }else{
+            Logger.v("Notification permission is granted.");
+        }
     }
 
     public void startPrompt(Activity activity, CleverTapInstanceConfig config){

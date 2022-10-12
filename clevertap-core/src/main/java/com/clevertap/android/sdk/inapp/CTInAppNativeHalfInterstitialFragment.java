@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.inapp;
 
 import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.res.Configuration;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -19,6 +20,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.customviews.CloseImageView;
 import java.util.ArrayList;
@@ -34,7 +37,8 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
 
         ArrayList<Button> inAppButtons = new ArrayList<>();
         View inAppView;
-        if (inAppNotification.isTablet() && isTablet()) {
+        if (inAppNotification.isTablet() && isTablet() || inAppNotification.isLocalInApp()
+                && isTabletFromDeviceType(inflater.getContext())) {
             inAppView = inflater.inflate(R.layout.tab_inapp_half_interstitial, container, false);
         } else {
             inAppView = inflater.inflate(R.layout.inapp_half_interstitial, container, false);
@@ -55,7 +59,9 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
                             public void onGlobalLayout() {
                                 FrameLayout.LayoutParams layoutParams = (FrameLayout.LayoutParams) relativeLayout
                                         .getLayoutParams();
-                                if (inAppNotification.isTablet() && isTablet()) {
+                                if (inAppNotification.isTablet() && isTablet()
+                                        || inAppNotification.isLocalInApp() &&
+                                            isTabletFromDeviceType(inflater.getContext())) {
                                     redrawHalfInterstitialInApp(relativeLayout, layoutParams, closeImageView);
                                 } else {
                                     if (isTablet()) {
@@ -194,5 +200,9 @@ public class CTInAppNativeHalfInterstitialFragment extends CTInAppBaseFullNative
         }
 
         return inAppView;
+    }
+
+    boolean isTabletFromDeviceType(Context context){
+        return DeviceInfo.getDeviceType(context) == DeviceInfo.TABLET;
     }
 }

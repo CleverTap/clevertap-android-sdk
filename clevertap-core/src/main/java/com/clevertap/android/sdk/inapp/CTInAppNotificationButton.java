@@ -215,21 +215,6 @@ public class CTInAppNotificationButton implements Parcelable {
         return this;
     }
 
-//    CTInAppNotificationButton initWithLocalData(String btnText, String btnBackgroundColor,
-//                                                String btnTextColor, String btnBorderColor,
-//                                                String btnBorderRadius) {
-//
-//        this.text = btnText != null ? btnText : "";
-//        this.backgroundColor = btnBackgroundColor != null ? btnBackgroundColor
-//                : Constants.BLUE;
-//
-//        this.textColor = btnTextColor != null ? btnTextColor : Constants.BLUE;
-//        this.borderColor = btnBorderColor !=null ? btnBorderColor : Constants.WHITE;
-//        this.borderRadius = btnBorderRadius != null ? btnBorderRadius : "2";//Adding default value as 2 instead of an empty value.
-//        // If the value is empty then action btn defaults to standard btn without any customizations
-//        return this;
-//    }
-
     /**
      * Checks if custom Key Value pair is present or not
      *

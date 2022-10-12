@@ -16,11 +16,12 @@ class CTLocalInApp private constructor() {
     companion object {
 
         @JvmStatic
-        fun builder(context: Context): Builder = Builder(context)
+        fun builder(): Builder = Builder()
         const val IS_LOCAL_INAPP = "isLocalInApp"
+        const val FALLBACK_TO_NOTIFICATION_SETTINGS = "fallbackToNotificationSettings"
     }
 
-    class Builder internal constructor(private val context: Context) {
+    class Builder internal constructor() {
 
         private var jsonObject = JSONObject()
 
@@ -29,10 +30,6 @@ class CTLocalInApp private constructor() {
                 put(Constants.KEY_TYPE, inAppType.type)
                 put(IS_LOCAL_INAPP, true)
                 put(Constants.KEY_HIDE_CLOSE, true)
-                put(
-                    Constants.KEY_IS_TABLET,
-                    DeviceInfo.getDeviceType(this@Builder.context) == DeviceInfo.TABLET
-                )
                 Builder1(this)
             }
 
@@ -91,6 +88,9 @@ class CTLocalInApp private constructor() {
         }
 
         class Builder6(private var jsonObject: JSONObject) {
+
+            fun setFallbackToSettings(fallbackToSettings: Boolean) =
+                apply { jsonObject.put(FALLBACK_TO_NOTIFICATION_SETTINGS, fallbackToSettings) }
 
             fun setBackgroundColor(backgroundColor: String) =
                 apply { jsonObject.put(Constants.KEY_BG, backgroundColor) }

@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk;
 
 import static com.clevertap.android.sdk.Utils.isAndroid13;
+import static com.clevertap.android.sdk.inapp.InAppController.IS_FIRST_TIME_PERMISSION_REQUEST;
 
 import android.Manifest;
 import android.app.Activity;
@@ -52,7 +53,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     private static final int PERMISSION_REQUEST_CODE = 2;
 
-    private static final String ANDROID_PERMISSION_STRING = "android.permission.POST_NOTIFICATIONS";
+    public static final String ANDROID_PERMISSION_STRING = "android.permission.POST_NOTIFICATIONS";
 
     public interface PermissionCallback {
         void onAccept();
@@ -71,7 +72,8 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                 throw new IllegalArgumentException();
             }
             inAppNotification = notif.getParcelable("inApp");
-            boolean displayHardNotificationDialog = notif.getBoolean("displayHardPermissionDialog",false);
+            boolean displayHardNotificationDialog = notif.getBoolean("displayHardPermissionDialog",
+                    false); // Using this boolean for a directly showing hard permission dialog flow
             Bundle configBundle = notif.getBundle("configBundle");
             if (configBundle != null) {
                 config = configBundle.getParcelable("config");
@@ -185,30 +187,28 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     @RequiresApi(api = 33)
     public void requestPermission() {
-        int permissionStatus = ContextCompat.checkSelfPermission(this,
+        int permissionStatus = ContextCompat.checkSelfPermission(InAppNotificationActivity.this,
                 Manifest.permission.POST_NOTIFICATIONS);
 
         if (permissionStatus == PackageManager.PERMISSION_DENIED){
-            boolean neverAskAgainClicked = !ActivityCompat.shouldShowRequestPermissionRationale(
-            InAppNotificationActivity.this, ANDROID_PERMISSION_STRING);
-
-            if (neverAskAgainClicked && inAppNotification.fallBackToNotificationSettings()) {
-                showFallbackAlertDialog();
-                return;
-            }
-
-            ActivityCompat.requestPermissions(this,
+            if (!StorageHelper.getBoolean(InAppNotificationActivity.this,
+                    IS_FIRST_TIME_PERMISSION_REQUEST,true)) {
+                boolean neverAskAgainClicked = ActivityCompat.shouldShowRequestPermissionRationale(
+                        InAppNotificationActivity.this, ANDROID_PERMISSION_STRING);
+                if (neverAskAgainClicked && inAppNotification.fallBackToNotificationSettings()) {
+                    showFallbackAlertDialog();
+                }
+            }else{
+                ActivityCompat.requestPermissions(InAppNotificationActivity.this,
                         new String[]{ANDROID_PERMISSION_STRING}, PERMISSION_REQUEST_CODE);
-
-        }else if (permissionStatus == PackageManager.PERMISSION_GRANTED){
-            permissionCallbackWeakReference.get().onAccept();
-            didDismiss(null);
+            }
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        StorageHelper.putBoolean(InAppNotificationActivity.this,IS_FIRST_TIME_PERMISSION_REQUEST,false);
         if (requestCode == PERMISSION_REQUEST_CODE) {
             boolean granted = grantResults.length > 0 && grantResults[0] ==
                     PackageManager.PERMISSION_GRANTED;
@@ -222,7 +222,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     }
 
     public void showFallbackAlertDialog() {
-        AlertDialogPromptForSettings.INSTANCE.show(this, new AlertDialogPromptForSettings.Callback() {
+        AlertDialogPromptForSettings.INSTANCE.show(InAppNotificationActivity.this, new AlertDialogPromptForSettings.Callback() {
             @Override
             public void onAccept() {
                 Utils.navigateToAndroidSettingsForNotifications(InAppNotificationActivity.this);

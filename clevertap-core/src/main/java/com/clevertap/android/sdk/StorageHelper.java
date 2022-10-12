@@ -95,7 +95,7 @@ public final class StorageHelper {
     }
 
     @SuppressWarnings("SameParameterValue")
-    static boolean getBoolean(Context context, String key, boolean defaultValue) {
+    public static boolean getBoolean(Context context, String key, boolean defaultValue) {
         return getPreferences(context).getBoolean(key, defaultValue);
     }
 

@@ -40,7 +40,7 @@ private const val PERMISSIONS_REQUEST_CODE = 34
 class HomeScreenFragment : Fragment() {
 
     private val viewModel by viewModels<HomeScreenViewModel> {
-        ViewModelFactory((activity as? HomeScreenActivity)?.cleverTapDefaultInstance, activity)
+        ViewModelFactory((activity as? HomeScreenActivity)?.cleverTapDefaultInstance)
     }
 
     companion object {
