@@ -8,14 +8,14 @@ runs:
 
     - name: Upload1
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: TestReportRelease-clevertap-core
         path: clevertap-core/build/reports/tests
 
     - name: Upload2
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: JacocoReportRelease-clevertap-core
         path: clevertap-core/build/reports/jacoco
@@ -29,14 +29,14 @@ runs:
 
     - name: Upload1
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: TestReportRelease-clevertap-geofence
         path: clevertap-geofence/build/reports/tests
 
     - name: Upload2
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: JacocoReportRelease-clevertap-geofence
         path: clevertap-geofence/build/reports/jacoco
@@ -50,14 +50,14 @@ runs:
 
     - name: Upload1
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: TestReportRelease-clevertap-hms
         path: clevertap-hms/build/reports/tests
 
     - name: Upload2
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: JacocoReportRelease-clevertap-hms
         path: clevertap-hms/build/reports/jacoco
@@ -71,14 +71,14 @@ runs:
 
     - name: Upload1
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: TestReportRelease-clevertap-xps
         path: clevertap-xps/build/reports/tests
 
     - name: Upload2
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: JacocoReportRelease-clevertap-xps
         path: clevertap-xps/build/reports/jacoco
@@ -93,14 +93,14 @@ runs:
 
     - name: Upload1
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: TestReportRelease-clevertap-pushtemplates
         path: clevertap-pushtemplates/build/reports/tests
 
     - name: Upload2
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: JacocoReportRelease-clevertap-pushtemplates
         path: clevertap-pushtemplates/build/reports/jacoco

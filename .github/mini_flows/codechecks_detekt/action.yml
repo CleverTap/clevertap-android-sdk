@@ -9,7 +9,7 @@ runs:
 
     - name: Upload AAR and apk files
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: detekt-clevertap-core
         path: clevertap-core/build/reports/detekt
@@ -23,7 +23,7 @@ runs:
 
     - name: Upload AAR and apk files
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: detekt-clevertap-geofence
         path: clevertap-geofence/build/reports/detekt
@@ -37,7 +37,7 @@ runs:
 
     - name: Upload AAR and apk files
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: detekt-clevertap-hms
         path: clevertap-hms/build/reports/detekt
@@ -51,7 +51,7 @@ runs:
 
     - name: Upload AAR and apk files
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: detekt-clevertap-pushTemplates
         path:  clevertap-pushtemplates/build/reports/detekt
@@ -64,7 +64,7 @@ runs:
 
     - name: Upload AAR and apk files
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: detekt-clevertap-xps
         path: clevertap-xps/build/reports/detekt

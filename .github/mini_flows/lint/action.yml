@@ -9,7 +9,7 @@ runs:
 
     - name: Upload AAR and apk files
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: lint-clevertap-core
         path: clevertap-core/build/reports/lint-results-debug.html
@@ -23,7 +23,7 @@ runs:
 
     - name: Upload AAR and apk files
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: lint-clevertap-geofence
         path: clevertap-geofence/build/reports/lint-results-debug.html
@@ -37,7 +37,7 @@ runs:
 
     - name: Upload AAR and apk files
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: lint-clevertap-hms
         path: clevertap-hms/build/reports/lint-results-debug.html
@@ -51,7 +51,7 @@ runs:
 
     - name: Upload AAR and apk files
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: lint-clevertap-pushTemplates
         path:  clevertap-pushtemplates/build/reports/lint-results-debug.html
@@ -64,7 +64,7 @@ runs:
 
     - name: Upload AAR and apk files
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: lint-clevertap-xps
         path: clevertap-xps/build/reports/lint-results-debug.html
