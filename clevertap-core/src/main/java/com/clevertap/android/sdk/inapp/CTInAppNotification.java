@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk.inapp;
 
-import static com.clevertap.android.sdk.inapp.CTLocalInAppBuilder.FALLBACK_TO_NOTIFICATION_SETTINGS;
-import static com.clevertap.android.sdk.inapp.CTLocalInAppBuilder.IS_LOCAL_INAPP;
+import static com.clevertap.android.sdk.inapp.CTLocalInApp.FALLBACK_TO_NOTIFICATION_SETTINGS;
+import static com.clevertap.android.sdk.inapp.CTLocalInApp.IS_LOCAL_INAPP;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.os.Bundle;
