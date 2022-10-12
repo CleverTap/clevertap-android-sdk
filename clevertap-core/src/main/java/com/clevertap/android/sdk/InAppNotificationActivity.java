@@ -30,6 +30,7 @@ import com.clevertap.android.sdk.inapp.CTInAppNativeHalfInterstitialImageFragmen
 import com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialFragment;
 import com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialImageFragment;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
+import com.clevertap.android.sdk.inapp.CTInAppNotificationButton;
 import com.clevertap.android.sdk.inapp.CTInAppType;
 import com.clevertap.android.sdk.inapp.InAppListener;
 import java.lang.ref.WeakReference;
@@ -51,6 +52,8 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     private static final int PERMISSION_REQUEST_CODE = 2;
 
     public static final String ANDROID_PERMISSION_STRING = "android.permission.POST_NOTIFICATIONS";
+
+    private boolean isFbSettings;
 
     public interface PermissionCallback {
 
@@ -184,30 +187,48 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         }
     }
 
+    public void promptPermission(CTInAppNotificationButton ctInAppNotificationButton){
+        if (isAndroid13(InAppNotificationActivity.this)) {
+            isFbSettings = ctInAppNotificationButton.isFallbackToSettings();
+            requestPermission();
+        }
+    }
+
     @RequiresApi(api = 33)
     public void requestPermission() {
         int permissionStatus = ContextCompat.checkSelfPermission(InAppNotificationActivity.this,
                 Manifest.permission.POST_NOTIFICATIONS);
 
         if (permissionStatus == PackageManager.PERMISSION_DENIED){
-            if (!StorageHelper.getBoolean(InAppNotificationActivity.this,
-                    IS_FIRST_TIME_PERMISSION_REQUEST,true)) {
+            boolean isFirstTimeRequest = StorageHelper.getBoolean(InAppNotificationActivity.this,
+                    IS_FIRST_TIME_PERMISSION_REQUEST,true);
+            if (!isFirstTimeRequest) {
                 boolean neverAskAgainClicked = ActivityCompat.shouldShowRequestPermissionRationale(
                         InAppNotificationActivity.this, ANDROID_PERMISSION_STRING);
-                if (neverAskAgainClicked && inAppNotification.fallBackToNotificationSettings()) {
+                if (neverAskAgainClicked && inAppNotification.fallBackToNotificationSettings()
+                        || isFbSettings) {
                     showFallbackAlertDialog();
+                    return;
                 }
-            }else{
-                ActivityCompat.requestPermissions(InAppNotificationActivity.this,
-                        new String[]{ANDROID_PERMISSION_STRING}, PERMISSION_REQUEST_CODE);
+
+                permissionCallbackWeakReference.get().onReject();
+                didDismiss(null);
+                return;
             }
+
+            ActivityCompat.requestPermissions(InAppNotificationActivity.this,
+                    new String[]{ANDROID_PERMISSION_STRING}, PERMISSION_REQUEST_CODE);
+        }else{
+            permissionCallbackWeakReference.get().onAccept();
+            didDismiss(null);
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        StorageHelper.putBoolean(InAppNotificationActivity.this,IS_FIRST_TIME_PERMISSION_REQUEST,false);
+        StorageHelper.putBoolean(InAppNotificationActivity.this,IS_FIRST_TIME_PERMISSION_REQUEST,
+                false);
         if (requestCode == PERMISSION_REQUEST_CODE) {
             boolean granted = grantResults.length > 0 && grantResults[0] ==
                     PackageManager.PERMISSION_GRANTED;
