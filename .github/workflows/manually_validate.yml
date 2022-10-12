@@ -72,7 +72,7 @@ jobs:
 
     steps:
       - name: Checkout the code from Repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Mandatory File Changes
         if: ${{ github.event.inputs.check_mandatory }}
