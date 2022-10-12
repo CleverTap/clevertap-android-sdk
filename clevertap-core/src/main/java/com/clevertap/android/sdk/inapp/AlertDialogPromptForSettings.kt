@@ -2,43 +2,39 @@ package com.clevertap.android.sdk.inapp
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.os.Build.VERSION.SDK_INT
+import android.os.Build.VERSION_CODES.LOLLIPOP
+import com.clevertap.android.sdk.CTStringResources
 import com.clevertap.android.sdk.R
 
-object AlertDialogPromptForSettings {
+class AlertDialogPromptForSettings private constructor() {
 
-    interface Callback {
-        fun onAccept()
-        fun onDecline()
-    }
+    companion object {
 
-    fun show(
-        activity: Activity,
-        callback: Callback,
-    ) {
-        val title = activity.getString(R.string.permission_not_available_title)
+        @JvmStatic
+        fun show(
+            activity: Activity, onAccept: () -> Unit, onDecline: () -> Unit
+        ) {
+            val (title, message, positiveButtonText, negativeButtonText) = CTStringResources(
+                activity,
+                R.string.ct_permission_not_available_title,
+                R.string.ct_permission_not_available_message,
+                R.string.ct_permission_not_available_open_settings_option,
+                R.string.ct_txt_cancel
+            )
 
-        val message = activity.getString(R.string.permission_not_available_message)
+            val builder = if (SDK_INT >= LOLLIPOP) AlertDialog.Builder(
+                activity,
+                android.R.style.Theme_Material_Light_Dialog_Alert
+            ) else AlertDialog.Builder(activity)
 
-        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.LOLLIPOP) {
-            AlertDialog.Builder(activity, android.R.style.Theme_Material_Light_Dialog_Alert)
-                .setTitle(title)
+            builder.setTitle(title)
                 .setMessage(message)
-                .setPositiveButton(R.string.permission_not_available_open_settings_option) { dialog, which ->
-                    callback.onAccept()
+                .setPositiveButton(positiveButtonText) { dialog, which ->
+                    onAccept()
                 }
-                .setNegativeButton(android.R.string.no) { dialog, which ->
-                    callback.onDecline()
-                }
-                .show()
-        }else{
-            AlertDialog.Builder(activity)
-                .setTitle(title)
-                .setMessage(message)
-                .setPositiveButton(R.string.permission_not_available_open_settings_option) { dialog, which ->
-                    callback.onAccept()
-                }
-                .setNegativeButton(android.R.string.no) { dialog, which ->
-                    callback.onDecline()
+                .setNegativeButton(negativeButtonText) { dialog, which ->
+                    onDecline()
                 }
                 .show()
         }
