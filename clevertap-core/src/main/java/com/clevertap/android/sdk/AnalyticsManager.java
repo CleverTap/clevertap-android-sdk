@@ -801,7 +801,7 @@ public class AnalyticsManager extends BaseAnalyticsManager {
         }
     }
 
-    Future<?> raiseEventForDirectCall(String eventName, JSONObject dcEventProperties) {
+    Future<?> raiseEventForSignedCall(String eventName, JSONObject dcEventProperties) {
 
         Future<?> future = null;
 
@@ -812,8 +812,8 @@ public class AnalyticsManager extends BaseAnalyticsManager {
 
             future = baseEventQueueManager.queueEvent(context, event, Constants.RAISED_EVENT);
         } catch (JSONException e) {
-            config.getLogger().debug(config.getAccountId(), Constants.LOG_TAG_DIRECT_CALL +
-                    "JSON Exception when raising Direct Call event "
+            config.getLogger().debug(config.getAccountId(), Constants.LOG_TAG_SIGNED_CALL +
+                    "JSON Exception when raising Signed Call event "
                     + eventName + " - " + e.getLocalizedMessage());
         }
 

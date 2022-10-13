@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.network;
 
-import static com.clevertap.android.sdk.Utils.getDCDomain;
+import static com.clevertap.android.sdk.Utils.getSCDomain;
 import static com.clevertap.android.sdk.utils.CTJsonConverter.getRenderedTargetList;
 
 import android.annotation.SuppressLint;
@@ -733,11 +733,11 @@ public class NetworkManager extends BaseNetworkManager {
         StorageHelper.putString(context, StorageHelper.storageKeyWithSuffix(config, Constants.KEY_DOMAIN_NAME),
                 domainName);
 
-        if (callbackManager.getDCDomainCallback() != null) {
+        if (callbackManager.getSCDomainListener() != null) {
             if (domainName != null) {
-                callbackManager.getDCDomainCallback().onDCDomainAvailable(getDCDomain(domainName));
+                callbackManager.getSCDomainListener().onSCDomainAvailable(getSCDomain(domainName));
             } else {
-                callbackManager.getDCDomainCallback().onDCDomainUnavailable();
+                callbackManager.getSCDomainListener().onSCDomainUnavailable();
             }
         }
     }

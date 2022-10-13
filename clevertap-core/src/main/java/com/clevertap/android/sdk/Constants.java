@@ -61,9 +61,9 @@ public interface Constants {
     String ICON_BASE_URL = "http://static.wizrocket.com/android/ico/";
     String NOTIFICATION_CLICKED_EVENT_NAME = "Notification Clicked";
     String NOTIFICATION_VIEWED_EVENT_NAME = "Notification Viewed";
-    String DC_OUTGOING_EVENT_NAME = "DCOutgoing";
-    String DC_INCOMING_EVENT_NAME = "DCIncoming";
-    String DC_END_EVENT_NAME = "DCEnd";
+    String SC_OUTGOING_EVENT_NAME = "SCOutgoing";
+    String SC_INCOMING_EVENT_NAME = "SCIncoming";
+    String SC_END_EVENT_NAME = "SCEnd";
     String GEOFENCE_ENTERED_EVENT_NAME = "Geocluster Entered";
     String GEOFENCE_EXITED_EVENT_NAME = "Geocluster Exited";
     String APP_LAUNCHED_EVENT = "App Launched";
@@ -257,7 +257,7 @@ public interface Constants {
     String LOG_TAG_PRODUCT_CONFIG = "Product Config : ";
     int FETCH_TYPE_PC = 0;
     int FETCH_TYPE_FF = 1;
-    String LOG_TAG_DIRECT_CALL = "DirectCall : ";
+    String LOG_TAG_SIGNED_CALL = "SignedCall : ";
     String LOG_TAG_GEOFENCES = "Geofences : ";
     // error message codes
     int INVALID_MULTI_VALUE = 1;

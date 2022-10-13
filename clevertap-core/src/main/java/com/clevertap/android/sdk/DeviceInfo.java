@@ -540,12 +540,8 @@ public class DeviceInfo {
             if (getGoogleAdID() != null) {
                 deviceIsMultiUser = new LoginInfoProvider(context, config, this).deviceIsMultiUser();
             }
-            JSONObject appLaunchFields = CTJsonConverter.from(this, mCoreMetaData.getLocationFromUser(), enableNetworkInfoReporting,
+            return CTJsonConverter.from(this, mCoreMetaData.getLocationFromUser(), enableNetworkInfoReporting,
                     deviceIsMultiUser);
-            if(mCoreMetaData.getDirectCallSDKVersion() != 0) {
-                appLaunchFields.put("dcv", mCoreMetaData.getDirectCallSDKVersion());
-            }
-            return appLaunchFields;
         } catch (Throwable t) {
             config.getLogger().verbose(config.getAccountId(), "Failed to construct App Launched event", t);
             return new JSONObject();
