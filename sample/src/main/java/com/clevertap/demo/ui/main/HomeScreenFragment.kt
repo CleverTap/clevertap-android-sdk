@@ -57,9 +57,7 @@ class HomeScreenFragment : Fragment() {
         listItemBinding = HomeScreenFragmentBinding.inflate(layoutInflater, container, false).apply {
             viewmodel = viewModel
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-            listItemBinding.expandableListView.isNestedScrollingEnabled = true
-        }
+        listItemBinding.expandableListView.isNestedScrollingEnabled = true
 
         return listItemBinding.root
     }

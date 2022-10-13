@@ -1,9 +1,10 @@
 package com.clevertap.android.sdk;
 
-import static com.clevertap.android.sdk.Utils.isAndroid13;
+import static com.clevertap.android.sdk.CTXtensions.isPackageAndOsTargetsAbove;
 import static com.clevertap.android.sdk.inapp.InAppController.IS_FIRST_TIME_PERMISSION_REQUEST;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -181,14 +182,16 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         }
     }
 
+    @SuppressLint("NewApi")
     public void prompt() {
-        if (isAndroid13(InAppNotificationActivity.this)) {
+        if (isPackageAndOsTargetsAbove(this, 32)) {
             requestPermission();
         }
     }
 
+    @SuppressLint("NewApi")
     public void promptPermission(CTInAppNotificationButton ctInAppNotificationButton){
-        if (isAndroid13(InAppNotificationActivity.this)) {
+        if (isPackageAndOsTargetsAbove(this, 32)) {
             isFbSettings = ctInAppNotificationButton.isFallbackToSettings();
             requestPermission();
         }

@@ -1,12 +1,13 @@
 package com.clevertap.android.sdk;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
+import static com.clevertap.android.sdk.CTXtensions.isPackageAndOsTargetsAbove;
 import static com.clevertap.android.sdk.Utils.getSCDomain;
-import static com.clevertap.android.sdk.Utils.isAndroid13;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM_LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
@@ -21,7 +22,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -36,10 +36,10 @@ import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.inbox.CTMessageDAO;
-import com.clevertap.android.sdk.interfaces.SCDomainListener;
 import com.clevertap.android.sdk.interfaces.NotificationHandler;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
+import com.clevertap.android.sdk.interfaces.SCDomainListener;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
@@ -1033,26 +1033,29 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
+    @SuppressLint("NewApi")
     public boolean isPushPermissionGranted(){
-        if (isAndroid13(context)) {
+        if (isPackageAndOsTargetsAbove(context, 32)) {
             return coreState.getInAppController().isPushPermissionGranted();
-        }else{
+        } else {
             return false;
         }
     }
 
+    @SuppressLint("NewApi")
     public void promptPushPrimer(JSONObject jsonObject) {
-        if (isAndroid13(context)) {
+        if (isPackageAndOsTargetsAbove(context, 32)) {
             coreState.getInAppController().promptPushPrimer(jsonObject);
-        }else{
+        } else {
             Logger.v("Ensure your app supports Android 13 to verify permission access for notifications.");
         }
     }
 
+    @SuppressLint("NewApi")
     public void promptForPushPermission(){
-        if (isAndroid13(context)){
+        if (isPackageAndOsTargetsAbove(context, 32)) {
             coreState.getInAppController().promptPermission();
-        }else{
+        } else {
             Logger.v("Ensure your app supports Android 13 to verify permission access for notifications.");
         }
     }

@@ -5,11 +5,8 @@ import static com.clevertap.android.sdk.Constants.AUTH;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
-import android.app.ActivityManager;
-import android.app.ActivityManager.RunningAppProcessInfo;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
@@ -26,8 +23,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Process;
-import android.os.SystemClock;
 import android.provider.Settings;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
@@ -36,7 +31,6 @@ import androidx.annotation.RestrictTo;
 import androidx.core.content.ContextCompat;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
-import com.google.android.gms.common.util.PlatformVersion;
 import com.google.firebase.messaging.RemoteMessage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -666,10 +660,6 @@ public final class Utils {
 
     }
 
-    public static boolean isAndroid13(Context context){
-        return  Build.VERSION.SDK_INT > 32 && getTargetSdkVersion(context) > 32;
-    }
-
     public static void navigateToAndroidSettingsForNotifications(Context context){
         Intent intent = new Intent();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -686,19 +676,6 @@ public final class Utils {
             intent.setData(Uri.parse("package:" + context.getPackageName()));
         }
         context.startActivity(intent);
-    }
-
-    public static int getTargetSdkVersion(Context context) {
-        String packageName = context.getPackageName();
-        PackageManager packageManager = context.getPackageManager();
-        try {
-            ApplicationInfo applicationInfo = packageManager.getApplicationInfo(packageName, 0);
-            return applicationInfo.targetSdkVersion;
-        } catch (PackageManager.NameNotFoundException e) {
-            e.printStackTrace();
-        }
-
-        return Build.VERSION_CODES.JELLY_BEAN;
     }
 
     static {
