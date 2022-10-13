@@ -2,18 +2,69 @@ runs:
   using: "composite"
   steps:
 
-    - name: Generate AAR files
+    - name: assembleDebug-clevertap-core
+      if: always()
       shell: bash
-      run: ./gradlew :clevertap-core:assembleDebug :clevertap-geofence:assembleDebug  :clevertap-hms:assembleDebug  :clevertap-pushTemplates:assembleDebug :clevertap-xps:assembleDebug
+      run: ./gradlew :clevertap-core:assembleDebug
 
     - name: Upload AAR and apk files
       if: always()
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
-        name: aars_and_apks.zip
-        path: |
-          clevertap-core/build/outputs/aar
-          clevertap-hms/build/outputs/aar
-          clevertap-xps/build/outputs/aar
-          clevertap-geofence/build/outputs/aar
-          clevertap-pushtemplates/build/outputs/aar
+        name: assembleDebug-clevertap-core
+        path: clevertap-core/build/outputs/aar
+
+###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
+
+    - name: assembleDebug-clevertap-geofence
+      if: always()
+      shell: bash
+      run: ./gradlew :clevertap-geofence:assembleDebug
+
+    - name: Upload AAR and apk files
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: assembleDebug-clevertap-geofence
+        path: clevertap-geofence/build/outputs/aar
+
+###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
+
+    - name: assembleDebug-clevertap-hms
+      if: always()
+      shell: bash
+      run: ./gradlew :clevertap-hms:assembleDebug
+
+    - name: Upload AAR and apk files
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: assembleDebug-clevertap-hms
+        path: clevertap-hms/build/outputs/aar
+
+###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
+
+    - name: assembleDebug-clevertap-pushTemplates
+      if: always()
+      shell: bash
+      run: ./gradlew :clevertap-pushtemplates:assembleDebug
+
+    - name: Upload AAR and apk files
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: assembleDebug-clevertap-pushTemplates
+        path:  clevertap-pushtemplates/build/outputs/aar
+
+###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------###------##----------
+
+    - name: assembleDebug-clevertap-xps
+      shell: bash
+      run: ./gradlew :clevertap-xps:assembleDebug
+
+    - name: Upload AAR and apk files
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: assembleDebug-clevertap-xps
+        path: clevertap-xps/build/outputs/aar

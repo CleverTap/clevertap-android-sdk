@@ -92,9 +92,9 @@ class XiaomiSdkHandler implements IMiSdkHandler {
         Logger.v("XiaomiSDKHandler: register | called with appid = "+appId + ", appkey="+appKey);
 
         try {
-            String region = manifestInfo.getAccountRegion();
+            String region = mConfig.getAccountRegion();
             region =  (region==null || region.isEmpty())? Constants.REGION_EUROPE : region;
-            Logger.v("XiaomiSDKHandler: register | final region from manifest = "+region);
+            Logger.v("XiaomiSDKHandler: register | final region from mConfig = "+region);
 
             Region xiaomiRegion =  region.equalsIgnoreCase( Constants.REGION_INDIA) ? Region.India : Region.Global;
             Logger.v("XiaomiSDKHandler: register | final xiaomi region as per manifest = "+xiaomiRegion.name());
@@ -104,14 +104,10 @@ class XiaomiSdkHandler implements IMiSdkHandler {
             MiPushClient.setRegion(xiaomiRegion);
             MiPushClient.registerPush(context, appId, appKey);
             isRegistered = true;
-            mConfig
-                    .log(LOG_TAG, XIAOMI_LOG_TAG + "Xiaomi Registeration success for appId-" + appId + " and appKey-"
-                            + appKey);
+            mConfig.log(LOG_TAG, XIAOMI_LOG_TAG + "Xiaomi Registeration success for appId-" + appId + " and appKey-" + appKey);
         } catch (Throwable throwable) {
             isRegistered = false;
-            mConfig
-                    .log(LOG_TAG,
-                            XIAOMI_LOG_TAG + "Xiaomi Registration failed for appId-" + appId + " appKey-" + appKey);
+            mConfig.log(LOG_TAG, XIAOMI_LOG_TAG + "Xiaomi Registration failed for appId-" + appId + " appKey-" + appKey);
             throw new RegistrationException("Registration failed for appId " + appId + " and appKey " + appKey);
         }
     }

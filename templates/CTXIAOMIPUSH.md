@@ -39,7 +39,32 @@ Click on [Mi Push Console](http://admin.xmpush.global.xiaomi.com/) and click on 
 ## 🚀 Integration
 [(Back to top)](#-table-of-contents)
 
-* Download the Mi push Library from [here](https://admin.xmpush.xiaomi.com/en/mipush/downpage/android) and add it in your app's lib folder (`app/libs`)
+* Download the Mi push Library from [here](https://github.com/CleverTap/clevertap-android-sdk/releases/tag/corev4.6.1_hmsv1.3.1_xpsv1.5.0) and add it in your app's lib folder (`app/libs`)
+
+* If you are using obfuscation for your builds, you might need to add the following lines in proguard rules, as required by [Xiaomi SDK](https://dev.mi.com/console/doc/detail?pId=1244):
+
+```text
+#Change xxx.DemoMessageRreceiver to the full class name defined in your app
+-keep class xxx.DemoMessageReceiver {*;}
+
+#SDK has been obfuscated and compressed to avoid class not found error due to re-obfuscation.
+-keep class com.xiaomi.**
+
+#If the compiling Android version you are using is 23, you can prevent getting a false warning which makes it impossible to compile.
+-dontwarn com.xiaomi.push.**
+
+-keep class com.xiaomi.mipush.sdk.MiPushMessage {*;}
+-keep class com.xiaomi.mipush.sdk.MiPushCommandMessage {*;}
+-keep class com.xiaomi.mipush.sdk.PushMessageReceiver {*;}
+-keep class com.xiaomi.mipush.sdk.MessageHandleService {*;}
+-keep class com.xiaomi.push.service.XMJobService {*;}
+-keep class com.xiaomi.push.service.XMPushService {*;}
+-keep class com.xiaomi.mipush.sdk.PushMessageHandler {*;}
+-keep class com.xiaomi.push.service.receivers.NetworkStatusReceiver {*;}
+-keep class com.xiaomi.push.service.receivers.PingReceiver {*;}
+-keep class com.xiaomi.mipush.sdk.NotificationClickedActivity {*;}
+```
+
 
 * Add the CleverTap Xiaomi Push dependency and Mi Push Dependency in your app’s `build.gradle`
 
