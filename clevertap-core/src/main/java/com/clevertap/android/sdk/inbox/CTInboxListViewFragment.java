@@ -287,6 +287,15 @@ public class CTInboxListViewFragment extends Fragment {
                 data.putString("wzrk_c2a", buttonText);
             }
             didClick(data, position, keyValuePayload,isInboxMessageBodyClick);
+
+            String isRequestForPermissionStr = inboxMessages.get(position).getInboxMessageContents().
+                    get(0).getLinktype(jsonObject);
+            if (isRequestForPermissionStr.equalsIgnoreCase("rfp")){
+                ((CTInboxActivity) requireActivity()).promptPermission(inboxMessages.get(position).
+                        getInboxMessageContents().get(0).getFbSettings(jsonObject));
+                return;
+            }
+
             boolean isKVButton = keyValuePayload != null && !keyValuePayload.isEmpty();
             if (jsonObject != null) {
                 if (isKVButton || inboxMessages.get(position).getInboxMessageContents().get(0).getLinktype(jsonObject)

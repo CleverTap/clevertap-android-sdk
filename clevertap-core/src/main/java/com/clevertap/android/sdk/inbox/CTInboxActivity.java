@@ -1,6 +1,11 @@
 package com.clevertap.android.sdk.inbox;
 
+import static com.clevertap.android.sdk.CTXtensions.isPackageAndOsTargetsAbove;
+import static com.clevertap.android.sdk.inapp.InAppController.IS_FIRST_TIME_PERMISSION_REQUEST;
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.Drawable;
@@ -9,9 +14,13 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
@@ -21,13 +30,18 @@ import com.clevertap.android.sdk.CTInboxListener;
 import com.clevertap.android.sdk.CTInboxStyleConfig;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.R;
+import com.clevertap.android.sdk.StorageHelper;
+import com.clevertap.android.sdk.Utils;
+import com.clevertap.android.sdk.inapp.AlertDialogPromptForSettings;
 import com.google.android.material.tabs.TabLayout;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import kotlin.Unit;
 
 /**
  * This activity shows the {@link CTInboxMessage} objects as per {@link CTInboxStyleConfig} style parameters
@@ -59,6 +73,10 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     private CleverTapAPI cleverTapAPI;
     private CTInboxListener inboxContentUpdatedListener = null;
 
+    private WeakReference<InAppNotificationActivity.PermissionCallback> permissionCallbackWeakReference;
+    private static final int PERMISSION_REQUEST_CODE = 2;
+    public static final String ANDROID_PERMISSION_STRING = "android.permission.POST_NOTIFICATIONS";
+
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         try {
@@ -76,6 +94,9 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
                 setListener(cleverTapAPI);
                 inboxContentUpdatedListener = cleverTapAPI.getCTNotificationInboxListener();
                 cleverTapAPI.setCTNotificationInboxListener(this);
+
+                setPermissionCallback(CleverTapAPI.instanceWithConfig(this, config).getCoreState()
+                        .getInAppController());
             }
             orientation = getResources().getConfiguration().orientation;
         } catch (Throwable t) {
@@ -196,6 +217,69 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             });
             tabLayout.setupWithViewPager(viewPager);
         }
+    }
+
+    @SuppressLint("NewApi")
+    public void promptPermission(boolean fbSettings){
+        if (isPackageAndOsTargetsAbove(this, 32)) {
+            requestPermission(fbSettings);
+        }
+    }
+
+    @RequiresApi(api = 33)
+    public void requestPermission(boolean fbSettings) {
+        int permissionStatus = ContextCompat.checkSelfPermission(CTInboxActivity.this,
+                Manifest.permission.POST_NOTIFICATIONS);
+
+        if (permissionStatus == PackageManager.PERMISSION_DENIED){
+            boolean isFirstTimeRequest = StorageHelper.getBoolean(CTInboxActivity.this,
+                    IS_FIRST_TIME_PERMISSION_REQUEST,true);
+            if (!isFirstTimeRequest) {
+                boolean neverAskAgainClicked = ActivityCompat.shouldShowRequestPermissionRationale(
+                        CTInboxActivity.this, ANDROID_PERMISSION_STRING);
+                if (neverAskAgainClicked && fbSettings) {
+                    showFallbackAlertDialog();
+                    return;
+                }
+
+                permissionCallbackWeakReference.get().onReject();
+                return;
+            }
+
+            ActivityCompat.requestPermissions(CTInboxActivity.this,
+                    new String[]{ANDROID_PERMISSION_STRING}, PERMISSION_REQUEST_CODE);
+        }else{
+            permissionCallbackWeakReference.get().onAccept();
+        }
+    }
+
+    public void showFallbackAlertDialog() {
+        AlertDialogPromptForSettings.show(this, () -> {
+            Utils.navigateToAndroidSettingsForNotifications(CTInboxActivity.this);
+            return Unit.INSTANCE;
+        }, () -> {
+            return Unit.INSTANCE;
+        });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        StorageHelper.putBoolean(CTInboxActivity.this,IS_FIRST_TIME_PERMISSION_REQUEST,
+                false);
+        if (requestCode == PERMISSION_REQUEST_CODE) {
+            boolean granted = grantResults.length > 0 && grantResults[0] ==
+                    PackageManager.PERMISSION_GRANTED;
+            if (granted) {
+                permissionCallbackWeakReference.get().onAccept();
+            }else {
+                permissionCallbackWeakReference.get().onReject();
+            }
+        }
+    }
+
+    public void setPermissionCallback(InAppNotificationActivity.PermissionCallback callback) {
+        permissionCallbackWeakReference = new WeakReference<>(callback);
     }
 
     @Override

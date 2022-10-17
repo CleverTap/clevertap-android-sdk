@@ -162,7 +162,7 @@ public final class StorageHelper {
         return getPreferences(context, nameSpace).getString(key, defaultValue);
     }
 
-    static void putBoolean(Context context, String key, boolean value) {
+    public static void putBoolean(Context context, String key, boolean value) {
         SharedPreferences prefs = getPreferences(context);
         SharedPreferences.Editor editor = prefs.edit().putBoolean(key, value);
         persist(editor);

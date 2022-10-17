@@ -47,6 +47,7 @@ public class CTInAppNotificationButton implements Parcelable {
     private String textColor;
 
     private String type;
+
     private boolean fallbackToSettings;
 
     CTInAppNotificationButton() {
@@ -207,6 +208,7 @@ public class CTInAppNotificationButton implements Parcelable {
                     this.actionUrl = action;
                 }
 
+                //TODO REMOVE THIS AFTER TESTING AND BACKEND CHANGE IS INCLUDED
                 if (actions.getString(Constants.KEY_TYPE).equalsIgnoreCase("rfp")) {
                     type = actions.getString(Constants.KEY_TYPE);
                     fallbackToSettings = actions.getBoolean(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS);
