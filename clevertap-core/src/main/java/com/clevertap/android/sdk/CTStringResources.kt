@@ -1,8 +1,11 @@
 package com.clevertap.android.sdk
 
-import android.app.Activity
+import android.content.Context
+import androidx.annotation.RestrictTo
+import androidx.annotation.RestrictTo.Scope.LIBRARY_GROUP
 
-class CTStringResources(private val context: Activity, vararg sRID: Int) {
+@RestrictTo(LIBRARY_GROUP)
+class CTStringResources(private val context: Context, vararg sRID: Int) {
 
     private var sArray: Array<String>
 

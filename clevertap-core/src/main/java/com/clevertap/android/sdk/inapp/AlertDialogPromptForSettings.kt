@@ -16,7 +16,7 @@ class AlertDialogPromptForSettings private constructor() {
             activity: Activity, onAccept: () -> Unit, onDecline: () -> Unit
         ) {
             val (title, message, positiveButtonText, negativeButtonText) = CTStringResources(
-                activity,
+                activity.applicationContext,
                 R.string.ct_permission_not_available_title,
                 R.string.ct_permission_not_available_message,
                 R.string.ct_permission_not_available_open_settings_option,
