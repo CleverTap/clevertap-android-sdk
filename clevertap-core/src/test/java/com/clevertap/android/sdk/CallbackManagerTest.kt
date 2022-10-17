@@ -3,18 +3,18 @@ package com.clevertap.android.sdk
 import android.os.Looper
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
+import com.clevertap.android.sdk.inapp.CTInAppNotification
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener
 import com.clevertap.android.sdk.product_config.CTProductConfigListener
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener
 import com.clevertap.android.shared.test.BaseTestCase
 import org.json.JSONObject
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.Mockito
+import org.junit.*
+import org.junit.runner.*
+import org.mockito.*
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.Shadows
-import java.util.ArrayList
 import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
@@ -88,6 +88,10 @@ class CallbackManagerTest : BaseTestCase() {
         val listener = object : InAppNotificationListener {
             override fun beforeShow(extras: MutableMap<String, Any>?): Boolean {
                 return true
+            }
+
+            override fun onShow(ctInAppNotification: CTInAppNotification?) {
+                TODO("Not yet implemented")
             }
 
             override fun onDismissed(extras: MutableMap<String, Any>?, actionExtras: MutableMap<String, Any>?) {}
