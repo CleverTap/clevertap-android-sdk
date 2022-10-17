@@ -142,23 +142,27 @@ public abstract class CTInAppBaseFragment extends Fragment {
             didClick(index,data, button.getKeyValues());
 
             if (index == 0 && inAppNotification.isLocalInApp()) {
-                ((InAppNotificationActivity) context).prompt();
+                ((InAppNotificationActivity) context).promptPermission(button);
                 return;
             }else if (index == 1 && inAppNotification.isLocalInApp()){
                 didDismiss(data);
                 return;
             }
 
-            if (button.getType().equalsIgnoreCase("rfp")){
-                ((InAppNotificationActivity) context).promptPermission(button);
-            }else {
-                String actionUrl = button.getActionUrl();
-                if (actionUrl != null) {
-                    fireUrlThroughIntent(actionUrl, data);
-                    return;
+            if (button.getType() != null && button.getType().equalsIgnoreCase("rfp")){
+                if (context instanceof  InAppNotificationActivity) {
+                    ((InAppNotificationActivity) context).promptPermission(button);
+                }else{
+                    InAppController.startPrompt(requireActivity(),config, button);
                 }
-                didDismiss(data);
+                return;
             }
+            String actionUrl = button.getActionUrl();
+            if (actionUrl != null) {
+                fireUrlThroughIntent(actionUrl, data);
+                return;
+            }
+            didDismiss(data);
 
         } catch (Throwable t) {
             config.getLogger().debug("Error handling notification button click: " + t.getCause());

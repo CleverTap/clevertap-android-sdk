@@ -1,6 +1,8 @@
 package com.clevertap.android.sdk;
 
 import static com.clevertap.android.sdk.CTXtensions.isPackageAndOsTargetsAbove;
+import static com.clevertap.android.sdk.inapp.InAppController.CT_INAPP_BUTTON_BUNDLE_KEY;
+import static com.clevertap.android.sdk.inapp.InAppController.DISPLAY_HARD_PERMISSION_BUNDLE_KEY;
 import static com.clevertap.android.sdk.inapp.InAppController.IS_FIRST_TIME_PERMISSION_REQUEST;
 
 import android.Manifest;
@@ -74,8 +76,8 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             if (notif == null) {
                 throw new IllegalArgumentException();
             }
-            inAppNotification = notif.getParcelable("inApp");
-            boolean displayHardNotificationDialog = notif.getBoolean("displayHardPermissionDialog",
+            inAppNotification = notif.getParcelable(Constants.INAPP_KEY);
+            boolean showHardNotificationPermission = notif.getBoolean(DISPLAY_HARD_PERMISSION_BUNDLE_KEY,
                     false); // Using this boolean for a directly showing hard permission dialog flow
             Bundle configBundle = notif.getBundle("configBundle");
             if (configBundle != null) {
@@ -83,9 +85,12 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             }
             setListener(CleverTapAPI.instanceWithConfig(this, config).getCoreState().getInAppController());
 
-            setPermissionCallback(CleverTapAPI.instanceWithConfig(this, config).getCoreState().getInAppController());
-            if (displayHardNotificationDialog) {
-                prompt();
+            setPermissionCallback(CleverTapAPI.instanceWithConfig(this, config).getCoreState()
+                    .getInAppController());
+
+            if (showHardNotificationPermission) {
+                CTInAppNotificationButton ctInAppNotificationButton = notif.getParcelable(CT_INAPP_BUTTON_BUNDLE_KEY);
+                promptPermission(ctInAppNotificationButton);
                 return;
             }
         } catch (Throwable t) {
@@ -183,16 +188,11 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     }
 
     @SuppressLint("NewApi")
-    public void prompt() {
-        if (isPackageAndOsTargetsAbove(this, 32)) {
-            requestPermission();
-        }
-    }
-
-    @SuppressLint("NewApi")
     public void promptPermission(CTInAppNotificationButton ctInAppNotificationButton){
         if (isPackageAndOsTargetsAbove(this, 32)) {
-            isFbSettings = ctInAppNotificationButton.isFallbackToSettings();
+            if (ctInAppNotificationButton != null) {
+                isFbSettings = ctInAppNotificationButton.isFallbackToSettings();
+            }
             requestPermission();
         }
     }
@@ -371,10 +371,18 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                                     return;
                                                 }
                                                 if (inAppNotification.isLocalInApp()) {
-                                                    prompt();
-                                                } else {
-                                                    didDismiss(data);
+                                                    promptPermission(inAppNotification.getButtons().get(0));
+                                                    return;
                                                 }
+
+                                                if (inAppNotification.getButtons().get(0).getType() != null &&
+                                                        inAppNotification.getButtons().get(0).getType()
+                                                        .equalsIgnoreCase("rfp")){
+                                                    promptPermission(inAppNotification.getButtons().get(0));
+                                                    return;
+                                                }
+
+                                                didDismiss(data);
                                             }
                                         })
                                 .create();
@@ -395,6 +403,14 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                                 fireUrlThroughIntent(actionUrl, data);
                                                 return;
                                             }
+
+                                            if (inAppNotification.getButtons().get(1).getType() != null &&
+                                                    inAppNotification.getButtons().get(1).getType()
+                                                    .equalsIgnoreCase("rfp")){
+                                                promptPermission(inAppNotification.getButtons().get(1));
+                                                return;
+                                            }
+
                                             didDismiss(data);
                                         }
                                     });

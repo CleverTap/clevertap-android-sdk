@@ -121,6 +121,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     public final static String LOCAL_INAPP_COUNT = "local_in_app_count";
 
     public final static String IS_FIRST_TIME_PERMISSION_REQUEST = "firstTimeRequest";
+    public final static String DISPLAY_HARD_PERMISSION_BUNDLE_KEY = "displayHardPermissionDialog";
+    public final static String CT_INAPP_BUTTON_BUNDLE_KEY = "inAppButton";
 
     public InAppController(Context context,
             CleverTapInstanceConfig config,
@@ -223,19 +225,22 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 }
             }
             startPrompt(Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
-                    config);
+                    config, null);
         }else{
             Logger.v("Notification permission is granted.");
         }
     }
 
-    public void startPrompt(Activity activity, CleverTapInstanceConfig config){
+    public static void startPrompt(Activity activity, CleverTapInstanceConfig config,
+                                   CTInAppNotificationButton button){
         if (!activity.getClass().equals(InAppNotificationActivity.class)) {
             Intent intent = new Intent(activity, InAppNotificationActivity.class);
             Bundle configBundle = new Bundle();
             configBundle.putParcelable("config", config);
             intent.putExtra("configBundle", configBundle);
-            intent.putExtra("displayHardPermissionDialog", true);
+            intent.putExtra(Constants.INAPP_KEY, currentlyDisplayingInApp);
+            intent.putExtra(DISPLAY_HARD_PERMISSION_BUNDLE_KEY, true);
+            intent.putExtra(CT_INAPP_BUTTON_BUNDLE_KEY, button);
             activity.startActivity(intent);
         }
     }
@@ -647,7 +652,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             case CTInAppTypeCoverImageOnly:
 
                 Intent intent = new Intent(context, InAppNotificationActivity.class);
-                intent.putExtra("inApp", inAppNotification);
+                intent.putExtra(Constants.INAPP_KEY, inAppNotification);
                 Bundle configBundle = new Bundle();
                 configBundle.putParcelable("config", config);
                 intent.putExtra("configBundle", configBundle);

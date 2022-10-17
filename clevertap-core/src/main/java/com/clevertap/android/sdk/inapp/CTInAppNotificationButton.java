@@ -196,8 +196,10 @@ public class CTInAppNotificationButton implements Parcelable {
             if (actions != null) {
 
                 //TODO REMOVE THIS AFTER TESTING AND BACKEND CHANGE IS INCLUDED
-                actions.put(Constants.KEY_TYPE,"rfp");
-                actions.put(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS,false);
+                if (jsonObject.has(Constants.KEY_TEXT) && jsonObject.getString(Constants.KEY_TEXT).contains("Allow")) {
+                    actions.put(Constants.KEY_TYPE, "rfp");
+                    actions.put(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS, false);
+                }
                 ////
 
                 String action = actions.has(Constants.KEY_ANDROID) ? actions.getString(Constants.KEY_ANDROID) : "";
@@ -205,8 +207,10 @@ public class CTInAppNotificationButton implements Parcelable {
                     this.actionUrl = action;
                 }
 
-                type = actions.getString(Constants.KEY_TYPE);
-                fallbackToSettings = actions.getBoolean(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS);
+                if (actions.getString(Constants.KEY_TYPE).equalsIgnoreCase("rfp")) {
+                    type = actions.getString(Constants.KEY_TYPE);
+                    fallbackToSettings = actions.getBoolean(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS);
+                }
             }
 
             //Custom Key Value pairs
