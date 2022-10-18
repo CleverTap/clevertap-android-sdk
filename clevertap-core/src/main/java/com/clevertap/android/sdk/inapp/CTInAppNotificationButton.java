@@ -179,7 +179,7 @@ public class CTInAppNotificationButton implements Parcelable {
         this.textColor = textColor;
     }
 
-    CTInAppNotificationButton initWithJSON(JSONObject jsonObject) {
+    CTInAppNotificationButton initWithJSON(JSONObject jsonObject, CTInAppType inAppType) {
         try {
             this.jsonDescription = jsonObject;
             this.text = jsonObject.has(Constants.KEY_TEXT) ? jsonObject.getString(Constants.KEY_TEXT) : "";
@@ -196,10 +196,19 @@ public class CTInAppNotificationButton implements Parcelable {
                     .getJSONObject(Constants.KEY_ACTIONS) : null;
             if (actions != null) {
 
-                //TODO REMOVE THIS AFTER TESTING AND BACKEND CHANGE IS INCLUDED
-                if (jsonObject.has(Constants.KEY_TEXT) && jsonObject.getString(Constants.KEY_TEXT).contains("Allow")) {
-                    actions.put(Constants.KEY_TYPE, "rfp");
-                    actions.put(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS, false);
+                //TODO REMOVE THIS AFTER TESTING AND BACKEND CHANGE IS INCLUDED and before RELEASE
+                if (inAppType == CTInAppType.CTInAppTypeCoverImageOnly ||
+                        inAppType == CTInAppType.CTInAppTypeInterstitialImageOnly ||
+                        inAppType == CTInAppType.CTInAppTypeHalfInterstitialImageOnly){
+                    actions.put(Constants.KEY_TYPE, Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION);
+                    actions.put(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS, true);
+                }else {
+                    //TODO REMOVE THIS AFTER TESTING AND BACKEND CHANGE IS INCLUDED and before RELEASE
+                    if (jsonObject.has(Constants.KEY_TEXT) && jsonObject.getString(
+                            Constants.KEY_TEXT).contains("Allow")) {
+                        actions.put(Constants.KEY_TYPE, Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION);
+                        actions.put(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS, true);
+                    }
                 }
                 ////
 
@@ -208,8 +217,9 @@ public class CTInAppNotificationButton implements Parcelable {
                     this.actionUrl = action;
                 }
 
-                //TODO REMOVE THIS AFTER TESTING AND BACKEND CHANGE IS INCLUDED
-                if (actions.getString(Constants.KEY_TYPE).equalsIgnoreCase("rfp")) {
+                //TODO Modify the below lines when package is released. Add empty checks here too.
+                if (actions.getString(Constants.KEY_TYPE).equalsIgnoreCase(
+                        Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)) {
                     type = actions.getString(Constants.KEY_TYPE);
                     fallbackToSettings = actions.getBoolean(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS);
                 }

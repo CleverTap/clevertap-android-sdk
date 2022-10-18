@@ -122,7 +122,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     public final static String IS_FIRST_TIME_PERMISSION_REQUEST = "firstTimeRequest";
     public final static String DISPLAY_HARD_PERMISSION_BUNDLE_KEY = "displayHardPermissionDialog";
-    public final static String CT_INAPP_BUTTON_BUNDLE_KEY = "inAppButton";
+    public final static String SHOW_FALLBACK_SETTINGS_BUNDLE_KEY = "shouldShowFallbackSettings";
 
     public InAppController(Context context,
             CleverTapInstanceConfig config,
@@ -209,30 +209,31 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     @RequiresApi(api = 33)
-    public void promptPermission(){
+    public void promptPermission(boolean showFallbackSettings){
         int permissionStatus = ContextCompat.checkSelfPermission(context,
                 Manifest.permission.POST_NOTIFICATIONS);
 
         if (permissionStatus == PackageManager.PERMISSION_DENIED) {
-            boolean isFirstTimeRequest = StorageHelper.getBoolean(context,IS_FIRST_TIME_PERMISSION_REQUEST,true);
+            boolean isFirstTimeRequest = StorageHelper.getBoolean(
+                    context,IS_FIRST_TIME_PERMISSION_REQUEST,true);
             if (!isFirstTimeRequest) {
                 if (ActivityCompat.shouldShowRequestPermissionRationale(
                         Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
-                        ANDROID_PERMISSION_STRING)){
+                        ANDROID_PERMISSION_STRING) && !showFallbackSettings){
                     Logger.v("Notification permission is denied. Please grant notification permission access" +
                             " in your app's settings to send notifications");
                     return;
                 }
             }
             startPrompt(Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
-                    config, null);
+                    config,showFallbackSettings);
         }else{
             Logger.v("Notification permission is granted.");
         }
     }
 
     public static void startPrompt(Activity activity, CleverTapInstanceConfig config,
-                                   CTInAppNotificationButton button){
+                                   boolean showFallbackSettings){
         if (!activity.getClass().equals(InAppNotificationActivity.class)) {
             Intent intent = new Intent(activity, InAppNotificationActivity.class);
             Bundle configBundle = new Bundle();
@@ -240,7 +241,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             intent.putExtra("configBundle", configBundle);
             intent.putExtra(Constants.INAPP_KEY, currentlyDisplayingInApp);
             intent.putExtra(DISPLAY_HARD_PERMISSION_BUNDLE_KEY, true);
-            intent.putExtra(CT_INAPP_BUTTON_BUNDLE_KEY, button);
+            intent.putExtra(DISPLAY_HARD_PERMISSION_BUNDLE_KEY, true);
+            intent.putExtra(SHOW_FALLBACK_SETTINGS_BUNDLE_KEY, showFallbackSettings);
             activity.startActivity(intent);
         }
     }

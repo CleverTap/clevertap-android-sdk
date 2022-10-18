@@ -1,9 +1,9 @@
 package com.clevertap.android.sdk;
 
 import static com.clevertap.android.sdk.CTXtensions.isPackageAndOsTargetsAbove;
-import static com.clevertap.android.sdk.inapp.InAppController.CT_INAPP_BUTTON_BUNDLE_KEY;
 import static com.clevertap.android.sdk.inapp.InAppController.DISPLAY_HARD_PERMISSION_BUNDLE_KEY;
 import static com.clevertap.android.sdk.inapp.InAppController.IS_FIRST_TIME_PERMISSION_REQUEST;
+import static com.clevertap.android.sdk.inapp.InAppController.SHOW_FALLBACK_SETTINGS_BUNDLE_KEY;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
@@ -56,7 +56,9 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     public static final String ANDROID_PERMISSION_STRING = "android.permission.POST_NOTIFICATIONS";
 
-    private boolean isFbSettings;
+    private boolean isFallbackSettingsEnabled;
+
+    private boolean shouldShowFallbackSettings;
 
     public interface PermissionCallback {
 
@@ -89,8 +91,9 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                     .getInAppController());
 
             if (showHardNotificationPermission) {
-                CTInAppNotificationButton ctInAppNotificationButton = notif.getParcelable(CT_INAPP_BUTTON_BUNDLE_KEY);
-                promptPermission(ctInAppNotificationButton);
+                shouldShowFallbackSettings = notif.getBoolean(SHOW_FALLBACK_SETTINGS_BUNDLE_KEY,
+                        false);
+                showHardPermissionPrompt();
                 return;
             }
         } catch (Throwable t) {
@@ -188,10 +191,17 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     }
 
     @SuppressLint("NewApi")
-    public void promptPermission(CTInAppNotificationButton ctInAppNotificationButton){
+    public void showHardPermissionPrompt() {
+        if (isPackageAndOsTargetsAbove(this, 32)) {
+            requestPermission();
+        }
+    }
+
+    @SuppressLint("NewApi")
+    public void showHardPermissionPrompt(CTInAppNotificationButton ctInAppNotificationButton){
         if (isPackageAndOsTargetsAbove(this, 32)) {
             if (ctInAppNotificationButton != null) {
-                isFbSettings = ctInAppNotificationButton.isFallbackToSettings();
+                isFallbackSettingsEnabled = ctInAppNotificationButton.isFallbackToSettings();
             }
             requestPermission();
         }
@@ -208,8 +218,8 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             if (!isFirstTimeRequest) {
                 boolean neverAskAgainClicked = ActivityCompat.shouldShowRequestPermissionRationale(
                         InAppNotificationActivity.this, ANDROID_PERMISSION_STRING);
-                if (neverAskAgainClicked && inAppNotification.fallBackToNotificationSettings()
-                        || isFbSettings) {
+
+                if (shouldShowFallbackAlertDialog(neverAskAgainClicked)){
                     showFallbackAlertDialog();
                     return;
                 }
@@ -227,8 +237,29 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         }
     }
 
+    /**
+     * This method will show `showFallbackAlertDialog()` if any of the below conditions are satisfied
+     * 1)If `neverAskAgainClicked` is true and when `isFbSettings` true.
+     *  `isFbSettings` key is available from IAM campaign.
+     * 2)If `neverAskAgainClicked` is true and when `showFbSettings` is true.
+     *  `showFbSettings` key is available when hard push permission flow is called.
+     * 3)If `neverAskAgainClicked` is true and when `inAppNotification.fallBackToNotificationSettings()` is true.
+     * `inAppNotification.fallBackToNotificationSettings()` is available when push primer flow is called.
+     * @param neverAskAgainClicked - This boolean will be true when permission is already denied.
+     *
+     * @return true/false
+     */
+    private boolean shouldShowFallbackAlertDialog(boolean neverAskAgainClicked) {
+        if (neverAskAgainClicked && isFallbackSettingsEnabled){
+            return true;
+        }else if (neverAskAgainClicked && shouldShowFallbackSettings){
+            return true;
+        }else return neverAskAgainClicked && inAppNotification.fallBackToNotificationSettings();
+    }
+
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         StorageHelper.putBoolean(InAppNotificationActivity.this,IS_FIRST_TIME_PERMISSION_REQUEST,
                 false);
@@ -371,14 +402,15 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                                     return;
                                                 }
                                                 if (inAppNotification.isLocalInApp()) {
-                                                    promptPermission(inAppNotification.getButtons().get(0));
+                                                    showHardPermissionPrompt();
                                                     return;
                                                 }
 
                                                 if (inAppNotification.getButtons().get(0).getType() != null &&
                                                         inAppNotification.getButtons().get(0).getType()
-                                                        .equalsIgnoreCase("rfp")){
-                                                    promptPermission(inAppNotification.getButtons().get(0));
+                                                        .equalsIgnoreCase(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)){
+                                                    showHardPermissionPrompt(
+                                                            inAppNotification.getButtons().get(0));
                                                     return;
                                                 }
 
@@ -406,8 +438,8 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
                                             if (inAppNotification.getButtons().get(1).getType() != null &&
                                                     inAppNotification.getButtons().get(1).getType()
-                                                    .equalsIgnoreCase("rfp")){
-                                                promptPermission(inAppNotification.getButtons().get(1));
+                                                    .equalsIgnoreCase(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)){
+                                                showHardPermissionPrompt(inAppNotification.getButtons().get(1));
                                                 return;
                                             }
 

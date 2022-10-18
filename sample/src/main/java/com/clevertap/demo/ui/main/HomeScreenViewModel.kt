@@ -436,7 +436,15 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
 
             "106"->{
                 if (cleverTapAPI?.isPushPermissionGranted == false) {
-                    cleverTapAPI.promptForPushPermission()
+                    cleverTapAPI.promptForPushPermission(false)
+                }else{
+                    Log.v("HomeScreenViewModel","Notification permission is already granted.")
+                }
+            }
+
+            "107"->{
+                if (cleverTapAPI?.isPushPermissionGranted == false) {
+                    cleverTapAPI.promptForPushPermission(true)
                 }else{
                     Log.v("HomeScreenViewModel","Notification permission is already granted.")
                 }

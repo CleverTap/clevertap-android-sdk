@@ -220,7 +220,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     }
 
     @SuppressLint("NewApi")
-    public void promptPermission(boolean fbSettings){
+    public void showHardPermissionPrompt(boolean fbSettings){
         if (isPackageAndOsTargetsAbove(this, 32)) {
             requestPermission(fbSettings);
         }

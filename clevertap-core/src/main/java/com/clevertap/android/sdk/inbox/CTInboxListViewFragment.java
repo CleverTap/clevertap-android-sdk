@@ -290,9 +290,9 @@ public class CTInboxListViewFragment extends Fragment {
 
             String isRequestForPermissionStr = inboxMessages.get(position).getInboxMessageContents().
                     get(0).getLinktype(jsonObject);
-            if (isRequestForPermissionStr.equalsIgnoreCase("rfp")){
-                ((CTInboxActivity) requireActivity()).promptPermission(inboxMessages.get(position).
-                        getInboxMessageContents().get(0).getFbSettings(jsonObject));
+            if (isRequestForPermissionStr.equalsIgnoreCase(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)){
+                ((CTInboxActivity) requireActivity()).showHardPermissionPrompt(inboxMessages.get(position).
+                        getInboxMessageContents().get(0).isFallbackSettingsEnabled(jsonObject));
                 return;
             }
 

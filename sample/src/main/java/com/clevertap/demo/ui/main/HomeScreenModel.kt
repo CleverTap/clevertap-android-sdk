@@ -64,14 +64,15 @@ object HomeScreenModel {
                 "Input Box - reminder - DOC false",
                 "Three CTA"
             ),
-            "PROMPT LOCAL IN-APP" to listOf(
-                "Generate Half-Interstitial Local InApp",
-                "Generate Half-Interstitial Local InApp with image URL",
-                "Generate Half-Interstitial Local InApp with fallbackToSettings - true",
-                "Generate Alert Local InApp",
-                "Generate Alert Local InApp with followDeviceOrientation - false",
-                "Generate Alert Local InApp with fallbackToSettings - true",
-                "Generate hard permission dialog"
+            "PROMPT LOCAL IAM" to listOf(
+                "Half-Interstitial Local IAM",
+                "Half-Interstitial Local IAM with image URL",
+                "Half-Interstitial Local IAM with fallbackToSettings - true",
+                "Alert Local IAM",
+                "Alert Local IAM with followDeviceOrientation - false",
+                "Alert Local IAM with fallbackToSettings - true",
+                "Hard permission dialog with fallbackToSettings - false",
+                "Hard permission dialog with fallbackToSettings - true"
             )
         )
     }

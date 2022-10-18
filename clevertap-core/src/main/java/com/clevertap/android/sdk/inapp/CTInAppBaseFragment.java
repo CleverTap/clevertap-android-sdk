@@ -68,7 +68,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
         }
     }
 
-    void didDismiss(Bundle data) {
+    public void didDismiss(Bundle data) {
         cleanup();
         InAppListener listener = getListener();
         if (listener != null && getActivity() != null && getActivity().getBaseContext() != null) {
@@ -142,20 +142,19 @@ public abstract class CTInAppBaseFragment extends Fragment {
             didClick(index,data, button.getKeyValues());
 
             if (index == 0 && inAppNotification.isLocalInApp()) {
-                ((InAppNotificationActivity) context).promptPermission(button);
+                ((InAppNotificationActivity) context).showHardPermissionPrompt();
                 return;
             }else if (index == 1 && inAppNotification.isLocalInApp()){
                 didDismiss(data);
                 return;
             }
 
-            if (button.getType() != null && button.getType().equalsIgnoreCase("rfp")){
+            if (button.getType() != null && button.getType().equalsIgnoreCase(
+                    Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)){
                 if (context instanceof  InAppNotificationActivity) {
-                    ((InAppNotificationActivity) context).promptPermission(button);
-                }else{
-                    InAppController.startPrompt(requireActivity(),config, button);
+                    ((InAppNotificationActivity) context).showHardPermissionPrompt(button);
+                    return;
                 }
-                return;
             }
             String actionUrl = button.getActionUrl();
             if (actionUrl != null) {
