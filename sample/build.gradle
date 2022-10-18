@@ -90,7 +90,7 @@ dependencies {
     implementation 'androidx.work:work-runtime:2.7.0'// Needed for geofence
     implementation 'androidx.concurrent:concurrent-futures:1.1.0'// Needed for geofence
 
-    implementation 'com.google.firebase:firebase-messaging:21.0.0' //Needed for FCM
+    implementation 'com.google.firebase:firebase-messaging:23.0.6' //Needed for FCM
     implementation 'com.google.android.gms:play-services-ads:20.4.0' //Needed to use Google Ad Ids
     //ExoPlayer Libraries for Audio/Video InApp Notifications
     implementation 'com.google.android.exoplayer:exoplayer:2.17.1'
