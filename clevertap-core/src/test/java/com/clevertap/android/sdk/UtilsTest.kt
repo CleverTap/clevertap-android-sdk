@@ -236,7 +236,7 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun test_drawableToBitmap_when_PassedDrawable_should_ReturnBitmap() {
-        val drawable: Drawable = application.getDrawable(R1.drawable.common_full_open_on_phone) ?: error("drawable is null")
+        val drawable: Drawable = application.getDrawable(R1.drawable.ct_image) ?: error("drawable is null")
         val bitmap = Utils.drawableToBitmap(drawable)
         printBitmapInfo(bitmap)
         assertNotNull(bitmap)
@@ -691,6 +691,9 @@ class UtilsTest : BaseTestCase() {
 
         val id5 = "abcd_1234_!!_::_$" + "@@_---"
         assertTrue { Utils.validateCTID(id5) }
+
+        val id6 = "......"
+        assertTrue { Utils.validateCTID(id6) }
     }
 
     @Test
