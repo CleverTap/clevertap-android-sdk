@@ -677,23 +677,34 @@ class UtilsTest : BaseTestCase() {
 
     @Test
     fun test_validateCTID_when_CTIdIsPassed_should_ReturnTrueOrFalse() {
-        val id1 = null
-        assertFalse { Utils.validateCTID(id1) }
-
-        val id2 = ""
-        assertFalse { Utils.validateCTID(id2) }
-
-        val id3 = "11111111_22222222_33333333_44444444_55555555_66666666_77777777_88888888"
-        assertFalse { Utils.validateCTID(id3) }
-
-        val id4 = "1 2 3 4"
-        assertFalse { Utils.validateCTID(id4) }
-
-        val id5 = "abcd_1234_!!_::_$" + "@@_---"
-        assertTrue { Utils.validateCTID(id5) }
-
-        val id6 = "......"
-        assertTrue { Utils.validateCTID(id6) }
+        //invalid ids :
+        listOf(
+            null,
+            "",
+            "   ",
+            "11111111_22222222_33333333_44444444_55555555_66666666_77777777_88888888",
+            "a 2 b c"
+        ).forEach {
+            val isValid = Utils.validateCTID(it)
+            println("following string is ${if(isValid)"valid  " else "invalid"} | '$it'")
+            assertFalse { isValid}
+        }
+        // valid ids :
+        listOf(
+            ("abcd_1234_!!_::_$" + "@@_---.|<>;+\\"),
+            "......",
+            "|||||||",
+            "<<<<____>>>>>",
+            "/////////////",
+            ";;;;;;;;;;;;;",
+            "++++++++++++",
+            (""+'\\'),
+            ("\\"+"\\"+"\\"+"\\"),
+        ).forEach {
+            val isValid = Utils.validateCTID(it)
+            println("following string is ${if(isValid)"valid  " else "invalid"} | '$it'")
+            assertTrue { isValid}
+        }
     }
 
     @Test
