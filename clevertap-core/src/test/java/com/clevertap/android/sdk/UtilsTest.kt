@@ -683,7 +683,8 @@ class UtilsTest : BaseTestCase() {
             "",
             "   ",
             "1111111122222222333333334444444455555555666666667777777788888888"+"1111111122222222333333334444444455555555666666667777777788888888"+"___morethan128_chars",
-            "a 2 b c"
+            "a 2 b c",
+            "//\\\\"
         ).forEach {
             val isValid = Utils.validateCTID(it)
             println("following string is ${if(isValid)"valid  " else "invalid"} | '$it'")
