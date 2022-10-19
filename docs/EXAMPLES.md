@@ -150,7 +150,7 @@ Use `onUserLogin` to maintain multiple distinct user profiles on the same device
 Add the following dependencies in your app's `build.gradle`
 
 ```groovy
-implementation "androidx.appcompat:appcompat:1.3.1"//MANDATORY for App Inbox
+implementation "androidx.appcompat:appcompat:1.6.0-rc01"//MANDATORY for App Inbox
 implementation "androidx.recyclerview:recyclerview:1.2.1"//MANDATORY for App Inbox
 implementation "androidx.viewpager:viewpager:1.0.0"//MANDATORY for App Inbox
 implementation "com.google.android.material:material:1.4.0"//MANDATORY for App Inbox
