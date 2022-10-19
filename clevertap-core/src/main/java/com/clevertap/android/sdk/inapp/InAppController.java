@@ -194,9 +194,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             boolean isFirstTimeRequest = StorageHelper.getBoolean(context,IS_FIRST_TIME_PERMISSION_REQUEST,true);
             if (!isFirstTimeRequest) {
                 //If permission is already denied and FALLBACK_TO_NOTIFICATION_SETTINGS is false
-                if (ActivityCompat.shouldShowRequestPermissionRationale(
-                        Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
-                        ANDROID_PERMISSION_STRING) && !jsonObject.has(FALLBACK_TO_NOTIFICATION_SETTINGS)) {
+                if (!jsonObject.has(FALLBACK_TO_NOTIFICATION_SETTINGS)) {
                     Logger.v("Notification permission is denied. Please grant notification permission access" +
                             " in your app's settings to send notifications");
                     return;

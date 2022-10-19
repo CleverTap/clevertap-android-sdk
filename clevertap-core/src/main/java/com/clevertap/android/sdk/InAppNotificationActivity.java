@@ -216,14 +216,10 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             boolean isFirstTimeRequest = StorageHelper.getBoolean(InAppNotificationActivity.this,
                     IS_FIRST_TIME_PERMISSION_REQUEST,true);
             if (!isFirstTimeRequest) {
-                boolean neverAskAgainClicked = ActivityCompat.shouldShowRequestPermissionRationale(
-                        InAppNotificationActivity.this, ANDROID_PERMISSION_STRING);
-
-                if (shouldShowFallbackAlertDialog(neverAskAgainClicked)){
+                if (shouldShowFallbackAlertDialog()){
                     showFallbackAlertDialog();
                     return;
                 }
-
                 permissionCallbackWeakReference.get().onReject();
                 didDismiss(null);
                 return;
@@ -239,22 +235,19 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     /**
      * This method will show `showFallbackAlertDialog()` if any of the below conditions are satisfied
-     * 1)If `neverAskAgainClicked` is true and when `isFbSettings` true.
-     *  `isFbSettings` key is available from IAM campaign.
-     * 2)If `neverAskAgainClicked` is true and when `showFbSettings` is true.
-     *  `showFbSettings` key is available when hard push permission flow is called.
-     * 3)If `neverAskAgainClicked` is true and when `inAppNotification.fallBackToNotificationSettings()` is true.
+     * 1)When `isFbSettings` true.`isFbSettings` key is available from IAM campaign.
+     * 2)When `showFbSettings` is true.`showFbSettings` key is available when hard push permission flow is called.
+     * 3)When `inAppNotification.fallBackToNotificationSettings()` is true.
      * `inAppNotification.fallBackToNotificationSettings()` is available when push primer flow is called.
-     * @param neverAskAgainClicked - This boolean will be true when permission is already denied.
      *
-     * @return true/false
+     * @return boolean
      */
-    private boolean shouldShowFallbackAlertDialog(boolean neverAskAgainClicked) {
-        if (neverAskAgainClicked && isFallbackSettingsEnabled){
+    private boolean shouldShowFallbackAlertDialog() {
+        if (isFallbackSettingsEnabled){
             return true;
-        }else if (neverAskAgainClicked && shouldShowFallbackSettings){
+        }else if (shouldShowFallbackSettings){
             return true;
-        }else return neverAskAgainClicked && inAppNotification.fallBackToNotificationSettings();
+        }else return inAppNotification != null && inAppNotification.fallBackToNotificationSettings();
     }
 
     @Override

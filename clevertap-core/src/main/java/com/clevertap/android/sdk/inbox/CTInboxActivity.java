@@ -227,7 +227,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     }
 
     @RequiresApi(api = 33)
-    public void requestPermission(boolean fbSettings) {
+    public void requestPermission(boolean isFallbackSettingsEnabled) {
         int permissionStatus = ContextCompat.checkSelfPermission(CTInboxActivity.this,
                 Manifest.permission.POST_NOTIFICATIONS);
 
@@ -235,13 +235,10 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             boolean isFirstTimeRequest = StorageHelper.getBoolean(CTInboxActivity.this,
                     IS_FIRST_TIME_PERMISSION_REQUEST,true);
             if (!isFirstTimeRequest) {
-                boolean neverAskAgainClicked = ActivityCompat.shouldShowRequestPermissionRationale(
-                        CTInboxActivity.this, ANDROID_PERMISSION_STRING);
-                if (neverAskAgainClicked && fbSettings) {
+                if (isFallbackSettingsEnabled) {
                     showFallbackAlertDialog();
                     return;
                 }
-
                 permissionCallbackWeakReference.get().onReject();
                 return;
             }
