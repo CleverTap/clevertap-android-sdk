@@ -9,7 +9,7 @@ import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
-import com.google.firebase.iid.FirebaseInstanceId
+import com.google.firebase.messaging.FirebaseMessaging
 import org.junit.*
 import org.junit.runner.*
 import org.mockito.Mockito.*
@@ -138,8 +138,8 @@ class FcmSdkHandlerImplTest : BaseTestCase() {
 
     @Test
     fun testRequestToken_Exception_Null_Token() {
-        mockStatic(FirebaseInstanceId::class.java).use {
-            `when`(FirebaseInstanceId.getInstance()).thenThrow(RuntimeException("Something Went wrong"))
+        mockStatic(FirebaseMessaging::class.java).use {
+            `when`(FirebaseMessaging.getInstance()).thenThrow(RuntimeException("Something Went wrong"))
             handler.requestToken()
             verify(listener, times(1)).onNewToken(null, FCM)
         }

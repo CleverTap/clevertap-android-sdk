@@ -1,41 +1,23 @@
 package com.clevertap.android.sdk
 
 import android.app.Activity
-import android.app.Application.ActivityLifecycleCallbacks
-import com.clevertap.android.sdk.pushnotification.fcm.FcmSdkHandlerImpl
-import com.clevertap.android.sdk.ManifestInfo
-import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
-import com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM
-import com.clevertap.android.sdk.pushnotification.fcm.TestFcmConstants.Companion.FCM_SENDER_ID
-import com.clevertap.android.sdk.utils.PackageUtils
-import com.clevertap.android.shared.test.BaseTestCase
-import com.clevertap.android.shared.test.TestApplication
-import com.google.firebase.FirebaseApp
-import com.google.firebase.FirebaseOptions
-import com.google.firebase.iid.FirebaseInstanceId
-import org.junit.*
-import org.junit.runner.*
-import org.mockito.Mockito.*
-import org.robolectric.RobolectricTestRunner
-import org.robolectric.annotation.Config
-import kotlin.test.assertFalse
-import org.robolectric.RuntimeEnvironment
-
-import android.content.SharedPreferences
-import android.preference.PreferenceManager
-import androidx.test.core.app.ApplicationProvider
 import com.android.installreferrer.api.InstallReferrerClient
-import com.android.installreferrer.api.InstallReferrerClient.InstallReferrerResponse
 import com.android.installreferrer.api.InstallReferrerStateListener
 import com.android.installreferrer.api.ReferrerDetails
+import com.clevertap.android.sdk.pushnotification.CTPushProviderListener
+import com.clevertap.android.sdk.pushnotification.fcm.FcmSdkHandlerImpl
 import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.task.MockCTExecutors
+import com.clevertap.android.shared.test.BaseTestCase
 import junit.framework.Assert.assertEquals
 import org.json.JSONObject
+import org.junit.*
+import org.junit.runner.*
 import org.mockito.*
-import kotlin.test.assertIsNot
+import org.mockito.Mockito.*
+import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
-import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)

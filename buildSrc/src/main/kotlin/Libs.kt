@@ -180,7 +180,7 @@ object Android {
     const val compileSdkVersionVal = 33
     const val targetSdkVersionVal = 33
     const val buildToolsVersionVal = "33.0.0"
-    const val minSdkVersionVal = 16
+    const val minSdkVersionVal = 19
 }
 
 object SDKTest {
