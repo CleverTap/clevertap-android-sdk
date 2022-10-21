@@ -1,5 +1,8 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 4.6.5 (October 21, 2022)
+* Allows more special characters when setting custom CleverTap ID
+
 ### Version 4.6.4 (October 11, 2022)
 * Bug fixes and improvements
 
