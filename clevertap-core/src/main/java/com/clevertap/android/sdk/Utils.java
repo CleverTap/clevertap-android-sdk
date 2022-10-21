@@ -583,7 +583,7 @@ public final class Utils {
             return false;
         }
         if (!cleverTapID.matches("[=|<>;+.A-Za-z0-9()!:$@_-]*")) {
-            Logger.i("Custom CleverTap ID cannot contain special characters apart from : =,(,),_,!,@,$,|<,>,/,;,+,.,\\ and - ");
+            Logger.i("Custom CleverTap ID cannot contain special characters apart from : =,(,),_,!,@,$,|<,>,;,+,. and - ");
             return false;
         }
         return true;
