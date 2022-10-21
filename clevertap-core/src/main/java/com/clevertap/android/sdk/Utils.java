@@ -578,7 +578,7 @@ public final class Utils {
                     "CLEVERTAP_USE_CUSTOM_ID has been set as 1 in AndroidManifest.xml but custom CleverTap ID passed is empty.");
             return false;
         }
-        if (cleverTapID.length() > 128) {
+        if (cleverTapID.length() > 64) {
             Logger.i("Custom CleverTap ID passed is greater than 64 characters. ");
             return false;
         }
