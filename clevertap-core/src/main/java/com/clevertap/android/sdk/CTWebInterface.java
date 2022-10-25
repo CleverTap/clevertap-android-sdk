@@ -40,8 +40,21 @@ public class CTWebInterface {
             Logger.d("CleverTap Instance is null.");
         } else {
             //Dismisses current IAM and proceeds to call promptForPushPermission()
-            inAppBaseFullFragment.didDismiss(null);
+            dismissInAppNotification();
             cleverTapAPI.promptForPushPermission(shouldShowFallbackSettings);
+        }
+    }
+    /**
+     * Method to be called from WebView Javascript to dismiss the InApp notification
+     */
+    @JavascriptInterface
+    public void dismissInAppNotification() {
+        CleverTapAPI cleverTapAPI = weakReference.get();
+        if (cleverTapAPI == null) {
+            Logger.d("CleverTap Instance is null.");
+        } else {
+            //Dismisses current IAM and proceeds to call promptForPushPermission()
+            inAppBaseFullFragment.didDismiss(null);
         }
     }
 
