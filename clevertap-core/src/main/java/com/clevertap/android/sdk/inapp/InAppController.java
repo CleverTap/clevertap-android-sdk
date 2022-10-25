@@ -186,47 +186,77 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     @RequiresApi(api = 33)
     public void promptPushPrimer(JSONObject jsonObject){
+        PushPermissionResponseListener listener = callbackManager.
+                getPushPermissionNotificationResponseListener();
         int permissionStatus = ContextCompat.checkSelfPermission(context,
                 Manifest.permission.POST_NOTIFICATIONS);
 
         if (permissionStatus == PackageManager.PERMISSION_DENIED){
             //Checks whether permission request is asked for the first time.
-            boolean isFirstTimeRequest = StorageHelper.getBoolean(context,IS_FIRST_TIME_PERMISSION_REQUEST,true);
-            if (!isFirstTimeRequest) {
-                //If permission is already denied and FALLBACK_TO_NOTIFICATION_SETTINGS is false
-                if (!jsonObject.has(FALLBACK_TO_NOTIFICATION_SETTINGS)) {
+            boolean isFirstTimeRequest = StorageHelper.getBoolean(context,IS_FIRST_TIME_PERMISSION_REQUEST,
+                    true);
+
+            boolean shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(
+                    Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
+                    ANDROID_PERMISSION_STRING);
+
+            if (!isFirstTimeRequest && shouldShowRequestPermissionRationale){
+                if (!jsonObject.has(FALLBACK_TO_NOTIFICATION_SETTINGS)){
                     Logger.v("Notification permission is denied. Please grant notification permission access" +
                             " in your app's settings to send notifications");
-                    return;
+                    if (listener != null){
+                        listener.onPushPermissionResponse(false);
+                    }
+                }else {
+                    prepareNotificationForDisplay(jsonObject);
                 }
+                return;
             }
             prepareNotificationForDisplay(jsonObject);
         }else{
-            Logger.v("Notification permission is granted.");
+            //Notification permission is granted
+            if (listener != null){
+                listener.onPushPermissionResponse(true);
+            }
         }
     }
 
     @RequiresApi(api = 33)
     public void promptPermission(boolean showFallbackSettings){
+        PushPermissionResponseListener listener = callbackManager.
+                getPushPermissionNotificationResponseListener();
         int permissionStatus = ContextCompat.checkSelfPermission(context,
                 Manifest.permission.POST_NOTIFICATIONS);
 
         if (permissionStatus == PackageManager.PERMISSION_DENIED) {
+            //Checks whether permission request is asked for the first time.
             boolean isFirstTimeRequest = StorageHelper.getBoolean(
                     context,IS_FIRST_TIME_PERMISSION_REQUEST,true);
-            if (!isFirstTimeRequest) {
-                if (ActivityCompat.shouldShowRequestPermissionRationale(
-                        Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
-                        ANDROID_PERMISSION_STRING) && !showFallbackSettings){
+
+            boolean shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(
+                    Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
+                    ANDROID_PERMISSION_STRING);
+
+            if (!isFirstTimeRequest && shouldShowRequestPermissionRationale){
+                if (!showFallbackSettings){
                     Logger.v("Notification permission is denied. Please grant notification permission access" +
-                            " in your app's settings to send notifications");
-                    return;
+                        " in your app's settings to send notifications");
+                    if (listener != null){
+                        listener.onPushPermissionResponse(false);
+                    }
+                }else {
+                    startPrompt(Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
+                            config, true);
                 }
+                return;
             }
             startPrompt(Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
                     config,showFallbackSettings);
         }else{
-            Logger.v("Notification permission is granted.");
+            //Notification permission is granted
+            if (listener != null){
+                listener.onPushPermissionResponse(true);
+            }
         }
     }
 

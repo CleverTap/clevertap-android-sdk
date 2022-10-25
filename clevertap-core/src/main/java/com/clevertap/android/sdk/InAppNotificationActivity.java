@@ -38,6 +38,8 @@ import com.clevertap.android.sdk.inapp.CTInAppType;
 import com.clevertap.android.sdk.inapp.InAppListener;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.Objects;
+
 import kotlin.Unit;
 
 public final class InAppNotificationActivity extends FragmentActivity implements InAppListener {
@@ -215,14 +217,15 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         if (permissionStatus == PackageManager.PERMISSION_DENIED){
             boolean isFirstTimeRequest = StorageHelper.getBoolean(InAppNotificationActivity.this,
                     IS_FIRST_TIME_PERMISSION_REQUEST,true);
-            if (!isFirstTimeRequest) {
+            boolean shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(
+                    Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
+                    ANDROID_PERMISSION_STRING);
+
+            if (!isFirstTimeRequest && shouldShowRequestPermissionRationale){
                 if (shouldShowFallbackAlertDialog()){
                     showFallbackAlertDialog();
                     return;
                 }
-                permissionCallbackWeakReference.get().onReject();
-                didDismiss(null);
-                return;
             }
 
             ActivityCompat.requestPermissions(InAppNotificationActivity.this,

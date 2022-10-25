@@ -30,6 +30,7 @@ import com.clevertap.android.sdk.CTInboxListener;
 import com.clevertap.android.sdk.CTInboxStyleConfig;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.R;
@@ -41,6 +42,8 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Objects;
+
 import kotlin.Unit;
 
 /**
@@ -234,7 +237,10 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         if (permissionStatus == PackageManager.PERMISSION_DENIED){
             boolean isFirstTimeRequest = StorageHelper.getBoolean(CTInboxActivity.this,
                     IS_FIRST_TIME_PERMISSION_REQUEST,true);
-            if (!isFirstTimeRequest) {
+            boolean shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(
+                    Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
+                    ANDROID_PERMISSION_STRING);
+            if (!isFirstTimeRequest && shouldShowRequestPermissionRationale) {
                 if (isFallbackSettingsEnabled) {
                     showFallbackAlertDialog();
                     return;
