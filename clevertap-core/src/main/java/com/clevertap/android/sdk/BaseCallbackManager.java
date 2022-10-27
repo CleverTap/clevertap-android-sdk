@@ -26,8 +26,6 @@ public abstract class BaseCallbackManager {
 
     public abstract InAppNotificationButtonListener getInAppNotificationButtonListener();
 
-    public abstract PushPrimerButtonListener getPushPrimerButtonListener();
-
     public abstract InAppNotificationListener getInAppNotificationListener();
 
     public abstract PushPermissionResponseListener getPushPermissionNotificationResponseListener();
@@ -62,7 +60,7 @@ public abstract class BaseCallbackManager {
     public abstract void setInAppNotificationButtonListener(
             InAppNotificationButtonListener inAppNotificationButtonListener);
 
-    public abstract void setPushPrimerButtonListener(PushPrimerButtonListener pushPrimerButtonListener);
+//    public abstract void setPushPrimerButtonListener(PushPrimerButtonListener pushPrimerButtonListener);
 
     public abstract void setInAppNotificationListener(InAppNotificationListener inAppNotificationListener);
 

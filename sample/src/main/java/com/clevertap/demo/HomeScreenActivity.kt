@@ -33,7 +33,7 @@ private const val TAG = "HomeScreenActivity"
 class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitListener, CTProductConfigListener,
     CTFeatureFlagsListener, SyncListener, InAppNotificationListener,
     PushPermissionResponseListener,
-    InAppNotificationButtonListener, PushPrimerButtonListener {
+    InAppNotificationButtonListener {
 
     var cleverTapDefaultInstance: CleverTapAPI? = null
 
@@ -148,8 +148,6 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
             inAppNotificationListener = this@HomeScreenActivity
 
             pushPermissionNotificationResponseListener = this@HomeScreenActivity
-
-            setPushPrimerButtonListener(this@HomeScreenActivity)
 
         }
 
@@ -271,13 +269,5 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
 
     override fun onInAppButtonClick(payload: HashMap<String, String>?) {
         TODO("Not yet implemented")
-    }
-
-    override fun onPositiveButtonClick(ctInAppNotification: CTInAppNotification?) {
-        Log.i(TAG, "onPositiveButtonClick() called")
-    }
-
-    override fun onNegativeButtonClick(ctInAppNotification: CTInAppNotification?) {
-        Log.i(TAG, "onNegativeButtonClick() called")
     }
 }

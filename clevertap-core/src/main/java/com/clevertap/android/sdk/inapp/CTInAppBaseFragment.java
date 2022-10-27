@@ -61,10 +61,10 @@ public abstract class CTInAppBaseFragment extends Fragment {
 
     abstract void cleanup();
 
-    void didClick(int index, Bundle data, HashMap<String, String> keyValueMap) {
+    void didClick(Bundle data, HashMap<String, String> keyValueMap) {
         InAppListener listener = getListener();
         if (listener != null) {
-            listener.inAppNotificationDidClick(inAppNotification, data, keyValueMap,index);
+            listener.inAppNotificationDidClick(inAppNotification, data, keyValueMap);
         }
     }
 
@@ -139,7 +139,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
             data.putString(Constants.NOTIFICATION_ID_TAG, inAppNotification.getCampaignId());
             data.putString(Constants.KEY_C2A, button.getText());
 
-            didClick(index,data, button.getKeyValues());
+            didClick(data, button.getKeyValues());
 
             if (index == 0 && inAppNotification.isLocalInApp()) {
                 ((InAppNotificationActivity) context).showHardPermissionPrompt();

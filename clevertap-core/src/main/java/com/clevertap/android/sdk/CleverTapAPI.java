@@ -2459,11 +2459,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     @SuppressWarnings("unused")
-    public void setPushPrimerButtonListener(PushPrimerButtonListener listener) {
-        coreState.getCallbackManager().setPushPrimerButtonListener(listener);
-    }
-
-    @SuppressWarnings("unused")
     public void setInboxMessageButtonListener(InboxMessageButtonListener listener) {
         this.inboxMessageButtonListener = new WeakReference<>(listener);
     }

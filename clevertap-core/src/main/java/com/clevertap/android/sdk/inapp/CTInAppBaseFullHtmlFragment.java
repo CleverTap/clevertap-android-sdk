@@ -50,7 +50,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
                     }
                 }
 
-                didClick(-1, formData, null);
+                didClick(formData, null);
                 Logger.d("Executing call to action for in-app: " + url);
                 fireUrlThroughIntent(url, formData);
             } catch (Throwable t) {

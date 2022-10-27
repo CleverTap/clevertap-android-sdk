@@ -157,8 +157,8 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     @Override
     public void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData,
-            HashMap<String, String> keyValueMap, int btnClickIndex) {
-        didClick(formData, keyValueMap, btnClickIndex);
+            HashMap<String, String> keyValueMap) {
+        didClick(formData, keyValueMap);
     }
 
     @Override
@@ -185,10 +185,10 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         super.setTheme(android.R.style.Theme_Translucent_NoTitleBar);
     }
 
-    void didClick(Bundle data, HashMap<String, String> keyValueMap, int btnClickIndex) {
+    void didClick(Bundle data, HashMap<String, String> keyValueMap) {
         InAppListener listener = getListener();
         if (listener != null) {
-            listener.inAppNotificationDidClick(inAppNotification, data, keyValueMap, btnClickIndex);
+            listener.inAppNotificationDidClick(inAppNotification, data, keyValueMap);
         }
     }
 
@@ -390,7 +390,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                                         inAppNotification.getCampaignId());
                                                 data.putString("wzrk_c2a",
                                                         inAppNotification.getButtons().get(0).getText());
-                                                didClick(data, null, 0);
+                                                didClick(data, null);
                                                 String actionUrl = inAppNotification.getButtons().get(0)
                                                         .getActionUrl();
                                                 if (actionUrl != null) {
@@ -425,7 +425,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                                     inAppNotification.getCampaignId());
                                             data.putString("wzrk_c2a",
                                                     inAppNotification.getButtons().get(1).getText());
-                                            didClick(data, null, 1);
+                                            didClick(data, null);
                                             String actionUrl = inAppNotification.getButtons().get(1).getActionUrl();
                                             if (actionUrl != null) {
                                                 fireUrlThroughIntent(actionUrl, data);
@@ -457,7 +457,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                                         inAppNotification.getCampaignId());
                                                 data.putString("wzrk_c2a",
                                                         inAppNotification.getButtons().get(0).getText());
-                                                didClick(data, null, 0);
+                                                didClick(data, null);
                                                 String actionUrl = inAppNotification.getButtons().get(0)
                                                         .getActionUrl();
                                                 if (actionUrl != null) {
@@ -479,7 +479,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                                     inAppNotification.getCampaignId());
                                             data.putString("wzrk_c2a",
                                                     inAppNotification.getButtons().get(1).getText());
-                                            didClick(data, null, 1);
+                                            didClick(data, null);
                                             String actionUrl = inAppNotification.getButtons().get(1).getActionUrl();
                                             if (actionUrl != null) {
                                                 fireUrlThroughIntent(actionUrl, data);
@@ -501,7 +501,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                         data.putString(Constants.NOTIFICATION_ID_TAG,
                                                 inAppNotification.getCampaignId());
                                         data.putString("wzrk_c2a", inAppNotification.getButtons().get(2).getText());
-                                        didClick(data, null, 2);
+                                        didClick(data, null);
                                         String actionUrl = inAppNotification.getButtons().get(2).getActionUrl();
                                         if (actionUrl != null) {
                                             fireUrlThroughIntent(actionUrl, data);
