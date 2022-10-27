@@ -34,7 +34,7 @@ public class CTWebInterface {
      * for Android 13 and above
      */
     @JavascriptInterface
-    public void promptForPushPermission(boolean shouldShowFallbackSettings) {
+    public void promptPushPermission(boolean shouldShowFallbackSettings) {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
             Logger.d("CleverTap Instance is null.");

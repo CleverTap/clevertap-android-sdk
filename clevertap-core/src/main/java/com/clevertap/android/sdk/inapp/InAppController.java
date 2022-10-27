@@ -48,7 +48,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public class InAppController implements CTInAppNotification.CTInAppNotificationListener, InAppListener,
-        InAppNotificationActivity.PermissionCallback {
+        InAppNotificationActivity.PushPermissionResultCallback {
 
     //InApp
     private final class NotificationPrepareRunnable implements Runnable {
@@ -123,6 +123,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     private final MainLooperHandler mainLooperHandler;
 
     public final static String LOCAL_INAPP_COUNT = "local_in_app_count";
+    public final static String IS_HARD_PERMISSION_REQUEST = "isHardPermissionRequest";
 
     public final static String IS_FIRST_TIME_PERMISSION_REQUEST = "firstTimeRequest";
     public final static String DISPLAY_HARD_PERMISSION_BUNDLE_KEY = "displayHardPermissionDialog";
@@ -192,7 +193,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     @RequiresApi(api = 33)
     public void promptPushPrimer(JSONObject jsonObject){
         PushPermissionResponseListener listener = callbackManager.
-                getPushPermissionNotificationResponseListener();
+                getPushPermissionResponseListener();
         int permissionStatus = ContextCompat.checkSelfPermission(context,
                 Manifest.permission.POST_NOTIFICATIONS);
 
@@ -226,25 +227,30 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         }
     }
 
-    private void showSoftOrHardPrompt(final JSONObject jsonObject) {
-        if (jsonObject.optBoolean("isFromPromptPermission", false)) {
-            startPrompt(Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
-                    config, true);
-        } else {
-            prepareNotificationForDisplay(jsonObject);
-        }
-    }
-
     @RequiresApi(api = 33)
     public void promptPermission(boolean showFallbackSettings) {
         JSONObject object = new JSONObject();
         try {
             object.put(FALLBACK_TO_NOTIFICATION_SETTINGS, showFallbackSettings);
-            object.put("isFromPromptPermission", true);
+            object.put(IS_HARD_PERMISSION_REQUEST, true);
         } catch (JSONException e) {
             e.printStackTrace();
         }
         promptPushPrimer(object);
+    }
+
+    /**
+     * Shows either push primer or directly calls hard permission dialog flow based on whether
+     * `isFromPromptPermission` is true.
+     * @param jsonObject InApp object
+     */
+    private void showSoftOrHardPrompt(final JSONObject jsonObject) {
+        if (jsonObject.optBoolean(IS_HARD_PERMISSION_REQUEST, false)) {
+            startPrompt(Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
+                    config, jsonObject.optBoolean(FALLBACK_TO_NOTIFICATION_SETTINGS, false));
+        } else {
+            prepareNotificationForDisplay(jsonObject);
+        }
     }
 
     public static void startPrompt(Activity activity, CleverTapInstanceConfig config,
@@ -255,7 +261,6 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             configBundle.putParcelable("config", config);
             intent.putExtra("configBundle", configBundle);
             intent.putExtra(Constants.INAPP_KEY, currentlyDisplayingInApp);
-            intent.putExtra(DISPLAY_HARD_PERMISSION_BUNDLE_KEY, true);
             intent.putExtra(DISPLAY_HARD_PERMISSION_BUNDLE_KEY, true);
             intent.putExtra(SHOW_FALLBACK_SETTINGS_BUNDLE_KEY, showFallbackSettings);
             activity.startActivity(intent);
@@ -372,16 +377,16 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     @Override
-    public void onAccept() {
-        final PushPermissionResponseListener listener = callbackManager.getPushPermissionNotificationResponseListener();
+    public void onPushPermissionAccept() {
+        final PushPermissionResponseListener listener = callbackManager.getPushPermissionResponseListener();
         if (listener != null){
             listener.onPushPermissionResponse(true);
         }
     }
 
     @Override
-    public void onReject() {
-        final PushPermissionResponseListener listener = callbackManager.getPushPermissionNotificationResponseListener();
+    public void onPushPermissionDeny() {
+        final PushPermissionResponseListener listener = callbackManager.getPushPermissionResponseListener();
         if (listener != null){
             listener.onPushPermissionResponse(false);
         }

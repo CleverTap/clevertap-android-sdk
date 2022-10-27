@@ -33,7 +33,6 @@ import com.clevertap.android.sdk.inapp.CTInAppNativeHalfInterstitialImageFragmen
 import com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialFragment;
 import com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialImageFragment;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
-import com.clevertap.android.sdk.inapp.CTInAppNotificationButton;
 import com.clevertap.android.sdk.inapp.CTInAppType;
 import com.clevertap.android.sdk.inapp.InAppListener;
 import java.lang.ref.WeakReference;
@@ -42,7 +41,8 @@ import java.util.Objects;
 
 import kotlin.Unit;
 
-public final class InAppNotificationActivity extends FragmentActivity implements InAppListener {
+public final class InAppNotificationActivity extends FragmentActivity implements InAppListener,
+        DidClickForHardPermissionListener {
 
     private static boolean isAlertVisible = false;
 
@@ -52,7 +52,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     private WeakReference<InAppListener> listenerWeakReference;
 
-    private WeakReference<PermissionCallback> permissionCallbackWeakReference;
+    private WeakReference<PushPermissionResultCallback> pushPermissionResultCallbackWeakReference;
 
     private static final int PERMISSION_REQUEST_CODE = 2;
 
@@ -62,11 +62,11 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     private boolean shouldShowFallbackSettings;
 
-    public interface PermissionCallback {
+    public interface PushPermissionResultCallback {
 
-        void onAccept();
+        void onPushPermissionAccept();
 
-        void onReject();
+        void onPushPermissionDeny();
     }
 
     public void onCreate(Bundle savedInstanceState) {
@@ -192,6 +192,16 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         }
     }
 
+    @Override
+    public void didClickForHardPermissionWithFallbackSettings(boolean fallbackToSettings) {
+        showHardPermissionPrompt(fallbackToSettings);
+    }
+
+    @Override
+    public void didClickForHardPermission() {
+        showHardPermissionPrompt();
+    }
+
     @SuppressLint("NewApi")
     public void showHardPermissionPrompt() {
         if (isPackageAndOsTargetsAbove(this, 32)) {
@@ -200,11 +210,9 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     }
 
     @SuppressLint("NewApi")
-    public void showHardPermissionPrompt(CTInAppNotificationButton ctInAppNotificationButton){
+    public void showHardPermissionPrompt(boolean isFallbackSettingsEnabled){
         if (isPackageAndOsTargetsAbove(this, 32)) {
-            if (ctInAppNotificationButton != null) {
-                isFallbackSettingsEnabled = ctInAppNotificationButton.isFallbackToSettings();
-            }
+            this.isFallbackSettingsEnabled = isFallbackSettingsEnabled;
             requestPermission();
         }
     }
@@ -231,7 +239,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             ActivityCompat.requestPermissions(InAppNotificationActivity.this,
                     new String[]{ANDROID_PERMISSION_STRING}, PERMISSION_REQUEST_CODE);
         }else{
-            permissionCallbackWeakReference.get().onAccept();
+            pushPermissionResultCallbackWeakReference.get().onPushPermissionAccept();
             didDismiss(null);
         }
     }
@@ -263,9 +271,9 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             boolean granted = grantResults.length > 0 && grantResults[0] ==
                     PackageManager.PERMISSION_GRANTED;
             if (granted) {
-                permissionCallbackWeakReference.get().onAccept();
+                pushPermissionResultCallbackWeakReference.get().onPushPermissionAccept();
             }else {
-                permissionCallbackWeakReference.get().onReject();
+                pushPermissionResultCallbackWeakReference.get().onPushPermissionDeny();
             }
             didDismiss(null);
         }
@@ -328,8 +336,8 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         listenerWeakReference = new WeakReference<>(listener);
     }
 
-    public void setPermissionCallback(PermissionCallback callback) {
-        permissionCallbackWeakReference = new WeakReference<>(callback);
+    public void setPermissionCallback(PushPermissionResultCallback callback) {
+        pushPermissionResultCallbackWeakReference = new WeakReference<>(callback);
     }
 
     private CTInAppBaseFullFragment createContentFragment() {
@@ -405,8 +413,8 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                                 if (inAppNotification.getButtons().get(0).getType() != null &&
                                                         inAppNotification.getButtons().get(0).getType()
                                                         .equalsIgnoreCase(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)){
-                                                    showHardPermissionPrompt(
-                                                            inAppNotification.getButtons().get(0));
+                                                    showHardPermissionPrompt(inAppNotification.
+                                                            getButtons().get(0).isFallbackToSettings());
                                                     return;
                                                 }
 
@@ -435,7 +443,8 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                             if (inAppNotification.getButtons().get(1).getType() != null &&
                                                     inAppNotification.getButtons().get(1).getType()
                                                     .equalsIgnoreCase(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)){
-                                                showHardPermissionPrompt(inAppNotification.getButtons().get(1));
+                                                showHardPermissionPrompt(inAppNotification.
+                                                        getButtons().get(1).isFallbackToSettings());
                                                 return;
                                             }
 

@@ -28,7 +28,7 @@ public abstract class BaseCallbackManager {
 
     public abstract InAppNotificationListener getInAppNotificationListener();
 
-    public abstract PushPermissionResponseListener getPushPermissionNotificationResponseListener();
+    public abstract PushPermissionResponseListener getPushPermissionResponseListener();
 
     public abstract CTInboxListener getInboxListener();
 
@@ -64,7 +64,7 @@ public abstract class BaseCallbackManager {
 
     public abstract void setInAppNotificationListener(InAppNotificationListener inAppNotificationListener);
 
-    public abstract void setPushPermissionNotificationResponseListener(PushPermissionResponseListener pushPermissionNotificationResponseListener);
+    public abstract void setPushPermissionResponseListener(PushPermissionResponseListener pushPermissionResponseListener);
 
     public abstract void setInboxListener(CTInboxListener inboxListener);
 
