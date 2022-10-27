@@ -102,20 +102,6 @@ public class CTInAppNotificationMedia implements Parcelable {
         }
     }
 
-//    CTInAppNotificationMedia initWithLocalData(String imgURI, int orientation) {
-//        this.orientation = orientation;
-//        this.contentType = "image";
-//        if (!imgURI.isEmpty()) {
-//            this.mediaUrl = imgURI;
-//            this.cacheKey = UUID.randomUUID().toString();
-//        }
-//        if (contentType.isEmpty()) {
-//            return null;
-//        } else {
-//            return this;
-//        }
-//    }
-
     boolean isAudio() {
         String contentType = this.getContentType();
         return contentType != null && this.mediaUrl != null && contentType.startsWith("audio");

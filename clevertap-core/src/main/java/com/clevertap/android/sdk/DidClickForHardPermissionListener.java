@@ -6,5 +6,4 @@ package com.clevertap.android.sdk;
  */
 public interface DidClickForHardPermissionListener {
     void didClickForHardPermissionWithFallbackSettings(boolean fallbackToSettings);
-    void didClickForHardPermission();
 }

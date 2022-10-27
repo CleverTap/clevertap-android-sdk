@@ -1,11 +1,10 @@
 package com.clevertap.android.sdk;
 
-import static com.clevertap.android.sdk.CTXtensions.isPackageAndOsTargetsAbove;
+import static com.clevertap.android.sdk.Constants.NOTIFICATION_PERMISSION_REQUEST_CODE;
 import static com.clevertap.android.sdk.inapp.InAppController.DISPLAY_HARD_PERMISSION_BUNDLE_KEY;
 import static com.clevertap.android.sdk.inapp.InAppController.IS_FIRST_TIME_PERMISSION_REQUEST;
 import static com.clevertap.android.sdk.inapp.InAppController.SHOW_FALLBACK_SETTINGS_BUNDLE_KEY;
 
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -17,11 +16,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.WindowManager;
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
-import com.clevertap.android.sdk.inapp.AlertDialogPromptForSettings;
 import com.clevertap.android.sdk.inapp.CTInAppBaseFullFragment;
 import com.clevertap.android.sdk.inapp.CTInAppHtmlCoverFragment;
 import com.clevertap.android.sdk.inapp.CTInAppHtmlHalfInterstitialFragment;
@@ -37,9 +32,6 @@ import com.clevertap.android.sdk.inapp.CTInAppType;
 import com.clevertap.android.sdk.inapp.InAppListener;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
-import java.util.Objects;
-
-import kotlin.Unit;
 
 public final class InAppNotificationActivity extends FragmentActivity implements InAppListener,
         DidClickForHardPermissionListener {
@@ -54,13 +46,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     private WeakReference<PushPermissionResultCallback> pushPermissionResultCallbackWeakReference;
 
-    private static final int PERMISSION_REQUEST_CODE = 2;
-
-    public static final String ANDROID_PERMISSION_STRING = "android.permission.POST_NOTIFICATIONS";
-
-    private boolean isFallbackSettingsEnabled;
-
-    private boolean shouldShowFallbackSettings;
+    private PushPermissionManager pushPermissionManager;
 
     public interface PushPermissionResultCallback {
 
@@ -87,15 +73,17 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             if (configBundle != null) {
                 config = configBundle.getParcelable("config");
             }
-            setListener(CleverTapAPI.instanceWithConfig(this, config).getCoreState().getInAppController());
 
+            setListener(CleverTapAPI.instanceWithConfig(this, config).getCoreState().getInAppController());
             setPermissionCallback(CleverTapAPI.instanceWithConfig(this, config).getCoreState()
                     .getInAppController());
 
+            pushPermissionManager = new PushPermissionManager(this);
+
             if (showHardNotificationPermission) {
-                shouldShowFallbackSettings = notif.getBoolean(SHOW_FALLBACK_SETTINGS_BUNDLE_KEY,
+                boolean shouldShowFallbackSettings = notif.getBoolean(SHOW_FALLBACK_SETTINGS_BUNDLE_KEY,
                         false);
-                showHardPermissionPrompt();
+                showHardPermissionPrompt(shouldShowFallbackSettings);
                 return;
             }
         } catch (Throwable t) {
@@ -197,68 +185,10 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         showHardPermissionPrompt(fallbackToSettings);
     }
 
-    @Override
-    public void didClickForHardPermission() {
-        showHardPermissionPrompt();
-    }
-
-    @SuppressLint("NewApi")
-    public void showHardPermissionPrompt() {
-        if (isPackageAndOsTargetsAbove(this, 32)) {
-            requestPermission();
-        }
-    }
-
     @SuppressLint("NewApi")
     public void showHardPermissionPrompt(boolean isFallbackSettingsEnabled){
-        if (isPackageAndOsTargetsAbove(this, 32)) {
-            this.isFallbackSettingsEnabled = isFallbackSettingsEnabled;
-            requestPermission();
-        }
-    }
-
-    @RequiresApi(api = 33)
-    public void requestPermission() {
-        int permissionStatus = ContextCompat.checkSelfPermission(InAppNotificationActivity.this,
-                Manifest.permission.POST_NOTIFICATIONS);
-
-        if (permissionStatus == PackageManager.PERMISSION_DENIED){
-            boolean isFirstTimeRequest = StorageHelper.getBoolean(InAppNotificationActivity.this,
-                    IS_FIRST_TIME_PERMISSION_REQUEST,true);
-            boolean shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(
-                    Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
-                    ANDROID_PERMISSION_STRING);
-
-            if (!isFirstTimeRequest && shouldShowRequestPermissionRationale){
-                if (shouldShowFallbackAlertDialog()){
-                    showFallbackAlertDialog();
-                    return;
-                }
-            }
-
-            ActivityCompat.requestPermissions(InAppNotificationActivity.this,
-                    new String[]{ANDROID_PERMISSION_STRING}, PERMISSION_REQUEST_CODE);
-        }else{
-            pushPermissionResultCallbackWeakReference.get().onPushPermissionAccept();
-            didDismiss(null);
-        }
-    }
-
-    /**
-     * This method will show `showFallbackAlertDialog()` if any of the below conditions are satisfied
-     * 1)When `isFbSettings` true.`isFbSettings` key is available from IAM campaign.
-     * 2)When `showFbSettings` is true.`showFbSettings` key is available when hard push permission flow is called.
-     * 3)When `inAppNotification.fallBackToNotificationSettings()` is true.
-     * `inAppNotification.fallBackToNotificationSettings()` is available when push primer flow is called.
-     *
-     * @return boolean
-     */
-    private boolean shouldShowFallbackAlertDialog() {
-        if (isFallbackSettingsEnabled){
-            return true;
-        }else if (shouldShowFallbackSettings){
-            return true;
-        }else return inAppNotification != null && inAppNotification.fallBackToNotificationSettings();
+        pushPermissionManager.showHardPermissionPrompt(isFallbackSettingsEnabled,
+                pushPermissionResultCallbackWeakReference.get());
     }
 
     @Override
@@ -267,7 +197,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         StorageHelper.putBoolean(InAppNotificationActivity.this,IS_FIRST_TIME_PERMISSION_REQUEST,
                 false);
-        if (requestCode == PERMISSION_REQUEST_CODE) {
+        if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
             boolean granted = grantResults.length > 0 && grantResults[0] ==
                     PackageManager.PERMISSION_GRANTED;
             if (granted) {
@@ -277,17 +207,6 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             }
             didDismiss(null);
         }
-    }
-
-    public void showFallbackAlertDialog() {
-        AlertDialogPromptForSettings.show(this, () -> {
-            Utils.navigateToAndroidSettingsForNotifications(InAppNotificationActivity.this);
-            didDismiss(null);
-            return Unit.INSTANCE;
-        }, () -> {
-            didDismiss(null);
-            return Unit.INSTANCE;
-        });
     }
 
     void didDismiss(Bundle data) {
@@ -406,7 +325,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                                     return;
                                                 }
                                                 if (inAppNotification.isLocalInApp()) {
-                                                    showHardPermissionPrompt();
+                                                    showHardPermissionPrompt(inAppNotification.fallBackToNotificationSettings());
                                                     return;
                                                 }
 

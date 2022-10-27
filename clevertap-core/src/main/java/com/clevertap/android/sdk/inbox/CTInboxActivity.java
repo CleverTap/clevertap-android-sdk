@@ -1,8 +1,7 @@
 package com.clevertap.android.sdk.inbox;
 
-import static com.clevertap.android.sdk.CTXtensions.isPackageAndOsTargetsAbove;
+import static com.clevertap.android.sdk.Constants.NOTIFICATION_PERMISSION_REQUEST_CODE;
 import static com.clevertap.android.sdk.inapp.InAppController.IS_FIRST_TIME_PERMISSION_REQUEST;
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -15,12 +14,9 @@ import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.appcompat.widget.Toolbar;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
@@ -30,22 +26,17 @@ import com.clevertap.android.sdk.CTInboxListener;
 import com.clevertap.android.sdk.CTInboxStyleConfig;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DidClickForHardPermissionListener;
 import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.PushPermissionManager;
 import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.StorageHelper;
-import com.clevertap.android.sdk.Utils;
-import com.clevertap.android.sdk.inapp.AlertDialogPromptForSettings;
 import com.google.android.material.tabs.TabLayout;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Objects;
-
-import kotlin.Unit;
 
 /**
  * This activity shows the {@link CTInboxMessage} objects as per {@link CTInboxStyleConfig} style parameters
@@ -78,9 +69,9 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     private CleverTapAPI cleverTapAPI;
     private CTInboxListener inboxContentUpdatedListener = null;
 
+    private PushPermissionManager pushPermissionManager;
     private WeakReference<InAppNotificationActivity.PushPermissionResultCallback> permissionCallbackWeakReference;
-    private static final int PERMISSION_REQUEST_CODE = 2;
-    public static final String ANDROID_PERMISSION_STRING = "android.permission.POST_NOTIFICATIONS";
+
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -102,6 +93,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
                 setPermissionCallback(CleverTapAPI.instanceWithConfig(this, config).getCoreState()
                         .getInAppController());
+                pushPermissionManager = new PushPermissionManager(this);
             }
             orientation = getResources().getConfiguration().orientation;
         } catch (Throwable t) {
@@ -229,52 +221,10 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         showHardPermissionPrompt(fallbackToSettings);
     }
 
-    @Override
-    public void didClickForHardPermission() {
-        //No op
-    }
-
     @SuppressLint("NewApi")
-    public void showHardPermissionPrompt(boolean fbSettings){
-        if (isPackageAndOsTargetsAbove(this, 32)) {
-            requestPermission(fbSettings);
-        }
-    }
-
-    @RequiresApi(api = 33)
-    public void requestPermission(boolean isFallbackSettingsEnabled) {
-        int permissionStatus = ContextCompat.checkSelfPermission(CTInboxActivity.this,
-                Manifest.permission.POST_NOTIFICATIONS);
-
-        if (permissionStatus == PackageManager.PERMISSION_DENIED){
-            boolean isFirstTimeRequest = StorageHelper.getBoolean(CTInboxActivity.this,
-                    IS_FIRST_TIME_PERMISSION_REQUEST,true);
-            boolean shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(
-                    Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
-                    ANDROID_PERMISSION_STRING);
-            if (!isFirstTimeRequest && shouldShowRequestPermissionRationale) {
-                if (isFallbackSettingsEnabled) {
-                    showFallbackAlertDialog();
-                    return;
-                }
-                permissionCallbackWeakReference.get().onPushPermissionDeny();
-                return;
-            }
-
-            ActivityCompat.requestPermissions(CTInboxActivity.this,
-                    new String[]{ANDROID_PERMISSION_STRING}, PERMISSION_REQUEST_CODE);
-        }else{
-            permissionCallbackWeakReference.get().onPushPermissionAccept();
-        }
-    }
-
-    public void showFallbackAlertDialog() {
-        AlertDialogPromptForSettings.show(this, () -> {
-            Utils.navigateToAndroidSettingsForNotifications(CTInboxActivity.this);
-            return Unit.INSTANCE;
-        }, () -> {
-            return Unit.INSTANCE;
-        });
+    public void showHardPermissionPrompt(boolean isFallbackSettingsEnabled){
+        pushPermissionManager.showHardPermissionPrompt(isFallbackSettingsEnabled,
+                permissionCallbackWeakReference.get());
     }
 
     @Override
@@ -282,7 +232,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         StorageHelper.putBoolean(CTInboxActivity.this,IS_FIRST_TIME_PERMISSION_REQUEST,
                 false);
-        if (requestCode == PERMISSION_REQUEST_CODE) {
+        if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
             boolean granted = grantResults.length > 0 && grantResults[0] ==
                     PackageManager.PERMISSION_GRANTED;
             if (granted) {
