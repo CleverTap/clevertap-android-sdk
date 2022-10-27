@@ -6,7 +6,10 @@ import com.clevertap.android.sdk.task.CTExecutorFactory
 
 class CTPreferenceCache {
 
-    var isFirstTimeRequest = firstTimeRequest
+    fun isFirstTimeRequest() = firstTimeRequest
+    fun setFirstTimeRequest(fTR : Boolean) {
+        firstTimeRequest = fTR
+    }
 
     companion object {
 
@@ -19,7 +22,7 @@ class CTPreferenceCache {
         @JvmStatic
         fun getInstance(context: Context, config: CleverTapInstanceConfig): CTPreferenceCache =
             INSTANCE ?: synchronized(this) {
-                INSTANCE ?: buildCache(context, config)
+                INSTANCE ?: buildCache(context, config).also { INSTANCE = it }
             }
 
         private fun buildCache(context: Context, config: CleverTapInstanceConfig): CTPreferenceCache {
@@ -36,7 +39,7 @@ class CTPreferenceCache {
         @JvmStatic
         fun updateCacheToDisk(context: Context, config: CleverTapInstanceConfig) {
             CTExecutorFactory.executors(config).ioTask<Void>().execute("updateCacheToDisk") {
-                StorageHelper.putBoolean(
+                StorageHelper.putBooleanImmediate(
                     context, InAppController.IS_FIRST_TIME_PERMISSION_REQUEST,
                     firstTimeRequest
                 )

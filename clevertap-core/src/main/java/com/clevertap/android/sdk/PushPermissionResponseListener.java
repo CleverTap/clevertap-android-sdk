@@ -11,5 +11,5 @@ public interface PushPermissionResponseListener {
      * @param accepted This boolean will return true if notification permission is granted and will retrun
      *                 false if permission is denied.
      */
-    void onPushPermissionResponse(boolean accepted);//Change method name here, sounds ambiguous
+    void onPushPermissionResponse(boolean accepted);
 }

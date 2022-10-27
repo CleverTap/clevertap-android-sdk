@@ -48,6 +48,8 @@ class CleverTapFactory {
         DeviceInfo deviceInfo = new DeviceInfo(context, config, cleverTapID, coreMetaData);
         coreState.setDeviceInfo(deviceInfo);
 
+        CTPreferenceCache.getInstance(context,config);
+
         BaseCallbackManager callbackManager = new CallbackManager(config, deviceInfo);
         coreState.setCallbackManager(callbackManager);
 
