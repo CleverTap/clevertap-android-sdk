@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inapp;
 
 import static com.clevertap.android.sdk.InAppNotificationActivity.ANDROID_PERMISSION_STRING;
 import static com.clevertap.android.sdk.inapp.CTLocalInApp.FALLBACK_TO_NOTIFICATION_SETTINGS;
+
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
@@ -10,7 +11,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Looper;
-
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class InAppController implements CTInAppNotification.CTInAppNotificationListener, InAppListener,
@@ -201,63 +202,45 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                     ANDROID_PERMISSION_STRING);
 
             if (!isFirstTimeRequest && shouldShowRequestPermissionRationale){
-                if (!jsonObject.has(FALLBACK_TO_NOTIFICATION_SETTINGS)){
+                if (!jsonObject.optBoolean(FALLBACK_TO_NOTIFICATION_SETTINGS, false)) {
                     Logger.v("Notification permission is denied. Please grant notification permission access" +
                             " in your app's settings to send notifications");
-                    if (listener != null){
+                    if (listener != null) {
                         listener.onPushPermissionResponse(false);
                     }
-                }else {
-                    prepareNotificationForDisplay(jsonObject);
+                } else {
+                    showSoftOrHardPrompt(jsonObject);
                 }
                 return;
             }
-            prepareNotificationForDisplay(jsonObject);
-        }else{
+            showSoftOrHardPrompt(jsonObject);
+        } else {
             //Notification permission is granted
-            if (listener != null){
+            if (listener != null) {
                 listener.onPushPermissionResponse(true);
             }
         }
     }
 
-    @RequiresApi(api = 33)
-    public void promptPermission(boolean showFallbackSettings){
-        PushPermissionResponseListener listener = callbackManager.
-                getPushPermissionNotificationResponseListener();
-        int permissionStatus = ContextCompat.checkSelfPermission(context,
-                Manifest.permission.POST_NOTIFICATIONS);
-
-        if (permissionStatus == PackageManager.PERMISSION_DENIED) {
-            //Checks whether permission request is asked for the first time.
-            boolean isFirstTimeRequest = StorageHelper.getBoolean(
-                    context,IS_FIRST_TIME_PERMISSION_REQUEST,true);
-
-            boolean shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(
-                    Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
-                    ANDROID_PERMISSION_STRING);
-
-            if (!isFirstTimeRequest && shouldShowRequestPermissionRationale){
-                if (!showFallbackSettings){
-                    Logger.v("Notification permission is denied. Please grant notification permission access" +
-                        " in your app's settings to send notifications");
-                    if (listener != null){
-                        listener.onPushPermissionResponse(false);
-                    }
-                }else {
-                    startPrompt(Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
-                            config, true);
-                }
-                return;
-            }
+    private void showSoftOrHardPrompt(final JSONObject jsonObject) {
+        if (jsonObject.optBoolean("isFromPromptPermission", false)) {
             startPrompt(Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
-                    config,showFallbackSettings);
-        }else{
-            //Notification permission is granted
-            if (listener != null){
-                listener.onPushPermissionResponse(true);
-            }
+                    config, true);
+        } else {
+            prepareNotificationForDisplay(jsonObject);
         }
+    }
+
+    @RequiresApi(api = 33)
+    public void promptPermission(boolean showFallbackSettings) {
+        JSONObject object = new JSONObject();
+        try {
+            object.put(FALLBACK_TO_NOTIFICATION_SETTINGS, showFallbackSettings);
+            object.put("isFromPromptPermission", true);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        promptPushPrimer(object);
     }
 
     public static void startPrompt(Activity activity, CleverTapInstanceConfig config,
