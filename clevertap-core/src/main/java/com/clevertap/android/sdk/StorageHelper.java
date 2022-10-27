@@ -174,6 +174,12 @@ public final class StorageHelper {
         persist(editor);
     }
 
+    public static void putIntImmediate(Context context, String key, int value) {
+        SharedPreferences prefs = getPreferences(context);
+        SharedPreferences.Editor editor = prefs.edit().putInt(key, value);
+        persistImmediately(editor);
+    }
+
     static void putLong(Context context, String key, long value) {
         SharedPreferences prefs = getPreferences(context);
         SharedPreferences.Editor editor = prefs.edit().putLong(key, value);

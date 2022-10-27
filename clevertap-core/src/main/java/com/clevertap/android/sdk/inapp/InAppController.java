@@ -23,6 +23,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
+import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.InAppNotificationListener;
 import com.clevertap.android.sdk.Logger;
@@ -111,6 +112,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     private final CoreMetaData coreMetaData;
 
+    private final DeviceInfo deviceInfo;
+
     private InAppState inAppState;
 
     private HashSet<String> inappActivityExclude = null;
@@ -131,7 +134,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             ControllerManager controllerManager,
             BaseCallbackManager callbackManager,
             AnalyticsManager analyticsManager,
-            CoreMetaData coreMetaData) {
+            CoreMetaData coreMetaData, final DeviceInfo deviceInfo) {
 
         this.context = context;
         this.config = config;
@@ -142,6 +145,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         this.analyticsManager = analyticsManager;
         this.coreMetaData = coreMetaData;
         this.inAppState = InAppState.RESUMED;
+        this.deviceInfo = deviceInfo;
     }
 
     public void checkExistingInAppNotifications(Activity activity) {
@@ -606,10 +610,17 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     private void incrementLocalInAppCountInPersistentStore(Context context, CTInAppNotification inAppNotification) {
-        if (inAppNotification.isLocalInApp()){
-            int localInAppCount = StorageHelper.getInt(context,LOCAL_INAPP_COUNT,0);
-            ++localInAppCount;
-            StorageHelper.putInt(context,LOCAL_INAPP_COUNT,localInAppCount);
+        if (inAppNotification.isLocalInApp()) {
+            deviceInfo.incrementLocalInAppCount();//update cache
+            Task<Void> task = CTExecutorFactory.executors(config).ioTask();
+            task.execute("InAppController#incrementLocalInAppCountInPersistentStore", new Callable<Void>() {
+                @Override
+                public Void call() {
+                    StorageHelper.putIntImmediate(context, LOCAL_INAPP_COUNT,
+                            deviceInfo.getLocalInAppCount());// update disk with cache
+                    return null;
+                }
+            });
         }
     }
 

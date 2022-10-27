@@ -14,7 +14,6 @@ import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import com.clevertap.android.sdk.validation.Validator;
-
 import java.util.concurrent.Callable;
 
 class CleverTapFactory {
@@ -99,7 +98,7 @@ class CleverTapFactory {
         coreState.setAnalyticsManager(analyticsManager);
 
         InAppController inAppController = new InAppController(context, config, mainLooperHandler,
-                controllerManager, callbackManager, analyticsManager, coreMetaData);
+                controllerManager, callbackManager, analyticsManager, coreMetaData, deviceInfo);
         coreState.setInAppController(inAppController);
         coreState.getControllerManager().setInAppController(inAppController);
 
