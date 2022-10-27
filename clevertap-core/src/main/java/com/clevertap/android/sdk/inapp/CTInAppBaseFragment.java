@@ -147,7 +147,8 @@ public abstract class CTInAppBaseFragment extends Fragment {
             didClick(data, button.getKeyValues());
 
             if (index == 0 && inAppNotification.isLocalInApp()) {
-                didClickForHardPermissionListener.didClickForHardPermission();
+                didClickForHardPermissionListener.didClickForHardPermissionWithFallbackSettings(
+                        inAppNotification.fallBackToNotificationSettings());
                 return;
             }else if (index == 1 && inAppNotification.isLocalInApp()){
                 didDismiss(data);

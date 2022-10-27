@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.inapp;
 
-import static com.clevertap.android.sdk.InAppNotificationActivity.ANDROID_PERMISSION_STRING;
+import static com.clevertap.android.sdk.PushPermissionManager.ANDROID_PERMISSION_STRING;
 import static com.clevertap.android.sdk.inapp.CTLocalInApp.FALLBACK_TO_NOTIFICATION_SETTINGS;
 
 import android.Manifest;
