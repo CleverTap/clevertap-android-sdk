@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk.inbox;
 
 import static com.clevertap.android.sdk.CTXtensions.isPackageAndOsTargetsAbove;
-import static com.clevertap.android.sdk.inapp.InAppController.IS_FIRST_TIME_PERMISSION_REQUEST;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -25,9 +25,9 @@ import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager.widget.ViewPager;
-
 import com.clevertap.android.sdk.CTInboxListener;
 import com.clevertap.android.sdk.CTInboxStyleConfig;
+import com.clevertap.android.sdk.CTPreferenceCache;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.CoreMetaData;
@@ -35,7 +35,6 @@ import com.clevertap.android.sdk.DidClickForHardPermissionListener;
 import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.R;
-import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.inapp.AlertDialogPromptForSettings;
 import com.google.android.material.tabs.TabLayout;
@@ -44,7 +43,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
-
 import kotlin.Unit;
 
 /**
@@ -57,7 +55,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     public interface InboxActivityListener {
 
         void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data,
-                HashMap<String, String> keyValue,boolean isBodyClick);
+                HashMap<String, String> keyValue, boolean isBodyClick);
 
         void messageDidShow(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data);
     }
@@ -75,11 +73,15 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     private CleverTapInstanceConfig config;
 
     private WeakReference<InboxActivityListener> listenerWeakReference;
+
     private CleverTapAPI cleverTapAPI;
+
     private CTInboxListener inboxContentUpdatedListener = null;
 
     private WeakReference<InAppNotificationActivity.PushPermissionResultCallback> permissionCallbackWeakReference;
+
     private static final int PERMISSION_REQUEST_CODE = 2;
+
     public static final String ANDROID_PERMISSION_STRING = "android.permission.POST_NOTIFICATIONS";
 
     public void onCreate(Bundle savedInstanceState) {
@@ -235,7 +237,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     }
 
     @SuppressLint("NewApi")
-    public void showHardPermissionPrompt(boolean fbSettings){
+    public void showHardPermissionPrompt(boolean fbSettings) {
         if (isPackageAndOsTargetsAbove(this, 32)) {
             requestPermission(fbSettings);
         }
@@ -246,9 +248,8 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         int permissionStatus = ContextCompat.checkSelfPermission(CTInboxActivity.this,
                 Manifest.permission.POST_NOTIFICATIONS);
 
-        if (permissionStatus == PackageManager.PERMISSION_DENIED){
-            boolean isFirstTimeRequest = StorageHelper.getBoolean(CTInboxActivity.this,
-                    IS_FIRST_TIME_PERMISSION_REQUEST,true);
+        if (permissionStatus == PackageManager.PERMISSION_DENIED) {
+            boolean isFirstTimeRequest = CTPreferenceCache.getInstance(this, config).isFirstTimeRequest();
             boolean shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(
                     Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
                     ANDROID_PERMISSION_STRING);
@@ -263,7 +264,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
             ActivityCompat.requestPermissions(CTInboxActivity.this,
                     new String[]{ANDROID_PERMISSION_STRING}, PERMISSION_REQUEST_CODE);
-        }else{
+        } else {
             permissionCallbackWeakReference.get().onPushPermissionAccept();
         }
     }
@@ -278,16 +279,18 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        StorageHelper.putBoolean(CTInboxActivity.this,IS_FIRST_TIME_PERMISSION_REQUEST,
-                false);
+        CTPreferenceCache.getInstance(this, config).setFirstTimeRequest(false);
+        CTPreferenceCache.updateCacheToDisk(this, config);
+
         if (requestCode == PERMISSION_REQUEST_CODE) {
             boolean granted = grantResults.length > 0 && grantResults[0] ==
                     PackageManager.PERMISSION_GRANTED;
             if (granted) {
                 permissionCallbackWeakReference.get().onPushPermissionAccept();
-            }else {
+            } else {
                 permissionCallbackWeakReference.get().onPushPermissionDeny();
             }
         }
@@ -316,7 +319,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     public void inboxDidInitialize() {
 
         Logger.d("CTInboxActivity: called inboxDidInitialize");
-        if(inboxContentUpdatedListener !=null) {
+        if (inboxContentUpdatedListener != null) {
             inboxContentUpdatedListener.inboxDidInitialize();
         }
 
@@ -328,7 +331,8 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         Logger.v("CTInboxActivity|inboxMessagesDidUpdate called");
         try {
             boolean isCUListenerAvailable = inboxContentUpdatedListener != null;
-            Logger.v("CTInboxActivity|inboxMessagesDidUpdate: inboxContentUpdatedListener available:" + isCUListenerAvailable);
+            Logger.v("CTInboxActivity|inboxMessagesDidUpdate: inboxContentUpdatedListener available:"
+                    + isCUListenerAvailable);
 
             boolean isUsingMultipleTabs = styleConfig.isUsingTabs();
             Logger.v("CTInboxActivity|inboxMessagesDidUpdate: isUsingMultipleTabs : " + isUsingMultipleTabs);
@@ -340,13 +344,13 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
                 int position = viewPager.getCurrentItem();
                 CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter.getItem(position);
                 fragment.updateAdapterContent();
-            }
-            else {
+            } else {
                 List<Fragment> fragments = getSupportFragmentManager().getFragments();
                 String singleTabTag = getFragmentTag();
                 for (Fragment f : fragments) {
                     String currentFTag = f.getTag();
-                    if (f instanceof CTInboxListViewFragment && currentFTag != null && currentFTag.equalsIgnoreCase(singleTabTag)) {
+                    if (f instanceof CTInboxListViewFragment && currentFTag != null && currentFTag.equalsIgnoreCase(
+                            singleTabTag)) {
                         ((CTInboxListViewFragment) f).updateAdapterContent();
                     }
                 }
@@ -363,24 +367,26 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     @Override
     public void messageDidClick(Context baseContext, CTInboxMessage inboxMessage, Bundle data,
             HashMap<String, String> keyValue, boolean isBodyClick) {
-        didClick(data, inboxMessage, keyValue,isBodyClick);
+        didClick(data, inboxMessage, keyValue, isBodyClick);
     }
 
     @Override
     public void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data) {
-        Logger.v("CTInboxActivity:messageDidShow() called with: data = [" + data + "], inboxMessage = [" + inboxMessage .getMessageId()+ "]");
+        Logger.v("CTInboxActivity:messageDidShow() called with: data = [" + data + "], inboxMessage = ["
+                + inboxMessage.getMessageId() + "]");
         didShow(data, inboxMessage);
     }
 
     void didClick(Bundle data, CTInboxMessage inboxMessage, HashMap<String, String> keyValue, boolean isBodyClick) {
         InboxActivityListener listener = getListener();
         if (listener != null) {
-            listener.messageDidClick(this, inboxMessage, data, keyValue,isBodyClick);
+            listener.messageDidClick(this, inboxMessage, data, keyValue, isBodyClick);
         }
     }
 
     void didShow(Bundle data, CTInboxMessage inboxMessage) {
-        Logger.v( "CTInboxActivity:didShow() called with: data = [" + data + "], inboxMessage = [" + inboxMessage.getMessageId() + "]");
+        Logger.v("CTInboxActivity:didShow() called with: data = [" + data + "], inboxMessage = ["
+                + inboxMessage.getMessageId() + "]");
         InboxActivityListener listener = getListener();
         if (listener != null) {
             listener.messageDidShow(this, inboxMessage, data);

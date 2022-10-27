@@ -19,6 +19,7 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
 import com.clevertap.android.sdk.AnalyticsManager;
 import com.clevertap.android.sdk.BaseCallbackManager;
+import com.clevertap.android.sdk.CTPreferenceCache;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
@@ -199,8 +200,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
         if (permissionStatus == PackageManager.PERMISSION_DENIED){
             //Checks whether permission request is asked for the first time.
-            boolean isFirstTimeRequest = StorageHelper.getBoolean(context,IS_FIRST_TIME_PERMISSION_REQUEST,
-                    true);
+            boolean isFirstTimeRequest = CTPreferenceCache.getInstance(context, config).isFirstTimeRequest();
 
             boolean shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(
                     Objects.requireNonNull(CoreMetaData.getCurrentActivity()),

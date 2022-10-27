@@ -2,7 +2,6 @@ package com.clevertap.android.sdk;
 
 import static com.clevertap.android.sdk.CTXtensions.isPackageAndOsTargetsAbove;
 import static com.clevertap.android.sdk.inapp.InAppController.DISPLAY_HARD_PERMISSION_BUNDLE_KEY;
-import static com.clevertap.android.sdk.inapp.InAppController.IS_FIRST_TIME_PERMISSION_REQUEST;
 import static com.clevertap.android.sdk.inapp.InAppController.SHOW_FALLBACK_SETTINGS_BUNDLE_KEY;
 
 import android.Manifest;
@@ -38,7 +37,6 @@ import com.clevertap.android.sdk.inapp.InAppListener;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Objects;
-
 import kotlin.Unit;
 
 public final class InAppNotificationActivity extends FragmentActivity implements InAppListener,
@@ -223,8 +221,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                 Manifest.permission.POST_NOTIFICATIONS);
 
         if (permissionStatus == PackageManager.PERMISSION_DENIED){
-            boolean isFirstTimeRequest = StorageHelper.getBoolean(InAppNotificationActivity.this,
-                    IS_FIRST_TIME_PERMISSION_REQUEST,true);
+                boolean isFirstTimeRequest = CTPreferenceCache.getInstance(this, config).isFirstTimeRequest();
             boolean shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(
                     Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
                     ANDROID_PERMISSION_STRING);
@@ -265,14 +262,15 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        StorageHelper.putBoolean(InAppNotificationActivity.this,IS_FIRST_TIME_PERMISSION_REQUEST,
-                false);
+        CTPreferenceCache.getInstance(this, config).setFirstTimeRequest(false);
+        CTPreferenceCache.updateCacheToDisk(this, config);
+
         if (requestCode == PERMISSION_REQUEST_CODE) {
             boolean granted = grantResults.length > 0 && grantResults[0] ==
                     PackageManager.PERMISSION_GRANTED;
             if (granted) {
                 pushPermissionResultCallbackWeakReference.get().onPushPermissionAccept();
-            }else {
+            } else {
                 pushPermissionResultCallbackWeakReference.get().onPushPermissionDeny();
             }
             didDismiss(null);
