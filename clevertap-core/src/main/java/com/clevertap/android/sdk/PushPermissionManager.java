@@ -2,7 +2,7 @@ package com.clevertap.android.sdk;
 
 import static com.clevertap.android.sdk.CTXtensions.isPackageAndOsTargetsAbove;
 import static com.clevertap.android.sdk.Constants.NOTIFICATION_PERMISSION_REQUEST_CODE;
-import static com.clevertap.android.sdk.inapp.InAppController.IS_FIRST_TIME_PERMISSION_REQUEST;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
@@ -16,13 +16,18 @@ import kotlin.Unit;
 
 public class PushPermissionManager {
 
+    private final CleverTapInstanceConfig config;
+
     private boolean isFallbackSettingsEnabled;
+
     public static final String ANDROID_PERMISSION_STRING = "android.permission.POST_NOTIFICATIONS";
+
     private final Activity activity;
 
 
-    public PushPermissionManager(Activity activity) {
+    public PushPermissionManager(Activity activity, CleverTapInstanceConfig config) {
         this.activity = activity;
+        this.config = config;
     }
 
     @SuppressLint("NewApi")
@@ -41,8 +46,7 @@ public class PushPermissionManager {
                 Manifest.permission.POST_NOTIFICATIONS);
 
         if (permissionStatus == PackageManager.PERMISSION_DENIED){
-            boolean isFirstTimeRequest = StorageHelper.getBoolean(activity,
-                    IS_FIRST_TIME_PERMISSION_REQUEST,true);
+            boolean isFirstTimeRequest = CTPreferenceCache.getInstance(activity, config).isFirstTimeRequest();
             boolean shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(
                     Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
                     ANDROID_PERMISSION_STRING);

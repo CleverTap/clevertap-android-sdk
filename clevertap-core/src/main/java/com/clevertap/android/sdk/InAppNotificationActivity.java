@@ -77,7 +77,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             setPermissionCallback(CleverTapAPI.instanceWithConfig(this, config).getCoreState()
                     .getInAppController());
 
-            pushPermissionManager = new PushPermissionManager(this);
+            pushPermissionManager = new PushPermissionManager(this, config);
 
             if (showHardNotificationPermission) {
                 boolean shouldShowFallbackSettings = notif.getBoolean(SHOW_FALLBACK_SETTINGS_BUNDLE_KEY,

@@ -1,7 +1,7 @@
 package com.clevertap.android.sdk.inbox;
 
 import static com.clevertap.android.sdk.Constants.NOTIFICATION_PERMISSION_REQUEST_CODE;
-import static com.clevertap.android.sdk.inapp.InAppController.IS_FIRST_TIME_PERMISSION_REQUEST;
+
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -31,7 +31,6 @@ import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.PushPermissionManager;
 import com.clevertap.android.sdk.R;
-import com.clevertap.android.sdk.StorageHelper;
 import com.google.android.material.tabs.TabLayout;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -95,7 +94,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
                 setPermissionCallback(CleverTapAPI.instanceWithConfig(this, config).getCoreState()
                         .getInAppController());
-                pushPermissionManager = new PushPermissionManager(this);
+                pushPermissionManager = new PushPermissionManager(this, config);
             }
             orientation = getResources().getConfiguration().orientation;
         } catch (Throwable t) {
