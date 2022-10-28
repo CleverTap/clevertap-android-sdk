@@ -268,6 +268,6 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
     }
 
     override fun onInAppButtonClick(payload: HashMap<String, String>?) {
-        TODO("Not yet implemented")
+        Log.i(TAG, "onInAppButtonClick() called")
     }
 }
