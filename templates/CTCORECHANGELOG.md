@@ -5,7 +5,7 @@
   * `isPushPermissionGranted()`
   * `promptPushPrimer(JSONObject)`
   * `promptForPushPermission(boolean showFallbackSettings)`
-*New callback `PushPermissionResponseListener` available which returns after user Allows/Denies notification permission.
+* New callback `PushPermissionResponseListener` available which returns after user Allows/Denies notification permission.
 * From 4.7.0+ existing callback `InAppNotificationListener` will now have `onShow(CTInAppNotification)` method which needs to implemented.
 
 ### Version 4.6.5 (October 21, 2022)
