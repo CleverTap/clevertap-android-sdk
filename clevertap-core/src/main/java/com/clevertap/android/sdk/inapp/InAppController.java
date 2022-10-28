@@ -269,8 +269,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     @RequiresApi(api = 33)
     public boolean isPushPermissionGranted(){
-        int permissionStatus = ContextCompat.checkSelfPermission(
-                Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
+        int permissionStatus = ContextCompat.checkSelfPermission(context,
                 Manifest.permission.POST_NOTIFICATIONS);
         return permissionStatus == PackageManager.PERMISSION_GRANTED;
     }

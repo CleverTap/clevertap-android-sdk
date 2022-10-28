@@ -24,10 +24,16 @@ public class PushPermissionManager {
 
     private final Activity activity;
 
+    private boolean isFromNotificationSettingsActivity;
 
     public PushPermissionManager(Activity activity, CleverTapInstanceConfig config) {
         this.activity = activity;
         this.config = config;
+        this.isFromNotificationSettingsActivity = false;
+    }
+
+    public boolean isFromNotificationSettingsActivity(){
+        return isFromNotificationSettingsActivity;
     }
 
     @SuppressLint("NewApi")
@@ -75,9 +81,7 @@ public class PushPermissionManager {
     public void showFallbackAlertDialog() {
         AlertDialogPromptForSettings.show(activity, () -> {
             Utils.navigateToAndroidSettingsForNotifications(activity);
-            if (activity instanceof InAppNotificationActivity) {
-                ((InAppNotificationActivity) activity).didDismiss(null);
-            }
+            isFromNotificationSettingsActivity = true;
             return Unit.INSTANCE;
         }, () -> {
             if (activity instanceof InAppNotificationActivity) {

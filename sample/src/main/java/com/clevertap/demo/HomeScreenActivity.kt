@@ -1,6 +1,7 @@
 package com.clevertap.demo
 
 
+import android.app.NotificationManager
 import android.content.Context
 
 import android.content.Intent
@@ -262,6 +263,17 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
         Log.i(TAG, "InApp---> response() called  $accepted")
         if(accepted){
             Toast.makeText(this, "Permission granted!", Toast.LENGTH_SHORT).show()
+
+            //For Android 13+ we need to create notification channel after notification permission is accepted
+            CleverTapAPI.createNotificationChannel(
+                this, "BRTesting", "Core",
+                "Core notifications", NotificationManager.IMPORTANCE_MAX, true
+            )
+
+            CleverTapAPI.createNotificationChannel(
+                this, "PTTesting", "Push templates",
+                "All push templates", NotificationManager.IMPORTANCE_MAX, true
+            )
         }else{
             Toast.makeText(this, "Permission denied!", Toast.LENGTH_SHORT).show()
         }

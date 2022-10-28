@@ -155,7 +155,7 @@ public abstract class CTInAppBaseFragment extends Fragment {
                 return;
             }
 
-            if (button.getType() != null && button.getType().equalsIgnoreCase(
+            if (button.getType() != null && button.getType().contains(
                     Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)){
                 didClickForHardPermissionListener.
                         didClickForHardPermissionWithFallbackSettings(button.isFallbackToSettings());

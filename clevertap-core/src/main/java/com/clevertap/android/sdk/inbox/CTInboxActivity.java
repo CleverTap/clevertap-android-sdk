@@ -2,6 +2,7 @@ package com.clevertap.android.sdk.inbox;
 
 import static com.clevertap.android.sdk.Constants.NOTIFICATION_PERMISSION_REQUEST_CODE;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -17,6 +18,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.content.ContextCompat;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
@@ -71,7 +73,8 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     private CTInboxListener inboxContentUpdatedListener = null;
 
     private PushPermissionManager pushPermissionManager;
-    private WeakReference<InAppNotificationActivity.PushPermissionResultCallback> permissionCallbackWeakReference;
+    private WeakReference<InAppNotificationActivity.PushPermissionResultCallback>
+            pushPermissionResultCallbackWeakReference;
 
 
     public void onCreate(Bundle savedInstanceState) {
@@ -218,6 +221,22 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (pushPermissionManager.isFromNotificationSettingsActivity()){
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                int permissionStatus = ContextCompat.checkSelfPermission(this,
+                        Manifest.permission.POST_NOTIFICATIONS);
+                if (permissionStatus == PackageManager.PERMISSION_GRANTED){
+                    pushPermissionResultCallbackWeakReference.get().onPushPermissionAccept();
+                } else {
+                    pushPermissionResultCallbackWeakReference.get().onPushPermissionDeny();
+                }
+            }
+        }
+    }
+
+    @Override
     public void didClickForHardPermissionWithFallbackSettings(boolean fallbackToSettings) {
         showHardPermissionPrompt(fallbackToSettings);
     }
@@ -225,7 +244,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     @SuppressLint("NewApi")
     public void showHardPermissionPrompt(boolean isFallbackSettingsEnabled){
         pushPermissionManager.showHardPermissionPrompt(isFallbackSettingsEnabled,
-                permissionCallbackWeakReference.get());
+                pushPermissionResultCallbackWeakReference.get());
     }
 
     @Override
@@ -238,15 +257,15 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             boolean granted = grantResults.length > 0 && grantResults[0] ==
                     PackageManager.PERMISSION_GRANTED;
             if (granted) {
-                permissionCallbackWeakReference.get().onPushPermissionAccept();
+                pushPermissionResultCallbackWeakReference.get().onPushPermissionAccept();
             } else {
-                permissionCallbackWeakReference.get().onPushPermissionDeny();
+                pushPermissionResultCallbackWeakReference.get().onPushPermissionDeny();
             }
         }
     }
 
     public void setPermissionCallback(InAppNotificationActivity.PushPermissionResultCallback callback) {
-        permissionCallbackWeakReference = new WeakReference<>(callback);
+        pushPermissionResultCallbackWeakReference = new WeakReference<>(callback);
     }
 
     @Override

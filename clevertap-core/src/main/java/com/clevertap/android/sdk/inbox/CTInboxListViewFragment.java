@@ -294,7 +294,7 @@ public class CTInboxListViewFragment extends Fragment {
 
             String isRequestForPermissionStr = inboxMessages.get(position).getInboxMessageContents().
                     get(0).getLinktype(jsonObject);
-            if (isRequestForPermissionStr.equalsIgnoreCase(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)){
+            if (isRequestForPermissionStr.contains(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)){
                 boolean isFallbackSettings = inboxMessages.get(position).
                         getInboxMessageContents().get(0).isFallbackSettingsEnabled(jsonObject);
                 didClickForHardPermissionListener.didClickForHardPermissionWithFallbackSettings(isFallbackSettings);

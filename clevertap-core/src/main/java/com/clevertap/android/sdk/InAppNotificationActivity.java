@@ -4,6 +4,7 @@ import static com.clevertap.android.sdk.Constants.NOTIFICATION_PERMISSION_REQUES
 import static com.clevertap.android.sdk.inapp.InAppController.DISPLAY_HARD_PERMISSION_BUNDLE_KEY;
 import static com.clevertap.android.sdk.inapp.InAppController.SHOW_FALLBACK_SETTINGS_BUNDLE_KEY;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
@@ -15,6 +16,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.WindowManager;
 import androidx.annotation.NonNull;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
 import com.clevertap.android.sdk.inapp.CTInAppBaseFullFragment;
 import com.clevertap.android.sdk.inapp.CTInAppHtmlCoverFragment;
@@ -133,6 +135,23 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             }
         } else if (isAlertVisible) {
             createContentFragment();
+        }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (pushPermissionManager.isFromNotificationSettingsActivity()){
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                int permissionStatus = ContextCompat.checkSelfPermission(this,
+                        Manifest.permission.POST_NOTIFICATIONS);
+                if (permissionStatus == PackageManager.PERMISSION_GRANTED){
+                    pushPermissionResultCallbackWeakReference.get().onPushPermissionAccept();
+                } else {
+                    pushPermissionResultCallbackWeakReference.get().onPushPermissionDeny();
+                }
+                didDismiss(null);
+            }
         }
     }
 
