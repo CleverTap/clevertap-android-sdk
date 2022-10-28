@@ -7,6 +7,10 @@ import android.os.Build.VERSION_CODES.LOLLIPOP
 import com.clevertap.android.sdk.CTStringResources
 import com.clevertap.android.sdk.R
 
+/**
+ * This class shows an Alert dialog to display a rationale message if notification permission is
+ * already denied.
+ */
 class AlertDialogPromptForSettings private constructor() {
 
     companion object {

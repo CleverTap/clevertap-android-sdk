@@ -14,6 +14,12 @@ import com.clevertap.android.sdk.inapp.AlertDialogPromptForSettings;
 import java.util.Objects;
 import kotlin.Unit;
 
+/**
+ *  This class abstracts notification permission request flow for Android 13+ devices. To call Android OS notification
+ *  permission flow from activity, one should call `showHardPermissionPrompt()` which will request for
+ *  notification permission and gives back result of the permission to the caller activity. *
+ *
+ * */
 public class PushPermissionManager {
 
     private final CleverTapInstanceConfig config;

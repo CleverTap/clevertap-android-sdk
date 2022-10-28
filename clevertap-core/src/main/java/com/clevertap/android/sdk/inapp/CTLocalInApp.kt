@@ -1,11 +1,13 @@
 package com.clevertap.android.sdk.inapp
 
-import android.content.Context
 import com.clevertap.android.sdk.Constants
-import com.clevertap.android.sdk.DeviceInfo
 import org.json.JSONArray
 import org.json.JSONObject
 
+/**
+ * Builder class which creates an JSON object to display local in-app. Only supports half-interstitial
+ * and alert local in-apps.
+ */
 class CTLocalInApp private constructor() {
 
     enum class InAppType(val type: String) {
