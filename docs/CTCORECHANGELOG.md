@@ -1,5 +1,13 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 4.7.0 (October 28, 2022)
+* Adds below new public APIs for supporting Android 13 notification runtime permission.
+  * `isPushPermissionGranted()`
+  * `promptPushPrimer(JSONObject)`
+  * `promptForPushPermission(boolean showFallbackSettings)`
+*New callback `PushPermissionResponseListener` available which returns after user Allows/Denies notification permission.
+* From 4.7.0+ existing callback `InAppNotificationListener` will now have `onShow(CTInAppNotification)` method which needs to implemented.
+
 ### Version 4.6.5 (October 21, 2022)
 * Allows more special characters when setting custom CleverTap ID
 

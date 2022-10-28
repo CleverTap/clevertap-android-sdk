@@ -1,6 +1,6 @@
 ## CleverTap Push Templates SDK CHANGE LOG
 
-### Version 1.0.6 (October 21, 2022)
+### Version 1.0.6 (October 28, 2022)
 * Targets Android 13
 * Supports CleverTap Android SDK v4.7.0
 
