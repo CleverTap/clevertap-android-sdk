@@ -1861,11 +1861,13 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         coreState.getAnalyticsManager().pushInboxMessageStateEvent(true, inboxMessage, data);
 
         if (keyValue != null && !keyValue.isEmpty()) {
+            Logger.v("clicked button of an inbox notification.");
             if (inboxMessageButtonListener != null && inboxMessageButtonListener.get() != null) {
                 inboxMessageButtonListener.get().onInboxButtonClick(keyValue);
             }
         }
         else{
+            Logger.v("clicked inbox notification.");
             if (isBodyClick && inboxMessageListener != null && inboxMessageListener.get() != null) {
                 inboxMessageListener.get().onInboxItemClicked(inboxMessage);
             }
