@@ -179,7 +179,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
                 public void onTabSelected(TabLayout.Tab tab) {
                     CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter
                             .getItem(tab.getPosition());
-                    fragment.updateAdapterContent();
                     if (fragment.getMediaRecyclerView() != null) {
                         fragment.getMediaRecyclerView().onRestartPlayer();
                     }
@@ -237,22 +236,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             if (isCUListenerAvailable) {
                 inboxContentUpdatedListener.inboxMessagesDidUpdate();
             }
-            if (isUsingMultipleTabs) {
-                int position = viewPager.getCurrentItem();
-                CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter.getItem(position);
-                fragment.updateAdapterContent();
-            }
-            else {
-                List<Fragment> fragments = getSupportFragmentManager().getFragments();
-                String singleTabTag = getFragmentTag();
-                for (Fragment f : fragments) {
-                    String currentFTag = f.getTag();
-                    if (f instanceof CTInboxListViewFragment && currentFTag != null && currentFTag.equalsIgnoreCase(singleTabTag)) {
-                        ((CTInboxListViewFragment) f).updateAdapterContent();
-                    }
-                }
 
-            }
 
         } catch (Throwable t) {
             Logger.i("Something Went Wrong", t);

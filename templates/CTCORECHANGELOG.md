@@ -1,5 +1,8 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 4.6.6 (October 31, 2022)
+* Fix app inbox bug where inbox message videos would not play when new inbox notifications are available
+
 ### Version 4.6.5 (October 21, 2022)
 * Allows more special characters when setting custom CleverTap ID
 
