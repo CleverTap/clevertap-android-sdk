@@ -50,7 +50,7 @@
                     android:textColor="@android:color/darker_gray" />
 
                 <ImageView
-                    android:id="@+id/carousel_read_circle"
+                    android:id="@+id/read_circle"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_gravity="center"

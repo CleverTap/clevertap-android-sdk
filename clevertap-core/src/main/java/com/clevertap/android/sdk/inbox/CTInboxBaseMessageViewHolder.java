@@ -1,10 +1,12 @@
 package com.clevertap.android.sdk.inbox;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
+import android.os.Handler;
 import android.util.DisplayMetrics;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -15,13 +17,11 @@ import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.recyclerview.widget.RecyclerView;
-
 import com.clevertap.android.sdk.R;
 import com.google.android.exoplayer2.ExoPlayer;
 import com.google.android.exoplayer2.MediaItem;
@@ -63,8 +63,11 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
 
     private boolean requiresMediaPlayer;
 
+    protected final ImageView readDot;
+
     CTInboxBaseMessageViewHolder(@NonNull View itemView) {
         super(itemView);
+        readDot = itemView.findViewById(R.id.read_circle);
     }
 
     public boolean addMediaPlayer(StyledPlayerView videoSurfaceView) {
@@ -305,5 +308,33 @@ public class CTInboxBaseMessageViewHolder extends RecyclerView.ViewHolder {
 
     private FrameLayout getLayoutForMediaPlayer() {
         return frameLayout;
+    }
+
+    protected void markItemAsRead(final CTInboxMessage inboxMessage,
+            final int position) {
+        Runnable runnable = new Runnable() {
+            @Override
+            public void run() {
+                final CTInboxListViewFragment parent = getParent();
+                if (parent != null) {
+                    Activity activity = parent.getActivity();
+                    if (activity == null) {
+                        return;
+                    }
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (readDot.getVisibility() == View.VISIBLE) {
+                                parent.didShow(null, position);
+                            }
+                            readDot.setVisibility(View.GONE);
+                            inboxMessage.setRead(true);
+                        }
+                    });
+                }
+            }
+        };
+        Handler handler = new Handler();
+        handler.postDelayed(runnable, 2000);
     }
 }
