@@ -74,8 +74,6 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
 
     private final ImageView readDot;
 
-    private ImageView carouselReadDot;
-
     private final LinearLayout sliderDots;
 
     private final TextView title;
@@ -154,23 +152,13 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
                 activity.runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        if (inboxMessage.getType() == CTInboxMessageType.CarouselImageMessage) {
-                            if (carouselReadDot.getVisibility() == View.VISIBLE) {
-                                if (parentWeak != null) {
-                                    parentWeak.didShow(null, position);
-                                }
+                        if (readDot.getVisibility() == View.VISIBLE) {
+                            if (parentWeak != null) {
+                                parentWeak.didShow(null, position);
                             }
-                            carouselReadDot.setVisibility(View.GONE);
-                            inboxMessage.setRead(true);
-                        } else {
-                            if (readDot.getVisibility() == View.VISIBLE) {
-                                if (parentWeak != null) {
-                                    parentWeak.didShow(null, position);
-                                }
-                            }
-                            readDot.setVisibility(View.GONE);
-                            inboxMessage.setRead(true);
                         }
+                        readDot.setVisibility(View.GONE);
+                        inboxMessage.setRead(true);
                     }
                 });
             }
