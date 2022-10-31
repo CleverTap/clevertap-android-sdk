@@ -28,17 +28,11 @@ class CTInboxMessageAdapter extends RecyclerView.Adapter {
     private ArrayList<CTInboxMessage> inboxMessages;
 
     CTInboxMessageAdapter(ArrayList<CTInboxMessage> inboxMessages, CTInboxListViewFragment fragment) {
-        Logger.v( "CTInboxMessageAdapter:  called at "+new Date());
         Logger.v("CTInboxMessageAdapter: messages="+inboxMessages);
         this.inboxMessages = inboxMessages;
         this.fragment = fragment;
     }
 
-    protected synchronized void updateInboxMessages(ArrayList<CTInboxMessage> newList) {
-        this.inboxMessages.clear();
-        this.inboxMessages.addAll(newList);
-        this.notifyDataSetChanged();
-    }
 
     @Override
     public int getItemCount() {

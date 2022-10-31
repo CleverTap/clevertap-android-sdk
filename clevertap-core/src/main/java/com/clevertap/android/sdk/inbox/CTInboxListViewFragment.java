@@ -95,12 +95,6 @@ public class CTInboxListViewFragment extends Fragment {
         }
     }
 
-    void updateAdapterContent(){
-        updateInboxMessages();
-        if(inboxMessageAdapter==null || inboxMessages==null || config ==null ) return;
-        inboxMessageAdapter.updateInboxMessages(inboxMessages);
-    }
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,

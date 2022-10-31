@@ -1,10 +1,8 @@
 package com.clevertap.android.sdk.inbox;
 
-import android.app.Activity;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
-import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -35,8 +33,6 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
 
     private final TextView message;
 
-    private final ImageView readDot;
-
     private final TextView timestamp;
 
     private final TextView title;
@@ -47,7 +43,6 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
         title = itemView.findViewById(R.id.messageTitle);
         message = itemView.findViewById(R.id.messageText);
         timestamp = itemView.findViewById(R.id.timestamp);
-        readDot = itemView.findViewById(R.id.read_circle);
         cta1 = itemView.findViewById(R.id.cta_button_1);
         cta2 = itemView.findViewById(R.id.cta_button_2);
         cta3 = itemView.findViewById(R.id.cta_button_3);
@@ -363,29 +358,8 @@ class CTSimpleMessageViewHolder extends CTInboxBaseMessageViewHolder {
         this.progressBarFrameLayout.setLayoutParams(new RelativeLayout.LayoutParams(width, height));
 
         //New thread to remove the Read dot, mark message as read and raise Notification Viewed
-        Runnable simpleRunnable = new Runnable() {
-            @Override
-            public void run() {
-                final CTInboxListViewFragment parent = getParent();
-                if (parent != null) {
-                    Activity activity = parent.getActivity();
-                    if (activity == null) {
-                        return;
-                    }
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (readDot.getVisibility() == View.VISIBLE) {
-                                parent.didShow(null, position);
-                            }
-                        }
-                    });
-                }
+        markItemAsRead(inboxMessage, position);
 
-            }
-        };
-        Handler simpleHandler = new Handler();
-        simpleHandler.postDelayed(simpleRunnable, 2000);
         if (parentWeak != null) {
             this.clickLayout.setOnClickListener(
                     new CTInboxButtonClickListener(position, inboxMessage, null, null, parentWeak,true));

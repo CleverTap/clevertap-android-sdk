@@ -1,10 +1,8 @@
 package com.clevertap.android.sdk.inbox;
 
-import android.app.Activity;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.graphics.Color;
-import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -37,8 +35,6 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
 
     private final LinearLayout ctaLinearLayout;
 
-    private final ImageView readDot;
-
     private final ImageView iconImage;
 
     private final TextView title;
@@ -54,7 +50,6 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
         message = itemView.findViewById(R.id.messageText);
         mediaImage = itemView.findViewById(R.id.media_image);
         iconImage = itemView.findViewById(R.id.image_icon);
-        readDot = itemView.findViewById(R.id.read_circle);
         timestamp = itemView.findViewById(R.id.timestamp);
         cta1 = itemView.findViewById(R.id.cta_button_1);
         cta2 = itemView.findViewById(R.id.cta_button_2);
@@ -372,28 +367,8 @@ class CTIconMessageViewHolder extends CTInboxBaseMessageViewHolder {
         this.progressBarFrameLayout.setLayoutParams(new RelativeLayout.LayoutParams(width, height));
 
         //New thread to remove the Read dot, mark message as read and raise Notification Viewed
-        Runnable iconRunnable = new Runnable() {
-            @Override
-            public void run() {
-                final CTInboxListViewFragment parent = getParent();
-                if (parent != null) {
-                    Activity activity = parent.getActivity();
-                    if (activity == null) {
-                        return;
-                    }
-                    activity.runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (readDot.getVisibility() == View.VISIBLE) {
-                                parent.didShow(null, position);
-                            }
-                        }
-                    });
-                }
-            }
-        };
-        Handler iconHandler = new Handler();
-        iconHandler.postDelayed(iconRunnable, 2000);
+        markItemAsRead(inboxMessage, position);
+
         try {
             if (!content.getIcon().isEmpty()) {
                 iconImage.setVisibility(View.VISIBLE);

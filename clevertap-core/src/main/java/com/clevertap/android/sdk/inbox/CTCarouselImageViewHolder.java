@@ -1,9 +1,7 @@
 package com.clevertap.android.sdk.inbox;
 
-import android.app.Activity;
 import android.content.Context;
 import android.graphics.Color;
-import android.os.Handler;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -60,8 +58,6 @@ class CTCarouselImageViewHolder extends CTInboxBaseMessageViewHolder {
         }
     }
 
-    private final ImageView carouselReadDot;
-
     private final TextView carouselTimestamp;
 
     private final RelativeLayout clickLayout;
@@ -75,7 +71,6 @@ class CTCarouselImageViewHolder extends CTInboxBaseMessageViewHolder {
         imageViewPager = itemView.findViewById(R.id.image_carousel_viewpager);
         sliderDots = itemView.findViewById(R.id.sliderDots);
         carouselTimestamp = itemView.findViewById(R.id.carousel_timestamp);
-        carouselReadDot = itemView.findViewById(R.id.carousel_read_circle);
         clickLayout = itemView.findViewById(R.id.body_linear_layout);
     }
 
@@ -89,9 +84,9 @@ class CTCarouselImageViewHolder extends CTInboxBaseMessageViewHolder {
         CTInboxMessageContent content = inboxMessage.getInboxMessageContents().get(0);
         this.carouselTimestamp.setVisibility(View.VISIBLE);
         if (inboxMessage.isRead()) {
-            this.carouselReadDot.setVisibility(View.GONE);
+            this.readDot.setVisibility(View.GONE);
         } else {
-            this.carouselReadDot.setVisibility(View.VISIBLE);
+            this.readDot.setVisibility(View.VISIBLE);
         }
         String carouselImageDisplayTimestamp = calculateDisplayTimestamp(inboxMessage.getDate());
         this.carouselTimestamp.setText(carouselImageDisplayTimestamp);
@@ -121,26 +116,6 @@ class CTCarouselImageViewHolder extends CTInboxBaseMessageViewHolder {
         this.clickLayout.setOnClickListener(
                 new CTInboxButtonClickListener(position, inboxMessage, null, parentWeak, this.imageViewPager,true));
 
-        Runnable carouselRunnable = new Runnable() {
-            @Override
-            public void run() {
-                Activity activity = parent.getActivity();
-                if (activity == null) {
-                    return;
-                }
-                activity.runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (carouselReadDot.getVisibility() == View.VISIBLE) {
-                            if (parentWeak != null) {
-                                parentWeak.didShow(null, position);
-                            }
-                        }
-                    }
-                });
-            }
-        };
-        Handler carouselHandler = new Handler();
-        carouselHandler.postDelayed(carouselRunnable, 2000);
+        markItemAsRead(inboxMessage, position);
     }
 }
