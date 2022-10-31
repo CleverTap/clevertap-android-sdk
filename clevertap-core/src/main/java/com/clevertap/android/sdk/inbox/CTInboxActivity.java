@@ -33,7 +33,7 @@ import java.util.List;
  * This activity shows the {@link CTInboxMessage} objects as per {@link CTInboxStyleConfig} style parameters
  */
 @RestrictTo(Scope.LIBRARY)
-public class CTInboxActivity extends FragmentActivity implements CTInboxListViewFragment.InboxListener, CTInboxListener {
+public class CTInboxActivity extends FragmentActivity implements CTInboxListViewFragment.InboxListener {
 
     public interface InboxActivityListener {
 
@@ -57,7 +57,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
     private WeakReference<InboxActivityListener> listenerWeakReference;
     private CleverTapAPI cleverTapAPI;
-    private CTInboxListener inboxContentUpdatedListener = null;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -74,8 +73,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             cleverTapAPI = CleverTapAPI.instanceWithConfig(getApplicationContext(), config);
             if (cleverTapAPI != null) {
                 setListener(cleverTapAPI);
-                inboxContentUpdatedListener = cleverTapAPI.getCTNotificationInboxListener();
-                cleverTapAPI.setCTNotificationInboxListener(this);
             }
             orientation = getResources().getConfiguration().orientation;
         } catch (Throwable t) {
@@ -211,39 +208,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         super.onDestroy();
     }
 
-
-    @Override
-    public void inboxDidInitialize() {
-
-        Logger.d("CTInboxActivity: called inboxDidInitialize");
-        if(inboxContentUpdatedListener !=null) {
-            inboxContentUpdatedListener.inboxDidInitialize();
-        }
-
-
-    }
-
-    @Override
-    public void inboxMessagesDidUpdate() {
-        Logger.v("CTInboxActivity|inboxMessagesDidUpdate called");
-        try {
-            boolean isCUListenerAvailable = inboxContentUpdatedListener != null;
-            Logger.v("CTInboxActivity|inboxMessagesDidUpdate: inboxContentUpdatedListener available:" + isCUListenerAvailable);
-
-            boolean isUsingMultipleTabs = styleConfig.isUsingTabs();
-            Logger.v("CTInboxActivity|inboxMessagesDidUpdate: isUsingMultipleTabs : " + isUsingMultipleTabs);
-
-            if (isCUListenerAvailable) {
-                inboxContentUpdatedListener.inboxMessagesDidUpdate();
-            }
-
-
-        } catch (Throwable t) {
-            Logger.i("Something Went Wrong", t);
-        }
-
-
-    }
 
     @Override
     public void messageDidClick(Context baseContext, CTInboxMessage inboxMessage, Bundle data,
