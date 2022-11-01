@@ -25,6 +25,7 @@ import com.clevertap.android.sdk.CTInboxStyleConfig;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.DidClickForHardPermissionListener;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.R;
 import com.clevertap.android.sdk.Utils;
@@ -69,6 +70,8 @@ public class CTInboxListViewFragment extends Fragment {
 
     private int tabPosition;
 
+    private DidClickForHardPermissionListener didClickForHardPermissionListener;
+
     @Override
     public void onAttach(@NonNull Context context) {
         super.onAttach(context);
@@ -81,6 +84,7 @@ public class CTInboxListViewFragment extends Fragment {
             if (context instanceof CTInboxActivity) {
                 setListener((CTInboxListViewFragment.InboxListener) getActivity());
             }
+            didClickForHardPermissionListener = (DidClickForHardPermissionListener) getActivity();
         }
     }
     private void updateInboxMessages(){
@@ -281,6 +285,16 @@ public class CTInboxListViewFragment extends Fragment {
                 data.putString("wzrk_c2a", buttonText);
             }
             didClick(data, position, keyValuePayload,isInboxMessageBodyClick);
+
+            String isRequestForPermissionStr = inboxMessages.get(position).getInboxMessageContents().
+                    get(0).getLinktype(jsonObject);
+            if (isRequestForPermissionStr.contains(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)){
+                boolean isFallbackSettings = inboxMessages.get(position).
+                        getInboxMessageContents().get(0).isFallbackSettingsEnabled(jsonObject);
+                didClickForHardPermissionListener.didClickForHardPermissionWithFallbackSettings(isFallbackSettings);
+                return;
+            }
+
             boolean isKVButton = keyValuePayload != null && !keyValuePayload.isEmpty();
             if (jsonObject != null) {
                 if (isKVButton || inboxMessages.get(position).getInboxMessageContents().get(0).getLinktype(jsonObject)

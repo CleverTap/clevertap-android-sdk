@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="ct_permission_not_available_title">Permission Not Available</string>
+    <string name="ct_permission_not_available_message">You have previously denied notification permission. Please go to settings to enable notifications.</string>
+    <string name="ct_permission_not_available_open_settings_option">Settings</string>
+    <string name="ct_txt_cancel">Cancel</string>
+
+    <string name="notification_permission_name_for_title">Notifications</string>
+    <string name="notification_permission_settings_message">Notifications</string>
+</resources>

@@ -127,6 +127,8 @@ public class CTJsonConverter {
                     evtData.put("Radio", radio);
                 }
             }
+            //Adds an extra field to send local inApp count in queueData.
+            evtData.put("LIAMC",deviceInfo.getLocalInAppCount());
 
         } catch (Throwable t) {
             // Ignore

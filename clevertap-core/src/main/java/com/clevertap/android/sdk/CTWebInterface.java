@@ -1,6 +1,8 @@
 package com.clevertap.android.sdk;
 
 import android.webkit.JavascriptInterface;
+import androidx.annotation.RestrictTo;
+import com.clevertap.android.sdk.inapp.CTInAppBaseFullFragment;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,9 +17,45 @@ import org.json.JSONObject;
 public class CTWebInterface {
 
     private final WeakReference<CleverTapAPI> weakReference;
+    private CTInAppBaseFullFragment inAppBaseFullFragment;
 
     public CTWebInterface(CleverTapAPI instance) {
         this.weakReference = new WeakReference<>(instance);
+    }
+
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+    public CTWebInterface(CleverTapAPI instance, CTInAppBaseFullFragment inAppBaseFullFragment){
+        this.weakReference = new WeakReference<>(instance);
+        this.inAppBaseFullFragment = inAppBaseFullFragment;
+    }
+
+    /**
+     * Method to be called from WebView Javascript to request permission for notification
+     * for Android 13 and above
+     */
+    @JavascriptInterface
+    public void promptPushPermission(boolean shouldShowFallbackSettings) {
+        CleverTapAPI cleverTapAPI = weakReference.get();
+        if (cleverTapAPI == null) {
+            Logger.d("CleverTap Instance is null.");
+        } else {
+            //Dismisses current IAM and proceeds to call promptForPushPermission()
+            dismissInAppNotification();
+            cleverTapAPI.promptForPushPermission(shouldShowFallbackSettings);
+        }
+    }
+    /**
+     * Method to be called from WebView Javascript to dismiss the InApp notification
+     */
+    @JavascriptInterface
+    public void dismissInAppNotification() {
+        CleverTapAPI cleverTapAPI = weakReference.get();
+        if (cleverTapAPI == null) {
+            Logger.d("CleverTap Instance is null.");
+        } else {
+            //Dismisses current IAM and proceeds to call promptForPushPermission()
+            inAppBaseFullFragment.didDismiss(null);
+        }
     }
 
     /**

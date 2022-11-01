@@ -1,5 +1,8 @@
 package com.clevertap.android.sdk;
 
+import static android.content.Context.USAGE_STATS_SERVICE;
+import static com.clevertap.android.sdk.inapp.InAppController.LOCAL_INAPP_COUNT;
+
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.UiModeManager;
@@ -23,6 +26,7 @@ import androidx.annotation.IntDef;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
+import androidx.annotation.WorkerThread;
 import androidx.core.app.NotificationManagerCompat;
 import com.clevertap.android.sdk.login.LoginInfoProvider;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
@@ -38,8 +42,6 @@ import java.util.ArrayList;
 import java.util.UUID;
 import java.util.concurrent.Callable;
 import org.json.JSONObject;
-
-import static android.content.Context.USAGE_STATS_SERVICE;
 
 @RestrictTo(Scope.LIBRARY)
 public class DeviceInfo {
@@ -88,6 +90,8 @@ public class DeviceInfo {
 
         private String appBucket;
 
+        private int localInAppCount;
+
         DeviceCachedInfo() {
             versionName = getVersionName();
             osName = getOsName();
@@ -106,6 +110,7 @@ public class DeviceInfo {
             widthPixels = getWidthPixels();
             dpi = getDPI();
             notificationsEnabled = getNotificationEnabledForUser();
+            localInAppCount = getLocalInAppCountFromPreference();
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                 appBucket = getAppBucket();
             }
@@ -391,12 +396,12 @@ public class DeviceInfo {
     /**
      * Device is a smart phone
      */
-    static final int SMART_PHONE = 1;
+    public static final int SMART_PHONE = 1;
 
     /**
      * Device is a tablet
      */
-    static final int TABLET = 2;
+    public static final int TABLET = 2;
 
     /**
      * Device is a television
@@ -625,6 +630,14 @@ public class DeviceInfo {
         return getDeviceCachedInfo().sdkVersion;
     }
 
+    public int getLocalInAppCount() {
+        return getDeviceCachedInfo().localInAppCount;
+    }
+
+    public void incrementLocalInAppCount() {
+        getDeviceCachedInfo().localInAppCount++;
+    }
+
     public ArrayList<ValidationResult> getValidationResults() {
         // noinspection unchecked
         ArrayList<ValidationResult> tempValidationResults = (ArrayList<ValidationResult>) validationResults.clone();
@@ -719,6 +732,11 @@ public class DeviceInfo {
 
     int getWidthPixels() {
         return getDeviceCachedInfo().widthPixels;
+    }
+
+    @WorkerThread
+    private int getLocalInAppCountFromPreference() {
+        return StorageHelper.getInt(context, LOCAL_INAPP_COUNT, 0);
     }
 
     void onInitDeviceInfo(final String cleverTapID) {

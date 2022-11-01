@@ -107,7 +107,7 @@ public final class StorageHelper {
     }
 
     @SuppressWarnings("SameParameterValue")
-    static boolean getBoolean(Context context, String key, boolean defaultValue) {
+    public static boolean getBoolean(Context context, String key, boolean defaultValue) {
         return getPreferences(context).getBoolean(key, defaultValue);
     }
 
@@ -162,16 +162,28 @@ public final class StorageHelper {
         return getPreferences(context, nameSpace).getString(key, defaultValue);
     }
 
-    static void putBoolean(Context context, String key, boolean value) {
+    public static void putBoolean(Context context, String key, boolean value) {
         SharedPreferences prefs = getPreferences(context);
         SharedPreferences.Editor editor = prefs.edit().putBoolean(key, value);
         persist(editor);
+    }
+
+    public static void putBooleanImmediate(Context context, String key, boolean value) {
+        SharedPreferences prefs = getPreferences(context);
+        SharedPreferences.Editor editor = prefs.edit().putBoolean(key, value);
+        persistImmediately(editor);
     }
 
     public static void putInt(Context context, String key, int value) {
         SharedPreferences prefs = getPreferences(context);
         SharedPreferences.Editor editor = prefs.edit().putInt(key, value);
         persist(editor);
+    }
+
+    public static void putIntImmediate(Context context, String key, int value) {
+        SharedPreferences prefs = getPreferences(context);
+        SharedPreferences.Editor editor = prefs.edit().putInt(key, value);
+        persistImmediately(editor);
     }
 
     static void putLong(Context context, String key, long value) {
