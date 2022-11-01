@@ -81,7 +81,6 @@ public class CTInboxMessage implements Parcelable {
             this.expires = jsonObject.has(Constants.KEY_WZRK_TTL) ? jsonObject.getLong(Constants.KEY_WZRK_TTL)
                     : System.currentTimeMillis() + 1000 * 60 * 60 * 24;
             this.isRead = jsonObject.has(Constants.KEY_IS_READ) && jsonObject.getBoolean(Constants.KEY_IS_READ);
-            Logger.d("CTInboxMessage:"+"constructor called at  "+new Date()+" | setting inbox isread= "+isRead() +" for id:"+messageId );
             JSONArray tagsArray = jsonObject.has(Constants.KEY_TAGS) ? jsonObject.getJSONArray(Constants.KEY_TAGS)
                     : null;
             if (tagsArray != null) {

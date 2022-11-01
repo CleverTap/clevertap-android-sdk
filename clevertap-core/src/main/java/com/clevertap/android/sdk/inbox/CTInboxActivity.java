@@ -44,12 +44,12 @@ import java.util.List;
  */
 @RestrictTo(Scope.LIBRARY)
 public class CTInboxActivity extends FragmentActivity implements CTInboxListViewFragment.InboxListener,
-        CTInboxListener, DidClickForHardPermissionListener {
+        DidClickForHardPermissionListener {
 
     public interface InboxActivityListener {
 
         void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data,
-                HashMap<String, String> keyValue, boolean isBodyClick);
+                HashMap<String, String> keyValue,boolean isBodyClick);
 
         void messageDidShow(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data);
     }
@@ -92,9 +92,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
             cleverTapAPI = CleverTapAPI.instanceWithConfig(getApplicationContext(), config);
             if (cleverTapAPI != null) {
                 setListener(cleverTapAPI);
-                inboxContentUpdatedListener = cleverTapAPI.getCTNotificationInboxListener();
-                cleverTapAPI.setCTNotificationInboxListener(this);
-
                 setPermissionCallback(CleverTapAPI.instanceWithConfig(this, config).getCoreState()
                         .getInAppController());
                 pushPermissionManager = new PushPermissionManager(this, config);
@@ -201,7 +198,6 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
                 public void onTabSelected(TabLayout.Tab tab) {
                     CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter
                             .getItem(tab.getPosition());
-                    fragment.updateAdapterContent();
                     if (fragment.getMediaRecyclerView() != null) {
                         fragment.getMediaRecyclerView().onRestartPlayer();
                     }
@@ -284,58 +280,9 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
 
     @Override
-    public void inboxDidInitialize() {
-
-        Logger.d("CTInboxActivity: called inboxDidInitialize");
-        if (inboxContentUpdatedListener != null) {
-            inboxContentUpdatedListener.inboxDidInitialize();
-        }
-
-
-    }
-
-    @Override
-    public void inboxMessagesDidUpdate() {
-        Logger.v("CTInboxActivity|inboxMessagesDidUpdate called");
-        try {
-            boolean isCUListenerAvailable = inboxContentUpdatedListener != null;
-            Logger.v("CTInboxActivity|inboxMessagesDidUpdate: inboxContentUpdatedListener available:"
-                    + isCUListenerAvailable);
-
-            boolean isUsingMultipleTabs = styleConfig.isUsingTabs();
-            Logger.v("CTInboxActivity|inboxMessagesDidUpdate: isUsingMultipleTabs : " + isUsingMultipleTabs);
-
-            if (isCUListenerAvailable) {
-                inboxContentUpdatedListener.inboxMessagesDidUpdate();
-            }
-            if (isUsingMultipleTabs) {
-                int position = viewPager.getCurrentItem();
-                CTInboxListViewFragment fragment = (CTInboxListViewFragment) inboxTabAdapter.getItem(position);
-                fragment.updateAdapterContent();
-            } else {
-                List<Fragment> fragments = getSupportFragmentManager().getFragments();
-                String singleTabTag = getFragmentTag();
-                for (Fragment f : fragments) {
-                    String currentFTag = f.getTag();
-                    if (f instanceof CTInboxListViewFragment && currentFTag != null && currentFTag.equalsIgnoreCase(
-                            singleTabTag)) {
-                        ((CTInboxListViewFragment) f).updateAdapterContent();
-                    }
-                }
-
-            }
-
-        } catch (Throwable t) {
-            Logger.i("Something Went Wrong", t);
-        }
-
-
-    }
-
-    @Override
     public void messageDidClick(Context baseContext, CTInboxMessage inboxMessage, Bundle data,
             HashMap<String, String> keyValue, boolean isBodyClick) {
-        didClick(data, inboxMessage, keyValue, isBodyClick);
+        didClick(data, inboxMessage, keyValue,isBodyClick);
     }
 
     @Override
@@ -348,7 +295,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     void didClick(Bundle data, CTInboxMessage inboxMessage, HashMap<String, String> keyValue, boolean isBodyClick) {
         InboxActivityListener listener = getListener();
         if (listener != null) {
-            listener.messageDidClick(this, inboxMessage, data, keyValue, isBodyClick);
+            listener.messageDidClick(this, inboxMessage, data, keyValue,isBodyClick);
         }
     }
 
