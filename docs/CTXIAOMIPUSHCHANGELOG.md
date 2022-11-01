@@ -1,6 +1,6 @@
 ## CleverTap Xiaomi Push SDK CHANGE LOG
 
-### Version 1.5.2 (October 31, 2022)
+### Version 1.5.2 (November 1, 2022)
 * Updated Xiaomi Push SDK to v5.1.1 which supports Android 13
 * Supports CleverTap Android SDK v4.7.0
 
