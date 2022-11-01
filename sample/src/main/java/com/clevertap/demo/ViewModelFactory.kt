@@ -5,8 +5,8 @@ import androidx.lifecycle.ViewModelProvider
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.demo.ui.main.HomeScreenViewModel
 
-class ViewModelFactory constructor(
-    private val cleverTapAPI: CleverTapAPI?
+class ViewModelFactory(
+    private val cleverTapAPI: CleverTapAPI?,
 ) : ViewModelProvider.NewInstanceFactory() {
 
     override fun <T : ViewModel> create(modelClass: Class<T>) =

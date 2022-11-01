@@ -46,6 +46,10 @@ public class CTInAppNotificationButton implements Parcelable {
 
     private String textColor;
 
+    private String type;
+
+    private boolean fallbackToSettings;
+
     CTInAppNotificationButton() {
     }
 
@@ -57,7 +61,8 @@ public class CTInAppNotificationButton implements Parcelable {
         actionUrl = in.readString();
         borderColor = in.readString();
         borderRadius = in.readString();
-
+        type = in.readString();
+        fallbackToSettings = in.readByte() != 0x00;
         try {
             jsonDescription = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
         } catch (JSONException e) {
@@ -84,7 +89,8 @@ public class CTInAppNotificationButton implements Parcelable {
         dest.writeString(actionUrl);
         dest.writeString(borderColor);
         dest.writeString(borderRadius);
-
+        dest.writeString(type);
+        dest.writeByte((byte) (fallbackToSettings ? 0x01 : 0x00));
         if (jsonDescription == null) {
             dest.writeByte((byte) (0x00));
         } else {
@@ -160,6 +166,14 @@ public class CTInAppNotificationButton implements Parcelable {
         return textColor;
     }
 
+    public String getType() {
+        return type;
+    }
+
+    public boolean isFallbackToSettings() {
+        return fallbackToSettings;
+    }
+
     @SuppressWarnings({"unused"})
     void setTextColor(String textColor) {
         this.textColor = textColor;
@@ -185,6 +199,10 @@ public class CTInAppNotificationButton implements Parcelable {
                 if (!action.isEmpty()) {
                     this.actionUrl = action;
                 }
+
+                type = actions.has(Constants.KEY_TYPE) ? actions.getString(Constants.KEY_TYPE) : "";
+                fallbackToSettings = actions.has(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS) ?
+                        actions.getBoolean(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS) : false;
             }
 
             //Custom Key Value pairs
@@ -207,6 +225,7 @@ public class CTInAppNotificationButton implements Parcelable {
                     }
                 }
             }
+
         } catch (JSONException e) {
             this.error = "Invalid JSON";
         }

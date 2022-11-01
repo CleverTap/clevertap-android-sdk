@@ -287,6 +287,19 @@ public class CTInboxMessageContent implements Parcelable {
         }
     }
 
+    public boolean isFallbackSettingsEnabled(JSONObject jsonObject) {
+        if (jsonObject == null) {
+            return false;
+        }
+        try {
+            return jsonObject.has(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS) ?
+                    jsonObject.getBoolean(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS) : false;
+        } catch (JSONException e) {
+            Logger.v("Unable to get fallback settings key with JSON - " + e.getLocalizedMessage());
+            return false;
+        }
+    }
+
     /**
      * Returns the media URL of the inbox message
      *

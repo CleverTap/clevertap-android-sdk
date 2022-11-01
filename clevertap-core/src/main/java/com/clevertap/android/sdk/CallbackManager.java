@@ -28,6 +28,8 @@ public class CallbackManager extends BaseCallbackManager {
 
     private InAppNotificationListener inAppNotificationListener;
 
+    private PushPermissionResponseListener pushPermissionResponseListener;
+
     private CTInboxListener inboxListener;
 
     private final CleverTapInstanceConfig config;
@@ -132,8 +134,18 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     @Override
+    public PushPermissionResponseListener getPushPermissionResponseListener() {
+        return pushPermissionResponseListener;
+    }
+
+    @Override
     public void setInAppNotificationListener(final InAppNotificationListener inAppNotificationListener) {
         this.inAppNotificationListener = inAppNotificationListener;
+    }
+
+    @Override
+    public void setPushPermissionResponseListener(PushPermissionResponseListener pushPermissionResponseListener) {
+        this.pushPermissionResponseListener = pushPermissionResponseListener;
     }
 
     @Override

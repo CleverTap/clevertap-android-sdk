@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.inapp;
 
+import static com.clevertap.android.sdk.inapp.CTLocalInApp.FALLBACK_TO_NOTIFICATION_SETTINGS;
+import static com.clevertap.android.sdk.inapp.CTLocalInApp.IS_LOCAL_INAPP;
 import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.os.Bundle;
@@ -220,6 +222,10 @@ public class CTInAppNotification implements Parcelable {
 
     private int widthPercentage;
 
+    private boolean isLocalInApp = false;
+
+    private boolean fallBackToNotificationSettings = false;
+
     CTInAppNotification() {
     }
 
@@ -267,6 +273,8 @@ public class CTInAppNotification implements Parcelable {
             jsEnabled = in.readByte() != 0x00;
             isPortrait = in.readByte() != 0x00;
             isLandscape = in.readByte() != 0x00;
+            isLocalInApp = in.readByte() != 0x00;
+            fallBackToNotificationSettings = in.readByte() != 0x00;
             landscapeImageUrl = in.readString();
             _landscapeImageCacheKey = in.readString();
             timeToLive = in.readLong();
@@ -354,6 +362,8 @@ public class CTInAppNotification implements Parcelable {
         dest.writeByte((byte) (jsEnabled ? 0x01 : 0x00));
         dest.writeByte((byte) (isPortrait ? 0x01 : 0x00));
         dest.writeByte((byte) (isLandscape ? 0x01 : 0x00));
+        dest.writeByte((byte) (isLocalInApp ? 0x01 : 0x00));
+        dest.writeByte((byte) (fallBackToNotificationSettings ? 0x01 : 0x00));
         dest.writeString(landscapeImageUrl);
         dest.writeString(_landscapeImageCacheKey);
         dest.writeLong(timeToLive);
@@ -389,6 +399,14 @@ public class CTInAppNotification implements Parcelable {
 
     String getError() {
         return error;
+    }
+
+    public boolean isLocalInApp() {
+        return isLocalInApp;
+    }
+
+    public boolean fallBackToNotificationSettings() {
+        return fallBackToNotificationSettings;
     }
 
     byte[] getGifByteArray(CTInAppNotificationMedia inAppMedia) {
@@ -579,6 +597,9 @@ public class CTInAppNotification implements Parcelable {
             this.campaignId = jsonObject.has(Constants.NOTIFICATION_ID_TAG) ? jsonObject
                     .getString(Constants.NOTIFICATION_ID_TAG) : "";
             this.type = jsonObject.getString(Constants.KEY_TYPE);
+            this.isLocalInApp = jsonObject.has(IS_LOCAL_INAPP) && jsonObject.getBoolean(IS_LOCAL_INAPP);
+            this.fallBackToNotificationSettings = jsonObject.has(FALLBACK_TO_NOTIFICATION_SETTINGS) &&
+                    jsonObject.getBoolean(FALLBACK_TO_NOTIFICATION_SETTINGS);
             this.excludeFromCaps = jsonObject.has(Constants.KEY_EFC) && jsonObject.getInt(Constants.KEY_EFC) == 1;
             this.totalLifetimeCount = jsonObject.has(Constants.KEY_TLC) ? jsonObject.getInt(Constants.KEY_TLC) : -1;
             this.totalDailyCount = jsonObject.has(Constants.KEY_TDC) ? jsonObject.getInt(Constants.KEY_TDC) : -1;

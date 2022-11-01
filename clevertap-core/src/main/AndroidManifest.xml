@@ -2,6 +2,9 @@
 <manifest package="com.clevertap.android.sdk"
     xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- Required runtime permission to display notifications on Android 13 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
     <application>
 
         <activity

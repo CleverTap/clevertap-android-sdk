@@ -299,14 +299,7 @@ CleverTap handles closing the notification with Action buttons. You will have to
              <action android:name="com.clevertap.PUSH_EVENT"/>
          </intent-filter>
      </service>
-```  
-
-Starting with v3.4.3, the CleverTap SDK supports specifying a custom FCM Sender ID. The SDK will now request for a token with the specified FCM Sender ID if it is present in the `AndroidManifest.xml`. If the FCM Sender ID is not present in the `AndroidManifest.xml` file, then the SDK will request for the token in the default manner which uses the app's `google-services.json` file. To use a custom FCM Sender ID, add the following field in your app's `AndroidManifest.xml`
-```xml
-    <meta-data
-        android:name="FCM_SENDER_ID"
-        android:value="id:1234567890"/>
-```
+``` 
 
 #### Push Amplification
 
@@ -331,6 +324,216 @@ To support in-app notifications, register the following activity in your Android
         android:name="CLEVERTAP_INAPP_EXCLUDE"
         android:value="YourSplashActivity1, YourSplashActivity2" />
    ```
+
+#### Push primer Android 13 notification runtime permission.
+
+Using Half-Interstitial in-app
+
+Java
+```java
+JSONObject jsonObject = CTLocalInApp.builder()
+        .setInAppType(CTLocalInApp.InAppType.HALF_INTERSTITIAL)
+        .setTitleText("Get Notified")
+        .setMessageText("Please enable notifications on your device to use Push Notifications.")
+        .followDeviceOrientation(true)
+        .setPositiveBtnText("Allow")
+        .setNegativeBtnText("Cancel")
+        .setBackgroundColor(Constants.WHITE)
+        .setBtnBorderColor(Constants.BLUE)
+        .setTitleTextColor(Constants.BLUE)
+        .setMessageTextColor(Constants.BLACK)
+        .setBtnTextColor(Constants.WHITE)
+        .setImageUrl("https://icons.iconarchive.com/icons/treetog/junior/64/camera-icon.png")
+        .setBtnBackgroundColor(Constants.BLUE)
+        .build();
+cleverTapAPI.promptPushPrimer(jsonObject);
+```
+
+Kotlin
+```kotlin
+val jsonObject = CTLocalInApp.builder()
+    .setInAppType(CTLocalInApp.InAppType.HALF_INTERSTITIAL)
+    .setTitleText("Get Notified")
+    .setMessageText("Please enable notifications on your device to use Push Notifications.")
+    .followDeviceOrientation(true)
+    .setPositiveBtnText("Allow")
+    .setNegativeBtnText("Cancel")
+    .setBackgroundColor(Constants.WHITE)
+    .setBtnBorderColor(Constants.BLUE)
+    .setTitleTextColor(Constants.BLUE)
+    .setMessageTextColor(Constants.BLACK)
+    .setBtnTextColor(Constants.WHITE)
+    .setBtnBackgroundColor(Constants.BLUE)
+    .build()
+cleverTapAPI.promptPushPrimer(jsonObject)
+```
+Using Alert in-app
+
+Java
+```java
+JSONObject jsonObject = CTLocalInApp.builder()
+        .setInAppType(CTLocalInApp.InAppType.ALERT)
+        .setTitleText("Get Notified")
+        .setMessageText("Enable Notification permission")
+        .followDeviceOrientation(true)
+        .setPositiveBtnText("Allow")
+        .setNegativeBtnText("Cancel")
+        .build();
+cleverTapAPI.promptPushPrimer(jsonObject);
+```
+Kotlin
+```kotlin
+val jsonObject = CTLocalInApp.builder()
+    .setInAppType(CTLocalInApp.InAppType.ALERT)
+    .setTitleText("Get Notified")
+    .setMessageText("Enable Notification permission")
+    .followDeviceOrientation(true)
+    .setPositiveBtnText("Allow")
+    .setNegativeBtnText("Cancel")
+    .build()
+cleverTapAPI.promptPushPrimer(jsonObject)
+
+```
+
+#### Call Android OS runtime notification dialog without using push primer.
+
+Takes boolean as a parameter. If true and the permission is denied then we fallback to app’s notification settings, if it’s false then we just throw a verbose log saying permission is denied.
+
+Java
+```java
+cleverTapAPI.promptForPushPermission(true);
+```
+Kotlin
+```kotlin
+cleverTapAPI.promptForPushPermission(true)
+```
+
+#### Check the status of notification permission whether it's granted or denied.
+Returns true if permission is granted, else returns false if permission is denied.
+
+Java
+```java
+cleverTapAPI.isPushPermissionGranted();
+```
+Kotlin
+```kotlin
+cleverTapAPI.isPushPermissionGranted
+```
+
+#### Call Android OS runtime notification dialog for HTML in-app campaigns.
+Two methods will be available to call hard permission dialog flow from HTML InApp’s as shown below:-
+promptPushPermission(boolean shouldShowFallbackSettings) - Use to trigger OS notification dialog.
+dismissInAppNotification() - Use to dismiss the current InApp.
+
+Sample code usage
+```html
+<script>
+document.querySelector('#bt_gnp').addEventListener(
+	'click',e => {
+if(window.CleverTap){
+ 		CleverTap.promptPushPermission(true); // true/false on whether to show app’s notification page if permission is denied.
+	}
+})</script>
+```
+
+#### CTLocalInApp builder methods description
+
+Builder Methods | Parameters | Description | Required
+---:|:---:|:---:|:---
+`setInAppType(InAppType)` | CTLocalInApp.InAppType.HALF_INTERSTITIAL OR CTLocalInApp.InAppType.ALERT | Accepts only HALF_INTERSTITIAL & ALERT type to display the type of InApp | Required
+`setTitleText(String)` | Text | Sets the title of the local in-app | Required
+`setMessageText(String)` | Text | Sets the subtitle of the local in-app | Required
+`followDeviceOrientation(boolean)` | true/false | If true then the local InApp is shown for both portrait and landscape. If it sets false then local InApp only displays for portrait mode | Required
+`setPositiveBtnText(String)` | Text | Sets the text of the positive button | Required
+`setNegativeBtnText(String)` | Text | Sets the text of the negative button | Required
+`setFallbackToSettings(boolean)` | true/false | If true and the permission  is denied then we fallback to app’s notification settings, if it’s false then we just throw a verbose log saying permission is denied | Optional
+`setBackgroundColor(String)` | Accepts Hex color as String | Sets the background color of the local in-app | Optional
+`setBtnBorderColor(String)` | Accepts Hex color as String | Sets the border color of both positive/negative buttons | Optional
+`setTitleTextColor(String)` | Accepts Hex color as String | Sets the title color of the local in-app | Optional
+`setMessageTextColor(String)` | Accepts Hex color as String | Sets the sub-title color of the local in-app | Optional
+`setBtnTextColor(String)` | Accepts Hex color as String | Sets the color of text for both positive/negative buttons | Optional
+`setBtnBackgroundColor(String)` | Accepts Hex color as String | Sets the background color for both positive/negative buttons | Optional
+`setBtnBorderRadius(String)` | Text | Sets the radius for both positive/negative buttons. Default radius is “2” if not set | Optional
+
+
+#### Available Callbacks for Push Primer
+
+Based on notification permission grant/deny, we’ll be providing a callback `PushPermissionResponseListener` .Below is a sample implementation to get the permission result
+```java
+public class MainActivity extends AppCompatActivity implements PushPermissionResponseListener {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+         private CleverTapAPI cleverTapDefaultInstance = CleverTapAPI.getDefaultInstance(this);
+         if (cleverTapDefaultInstance != null) {
+            cleverTapDefaultInstance.ct.setPushPermissionResponseListener(this);            
+        }
+    }
+    
+    @Override
+    public void onPushPermissionResponse(boolean accepted) {
+        Log.i(TAG, "onPushPermissionResponse :  InApp---> response() called accepted="+accepted);
+    }
+}
+```
+
+From CT-SDK 4.7.0+, new method onShow() is introduced for InAppNotificationListener . Below is the new method added for when the InApp is shown:-
+```java
+@Override
+public void onShow(CTInAppNotification ctInAppNotification) {
+
+}
+```
+
+Please note from Android 13+ devices to render notification we'll have to call createNotificationChannel() after the permission is accepted.
+
+Java
+```java
+public class MainActivity extends AppCompatActivity implements PushPermissionResponseListener {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        private CleverTapAPI cleverTapDefaultInstance = CleverTapAPI.getDefaultInstance(this);
+        if (cleverTapDefaultInstance != null) {
+            cleverTapDefaultInstance.ct.setPushPermissionResponseListener(this);
+        }
+    }
+
+    @Override
+    public void onPushPermissionResponse(boolean accepted) {
+        if(accepted){
+            //For Android 13+ we need to create notification channel after notification permission is accepted
+            CleverTapAPI.createNotificationChannel(getApplicationContext(), "BRTesting", "Testing Channel",
+                    "Testing Channel for BR", NotificationManager.IMPORTANCE_HIGH, true);
+        }
+    }
+}
+```
+Kotlin
+```kotlin
+class HomeScreenActivity : AppCompatActivity(),PushPermissionResponseListener{
+    override fun onCreate(savedInstanceState: Bundle?) {
+        var cleverTapDefaultInstance = CleverTapAPI.getDefaultInstance(this)
+        cleverTapDefaultInstance?.apply {
+            pushPermissionNotificationResponseListener = this@HomeScreenActivity
+        }
+    }
+
+    override fun onPushPermissionResponse(accepted: Boolean) {
+        if(accepted){
+            //For Android 13+ we need to create notification channel after notification permission is accepted
+            CleverTapAPI.createNotificationChannel(
+                this, "BRTesting", "Core",
+                "Core notifications", NotificationManager.IMPORTANCE_MAX, true
+            )
+        }
+    }
+}
+```
+
+#### Google Ad Id changes for Android 13
+Please note if using Google Ad Id for apps targeting Android 13+, will have to declare the below permission
+```xml
+<uses-permission android:name="com.google.android.gms.permission.AD_ID"/>
+```
 
 #### Tracking the Install Referrer
 

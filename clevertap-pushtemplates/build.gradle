@@ -27,7 +27,6 @@ android {
 
 dependencies {
     compileOnly project(':clevertap-core')
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.5.31"
     implementation Libs.core_ktx
     implementation Libs.appcompat
     compileOnly Libs.material

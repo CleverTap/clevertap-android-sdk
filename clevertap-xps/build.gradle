@@ -9,7 +9,7 @@ ext {
     licenseName = 'MIT License'
     licenseUrl = 'https://opensource.org/licenses/MIT'
     allLicenses = ["MIT"]
-    minSdkVersionVal = 19
+    minSdkVersionVal = Android.minSdkVersionVal
 }
 
 apply from: "../gradle-scripts/commons.gradle"

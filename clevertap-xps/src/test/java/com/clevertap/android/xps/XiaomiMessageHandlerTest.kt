@@ -1,9 +1,9 @@
 package com.clevertap.android.xps
 
 import android.os.Bundle
-import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.interfaces.INotificationParser
+import com.clevertap.android.sdk.pushnotification.PushNotificationHandler
 import com.clevertap.android.shared.test.BaseTestCase
 import com.clevertap.android.shared.test.TestApplication
 import com.clevertap.android.xps.XpsConstants.FAILED_WITH_EXCEPTION
@@ -47,8 +47,8 @@ class XiaomiMessageHandlerTest : BaseTestCase() {
     fun testCreateNotification_Invalid_Message_Throws_Exception() {
         val bundle = Bundle()
         `when`(parser.toBundle(any(MiPushMessage::class.java))).thenReturn(bundle)
-        mockStatic(CleverTapAPI::class.java).use {
-            `when`(CleverTapAPI.createNotification(application, bundle)).thenThrow(
+        mockStatic(PushNotificationHandler::class.java).use {
+            `when`(PushNotificationHandler.getPushNotificationHandler()).thenThrow(
                 RuntimeException("Something went wrong")
             )
             val isSuccess = mHandlerCT.createNotification(application, MiPushMessage())

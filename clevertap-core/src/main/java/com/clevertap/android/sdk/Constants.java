@@ -172,6 +172,9 @@ public interface Constants {
     String KEY_TDC = "tdc";
     String KEY_KV = "kv";
     String KEY_TYPE = "type";
+    String KEY_FALLBACK_NOTIFICATION_SETTINGS = "fbSettings";
+    String KEY_REQUEST_FOR_NOTIFICATION_PERMISSION = "rfp";
+    int NOTIFICATION_PERMISSION_REQUEST_CODE = 102;
     String KEY_IS_TABLET = "tablet";
     String KEY_BG = "bg";
     String KEY_TITLE = "title";
@@ -216,6 +219,8 @@ public interface Constants {
     String BLACK = "#000000";
     String WHITE = "#FFFFFF";
     String BLUE = "#0000FF";
+    String GREEN = "#00FF00";
+    String LIGHT_BLUE = "#818ce5";
     /**
      * Profile command constants.
      */
