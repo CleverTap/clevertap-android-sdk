@@ -39,7 +39,7 @@ Click on [Mi Push Console](http://admin.xmpush.global.xiaomi.com/) and click on 
 ## 🚀 Integration
 [(Back to top)](#-table-of-contents)
 
-* Download the Mi push Library from [here](https://github.com/CleverTap/clevertap-android-sdk/releases/tag/corev4.6.1_hmsv1.3.1_xpsv1.5.0) and add it in your app's lib folder (`app/libs`)
+* Download the Mi push Library from [here](https://github.com/CleverTap/clevertap-android-sdk/releases/tag/corev4.7.0_xpsv1.5.2_geofencev1.2.0_hmsv1.3.2_ptv1.0.6) and add it in your app's lib folder (`app/libs`)
 
 * If you are using obfuscation for your builds, you might need to add the following lines in proguard rules, as required by [Xiaomi SDK](https://dev.mi.com/console/doc/detail?pId=1244):
 
