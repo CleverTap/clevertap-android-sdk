@@ -395,7 +395,7 @@ pt_msg | Required  | Message
 pt_subtitle | Optional  | Subtitle
 pt_img1 | Required  | Image One
 pt_img2 | Required  | Image Two
-pt_img3 | Optional  | Image Three
+pt_img3 | Required  | Image Three
 pt_bt1 | Required  | Big text for first image
 pt_bt2 | Required  | Big text for second image
 pt_bt3 | Required  | Big text for third image
@@ -534,7 +534,8 @@ Product Catalog | 1:1 | .JPG
 
 * For Auto and Manual Carousel the image dimensions should not exceed more than 840x560 for Android 11 and Android 12 devices and with 3:2 image aspect ratio
 * For Product Catalog image aspect ratio should be 1:1 and image size should be less than 80kb for Android 11 and Android 12 devices
-* For Zero Bezel it's recommended that if your images have any text it should be present in the middle of the image.
+* For Zero Bezel it's recommended that if your image has any text it should be present in the middle of the image for Android 12+ devices. 
+* For Android 12+ devices it's recommended that if your image has any text it should be present in the middle of the image.
 
 ## Android 12 Trampoline restrictions
 
