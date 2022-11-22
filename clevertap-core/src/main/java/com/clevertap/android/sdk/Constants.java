@@ -5,10 +5,8 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.StringDef;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
-import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Locale;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public interface Constants {
@@ -49,7 +47,6 @@ public interface Constants {
     int SESSION_LENGTH_MINS = 20;
     String DEVICE_ID_TAG = "deviceId";
     String FALLBACK_ID_TAG = "fallbackId";
-    SimpleDateFormat FB_DOB_DATE_FORMAT = new SimpleDateFormat("MM/dd/yyyy", Locale.US);
     int PAGE_EVENT = 1;
     int PING_EVENT = 2;
     int PROFILE_EVENT = 3;
