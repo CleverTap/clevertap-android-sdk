@@ -144,7 +144,9 @@ public class PushProviders implements CTPushProviderListener {
         }
 
         if (config.isAnalyticsOnly()) {
-            config.getLogger().debug(config.getAccountId(), "Instance is set for Analytics only, cannot create notification");
+            config.getLogger()
+                    .debug(config.getAccountId(),
+                            "Instance is set for Analytics only, cannot create notification");
             return;
         }
 
@@ -156,11 +158,19 @@ public class PushProviders implements CTPushProviderListener {
             }
             String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
             if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
-                config.getLogger().debug(config.getAccountId(), "Handling notification: " + extras);
-                config.getLogger().debug(config.getAccountId(), "Handling notification::nh_source = " + extras.getString("nh_source", "source not available"));
+                config.getLogger()
+                        .debug(config.getAccountId(),
+                                "Handling notification: " + extras);
+                config.getLogger()
+                        .debug(config.getAccountId(),
+                                "Handling notification::nh_source = " + extras.getString("nh_source",
+                                        "source not available"));
                 if (extras.getString(Constants.WZRK_PUSH_ID) != null) {
-                    if (baseDatabaseManager.loadDBAdapter(context).doesPushNotificationIdExist(extras.getString(Constants.WZRK_PUSH_ID))) {
-                        config.getLogger().debug(config.getAccountId(), "Push Notification already rendered, not showing again");
+                    if (baseDatabaseManager.loadDBAdapter(context)
+                            .doesPushNotificationIdExist(
+                                    extras.getString(Constants.WZRK_PUSH_ID))) {
+                        config.getLogger().debug(config.getAccountId(),
+                                "Push Notification already rendered, not showing again");
                         return;
                     }
                 }
@@ -168,8 +178,11 @@ public class PushProviders implements CTPushProviderListener {
                 notifMessage = (notifMessage != null) ? notifMessage : "";
                 if (notifMessage.isEmpty()) {
                     //silent notification
-                    config.getLogger().verbose(config.getAccountId(), "Push notification message is empty, not rendering");
-                    baseDatabaseManager.loadDBAdapter(context).storeUninstallTimestamp();
+                    config.getLogger()
+                            .verbose(config.getAccountId(),
+                                    "Push notification message is empty, not rendering");
+                    baseDatabaseManager.loadDBAdapter(context)
+                            .storeUninstallTimestamp();
                     String pingFreq = extras.getString("pf", "");
                     if (!TextUtils.isEmpty(pingFreq)) {
                         updatePingFrequencyIfNeeded(context, Integer.parseInt(pingFreq));
@@ -186,7 +199,8 @@ public class PushProviders implements CTPushProviderListener {
             // Occurs if the notification image was null
             // Let's return, as we couldn't get a handle on the app's icon
             // Some devices throw a PackageManager* exception too
-            config.getLogger().debug(config.getAccountId(), "Couldn't render notification: ", t);
+            config.getLogger()
+                    .debug(config.getAccountId(), "Couldn't render notification: ", t);
         }
     }
 
@@ -213,7 +227,8 @@ public class PushProviders implements CTPushProviderListener {
                     if (TextUtils.isEmpty(key)) {
                         return null;
                     }
-                    StorageHelper.putStringImmediate(context, StorageHelper.storageKeyWithSuffix(config, key), token);
+                    StorageHelper
+                            .putStringImmediate(context, StorageHelper.storageKeyWithSuffix(config, key), token);
                     config.log(PushConstants.LOG_TAG, pushType + "Cached New Token successfully " + token);
                     return null;
                 }
@@ -356,7 +371,8 @@ public class PushProviders implements CTPushProviderListener {
                 notifMessage = (notifMessage != null) ? notifMessage : "";
                 if (notifMessage.isEmpty()) {
                     //silent notification
-                    config.getLogger().verbose(config.getAccountId(), "Push notification message is empty, not rendering");
+                    config.getLogger()
+                            .verbose(config.getAccountId(), "Push notification message is empty, not rendering");
                     baseDatabaseManager.loadDBAdapter(context).storeUninstallTimestamp();
                     String pingFreq = extras.getString("pf", "");
                     if (!TextUtils.isEmpty(pingFreq)) {
@@ -364,7 +380,8 @@ public class PushProviders implements CTPushProviderListener {
                     }
                 } else {
                     String wzrk_pid = extras.getString(Constants.WZRK_PUSH_ID);
-                    String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE, (System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL) / 1000 + "");
+                    String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE,
+                            (System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL) / 1000 + "");
                     long wzrk_ttl = Long.parseLong(ttl);
                     DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
                     config.getLogger().verbose("Storing Push Notification..." + wzrk_pid + " - with ttl - " + ttl);
@@ -414,7 +431,8 @@ public class PushProviders implements CTPushProviderListener {
     }
 
     private boolean alreadyHaveToken(String newToken, PushType pushType) {
-        boolean alreadyAvailable = !TextUtils.isEmpty(newToken) && pushType != null && newToken.equalsIgnoreCase(getCachedToken(pushType));
+        boolean alreadyAvailable = !TextUtils.isEmpty(newToken) && pushType != null && newToken
+                .equalsIgnoreCase(getCachedToken(pushType));
         if (pushType != null) {
             config.log(PushConstants.LOG_TAG, pushType + "Token Already available value: " + alreadyAvailable);
         }
@@ -477,7 +495,10 @@ public class PushProviders implements CTPushProviderListener {
                                             flagsAlarmPendingIntent);
                             if (alarmManager != null) {
                                 if (pingFrequency != -1) {
-                                    alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime() + (pingFrequency * Constants.ONE_MIN_IN_MILLIS), Constants.ONE_MIN_IN_MILLIS * pingFrequency, alarmServicePendingIntent);
+                                    alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP,
+                                            SystemClock.elapsedRealtime() + (pingFrequency
+                                                    * Constants.ONE_MIN_IN_MILLIS),
+                                            Constants.ONE_MIN_IN_MILLIS * pingFrequency, alarmServicePendingIntent);
                                 }
                             }
                         }
@@ -530,7 +551,8 @@ public class PushProviders implements CTPushProviderListener {
 
         //running job, no hard cancel so check for diff in ping frequency and recreate if needed
         JobInfo existingJobInfo = getJobInfo(existingJobId, jobScheduler);
-        if (existingJobInfo != null && existingJobInfo.getIntervalMillis() != pingFrequency * Constants.ONE_MIN_IN_MILLIS) {
+        if (existingJobInfo != null
+                && existingJobInfo.getIntervalMillis() != pingFrequency * Constants.ONE_MIN_IN_MILLIS) {
             jobScheduler.cancel(existingJobId);
             StorageHelper.putInt(context, Constants.PF_JOB_ID, -1);
             needsCreate = true;
@@ -613,11 +635,14 @@ public class PushProviders implements CTPushProviderListener {
             Class<?> providerClass = Class.forName(className);
 
             if (isInit) {
-                Constructor<?> constructor = providerClass.getConstructor(CTPushProviderListener.class, Context.class, CleverTapInstanceConfig.class);
+                Constructor<?> constructor = providerClass
+                        .getConstructor(CTPushProviderListener.class, Context.class, CleverTapInstanceConfig.class);
                 pushProvider = (CTPushProvider) constructor.newInstance(this, context, config);
 
             } else {
-                Constructor<?> constructor = providerClass.getConstructor(CTPushProviderListener.class, Context.class, CleverTapInstanceConfig.class, Boolean.class);
+                Constructor<?> constructor = providerClass
+                        .getConstructor(CTPushProviderListener.class, Context.class, CleverTapInstanceConfig.class,
+                                Boolean.class);
                 pushProvider = (CTPushProvider) constructor.newInstance(this, context, config, false);
             }
             config.log(PushConstants.LOG_TAG, "Found provider:" + className);
@@ -628,7 +653,8 @@ public class PushProviders implements CTPushProviderListener {
         } catch (ClassNotFoundException e) {
             config.log(PushConstants.LOG_TAG, "Unable to create provider ClassNotFoundException" + className);
         } catch (Exception e) {
-            config.log(PushConstants.LOG_TAG, "Unable to create provider " + className + " Exception:" + e.getClass().getName());
+            config.log(PushConstants.LOG_TAG,
+                    "Unable to create provider " + className + " Exception:" + e.getClass().getName());
         }
         return pushProvider;
     }
@@ -644,7 +670,8 @@ public class PushProviders implements CTPushProviderListener {
 
     private void findCTPushProviders(List<CTPushProvider> providers) {
         if (providers.isEmpty()) {
-            config.log(PushConstants.LOG_TAG, "No push providers found!. Make sure to install at least one push provider");
+            config.log(PushConstants.LOG_TAG,
+                    "No push providers found!. Make sure to install at least one push provider");
             return;
         }
 
@@ -689,19 +716,22 @@ public class PushProviders implements CTPushProviderListener {
                 if (pushType.getRunningDevices() == PushConstants.NO_DEVICES) {
                     allEnabledPushTypes.remove(pushType);
                     allDisabledPushTypes.add(pushType);
-                    config.log(PushConstants.LOG_TAG, "disabling " + pushType + " due to flag set as PushConstants.NO_DEVICES");
+                    config.log(PushConstants.LOG_TAG,
+                            "disabling " + pushType + " due to flag set as PushConstants.NO_DEVICES");
                 }
                 // if push is off for non-xiaomi devices then remove xps
                 if (pushType.getRunningDevices() == PushConstants.XIAOMI_MIUI_DEVICES) {
                     if (!PackageUtils.isXiaomiDeviceRunningMiui(context)) {
                         allEnabledPushTypes.remove(pushType);
                         allDisabledPushTypes.add(pushType);
-                        config.log(PushConstants.LOG_TAG, "disabling " + pushType + " due to flag set as PushConstants.XIAOMI_MIUI_DEVICES");
+                        config.log(PushConstants.LOG_TAG,
+                                "disabling " + pushType + " due to flag set as PushConstants.XIAOMI_MIUI_DEVICES");
                     }
                 }
 
             } catch (Exception e) {
-                config.log(PushConstants.LOG_TAG, "SDK class Not available " + className + " Exception:" + e.getClass().getName());
+                config.log(PushConstants.LOG_TAG,
+                        "SDK class Not available " + className + " Exception:" + e.getClass().getName());
             }
         }
     }
@@ -733,7 +763,8 @@ public class PushProviders implements CTPushProviderListener {
     }
 
     private void initPushAmp() {
-        if (config.isBackgroundSync() && !config.isAnalyticsOnly()) {
+        if (config.isBackgroundSync() && !config
+                .isAnalyticsOnly()) {
             Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
             task.execute("createOrResetJobScheduler", new Callable<Void>() {
                 @Override
@@ -773,7 +804,8 @@ public class PushProviders implements CTPushProviderListener {
     private boolean isValid(CTPushProvider provider) {
 
         if (VERSION_CODE < provider.minSDKSupportVersionCode()) {
-            config.log(PushConstants.LOG_TAG, "Provider: %s version %s does not match the SDK version %s. Make sure all CleverTap dependencies are the same version.");
+            config.log(PushConstants.LOG_TAG,
+                    "Provider: %s version %s does not match the SDK version %s. Make sure all CleverTap dependencies are the same version.");
             return false;
         }
         switch (provider.getPushType()) {
@@ -782,13 +814,16 @@ public class PushProviders implements CTPushProviderListener {
             case XPS:
             case BPS:
                 if (provider.getPlatform() != PushConstants.ANDROID_PLATFORM) {
-                    config.log(PushConstants.LOG_TAG, "Invalid Provider: " + provider.getClass() + " delivery is only available for Android platforms." + provider.getPushType());
+                    config.log(PushConstants.LOG_TAG, "Invalid Provider: " + provider.getClass() +
+                            " delivery is only available for Android platforms." + provider.getPushType());
                     return false;
                 }
                 break;
             case ADM:
                 if (provider.getPlatform() != PushConstants.AMAZON_PLATFORM) {
-                    config.log(PushConstants.LOG_TAG, "Invalid Provider: " + provider.getClass() + " ADM delivery is only available for Amazon platforms." + provider.getPushType());
+                    config.log(PushConstants.LOG_TAG, "Invalid Provider: " +
+                            provider.getClass() +
+                            " ADM delivery is only available for Amazon platforms." + provider.getPushType());
                     return false;
                 }
                 break;
@@ -906,9 +941,12 @@ public class PushProviders implements CTPushProviderListener {
             if (VERSION.SDK_INT >= VERSION_CODES.S) {
                 flagsAlarmPendingIntent |= PendingIntent.FLAG_MUTABLE;
             }
-            PendingIntent alarmPendingIntent = PendingIntent.getService(context, config.getAccountId().hashCode(), intent, flagsAlarmPendingIntent);
+            PendingIntent alarmPendingIntent = PendingIntent
+                    .getService(context, config.getAccountId().hashCode(), intent,
+                            flagsAlarmPendingIntent);
             if (alarmManager != null) {
-                alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime(), Constants.ONE_MIN_IN_MILLIS * pingFrequency, alarmPendingIntent);
+                alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime(),
+                        Constants.ONE_MIN_IN_MILLIS * pingFrequency, alarmPendingIntent);
             }
         }
     }
@@ -921,19 +959,23 @@ public class PushProviders implements CTPushProviderListener {
         if (VERSION.SDK_INT >= VERSION_CODES.S) {
             flagsAlarmPendingIntent |= PendingIntent.FLAG_MUTABLE;
         }
-        PendingIntent alarmPendingIntent = PendingIntent.getService(context, config.getAccountId().hashCode(), cancelIntent, flagsAlarmPendingIntent);
+        PendingIntent alarmPendingIntent = PendingIntent
+                .getService(context, config.getAccountId().hashCode(), cancelIntent,
+                        flagsAlarmPendingIntent);
         if (alarmManager != null && alarmPendingIntent != null) {
             alarmManager.cancel(alarmPendingIntent);
         }
     }
 
     @RestrictTo(Scope.LIBRARY)
-    public @NonNull INotificationRenderer getPushNotificationRenderer() {
+    public @NonNull
+    INotificationRenderer getPushNotificationRenderer() {
         return iNotificationRenderer;
     }
 
     @RestrictTo(Scope.LIBRARY)
-    public @NonNull Object getPushRenderingLock() {
+    public @NonNull
+    Object getPushRenderingLock() {
         return pushRenderingLock;
     }
 
@@ -953,8 +995,8 @@ public class PushProviders implements CTPushProviderListener {
     }
 
     private void triggerNotification(Context context, Bundle extras, int notificationId) {
-        Logger.v( "triggerNotification() called with: context = [" + context + "], extras = [" + extras + "], notificationId = [" + notificationId + "]");
-        NotificationManager notificationManager = (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
+        NotificationManager notificationManager =
+                (NotificationManager) context.getSystemService(NOTIFICATION_SERVICE);
 
         if (notificationManager == null) {
             String notificationManagerError = "Unable to render notification, Notification Manager is null.";
@@ -1021,20 +1063,27 @@ public class PushProviders implements CTPushProviderListener {
                     } else if (collapse_key instanceof String) {
                         try {
                             notificationId = Integer.parseInt(collapse_key.toString());
-                            config.getLogger().verbose(config.getAccountId(), "Converting collapse_key: " + collapse_key + " to notificationId int: " + notificationId);
+                            config.getLogger().verbose(config.getAccountId(),
+                                    "Converting collapse_key: " + collapse_key + " to notificationId int: "
+                                            + notificationId);
                         } catch (NumberFormatException e) {
                             notificationId = (collapse_key.toString().hashCode());
-                            config.getLogger().verbose(config.getAccountId(), "Converting collapse_key: " + collapse_key + " to notificationId int: " + notificationId);
+                            config.getLogger().verbose(config.getAccountId(),
+                                    "Converting collapse_key: " + collapse_key + " to notificationId int: "
+                                            + notificationId);
                         }
                     }
                     notificationId = Math.abs(notificationId); //Notification Id always needs to be positive
-                    config.getLogger().debug(config.getAccountId(), "Creating the notification id: " + notificationId + " from collapse_key: " + collapse_key);
+                    config.getLogger().debug(config.getAccountId(),
+                            "Creating the notification id: " + notificationId + " from collapse_key: "
+                                    + collapse_key);
                 }
             } catch (NumberFormatException e) {
                 // no-op
             }
         } else {
-            config.getLogger().debug(config.getAccountId(), "Have user provided notificationId: " + notificationId + " won't use collapse_key (if any) as basis for notificationId");
+            config.getLogger().debug(config.getAccountId(), "Have user provided notificationId: " + notificationId
+                    + " won't use collapse_key (if any) as basis for notificationId");
         }
 
         // if after trying collapse_key notification is still empty set to random int
@@ -1048,7 +1097,8 @@ public class PushProviders implements CTPushProviderListener {
             nb = new NotificationCompat.Builder(context, channelId);
 
             // choices here are Notification.BADGE_ICON_NONE = 0, Notification.BADGE_ICON_SMALL = 1, Notification.BADGE_ICON_LARGE = 2.  Default is  Notification.BADGE_ICON_LARGE
-            String badgeIconParam = extras.getString(Constants.WZRK_BADGE_ICON, null);
+            String badgeIconParam = extras
+                    .getString(Constants.WZRK_BADGE_ICON, null);
             if (badgeIconParam != null) {
                 try {
                     int badgeIconType = Integer.parseInt(badgeIconParam);
@@ -1096,7 +1146,8 @@ public class PushProviders implements CTPushProviderListener {
 
         String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
         if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
-            String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE, (System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL) / 1000 + "");
+            String ttl = extras.getString(Constants.WZRK_TIME_TO_LIVE,
+                    (System.currentTimeMillis() + Constants.DEFAULT_PUSH_TTL) / 1000 + "");
             long wzrk_ttl = Long.parseLong(ttl);
             String wzrk_pid = extras.getString(Constants.WZRK_PUSH_ID);
             DBAdapter dbAdapter = baseDatabaseManager.loadDBAdapter(context);
@@ -1105,14 +1156,17 @@ public class PushProviders implements CTPushProviderListener {
 
             boolean notificationViewedEnabled = "true".equals(extras.getString(Constants.WZRK_RNV, ""));
             if (!notificationViewedEnabled) {
-                ValidationResult notificationViewedError = ValidationResultFactory.create(512, Constants.NOTIFICATION_VIEWED_DISABLED, extras.toString());
+                ValidationResult notificationViewedError = ValidationResultFactory
+                        .create(512, Constants.NOTIFICATION_VIEWED_DISABLED, extras.toString());
                 config.getLogger().debug(notificationViewedError.getErrorDesc());
                 validationResultStack.pushValidationResult(notificationViewedError);
                 return;
             }
 
             analyticsManager.pushNotificationViewedEvent(extras);
-            config.getLogger().verbose("Rendered Push Notification... from nh_source = " + extras.getString("nh_source", "source not available"));
+            config.getLogger()
+                    .verbose("Rendered Push Notification... from nh_source = " + extras.getString("nh_source",
+                            "source not available"));
         }
     }
 }
