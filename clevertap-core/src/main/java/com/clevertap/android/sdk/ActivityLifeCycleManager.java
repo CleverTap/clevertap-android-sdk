@@ -98,7 +98,7 @@ class ActivityLifeCycleManager {
                     if (!coreMetaData.isInstallReferrerDataSent() && coreMetaData
                             .isFirstSession()) {
                         handleInstallReferrerOnFirstInstall();
-                    }
+                    }//
                     return null;
                 }
             });
