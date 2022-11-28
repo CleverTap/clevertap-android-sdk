@@ -157,7 +157,7 @@ class ActivityLifeCycleManager {
                 public void onInstallReferrerSetupFinished(int responseCode) {
                     switch (responseCode) {
                         case InstallReferrerClient.InstallReferrerResponse.OK:
-                            // Connection established.
+                            // Connection established
                             Task<ReferrerDetails> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
                             task.execute("ActivityLifeCycleManager#getInstallReferrer", () -> {
                                 ReferrerDetails response = null;
