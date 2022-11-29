@@ -159,19 +159,7 @@ class ActivityLifeCycleManager {
                         case InstallReferrerClient.InstallReferrerResponse.OK:
                             // Connection established
                             Task<ReferrerDetails> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-                            task.execute("ActivityLifeCycleManager#getInstallReferrer", () -> {
-                                ReferrerDetails response = null;
-                                try {
-                                    response = referrerClient.getInstallReferrer();
-                                } catch (RemoteException e) {
-                                    config.getLogger().debug(config.getAccountId(),
-                                            "Remote exception caused by Google Play Install Referrer library - " + e
-                                                    .getMessage());
-                                    referrerClient.endConnection();
-                                    coreMetaData.setInstallReferrerDataSent(false);
-                                }
-                                return response;
-                            });
+
                             task.addOnSuccessListener(response -> {
                                 try {
                                     String referrerUrl = response.getInstallReferrer();
@@ -185,12 +173,28 @@ class ActivityLifeCycleManager {
                                             "Install Referrer data set [Referrer URL-" + referrerUrl + "]");
                                 } catch (NullPointerException npe) {
                                     config.getLogger().debug(config.getAccountId(),
-                                            "Install referrer client null pointer exception caused by Google Play Install Referrer library - " + npe
+                                            "Install referrer client null pointer exception caused by Google Play Install Referrer library - "
+                                                    + npe
                                                     .getMessage());
                                     referrerClient.endConnection();
                                     coreMetaData.setInstallReferrerDataSent(false);
                                 }
                             });
+
+                            task.execute("ActivityLifeCycleManager#getInstallReferrer", () -> {
+                                ReferrerDetails response = null;
+                                try {
+                                    response = referrerClient.getInstallReferrer();
+                                } catch (RemoteException e) {
+                                    config.getLogger().debug(config.getAccountId(),
+                                            "Remote exception caused by Google Play Install Referrer library - " + e
+                                                    .getMessage());
+                                    referrerClient.endConnection();
+                                    coreMetaData.setInstallReferrerDataSent(false);
+                                }
+                                return response;
+                            });
+
                             break;
                         case InstallReferrerClient.InstallReferrerResponse.FEATURE_NOT_SUPPORTED:
                             // API not available on the current Play Store app.
