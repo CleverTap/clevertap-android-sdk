@@ -12,7 +12,7 @@ jobs:
       packages: write
 
     steps:
-      - name: Checkout the code from Repo
+      - name: Checkout the code from Repo.
         uses: actions/checkout@v2
 
       - name: Setup JDK 11.
