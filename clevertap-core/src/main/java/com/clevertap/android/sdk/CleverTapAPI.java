@@ -63,6 +63,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
@@ -1637,12 +1638,12 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Returns the PushPermissionNotificationResponseListener object
+     * Returns the list of PushPermissionNotificationResponseListener
      *
      * @return An {@link PushPermissionResponseListener} object
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
-    public PushPermissionResponseListener getPushPermissionNotificationResponseListener() {
+    public List<PushPermissionResponseListener> getPushPermissionNotificationResponseListener() {
         return coreState.getCallbackManager().getPushPermissionResponseListener();
     }
 

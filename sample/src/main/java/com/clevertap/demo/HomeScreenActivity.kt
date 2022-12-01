@@ -148,8 +148,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
 
             inAppNotificationListener = this@HomeScreenActivity
 
-            pushPermissionNotificationResponseListener = this@HomeScreenActivity
-
+            setPushPermissionNotificationResponseListener(this@HomeScreenActivity)
         }
 
         //With CleverTap Android SDK v3.2.0 you can create additional instances to send data to multiple CleverTap accounts
