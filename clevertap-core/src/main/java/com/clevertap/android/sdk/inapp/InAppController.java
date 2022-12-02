@@ -378,9 +378,9 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         notifyPushPermissionResult(false);
     }
 
-    //iterates over list of PushPermissionResponseListener to notify the result
+    //iterates over the PushPermissionResponseListenerList to notify the result
     public void notifyPushPermissionResult(boolean result) {
-        for (final PushPermissionResponseListener listener: callbackManager.getPushPermissionResponseListener()) {
+        for (final PushPermissionResponseListener listener: callbackManager.getPushPermissionResponseListenerList()) {
             if (listener != null){
                 listener.onPushPermissionResponse(result);
             }
