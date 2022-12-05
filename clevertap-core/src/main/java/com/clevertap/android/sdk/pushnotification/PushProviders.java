@@ -745,14 +745,9 @@ public class PushProviders implements CTPushProviderListener {
      * Loads all the plugins that are currently supported by the device.
      */
     private void init() {
-
         findEnabledPushTypes();
-
         List<CTPushProvider> providers = createProviders();
-
-
         Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-
 
         task.addOnSuccessListener(unused -> findCustomEnabledPushTypes());
         task.execute("asyncFindCTPushProviders", () -> {
