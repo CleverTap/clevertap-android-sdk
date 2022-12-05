@@ -1655,8 +1655,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     /**
      * This method registers the PushPermissionNotificationResponseListener.
      * <p>
-     * Use this method only from the onCreate() of the activity/fragment and unregister the
-     * listener from the the onDestroy() method using the
+     * Call this method only from the onCreate() of the activity/fragment and unregister the
+     * listener from the onDestroy() method using the
      * {@link #unregisterPushPermissionNotificationResponseListener(PushPermissionResponseListener)}
      *
      * @param pushPermissionResponseListener An {@link PushPermissionResponseListener} object
