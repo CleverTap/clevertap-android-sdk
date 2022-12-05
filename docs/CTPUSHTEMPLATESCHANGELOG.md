@@ -1,6 +1,6 @@
 ## CleverTap Push Templates SDK CHANGE LOG
 
-### Version 1.0.7 (November xx, 2022)
+### Version 1.0.7 (December 5, 2022)
 * UI bug fixes for Non-linear Product Catalogue template.
 
 ### Version 1.0.6 (November 1, 2022)
