@@ -115,11 +115,7 @@ class ActivityLifeCycleManagerTest : BaseTestCase() {
         //`when`(coreState.callbackManager.geofenceCallback).thenReturn(geofenceCallback)
 
         mockStatic(CTExecutorFactory::class.java).use {
-            `when`(CTExecutorFactory.executors(any())).thenReturn(
-                MockCTExecutors(
-                    cleverTapInstanceConfig
-                )
-            )
+            `when`(CTExecutorFactory.executors(cleverTapInstanceConfig)).thenReturn(MockCTExecutors(cleverTapInstanceConfig))
             mockStatic(InstallReferrerClient::class.java).use {
                 val referrerDetails = mock(ReferrerDetails::class.java)
                 val captor = ArgumentCaptor.forClass(InstallReferrerStateListener::class.java)
