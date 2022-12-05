@@ -1,7 +1,7 @@
 ## CleverTap Android SDK CHANGE LOG
 
 ### Version 4.7.1 (December 5, 2022)
-* Bug fixes and improvements
+* Fixes ANR on main thread for static initialization of `SimpleDateFormat()`
 
 ### Version 4.7.0 (November 1, 2022)
 * Adds below new public APIs for supporting [Android 13 notification runtime permission](https://developer.android.com/develop/ui/views/notifications/notification-permission)
