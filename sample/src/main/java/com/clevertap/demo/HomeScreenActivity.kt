@@ -148,7 +148,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
 
             inAppNotificationListener = this@HomeScreenActivity
 
-            setPushPermissionNotificationResponseListener(this@HomeScreenActivity)
+            registerPushPermissionNotificationResponseListener(this@HomeScreenActivity)
         }
 
         //With CleverTap Android SDK v3.2.0 you can create additional instances to send data to multiple CleverTap accounts
@@ -280,5 +280,10 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
 
     override fun onInAppButtonClick(payload: HashMap<String, String>?) {
         Log.i(TAG, "onInAppButtonClick() called")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        cleverTapDefaultInstance?.unregisterPushPermissionNotificationResponseListener(this)
     }
 }
