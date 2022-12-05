@@ -150,6 +150,11 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     @Override
+    public void unregisterPushPermissionResponseListener(PushPermissionResponseListener pushPermissionResponseListener) {
+        this.pushPermissionResponseListenerList.remove(pushPermissionResponseListener);
+    }
+
+    @Override
     public CTInboxListener getInboxListener() {
         return inboxListener;
     }
