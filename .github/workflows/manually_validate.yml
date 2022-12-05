@@ -64,7 +64,6 @@ on:
 
 jobs:
   lint-static_checks-test-build:
-    if: github.head_ref == 'develop'
     runs-on: ubuntu-latest
     permissions:
       contents: read
