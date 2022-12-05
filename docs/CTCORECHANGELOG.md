@@ -2,6 +2,10 @@
 
 ### Version 4.7.1 (December 5, 2022)
 * Fixes ANR on main thread for static initialization of `SimpleDateFormat()`
+* add Proguard rules to keep CREATOR instance for Parcelable classes to prevent ANR
+* make call to `installReferral` async to prevent crash when called on main thread
+* use concurrent HashMap instead of HashMap for storing `CleverTapApi` instances to prevent crashes when trying to access the instances concurrently
+* made calls to `findCTPushProvider` and `findCustomEnabledPushTypes` async to prevent crash when called on main thread
 
 ### Version 4.7.0 (November 1, 2022)
 * Adds below new public APIs for supporting [Android 13 notification runtime permission](https://developer.android.com/develop/ui/views/notifications/notification-permission)
