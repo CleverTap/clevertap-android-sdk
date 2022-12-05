@@ -193,8 +193,6 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     @RequiresApi(api = 33)
     public void promptPushPrimer(JSONObject jsonObject){
-        PushPermissionResponseListener listener = callbackManager.
-                getPushPermissionResponseListener();
         int permissionStatus = ContextCompat.checkSelfPermission(context,
                 Manifest.permission.POST_NOTIFICATIONS);
 
@@ -210,9 +208,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
                 if (!jsonObject.optBoolean(FALLBACK_TO_NOTIFICATION_SETTINGS, false)) {
                     Logger.v("Notification permission is denied. Please grant notification permission access" +
                             " in your app's settings to send notifications");
-                    if (listener != null) {
-                        listener.onPushPermissionResponse(false);
-                    }
+                    notifyPushPermissionResult(false);
                 } else {
                     showSoftOrHardPrompt(jsonObject);
                 }
@@ -220,10 +216,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             }
             showSoftOrHardPrompt(jsonObject);
         } else {
-            //Notification permission is granted
-            if (listener != null) {
-                listener.onPushPermissionResponse(true);
-            }
+            notifyPushPermissionResult(true);
         }
     }
 
@@ -377,17 +370,20 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     @Override
     public void onPushPermissionAccept() {
-        final PushPermissionResponseListener listener = callbackManager.getPushPermissionResponseListener();
-        if (listener != null){
-            listener.onPushPermissionResponse(true);
-        }
+        notifyPushPermissionResult(true);
     }
 
     @Override
     public void onPushPermissionDeny() {
-        final PushPermissionResponseListener listener = callbackManager.getPushPermissionResponseListener();
-        if (listener != null){
-            listener.onPushPermissionResponse(false);
+        notifyPushPermissionResult(false);
+    }
+
+    //iterates over the PushPermissionResponseListenerList to notify the result
+    public void notifyPushPermissionResult(boolean result) {
+        for (final PushPermissionResponseListener listener: callbackManager.getPushPermissionResponseListenerList()) {
+            if (listener != null){
+                listener.onPushPermissionResponse(result);
+            }
         }
     }
 

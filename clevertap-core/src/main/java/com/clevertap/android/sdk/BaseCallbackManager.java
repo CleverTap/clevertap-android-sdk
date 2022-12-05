@@ -9,6 +9,7 @@ import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
 import java.util.ArrayList;
+import java.util.List;
 
 public abstract class BaseCallbackManager {
 
@@ -28,7 +29,7 @@ public abstract class BaseCallbackManager {
 
     public abstract InAppNotificationListener getInAppNotificationListener();
 
-    public abstract PushPermissionResponseListener getPushPermissionResponseListener();
+    public abstract List<PushPermissionResponseListener> getPushPermissionResponseListenerList();
 
     public abstract CTInboxListener getInboxListener();
 
@@ -62,7 +63,9 @@ public abstract class BaseCallbackManager {
 
     public abstract void setInAppNotificationListener(InAppNotificationListener inAppNotificationListener);
 
-    public abstract void setPushPermissionResponseListener(PushPermissionResponseListener pushPermissionResponseListener);
+    public abstract void unregisterPushPermissionResponseListener(PushPermissionResponseListener pushPermissionResponseListener);
+
+    public abstract void registerPushPermissionResponseListener(PushPermissionResponseListener pushPermissionResponseListener);
 
     public abstract void setInboxListener(CTInboxListener inboxListener);
 

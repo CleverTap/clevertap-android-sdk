@@ -63,6 +63,7 @@ import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
@@ -1637,25 +1638,34 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Returns the PushPermissionNotificationResponseListener object
-     *
-     * @return An {@link PushPermissionResponseListener} object
-     */
-    @SuppressWarnings({"unused", "WeakerAccess"})
-    public PushPermissionResponseListener getPushPermissionNotificationResponseListener() {
-        return coreState.getCallbackManager().getPushPermissionResponseListener();
-    }
-
-    /**
-     * This method sets the PushPermissionNotificationResponseListener
+     * This method unregisters the given instance of the PushPermissionResponseListener if
+     * previously registered.
+     * <p>
+     * Use this method to stop observing the push permission result.
      *
      * @param pushPermissionResponseListener An {@link PushPermissionResponseListener} object
      */
     @SuppressWarnings({"unused"})
-    public void setPushPermissionNotificationResponseListener(PushPermissionResponseListener
+    public void unregisterPushPermissionNotificationResponseListener(PushPermissionResponseListener
+                                                                           pushPermissionResponseListener) {
+        coreState.getCallbackManager().
+                unregisterPushPermissionResponseListener(pushPermissionResponseListener);
+    }
+
+    /**
+     * This method registers the PushPermissionNotificationResponseListener.
+     * <p>
+     * Call this method only from the onCreate() of the activity/fragment and unregister the
+     * listener from the onDestroy() method using the
+     * {@link #unregisterPushPermissionNotificationResponseListener(PushPermissionResponseListener)}
+     *
+     * @param pushPermissionResponseListener An {@link PushPermissionResponseListener} object
+     */
+    @SuppressWarnings({"unused"})
+    public void registerPushPermissionNotificationResponseListener(PushPermissionResponseListener
                                                                           pushPermissionResponseListener) {
         coreState.getCallbackManager().
-                setPushPermissionResponseListener(pushPermissionResponseListener);
+                registerPushPermissionResponseListener(pushPermissionResponseListener);
     }
 
     /**
