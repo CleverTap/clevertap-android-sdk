@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
@@ -15,8 +14,7 @@
         android:id="@+id/carousel_relative_layout"
         android:layout_width="match_parent"
         android:layout_height="200dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
+        android:layout_marginTop="8dp"
         android:weightSum="1">
 
         <ViewFlipper
@@ -31,64 +29,58 @@
             android:layout_width="0dp"
             android:layout_height="match_parent"
             android:layout_weight="0.5"
-            android:orientation="vertical"
-            android:weightSum="1">
+            android:orientation="vertical">
 
-            <LinearLayout
+            <RelativeLayout
                 android:layout_width="match_parent"
-                android:layout_height="0dp"
-                android:layout_weight="0.4"
-                android:orientation="vertical"
-                android:padding="8dp"
-                android:weightSum="3"
-                android:gravity="center">
-
+                android:layout_height="wrap_content"
+                android:padding="8dp">
 
                 <TextView
                     android:id="@+id/product_price"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
-                    tools:text="Rs: 5,000,000"
                     android:textAppearance="@style/PushTitle"
                     android:textAlignment="center"
-                    android:layout_gravity="center_horizontal"/>
+                    android:gravity="center_horizontal"
+                    android:layout_centerHorizontal="true"/>
 
                 <Button
                     android:id="@+id/product_action"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
-                    android:background="@android:color/holo_orange_light"
-                    tools:text="Buy Now"
+                    android:layout_marginTop="8dp"
+                    android:layout_below="@id/product_price"
+                    android:gravity="center"
+                    android:layout_centerHorizontal="true"
                     android:textAppearance="@style/PushMessage"/>
 
+            </RelativeLayout>
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:visibility="visible"
+                android:weightSum="3">
+
+                <ImageView
+                    android:id="@+id/small_image1"
+                    android:layout_width="0dp"
                     android:layout_height="match_parent"
-                    android:layout_marginTop="16dp"
-                    android:orientation="horizontal">
+                    android:layout_weight="1"/>
 
-                    <ImageView
-                        android:id="@+id/small_image1"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"/>
+                <ImageView
+                    android:id="@+id/small_image2"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"/>
 
-
-                    <ImageView
-                        android:id="@+id/small_image2"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"/>
-
-                    <ImageView
-                        android:id="@+id/small_image3"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"/>
-                </LinearLayout>
+                <ImageView
+                    android:id="@+id/small_image3"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"/>
             </LinearLayout>
 
 

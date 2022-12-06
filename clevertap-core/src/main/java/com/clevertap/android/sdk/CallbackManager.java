@@ -14,6 +14,7 @@ import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
+import java.util.List;
 
 @RestrictTo(Scope.LIBRARY)
 public class CallbackManager extends BaseCallbackManager {
@@ -28,7 +29,7 @@ public class CallbackManager extends BaseCallbackManager {
 
     private InAppNotificationListener inAppNotificationListener;
 
-    private PushPermissionResponseListener pushPermissionResponseListener;
+    private final List<PushPermissionResponseListener> pushPermissionResponseListenerList = new ArrayList<>();
 
     private CTInboxListener inboxListener;
 
@@ -148,8 +149,8 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     @Override
-    public PushPermissionResponseListener getPushPermissionResponseListener() {
-        return pushPermissionResponseListener;
+    public List<PushPermissionResponseListener> getPushPermissionResponseListenerList() {
+        return pushPermissionResponseListenerList;
     }
 
     @Override
@@ -158,8 +159,13 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     @Override
-    public void setPushPermissionResponseListener(PushPermissionResponseListener pushPermissionResponseListener) {
-        this.pushPermissionResponseListener = pushPermissionResponseListener;
+    public void registerPushPermissionResponseListener(PushPermissionResponseListener pushPermissionResponseListener) {
+        this.pushPermissionResponseListenerList.add(pushPermissionResponseListener);
+    }
+
+    @Override
+    public void unregisterPushPermissionResponseListener(PushPermissionResponseListener pushPermissionResponseListener) {
+        this.pushPermissionResponseListenerList.remove(pushPermissionResponseListener);
     }
 
     @Override
