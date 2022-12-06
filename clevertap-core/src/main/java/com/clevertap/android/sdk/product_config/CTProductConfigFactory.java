@@ -10,9 +10,20 @@ import com.clevertap.android.sdk.utils.FileUtils;
 
 /**
  * Factory class to get {@link CTProductConfigController} instance for a particular configuration
+
+ * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+ *      Note: This class has been deprecated and will be removed in the future versions of this SDK.
+ * </p>
  */
+@Deprecated
 public class CTProductConfigFactory {
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     public static CTProductConfigController getInstance(Context context, DeviceInfo deviceInfo,
             CleverTapInstanceConfig config, BaseAnalyticsManager baseAnalyticsManager, CoreMetaData coreMetaData,
             BaseCallbackManager callbackManager) {

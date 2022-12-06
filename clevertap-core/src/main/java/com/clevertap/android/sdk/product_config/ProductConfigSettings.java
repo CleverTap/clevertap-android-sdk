@@ -23,6 +23,12 @@ import java.util.concurrent.TimeUnit;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/**
+ * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+ *      Note: This class has been deprecated and will be removed in the future versions of this SDK.
+ * </p>
+ */
+@Deprecated
 public class ProductConfigSettings {
 
     private final CleverTapInstanceConfig config;
@@ -33,6 +39,12 @@ public class ProductConfigSettings {
 
     private final Map<String, String> settingsMap = Collections.synchronizedMap(new HashMap<String, String>());
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     ProductConfigSettings(String guid, CleverTapInstanceConfig config, FileUtils fileUtils) {
         this.guid = guid;
         this.config = config;
@@ -73,6 +85,12 @@ public class ProductConfigSettings {
         return getDirName() + "/" + CTProductConfigConstants.FILE_NAME_CONFIG_SETTINGS;
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     public String getGuid() {
         return guid;
     }
