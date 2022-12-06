@@ -123,6 +123,12 @@ public class CoreState extends CleverTapState {
         this.coreMetaData = coreMetaData;
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     public CTProductConfigController getCtProductConfigController() {
         initProductConfig();
         return getControllerManager().getCTProductConfigController();
@@ -230,6 +236,12 @@ public class CoreState extends CleverTapState {
         this.mainLooperHandler = mainLooperHandler;
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     private void initProductConfig() {
         if (getConfig().isAnalyticsOnly()) {
             getConfig().getLogger()

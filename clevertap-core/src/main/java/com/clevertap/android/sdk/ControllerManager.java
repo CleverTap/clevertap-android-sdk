@@ -22,12 +22,24 @@ public class ControllerManager {
 
     private CTDisplayUnitController ctDisplayUnitController;
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     private CTFeatureFlagsController ctFeatureFlagsController;
 
     private CTInboxController ctInboxController;
 
     private final CTLockManager ctLockManager;
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     private CTProductConfigController ctProductConfigController;
 
     private final BaseCallbackManager callbackManager;
@@ -65,11 +77,23 @@ public class ControllerManager {
         ctDisplayUnitController = CTDisplayUnitController;
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     public CTFeatureFlagsController getCTFeatureFlagsController() {
 
         return ctFeatureFlagsController;
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     public void setCTFeatureFlagsController(
             final CTFeatureFlagsController CTFeatureFlagsController) {
         ctFeatureFlagsController = CTFeatureFlagsController;
@@ -83,10 +107,22 @@ public class ControllerManager {
         ctInboxController = CTInboxController;
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     public CTProductConfigController getCTProductConfigController() {
         return ctProductConfigController;
     }
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     public void setCTProductConfigController(
             final CTProductConfigController CTProductConfigController) {
         ctProductConfigController = CTProductConfigController;

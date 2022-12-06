@@ -21,10 +21,22 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/**
+ * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+ *      Note: This class has been deprecated and will be removed in the future versions of this SDK.
+ * </p>
+ */
+@Deprecated
 public class CTFeatureFlagsController {
 
     final CleverTapInstanceConfig config;
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     public String getGuid() {
         return guid;
     }
@@ -41,6 +53,12 @@ public class CTFeatureFlagsController {
 
     private final Map<String, Boolean> store = Collections.synchronizedMap(new HashMap<String, Boolean>());
 
+    /**
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     * </p>
+     */
+    @Deprecated
     CTFeatureFlagsController(String guid, CleverTapInstanceConfig config,
             BaseCallbackManager callbackManager, BaseAnalyticsManager analyticsManager, FileUtils fileUtils) {
         this.guid = guid;
@@ -58,7 +76,12 @@ public class CTFeatureFlagsController {
     /**
      * This method is internal to the CleverTap SDK.
      * Developers should not use this method
+     *
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     * </p>
      */
+    @Deprecated
     public void fetchFeatureFlags() {
         Task<Void> task = CTExecutorFactory.executors(config).mainTask();
         task.execute("fetchFeatureFlags", new Callable<Void>() {
@@ -80,7 +103,12 @@ public class CTFeatureFlagsController {
      * @param key          - Key of the Feature flag
      * @param defaultValue - default value of the Key, in case we don't find any Feature Flag with the Key.
      * @return boolean- Value of the Feature flag.
+
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     * </p>
      */
+    @Deprecated
     public Boolean get(String key, boolean defaultValue) {
         if (!isInitialized) {
             getConfigLogger()
@@ -107,7 +135,12 @@ public class CTFeatureFlagsController {
      * Method to check Feature Flag has been initialized
      *
      * @return boolean- true if initialized, else false.
+
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     * </p>
      */
+    @Deprecated
     public boolean isInitialized() {
         return isInitialized;
     }
@@ -115,7 +148,13 @@ public class CTFeatureFlagsController {
     /**
      * This method is internal to the CleverTap SDK.
      * Developers should not use this method
+
+
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     * </p>
      */
+    @Deprecated
     public void resetWithGuid(String guid) {
         this.guid = guid;
         init();
@@ -124,7 +163,11 @@ public class CTFeatureFlagsController {
     /**
      * This method is internal to the CleverTap SDK.
      * Developers should not use this method
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     * </p>
      */
+    @Deprecated
     public void setGuidAndInit(String cleverTapID) {
         if (isInitialized) {
             return;
@@ -136,7 +179,11 @@ public class CTFeatureFlagsController {
     /**
      * This method is internal to the CleverTap SDK.
      * Developers should not use this method
+     * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
+     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     * </p>
      */
+    @Deprecated
     public synchronized void updateFeatureFlags(JSONObject jsonObject) throws JSONException {
 
         JSONArray featureFlagList = jsonObject.getJSONArray(Constants.KEY_KV);
