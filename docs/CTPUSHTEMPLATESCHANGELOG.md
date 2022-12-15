@@ -2,6 +2,7 @@
 
 ### Version 1.0.7 (December 5, 2022)
 * UI bug fixes for Non-linear Product Catalogue template.
+* Supports CleverTap Android SDK v4.7.2.
 
 ### Version 1.0.6 (November 1, 2022)
 * Targets Android 13
