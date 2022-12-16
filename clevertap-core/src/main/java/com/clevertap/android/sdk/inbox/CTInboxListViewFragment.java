@@ -84,7 +84,11 @@ public class CTInboxListViewFragment extends Fragment {
             if (context instanceof CTInboxActivity) {
                 setListener((CTInboxListViewFragment.InboxListener) getActivity());
             }
-            didClickForHardPermissionListener = (DidClickForHardPermissionListener) getActivity();
+            /*Initializes the below listener only when inbox payload has CTInbox activity as their host activity
+            when requesting permission for notification.*/
+            if (context instanceof DidClickForHardPermissionListener) {
+                didClickForHardPermissionListener = (DidClickForHardPermissionListener) context;
+            }
         }
     }
     private void updateInboxMessages(){
@@ -288,7 +292,8 @@ public class CTInboxListViewFragment extends Fragment {
 
             String isRequestForPermissionStr = inboxMessages.get(position).getInboxMessageContents().
                     get(0).getLinktype(jsonObject);
-            if (isRequestForPermissionStr.contains(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)){
+            if (isRequestForPermissionStr.contains(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)
+                && didClickForHardPermissionListener != null){
                 boolean isFallbackSettings = inboxMessages.get(position).
                         getInboxMessageContents().get(0).isFallbackSettingsEnabled(jsonObject);
                 didClickForHardPermissionListener.didClickForHardPermissionWithFallbackSettings(isFallbackSettings);

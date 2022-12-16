@@ -6,11 +6,13 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.util.TypedValue;
 import android.view.View;
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.DidClickForHardPermissionListener;
+import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.customviews.CloseImageView;
 import java.lang.ref.WeakReference;
@@ -54,7 +56,11 @@ public abstract class CTInAppBaseFragment extends Fragment {
             config = bundle.getParcelable(Constants.KEY_CONFIG);
             currentOrientation = getResources().getConfiguration().orientation;
             generateListener();
-            didClickForHardPermissionListener = (DidClickForHardPermissionListener) getActivity();
+            /*Initialize the below listener only when in app has InAppNotification activity as their host activity
+            when requesting permission for notification.*/
+            if (context instanceof DidClickForHardPermissionListener) {
+                didClickForHardPermissionListener = (DidClickForHardPermissionListener) context;
+            }
         }
     }
 
@@ -146,7 +152,8 @@ public abstract class CTInAppBaseFragment extends Fragment {
 
             didClick(data, button.getKeyValues());
 
-            if (index == 0 && inAppNotification.isLocalInApp()) {
+            if (index == 0 && inAppNotification.isLocalInApp() &&
+                    didClickForHardPermissionListener != null) {
                 didClickForHardPermissionListener.didClickForHardPermissionWithFallbackSettings(
                         inAppNotification.fallBackToNotificationSettings());
                 return;
@@ -156,7 +163,8 @@ public abstract class CTInAppBaseFragment extends Fragment {
             }
 
             if (button.getType() != null && button.getType().contains(
-                    Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)){
+                    Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)
+                    && didClickForHardPermissionListener != null){
                 didClickForHardPermissionListener.
                         didClickForHardPermissionWithFallbackSettings(button.isFallbackToSettings());
                 return;
