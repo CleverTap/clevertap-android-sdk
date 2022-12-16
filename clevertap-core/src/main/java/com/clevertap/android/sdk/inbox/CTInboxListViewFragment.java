@@ -83,9 +83,11 @@ public class CTInboxListViewFragment extends Fragment {
             updateInboxMessages();
             if (context instanceof CTInboxActivity) {
                 setListener((CTInboxListViewFragment.InboxListener) getActivity());
-                /*Initializes the below listener only when inbox payload has CTInbox activity as their host activity
-                when requesting permission for notification.*/
-                didClickForHardPermissionListener = (DidClickForHardPermissionListener) getActivity();
+            }
+            /*Initializes the below listener only when inbox payload has CTInbox activity as their host activity
+            when requesting permission for notification.*/
+            if (context instanceof DidClickForHardPermissionListener) {
+                didClickForHardPermissionListener = (DidClickForHardPermissionListener) context;
             }
         }
     }

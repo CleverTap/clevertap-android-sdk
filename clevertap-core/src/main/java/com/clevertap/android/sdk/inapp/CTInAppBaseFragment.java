@@ -58,8 +58,8 @@ public abstract class CTInAppBaseFragment extends Fragment {
             generateListener();
             /*Initialize the below listener only when in app has InAppNotification activity as their host activity
             when requesting permission for notification.*/
-            if (context instanceof InAppNotificationActivity) {
-                didClickForHardPermissionListener = (DidClickForHardPermissionListener) getActivity();
+            if (context instanceof DidClickForHardPermissionListener) {
+                didClickForHardPermissionListener = (DidClickForHardPermissionListener) context;
             }
         }
     }
