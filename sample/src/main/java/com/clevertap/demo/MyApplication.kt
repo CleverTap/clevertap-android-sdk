@@ -98,6 +98,10 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                 this, "PTTesting", "Push templates",
                 "All push templates", NotificationManager.IMPORTANCE_MAX, true
             )
+            CleverTapAPI.createNotificationChannel(
+                this, "BlockBRTesting", "Blocked Core",
+                "Blocked Core notifications", NotificationManager.IMPORTANCE_NONE, true
+            )
         }
     }
 

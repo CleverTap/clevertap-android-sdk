@@ -8,7 +8,7 @@ import com.clevertap.android.sdk.CTInboxStyleConfig
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.Constants
 import com.clevertap.android.sdk.inapp.CTLocalInApp
-import java.util.*
+import java.util.Date
 
 class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel() {
 
@@ -23,6 +23,7 @@ class HomeScreenViewModel(private val cleverTapAPI: CleverTapAPI?) : ViewModel()
         when (commandPosition) {
             "00" -> {
                 cleverTapAPI?.pushEvent("testEventPushAmp")
+                cleverTapAPI?.pushEvent("BlockBRTesting")
             }
             "01" -> {
                 //Record an event with properties
