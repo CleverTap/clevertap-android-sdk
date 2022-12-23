@@ -1,5 +1,5 @@
 /*
- * Copyright 2013, Leanplum, Inc. All rights reserved.
+ * Copyright 2013, CleverTap, Inc. All rights reserved.
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -30,7 +30,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Parses Leanplum annotations.
+ * Parses CleverTap annotations.
  *
  * @author Andrew First
  */
@@ -102,7 +102,7 @@ public class Parser {
   }
 
   /**
-   * Parses Leanplum annotations for all given object instances.
+   * Parses CleverTap annotations for all given object instances.
    */
   public static void parseVariables(Object... instances) {
     try {
@@ -115,7 +115,7 @@ public class Parser {
   }
 
   /**
-   * Parses Leanplum annotations for all given classes.
+   * Parses CleverTap annotations for all given classes.
    */
   public static void parseVariablesForClasses(Class<?>... classes) {
     try {

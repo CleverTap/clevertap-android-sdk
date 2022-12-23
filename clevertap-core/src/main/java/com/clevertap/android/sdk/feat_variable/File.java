@@ -1,5 +1,5 @@
 /*
- * Copyright 2013, Leanplum, Inc. All rights reserved.
+ * Copyright 2013, CleverTap, Inc. All rights reserved.
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -27,7 +27,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Leanplum variable annotation. Use this to make this variable changeable from the Leanplum
+ * CleverTap variable annotation. Use this to make this variable changeable from the CleverTap
  * dashboard.
  *
  * @author Andrew First

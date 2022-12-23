@@ -17,7 +17,7 @@ import com.clevertap.android.sdk.feat_variable.extras.OperationQueue;
 import com.clevertap.android.sdk.feat_variable.mock.LPClassesMock;
 
 /**
- * Leanplum variable.
+ * CleverTap variable.
  *
  * @param <T> Type of the variable. Can be Boolean, Byte, Short, Integer, Long, Float, Double,
  * Character, String, List, or Map. You may nest lists and maps arbitrarily.
@@ -48,7 +48,7 @@ public class Var<T> {
 
     private void warnIfNotStarted() {
         if (!isInternal && !LPClassesMock.hasStarted() && !printedCallbackWarning) {
-            Log.i(TAG,"Leanplum hasn't finished retrieving values from the server. " +
+            Log.i(TAG,"CleverTap hasn't finished retrieving values from the server. " +
                     "You should use a callback to make sure the value for '%s' is ready. " +
                     "Otherwise, your app may not use the most up-to-date value."+name);
             printedCallbackWarning = true;

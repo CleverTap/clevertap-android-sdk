@@ -1,5 +1,5 @@
 /*
- * Copyright 2013, Leanplum, Inc. All rights reserved.
+ * Copyright 2013, CleverTap, Inc. All rights reserved.
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -27,13 +27,13 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Leanplum variable annotation.
+ * CleverTap variable annotation.
  * <p>
- * <p>Use this to make this variable changeable from the Leanplum dashboard. Variables must be of
+ * <p>Use this to make this variable changeable from the CleverTap dashboard. Variables must be of
  * type boolean, byte, short, int, long, float, double, char, String, List, or Map. Lists and maps
  * may contain other lists and maps.
  * <p>
- * <p>Variables with this annotation update when the API call for Leanplum.start completes
+ * <p>Variables with this annotation update when the API call for CleverTap.start completes
  * successfully or fails (in which case values are loaded from a cache stored on the device).
  *
  * @author Andrew First

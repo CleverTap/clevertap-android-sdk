@@ -1,5 +1,5 @@
 /*
- * Copyright 2013, Leanplum, Inc. All rights reserved.
+ * Copyright 2013, CleverTap, Inc. All rights reserved.
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -52,7 +52,7 @@ import com.clevertap.android.sdk.feat_variable.Var;
 import com.clevertap.android.sdk.feat_variable.VarCache;
 
 /**
- * Leanplum file manager.
+ * CleverTap file manager.
  *
  * @author Andrew First
  */
