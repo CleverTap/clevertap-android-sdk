@@ -48,16 +48,6 @@ public class Var<T> {
 
 
     /**
-     * Defines a new variable with a default value.
-     *
-     * @param name Name of the variable.
-     * @param defaultValue Default value of the variable. Can't be null.
-     */
-    public static <T> Var<T> define(String name, T defaultValue) {
-        return define(name, defaultValue, VarCache.kindFromValue(defaultValue), null);
-    }
-
-    /**
      * Defines a variable with kind. Can be Boolean, Byte, Short, Integer, Long, Float, Double,
      * Character, String, List, or Map. You may nest lists and maps arbitrarily.
      *
@@ -70,6 +60,16 @@ public class Var<T> {
      */
     public static <T> Var<T> define(String name, T defaultValue, String kind) {
         return define(name, defaultValue, kind, null);
+    }
+
+    /**
+     * Defines a new variable with a default value.
+     *
+     * @param name Name of the variable.
+     * @param defaultValue Default value of the variable. Can't be null.
+     */
+    public static <T> Var<T> define(String name, T defaultValue) {
+        return define(name, defaultValue, VarCache.kindFromValue(defaultValue), null);
     }
 
     private static <T> Var<T> define(String name, T defaultValue, String kind, VarInitializer<T> initializer) {
