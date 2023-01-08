@@ -21,7 +21,7 @@ import com.clevertap.android.sdk.feat_variable.mock.LPClassesMock;
  *
  * @param <T> Type of the variable. Can be Boolean, Byte, Short, Integer, Long, Float, Double,
  * Character, String, List, or Map. You may nest lists and maps arbitrarily.
- * @author Andrew First
+ * @author Ansh Sachdeva
  */
 public class Var<T> {
     private String name;

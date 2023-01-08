@@ -32,7 +32,7 @@ import java.util.Map;
 /**
  * Parses CleverTap annotations.
  *
- * @author Andrew First
+ * @author Ansh Sachdeva
  */
 public class Parser {
   private static final String TAG = "Parser>";

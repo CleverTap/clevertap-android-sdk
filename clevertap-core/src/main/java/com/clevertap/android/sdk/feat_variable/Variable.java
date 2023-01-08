@@ -36,7 +36,7 @@ import java.lang.annotation.Target;
  * <p>Variables with this annotation update when the API call for CleverTap.start completes
  * successfully or fails (in which case values are loaded from a cache stored on the device).
  *
- * @author Andrew First
+ * @author Ansh Sachdeva
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)

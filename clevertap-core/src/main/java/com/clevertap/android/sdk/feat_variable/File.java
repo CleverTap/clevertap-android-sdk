@@ -30,7 +30,7 @@ import java.lang.annotation.Target;
  * CleverTap variable annotation. Use this to make this variable changeable from the CleverTap
  * dashboard.
  *
- * @author Andrew First
+ * @author Ansh Sachdeva
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)

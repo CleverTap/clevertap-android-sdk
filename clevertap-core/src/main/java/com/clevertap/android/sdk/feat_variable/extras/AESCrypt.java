@@ -47,7 +47,7 @@ import javax.crypto.spec.SecretKeySpec;
  * AES Encryption as detailed at
  * http://nelenkov.blogspot.com/2012/04/using-password-based-encryption-on.html
  *
- * @author Aakash Patel
+ * @author Ansh Sachdeva
  */
 public class AESCrypt {
   public static final String TAG = "AESCrypt";

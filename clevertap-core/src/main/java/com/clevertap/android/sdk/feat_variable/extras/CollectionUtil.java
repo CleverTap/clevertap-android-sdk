@@ -33,7 +33,7 @@ import java.util.Map;
 /**
  * Helper class to easily create new list, map or set objects containing provided parameters.
  *
- * @author Ben Marten
+ * @author Ansh Sachdeva
  */
 public class CollectionUtil {
   /**

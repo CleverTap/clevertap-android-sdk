@@ -54,7 +54,7 @@ import com.clevertap.android.sdk.feat_variable.VarCache;
 /**
  * CleverTap file manager.
  *
- * @author Andrew First
+ * @author Ansh Sachdeva
  */
 public class FileManager {
   private static final String TAG = "FileManager";

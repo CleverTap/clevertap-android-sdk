@@ -58,7 +58,7 @@ import com.clevertap.android.sdk.feat_variable.mock.LPClassesMock;
 /**
  * Variable cache.
  *
- * @author Andrew First.
+ * @author Ansh Sachdeva.
  */
 public class VarCache {
     private static final String TAG = "VarCache>";

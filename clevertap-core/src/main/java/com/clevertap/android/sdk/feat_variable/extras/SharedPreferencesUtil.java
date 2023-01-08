@@ -27,7 +27,7 @@ import android.content.SharedPreferences;
 /**
  * Shared preferences manipulation utilities.
  *
- * @author Anna Orlova
+ * @author Ansh Sachdeva
  */
 public class SharedPreferencesUtil {
   public static final String DEFAULT_STRING_VALUE = "";

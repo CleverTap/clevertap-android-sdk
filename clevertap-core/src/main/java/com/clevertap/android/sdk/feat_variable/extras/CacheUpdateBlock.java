@@ -24,7 +24,7 @@ package com.clevertap.android.sdk.feat_variable.extras;
 /**
  * Update block that will be triggered on new content.
  *
- * @author Ben Marten
+ * @author Ansh Sachdeva
  */
 public interface CacheUpdateBlock {
   void updateCache();

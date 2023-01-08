@@ -37,7 +37,7 @@ import java.util.Map;
 /**
  * Converts objects to/from JSON.
  *
- * @author Andrew First
+ * @author Ansh Sachdeva
  */
 public class JsonConverter {
   public static final String TAG = "JsonConverter>";
