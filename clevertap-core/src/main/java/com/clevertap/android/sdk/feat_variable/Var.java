@@ -46,21 +46,33 @@ public class Var<T> {
     private static boolean printedCallbackWarning;
     private static final String TAG = "Var>";
 
-    private void warnIfNotStarted() {
-        if (!isInternal && !LPClassesMock.hasStarted() && !printedCallbackWarning) {
-            Log.i(TAG,"CleverTap hasn't finished retrieving values from the server. " +
-                    "You should use a callback to make sure the value for '%s' is ready. " +
-                    "Otherwise, your app may not use the most up-to-date value."+name);
-            printedCallbackWarning = true;
-        }
+
+    /**
+     * Defines a new variable with a default value.
+     *
+     * @param name Name of the variable.
+     * @param defaultValue Default value of the variable. Can't be null.
+     */
+    public static <T> Var<T> define(String name, T defaultValue) {
+        return define(name, defaultValue, VarCache.kindFromValue(defaultValue), null);
     }
 
-    private interface VarInitializer<T> {
-        void init(Var<T> var);
+    /**
+     * Defines a variable with kind. Can be Boolean, Byte, Short, Integer, Long, Float, Double,
+     * Character, String, List, or Map. You may nest lists and maps arbitrarily.
+     *
+     * @param name Name of the variable.
+     * @param defaultValue Default value.
+     * @param kind Kind of the variable.
+     * @param <T> Boolean, Byte, Short, Integer, Long, Float, Double, Character, String, List, or
+     * Map.
+     * @return Initialized variable.
+     */
+    public static <T> Var<T> define(String name, T defaultValue, String kind) {
+        return define(name, defaultValue, kind, null);
     }
 
-    private static <T> Var<T> define(
-            String name, T defaultValue, String kind, VarInitializer<T> initializer) {
+    private static <T> Var<T> define(String name, T defaultValue, String kind, VarInitializer<T> initializer) {
         if (TextUtils.isEmpty(name)) {
             Log.e(TAG,"Empty name parameter provided.");
             return null;
@@ -100,111 +112,6 @@ public class Var<T> {
             LPClassesMock.exception(t);
         }
         return var;
-    }
-
-    /**
-     * Defines a new variable with a default value.
-     *
-     * @param name Name of the variable.
-     * @param defaultValue Default value of the variable. Can't be null.
-     */
-    public static <T> Var<T> define(String name, T defaultValue) {
-        return define(name, defaultValue, VarCache.kindFromValue(defaultValue), null);
-    }
-
-    /**
-     * Defines a variable with kind. Can be Boolean, Byte, Short, Integer, Long, Float, Double,
-     * Character, String, List, or Map. You may nest lists and maps arbitrarily.
-     *
-     * @param name Name of the variable.
-     * @param defaultValue Default value.
-     * @param kind Kind of the variable.
-     * @param <T> Boolean, Byte, Short, Integer, Long, Float, Double, Character, String, List, or
-     * Map.
-     * @return Initialized variable.
-     */
-    public static <T> Var<T> define(String name, T defaultValue, String kind) {
-        return define(name, defaultValue, kind, null);
-    }
-
-    /**
-     * Defines a color.
-     *
-     * @param name Name of the variable
-     * @param defaultValue Default value.
-     * @return Initialized variable.
-     */
-    @SuppressWarnings("WeakerAccess")
-    public static Var<Integer> defineColor(String name, int defaultValue) {
-        return define(name, defaultValue, Constants.Kinds.COLOR, null);
-    }
-
-    /**
-     * Defines a variable for a file.
-     *
-     * @param name Name of the variable.
-     * @param defaultFilename Default filename.
-     * @return Initialized variable.
-     */
-    public static Var<String> defineFile(String name, String defaultFilename) {
-        return define(name, defaultFilename, Constants.Kinds.FILE, null);
-    }
-
-    /**
-     * Defines a variable for a file located in assets directory.
-     *
-     * @param name Name of the variable.
-     * @param defaultFilename Default filename.
-     * @return Initialized variable.
-     */
-    public static Var<String> defineAsset(String name, String defaultFilename) {
-        return define(name, defaultFilename, Constants.Kinds.FILE, new VarInitializer<String>() {
-            @Override
-            public void init(Var<String> var) {
-                var.isAsset = true;
-            }
-        });
-    }
-
-    /**
-     * Define a resource variable with default value referencing id of the file located in
-     * res/ directory.
-     *
-     * @param name Name of the variable.
-     * @param resId Resource id of any file located in res/ directory.
-     * @return Initalized variable.
-     */
-    public static Var<String> defineResource(String name, int resId) {
-        String resourceName = LPClassesMock.generateResourceNameFromId(resId);
-        return define(name, resourceName, Constants.Kinds.FILE, new VarInitializer<String>() {
-            @Override
-            public void init(Var<String> var) {
-                var.isResource = true;
-            }
-        });
-    }
-
-    /**
-     * Defines a resource.
-     *
-     * @param name Name of the variable.
-     * @param defaultFilename Default filename.
-     * @param size Size of the data.
-     * @param hash Hash of the data.
-     * @param data Data.
-     * @return Initalized variable.
-     */
-    public static Var<String> defineResource(String name, String defaultFilename,
-                                             final int size, final String hash, final byte[] data) {
-        return define(name, defaultFilename, Constants.Kinds.FILE, new VarInitializer<String>() {
-            @Override
-            public void init(Var<String> var) {
-                var.isResource = true;
-                var.size = size;
-                var.hash = hash;
-                var.data = data;
-            }
-        });
     }
 
     protected Var() {
@@ -333,6 +240,16 @@ public class Var<T> {
             numberValue = null;
         }
     }
+
+    private void warnIfNotStarted() {
+        if (!isInternal && !LPClassesMock.hasStarted() && !printedCallbackWarning) {
+            Log.i(TAG,"CleverTap hasn't finished retrieving values from the server. " +
+                    "You should use a callback to make sure the value for '%s' is ready. " +
+                    "Otherwise, your app may not use the most up-to-date value."+name);
+            printedCallbackWarning = true;
+        }
+    }
+
 
     /**
      * Updates variable with values from server.
@@ -596,4 +513,98 @@ public class Var<T> {
     public String toString() {
         return "Var(" + name + ")=" + value;
     }
+
+
+
+    //can be removed //todo
+    /**
+     * Defines a variable for a file located in assets directory.
+     *
+     * @param name Name of the variable.
+     * @param defaultFilename Default filename.
+     * @return Initialized variable.
+     */
+    public static Var<String> defineAsset(String name, String defaultFilename) {
+        return define(name, defaultFilename, Constants.Kinds.FILE, new VarInitializer<String>() {
+            @Override
+            public void init(Var<String> var) {
+                var.isAsset = true;
+            }
+        });
+    }
+
+    //can be removed //todo
+    /**
+     * Define a resource variable with default value referencing id of the file located in
+     * res/ directory.
+     *
+     * @param name Name of the variable.
+     * @param resId Resource id of any file located in res/ directory.
+     * @return Initalized variable.
+     */
+    public static Var<String> defineResource(String name, int resId) {
+        String resourceName = LPClassesMock.generateResourceNameFromId(resId);
+        return define(name, resourceName, Constants.Kinds.FILE, new VarInitializer<String>() {
+            @Override
+            public void init(Var<String> var) {
+                var.isResource = true;
+            }
+        });
+    }
+
+
+    //can be removed //todo
+    /**
+     * Defines a resource.
+     *
+     * @param name Name of the variable.
+     * @param defaultFilename Default filename.
+     * @param size Size of the data.
+     * @param hash Hash of the data.
+     * @param data Data.
+     * @return Initalized variable.
+     */
+    public static Var<String> defineResource(String name, String defaultFilename, final int size, final String hash, final byte[] data) {
+        return define(name, defaultFilename, Constants.Kinds.FILE, new VarInitializer<String>() {
+            @Override
+            public void init(Var<String> var) {
+                var.isResource = true;
+                var.size = size;
+                var.hash = hash;
+                var.data = data;
+            }
+        });
+    }
+
+
+    //can be removed //todo
+    /**
+     * Defines a color.
+     *
+     * @param name Name of the variable
+     * @param defaultValue Default value.
+     * @return Initialized variable.
+     */
+    @SuppressWarnings("WeakerAccess")
+    public static Var<Integer> defineColor(String name, int defaultValue) {
+        return define(name, defaultValue, Constants.Kinds.COLOR, null);
+    }
+
+    //can be removed //todo
+    /**
+     * Defines a variable for a file.
+     *
+     * @param name Name of the variable.
+     * @param defaultFilename Default filename.
+     * @return Initialized variable.
+     */
+    public static Var<String> defineFile(String name, String defaultFilename) {
+        return define(name, defaultFilename, Constants.Kinds.FILE, null);
+    }
+
+
+    private interface VarInitializer<T> {
+        void init(Var<T> var);
+    }
+
 }
