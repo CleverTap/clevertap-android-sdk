@@ -453,6 +453,7 @@ public class VarCache {
         }
         Context context = LPClassesMock.getContext();
         SharedPreferences defaults = context.getSharedPreferences(LEANPLUM, Context.MODE_PRIVATE);
+        //todo verify if sp is storing the value
         SharedPreferences.Editor editor = defaults.edit();
 
         // Crypt functions return input text if there was a problem.

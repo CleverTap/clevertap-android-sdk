@@ -24,6 +24,11 @@ package com.clevertap.android.sdk.feat_variable;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.clevertap.android.sdk.feat_variable.Var;
+import com.clevertap.android.sdk.feat_variable.File;
+import com.clevertap.android.sdk.feat_variable.Variable;
+import com.clevertap.android.sdk.feat_variable.VariableCallback;
+
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -36,6 +41,9 @@ import java.util.Map;
  * @author Ansh Sachdeva
  */
 public class Parser {
+
+  //todo : next imp function is Var.define() , varObj.addValueChangedHandler()/removeValueChangedHandler()/name()/value()
+
   private static final String TAG = "Parser>";
 
 
@@ -69,7 +77,7 @@ public class Parser {
   }
 
 
-  // todo : changes: removed all errors and try catch them here only
+  // note : changes: removed all errors and try catch them here only
   //parseVariablesHelper(context,MainActivity::class.java)//<-- call that occurred when Parser.parseVariables(this) in MainActivity onCreate got called
   //parseVariablesHelper(null,MyVars::class.java);        //<-- call that occurred when Parser.parseVariablesForClasses(MyVars::class.java) got called
   private static void parseVariablesHelper(Object instance, Class<?> clazz) {
@@ -173,7 +181,8 @@ public class Parser {
 
 
     //then we set a listener on var instance which will give a callback with new var<x> instance
-    // whenever its triggered. when this happens, we update field.value = var.value if field is not null
+    // whenever its triggered. when this happens, we update field's field.value = var.value
+    // (not variable.value, the one returned in callback (todo why? ) if field is not null
     // also note that to set field's value, field must not be a non final(i.e mutable) value, therefore we first call
     // field.setAccessible(true) to make it mutable
 
@@ -203,6 +212,7 @@ public class Parser {
     });
   }
 
+  // can be removed //todo
   private static void defineFileVariable(final Object instance, String name, String value, final Field field) {
     final Var<String> var = Var.defineFile(name, value);
     final boolean hasInstance = instance != null;

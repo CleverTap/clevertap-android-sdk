@@ -58,6 +58,8 @@ public class Var<T> {
      * Map.
      * @return Initialized variable.
      */
+    // define<Double>("some_global_var_name",12.4,"float")
+    // define<String>("some_global_var_name2","hi","string")
     public static <T> Var<T> define(String name, T defaultValue, String kind) {
         return define(name, defaultValue, kind, null);
     }
@@ -72,22 +74,29 @@ public class Var<T> {
         return define(name, defaultValue, VarCache.kindFromValue(defaultValue), null);
     }
 
+    // define<Double>("some_global_var_name",12.4,"float",null)
+    // define<String>("some_global_var_name2","hi","string",null)
     private static <T> Var<T> define(String name, T defaultValue, String kind, VarInitializer<T> initializer) {
+        //checks if name is correct . if correct continues or  returns null
         if (TextUtils.isEmpty(name)) {
             Log.e(TAG,"Empty name parameter provided.");
             return null;
         }
+
+        // checks if var exists  in  VarCache.getVariable(name) . if exists, then returns the var, otherwise continues . todo : check VarCache.getVariable(name)
         Var<T> existing = VarCache.getVariable(name);
         if (existing != null) {
             return existing;
         }
+
+        // check if LP has called start and whether name is not a special name. if either fails, then generates a log else continues // todo : discuss our conditions for this check
         if (LPClassesMock.hasCalledStart() && !name.startsWith(Constants.Values.RESOURCES_VARIABLE)) {
             Log.i(TAG,"You should not create new variables after calling start (name=" + name + ")");
         }
         Var<T> var = new Var<>();
         try {
             var.name = name;
-            var.nameComponents = VarCache.getNameComponents(name);
+            var.nameComponents = VarCache.getNameComponents(name); //todo check VarCache.getNameComponents(name);
             var.defaultValue = defaultValue;
             var.value = defaultValue;
             var.kind = kind;
@@ -97,8 +106,11 @@ public class Var<T> {
             if (initializer != null) {
                 initializer.init(var);
             }
-            var.cacheComputedValues();
-            VarCache.registerVariable(var);
+
+            var.cacheComputedValues(); //todo check var.cacheComputedValues()
+            VarCache.registerVariable(var); //todo :  check VarCache.registerVariable(var)
+
+            //can be removed //todo
             if (Constants.Kinds.FILE.equals(var.kind)) {
                 if (var.isResource) {
                     VarCache.registerFile(var.stringValue, var::defaultStream, var.hash, var.size);
@@ -107,7 +119,9 @@ public class Var<T> {
                     VarCache.registerFile(var.stringValue, defaultVal, var::defaultStream);
                 }
             }
-            var.update();
+
+
+            var.update(); //todo  check var.update()
         } catch (Throwable t) {
             LPClassesMock.exception(t);
         }
@@ -220,6 +234,7 @@ public class Var<T> {
         }
     }
 
+    //todo what does this function do, and why it is used?
     private void cacheComputedValues() {
         if (value instanceof String) {
             stringValue = (String) value;
@@ -256,7 +271,6 @@ public class Var<T> {
      */
     public synchronized void update() {
         // TODO: Clean up memory for resource variables.
-        //data = null; // todo : check if its uncommented in LP. if yes, then do something about it. this code might be needed for functioning of feature!
         T oldValue = value;
         value = VarCache.getMergedValueFromComponentArray(nameComponents);
         if (value == null && oldValue == null) {

@@ -6,11 +6,14 @@ import android.util.Log;
 import org.json.JSONObject;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
+import com.clevertap.android.sdk.feat_variable.VarCache;
+import com.clevertap.android.sdk.feat_variable.VariablesChangedCallback;
 import com.clevertap.android.sdk.feat_variable.extras.CollectionUtil;
 import com.clevertap.android.sdk.feat_variable.extras.Constants;
 
@@ -124,6 +127,42 @@ public final class LPClassesMock {
     //ActionManager.getInstance().getDefinitions().getActionDefinitionMaps()
     public static Map<String, Object> getActionDefinitionMaps(){
         return  new HashMap<>();
+    }
+
+
+
+    /**
+     * Add a callback for when the variables receive new values from the server. This will be called
+     * on start, and also later on if the user is in an experiment that can updated in realtime.
+     */
+    public static void addVariablesChangedHandler(VariablesChangedCallback handler) {
+        if (handler == null) {
+            Log.e(TAG,"addVariablesChangedHandler - Invalid handler parameter provided.");
+            return;
+        }
+
+        synchronized (variablesChangedHandlers) {
+            variablesChangedHandlers.add(handler);
+        }
+        if (VarCache.hasReceivedDiffs()) {
+            handler.variablesChanged();
+        }
+    }
+
+    private static final ArrayList<VariablesChangedCallback> variablesChangedHandlers = new ArrayList<>();
+
+    /**
+     * Removes a variables changed callback.
+     */
+    public static void removeVariablesChangedHandler(VariablesChangedCallback handler) {
+        if (handler == null) {
+            Log.e(TAG,"removeVariablesChangedHandler - Invalid handler parameter provided.");
+            return;
+        }
+
+        synchronized (variablesChangedHandlers) {
+            variablesChangedHandlers.remove(handler);
+        }
     }
 
 }

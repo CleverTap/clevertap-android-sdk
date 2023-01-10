@@ -109,7 +109,7 @@ public class APIConfig {
   private void load() {
     Context context = LPClassesMock.getContext();
     if (context == null) {
-      Log.e(TAG,"Leanplum context is null. Please call Leanplum.setApplicationContext(context) "
+      Log.e(TAG,"CleverTap context is null. Please call Leanplum.setApplicationContext(context) "
           + "before anything else.");
       return;
     }
@@ -142,7 +142,7 @@ public class APIConfig {
   public void save() {
     Context context = LPClassesMock.getContext();
     if (context == null) {
-      Log.e(TAG,"Leanplum context is null. Please call Leanplum.setApplicationContext(context) "
+      Log.e(TAG,"CleverTap context is null. Please call Leanplum.setApplicationContext(context) "
           + "before anything else.");
       return;
     }
