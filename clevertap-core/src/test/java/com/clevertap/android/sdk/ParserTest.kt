@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk
 
 import com.clevertap.android.sdk.feat_variable.Parser
+import com.clevertap.android.sdk.feat_variable.Var
 import com.clevertap.android.sdk.feat_variable.VarCache
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.Assert
@@ -41,7 +42,7 @@ class ParserTest :BaseTestCase(){
 
     private fun checkVarCache() {
           println( "checkVarCache() called")
-          println( "checkVarCache:  valuesFromClient:           ${VarCache.valuesFromClient}", )
+          //println( "checkVarCache:  valuesFromClient:           ${VarCache.valuesFromClient}", )
           println( "checkVarCache:  welcomeMsg:                 ${VarCache.getVariable<String?>("welcomeMsg")}", )
           println( "checkVarCache:  isOptedForOffers:           ${VarCache.getVariable<Boolean?>("isOptedForOffers")}", )
           println( "checkVarCache:  initialCoins:               ${VarCache.getVariable<Int?>("initialCoins")}", )

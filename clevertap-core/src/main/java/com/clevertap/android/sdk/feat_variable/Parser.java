@@ -149,10 +149,11 @@ public class Parser {
         } else {
           Object value = field.get(instance);
           String stringValue = value == null ? null : value.toString();
-          if (isFile) {
-            defineFileVariable(instance, variableName, stringValue, field);
-          } else {
+          if (!isFile) {
             defineVariable(instance, variableName, stringValue, "string", field);
+          }
+          else {
+            defineFileVariable(instance, variableName, stringValue, field);
           }
         }
       }
@@ -179,13 +180,13 @@ public class Parser {
     final boolean hasInstance = instance != null;
     final WeakReference<Object> weakInstance = new WeakReference<>(instance);
 
+    // if vars are defined via @Variable annotation, we always attach a value change listener(VariableCallback) , but if they are defined via Var.define(), its upto user to add such listers if needed.
 
     //then we set a listener on var instance which will give a callback with new var<x> instance
     // whenever its triggered. when this happens, we update field's field.value = var.value
     // (not variable.value, the one returned in callback (todo why? ) if field is not null
     // also note that to set field's value, field must not be a non final(i.e mutable) value, therefore we first call
     // field.setAccessible(true) to make it mutable
-
     var.addValueChangedHandler(new VariableCallback<T>() {
       @Override
       public void handle(Var<T> variable) {
