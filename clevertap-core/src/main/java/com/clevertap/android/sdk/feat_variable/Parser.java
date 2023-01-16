@@ -24,8 +24,14 @@ package com.clevertap.android.sdk.feat_variable;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.clevertap.android.sdk.feat_variable.annotations.Variable;
+import com.clevertap.android.sdk.feat_variable.callbacks.VariableCallback;
+
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -99,14 +105,16 @@ public class Parser {
             group = annotation.group();
             name = annotation.name();
           }
-        } else if (field.isAnnotationPresent(File.class)) {
-          File annotation = field.getAnnotation(File.class);
-          if(annotation!=null){
-            group = annotation.group();
-            name = annotation.name();
-          }
-          isFile = true;
-        } else {
+        }
+      //else if (field.isAnnotationPresent(File.class)) {
+      //  File annotation = field.getAnnotation(File.class);
+      //  if(annotation!=null){
+      //    group = annotation.group();
+      //    name = annotation.name();
+      //  }
+      //  isFile = true;
+      //  }
+      else {
           continue;
         }
 

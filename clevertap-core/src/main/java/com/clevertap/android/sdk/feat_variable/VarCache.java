@@ -25,9 +25,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
-import com.clevertap.android.sdk.feat_variable.utils.AESCrypt;
+import com.clevertap.android.sdk.feat_variable.callbacks.CacheUpdateBlock;
 import com.clevertap.android.sdk.feat_variable.utils.CTVariableUtils;
-import com.clevertap.android.sdk.feat_variable.utils.CacheUpdateBlock;
 import com.clevertap.android.sdk.feat_variable.utils.Constants;
 
 import java.lang.reflect.Array;
@@ -221,20 +220,21 @@ public class VarCache {
         Context context = CTVariables.getContext();
 
         if(context==null){return;}
-        SharedPreferences defaults = context.getSharedPreferences(LEANPLUM, Context.MODE_PRIVATE);//wrongly named. should be just sp since it contains actual values (as encrypted strings)
+        SharedPreferences defaults = context.getSharedPreferences(LEANPLUM, Context.MODE_PRIVATE);
 
         // if token in ApiConfigSingleton is null, we directly call applyVariableDiffs(d,m,r,v,l,v,v,v) with empty objects
         // else we 1) take out the encrypted string (or default value)  from encrypted prefs  (2) decrypt it (3) create  maps/list out of them and and (4) call applyVariableDiffs(d,m,r,v,l,v,v,v) with those values
         // for else case, we also set deviceID,userId and logging in ApiConfig based on values stored in encrypted prefs
         //for else case, we also call userAttribute()
-        //if (LPClassesMock.getAPIConfigToken() == null) { //todo : logic needed?
+
+        //if (LPClassesMock.getAPIConfigToken() == null)
         //    applyVariableDiffs(new HashMap<>());
         //    return;
         //}
         try {
             // Crypt functions return input text if there was a problem.
-            AESCrypt aesContext = new AESCrypt(CTVariableUtils.getAPIConfigAppID(), CTVariableUtils.getAPIConfigToken());
-            String variables = aesContext.decodePreference(defaults, Constants.Defaults.VARIABLES_KEY, "{}");
+            //AESCrypt aesContext = new AESCrypt(CTVariableUtils.getAPIConfigAppID(), CTVariableUtils.getAPIConfigToken());
+            String variables = CTVariableUtils.getFromPreference(defaults, Constants.Defaults.VARIABLES_KEY, "{}");
             //String messages = aesContext.decodePreference(defaults, Constants.Defaults.MESSAGES_KEY, "{}");
             //String regions = aesContext.decodePreference(defaults, Constants.Defaults.REGIONS_KEY, "{}");
             //String variants = aesContext.decodePreference(defaults, Constants.Keys.VARIANTS, "[]");
@@ -494,9 +494,9 @@ public class VarCache {
         
 
         // Crypt functions return input text if there was a problem.
-        AESCrypt aesContext = new AESCrypt(CTVariableUtils.getAPIConfigAppID(), CTVariableUtils.getAPIConfigToken());
+        //AESCrypt aesContext = new AESCrypt(CTVariableUtils.getAPIConfigAppID(), CTVariableUtils.getAPIConfigToken());
 
-        String variablesCipher = aesContext.encrypt(CTVariableUtils.toJson(diffs));
+        String variablesCipher = CTVariableUtils.toJson(diffs); // aesContext.encrypt(CTVariableUtils.toJson(diffs));
         editor.putString(Constants.Defaults.VARIABLES_KEY, variablesCipher);
 
         //String messagesCipher = aesContext.encrypt(LPClassesMock.toJson(messages));
@@ -553,18 +553,9 @@ public class VarCache {
 
     /*<4 called together>*/
 
-    //will force upload vars from vars[g] map to server ?/todo hristo
+    //will force upload vars from vars[g] map to server ?
     public static boolean sendContentIfChanged() {
-        boolean variables = true;
-        boolean changed = false;
-        if (devModeValuesFromServer != null && !valuesFromClient.equals(devModeValuesFromServer)) {
-            changed = true;
-        }
-        boolean areLocalAndServerDefinitionsEqual = false; // ActionManagerDefinitionKt.areLocalAndServerDefinitionsEqual(ActionManager.getInstance()); //todo is it important?
-        if (/*actions &&*/ !areLocalAndServerDefinitionsEqual) {
-            changed = true;
-        }
-
+        boolean changed = devModeValuesFromServer != null && !valuesFromClient.equals(devModeValuesFromServer);
         if (changed) {
             HashMap<String, Object> params = new HashMap<>();
             params.put(Constants.Params.VARS, CTVariableUtils.toJson(valuesFromClient));

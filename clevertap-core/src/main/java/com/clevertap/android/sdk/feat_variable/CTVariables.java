@@ -8,6 +8,8 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.feat_variable.callbacks.VariablesChangedCallback;
+import com.clevertap.android.sdk.feat_variable.utils.CTVariableUtils;
 
 import org.json.JSONObject;
 
@@ -18,7 +20,7 @@ import java.util.Map;
 
 public class CTVariables {
     private static final ArrayList<VariablesChangedCallback> variablesChangedHandlers = new ArrayList<>(); //needed
-    private static final ArrayList<VariablesChangedCallback> oneTimeVariablesChangedHandler = new ArrayList<>();// needed : its actually onceVariableChanged(basically same as first in case of variables but runs only once),
+    private static final ArrayList<VariablesChangedCallback> oneTimeVariablesChangedHandlers = new ArrayList<>();// needed : its actually onceVariableChanged(basically same as first in case of variables but runs only once),
 
     private static Context context;
     public static final  boolean isDevelopmentModeEnabled = false;
@@ -44,8 +46,8 @@ public class CTVariables {
     static synchronized void init(){
         // this is a situation where some error happened in ct sdk. so we just apply empty to all var cache
         if (hasSdkError) {
-            //LeanplumInternal.setHasStarted(true); //todo needed ? ask hristo
-            //LeanplumInternal.setStartSuccessful(true); //todo needed ? ask hristo
+            CTVariableUtils.setHasStarted(true);
+            CTVariableUtils.setHasCalledStart(true);
             triggerVariablesChanged();
             VarCache.applyVariableDiffs(new HashMap<>());
         }
@@ -58,7 +60,7 @@ public class CTVariables {
             // we register an internal listener to update client's listenere whenever the load diffs updates the variables
             VarCache.onUpdate(CTVariables::triggerVariablesChanged);
 
-            //todo code to download clevertap variable data and pass it in
+            //todo: replace with code to download clevertap variable data and pass it in
             new Thread(() -> {
                 try {
                     Thread.sleep(1000);
@@ -76,17 +78,18 @@ public class CTVariables {
     }
 
     private static void handleStartResponse(@Nullable final JSONObject response) {
-        boolean jsonHasVariableData = true; //check if response was successful, like response.data!=null
+        boolean jsonHasVariableData = response!=null && true; //check if response was successful, like response.data!=null //todo add logic as per backend response structure
         try {
             if (!jsonHasVariableData) {
-                //LeanplumInternal.setHasStarted(true);//todo needed ? ask hristo
-                // Load the variables that were stored on the device from the last session.this will also invoke user's callback, but with values from last session/shared prefs
+                CTVariableUtils.setHasStarted(true);
+                // Load the variables that were stored on the device from the last session.
+                // this will also invoke user's callback, but with values from last session/shared prefs
                 VarCache.loadDiffs();
             } else {
-                Map<String, Object> values = new HashMap<>();  //JsonConverter.mapFromJson(response.optJSONObject(VARS));  //get vars from json //todo
+                Map<String, Object> values = CTVariableUtils.mapFromJson(response.optJSONObject(VARS));
                 VarCache.applyVariableDiffs(values);
                 if (isDevelopmentModeEnabled) {
-                    HashMap<String, Object> valuesFromCode = new HashMap<>(); // response.optJSONObject(VARS_FROM_CODE); //todo
+                    Map<String, Object> valuesFromCode = CTVariableUtils.mapFromJson(response.optJSONObject(VARS_FROM_CODE));
                     VarCache.setDevModeValuesFromServer(valuesFromCode);
                 }
             }
@@ -95,11 +98,45 @@ public class CTVariables {
         }
     }
 
-    public static void addVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
-        if (handler == null) {
-            Logger.v("addVariablesChangedHandler - Invalid handler parameter provided.");
-            return;
+
+    private static void triggerVariablesChanged() {
+        synchronized (variablesChangedHandlers) {
+            for (VariablesChangedCallback callback : variablesChangedHandlers) {
+                CTVariableUtils.runOnMainThread(callback);
+            }
         }
+        synchronized (oneTimeVariablesChangedHandlers) {
+            for (VariablesChangedCallback callback : oneTimeVariablesChangedHandlers) {
+                CTVariableUtils.runOnMainThread(callback);
+            }
+            oneTimeVariablesChangedHandlers.clear();
+        }
+    }
+
+
+
+    static boolean areVariablesReceived() { //areVariablesReceivedAndNoDownloadsPending
+        return VarCache.hasReceivedDiffs();
+    }
+
+
+    //remove all vars data . used when switching profiles
+    public static void clearUserContent() {
+        VarCache.clearUserContent();
+    }
+
+
+
+    public static void forceContentUpdate(@NonNull Runnable callback) {
+        // api to  fetch variables forcefully from the server. it is same endpoint as start,
+        // but with differen parameters.
+        // todo : replace with ct endpopoint
+
+    }
+
+
+    public static void addVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
+
 
         synchronized (variablesChangedHandlers) {
             variablesChangedHandlers.add(handler);
@@ -108,93 +145,29 @@ public class CTVariables {
             handler.variablesChanged();
         }
     }
-
-
     public static void removeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
-        if (handler == null) {
-            Logger.v("removeVariablesChangedHandler - Invalid handler parameter provided.");
-            return;
-        }
-
         synchronized (variablesChangedHandlers) {
             variablesChangedHandlers.remove(handler);
         }
     }
-
-
-    private static void triggerVariablesChanged() {
-        synchronized (variablesChangedHandlers) {
-            for (VariablesChangedCallback callback : variablesChangedHandlers) {
-                //OperationQueue.sharedInstance().addUiOperation(callback); // replace with ct implemnetation of ui thread executor
-            }
-        }
-        synchronized (oneTimeVariablesChangedHandler) {
-            for (VariablesChangedCallback callback : oneTimeVariablesChangedHandler) {
-                //OperationQueue.sharedInstance().addUiOperation(callback); // replace with ct implemnetation of ui thread executor
-            }
-            oneTimeVariablesChangedHandler.clear();
-        }
-    }
-
-
-
-    // rename to addOnceVariablesChanged
-    public static void addOnceVariablesChanged(@NonNull VariablesChangedCallback handler) { //addOnceVariablesChangedAndNoDownloadsPendingHandler
-        if (handler == null) {
-            Logger.v("addOnceVariablesChanged - Invalid handler parameter" + " provided.");
-            return;
-        }
-
+    public static void addOneTimeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) { //addOnceVariablesChangedAndNoDownloadsPendingHandler
         if (areVariablesReceived()) {
             handler.variablesChanged();
         } else {
-            synchronized (oneTimeVariablesChangedHandler) {
-                oneTimeVariablesChangedHandler.add(handler);
+            synchronized (oneTimeVariablesChangedHandlers) {
+                oneTimeVariablesChangedHandlers.add(handler);
             }
         }
     }
+    public static void removeOneTimeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) { //removeOnceVariablesChangedAndNoDownloadsPendingHandler
 
-    static boolean areVariablesReceived() { //areVariablesReceivedAndNoDownloadsPending
-        return VarCache.hasReceivedDiffs();
-    }
-
-
-    //
-    public static void removeOnceVariablesChanged(@NonNull VariablesChangedCallback handler) { //removeOnceVariablesChangedAndNoDownloadsPendingHandler
-        if (handler == null) {
-            Logger.v("removeOnceVariablesChanged - Invalid handler parameter provided.");
-            return;
-        }
-
-        synchronized (oneTimeVariablesChangedHandler) {
-            oneTimeVariablesChangedHandler.remove(handler);
+        synchronized (oneTimeVariablesChangedHandlers) {
+            oneTimeVariablesChangedHandlers.remove(handler);
         }
     }
 
-    // api to  fetch variables forcefully from the server. it is same endpoint as start, but with differen parameters. todo : replace with ct endpopoint
-    public static void forceContentUpdate(@NonNull Runnable callback) {
-
-    }
-    
 
 
-    //todo needed?
-    /*Traverses the variable structure with the specified path. Path components can be either strings representing keys in a dictionary, or integers representing indices in a list.*/
-    @Nullable
-    public static Object objectForKeyPathComponents(@NonNull Object[] pathComponents) {
-        try {
-            return VarCache.getMergedValueFromComponentArray(pathComponents);
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
-        return null;
-    }
-
-    
-    //remove all vars data . used when switching profiles
-    public static void clearUserContent() {
-        VarCache.clearUserContent();
-    }
 
 
 

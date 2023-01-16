@@ -7,6 +7,7 @@ import android.os.Looper;
 import android.text.Editable;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -17,45 +18,41 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import com.clevertap.android.sdk.feat_variable.CTVariables;
-import com.clevertap.android.sdk.feat_variable.utils.Constants;
-
-//mainly made to mock functions used Leanplum.java
+//mainly made to mock functions used in Leanplum.java . its functions should be replaced by actual ct functions or renamed and  shifted to proper classes
 public final class CTVariableUtils {
-
     private static final String TAG = "LPClassesMock>";
 
+    private static boolean startApiResponseReceived = true;
+    private static boolean hasStartFunctionExecuted = true;
 
-    //APIConfig.getInstance().token()
-    public static String getAPIConfigToken(){ //todo : imp for vars //understand from hristo regarding how to use, if needed?
-        return "todo";
-    }
 
-    //APIConfig.getInstance().getAppID()
-    public static String getAPIConfigAppID(){ //todo : imp for vars //understand from hristo regarding how to use, if needed?
-        return "appid";
-    }
-
-    //Leanplum.hasStarted() //todo : imp for vars //understand from hristo regarding how to use, if needed?
     public static Boolean hasStarted(){
-        return true;
+        //its true if server response for "start" api is received. //todo : decide whether it is needed // darshan
+        return startApiResponseReceived;
     }
 
-    //LeanplumInternal.hasCalledStart()//todo : imp for vars //understand from hristo regarding how to use, if needed?
+    public static void setHasStarted(boolean responseReceived){ //todo : decide whether it is needed//darshan
+        startApiResponseReceived = responseReceived;
+    }
+
+     //todo : decide whether it is needed //darshan
     public static Boolean hasCalledStart(){
-        return true;
+        // its true if  start() function has finished executing //alt for LeanplumInternal.hasCalledStart()
+        return hasStartFunctionExecuted;
     }
 
+    //todo : decide whether it is needed //darshan
+    public static void  setHasCalledStart(boolean hasExecuted) {hasStartFunctionExecuted = hasExecuted; }
 
     /* Utility functions */
 
-    //CollectionUtil.uncheckedCast()
+    //alt for CollectionUtil.uncheckedCast()
     @SuppressWarnings({"unchecked"})
     public static <T> T uncheckedCast(Object obj) {
         return (T) obj;
     }
 
-    //JsonConverter.fromJson(..)
+    //alt for: JsonConverter.fromJson(..)
     public static Map<String, Object> fromJson(String json) {
         if (json == null) {
             return null;
@@ -85,7 +82,7 @@ public final class CTVariableUtils {
         }
         return obj;
     }
-    private static <T> Map<String, T> mapFromJson(JSONObject object) {
+    public static <T> Map<String, T> mapFromJson(JSONObject object) {
         if (object == null) {
             return null;
         }
@@ -151,7 +148,7 @@ public final class CTVariableUtils {
         return obj;
     }
 
-    //JsonConverter.toJson(..)
+    //alt for : JsonConverter.toJson(..)
     public static String toJson(Map<String, ?> map) {
         if (map == null) {
             return null;
@@ -165,7 +162,17 @@ public final class CTVariableUtils {
     }
 
 
-    //SharedPreferenceUtil.commitChanges()
+    @NonNull //alt for:  aesContext.decodePreference
+    public static String getFromPreference(SharedPreferences preferences, String key, String defaultValue) {
+
+        String text = preferences.getString(key, null);
+        if (text == null) {
+            return defaultValue;
+        }
+        return text;
+    }
+
+    //alt for: SharedPreferenceUtil.commitChanges()
     public static void commitChanges(SharedPreferences.Editor editor){
         try {
             editor.apply();
@@ -175,7 +182,7 @@ public final class CTVariableUtils {
     }
 
 
-    // LeanplumInternal.maybeThrowException(..)
+    // alt for: LeanplumInternal.maybeThrowException(..)
     public static void maybeThrowException(RuntimeException e) {
         if (Constants.isDevelopmentModeEnabled) {
             throw e;
@@ -185,94 +192,10 @@ public final class CTVariableUtils {
     }
 
 
-
-    //Log.exception(t);
-    public static void exception(Throwable t){
-        t.printStackTrace();
-    }
-
-    //Util.generateResourceNameFromId(resId)
-    public static  String generateResourceNameFromId(int resId){
-        return null;
-    }
-    private static int generateIdFromResourceName(String resourceName) {
-        return 0;
-        /*
-        // Split resource name to extract folder and file name.
-        String[] parts = resourceName.split("/");
-        if (parts.length == 2) {
-            Resources resources = Leanplum.getContext().getResources();
-            // Type name represents folder where file is contained.
-            String typeName = parts[0];
-            String fileName = parts[1];
-            String entryName = fileName;
-            // Since fileName contains extension we have to remove it,
-            // to be able to get resource id.
-            String[] fileParts = fileName.split("\\.(?=[^\\.]+$)");
-            if (fileParts.length == 2) {
-                entryName = fileParts[0];
-            }
-            // Get identifier for a file in specified directory
-            if (!TextUtils.isEmpty(typeName) && !TextUtils.isEmpty(entryName)) {
-                return resources.getIdentifier(entryName, typeName, Leanplum.getContext().getPackageName());
-            }
-        }
-        Log.d("Could not extract resource id from provided resource name: ", resourceName);
-        return 0;
-        */
-    }
-
-
-
-    //Leanplum.getContext()
-    public static Context getContext(){
-        return CTVariables.getContext();
-    }
-
-    // misc util;
+    // alt for: OperationQueue.sharedInstance().addUiOperation(callback) : todo //replace with ct logic to run callbacks on ui thread
     public static  void runOnMainThread(Runnable callback) {
         new Handler(Looper.getMainLooper()).post(callback);
     }
-
-    ////FileTransferManager.getInstance().downloadFile(stringValue, urlValue, onComplete, onComplete)
-    //public static void downloadFile(final String path, final String url, Runnable onResponse, Runnable onError) {}
-    //
-    //
-    ////FileTransferManager.getInstance().sendFilesNow(fileData, filenames, streams);
-    //public static void sendFilesNow(List<JSONObject> fileData, final List<String> filenames, final List<InputStream> streams) {}
-    //
-    ////Util.isSimulator()
-    //public static boolean isSimulator() {
-    //    String model = android.os.Build.MODEL.toLowerCase(Locale.getDefault());
-    //    return model.contains("google_sdk")
-    //            || model.contains("emulator")
-    //            || model.contains("sdk");
-    //}
-    //
-    ////Utils.multiIndex
-    //public static <T> T multiIndex(Map<?, ?> map, Object... indices) {
-    //    if (map == null) {
-    //        return null;
-    //    }
-    //    Object current = map;
-    //    for (Object index : indices) {
-    //        if (!((Map<?, ?>) current).containsKey(index)) {
-    //            return null;
-    //        }
-    //        current = ((Map<?, ?>) current).get(index);
-    //    }
-    //    return uncheckedCast(current);
-    //}
-    //
-    ////Leanplum.hasStartedAndRegisteredAsDeveloper()
-    //public static boolean hasStartedAndRegisteredAsDeveloper() {
-    //    return true; //LeanplumInternal.hasStartedAndRegisteredAsDeveloper();
-    //}
-    //
-    ////ActionManager.getInstance().getDefinitions().getActionDefinitionMaps()
-    //public static Map<String, Object> getActionDefinitionMaps(){
-    //    return  new HashMap<>();
-    //}
 
 
 }

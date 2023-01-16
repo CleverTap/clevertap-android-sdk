@@ -1,4 +1,6 @@
-package com.clevertap.android.sdk.feat_variable;
+package com.clevertap.android.sdk.feat_variable.callbacks;
+
+import com.clevertap.android.sdk.feat_variable.Var;
 
 public abstract class VariableCallback<T> implements Runnable {
     private Var<T> variable;

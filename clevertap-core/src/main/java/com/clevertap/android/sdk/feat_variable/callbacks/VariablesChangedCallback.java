@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package com.clevertap.android.sdk.feat_variable;
+package com.clevertap.android.sdk.feat_variable.callbacks;
 
 /**
  * Variables changed callback.

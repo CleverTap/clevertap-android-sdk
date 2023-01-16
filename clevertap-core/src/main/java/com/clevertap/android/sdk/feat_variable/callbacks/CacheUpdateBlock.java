@@ -1,5 +1,5 @@
 /*
- * Copyright 2013, CleverTap, Inc. All rights reserved.
+ * Copyright 2017, CleverTap, Inc. All rights reserved.
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -19,29 +19,13 @@
  * under the License.
  */
 
-package com.clevertap.android.sdk.feat_variable;
-
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+package com.clevertap.android.sdk.feat_variable.callbacks;
 
 /**
- * CleverTap variable annotation. Use this to make this variable changeable from the CleverTap
- * dashboard.
+ * Update block that will be triggered on new content.
  *
  * @author Ansh Sachdeva
  */
-@Target(ElementType.FIELD)
-@Retention(RetentionPolicy.RUNTIME)
-public @interface File {
-  /**
-   * (Optional). The group to put the variable in. Use "." to nest groups.
-   */
-  String group() default "";
-
-  /**
-   * (Optional). The name of the variable. If not set, then uses the actual name of the field.
-   */
-  String name() default "";
+public interface CacheUpdateBlock {
+  void updateCache();
 }

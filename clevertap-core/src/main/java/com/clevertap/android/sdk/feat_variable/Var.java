@@ -5,6 +5,7 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.feat_variable.callbacks.VariableCallback;
 import com.clevertap.android.sdk.feat_variable.utils.CTVariableUtils;
 import com.clevertap.android.sdk.feat_variable.utils.Constants;
 
@@ -273,7 +274,7 @@ public class Var<T> {
         synchronized (valueChangedHandlers) {
             for (VariableCallback<T> callback : valueChangedHandlers) {
                 callback.setVariable(this);
-                CTVariableUtils.runOnMainThread(callback);//todo : CT Logic to trigger these callbacks on main thread
+                CTVariableUtils.runOnMainThread(callback);
 
             }
         }
