@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package com.clevertap.android.sdk.feat_variable.extras;
+package com.clevertap.android.sdk.feat_variable.utils;
 
 import android.content.SharedPreferences;
 import android.util.Log;

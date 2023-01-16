@@ -1,5 +1,5 @@
 /*
- * Copyright 2017, Leanplum, Inc. All rights reserved.
+ * Copyright 2017, CleverTap, Inc. All rights reserved.
  *
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -19,7 +19,7 @@
  * under the License.
  */
 
-package com.clevertap.android.sdk.feat_variable.extras;
+package com.clevertap.android.sdk.feat_variable.utils;
 
 /**
  * Update block that will be triggered on new content.

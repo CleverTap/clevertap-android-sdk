@@ -4,17 +4,13 @@ package com.clevertap.android.sdk.feat_variable;
 import android.text.TextUtils;
 import android.util.Log;
 
-import java.io.InputStream;
+import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.feat_variable.utils.CTVariableUtils;
+import com.clevertap.android.sdk.feat_variable.utils.Constants;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-
-import com.clevertap.android.sdk.feat_variable.extras.Constants;
-import com.clevertap.android.sdk.feat_variable.extras.FileManager;
-import com.clevertap.android.sdk.feat_variable.extras.FileManager.DownloadFileResult;
-import com.clevertap.android.sdk.feat_variable.extras.OperationQueue;
-import com.clevertap.android.sdk.feat_variable.mock.LPClassesMock;
 
 /**
  * CleverTap variable.
@@ -34,20 +30,22 @@ public class Var<T> {
     private T defaultValue;
     private T value;
     private String kind;
-    private final List<VariableCallback<T>> fileReadyHandlers = new ArrayList<>();
-    private final List<VariableCallback<T>> valueChangedHandlers = new ArrayList<>();
-    private boolean fileIsPending;
     private boolean hadStarted;
-    private boolean isAsset;
-    public boolean isResource;
-    private int size;
-    private String hash;
-    private byte[] data;
-    private boolean valueIsInAssets = false;
-    private boolean isInternal;
-    private int overrideResId;
+    private final List<VariableCallback<T>> valueChangedHandlers = new ArrayList<>();
     private static boolean printedCallbackWarning;
     private static final String TAG = "Var>";
+
+    //private final List<VariableCallback<T>> fileReadyHandlers = new ArrayList<>();
+    //private boolean fileIsPending;
+    //private boolean isAsset;
+    //public boolean isResource;
+    //private int size;
+    //private String hash;
+    //private byte[] data;
+    //private boolean valueIsInAssets = false;
+    //private boolean isInternal;
+    //private int overrideResId;
+
 
 
     /*<basic getter-setters>*/
@@ -70,22 +68,16 @@ public class Var<T> {
         warnIfNotStarted();
         return value;
     }
-    public int overrideResId() {
-        return overrideResId;
-    }
-    public void setOverrideResId(int resId) {
-        overrideResId = resId;
-    }
     public void addValueChangedHandler(VariableCallback<T> handler) {
         if (handler == null) {
-            Log.e(TAG,"Invalid handler parameter provided.");
+            Log.e(TAG, "Invalid handler parameter provided.");
             return;
         }
 
         synchronized (valueChangedHandlers) {
             valueChangedHandlers.add(handler);
         }
-        if (LPClassesMock.hasStarted()) {
+        if (CTVariableUtils.hasStarted()) {
             handler.handle(this);
         }
     }
@@ -98,28 +90,27 @@ public class Var<T> {
         warnIfNotStarted();
         return numberValue;
     }
+    //public int overrideResId() {
+    //    return overrideResId;
+    //}
+
+    //public void setOverrideResId(int resId) {
+    //    overrideResId = resId;
+    //}
 
     /*</basic getter-setters>*/
 
 
 
-
-    // define<Double>("some_global_var_name",12.4,"float")
-    // define<String>("some_global_var_name2","hi","string")
-    // this is called by parser when parsing code define @Variable variables for the first time
-    public static <T> Var<T> define(String name, T defaultValue, String kind) {
-        return define(name, defaultValue, kind, null);
-    }
-
     public static <T> Var<T> define(String name, T defaultValue) {
         String type = VarCache.kindFromValue(defaultValue); // 1.2 -> "float" , 1 -> "integer" etc
-        return define(name, defaultValue, type, null);
+        return define(name, defaultValue, type);
     }
 
     // define<Double>("some_global_var_name",12.4,"float",null)
     // define<String>("some_global_var_name2","hi","string",null)
     // this is called by parser( via define( name, value,kind)) when parsing code define @Variable variables for the first time
-    private static <T> Var<T> define(String name, T defaultValue, String kind, VarInitializer<T> initializer) {
+    public static <T> Var<T> define(String name, T defaultValue,String kind /* VarInitializer<T> initializer*/) {
         //checks if name is correct . if correct continues or  returns null
         if (TextUtils.isEmpty(name)) {
             Log.e(TAG,"Empty name parameter provided.");
@@ -133,7 +124,7 @@ public class Var<T> {
         }
 
         // check if LP has called start and whether name is not a special name. if either fails, then generates a log else continues // todo : discuss our conditions for this check
-        if (LPClassesMock.hasCalledStart() && !name.startsWith(Constants.Values.RESOURCES_VARIABLE)) {
+        if (CTVariableUtils.hasCalledStart() && !name.startsWith(Constants.Values.RESOURCES_VARIABLE)) {
             Log.i(TAG,"You should not create new variables after calling start (name=" + name + ")");
         }
         Var<T> var = new Var<>();
@@ -143,35 +134,34 @@ public class Var<T> {
             var.defaultValue = defaultValue;
             var.value = defaultValue;
             var.kind = kind;
-            if (name.startsWith(Constants.Values.RESOURCES_VARIABLE)) {
-                var.isInternal = true;
-            }
-            if (initializer != null) {
-                initializer.init(var);
-            }
+            //if (name.startsWith(Constants.Values.RESOURCES_VARIABLE)) {
+            //    var.isInternal = true;
+            //}
+            //if (initializer != null) {
+            //    initializer.init(var);
+            //}
 
-            var.cacheComputedValues(); //todo check var.cacheComputedValues()
+            var.cacheComputedValues();
             VarCache.registerVariable(var);  // will put var in VarCache.vars , & update VarCache.valueFromClient , VarCache.defaultKinds
-            //can be removed //todo
-            if (Constants.Kinds.FILE.equals(var.kind)) {
-                if (var.isResource) {
-                    VarCache.registerFile(var.stringValue, var::defaultStream, var.hash, var.size);
-                } else {
-                    String defaultVal = var.defaultValue() == null ? null : var.defaultValue().toString();
-                    VarCache.registerFile(var.stringValue, defaultVal, var::defaultStream);
-                }
-            }
+
+            //if (Constants.Kinds.FILE.equals(var.kind)) {
+            //    if (var.isResource) {
+            //        VarCache.registerFile(var.stringValue, var::defaultStream, var.hash, var.size);
+            //    } else {
+            //        String defaultVal = var.defaultValue() == null ? null : var.defaultValue().toString();
+            //        VarCache.registerFile(var.stringValue, defaultVal, var::defaultStream);
+            //    }
+            //}
 
 
-            var.update(); //todo  check var.update()
+            var.update();
         } catch (Throwable t) {
-            LPClassesMock.exception(t);
+            t.printStackTrace();
         }
         return var;
     }
 
 
-    //todo what does this function do, and why it is used? //  unsure
     private void cacheComputedValues() {
         if (value instanceof String) {
             stringValue = (String) value;
@@ -238,50 +228,42 @@ public class Var<T> {
         }
         cacheComputedValues();
 
-        //can be removed//todo
-        if (VarCache.silent() && name.startsWith(Constants.Values.RESOURCES_VARIABLE) && Constants.Kinds.FILE.equals(kind) && !fileIsPending) {
-            triggerFileIsReady();
-        }
+        //if (VarCache.silent() && name.startsWith(Constants.Values.RESOURCES_VARIABLE) && Constants.Kinds.FILE.equals(kind) && !fileIsPending) {
+        //    triggerFileIsReady();
+        //}
 
         if (VarCache.silent()) {
             return;
         }
 
-        if (LPClassesMock.hasStarted()) {
+        if (CTVariableUtils.hasStarted()) {
             triggerValueChanged();
         }
 
-        //can be removed// Check if file exists, otherwise we need to download it. //todo
-        if (Constants.Kinds.FILE.equals(kind)) {
-            if (!Constants.isNoop()) {
-                DownloadFileResult result = FileManager.maybeDownloadFile(
-                        isResource, stringValue, (String) defaultValue, null,
-                        new Runnable() {
-                            @Override
-                            public void run() {
-                                triggerFileIsReady();
-                            }
-                        });
-                valueIsInAssets = false;
-                if (result == DownloadFileResult.DOWNLOADING) {
-                    fileIsPending = true;
-                } else if (result == DownloadFileResult.EXISTS_IN_ASSETS) {
-                    valueIsInAssets = true;
-                }
-            }
-            if (LPClassesMock.hasStarted() && !fileIsPending) {
-                triggerFileIsReady();
-            }
-        }
 
-        if (LPClassesMock.hasStarted()) {
+        //if (Constants.Kinds.FILE.equals(kind)) {
+        //    if (!CTVariables.hasSdkError) {
+        //        DownloadFileResult result = FileManager.maybeDownloadFile(isResource, stringValue, (String) defaultValue, null, () -> triggerFileIsReady());
+        //        valueIsInAssets = false;
+        //        if (result == DownloadFileResult.DOWNLOADING) {
+        //            fileIsPending = true;
+        //        } else if (result == DownloadFileResult.EXISTS_IN_ASSETS) {
+        //            valueIsInAssets = true;
+        //        }
+        //    }
+        //    if (LPClassesMock.hasStarted() && !fileIsPending) {
+        //        triggerFileIsReady();
+        //    }
+        //}
+
+        if (CTVariableUtils.hasStarted()) {
             hadStarted = true;
         }
     }
 
     private void warnIfNotStarted() {
-        if (!isInternal && !LPClassesMock.hasStarted() && !printedCallbackWarning) {
-            Log.i(TAG,"CleverTap hasn't finished retrieving values from the server. " + "You should use a callback to make sure the value for '%s' is ready. " + "Otherwise, your app may not use the most up-to-date value."+name);
+        if (/*!isInternal &&*/  !CTVariableUtils.hasStarted() && !printedCallbackWarning) {
+            Logger.v(TAG, "CleverTap hasn't finished retrieving values from the server. You should use a callback to make sure the value for '%s' is ready. Otherwise, your app may not use the most up-to-date value." + name);
             printedCallbackWarning = true;
         }
     }
@@ -290,32 +272,14 @@ public class Var<T> {
     private void triggerValueChanged() {
         synchronized (valueChangedHandlers) {
             for (VariableCallback<T> callback : valueChangedHandlers) {
-
                 callback.setVariable(this);
+                CTVariableUtils.runOnMainThread(callback);//todo : CT Logic to trigger these callbacks on main thread
 
-                OperationQueue.sharedInstance().addUiOperation(callback);//runs this task on ui thread
             }
         }
     }
 
-
-    // not needed for now
-    public Object objectForKeyPath(Object... keys) {
-        try {
-            warnIfNotStarted();
-            List<Object> components = new ArrayList<>();
-            Collections.addAll(components, nameComponents);
-            if (keys != null && keys.length > 0) {
-                Collections.addAll(components, keys);
-            }
-            return VarCache.getMergedValueFromComponentArray(
-                    components.toArray(new Object[components.size()]));
-        } catch (Throwable t) {
-            LPClassesMock.exception(t);
-            return null;
-        }
-    }
-
+    // if variable is of type list, then it will return the size of list
     public int count() {
         try {
             warnIfNotStarted();
@@ -324,10 +288,10 @@ public class Var<T> {
                 return ((List<?>) result).size();
             }
         } catch (Throwable t) {
-            LPClassesMock.exception(t);
+            t.printStackTrace();
             return 0;
         }
-        LPClassesMock.maybeThrowException(new UnsupportedOperationException("This variable is not a list."));
+        CTVariableUtils.maybeThrowException(new UnsupportedOperationException("This variable is not a list."));
         return 0;
     }
 
@@ -337,140 +301,140 @@ public class Var<T> {
     }
 
 
+    // not needed for now
+    //public Object objectForKeyPath(Object... keys) {
+    //        try {
+    //            warnIfNotStarted();
+    //            List<Object> components = new ArrayList<>();
+    //            Collections.addAll(components, nameComponents);
+    //            if (keys != null && keys.length > 0) {
+    //                Collections.addAll(components, keys);
+    //            }
+    //            return VarCache.getMergedValueFromComponentArray(
+    //                    components.toArray(new Object[components.size()]));
+    //        } catch (Throwable t) {
+    //            LPClassesMock.exception(t);
+    //            return null;
+    //        }
+    //    }
 
+    /* File related code */
 
-
-    /*<FILE RELATED STUFF : TO BE REMOVED>*/
-
-
-    //canbe removed //todo
-    public InputStream stream() {
-        try {
-            if (!Constants.Kinds.FILE.equals(kind)) {
-                return null;
-            }
-            warnIfNotStarted();
-            InputStream stream = FileManager.stream(isResource, isAsset, valueIsInAssets, fileValue(), (String) defaultValue, data);
-            if (stream == null) {return defaultStream();}
-            return stream;
-        } catch (Throwable t) {
-            LPClassesMock.exception(t);
-            return null;
-        }
-    }
-
-
-    //can be removed //todo
-    public static Var<String> defineAsset(String name, String defaultFilename) {
-        return define(name, defaultFilename, Constants.Kinds.FILE, new VarInitializer<String>() {
-            @Override
-            public void init(Var<String> var) {
-                var.isAsset = true;
-            }
-        });
-    }
-
-    //can be removed //todo
-    public static Var<String> defineResource(String name, int resId) {
-        String resourceName = LPClassesMock.generateResourceNameFromId(resId);
-        return define(name, resourceName, Constants.Kinds.FILE, new VarInitializer<String>() {
-            @Override
-            public void init(Var<String> var) {
-                var.isResource = true;
-            }
-        });
-    }
-
-
-    //can be removed //todo
-    public static Var<String> defineResource(String name, String defaultFilename, final int size, final String hash, final byte[] data) {
-        return define(name, defaultFilename, Constants.Kinds.FILE, new VarInitializer<String>() {
-            @Override
-            public void init(Var<String> var) {
-                var.isResource = true;
-                var.size = size;
-                var.hash = hash;
-                var.data = data;
-            }
-        });
-    }
-
-    //can be removed //todo
-    public static Var<Integer> defineColor(String name, int defaultValue) {
-        return define(name, defaultValue, Constants.Kinds.COLOR, null);
-    }
-
-    //can be removed //todo
-    public static Var<String> defineFile(String name, String defaultFilename) {
-        return define(name, defaultFilename, Constants.Kinds.FILE, null);
-    }
-
-    //can be removed //todo
-    public void addFileReadyHandler(VariableCallback<T> handler) {
-        if (handler == null) {
-            Log.e(TAG,"Invalid handler parameter provided.");
-            return;
-        }
-        synchronized (fileReadyHandlers) {
-            fileReadyHandlers.add(handler);
-        }
-        if (LPClassesMock.hasStarted() && !fileIsPending) {
-            handler.handle(this);
-        }
-    }
-
-    //can be removed //todo
-    public void removeFileReadyHandler(VariableCallback<T> handler) {
-        if (handler == null) {
-            Log.e(TAG,"Invalid handler parameter provided.");
-            return;
-        }
-        synchronized (fileReadyHandlers) {
-            fileReadyHandlers.remove(handler);
-        }
-    }
-
-    //can be removed //todo
-    public String fileValue() {
-        try {
-            warnIfNotStarted();
-            if (Constants.Kinds.FILE.equals(kind)) {
-                return FileManager.fileValue(stringValue, (String) defaultValue, valueIsInAssets);
-            }
-        } catch (Throwable t) {
-            LPClassesMock.exception(t);
-        }
-        return null;
-    }
-
-    //can be removed //todo
-    private void triggerFileIsReady() {
-        synchronized (fileReadyHandlers) {
-            fileIsPending = false;
-            for (VariableCallback<T> callback : fileReadyHandlers) {
-                callback.setVariable(this);
-                OperationQueue.sharedInstance().addUiOperation(callback);
-            }
-        }
-    }
-
-    //can be removed //todo
-    private InputStream defaultStream() {
-        try {
-            if (!Constants.Kinds.FILE.equals(kind)) {
-                return null;
-            }
-            return FileManager.stream(isResource, isAsset, valueIsInAssets, (String) defaultValue, (String) defaultValue, data);
-        } catch (Throwable t) {
-            LPClassesMock.exception(t);
-            return null;
-        }
-    }
-
-
-
-    private interface VarInitializer<T> {
-        void init(Var<T> var);
-    }
+    //public InputStream stream() {
+    //    try {
+    //        if (!Constants.Kinds.FILE.equals(kind)) {
+    //            return null;
+    //        }
+    //        warnIfNotStarted();
+    //        InputStream stream = FileManager.stream(isResource, isAsset, valueIsInAssets, fileValue(), (String) defaultValue, data);
+    //        if (stream == null) {return defaultStream();}
+    //        return stream;
+    //    } catch (Throwable t) {
+    //        LPClassesMock.exception(t);
+    //        return null;
+    //    }
+    //}
+    //
+    //
+    //public static Var<String> defineAsset(String name, String defaultFilename) {
+    //    return define(name, defaultFilename, Constants.Kinds.FILE, new VarInitializer<String>() {
+    //        @Override
+    //        public void init(Var<String> var) {
+    //            var.isAsset = true;
+    //        }
+    //    });
+    //}
+    //
+    //public static Var<String> defineResource(String name, int resId) {
+    //    String resourceName = LPClassesMock.generateResourceNameFromId(resId);
+    //    return define(name, resourceName, Constants.Kinds.FILE, new VarInitializer<String>() {
+    //        @Override
+    //        public void init(Var<String> var) {
+    //            var.isResource = true;
+    //        }
+    //    });
+    //}
+    //
+    //
+    //public static Var<String> defineResource(String name, String defaultFilename, final int size, final String hash, final byte[] data) {
+    //    return define(name, defaultFilename, Constants.Kinds.FILE, new VarInitializer<String>() {
+    //        @Override
+    //        public void init(Var<String> var) {
+    //            var.isResource = true;
+    //            var.size = size;
+    //            var.hash = hash;
+    //            var.data = data;
+    //        }
+    //    });
+    //}
+    //
+    //public static Var<Integer> defineColor(String name, int defaultValue) {
+    //    return define(name, defaultValue, Constants.Kinds.COLOR, null);
+    //}
+    //
+    //public static Var<String> defineFile(String name, String defaultFilename) {
+    //    return define(name, defaultFilename, Constants.Kinds.FILE, null);
+    //}
+    //
+    //public void addFileReadyHandler(VariableCallback<T> handler) {
+    //    if (handler == null) {
+    //        Log.e(TAG,"Invalid handler parameter provided.");
+    //        return;
+    //    }
+    //    synchronized (fileReadyHandlers) {
+    //        fileReadyHandlers.add(handler);
+    //    }
+    //    if (LPClassesMock.hasStarted() && !fileIsPending) {
+    //        handler.handle(this);
+    //    }
+    //}
+    //
+    //public void removeFileReadyHandler(VariableCallback<T> handler) {
+    //    if (handler == null) {
+    //        Log.e(TAG,"Invalid handler parameter provided.");
+    //        return;
+    //    }
+    //    synchronized (fileReadyHandlers) {
+    //        fileReadyHandlers.remove(handler);
+    //    }
+    //}
+    //
+    //public String fileValue() {
+    //    try {
+    //        warnIfNotStarted();
+    //        if (Constants.Kinds.FILE.equals(kind)) {
+    //            return FileManager.fileValue(stringValue, (String) defaultValue, valueIsInAssets);
+    //        }
+    //    } catch (Throwable t) {
+    //        LPClassesMock.exception(t);
+    //    }
+    //    return null;
+    //}
+    //
+    //private void triggerFileIsReady() {
+    //    synchronized (fileReadyHandlers) {
+    //        fileIsPending = false;
+    //        for (VariableCallback<T> callback : fileReadyHandlers) {
+    //            callback.setVariable(this);
+    //            OperationQueue.sharedInstance().addUiOperation(callback);
+    //        }
+    //    }
+    //}
+    //
+    //private InputStream defaultStream() {
+    //    try {
+    //        if (!Constants.Kinds.FILE.equals(kind)) {
+    //            return null;
+    //        }
+    //        return FileManager.stream(isResource, isAsset, valueIsInAssets, (String) defaultValue, (String) defaultValue, data);
+    //    } catch (Throwable t) {
+    //        LPClassesMock.exception(t);
+    //        return null;
+    //    }
+    //}
+    //
+    //private interface VarInitializer<T> {
+    //    void init(Var<T> var);
+    //}
 
 }

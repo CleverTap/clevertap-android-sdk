@@ -16,15 +16,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class LeanplumVariables {
+public class CTVariables {
     private static final ArrayList<VariablesChangedCallback> variablesChangedHandlers = new ArrayList<>(); //needed
-    private static final ArrayList<VariablesChangedCallback> onceNoDownloadsHandlers = new ArrayList<>();// needed : its actually onceVariableChangedAndNoDownloadsPending (basically same as first in case of variables but runs only once),
+    private static final ArrayList<VariablesChangedCallback> oneTimeVariablesChangedHandler = new ArrayList<>();// needed : its actually onceVariableChanged(basically same as first in case of variables but runs only once),
 
     private static Context context;
     public static final  boolean isDevelopmentModeEnabled = false;
 
 
-    private static final boolean hasSdkError =false;
+    public static final boolean hasSdkError =false;
     public static final String VARS_FROM_CODE = "varsFromCode";
     public static final String VARS = "vars";
 
@@ -33,21 +33,21 @@ public class LeanplumVariables {
     @Nullable
     public static Context getContext() {
         if (context == null) {
-            Logger.v("Your application context is not set. You should call Leanplum.setApplicationContext(this) or " + "LeanplumActivityHelper.enableLifecycleCallbacks(this) in your application's " + "onCreate method, or have your application extend LeanplumApplication.");
+            Logger.v("Your application context is not set. You should call CTVariables.setApplicationContext(this) or CTActivityHelper.enableLifecycleCallbacks(this) in your application's " + "onCreate method, or have your application extend CleverTapApplication.");
         }
         return context;
     }
     public static void setContext(Context context) {
-        LeanplumVariables.context = context;
+        CTVariables.context = context;
     }
 
     static synchronized void init(){
         // this is a situation where some error happened in ct sdk. so we just apply empty to all var cache
         if (hasSdkError) {
-            //LeanplumInternal.setHasStarted(true);
-            //LeanplumInternal.setStartSuccessful(true);
+            //LeanplumInternal.setHasStarted(true); //todo needed ? ask hristo
+            //LeanplumInternal.setStartSuccessful(true); //todo needed ? ask hristo
             triggerVariablesChanged();
-            VarCache.applyVariableDiffs(new HashMap<>(), new HashMap<>(), new HashMap<>(), new ArrayList<>(), new ArrayList<>(), new HashMap<>(), "", "");
+            VarCache.applyVariableDiffs(new HashMap<>());
         }
        else {
             // we first load variables from cache . and set silent so as to not update listeners. then we reset silent to false, so next time when we load from the server, we aree able to call listeners
@@ -56,7 +56,7 @@ public class LeanplumVariables {
             VarCache.setSilent(false);
 
             // we register an internal listener to update client's listenere whenever the load diffs updates the variables
-            VarCache.onUpdate(LeanplumVariables::triggerVariablesChanged);
+            VarCache.onUpdate(CTVariables::triggerVariablesChanged);
 
             //todo code to download clevertap variable data and pass it in
             new Thread(() -> {
@@ -79,7 +79,7 @@ public class LeanplumVariables {
         boolean jsonHasVariableData = true; //check if response was successful, like response.data!=null
         try {
             if (!jsonHasVariableData) {
-                //LeanplumInternal.setHasStarted(true);
+                //LeanplumInternal.setHasStarted(true);//todo needed ? ask hristo
                 // Load the variables that were stored on the device from the last session.this will also invoke user's callback, but with values from last session/shared prefs
                 VarCache.loadDiffs();
             } else {
@@ -128,51 +128,50 @@ public class LeanplumVariables {
                 //OperationQueue.sharedInstance().addUiOperation(callback); // replace with ct implemnetation of ui thread executor
             }
         }
-        synchronized (onceNoDownloadsHandlers) {
-            for (VariablesChangedCallback callback : onceNoDownloadsHandlers) {
+        synchronized (oneTimeVariablesChangedHandler) {
+            for (VariablesChangedCallback callback : oneTimeVariablesChangedHandler) {
                 //OperationQueue.sharedInstance().addUiOperation(callback); // replace with ct implemnetation of ui thread executor
             }
-            onceNoDownloadsHandlers.clear();
+            oneTimeVariablesChangedHandler.clear();
         }
     }
 
 
 
     // rename to addOnceVariablesChanged
-    public static void addOnceVariablesChangedAndNoDownloadsPendingHandler(@NonNull VariablesChangedCallback handler) {
+    public static void addOnceVariablesChanged(@NonNull VariablesChangedCallback handler) { //addOnceVariablesChangedAndNoDownloadsPendingHandler
         if (handler == null) {
-            Logger.v("addOnceVariablesChangedAndNoDownloadsPendingHandler - Invalid handler parameter" + " provided.");
+            Logger.v("addOnceVariablesChanged - Invalid handler parameter" + " provided.");
             return;
         }
 
-        if (areVariablesReceivedAndNoDownloadsPending()) {
+        if (areVariablesReceived()) {
             handler.variablesChanged();
         } else {
-            synchronized (onceNoDownloadsHandlers) {
-                onceNoDownloadsHandlers.add(handler);
+            synchronized (oneTimeVariablesChangedHandler) {
+                oneTimeVariablesChangedHandler.add(handler);
             }
         }
     }
 
-    //todo change to include only variables
-    static boolean areVariablesReceivedAndNoDownloadsPending() {
+    static boolean areVariablesReceived() { //areVariablesReceivedAndNoDownloadsPending
         return VarCache.hasReceivedDiffs();
     }
 
 
     //
-    public static void removeOnceVariablesChangedAndNoDownloadsPendingHandler(@NonNull VariablesChangedCallback handler) {
+    public static void removeOnceVariablesChanged(@NonNull VariablesChangedCallback handler) { //removeOnceVariablesChangedAndNoDownloadsPendingHandler
         if (handler == null) {
-            Logger.v("removeOnceVariablesChangedAndNoDownloadsPendingHandler - Invalid handler parameter provided.");
+            Logger.v("removeOnceVariablesChanged - Invalid handler parameter provided.");
             return;
         }
 
-        synchronized (onceNoDownloadsHandlers) {
-            onceNoDownloadsHandlers.remove(handler);
+        synchronized (oneTimeVariablesChangedHandler) {
+            oneTimeVariablesChangedHandler.remove(handler);
         }
     }
 
-    // leanplum's implementation of fetching variables forcefully from the server. it is same endpoint as start, but with differen parameters. todo : replace with ct endpopoint
+    // api to  fetch variables forcefully from the server. it is same endpoint as start, but with differen parameters. todo : replace with ct endpopoint
     public static void forceContentUpdate(@NonNull Runnable callback) {
 
     }

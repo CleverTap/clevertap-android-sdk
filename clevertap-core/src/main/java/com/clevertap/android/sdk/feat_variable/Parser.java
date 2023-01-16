@@ -24,11 +24,6 @@ package com.clevertap.android.sdk.feat_variable;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.clevertap.android.sdk.feat_variable.Var;
-import com.clevertap.android.sdk.feat_variable.File;
-import com.clevertap.android.sdk.feat_variable.Variable;
-import com.clevertap.android.sdk.feat_variable.VariableCallback;
-
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -42,7 +37,6 @@ import java.util.Map;
  */
 public class Parser {
 
-  //todo : next imp function is Var.define() , varObj.addValueChangedHandler()/removeValueChangedHandler()/name()/value()
 
   private static final String TAG = "Parser>";
 
@@ -97,16 +91,20 @@ public class Parser {
          it will also try to call defineFileVariable(...) if it has @File annotation
        */
       for (final Field field : fields) {
-        String group, name;
+        String group = "", name = "";
         boolean isFile = false;
         if (field.isAnnotationPresent(Variable.class)) {
           Variable annotation = field.getAnnotation(Variable.class);
-          group = annotation.group();
-          name = annotation.name();
+          if(annotation!=null){
+            group = annotation.group();
+            name = annotation.name();
+          }
         } else if (field.isAnnotationPresent(File.class)) {
           File annotation = field.getAnnotation(File.class);
-          group = annotation.group();
-          name = annotation.name();
+          if(annotation!=null){
+            group = annotation.group();
+            name = annotation.name();
+          }
           isFile = true;
         } else {
           continue;
@@ -152,9 +150,6 @@ public class Parser {
           if (!isFile) {
             defineVariable(instance, variableName, stringValue, "string", field);
           }
-          else {
-            defineFileVariable(instance, variableName, stringValue, field);
-          }
         }
       }
     } catch (IllegalArgumentException t) {
@@ -184,7 +179,7 @@ public class Parser {
 
     //then we set a listener on var instance which will give a callback with new var<x> instance
     // whenever its triggered. when this happens, we update field's field.value = var.value
-    // (not variable.value, the one returned in callback (todo why? ) if field is not null
+    // (not variable.value, the one returned in callback
     // also note that to set field's value, field must not be a non final(i.e mutable) value, therefore we first call
     // field.setAccessible(true) to make it mutable
     var.addValueChangedHandler(new VariableCallback<T>() {
@@ -201,37 +196,6 @@ public class Parser {
             field.setAccessible(true);
           }
           field.set(instanceFromWeakRef, var.value());
-          if (!accessible) {
-            field.setAccessible(false);
-          }
-        } catch (IllegalArgumentException e) {
-          Log.e(TAG,"Invalid value " + var.value() + " for field " + var.name(), e);
-        } catch (IllegalAccessException e) {
-          Log.e(TAG,"Error setting value for field " + var.name(), e);
-        }
-      }
-    });
-  }
-
-  // can be removed //todo
-  private static void defineFileVariable(final Object instance, String name, String value, final Field field) {
-    final Var<String> var = Var.defineFile(name, value);
-    final boolean hasInstance = instance != null;
-    final WeakReference<Object> weakInstance = new WeakReference<>(instance);
-    var.addFileReadyHandler(new VariableCallback<String>() {
-      @Override
-      public void handle(Var<String> variable) {
-        Object instance = weakInstance.get();
-        if ((hasInstance && instance == null) || field == null) {
-          var.removeFileReadyHandler(this);
-          return;
-        }
-        try {
-          boolean accessible = field.isAccessible();
-          if (!accessible) {
-            field.setAccessible(true);
-          }
-          field.set(instance, var.fileValue());
           if (!accessible) {
             field.setAccessible(false);
           }

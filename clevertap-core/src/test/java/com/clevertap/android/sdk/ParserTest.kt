@@ -1,7 +1,6 @@
 package com.clevertap.android.sdk
 
 import com.clevertap.android.sdk.feat_variable.Parser
-import com.clevertap.android.sdk.feat_variable.Var
 import com.clevertap.android.sdk.feat_variable.VarCache
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.Assert

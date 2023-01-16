@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.feat_variable.extras;
+package com.clevertap.android.sdk.feat_variable.utils;
 
 public class Constants {
     public static final String LEANPLUM_PACKAGE_IDENTIFIER = "s";
