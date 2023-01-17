@@ -36,18 +36,6 @@ public class Var<T> {
     private static boolean printedCallbackWarning;
     private static final String TAG = "Var>";
 
-    //private final List<VariableCallback<T>> fileReadyHandlers = new ArrayList<>();
-    //private boolean fileIsPending;
-    //private boolean isAsset;
-    //public boolean isResource;
-    //private int size;
-    //private String hash;
-    //private byte[] data;
-    //private boolean valueIsInAssets = false;
-    //private boolean isInternal;
-    //private int overrideResId;
-
-
 
     /*<basic getter-setters>*/
     @Override public String toString() {
@@ -91,15 +79,6 @@ public class Var<T> {
         warnIfNotStarted();
         return numberValue;
     }
-    //public int overrideResId() {
-    //    return overrideResId;
-    //}
-
-    //public void setOverrideResId(int resId) {
-    //    overrideResId = resId;
-    //}
-
-    /*</basic getter-setters>*/
 
 
 
@@ -111,7 +90,7 @@ public class Var<T> {
     // define<Double>("some_global_var_name",12.4,"float",null)
     // define<String>("some_global_var_name2","hi","string",null)
     // this is called by parser( via define( name, value,kind)) when parsing code define @Variable variables for the first time
-    public static <T> Var<T> define(String name, T defaultValue,String kind /* VarInitializer<T> initializer*/) {
+    public static <T> Var<T> define(String name, T defaultValue,String kind) {
         //checks if name is correct . if correct continues or  returns null
         if (TextUtils.isEmpty(name)) {
             Log.e(TAG,"Empty name parameter provided.");
@@ -135,24 +114,10 @@ public class Var<T> {
             var.defaultValue = defaultValue;
             var.value = defaultValue;
             var.kind = kind;
-            //if (name.startsWith(Constants.Values.RESOURCES_VARIABLE)) {
-            //    var.isInternal = true;
-            //}
-            //if (initializer != null) {
-            //    initializer.init(var);
-            //}
 
             var.cacheComputedValues();
             VarCache.registerVariable(var);  // will put var in VarCache.vars , & update VarCache.valueFromClient , VarCache.defaultKinds
 
-            //if (Constants.Kinds.FILE.equals(var.kind)) {
-            //    if (var.isResource) {
-            //        VarCache.registerFile(var.stringValue, var::defaultStream, var.hash, var.size);
-            //    } else {
-            //        String defaultVal = var.defaultValue() == null ? null : var.defaultValue().toString();
-            //        VarCache.registerFile(var.stringValue, defaultVal, var::defaultStream);
-            //    }
-            //}
 
 
             var.update();
@@ -229,41 +194,18 @@ public class Var<T> {
         }
         cacheComputedValues();
 
-        //if (VarCache.silent() && name.startsWith(Constants.Values.RESOURCES_VARIABLE) && Constants.Kinds.FILE.equals(kind) && !fileIsPending) {
-        //    triggerFileIsReady();
-        //}
-
         if (VarCache.silent()) {
             return;
         }
 
         if (CTVariableUtils.hasStarted()) {
-            triggerValueChanged();
-        }
-
-
-        //if (Constants.Kinds.FILE.equals(kind)) {
-        //    if (!CTVariables.hasSdkError) {
-        //        DownloadFileResult result = FileManager.maybeDownloadFile(isResource, stringValue, (String) defaultValue, null, () -> triggerFileIsReady());
-        //        valueIsInAssets = false;
-        //        if (result == DownloadFileResult.DOWNLOADING) {
-        //            fileIsPending = true;
-        //        } else if (result == DownloadFileResult.EXISTS_IN_ASSETS) {
-        //            valueIsInAssets = true;
-        //        }
-        //    }
-        //    if (LPClassesMock.hasStarted() && !fileIsPending) {
-        //        triggerFileIsReady();
-        //    }
-        //}
-
-        if (CTVariableUtils.hasStarted()) {
             hadStarted = true;
+            triggerValueChanged();
         }
     }
 
     private void warnIfNotStarted() {
-        if (/*!isInternal &&*/  !CTVariableUtils.hasStarted() && !printedCallbackWarning) {
+        if ( !CTVariableUtils.hasStarted() && !printedCallbackWarning) {
             Logger.v(TAG, "CleverTap hasn't finished retrieving values from the server. You should use a callback to make sure the value for '%s' is ready. Otherwise, your app may not use the most up-to-date value." + name);
             printedCallbackWarning = true;
         }
@@ -300,142 +242,4 @@ public class Var<T> {
         warnIfNotStarted();
         return stringValue;
     }
-
-
-    // not needed for now
-    //public Object objectForKeyPath(Object... keys) {
-    //        try {
-    //            warnIfNotStarted();
-    //            List<Object> components = new ArrayList<>();
-    //            Collections.addAll(components, nameComponents);
-    //            if (keys != null && keys.length > 0) {
-    //                Collections.addAll(components, keys);
-    //            }
-    //            return VarCache.getMergedValueFromComponentArray(
-    //                    components.toArray(new Object[components.size()]));
-    //        } catch (Throwable t) {
-    //            LPClassesMock.exception(t);
-    //            return null;
-    //        }
-    //    }
-
-    /* File related code */
-
-    //public InputStream stream() {
-    //    try {
-    //        if (!Constants.Kinds.FILE.equals(kind)) {
-    //            return null;
-    //        }
-    //        warnIfNotStarted();
-    //        InputStream stream = FileManager.stream(isResource, isAsset, valueIsInAssets, fileValue(), (String) defaultValue, data);
-    //        if (stream == null) {return defaultStream();}
-    //        return stream;
-    //    } catch (Throwable t) {
-    //        LPClassesMock.exception(t);
-    //        return null;
-    //    }
-    //}
-    //
-    //
-    //public static Var<String> defineAsset(String name, String defaultFilename) {
-    //    return define(name, defaultFilename, Constants.Kinds.FILE, new VarInitializer<String>() {
-    //        @Override
-    //        public void init(Var<String> var) {
-    //            var.isAsset = true;
-    //        }
-    //    });
-    //}
-    //
-    //public static Var<String> defineResource(String name, int resId) {
-    //    String resourceName = LPClassesMock.generateResourceNameFromId(resId);
-    //    return define(name, resourceName, Constants.Kinds.FILE, new VarInitializer<String>() {
-    //        @Override
-    //        public void init(Var<String> var) {
-    //            var.isResource = true;
-    //        }
-    //    });
-    //}
-    //
-    //
-    //public static Var<String> defineResource(String name, String defaultFilename, final int size, final String hash, final byte[] data) {
-    //    return define(name, defaultFilename, Constants.Kinds.FILE, new VarInitializer<String>() {
-    //        @Override
-    //        public void init(Var<String> var) {
-    //            var.isResource = true;
-    //            var.size = size;
-    //            var.hash = hash;
-    //            var.data = data;
-    //        }
-    //    });
-    //}
-    //
-    //public static Var<Integer> defineColor(String name, int defaultValue) {
-    //    return define(name, defaultValue, Constants.Kinds.COLOR, null);
-    //}
-    //
-    //public static Var<String> defineFile(String name, String defaultFilename) {
-    //    return define(name, defaultFilename, Constants.Kinds.FILE, null);
-    //}
-    //
-    //public void addFileReadyHandler(VariableCallback<T> handler) {
-    //    if (handler == null) {
-    //        Log.e(TAG,"Invalid handler parameter provided.");
-    //        return;
-    //    }
-    //    synchronized (fileReadyHandlers) {
-    //        fileReadyHandlers.add(handler);
-    //    }
-    //    if (LPClassesMock.hasStarted() && !fileIsPending) {
-    //        handler.handle(this);
-    //    }
-    //}
-    //
-    //public void removeFileReadyHandler(VariableCallback<T> handler) {
-    //    if (handler == null) {
-    //        Log.e(TAG,"Invalid handler parameter provided.");
-    //        return;
-    //    }
-    //    synchronized (fileReadyHandlers) {
-    //        fileReadyHandlers.remove(handler);
-    //    }
-    //}
-    //
-    //public String fileValue() {
-    //    try {
-    //        warnIfNotStarted();
-    //        if (Constants.Kinds.FILE.equals(kind)) {
-    //            return FileManager.fileValue(stringValue, (String) defaultValue, valueIsInAssets);
-    //        }
-    //    } catch (Throwable t) {
-    //        LPClassesMock.exception(t);
-    //    }
-    //    return null;
-    //}
-    //
-    //private void triggerFileIsReady() {
-    //    synchronized (fileReadyHandlers) {
-    //        fileIsPending = false;
-    //        for (VariableCallback<T> callback : fileReadyHandlers) {
-    //            callback.setVariable(this);
-    //            OperationQueue.sharedInstance().addUiOperation(callback);
-    //        }
-    //    }
-    //}
-    //
-    //private InputStream defaultStream() {
-    //    try {
-    //        if (!Constants.Kinds.FILE.equals(kind)) {
-    //            return null;
-    //        }
-    //        return FileManager.stream(isResource, isAsset, valueIsInAssets, (String) defaultValue, (String) defaultValue, data);
-    //    } catch (Throwable t) {
-    //        LPClassesMock.exception(t);
-    //        return null;
-    //    }
-    //}
-    //
-    //private interface VarInitializer<T> {
-    //    void init(Var<T> var);
-    //}
-
 }

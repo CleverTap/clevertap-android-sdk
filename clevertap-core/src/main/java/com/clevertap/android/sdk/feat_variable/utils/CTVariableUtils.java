@@ -1,13 +1,11 @@
 package com.clevertap.android.sdk.feat_variable.utils;
 
-import android.content.Context;
 import android.content.SharedPreferences;
-import android.os.Handler;
-import android.os.Looper;
 import android.text.Editable;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import com.clevertap.android.sdk.Utils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,10 +27,12 @@ public final class CTVariableUtils {
     public static Boolean hasStarted(){
         //its true if server response for "start" api is received. //todo : decide whether it is needed // darshan
         return startApiResponseReceived;
+//        CleverTapInstanceConfig config;
+//        config.isCreatedPostAppLaunch();
     }
 
     public static void setHasStarted(boolean responseReceived){ //todo : decide whether it is needed//darshan
-        startApiResponseReceived = responseReceived;
+        startApiResponseReceived = responseReceived; // might not be needed
     }
 
      //todo : decide whether it is needed //darshan
@@ -192,9 +192,10 @@ public final class CTVariableUtils {
     }
 
 
-    // alt for: OperationQueue.sharedInstance().addUiOperation(callback) : todo //replace with ct logic to run callbacks on ui thread
+    // alt for: OperationQueue.sharedInstance().addUiOperation(callback) :
+    @Deprecated
     public static  void runOnMainThread(Runnable callback) {
-        new Handler(Looper.getMainLooper()).post(callback);
+        Utils.runOnUiThread(callback);
     }
 
 

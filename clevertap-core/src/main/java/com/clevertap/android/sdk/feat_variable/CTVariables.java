@@ -128,16 +128,25 @@ public class CTVariables {
 
 
     public static void forceContentUpdate(@NonNull Runnable callback) {
+        /*
+         * Forces content to update from the server. If variables have changed, the appropriate callbacks
+         * will fire. Use sparingly as if the app is updated, you'll have to deal with potentially
+         * inconsistent state or user experience.
+         *
+         * @param callback The callback to invoke when the call completes from the server. The callback
+         *                 will fire regardless of whether the variables have changed. Null value is not
+         *                 permitted.
+         */
+
         // api to  fetch variables forcefully from the server. it is same endpoint as start,
         // but with differen parameters.
-        // todo : replace with ct endpopoint
+        // todo : replace with ct endpopoint // backend
+
 
     }
 
 
     public static void addVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
-
-
         synchronized (variablesChangedHandlers) {
             variablesChangedHandlers.add(handler);
         }

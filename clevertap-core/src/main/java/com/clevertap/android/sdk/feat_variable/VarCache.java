@@ -61,19 +61,6 @@ public class VarCache {
     private static final String NAME_COMPONENT_REGEX = "(?:[^\\.\\[.(\\\\]+|\\\\.)+";
     private static final Pattern NAME_COMPONENT_PATTERN = Pattern.compile(NAME_COMPONENT_REGEX);
 
-    //private static volatile String varsJson;
-    //private static volatile String varsSignature;
-    //private static final Map<String, Object> fileAttributes = new HashMap<>();
-    //private static final Map<String, StreamProvider> fileStreams = new HashMap<>();
-    //private static Map<String, Object> regions = new HashMap<>();
-    //private static Map<String, Object> messageDiffs = new HashMap<>();
-    //private static Map<String, Object> devModeFileAttributesFromServer;
-    //private static Map<String, Object> userAttributes;
-    //private static Map<String, Object> variantDebugInfo = new HashMap<>();
-    //private static Map<String, Object> messages = new HashMap<>();
-    //private static volatile List<Map<String, Object>> variants = new ArrayList<>();
-    //private static volatile List<Map<String, Object>> localCaps = new ArrayList<>();
-    //private static int contentVersion;
 
     // 1.2 -> "float" , 1 -> "integer" etc
     public static <T> String kindFromValue(T defaultValue) {
@@ -111,8 +98,6 @@ public class VarCache {
     }
 
 
-    /*<1called together>*/
-
     // v: Var("group1.myVariable",12.4,"float") -> unit
     //-----
     //  1. will put v in vars
@@ -130,7 +115,6 @@ public class VarCache {
     // this will basically update:
     // values(i.e valuesFromClient[G]) from mapOf() to mapOf("group1"to mapOf(),'myVariable' to mapOf()) and (kinds(i.e defaultKinds[G]) from mapOf() to mapOf("group1.myVariable" to "float")
     public static void updateValues(String name, String[] nameComponents, Object value, String kind, Map<String, Object> values, Map<String, String> kinds) {
-        //why : casting to object in #149 and then back to map in #155?
         //if(nc=[g,m] and valuePtr = mapOf({a:b},{c:d}), then after iterating nc, valuePtr will be either b/d/emptymap based on  whether a/c=g/m .
         Object valuesPtr = values;
         if (nameComponents != null && nameComponents.length > 0) {
@@ -147,11 +131,6 @@ public class VarCache {
         }
     }
 
-    /*</1called together>*/
-
-
-
-   /* <2called together>*/
 
     //components:["group1","myVariable"]
     //----
@@ -171,7 +150,6 @@ public class VarCache {
         return (T) mergedPtr;
     }
 
-    /*</2called together>*/
 
 
 
@@ -182,7 +160,7 @@ public class VarCache {
     // traverse(listOf(1234,5678,1111,null),3, true) -> hashMap() | also changes collection to : listOf(1234,5678,1111,hashMap() )
     // traverse(listOf(1234,5678,1111,null),3, false) -> null()
     //-----
-    //<util function for 1/2>. it will either return the value of key from the collection, or empty map if key is not in
+    //it will either return the value of key from the collection, or empty map if key is not in
     // collection; and it will also add the empty map against that key in collection
     private static Object traverse(Object collection, Object key, boolean autoInsert) {
         if (collection == null) {
@@ -209,11 +187,9 @@ public class VarCache {
         return null;
     }
 
-    //</util function for 1/2>
 
 
-    /*<3 called together>*/
-    //will basically call applyVariableDiffs(d,m,r,v,l,v,v,v) with values stored in pref (after decryption) and userAttributes()
+    //will basically call applyVariableDiffs(..) with values stored in pref (after decryption) and userAttributes()
     public static void loadDiffs() {
         // if CTVariables.hasSdkError we return w/o doing anything
         if (CTVariables.hasSdkError) {return;}
@@ -221,45 +197,13 @@ public class VarCache {
 
         if(context==null){return;}
         SharedPreferences defaults = context.getSharedPreferences(LEANPLUM, Context.MODE_PRIVATE);
-
-        // if token in ApiConfigSingleton is null, we directly call applyVariableDiffs(d,m,r,v,l,v,v,v) with empty objects
-        // else we 1) take out the encrypted string (or default value)  from encrypted prefs  (2) decrypt it (3) create  maps/list out of them and and (4) call applyVariableDiffs(d,m,r,v,l,v,v,v) with those values
-        // for else case, we also set deviceID,userId and logging in ApiConfig based on values stored in encrypted prefs
-        //for else case, we also call userAttribute()
-
-        //if (LPClassesMock.getAPIConfigToken() == null)
-        //    applyVariableDiffs(new HashMap<>());
-        //    return;
-        //}
         try {
-            // Crypt functions return input text if there was a problem.
-            //AESCrypt aesContext = new AESCrypt(CTVariableUtils.getAPIConfigAppID(), CTVariableUtils.getAPIConfigToken());
             String variables = CTVariableUtils.getFromPreference(defaults, Constants.Defaults.VARIABLES_KEY, "{}");
-            //String messages = aesContext.decodePreference(defaults, Constants.Defaults.MESSAGES_KEY, "{}");
-            //String regions = aesContext.decodePreference(defaults, Constants.Defaults.REGIONS_KEY, "{}");
-            //String variants = aesContext.decodePreference(defaults, Constants.Keys.VARIANTS, "[]");
-            //String localCaps = aesContext.decodePreference(defaults, Constants.Keys.LOCAL_CAPS, "[]");
-            //String variantDebugInfo = aesContext.decodePreference(defaults, Constants.Keys.VARIANT_DEBUG_INFO, "{}");
-            //String varsJson = aesContext.decodePreference(defaults, Constants.Defaults.VARIABLES_JSON_KEY, "{}");
-            //String varsSignature = aesContext.decodePreference(defaults, Constants.Defaults.VARIABLES_SIGN_KEY, null);
             applyVariableDiffs(CTVariableUtils.fromJson(variables));
-            //applyVariableDiffs(LPClassesMock.fromJson(variables), LPClassesMock.fromJson(messages), LPClassesMock.fromJson(regions), LPClassesMock.listFromJson(new JSONArray(variants)), LPClassesMock.listFromJson(new JSONArray(localCaps)), LPClassesMock.fromJson(variantDebugInfo), varsJson, varsSignature);
-            //String deviceId = aesContext.decodePreference(defaults, Constants.Params.DEVICE_ID, null);
-            //if (deviceId != null) {
-            //    APIConfig.getInstance().setDeviceId(deviceId);
-            //}
-            //String userId = aesContext.decodePreference(defaults, Constants.Params.USER_ID, null);
-            //if (userId != null) {
-            //    APIConfig.getInstance().setUserId(userId);
-            //}
-            //String loggingEnabled = aesContext.decodePreference(defaults, Constants.Keys.LOGGING_ENABLED, "false");
-            //if (Boolean.parseBoolean(loggingEnabled)) {
-            //    Constants.loggingEnabled = true;
-            //}
+
         } catch (Exception e) {
             Log.e(TAG,"Could not load variable diffs.\n" + Log.getStackTraceString(e));
         }
-        //userAttributes();
     }
 
 
@@ -276,79 +220,7 @@ public class VarCache {
                     var.update();
                 }
             }
-            //fileVariableFinish();
         }
-
-        //used with regards to in-apps , so not needed for variables
-        //if (messages != null) {
-        //    // Store messages.
-        //    messageDiffs = messages;
-        //    Map<String, Object> newMessages = new HashMap<>();
-        //    for (Map.Entry<String, Object> entry : messages.entrySet()) {
-        //        Map<String, Object> messageConfig = LPClassesMock.uncheckedCast(entry.getValue());
-        //        Map<String, Object> newConfig = new HashMap<>(messageConfig);
-        //        Map<String, Object> actionArgs = LPClassesMock.uncheckedCast(messageConfig.get(Constants.Keys.VARS));
-        //        Map<String, Object> actionDefinitions = LPClassesMock.getActionDefinitionMaps();
-        //        Map<String, Object> defaultArgs = LPClassesMock.multiIndex(actionDefinitions, newConfig.get(Constants.Params.ACTION), "values");
-        //        Map<String, Object> vars = LPClassesMock.uncheckedCast(mergeHelper(defaultArgs, actionArgs));
-        //        newMessages.put(entry.getKey(), newConfig);
-        //        newConfig.put(Constants.Keys.VARS, vars);
-        //    }
-        //
-        //    VarCache.messages = newMessages;
-        //    for (Map.Entry<String, Object> entry : VarCache.messages.entrySet()) {
-        //        String name = entry.getKey();
-        //        Map<String, Object> messageConfig = LPClassesMock.uncheckedCast(VarCache.messages.get(name));
-        //        if (messageConfig != null && messageConfig.get("action") != null) {
-        //            Map<String, Object> actionArgs = LPClassesMock.uncheckedCast(messageConfig.get(Constants.Keys.VARS));
-        //            //new ActionContext(messageConfig.get("action").toString(), actionArgs, name).update();
-        //        }
-        //    }
-        //}
-
-        //used with regards to in-apps , so not needed for variables
-        //if (regions != null) {
-        //    VarCache.regions = regions;
-        //}
-
-        //used with regards to in-apps , so not needed for variables
-        //if (messages != null || regions != null) {
-        //    Set<String> foregroundRegionNames = new HashSet<>();
-        //    Set<String> backgroundRegionNames = new HashSet<>();
-        //    ActionManager.getForegroundandBackgroundRegionNames(foregroundRegionNames, backgroundRegionNames);
-        //    LocationManager locationManager = ActionManager.getLocationManager();
-        //    if (locationManager != null) {
-        //        locationManager.setRegionsData(regions, foregroundRegionNames, backgroundRegionNames);
-        //    }
-        //}
-
-        //used with regards to in-apps , so not needed for variables
-        //if (variants != null) {
-        //    VarCache.variants = variants;
-        //}
-
-        //used with regards to in-apps , so not needed for variables
-        //if (localCaps != null) {
-        //    VarCache.localCaps = localCaps;
-        //}
-
-        // might not be needed for variables . this just sets the variantDebugInfo in a global variable
-        //if (variantDebugInfo != null) {
-        //    VarCache.setVariantDebugInfo(variantDebugInfo);
-        //}
-
-        // this is for verifying that values of variables are from LP server only and not
-        // modified externally and can be used by client to send them to their own server
-        // and verify its signature byt decrypting via public key
-        //if (varsJson != null) {
-        //    VarCache.varsJson = varsJson;
-        //    VarCache.varsSignature = varsSignature;
-        //}
-
-        // this is associated with a seperate feature (involving ActionContext) for preventing
-        // updates to in app and other dependent features when variables are updated while user
-        // is using the app.
-        //contentVersion++;
 
         // will only call saveDiffs() and triggerHasReceivedDiffs() when silent[g] is false.
         // saveDiffs() is opposite of loadDiffs() and will save the current globalVariable's data to cache
@@ -482,58 +354,16 @@ public class VarCache {
         if (CTVariables.hasSdkError) {
             return;
         }
-        //if (LPClassesMock.getAPIConfigToken() == null) {
-        //    return;
-        //}
         Context context = CTVariables.getContext();
         if(context==null){
             return;
         }
         SharedPreferences defaults = context.getSharedPreferences(LEANPLUM, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = defaults.edit();
-        
-
-        // Crypt functions return input text if there was a problem.
-        //AESCrypt aesContext = new AESCrypt(CTVariableUtils.getAPIConfigAppID(), CTVariableUtils.getAPIConfigToken());
 
         String variablesCipher = CTVariableUtils.toJson(diffs); // aesContext.encrypt(CTVariableUtils.toJson(diffs));
         editor.putString(Constants.Defaults.VARIABLES_KEY, variablesCipher);
 
-        //String messagesCipher = aesContext.encrypt(LPClassesMock.toJson(messages));
-        //editor.putString(Constants.Defaults.MESSAGES_KEY, messagesCipher);
-
-        //String regionsCipher = aesContext.encrypt(LPClassesMock.toJson(regions));
-        //editor.putString(Constants.Defaults.REGIONS_KEY, regionsCipher);
-
-        //try {
-        //    if (variants != null && !variants.isEmpty()) {
-        //        String variantsJson = LPClassesMock.listToJsonArray(variants).toString();
-        //        editor.putString(Constants.Keys.VARIANTS, aesContext.encrypt(variantsJson));
-        //    }
-        //} catch (JSONException e1) {
-        //    Log.e(TAG,"Error converting " + variants + " to JSON.\n" + Log.getStackTraceString(e1));
-        //}
-
-        //try {
-        //    if (localCaps != null) {
-        //        String json = LPClassesMock.listToJsonArray(localCaps).toString();
-        //        editor.putString(Constants.Keys.LOCAL_CAPS, aesContext.encrypt(json));
-        //    }
-        //} catch (JSONException e) {
-        //    Log.e(TAG,"Error converting " + localCaps + " to JSON.\n" + Log.getStackTraceString(e));
-        //}
-        //
-        //if (variantDebugInfo != null) {
-        //    editor.putString(Constants.Keys.VARIANT_DEBUG_INFO, aesContext.encrypt(LPClassesMock.toJson(variantDebugInfo)));
-        //}
-
-        // partially related to variables ,might be added in future . check applyVariableDiffs
-        //editor.putString(Constants.Defaults.VARIABLES_JSON_KEY, aesContext.encrypt(varsJson));
-        //editor.putString(Constants.Defaults.VARIABLES_SIGN_KEY, aesContext.encrypt(varsSignature));
-
-        //editor.putString(Constants.Params.DEVICE_ID, aesContext.encrypt(APIConfig.getInstance().deviceId()));
-        //editor.putString(Constants.Params.USER_ID, aesContext.encrypt(APIConfig.getInstance().userId()));
-        //editor.putString(Constants.Keys.LOGGING_ENABLED, aesContext.encrypt(String.valueOf(Constants.loggingEnabled)));
         CTVariableUtils.commitChanges(editor);
     }
 
@@ -548,12 +378,7 @@ public class VarCache {
 
 
 
-    /*</3 called together>*/
-
-
-    /*<4 called together>*/
-
-    //will force upload vars from vars[g] map to server ?
+    //will force upload vars from vars[g] map to server
     public static boolean sendContentIfChanged() {
         boolean changed = devModeValuesFromServer != null && !valuesFromClient.equals(devModeValuesFromServer);
         if (changed) {
@@ -567,9 +392,6 @@ public class VarCache {
         return changed;
     }
 
-    //</4 called together>
-
-
 
     // will reset few global variables
     // and also call ActionManagerDefinitionKt.setDevModeActionDefinitionsFromServer(..)
@@ -578,19 +400,6 @@ public class VarCache {
         diffs.clear();
         merged = null;
         vars.clear();
-
-        //devModeFileAttributesFromServer = null;
-        //varsJson = null;
-        //varsSignature = null;
-        //
-        //localCaps = new ArrayList<>();
-        //variants = new ArrayList<>();
-        //variantDebugInfo.clear();
-        //userAttributes = null;
-        //messageDiffs.clear();
-        //messages = null;
-
-        //ActionManagerDefinitionKt.setDevModeActionDefinitionsFromServer(ActionManager.getInstance(), null);
     }
 
 
@@ -615,47 +424,9 @@ public class VarCache {
         updateBlock = null;
         vars.clear();
         valuesFromClient.clear();
-
-
-
-
-        //varsJson = null;
-        //varsSignature = null;
-        //contentVersion = 0;
-        //variantDebugInfo.clear();
-        //variants = new ArrayList<>();
-        //devModeFileAttributesFromServer = null;
-        //fileAttributes.clear();
-        //fileStreams.clear();
-        //messageDiffs.clear();
-        //regions.clear();
-        //userAttributes = null;
-        //messages = null;
-        //localCaps = new ArrayList<>();
-        //ActionManager.getInstance().getDefinitions().clear();
-        //ActionManagerDefinitionKt.setDevModeActionDefinitionsFromServer(ActionManager.getInstance(), null);
-
-
     }
 
 
-//    public static void saveUserAttributes() {
-//        if (CTVariables.hasSdkError || LPClassesMock.getAPIConfigAppID() == null || userAttributes == null) {
-//            return;
-//        }
-//        Context context = CTVariables.getContext();
-//        SharedPreferences defaults = context.getSharedPreferences(LEANPLUM, Context.MODE_PRIVATE);
-//        SharedPreferences.Editor editor = defaults.edit();
-//        // Crypt functions return input text if there was a problem.
-//        String plaintext = LPClassesMock.toJson(userAttributes);
-//        AESCrypt aesContext = new AESCrypt(LPClassesMock.getAPIConfigAppID(), LPClassesMock.getAPIConfigToken());
-//        editor.putString(Constants.Defaults.ATTRIBUTES_KEY, aesContext.encrypt(plaintext));
-//        LPClassesMock.commitChanges(editor);
-//    }
-
-
-
-    //<basic getter-setters>
     public static <T> Var<T> getVariable(String name) {
         return (Var<T>) vars.get(name);
     }
@@ -678,255 +449,4 @@ public class VarCache {
     public static boolean hasReceivedDiffs() {
         return hasReceivedDiffs;
     }
-    //public static List<Map<String, Object>> variants() {
-    //    return variants;
-    //}
-    //public static List<Map<String, Object>> localCaps() {
-    //    return localCaps;
-    //}
-    //public static Map<String, Object> messages() {
-    //    return messages;
-    //}
-    //public static Map<String, Object> getMessageDiffs() {
-    //    return messageDiffs;
-    //}
-    //public static Map<String, Object> regions() {
-    //    return regions;
-    //}
-    //public static Map<String, Object> getVariantDebugInfo() {
-    //    return variantDebugInfo;
-    //}
-    //public static int contentVersion() {
-    //    return contentVersion;
-    //}
-    //public static void setVariantDebugInfo(Map<String, Object> variantDebugInfo) {
-    //    if (variantDebugInfo != null) {
-    //        VarCache.variantDebugInfo = variantDebugInfo;
-    //    } else {
-    //        VarCache.variantDebugInfo = new HashMap<>();
-    //    }
-    //}
-    //</basic getter-setters>
-
-
-//    /*---------------- FILE RELATED CODE ----------------*/
-//
-//    public static void registerFile(String stringValue, StreamProvider defaultStream, String hash, int size) {
-//
-//        if (!isStreamAvailable(defaultStream) || !Constants.isDevelopmentModeEnabled || CTVariables.hasSdkError) {
-//            return;
-//        }
-//
-//        Map<String, Object> attributes = new HashMap<>();
-//        attributes.put(Constants.Keys.HASH, hash);
-//        attributes.put(Constants.Keys.SIZE, size);
-//
-//        Map<String, Object> variationAttributes = new HashMap<>();
-//        variationAttributes.put("", attributes);
-//
-//        fileStreams.put(stringValue, defaultStream);
-//        fileAttributes.put(stringValue, variationAttributes);
-//        maybeUploadNewFiles();
-//    }
-//    public static void registerFile(String stringValue, String defaultValue, StreamProvider defaultStream) {
-//
-//        if (!isStreamAvailable(defaultStream)
-//                || !Constants.isDevelopmentModeEnabled
-//                || CTVariables.hasSdkError) {
-//            return;
-//        }
-//
-//        Map<String, Object> variationAttributes = new HashMap<>();
-//        Map<String, Object> attributes = new HashMap<>();
-//
-//        if (LPClassesMock.isSimulator()) {
-//            HashResults result = FileManager.fileMD5HashCreateWithPath(defaultStream.openStream());
-//            if (result != null) {
-//                attributes.put(Constants.Keys.HASH, result.hash);
-//                attributes.put(Constants.Keys.SIZE, result.size);
-//            }
-//        } else {
-//            int size = FileManager.getFileSize(
-//                    FileManager.fileValue(stringValue, defaultValue, null));
-//            attributes.put(Constants.Keys.SIZE, size);
-//        }
-//
-//        variationAttributes.put("", attributes);
-//        fileStreams.put(stringValue, defaultStream);
-//        fileAttributes.put(stringValue, variationAttributes);
-//        maybeUploadNewFiles();
-//    }
-//
-//    /**
-//     * Update file variables stream info with override info, so that override files don't require
-//     * downloads if they're already available.
-//     */
-//    private static void fileVariableFinish() {
-//        for (String name : new HashMap<>(vars).keySet()) {
-//            Var<?> var = vars.get(name);
-//            if (var == null) {
-//                continue;
-//            }
-//            String overrideFile = var.stringValue;
-//            if (var.isResource && Constants.Kinds.FILE.equals(var.kind()) && overrideFile != null &&
-//                    !overrideFile.equals(var.defaultValue())) {
-//                Map<String, Object> variationAttributes = LPClassesMock.uncheckedCast(fileAttributes.get
-//                        (overrideFile));
-//                StreamProvider streamProvider = fileStreams.get(overrideFile);
-//                if (variationAttributes != null && streamProvider != null) {
-//                    var.setOverrideResId(getResIdFromPath(var.stringValue()));
-//                }
-//            }
-//        }
-//    }
-//
-//    /**
-//     * Convert a resId to a resPath.
-//     */
-//    public static int getResIdFromPath(String resPath) {
-//        int resId = 0;
-//        try {
-//            String path = resPath.replace("res/", "");
-//            path = path.substring(0, path.lastIndexOf('.'));  // remove file extension
-//            String name = path.substring(path.lastIndexOf('/') + 1);
-//            String type = path.substring(0, path.lastIndexOf('/'));
-//            type = type.replace('/', '.');
-//            Context context = CTVariables.getContext();
-//            resId = context.getResources().getIdentifier(name, type, context.getPackageName());
-//        } catch (Exception e) {
-//            // Fall back to 0 on any exception
-//        }
-//        return resId;
-//    }
-//
-//    // this function takes an instance of a class that implements StreamProvider .
-//    // StreamProvider is a basic interface with just one function 'InputStream openStream()', that too
-//    // with a misleading name, which should be 'InputStream getStream()' instead.
-//    // any class implementing it, should just return an inputStream
-//    //
-//    // this function checks if instance of Streamprovider or the stream inside is null. if either
-//    // case is true, it returns false, otherwise it calls the InputStream's close() function
-//    // and returns true
-//    private static boolean isStreamAvailable(StreamProvider stream) {
-//        if (stream == null)
-//            return false;
-//
-//        try {
-//            InputStream is = stream.openStream();
-//            if (is != null) {
-//                is.close();
-//                return true;
-//            }
-//        } catch (Throwable ignore) {
-//        }
-//        return false;
-//    }
-//
-//    static void maybeUploadNewFiles() {
-//        // First check to make sure we have all the data we need
-//        if (CTVariables.hasSdkError
-//                || devModeFileAttributesFromServer == null
-//                || !LPClassesMock.hasStartedAndRegisteredAsDeveloper()
-//                || !Constants.enableFileUploadingInDevelopmentMode) {
-//            return;
-//        }
-//
-//        List<String> filenames = new ArrayList<>();
-//        List<JSONObject> fileData = new ArrayList<>();
-//        List<InputStream> streams = new ArrayList<>();
-//        int totalSize = 0;
-//        for (Map.Entry<String, Object> entry : fileAttributes.entrySet()) {
-//            String name = entry.getKey();
-//            Map<String, Object> variationAttributes = LPClassesMock.uncheckedCast(entry.getValue());
-//            Map<String, Object> serverVariationAttributes =
-//                    LPClassesMock.uncheckedCast(devModeFileAttributesFromServer.get(name));
-//            Map<String, Object> localAttributes = LPClassesMock.uncheckedCast(variationAttributes.get
-//                    (""));
-//            Map<String, Object> serverAttributes = LPClassesMock.uncheckedCast(
-//                    (serverVariationAttributes != null ? serverVariationAttributes.get("") : null));
-//            if (FileManager.isNewerLocally(localAttributes, serverAttributes)) {
-//                Log.d(TAG,"Will upload file " + name + ". Local attributes: " +
-//                        localAttributes + "; server attributes: " + serverAttributes);
-//
-//                String hash = (String) localAttributes.get(Constants.Keys.HASH);
-//                if (hash == null) {
-//                    hash = "";
-//                }
-//
-//                String variationPath = FileManager.fileRelativeToAppBundle(name);
-//
-//                // Upload in batch if we can't put any more files in
-//                if ((totalSize > Constants.Files.MAX_UPLOAD_BATCH_SIZES && filenames.size() > 0) || filenames.size() >= Constants.Files.MAX_UPLOAD_BATCH_FILES) {
-//
-//                    LPClassesMock.sendFilesNow(fileData, filenames, streams);
-//
-//                    filenames = new ArrayList<>();
-//                    fileData = new ArrayList<>();
-//                    streams = new ArrayList<>();
-//                    totalSize = 0;
-//                }
-//
-//                // Add the current file to the lists and update size
-//                Object size = localAttributes.get(Constants.Keys.SIZE);
-//                totalSize += (Integer) size;
-//                filenames.add(variationPath);
-//                JSONObject fileDatum = new JSONObject();
-//                try {
-//                    fileDatum.put(Constants.Keys.HASH, hash);
-//                    fileDatum.put(Constants.Keys.SIZE, localAttributes.get(Constants.Keys.SIZE) + "");
-//                    fileDatum.put(Constants.Keys.FILENAME, name);
-//                    fileData.add(fileDatum);
-//                } catch (JSONException e) {
-//                    // HASH, SIZE, or FILENAME are null, which they never should be (they're constants).
-//                    Log.e(TAG,"Unable to upload files.\n" + Log.getStackTraceString(e));
-//                    fileData.add(new JSONObject());
-//                }
-//                InputStream is = null;
-//                StreamProvider streamProvider = fileStreams.get(name);
-//                if (streamProvider != null) {
-//                    is = streamProvider.openStream();
-//                }
-//                streams.add(is);
-//            }
-//        }
-//
-//        if (filenames.size() > 0) {
-//            LPClassesMock.sendFilesNow(fileData, filenames, streams);
-//        }
-//    }
-//
-//
-//
-//
-//    @FunctionalInterface
-//    public interface StreamProvider {
-//        InputStream openStream();
-//    }
-//
-//     /*
-//    @Nullable
-//    public static SecuredVars getSecuredVars() {
-//        if (TextUtils.isEmpty(varsJson) || TextUtils.isEmpty(varsSignature)) {
-//            return null;
-//        }
-//        return new SecuredVars(varsJson, varsSignature);
-//    }
-//    */
-
-//    public static Map<String, Object> userAttributes() {
-//        //originally package private(i.e no public/private/protected
-//        if (userAttributes == null) {
-//            Context context = CTVariables.getContext();
-//            SharedPreferences defaults = context.getSharedPreferences(LEANPLUM, Context.MODE_PRIVATE);
-//            AESCrypt aesContext = new AESCrypt(LPClassesMock.getAPIConfigAppID(), LPClassesMock.getAPIConfigToken());
-//            try {
-//                userAttributes = LPClassesMock.fromJson(aesContext.decodePreference(defaults, Constants.Defaults.ATTRIBUTES_KEY, "{}"));
-//            } catch (Exception e) {
-//                Log.e(TAG,"Could not load user attributes.\n" + Log.getStackTraceString(e));
-//                userAttributes = new HashMap<>();
-//            }
-//        }
-//        return userAttributes;
-//    }
-
 }
