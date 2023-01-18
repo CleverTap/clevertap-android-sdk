@@ -5,44 +5,207 @@ import android.text.Editable;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RestrictTo;
 import com.clevertap.android.sdk.Utils;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.reflect.Array;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
-//mainly made to mock functions used in Leanplum.java . its functions should be replaced by actual ct functions or renamed and  shifted to proper classes
+@RestrictTo(RestrictTo.Scope.LIBRARY)
 public final class CTVariableUtils {
+    public static final String INT = "integer";
+    public static final String FLOAT = "float";
+    public static final String STRING = "string";
+    public static final String BOOLEAN = "bool";
+    public static final String DICTIONARY = "group";
+    public static final String ARRAY = "list";
+    public static boolean isDevelopmentModeEnabled = false;
+
     private static final String TAG = "LPClassesMock>";
 
-    private static boolean startApiResponseReceived = true;
-    private static boolean hasStartFunctionExecuted = true;
+    // check test for more info
+    public static Object mergeHelper(Object vars, Object diff) {
+        if (diff == null) {
+            return vars;
+        }
+        if (diff instanceof Number
+                || diff instanceof Boolean
+                || diff instanceof String
+                || diff instanceof Character
+                || vars instanceof Number
+                || vars instanceof Boolean
+                || vars instanceof String
+                || vars instanceof Character) {
+            return diff;
+        }
 
+        Iterable<?> diffKeys = (diff instanceof Map) ? ((Map<?, ?>) diff).keySet() : (Iterable<?>) diff;
+        Iterable<?> varsKeys = (vars instanceof Map) ? ((Map<?, ?>) vars).keySet() : (Iterable<?>) vars;
+        Map<?, ?> diffMap = (diff instanceof Map) ? ((Map<?, ?>) diff) : null;
+        Map<?, ?> varsMap = (vars instanceof Map) ? ((Map<?, ?>) vars) : null;
 
-    public static Boolean hasStarted(){
-        //its true if server response for "start" api is received. //todo : decide whether it is needed // darshan
-        return startApiResponseReceived;
-//        CleverTapInstanceConfig config;
-//        config.isCreatedPostAppLaunch();
+        // Infer that the diffs is an array if the vars value doesn't exist to tell us the type.
+        boolean isArray = false;
+        if (vars == null) {
+            if (diff instanceof Map && ((Map<?, ?>) diff).size() > 0) {
+                isArray = true;
+                for (Object var : diffKeys) {
+                    if (!(var instanceof String)) {
+                        isArray = false;
+                        break;
+                    }
+                    String str = ((String) var);
+                    if (str.length() < 3 || str.charAt(0) != '[' || str.charAt(str.length() - 1) != ']') {
+                        isArray = false;
+                        break;
+                    }
+                    String varSubscript = str.substring(1, str.length() - 1);
+                    if (!("" + Integer.getInteger(varSubscript)).equals(varSubscript)) {
+                        isArray = false;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Merge arrays.
+        if (vars instanceof List || isArray) {
+            ArrayList<Object> merged = new ArrayList<>();
+            for (Object var : varsKeys) {
+                merged.add(var);
+            }
+
+            // Merge values from server
+            // Array values from server come as Dictionary
+            // Example:
+            // string[] items = new string[] { "Item 1", "Item 2"};
+            // args.With<string[]>("Items", items); // Action Context arg value
+            // "vars": {
+            //      "Items": {
+            //                  "[1]": "Item 222", // Modified value from server
+            //                  "[0]": "Item 111"  // Modified value from server
+            //              }
+            //  }
+            // Prevent error when loading variable diffs where the diff is an Array and not Dictionary
+            if (diffMap != null) {
+                for (Object varSubscript : diffKeys) {
+                    if (varSubscript instanceof String) {
+                        String strSubscript = (String) varSubscript;
+                        if (strSubscript.length() > 2 && strSubscript.startsWith("[") && strSubscript.endsWith("]")) {
+                            // Get the index from the string key: "[0]" -> 0
+                            int subscript = Integer.parseInt(strSubscript.substring(1, strSubscript.length() - 1));
+                            Object var = diffMap.get(strSubscript);
+                            while (subscript >= merged.size() && merged.size() < Short.MAX_VALUE) {
+                                merged.add(null);
+                            }
+                            merged.set(subscript, mergeHelper(merged.get(subscript), var));
+                        }
+                    }
+                }
+            }
+            return merged;
+        }
+
+        // Merge dictionaries.
+        if (vars instanceof Map || diff instanceof Map) {
+            HashMap<Object, Object> merged = new HashMap<>();
+            if (varsKeys != null) {
+                for (Object var : varsKeys) {
+                    if (diffMap != null && varsMap != null) {
+                        Object diffVar = diffMap.get(var);
+                        Object value = varsMap.get(var);
+                        if (diffVar == null && value != null) {
+                            merged.put(var, value);
+                        }
+                    }
+                }
+            }
+            for (Object var : diffKeys) {
+                Object diffsValue = diffMap != null ? diffMap.get(var) : null;
+                Object varsValue = varsMap != null ? varsMap.get(var) : null;
+                Object mergedValues = mergeHelper(varsValue, diffsValue);
+                merged.put(var, mergedValues);
+            }
+            return merged;
+        }
+        return null;
     }
 
-    public static void setHasStarted(boolean responseReceived){ //todo : decide whether it is needed//darshan
-        startApiResponseReceived = responseReceived; // might not be needed
+    // check test for more info
+    public static Object traverse(Object collection, Object key, boolean autoInsert) {
+        if (collection == null) {
+            return null;
+        }
+        if (collection instanceof Map) {
+            Map<Object, Object> castedCollection = CTVariableUtils.uncheckedCast(collection);
+            Object result = castedCollection.get(key);
+            if (autoInsert && result == null && key instanceof String) {
+                result = new HashMap<String, Object>();
+                castedCollection.put(key, result);
+            }
+            return result;
+        }
+        else if (collection instanceof List) {
+            List<Object> castedList = CTVariableUtils.uncheckedCast(collection);
+            Object result = castedList.get((Integer) key);
+            if (autoInsert && result == null) {
+                result = new HashMap<String, Object>();
+                castedList.set((Integer) key, result);
+            }
+            return result;
+        }
+
+        return null;
     }
 
-     //todo : decide whether it is needed //darshan
-    public static Boolean hasCalledStart(){
-        // its true if  start() function has finished executing //alt for LeanplumInternal.hasCalledStart()
-        return hasStartFunctionExecuted;
+    // check test for more info
+    public static <T> String kindFromValue(T defaultValue) {
+        String kind = null;
+        if (defaultValue instanceof Integer || defaultValue instanceof Long || defaultValue instanceof Short || defaultValue instanceof Character || defaultValue instanceof Byte || defaultValue instanceof BigInteger) {
+            kind = INT;
+        }
+        else if (defaultValue instanceof Float || defaultValue instanceof Double || defaultValue instanceof BigDecimal) {
+            kind = FLOAT;
+        }
+        else if (defaultValue instanceof String) {
+            kind = STRING;
+        }
+        else if (defaultValue instanceof List || defaultValue instanceof Array) {
+            kind = ARRAY;
+        }
+        else if (defaultValue instanceof Map) {
+            kind = DICTIONARY;
+        }
+        else if (defaultValue instanceof Boolean) {
+            kind = BOOLEAN;
+        }
+        return kind;
     }
 
-    //todo : decide whether it is needed //darshan
-    public static void  setHasCalledStart(boolean hasExecuted) {hasStartFunctionExecuted = hasExecuted; }
+
+    // check test for more info
+    public static String[] getNameComponents(String name) {
+        final String NAME_COMPONENT_REGEX = "(?:[^\\.\\[.(\\\\]+|\\\\.)+";
+        final Pattern NAME_COMPONENT_PATTERN = Pattern.compile(NAME_COMPONENT_REGEX);
+        Matcher matcher = NAME_COMPONENT_PATTERN.matcher(name);
+        List<String> components = new ArrayList<>();
+        while (matcher.find()) {
+            components.add(name.substring(matcher.start(), matcher.end()));
+        }
+        return components.toArray(new String[0]);
+    }
+
 
     /* Utility functions */
 
@@ -184,7 +347,7 @@ public final class CTVariableUtils {
 
     // alt for: LeanplumInternal.maybeThrowException(..)
     public static void maybeThrowException(RuntimeException e) {
-        if (Constants.isDevelopmentModeEnabled) {
+        if (isDevelopmentModeEnabled) {
             throw e;
         } else {
             Log.e(TAG,e.getMessage() + " This error is only thrown in development mode.", e);
@@ -193,8 +356,7 @@ public final class CTVariableUtils {
 
 
     // alt for: OperationQueue.sharedInstance().addUiOperation(callback) :
-    @Deprecated
-    public static  void runOnMainThread(Runnable callback) {
+    public static  void runOnUiThread(Runnable callback) {
         Utils.runOnUiThread(callback);
     }
 

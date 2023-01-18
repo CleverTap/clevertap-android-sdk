@@ -8,6 +8,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.feat_variable.callbacks.VariablesChangedCallback;
 import com.clevertap.android.sdk.feat_variable.utils.CTVariableUtils;
 
@@ -19,13 +20,12 @@ import java.util.Map;
 
 
 public class CTVariables {
-    private static final ArrayList<VariablesChangedCallback> variablesChangedHandlers = new ArrayList<>(); //needed
-    private static final ArrayList<VariablesChangedCallback> oneTimeVariablesChangedHandlers = new ArrayList<>();// needed : its actually onceVariableChanged(basically same as first in case of variables but runs only once),
-
+    private static final ArrayList<VariablesChangedCallback> variablesChangedHandlers = new ArrayList<>();
+    private static final ArrayList<VariablesChangedCallback> oneTimeVariablesChangedHandlers = new ArrayList<>();
     private static Context context;
     public static final  boolean isDevelopmentModeEnabled = false;
-
-
+    private static boolean startApiResponseReceived = false;
+    private static boolean hasStartFunctionExecuted = false;
     public static final boolean hasSdkError =false;
     public static final String VARS_FROM_CODE = "varsFromCode";
     public static final String VARS = "vars";
@@ -43,11 +43,34 @@ public class CTVariables {
         CTVariables.context = context;
     }
 
+
+    public static Boolean hasStarted(){
+        //its true if server response for "start" api is received. //todo : decide whether it is needed // darshan
+        return startApiResponseReceived;
+//        CleverTapInstanceConfig config;
+//        config.isCreatedPostAppLaunch();
+    }
+
+    public static void setHasStarted(boolean responseReceived){ //todo : decide whether it is needed//darshan
+        startApiResponseReceived = responseReceived; // might not be needed
+    }
+
+    //todo : decide whether it is needed //darshan
+    public static Boolean hasCalledStart(){
+        // its true if  start() function has finished executing //alt for LeanplumInternal.hasCalledStart()
+        return hasStartFunctionExecuted;
+    }
+
+    //todo : decide whether it is needed //darshan
+    public static void  setHasCalledStart(boolean hasExecuted) {hasStartFunctionExecuted = hasExecuted; }
+
+
+
     static synchronized void init(){
         // this is a situation where some error happened in ct sdk. so we just apply empty to all var cache
         if (hasSdkError) {
-            CTVariableUtils.setHasStarted(true);
-            CTVariableUtils.setHasCalledStart(true);
+            setHasStarted(true);
+            setHasCalledStart(true);
             triggerVariablesChanged();
             VarCache.applyVariableDiffs(new HashMap<>());
         }
@@ -58,7 +81,7 @@ public class CTVariables {
             VarCache.setSilent(false);
 
             // we register an internal listener to update client's listenere whenever the load diffs updates the variables
-            VarCache.onUpdate(CTVariables::triggerVariablesChanged);
+            VarCache.setCacheUpdateBlock(CTVariables::triggerVariablesChanged);
 
             //todo: replace with code to download clevertap variable data and pass it in
             new Thread(() -> {
@@ -81,7 +104,7 @@ public class CTVariables {
         boolean jsonHasVariableData = response!=null && true; //check if response was successful, like response.data!=null //todo add logic as per backend response structure
         try {
             if (!jsonHasVariableData) {
-                CTVariableUtils.setHasStarted(true);
+                setHasStarted(true);
                 // Load the variables that were stored on the device from the last session.
                 // this will also invoke user's callback, but with values from last session/shared prefs
                 VarCache.loadDiffs();
@@ -102,12 +125,13 @@ public class CTVariables {
     private static void triggerVariablesChanged() {
         synchronized (variablesChangedHandlers) {
             for (VariablesChangedCallback callback : variablesChangedHandlers) {
-                CTVariableUtils.runOnMainThread(callback);
+                Utils.runOnUiThread(callback);
+
             }
         }
         synchronized (oneTimeVariablesChangedHandlers) {
             for (VariablesChangedCallback callback : oneTimeVariablesChangedHandlers) {
-                CTVariableUtils.runOnMainThread(callback);
+                Utils.runOnUiThread(callback);
             }
             oneTimeVariablesChangedHandlers.clear();
         }

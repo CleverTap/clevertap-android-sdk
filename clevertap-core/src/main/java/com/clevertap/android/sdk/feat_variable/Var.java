@@ -5,9 +5,9 @@ import android.text.TextUtils;
 import android.util.Log;
 
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.feat_variable.callbacks.VariableCallback;
 import com.clevertap.android.sdk.feat_variable.utils.CTVariableUtils;
-import com.clevertap.android.sdk.feat_variable.utils.Constants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -31,10 +31,12 @@ public class Var<T> {
     private T defaultValue;
     private T value;
     private String kind;
-    private boolean hadStarted;
+    private boolean hadStarted = false;
     private final List<VariableCallback<T>> valueChangedHandlers = new ArrayList<>();
     private static boolean printedCallbackWarning;
     private static final String TAG = "Var>";
+    public static final String RESOURCES_VARIABLE = "__Android Resources";
+
 
 
     /*<basic getter-setters>*/
@@ -66,7 +68,7 @@ public class Var<T> {
         synchronized (valueChangedHandlers) {
             valueChangedHandlers.add(handler);
         }
-        if (CTVariableUtils.hasStarted()) {
+        if (CTVariables.hasStarted()) {
             handler.handle(this);
         }
     }
@@ -83,7 +85,7 @@ public class Var<T> {
 
 
     public static <T> Var<T> define(String name, T defaultValue) {
-        String type = VarCache.kindFromValue(defaultValue); // 1.2 -> "float" , 1 -> "integer" etc
+        String type = CTVariableUtils.kindFromValue(defaultValue);
         return define(name, defaultValue, type);
     }
 
@@ -104,13 +106,13 @@ public class Var<T> {
         }
 
         // check if LP has called start and whether name is not a special name. if either fails, then generates a log else continues // todo : discuss our conditions for this check
-        if (CTVariableUtils.hasCalledStart() && !name.startsWith(Constants.Values.RESOURCES_VARIABLE)) {
+        if (CTVariables.hasCalledStart() && !name.startsWith(RESOURCES_VARIABLE)) {
             Log.i(TAG,"You should not create new variables after calling start (name=" + name + ")");
         }
         Var<T> var = new Var<>();
         try {
             var.name = name;
-            var.nameComponents = VarCache.getNameComponents(name);// "group1.group2.name" -> ["group1","group2","name"]
+            var.nameComponents = CTVariableUtils.getNameComponents(name);// "group1.group2.name" -> ["group1","group2","name"]
             var.defaultValue = defaultValue;
             var.value = defaultValue;
             var.kind = kind;
@@ -198,14 +200,14 @@ public class Var<T> {
             return;
         }
 
-        if (CTVariableUtils.hasStarted()) {
+        if (CTVariables.hasStarted()) {
             hadStarted = true;
             triggerValueChanged();
         }
     }
 
     private void warnIfNotStarted() {
-        if ( !CTVariableUtils.hasStarted() && !printedCallbackWarning) {
+        if ( !CTVariables.hasStarted() && !printedCallbackWarning) {
             Logger.v(TAG, "CleverTap hasn't finished retrieving values from the server. You should use a callback to make sure the value for '%s' is ready. Otherwise, your app may not use the most up-to-date value." + name);
             printedCallbackWarning = true;
         }
@@ -216,7 +218,7 @@ public class Var<T> {
         synchronized (valueChangedHandlers) {
             for (VariableCallback<T> callback : valueChangedHandlers) {
                 callback.setVariable(this);
-                CTVariableUtils.runOnMainThread(callback);
+                Utils.runOnUiThread(callback);
 
             }
         }
