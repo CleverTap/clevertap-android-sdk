@@ -1,12 +1,13 @@
 package com.clevertap.android.sdk.feat_variable
 
 
+import com.clevertap.android.sdk.feat_variable.utils.CTVariableUtils
 import com.clevertap.android.shared.test.BaseTestCase
-import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import java.util.*
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class VarCacheTest : BaseTestCase() {
@@ -31,6 +32,25 @@ class VarCacheTest : BaseTestCase() {
 
     @Test
     fun test_updateValues() {
+        val name = "mobile.smartphone.android.samsung.s22"
+        val components = CTVariableUtils.getNameComponents(name)
+        println("components=${Arrays.toString(components)}")
+        val value = 54999.99
+        val kind = "float"
+        val values = hashMapOf<String,Any?>()
+        val kinds= hashMapOf<String,String>()
+        CTVariableUtils.updateValuesAndKinds(name,components,value, kind, values, kinds)
+        println("a: new values = $values") // {mobile={smartphone={android={samsung={s22=54999.99}}}}}
+        println("a: new kinds = $kinds")  //  {"mobile.smartphone.android.samsung.s22"=float}
+
+        val name2 = "mobile.smartphone.apple.iphone.15pro"
+        val components2= CTVariableUtils.getNameComponents(name2)
+        val value2 = "unreleased"
+        CTVariableUtils.updateValuesAndKinds(name2,components2,value2, kind, values, kinds)
+        println("b: new values = $values") //{mobile={smartphone={apple={iphone={15pro=unreleased}}, android={samsung={s22=54999.99}}}}}
+        println("b: new kinds = $kinds")  //{mobile.smartphone.android.samsung.s22=float, mobile.smartphone.apple.iphone.15pro=float}
+
+        assertTrue (true)
     }
 
     @Test

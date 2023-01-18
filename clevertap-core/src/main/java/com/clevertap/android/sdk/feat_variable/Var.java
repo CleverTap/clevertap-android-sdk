@@ -31,7 +31,7 @@ public class Var<T> {
     private T defaultValue;
     private T value;
     private String kind;
-    private boolean hadStarted = false;
+    private boolean hadStarted = false;//todo this seems dangerous as it will stop update() from working after 1sr call. should we remove it?
     private final List<VariableCallback<T>> valueChangedHandlers = new ArrayList<>();
     private static boolean printedCallbackWarning;
     private static final String TAG = "Var>";
@@ -68,6 +68,8 @@ public class Var<T> {
         synchronized (valueChangedHandlers) {
             valueChangedHandlers.add(handler);
         }
+
+        // is this for some bug fix ? todo @hristo
         if (CTVariables.hasStarted()) {
             handler.handle(this);
         }

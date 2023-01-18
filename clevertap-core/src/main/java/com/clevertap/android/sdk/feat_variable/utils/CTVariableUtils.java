@@ -6,6 +6,8 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
+import androidx.annotation.VisibleForTesting;
+
 import com.clevertap.android.sdk.Utils;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -33,6 +35,29 @@ public final class CTVariableUtils {
     public static boolean isDevelopmentModeEnabled = false;
 
     private static final String TAG = "LPClassesMock>";
+
+
+    // name: "group1.myVariable", nameComponents: ['group1','myVariable'], value: 12.4, kind: "float", values:valuesFromClient[G],kinds: defaultKinds[G]
+    //-----
+    // this will basically update:
+    // values from mapOf() to mapOf("group1":mapOf('myvariable':12.4)) and
+    // kinds from mapOf() to mapOf("group1.myVariable" : "float")
+    // check test for a more clarity
+    public static void updateValuesAndKinds(String name, String[] nameComponents, Object value, String kind, Map<String, Object> values, Map<String, String> kinds) {
+        Object valuesPtr = values;
+        if (nameComponents != null && nameComponents.length > 0) {
+            for (int i = 0; i < nameComponents.length - 1; i++) {
+                valuesPtr = CTVariableUtils.traverse(valuesPtr, nameComponents[i], true);// can be either the actual value, or empty hashmap
+            }
+            if (valuesPtr instanceof Map) {
+                Map<String, Object> map = CTVariableUtils.uncheckedCast(valuesPtr);
+                map.put(nameComponents[nameComponents.length - 1], value);
+            }
+        }
+        if (kinds != null) {
+            kinds.put(name, kind);
+        }
+    }
 
     // check test for more info
     public static Object mergeHelper(Object vars, Object diff) {

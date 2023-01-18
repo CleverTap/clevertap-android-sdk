@@ -44,78 +44,96 @@ public class VarCache {
     private static final String LEANPLUM = "__leanplum__";
     public static final String VARIABLES_KEY = "__leanplum_variables";
 
+    /*
+     * - gets set in init() and unset in reset()
+     * - its function updateCache() gets called everytime triggerHasReceivedDiffs is called
+     * - its function is implemented as CTVariables::triggerVariablesChanged()
+     * - so whenever updateCache() is called,triggerVariablesChanged() is called which basically triggers users' listeners
+     * */
     private static CacheUpdateBlock updateBlock;
 
-    @VisibleForTesting//@VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    /*
+     *
+     * */
+    @VisibleForTesting
     public static final Map<String, Object> valuesFromClient = new HashMap<>();
 
+    /*
+     *
+     * */
     @VisibleForTesting
     public static final Map<String, Var<?>> vars = new ConcurrentHashMap<>();
 
+    /*
+     *
+     * */
     @VisibleForTesting
     public static final Map<String, String> defaultKinds = new HashMap<>();
 
+    /*
+     *
+     * */
     @VisibleForTesting
     public static Map<String, Object> diffs = new HashMap<>();
 
-    @VisibleForTesting
-    public static Map<String, Object> devModeValuesFromServer;
-
-    @VisibleForTesting
-    public static boolean hasReceivedDiffs = false;
-
+    /*
+     *
+     * */
     @VisibleForTesting
     public static Object merged;
 
+
+    /*
+     * set: everytime the api response from CTVariables.requestVariableDataFromServer() comes,
+     *      it sets this map to the values of 'locals' from the server
+     * get: when calling the forceLocalsUpdateApi i.e, sendContentIfChanged(),
+     *      this is a check to ensure that only changed local values are sent by
+     *      equating  with valuesFromClient
+     * //todo canbe removed? @Hristo
+     * */
     @VisibleForTesting
-    public static boolean silent;
+    public static Map<String, Object> devModeValuesFromServer;
+
+    /** enabled whenever triggerHasReceivedDiffs is called and disabled when reset is called.**/ // todo can be removed? @hristo
+    @VisibleForTesting
+    public static boolean hasReceivedDiffs = false;
+
+
+    /*
+    *
+    * */
+    @VisibleForTesting
+    public static boolean silent; //todo : check other areas where silent is used and see if there is a possibility to remove this with @Hristo?
 
 
     // v: Var("group1.myVariable",12.4,"float") -> unit
     //-----
-    //  1. will put v in vars
+    //  1. will update vars[g] from mapOf() to mapOf("group1.myVariable" to  Var(..) )
     //  2. make synchronous call to updateValues("group1.myVariable",['group1','myVariable'],12.4,"float",valuesFromClient, defaultKinds)
-    //  (last 2 are global variables,they are prob passed like this  so as to make the whole function testable without relying on global variables)
+    //     (last 2 are global variables,they are prob passed like this  so as to make the whole function testable without relying on global variables)
+    //     This call will var's data  add to both kinds[g] map and valuesFromClient[g] map
+    //     for kinds[g] it will simply change from mapOf() to mapOf("group1.myVariable": "float")
+    //     for valuesFromClient, it will changed from mapOf() to mapOf("group1":mapOf('myvariable':12.4))
+    //    for every next value added, the internal maps of valuesFromClient will get updated accordingly
     public static void registerVariable(Var<?> var) {
         vars.put(var.name(), var);
         synchronized (valuesFromClient) {
-            updateValues(var.name(), var.nameComponents(), var.defaultValue(), var.kind(), valuesFromClient, defaultKinds);
+            CTVariableUtils.updateValuesAndKinds(var.name(), var.nameComponents(), var.defaultValue(), var.kind(), valuesFromClient, defaultKinds);
         }
     }
 
-    // name: "group1.myVariable", ameComponents: ['group1','myVariable'], value: 12.4, kind: "float", values:valuesFromClient[G],kinds: defaultKinds[G]
-    //-----
-    // this will basically update:
-    // values(i.e valuesFromClient[G]) from mapOf() to mapOf("group1"to mapOf(),'myVariable' to mapOf()) and (kinds(i.e defaultKinds[G]) from mapOf() to mapOf("group1.myVariable" to "float")
-    public static void updateValues(String name, String[] nameComponents, Object value, String kind, Map<String, Object> values, Map<String, String> kinds) {
-        //if(nc=[g,m] and valuePtr = mapOf({a:b},{c:d}), then after iterating nc, valuePtr will be either b/d/emptymap based on  whether a/c=g/m .
-        Object valuesPtr = values;
-        if (nameComponents != null && nameComponents.length > 0) {
-            for (int i = 0; i < nameComponents.length - 1; i++) {
-                valuesPtr = CTVariableUtils.traverse(valuesPtr, nameComponents[i], true);
-            }
-            if (valuesPtr instanceof Map) {
-                Map<String, Object> map = CTVariableUtils.uncheckedCast(valuesPtr);
-                map.put(nameComponents[nameComponents.length - 1], value);
-            }
-        }
-        if (kinds != null) {
-            kinds.put(name, kind);
-        }
-    }
 
 
     //components:["group1","myVariable"]
     //----
     //basically calls getMergedValueFromComponentArray(components,merged[g] or valuesFromClient[g]) and returns its value
     public static <T> T getMergedValueFromComponentArray(Object[] components) {
-        // merged can be mapOf(..?..) or arraylist  . valuesFromClient can be a mapOf("group1"to mapOf(),'myVariable' to mapOf())
         return getMergedValueFromComponentArray(components, merged != null ? merged : valuesFromClient);
     }
 
     //components : ["group1","myVariable"]  , values : merged[g] or valuesFromClient[g]
-    // will basically set values(i.e merged[g] or valuesFromClient[g]) to to mapOf("group1"to mapOf(),'myVariable' to mapOf())
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+    // will basically set values(i.e merged[g] or valuesFromClient[g]) to mapOf("group1"to mapOf('myVariable' to 12.4))
+    @VisibleForTesting
     public static <T> T getMergedValueFromComponentArray(Object[] components, Object values) {
         Object mergedPtr = values;
         for (Object component : components) {
@@ -124,7 +142,7 @@ public class VarCache {
         return (T) mergedPtr;
     }
 
-    //will basically call applyVariableDiffs(..) with values stored in pref (after decryption) and userAttributes()
+    //will basically call applyVariableDiffs(..) with values stored in pref
     public static void loadDiffs() {
         // if CTVariables.hasSdkError we return w/o doing anything
         if (CTVariables.hasSdkError) {return;}
@@ -134,7 +152,8 @@ public class VarCache {
         SharedPreferences defaults = context.getSharedPreferences(LEANPLUM, Context.MODE_PRIVATE);
         try {
             String variables = CTVariableUtils.getFromPreference(defaults, VARIABLES_KEY, "{}");
-            applyVariableDiffs(CTVariableUtils.fromJson(variables));
+            Map<String,Object> variablesAsMap = CTVariableUtils.fromJson(variables);
+            applyVariableDiffs(variablesAsMap);
 
         } catch (Exception e) {
             Log.e(TAG,"Could not load variable diffs.\n" + Log.getStackTraceString(e));
@@ -142,7 +161,11 @@ public class VarCache {
     }
 
 
-    //will basically 1) set diffs[g] = diffs (2.) call computeMergedDictionary() (3.) call var.update() for every var in vars[g] (4.) optionally call saveDiffs() and triggerHasReceivedDiffs()
+    //will basically
+    // 1) set diffs[g] = diffs
+    // (2.) call computeMergedDictionary()
+    // (3.) call var.update() for every var in vars[g]
+    // (4.)  if silent is false,  call saveDiffs() and triggerHasReceivedDiffs()
     public static void applyVariableDiffs(Map<String, Object> diffs) {
         if (diffs != null) {
             VarCache.diffs = diffs;
@@ -157,23 +180,21 @@ public class VarCache {
             }
         }
 
-        // will only call saveDiffs() and triggerHasReceivedDiffs() when silent[g] is false.
-        // saveDiffs() is opposite of loadDiffs() and will save the current globalVariable's data to cache
-        // triggerHasReceivedDiffs() will trigger user's callbacks
+        //todo  instead of calling it with this hack, can't we just call saveDiffs() and triggerHasReceivedDiffs() in handleStartResponse() and failSafe()? //todo @hristo?
         if (!silent) {
             saveDiffs();
             triggerHasReceivedDiffs();
         }
     }
 
-    // basically  merged[g] = mergeHelper(valuesFromClient[g], diffs[g])
+    // basically  merged[g] = mergeHelper(valuesFromClient[g], diffs[g]) // todo can this  be removed and code be added directly to the caller?@hristo
     private static void computeMergedDictionary() {
         synchronized (valuesFromClient) {
             merged = CTVariableUtils.mergeHelper(valuesFromClient, diffs);
         }
     }
 
-    //save the values from global variables to shared prefs after encrypting
+    // saveDiffs() is opposite of loadDiffs() and will save diffs[g]  to cache
     public static void saveDiffs() {
         if (CTVariables.hasSdkError) {
             return;
@@ -194,14 +215,14 @@ public class VarCache {
     //will simply  set hasReceivedDiffs[g] = true; and call updateBlock[g].updateCache() which further triggers the callbacks set by user for listening to variables update
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public static void triggerHasReceivedDiffs() {
-        // update block is a callback registered by LP to trigger user's callback once the diffs are changed
+        // update block is a callback registered by CTVariables to trigger user's callback once the diffs are changed
         hasReceivedDiffs = true;
         if (updateBlock != null) {
             updateBlock.updateCache();
         }
     }
 
-    //will force upload vars from vars[g] map to server
+    //will force upload vars from valuesFromClient[g] and  defaultKinds[g] map to server
     public static boolean sendContentIfChanged() {
         boolean changed = devModeValuesFromServer != null && !valuesFromClient.equals(devModeValuesFromServer);
         if (changed) {
@@ -224,9 +245,6 @@ public class VarCache {
         merged = null;
         vars.clear();
     }
-
-
-
 
 
     // will reset a lot of global variables
