@@ -24,10 +24,9 @@ public class CTVariables {
     private static final ArrayList<VariablesChangedCallback> variablesChangedHandlers = new ArrayList<>();
     private static final ArrayList<VariablesChangedCallback> oneTimeVariablesChangedHandlers = new ArrayList<>();
     private static Context context;
-    private static boolean startApiResponseReceived = false;
-    private static boolean hasStartFunctionExecuted = false;
-    public static final boolean hasSdkError =false;
-    public static final String VARS_FROM_CODE = "varsFromCode";
+    private static boolean variableResponseReceived = false;
+    public static final boolean hasSdkError =false; //todo // keep it? @darshan
+    //public static final String VARS_FROM_CODE = "varsFromCode";
     public static final String VARS = "vars";
 
 
@@ -44,24 +43,15 @@ public class CTVariables {
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public static Boolean hasStarted(){
+    public static Boolean variableResponseReceived(){
         //its true if server response for "start" api is received.
-        return startApiResponseReceived;
+        return variableResponseReceived;
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public static void setHasStarted(boolean responseReceived){
-        startApiResponseReceived = responseReceived; // might not be needed
+    public static void setVariableResponseReceived(boolean responseReceived){
+        variableResponseReceived = responseReceived; // might not be needed
     }
-
-    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public static Boolean hasCalledStart(){
-        // its true if  start() function has finished executing //alt for LeanplumInternal.hasCalledStart()
-        return hasStartFunctionExecuted;
-    }
-
-    public static void  setHasCalledStart(boolean hasExecuted) {hasStartFunctionExecuted = hasExecuted; }
-
 
     /* // can be called as  CTVariables.onAppLaunched()
      * -2. <user calls CTVariables.setContext(context)>
@@ -110,7 +100,7 @@ public class CTVariables {
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     public static void requestVariableDataFromServer() {
         Logger.v("requesting data from server");
-        CTVariables.setHasStarted(false); //todo @hristo : whenever requesting data from server on wzrk_fetch, we should set has started as false, right? because at that time too the variables should not be accessed / listeners to be called
+        //CTVariables.setHasStarted(false); //todo @hristo : whenever requesting data from server on wzrk_fetch, we should set has started as false, right? because at that time too the variables should not be accessed / listeners to be called
         //VarCache.setHasReceivedDiffs(false);;
         new Thread(() -> {
             try {
@@ -137,8 +127,7 @@ public class CTVariables {
     private static void checkFailSafe() {
         // this is a situation where some error happened in ct sdk. so we just apply empty to all var cache
         if (hasSdkError) {
-            setHasStarted(true);
-            setHasCalledStart(true);
+            setVariableResponseReceived(true);
             triggerVariablesChanged();
             VarCache.updateDiffs(new HashMap<>());
         }
@@ -147,10 +136,10 @@ public class CTVariables {
     }
 
     private static void handleStartResponse(@Nullable final JSONObject response) {
+        setVariableResponseReceived(true);
         boolean jsonHasVariableData = response!=null && true; //check if response was successful, like response.data!=null //todo add logic as per backend response structure
         try {
             if (!jsonHasVariableData) {
-                setHasStarted(true);
                 // Load the variables that were stored on the device from the last session.
                 // this will also invoke user's callback, but with values from last session/shared prefs
                 VarCache.loadDiffsAndTriggerHandlers();

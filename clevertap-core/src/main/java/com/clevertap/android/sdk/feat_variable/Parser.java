@@ -22,7 +22,6 @@
 package com.clevertap.android.sdk.feat_variable;
 
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.feat_variable.annotations.Variable;
@@ -30,9 +29,6 @@ import com.clevertap.android.sdk.feat_variable.callbacks.VariableCallback;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -58,7 +54,7 @@ public class Parser {
         parseVariablesHelper(instance, instance.getClass());
       }
     } catch (Throwable t) {
-      Log.e(TAG,"Error parsing variables", t);
+      Logger.v("Error parsing variables", t);
     }
   }
 
@@ -73,7 +69,7 @@ public class Parser {
         parseVariablesHelper(null, clazz);
       }
     } catch (Throwable t) {
-      Log.e(TAG,"Error parsing variables", t);
+      Logger.v("Error parsing variables", t);
     }
   }
 
@@ -138,9 +134,9 @@ public class Parser {
         } else if (fieldTypeString.equals("boolean")) {
           defineVariable(instance, variableName, field.getBoolean(instance), "bool", field);
         } else if (fieldType.isPrimitive()) {
-          Log.e(TAG, "Variable " + variableName + " is an unsupported primitive type.");
+          Logger.v( "Variable " + variableName + " is an unsupported primitive type.");
         } else if (fieldType.isArray()) {
-          Log.e(TAG, "Variable " + variableName + " should be a List instead of an Array.");
+          Logger.v( "Variable " + variableName + " should be a List instead of an Array.");
         } else if (fieldType.isAssignableFrom(List.class)) {
           defineVariable(instance, variableName, field.get(instance), "list", field);
         } else if (fieldType.isAssignableFrom(Map.class)) {
@@ -154,13 +150,13 @@ public class Parser {
         }
       }
     } catch (IllegalArgumentException t) {
-      Log.e(TAG, "Error parsing variables(IllegalArgumentException):", t);
+      Logger.v( "Error parsing variables(IllegalArgumentException):", t);
       t.printStackTrace();
     } catch (IllegalAccessException t) {
-      Log.e(TAG, "Error parsing variables(IllegalAccessException):", t);
+      Logger.v( "Error parsing variables(IllegalAccessException):", t);
       t.printStackTrace();
     } catch (Throwable t) {
-      Log.e(TAG, "Error parsing variables:", t);
+      Logger.v( "Error parsing variables:", t);
       t.printStackTrace();
     }
 
@@ -205,9 +201,9 @@ public class Parser {
             field.setAccessible(false);
           }
         } catch (IllegalArgumentException e) {
-          Log.e(TAG,"Invalid value " + var.value() + " for field " + var.name(), e);
+          Logger.v("Invalid value " + var.value() + " for field " + var.name(), e);
         } catch (IllegalAccessException e) {
-          Log.e(TAG,"Error setting value for field " + var.name(), e);
+          Logger.v("Error setting value for field " + var.name(), e);
         }
       }
     });

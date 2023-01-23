@@ -2,13 +2,13 @@ package com.clevertap.android.sdk.feat_variable.utils;
 
 import android.content.SharedPreferences;
 import android.text.Editable;
-import android.util.Log;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
-import androidx.annotation.VisibleForTesting;
 
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
+import com.clevertap.android.sdk.feat_variable.CTVariables;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,9 +32,6 @@ public final class CTVariableUtils {
     public static final String BOOLEAN = "bool";
     public static final String DICTIONARY = "group";
     public static final String ARRAY = "list";
-    public static boolean isDevelopmentModeEnabled = false;
-
-    private static final String TAG = "LPClassesMock>";
 
 
     // name: "group1.myVariable", nameComponents: ['group1','myVariable'], value: 12.4, kind: "float", values:valuesFromClient[G],kinds: defaultKinds[G]
@@ -234,13 +231,11 @@ public final class CTVariableUtils {
 
     /* Utility functions */
 
-    //alt for CollectionUtil.uncheckedCast()
     @SuppressWarnings({"unchecked"})
     public static <T> T uncheckedCast(Object obj) {
         return (T) obj;
     }
 
-    //alt for: JsonConverter.fromJson(..)
     public static Map<String, Object> fromJson(String json) {
         if (json == null) {
             return null;
@@ -248,7 +243,7 @@ public final class CTVariableUtils {
         try {
             return mapFromJson(new JSONObject(json));
         } catch (JSONException e) {
-            Log.e(TAG,"Error converting " + json + " from JSON", e);
+            Logger.v("Error converting " + json + " from JSON", e);
             return null;
         }
     }
@@ -335,8 +330,6 @@ public final class CTVariableUtils {
         }
         return obj;
     }
-
-    //alt for : JsonConverter.toJson(..)
     public static String toJson(Map<String, ?> map) {
         if (map == null) {
             return null;
@@ -344,13 +337,10 @@ public final class CTVariableUtils {
         try {
             return mapToJsonObject(map).toString();
         } catch (JSONException e) {
-            Log.e(TAG,"Error converting " + map + " to JSON", e);
+            Logger.v("Error converting " + map + " to JSON", e);
             return null;
         }
     }
-
-
-    @NonNull //alt for:  aesContext.decodePreference
     public static String getFromPreference(SharedPreferences preferences, String key, String defaultValue) {
 
         String text = preferences.getString(key, null);
@@ -359,8 +349,6 @@ public final class CTVariableUtils {
         }
         return text;
     }
-
-    //alt for: SharedPreferenceUtil.commitChanges()
     public static void commitChanges(SharedPreferences.Editor editor){
         try {
             editor.apply();
@@ -368,14 +356,11 @@ public final class CTVariableUtils {
             editor.commit();
         }
     }
-
-
-    // alt for: LeanplumInternal.maybeThrowException(..)
     public static void maybeThrowException(RuntimeException e) {
-        if (isDevelopmentModeEnabled) {
+        if (CTVariables.isInDevelopmentMode()) {
             throw e;
         } else {
-            Log.e(TAG,e.getMessage() + " This error is only thrown in development mode.", e);
+            Logger.v(e.getMessage() + " This error is only thrown in development mode.", e);
         }
     }
 

@@ -2,8 +2,6 @@ package com.clevertap.android.sdk.feat_variable;
 
 
 import android.text.TextUtils;
-import android.util.Log;
-
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.feat_variable.callbacks.VariableCallback;
@@ -34,7 +32,6 @@ public class Var<T> {
     private boolean hadStarted = false;// todo @hristo @darshan this seems dangerous as it will stop update() from working after 1sr call. should we remove it?
     private final List<VariableCallback<T>> valueChangedHandlers = new ArrayList<>();
     private static boolean printedCallbackWarning;
-    private static final String TAG = "Var>";
     public static final String RESOURCES_VARIABLE = "__Android Resources";
 
 
@@ -61,7 +58,7 @@ public class Var<T> {
     }
     public void addValueChangedHandler(VariableCallback<T> handler) {
         if (handler == null) {
-            Log.e(TAG, "Invalid handler parameter provided.");
+            Logger.v( "Invalid handler parameter provided.");
             return;
         }
 
@@ -70,7 +67,7 @@ public class Var<T> {
         }
 
         // make sure the handler is called evenm after the value has been updated
-        if (CTVariables.hasStarted()) {
+        if (CTVariables.variableResponseReceived()) {
             handler.handle(this);
         }
     }
@@ -97,7 +94,7 @@ public class Var<T> {
     public static <T> Var<T> define(String name, T defaultValue,String kind) {
         //checks if name is correct . if correct continues or  returns null
         if (TextUtils.isEmpty(name)) {
-            Log.e(TAG,"Empty name parameter provided.");
+            Logger.v("Empty name parameter provided.");
             return null;
         }
 
@@ -107,9 +104,9 @@ public class Var<T> {
             return existing;
         }
 
-        // check if LP has called start and whether name is not a special name. if either fails, then generates a log else continues // todo : discuss our conditions for this check
-        if (CTVariables.hasCalledStart() && !name.startsWith(RESOURCES_VARIABLE)) {
-            Log.i(TAG,"You should not create new variables after calling start (name=" + name + ")");
+        // check if  name is not a special name. if either fails, then generates a log else continues // todo piyush : discuss our conditions for this check
+        if (!name.startsWith(RESOURCES_VARIABLE)) {
+            Logger.v("You should not create new variables after calling start (name=" + name + ")");
         }
         Var<T> var = new Var<>();
         try {
@@ -121,8 +118,6 @@ public class Var<T> {
 
             var.cacheComputedValues();
             VarCache.registerVariable(var);  // will put var in VarCache.vars , & update VarCache.valueFromClient , VarCache.defaultKinds
-
-
 
             var.update();
         } catch (Throwable t) {
@@ -199,15 +194,15 @@ public class Var<T> {
         }
         cacheComputedValues();
 
-        if (CTVariables.hasStarted()) {
+        if (CTVariables.variableResponseReceived()) {
             hadStarted = true;
             triggerValueChanged();
         }
     }
 
     private void warnIfNotStarted() {
-        if ( !CTVariables.hasStarted() && !printedCallbackWarning) {
-            Logger.v(TAG, "CleverTap hasn't finished retrieving values from the server. You should use a callback to make sure the value for '%s' is ready. Otherwise, your app may not use the most up-to-date value." + name);
+        if ( !CTVariables.variableResponseReceived() && !printedCallbackWarning) {
+            Logger.v( "CleverTap hasn't finished retrieving values from the server. You should use a callback to make sure the value for "+name+" is ready. Otherwise, your app may not use the most up-to-date value.");
             printedCallbackWarning = true;
         }
     }
