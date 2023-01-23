@@ -190,11 +190,11 @@ CleverTap Huawei Push SDK provides an out of the box service to use the Huawei M
 CleverTap Push Templates SDK helps you engage with your users using fancy push notification templates built specifically to work with [CleverTap](https://www.clevertap.com).
 Find the integration steps for the CleverTap Push Templates SDK [here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTPUSHTEMPLATES.md)
 
-## 📲 CleverTap RenderMax Push SDK
+## 📲 CleverTap RenderMax SDK
 [(Back to top)](#-table-of-contents)
 
-RenderMax Push SDK delivers and renders notifications on the user's device even if the FCM delivery fails or the device is optimized for battery consumption.
-Find the integration steps for the CleverTap RenderMax Push SDK [here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTRENDERMAX.md)
+RenderMax SDK delivers and renders notifications on the user's device even if the FCM delivery fails or the device is optimized for battery consumption.
+Find the integration steps for the CleverTap RenderMax SDK [here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTRENDERMAX.md)
 
 ## 📄 License
 [(Back to top)](#-table-of-contents)
