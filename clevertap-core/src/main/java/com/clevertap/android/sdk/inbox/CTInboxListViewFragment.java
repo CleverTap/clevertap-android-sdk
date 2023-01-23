@@ -273,7 +273,9 @@ public class CTInboxListViewFragment extends Fragment {
         this.mediaRecyclerView = mediaRecyclerView;
     }
 
-    void handleClick(int position, String buttonText, JSONObject jsonObject, HashMap<String, String> keyValuePayload, boolean isInboxMessageBodyClick) {
+    void handleClick(int position, String buttonText, JSONObject jsonObject, HashMap<String, String> keyValuePayload) {
+        boolean isInboxMessageBodyClick = jsonObject != null;
+
         try {
             Bundle data = new Bundle();
             JSONObject wzrkParams = inboxMessages.get(position).getWzrkParams();
@@ -290,18 +292,18 @@ public class CTInboxListViewFragment extends Fragment {
             }
             didClick(data, position, keyValuePayload,isInboxMessageBodyClick);
 
-            String isRequestForPermissionStr = inboxMessages.get(position).getInboxMessageContents().
-                    get(0).getLinktype(jsonObject);
-            if (isRequestForPermissionStr.contains(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)
-                && didClickForHardPermissionListener != null){
-                boolean isFallbackSettings = inboxMessages.get(position).
-                        getInboxMessageContents().get(0).isFallbackSettingsEnabled(jsonObject);
-                didClickForHardPermissionListener.didClickForHardPermissionWithFallbackSettings(isFallbackSettings);
-                return;
-            }
-
             boolean isKVButton = keyValuePayload != null && !keyValuePayload.isEmpty();
-            if (jsonObject != null) {
+            if (isInboxMessageBodyClick) {
+                String isRequestForPermissionStr = inboxMessages.get(position).getInboxMessageContents().
+                        get(0).getLinktype(jsonObject);
+                if (isRequestForPermissionStr.contains(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)
+                        && didClickForHardPermissionListener != null) {
+                    boolean isFallbackSettings = inboxMessages.get(position).
+                            getInboxMessageContents().get(0).isFallbackSettingsEnabled(jsonObject);
+                    didClickForHardPermissionListener.didClickForHardPermissionWithFallbackSettings(isFallbackSettings);
+                    return;
+                }
+
                 if (isKVButton || inboxMessages.get(position).getInboxMessageContents().get(0).getLinktype(jsonObject)
                         .equalsIgnoreCase(Constants.COPY_TYPE)) {
                     //noinspection UnnecessaryReturnStatement
