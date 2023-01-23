@@ -274,7 +274,7 @@ public class CTInboxListViewFragment extends Fragment {
     }
 
     void handleClick(int position, String buttonText, JSONObject jsonObject, HashMap<String, String> keyValuePayload) {
-        boolean isInboxMessageBodyClick = jsonObject != null;
+        boolean isInboxMessageButtonClick = jsonObject != null;
 
         try {
             Bundle data = new Bundle();
@@ -290,10 +290,10 @@ public class CTInboxListViewFragment extends Fragment {
             if (buttonText != null && !buttonText.isEmpty()) {
                 data.putString("wzrk_c2a", buttonText);
             }
-            didClick(data, position, keyValuePayload,isInboxMessageBodyClick);
+            didClick(data, position, keyValuePayload,isInboxMessageButtonClick);
 
             boolean isKVButton = keyValuePayload != null && !keyValuePayload.isEmpty();
-            if (isInboxMessageBodyClick) {
+            if (isInboxMessageButtonClick) {
                 String isRequestForPermissionStr = inboxMessages.get(position).getInboxMessageContents().
                         get(0).getLinktype(jsonObject);
                 if (isRequestForPermissionStr.contains(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)
