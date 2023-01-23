@@ -24,6 +24,7 @@ package com.clevertap.android.sdk.feat_variable;
 import android.text.TextUtils;
 import android.util.Log;
 
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.feat_variable.annotations.Variable;
 import com.clevertap.android.sdk.feat_variable.callbacks.VariableCallback;
 
@@ -106,14 +107,6 @@ public class Parser {
             name = annotation.name();
           }
         }
-      //else if (field.isAnnotationPresent(File.class)) {
-      //  File annotation = field.getAnnotation(File.class);
-      //  if(annotation!=null){
-      //    group = annotation.group();
-      //    name = annotation.name();
-      //  }
-      //  isFile = true;
-      //  }
       else {
           continue;
         }
@@ -179,6 +172,10 @@ public class Parser {
   private static <T> void defineVariable(final Object instance, String name, T value, String kind, final Field field) {
     // we first call var.define(..) with field name, value and kind
     final Var<T> var = Var.define(name, value, kind);
+    if (var == null) {
+      Logger.v("Something went wrong, var is null, returning");
+      return;
+    }
 
     final boolean hasInstance = instance != null;
     final WeakReference<Object> weakInstance = new WeakReference<>(instance);

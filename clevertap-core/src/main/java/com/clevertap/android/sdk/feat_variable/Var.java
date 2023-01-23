@@ -31,7 +31,7 @@ public class Var<T> {
     private T defaultValue;
     private T value;
     private String kind;
-    private boolean hadStarted = false;//todo this seems dangerous as it will stop update() from working after 1sr call. should we remove it?
+    private boolean hadStarted = false;// todo @hristo @darshan this seems dangerous as it will stop update() from working after 1sr call. should we remove it?
     private final List<VariableCallback<T>> valueChangedHandlers = new ArrayList<>();
     private static boolean printedCallbackWarning;
     private static final String TAG = "Var>";
@@ -41,7 +41,7 @@ public class Var<T> {
 
     /*<basic getter-setters>*/
     @Override public String toString() {
-        return "Var(" + name + ")=" + value;
+        return "Var(" + name + ","+value+")" ;
     }
     public String name() {
         return name;
@@ -69,7 +69,7 @@ public class Var<T> {
             valueChangedHandlers.add(handler);
         }
 
-        // is this for some bug fix ? todo @hristo
+        // make sure the handler is called evenm after the value has been updated
         if (CTVariables.hasStarted()) {
             handler.handle(this);
         }
@@ -193,14 +193,11 @@ public class Var<T> {
         if (value == null && oldValue == null) {
             return;
         }
+        //todo : check what would happend when we start application, and then request variables from server again after sometime (after changing values in server)
         if (value != null && oldValue != null && value.equals(oldValue) && hadStarted) {
             return;
         }
         cacheComputedValues();
-
-        if (VarCache.silent()) {
-            return;
-        }
 
         if (CTVariables.hasStarted()) {
             hadStarted = true;

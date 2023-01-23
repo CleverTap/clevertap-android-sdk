@@ -83,27 +83,13 @@ public class VarCache {
     public static Object merged;
 
 
-    /*
-     * set: everytime the api response from CTVariables.requestVariableDataFromServer() comes,
-     *      it sets this map to the values of 'locals' from the server
-     * get: when calling the forceLocalsUpdateApi i.e, sendContentIfChanged(),
-     *      this is a check to ensure that only changed local values are sent by
-     *      equating  with valuesFromClient
-     * //todo canbe removed? @Hristo
-     * */
+    // this is an additional check/ optimisation to prevent pushLocalVariablesToServer() from sending unnecessary api request for variables that already on the server
     @VisibleForTesting
     public static Map<String, Object> devModeValuesFromServer;
 
-    /** enabled whenever triggerHasReceivedDiffs is called and disabled when reset is called.**/ // todo can be removed? @hristo
-    @VisibleForTesting
-    public static boolean hasReceivedDiffs = false;
+    private static boolean hasReceivedDiffs = false;
 
 
-    /*
-    *
-    * */
-    @VisibleForTesting
-    public static boolean silent; //todo : check other areas where silent is used and see if there is a possibility to remove this with @Hristo?
 
 
     // v: Var("group1.myVariable",12.4,"float") -> unit
@@ -159,43 +145,19 @@ public class VarCache {
             Log.e(TAG,"Could not load variable diffs.\n" + Log.getStackTraceString(e));
         }
     }
-
-
-    //will basically
-    // 1) set diffs[g] = diffs
-    // (2.) call computeMergedDictionary()
-    // (3.) call var.update() for every var in vars[g]
-    // (4.)  if silent is false,  call saveDiffs() and triggerHasReceivedDiffs()
-    public static void applyVariableDiffs(Map<String, Object> diffs) {
-        if (diffs != null) {
-            VarCache.diffs = diffs;
-            computeMergedDictionary();
-
-            // Update variables with new values. Have to copy the dictionary because a dictionary variable may add a new sub-variable, modifying the variable dictionary.
-            for (String name : new HashMap<>(vars).keySet()) {
-                Var<?> var = vars.get(name);
-                if (var != null) {
-                    var.update();
-                }
-            }
-        }
-
-        //todo  instead of calling it with this hack, can't we just call saveDiffs() and triggerHasReceivedDiffs() in handleStartResponse() and failSafe()? //todo @hristo?
-        if (!silent) {
-            saveDiffs();
-            triggerHasReceivedDiffs();
-        }
+    public  static  void  loadDiffsAndTriggerHandlers(){
+        loadDiffs();
+        triggerHasReceivedDiffs();
     }
 
-    // basically  merged[g] = mergeHelper(valuesFromClient[g], diffs[g]) // todo can this  be removed and code be added directly to the caller?@hristo
-    private static void computeMergedDictionary() {
-        synchronized (valuesFromClient) {
-            merged = CTVariableUtils.mergeHelper(valuesFromClient, diffs);
-        }
+    public  static  void  updateDiffs(Map<String, Object> diffs){
+        applyVariableDiffs(diffs);
+        saveDiffs();
+        triggerHasReceivedDiffs();
     }
 
     // saveDiffs() is opposite of loadDiffs() and will save diffs[g]  to cache
-    public static void saveDiffs() {
+    private static void saveDiffs() {
         if (CTVariables.hasSdkError) {
             return;
         }
@@ -212,6 +174,30 @@ public class VarCache {
         CTVariableUtils.commitChanges(editor);
     }
 
+    //will basically
+    // 1) set diffs[g] = diffs
+    // (2.) call computeMergedDictionary()
+    // (3.) call var.update() for every var in vars[g]
+    // (4.)  if silent is false,  call saveDiffs() and triggerHasReceivedDiffs()
+    private static void applyVariableDiffs(Map<String, Object> diffs) {
+        if (diffs != null) {
+            synchronized (valuesFromClient) {
+                VarCache.diffs = diffs;
+                merged = CTVariableUtils.mergeHelper(valuesFromClient, VarCache.diffs);
+            }
+            // Update variables with new values. Have to copy the dictionary because a
+            // dictionary variable may add a new sub-variable, modifying the variable dictionary.
+            for (String name : new HashMap<>(vars).keySet()) {
+                Var<?> var = vars.get(name);
+                if (var != null) {
+                    var.update();
+                }
+            }
+        }
+
+    }
+
+
     //will simply  set hasReceivedDiffs[g] = true; and call updateBlock[g].updateCache() which further triggers the callbacks set by user for listening to variables update
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public static void triggerHasReceivedDiffs() {
@@ -223,7 +209,8 @@ public class VarCache {
     }
 
     //will force upload vars from valuesFromClient[g] and  defaultKinds[g] map to server
-    public static boolean sendContentIfChanged() {
+    //todo : can be made to use callback as a param  for when response is received
+    public static void pushLocalVariablesToServer() { //originally : sendContentIfChanged()
         boolean changed = devModeValuesFromServer != null && !valuesFromClient.equals(devModeValuesFromServer);
         if (changed) {
             HashMap<String, Object> params = new HashMap<>();
@@ -233,8 +220,9 @@ public class VarCache {
             //RequestSender.getInstance().send(request); ;// todo : ct code to send to server
         }
 
-        return changed;
     }
+
+    //public static boolean sendContentIfChanged() {..}
 
 
     // will reset few global variables
@@ -254,20 +242,13 @@ public class VarCache {
         diffs.clear();
         hasReceivedDiffs = false;
         merged = null;
-        silent = false;
         updateBlock = null;
         vars.clear();
         valuesFromClient.clear();
     }
 
 
-    /*
-     * Sets whether values should be saved and callbacks triggered when the variable values get
-     * updated.
-     */
-    public static void setSilent(boolean silent) {
-        VarCache.silent = silent;
-    }
+
 
     public static void setDevModeValuesFromServer(Map<String, Object> values) {
         devModeValuesFromServer = values;
@@ -276,9 +257,7 @@ public class VarCache {
         return (Var<T>) vars.get(name);
     }
 
-    public static boolean silent() {
-        return silent;
-    }
+
     public static void setCacheUpdateBlock(CacheUpdateBlock block) {
         updateBlock = block;
     }

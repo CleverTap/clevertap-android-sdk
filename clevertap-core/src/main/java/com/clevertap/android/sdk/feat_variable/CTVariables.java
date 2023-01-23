@@ -7,7 +7,9 @@ import android.os.Looper;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
+import androidx.core.os.BuildCompat;
 
+import com.clevertap.android.sdk.BuildConfig;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.feat_variable.callbacks.VariablesChangedCallback;
@@ -19,21 +21,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-/*
- *  {
- *    variants:{...},
- *    locals:{
- *      "smartphone" : { "android":{"s22":54000} ,
- *       "apple":{"i14pro":"unreleased"}
- *    }
- *   }
- *
- * */
+
 public class CTVariables {
     private static final ArrayList<VariablesChangedCallback> variablesChangedHandlers = new ArrayList<>();
     private static final ArrayList<VariablesChangedCallback> oneTimeVariablesChangedHandlers = new ArrayList<>();
     private static Context context;
-    public static final  boolean isDevelopmentModeEnabled = false;
+    private static  boolean isDevelopmentModeEnabled = BuildConfig.DEBUG;
     private static boolean startApiResponseReceived = false;
     private static boolean hasStartFunctionExecuted = false;
     public static final boolean hasSdkError =false;
@@ -53,16 +46,18 @@ public class CTVariables {
         CTVariables.context = context;
     }
 
-
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static Boolean hasStarted(){
         //its true if server response for "start" api is received.
         return startApiResponseReceived;
     }
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static void setHasStarted(boolean responseReceived){
         startApiResponseReceived = responseReceived; // might not be needed
     }
 
+    @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static Boolean hasCalledStart(){
         // its true if  start() function has finished executing //alt for LeanplumInternal.hasCalledStart()
         return hasStartFunctionExecuted;
@@ -108,11 +103,7 @@ public class CTVariables {
      */
     public static synchronized void init(){
         checkFailSafe();
-        // we first load variables from cache . and set silent so as to not update listeners. then we reset silent to false, so next time when we load from the server, we aree able to call listeners
-        VarCache.setSilent(true);
         VarCache.loadDiffs();
-        VarCache.setSilent(false);
-        // we register an internal listener to update client's listenere whenever the load diffs updates the variables
         VarCache.setCacheUpdateBlock(CTVariables::triggerVariablesChanged);
         requestVariableDataFromServer();
     }
@@ -121,14 +112,24 @@ public class CTVariables {
 
     @RestrictTo(RestrictTo.Scope.LIBRARY)
     public static void requestVariableDataFromServer() {
-        //todo: replace with code to download clevertap variable data and pass it in
+        Logger.v("requesting data from server");
+        CTVariables.setHasStarted(false); //todo @hristo : whenever requesting data from server on wzrk_fetch, we should set has started as false, right? because at that time too the variables should not be accessed / listeners to be called
+        //VarCache.setHasReceivedDiffs(false);;
         new Thread(() -> {
             try {
-                Thread.sleep(1000);
-                new Handler(Looper.getMainLooper()).post(() -> {
-                    JSONObject resp = new JSONObject();// assumption this is the json received from server
-                    handleStartResponse(resp);
+                Thread.sleep(2000);
+                Utils.runOnUiThread(() -> {
+                    try {
+                        Logger.v("request complete. sending data from server to handleStartResponse");
+                        JSONObject resp = new JSONObject("{\"vars\":{\"aiName\":\"[jesus,mary,witch]\",\"userConfigurableProps\":\"{difficultyLevel=3.3,ai_Gender=F,numberOfGuesses=5,watchAddForAnotherGuess=true}\",\"correctGuessPercentage\":\"80\",\"initialCoins\":\"100\",\"isOptedForOffers\":\"false\",\"android\":{\"samsung\":{\"s22\":65000}},\"welcomeMsg\":\"Hey@{mateeee}\"},\"varsFromCode\":{\"apple\":{\"iphone15\":\"UnReleased\"},\"aiNames\":\"[don2,jason2,shiela2,may2]\",\"userConfigurableProps\":\"{difficultyLevel=1.8,ai_Gender=F,numberOfGuesses=10}\",\"correctGuessPercentage\":50,\"initialCoins\":45,\"isOptedForOffers\":true,\"android\":{\"nokia\":{\"12\":\"UnReleased\",\"6a\":6400},\"samsung\":{\"s22\":54999.99,\"s23\":\"UnReleased\"}},\"welcomeMsg\":\"HelloUser\"}}");
+                        Logger.v(resp.toString(2));
+                        handleStartResponse(resp);
+                    }
+                    catch (Throwable t){
+                        t.printStackTrace();
+                    }
                 });
+
             } catch (Throwable t) {
                 t.printStackTrace();
             }
@@ -142,10 +143,9 @@ public class CTVariables {
             setHasStarted(true);
             setHasCalledStart(true);
             triggerVariablesChanged();
-            VarCache.applyVariableDiffs(new HashMap<>());
-            // saveDiffs();
-            //            triggerHasReceivedDiffs();
+            VarCache.updateDiffs(new HashMap<>());
         }
+
 
     }
 
@@ -156,13 +156,10 @@ public class CTVariables {
                 setHasStarted(true);
                 // Load the variables that were stored on the device from the last session.
                 // this will also invoke user's callback, but with values from last session/shared prefs
-                //VarCache.setSilent(false); <-- this is basically implied here, right?//todo @hristo
-                VarCache.loadDiffs();
+                VarCache.loadDiffsAndTriggerHandlers();
             } else {
-                Map<String, Object> variants = CTVariableUtils.mapFromJson(response.optJSONObject(VARS));
-                VarCache.applyVariableDiffs(variants);
-                //saveDiffs(); <-- this is basically implied here since silent is always false, right?//todo @hristo
-                //triggerHasReceivedDiffs();<-- this is basically implied here, right?//todo @hristo
+                Map<String, Object> variableDiffs = CTVariableUtils.mapFromJson(response.optJSONObject(VARS));
+                VarCache.updateDiffs(variableDiffs);
                 if (isDevelopmentModeEnabled) {
                     Map<String, Object> locals = CTVariableUtils.mapFromJson(response.optJSONObject(VARS_FROM_CODE));
                     VarCache.setDevModeValuesFromServer(locals);
@@ -196,20 +193,11 @@ public class CTVariables {
 
 
 
-    public static void forceContentUpdate(@NonNull Runnable callback) {
-        /*
-         * Forces content to update from the server. If variables have changed, the appropriate callbacks
-         * will fire. Use sparingly as if the app is updated, you'll have to deal with potentially
-         * inconsistent state or user experience.
-         *
-         * @param callback The callback to invoke when the call completes from the server. The callback
-         *                 will fire regardless of whether the variables have changed. Null value is not
-         *                 permitted.
-         */
 
-        // api to  fetch variables forcefully from the server. it is same endpoint as start,
-        // but with differen parameters.
-        // todo : replace with ct endpopoint // backend
+    public static void pushLocalVariablesToServer() {
+        // todo add a mechanism to prevent this call if in production mode (whatever is decided in Discussions) //darshan
+
+        if(CTVariables.isDevelopmentModeEnabled) VarCache.pushLocalVariablesToServer();
 
 
     }
@@ -219,7 +207,10 @@ public class CTVariables {
         synchronized (variablesChangedHandlers) {
             variablesChangedHandlers.add(handler);
         }
-        // why call immediately after adding a listener? is it for some bug fix? todo @hristo
+        // it is neeeded to call the listeners immediately after being added becaue there is
+        // no surity that it is going to be called later. we only receive diffs and call the
+        // listeners in CTVariables.init's start response, so if app registers the listeneres later,
+        // it should also get those previously updated values
         if (VarCache.hasReceivedDiffs()) {
             handler.variablesChanged();
         }
@@ -230,8 +221,8 @@ public class CTVariables {
         }
     }
     public static void addOneTimeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) { //addOnceVariablesChangedAndNoDownloadsPendingHandler
-        //todo why one time listener is like this, while multiple time listener is attached differently? //todo @hristo
-        if (VarCache.hasReceivedDiffs()) { //originally: areVariablesReceived
+        // todo : comment
+        if (VarCache.hasReceivedDiffs()) {
             handler.variablesChanged();
         } else {
             synchronized (oneTimeVariablesChangedHandlers) {
@@ -245,10 +236,4 @@ public class CTVariables {
             oneTimeVariablesChangedHandlers.remove(handler);
         }
     }
-
-
-
-
-
-
 }
