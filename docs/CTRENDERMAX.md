@@ -29,7 +29,7 @@ To use CleverTap's RenderMax Push Delivery with your app, add the following code
 
 [(Back to top)](#table-of-contents)
 
-* The RenderMax Push SDK is supported for Android SDK `v4.6.6`, React Native SDK `v0.9.3`, and above.
+* The RenderMax SDK is supported for Android SDK `v4.6.6`, React Native SDK `v0.9.3`, Flutter SDK `v1.5.5` and above.
 * If the app is custom rendering the push notification and not passing the payload to CleverTap SDK, add the following code before you render the notification:
 
   ```
@@ -40,12 +40,12 @@ To use CleverTap's RenderMax Push Delivery with your app, add the following code
 
 [(Back to top)](#table-of-contents)
 
-RenderMax push SDK is distributed as obfuscated package and for it's smooth working with proguard you must add necessary rules.
-The Good News is that, Proguard rules for renderMAX is provided out of the box through `consumer-rules.pro` which gets merged with App's proguard rule so you don't have to do anything here.
-Thanks to `consumer-rules.pro`. You can check renderMAX proguard rules in your `/build/outputs/mapping/configuration.txt` by searching rendermax keyword.
+RenderMax SDK is distributed as obfuscated package and for it's smooth working with proguard you must add necessary rules.
+The good News is that, Proguard rules for RenderMax is provided out of the box through `consumer-rules.pro` which gets merged with App's proguard rule so you don't have to do anything here.
+Thanks to `consumer-rules.pro`. You can check RenderMax proguard rules in your `/build/outputs/mapping/configuration.txt` by searching RenderMax keyword.
 
 # Changelog
 
 [(Back to top)](#table-of-contents)
 
-ChangeLog can be found [here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTRENDERMAXCHANGELOG.md)
+Changelog can be found [here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTRENDERMAXCHANGELOG.md)

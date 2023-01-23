@@ -1,4 +1,4 @@
-## CleverTap RenderMAX Push SDK CHANGE LOG
+## CleverTap RenderMax SDK CHANGE LOG
 
 ### Version 1.0.2 (January 25, 2023)
 * Fix [runtime exception](https://github.com/CleverTap/clevertap-android-sdk/issues/379)
