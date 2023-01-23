@@ -1,13 +1,11 @@
 package com.clevertap.android.sdk.feat_variable;
 
 import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
 
+import androidx.annotation.Discouraged;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
-import androidx.core.os.BuildCompat;
 
 import com.clevertap.android.sdk.BuildConfig;
 import com.clevertap.android.sdk.Logger;
@@ -26,7 +24,6 @@ public class CTVariables {
     private static final ArrayList<VariablesChangedCallback> variablesChangedHandlers = new ArrayList<>();
     private static final ArrayList<VariablesChangedCallback> oneTimeVariablesChangedHandlers = new ArrayList<>();
     private static Context context;
-    private static  boolean isDevelopmentModeEnabled = BuildConfig.DEBUG;
     private static boolean startApiResponseReceived = false;
     private static boolean hasStartFunctionExecuted = false;
     public static final boolean hasSdkError =false;
@@ -160,10 +157,10 @@ public class CTVariables {
             } else {
                 Map<String, Object> variableDiffs = CTVariableUtils.mapFromJson(response.optJSONObject(VARS));
                 VarCache.updateDiffs(variableDiffs);
-                if (isDevelopmentModeEnabled) {
-                    Map<String, Object> locals = CTVariableUtils.mapFromJson(response.optJSONObject(VARS_FROM_CODE));
-                    VarCache.setDevModeValuesFromServer(locals);
-                }
+                //if (isDevelopmentModeEnabled) {
+                //    Map<String, Object> locals = CTVariableUtils.mapFromJson(response.optJSONObject(VARS_FROM_CODE));
+                //    VarCache.setDevModeValuesFromServer(locals);
+                //}
             }
         } catch (Throwable t) {
             t.printStackTrace();
@@ -193,13 +190,12 @@ public class CTVariables {
 
 
 
-
-    public static void pushLocalVariablesToServer() {
-        // todo add a mechanism to prevent this call if in production mode (whatever is decided in Discussions) //darshan
-
-        if(CTVariables.isDevelopmentModeEnabled) VarCache.pushLocalVariablesToServer();
-
-
+    @Discouraged(message = "Be Very careful when calling this api. This should only be called in debug mode")
+    public static void pushVariablesToServer(Runnable onComplete) {
+        VarCache.pushVariablesToServer(onComplete);
+    }
+    public static boolean isInDevelopmentMode(){
+        return BuildConfig.DEBUG;
     }
 
 

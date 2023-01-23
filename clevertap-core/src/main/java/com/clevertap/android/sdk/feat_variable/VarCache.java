@@ -83,9 +83,7 @@ public class VarCache {
     public static Object merged;
 
 
-    // this is an additional check/ optimisation to prevent pushLocalVariablesToServer() from sending unnecessary api request for variables that already on the server
-    @VisibleForTesting
-    public static Map<String, Object> devModeValuesFromServer;
+
 
     private static boolean hasReceivedDiffs = false;
 
@@ -209,26 +207,22 @@ public class VarCache {
     }
 
     //will force upload vars from valuesFromClient[g] and  defaultKinds[g] map to server
-    //todo : can be made to use callback as a param  for when response is received
-    public static void pushLocalVariablesToServer() { //originally : sendContentIfChanged()
-        boolean changed = devModeValuesFromServer != null && !valuesFromClient.equals(devModeValuesFromServer);
-        if (changed) {
+    public static void pushVariablesToServer(Runnable callback) {
+        if (CTVariables.isInDevelopmentMode()) {
             HashMap<String, Object> params = new HashMap<>();
             params.put("vars", CTVariableUtils.toJson(valuesFromClient));
             params.put("kinds", CTVariableUtils.toJson(defaultKinds));
+            // todo : ct code to send to server
             //Request request = RequestBuilder.withSetVarsAction().andParams(params).andType(RequestType.IMMEDIATE).create();// todo : ct code to send to server
-            //RequestSender.getInstance().send(request); ;// todo : ct code to send to server
+            //RequestSender.getInstance().send(request); ;
         }
 
     }
 
-    //public static boolean sendContentIfChanged() {..}
-
 
     // will reset few global variables
-    // and also call ActionManagerDefinitionKt.setDevModeActionDefinitionsFromServer(..)
     public static void clearUserContent() {
-        devModeValuesFromServer = null;
+        //devModeValuesFromServer = null;
         diffs.clear();
         merged = null;
         vars.clear();
@@ -238,7 +232,7 @@ public class VarCache {
     // will reset a lot of global variables
     public static void reset() {
         defaultKinds.clear();
-        devModeValuesFromServer = null;
+        //devModeValuesFromServer = null;
         diffs.clear();
         hasReceivedDiffs = false;
         merged = null;
@@ -250,9 +244,10 @@ public class VarCache {
 
 
 
-    public static void setDevModeValuesFromServer(Map<String, Object> values) {
-        devModeValuesFromServer = values;
-    }
+    //public static void setDevModeValuesFromServer(Map<String, Object> values) {
+    //    devModeValuesFromServer = values;
+    //}
+    //public static boolean sendContentIfChanged() {..}
     public static <T> Var<T> getVariable(String name) {
         return (Var<T>) vars.get(name);
     }
