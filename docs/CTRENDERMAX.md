@@ -4,7 +4,7 @@
 
 # RenderMax by CleverTap
 
-RenderMax Push Delivery delivers and renders notifications on the user's device even if the FCM delivery fails or the device is optimized for battery consumption.
+RenderMax SDK delivers and renders notifications on the user's device even if the FCM delivery fails or the device is optimized for battery consumption.
 
 # Table of contents
 
@@ -17,7 +17,7 @@ RenderMax Push Delivery delivers and renders notifications on the user's device 
 
 [(Back to top)](#table-of-contents)
 
-To use CleverTap's RenderMax Push Delivery with your app, add the following code snippet in the `build.gradle` of the app.
+To use CleverTap's RenderMax SDK with your app, add the following code snippet in the `build.gradle` of the app.
 
 ```groovy
     dependencies {
@@ -41,8 +41,8 @@ To use CleverTap's RenderMax Push Delivery with your app, add the following code
 [(Back to top)](#table-of-contents)
 
 RenderMax SDK is distributed as obfuscated package and for it's smooth working with proguard you must add necessary rules.
-The good News is that, Proguard rules for RenderMax is provided out of the box through `consumer-rules.pro` which gets merged with App's proguard rule so you don't have to do anything here.
-Thanks to `consumer-rules.pro`. You can check RenderMax proguard rules in your `/build/outputs/mapping/configuration.txt` by searching RenderMax keyword.
+The good news is that, Proguard rules for RenderMax SDK is provided out of the box through `consumer-rules.pro` which gets merged with App's Proguard rule so you don't have to do anything here.
+Thanks to `consumer-rules.pro`. You can check RenderMax Proguard rules in your `/build/outputs/mapping/configuration.txt` by searching RenderMax keyword.
 
 # Changelog
 
