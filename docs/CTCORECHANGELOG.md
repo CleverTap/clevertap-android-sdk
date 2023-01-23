@@ -1,5 +1,8 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 4.7.3 (xx, 2023)
+* Fixes NPE when clicked on body of InboxMessage with deep link in `CTInboxListFragment`
+
 ### Version 4.7.2 (December 16, 2022)
 * Fixes a crash (`ClassCastException`) in header/footer InApp templates.
 
