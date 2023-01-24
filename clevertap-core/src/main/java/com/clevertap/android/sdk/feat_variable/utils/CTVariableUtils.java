@@ -41,6 +41,7 @@ public final class CTVariableUtils {
     // kinds from mapOf() to mapOf("group1.myVariable" : "float")
     // check test for a more clarity
     public static void updateValuesAndKinds(String name, String[] nameComponents, Object value, String kind, Map<String, Object> values, Map<String, String> kinds) {
+        //Logger.v( "updateValuesAndKinds() called with: name = [" + name + "], nameComponents = [" + Arrays.toString(nameComponents) + "], value = [" + value + "], kind = [" + kind + "], values = [" + values + "], kinds = [" + kinds + "]");
         Object valuesPtr = values;
         if (nameComponents != null && nameComponents.length > 0) {
             for (int i = 0; i < nameComponents.length - 1; i++) {
@@ -58,6 +59,7 @@ public final class CTVariableUtils {
 
     // check test for more info
     public static Object mergeHelper(Object vars, Object diff) {
+        //Logger.v( "mergeHelper() called with: vars = [" + vars + "], diff = [" + diff + "]");
         if (diff == null) {
             return vars;
         }
@@ -104,8 +106,10 @@ public final class CTVariableUtils {
         // Merge arrays.
         if (vars instanceof List || isArray) {
             ArrayList<Object> merged = new ArrayList<>();
-            for (Object var : varsKeys) {
-                merged.add(var);
+            if(varsKeys!=null){
+                for (Object var : varsKeys) {
+                    merged.add(var);
+                }
             }
 
             // Merge values from server
@@ -166,6 +170,7 @@ public final class CTVariableUtils {
 
     // check test for more info
     public static Object traverse(Object collection, Object key, boolean autoInsert) {
+        //Logger.v("traverse() called with: collection = [" + collection + "], key = [" + key + "], autoInsert = [" + autoInsert + "]");
         if (collection == null) {
             return null;
         }
@@ -193,6 +198,7 @@ public final class CTVariableUtils {
 
     // check test for more info
     public static <T> String kindFromValue(T defaultValue) {
+        //Logger.v("kindFromValue() called with: defaultValue = [" + defaultValue + "]");
         String kind = null;
         if (defaultValue instanceof Integer || defaultValue instanceof Long || defaultValue instanceof Short || defaultValue instanceof Character || defaultValue instanceof Byte || defaultValue instanceof BigInteger) {
             kind = INT;
@@ -212,12 +218,14 @@ public final class CTVariableUtils {
         else if (defaultValue instanceof Boolean) {
             kind = BOOLEAN;
         }
+        //Logger.v("kindFromValue: returns kind='"+kind+"'");
         return kind;
     }
 
 
     // check test for more info
     public static String[] getNameComponents(String name) {
+        //Logger.v("getNameComponents() called with: name = [" + name + "]");
         final String NAME_COMPONENT_REGEX = "(?:[^\\.\\[.(\\\\]+|\\\\.)+";
         final Pattern NAME_COMPONENT_PATTERN = Pattern.compile(NAME_COMPONENT_REGEX);
         Matcher matcher = NAME_COMPONENT_PATTERN.matcher(name);
@@ -225,6 +233,7 @@ public final class CTVariableUtils {
         while (matcher.find()) {
             components.add(name.substring(matcher.start(), matcher.end()));
         }
+        //Logger.v("getNameComponents: returns components="+components);
         return components.toArray(new String[0]);
     }
 

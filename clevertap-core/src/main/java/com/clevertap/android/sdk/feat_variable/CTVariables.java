@@ -43,13 +43,13 @@ public class CTVariables {
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public static Boolean variableResponseReceived(){
+    public static Boolean variableResponseReceived(){ //originally hasStarted
         //its true if server response for "start" api is received.
         return variableResponseReceived;
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
-    public static void setVariableResponseReceived(boolean responseReceived){
+    public static void setVariableResponseReceived(boolean responseReceived){ //originally setHasStarted()
         variableResponseReceived = responseReceived; // might not be needed
     }
 
@@ -95,6 +95,18 @@ public class CTVariables {
         requestVariableDataFromServer();
     }
 
+    @Discouraged(message = "remove after testing")
+    public static synchronized void initWithApiFailure(){
+        checkFailSafe();
+        VarCache.loadDiffs();
+        VarCache.setCacheUpdateBlock(CTVariables::triggerVariablesChanged);
+        //requestVariableDataFromServer();
+
+        Logger.v("requesting data from server");
+
+        handleStartResponse(null);
+    }
+
 
 
     @RestrictTo(RestrictTo.Scope.LIBRARY)
@@ -102,25 +114,11 @@ public class CTVariables {
         Logger.v("requesting data from server");
         //CTVariables.setHasStarted(false); //todo @hristo : whenever requesting data from server on wzrk_fetch, we should set has started as false, right? because at that time too the variables should not be accessed / listeners to be called
         //VarCache.setHasReceivedDiffs(false);;
-        new Thread(() -> {
-            try {
-                Thread.sleep(2000);
-                Utils.runOnUiThread(() -> {
-                    try {
-                        Logger.v("request complete. sending data from server to handleStartResponse");
-                        JSONObject resp = new JSONObject("{\"vars\":{\"aiName\":\"[jesus,mary,witch]\",\"userConfigurableProps\":\"{difficultyLevel=3.3,ai_Gender=F,numberOfGuesses=5,watchAddForAnotherGuess=true}\",\"correctGuessPercentage\":\"80\",\"initialCoins\":\"100\",\"isOptedForOffers\":\"false\",\"android\":{\"samsung\":{\"s22\":65000}},\"welcomeMsg\":\"Hey@{mateeee}\"},\"varsFromCode\":{\"apple\":{\"iphone15\":\"UnReleased\"},\"aiNames\":\"[don2,jason2,shiela2,may2]\",\"userConfigurableProps\":\"{difficultyLevel=1.8,ai_Gender=F,numberOfGuesses=10}\",\"correctGuessPercentage\":50,\"initialCoins\":45,\"isOptedForOffers\":true,\"android\":{\"nokia\":{\"12\":\"UnReleased\",\"6a\":6400},\"samsung\":{\"s22\":54999.99,\"s23\":\"UnReleased\"}},\"welcomeMsg\":\"HelloUser\"}}");
-                        Logger.v(resp.toString(2));
-                        handleStartResponse(resp);
-                    }
-                    catch (Throwable t){
-                        t.printStackTrace();
-                    }
-                });
 
-            } catch (Throwable t) {
-                t.printStackTrace();
-            }
-        }).start();
+        FakeServer.requestBE(jsonObject -> { //todo replace with actual api
+            handleStartResponse(jsonObject);
+            return kotlin.Unit.INSTANCE;
+        });
 
     }
 
@@ -192,21 +190,20 @@ public class CTVariables {
         synchronized (variablesChangedHandlers) {
             variablesChangedHandlers.add(handler);
         }
-        // it is neeeded to call the listeners immediately after being added becaue there is
-        // no surity that it is going to be called later. we only receive diffs and call the
-        // listeners in CTVariables.init's start response, so if app registers the listeneres later,
+        // it is needed to call the listeners immediately after being added because there is
+        // no guarentee that it is going to be called later. we only receive diffs and call the
+        // listeners in CTVariables.init() response, so if app registers the listeners later,
         // it should also get those previously updated values
         if (VarCache.hasReceivedDiffs()) {
             handler.variablesChanged();
         }
     }
-    public static void removeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
-        synchronized (variablesChangedHandlers) {
-            variablesChangedHandlers.remove(handler);
-        }
-    }
-    public static void addOneTimeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) { //addOnceVariablesChangedAndNoDownloadsPendingHandler
-        // todo : comment
+
+    public static void addOneTimeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
+        // we are directly calling the listener to handle the scenario where some of the handlers
+        // were already registered previously and new handlers are added later. as per the logic of
+        // triggerVariablesChanged(), the listeners will only be called once, and therefore new
+        // listeners won't get called. so we trigger them immediately
         if (VarCache.hasReceivedDiffs()) {
             handler.variablesChanged();
         } else {
@@ -215,10 +212,28 @@ public class CTVariables {
             }
         }
     }
+
+    public static void removeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
+        synchronized (variablesChangedHandlers) {
+            variablesChangedHandlers.remove(handler);
+        }
+    }
     public static void removeOneTimeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) { //removeOnceVariablesChangedAndNoDownloadsPendingHandler
 
         synchronized (oneTimeVariablesChangedHandlers) {
             oneTimeVariablesChangedHandlers.remove(handler);
+        }
+    }
+
+    public static void removeAllVariablesChangedHandler() {
+        synchronized (variablesChangedHandlers) {
+            variablesChangedHandlers.clear();
+        }
+    }
+    public static void removeAllOneTimeVariablesChangedHandler() { //removeOnceVariablesChangedAndNoDownloadsPendingHandler
+
+        synchronized (oneTimeVariablesChangedHandlers) {
+            oneTimeVariablesChangedHandlers.clear();
         }
     }
 }

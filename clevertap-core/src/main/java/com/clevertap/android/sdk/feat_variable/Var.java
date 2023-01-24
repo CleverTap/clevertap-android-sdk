@@ -100,6 +100,7 @@ public class Var<T> {
 
         // checks if var exists  in  VarCache.getVariable(name) . if exists, then returns the var, otherwise continues .
         Var<T> existing = VarCache.getVariable(name);
+        Logger.v("current variable value for name='"+name+"' is : '"+existing+"'");
         if (existing != null) {
             return existing;
         }
@@ -182,18 +183,19 @@ public class Var<T> {
     }
 
     // updates the values of value[g] from cached value to server value  . called by VarCahe.applyVariableDiffs()
+    //todo : check what would happen when we start application, and then request variables from server again after sometime (after changing values in server)
     public synchronized void update() {
         T oldValue = value;
         value = VarCache.getMergedValueFromComponentArray(nameComponents);
+        Logger.v("update: value='"+value+"', oldValue='"+oldValue+"', hadStarted="+hadStarted);
         if (value == null && oldValue == null) {
             return;
         }
-        //todo : check what would happend when we start application, and then request variables from server again after sometime (after changing values in server)
         if (value != null && oldValue != null && value.equals(oldValue) && hadStarted) {
             return;
         }
         cacheComputedValues();
-
+        Logger.v("CTVariables.variableResponseReceived()="+CTVariables.variableResponseReceived());
         if (CTVariables.variableResponseReceived()) {
             hadStarted = true;
             triggerValueChanged();

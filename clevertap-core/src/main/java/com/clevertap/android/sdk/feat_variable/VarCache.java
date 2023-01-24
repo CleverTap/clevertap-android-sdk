@@ -23,10 +23,9 @@ package com.clevertap.android.sdk.feat_variable;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.util.Log;
-
 import androidx.annotation.VisibleForTesting;
 
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.feat_variable.callbacks.CacheUpdateBlock;
 import com.clevertap.android.sdk.feat_variable.utils.CTVariableUtils;
 
@@ -40,7 +39,6 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Ansh Sachdeva.
  */
 public class VarCache {
-    private static final String TAG = "VarCache>";
     private static final String LEANPLUM = "__leanplum__";
     public static final String VARIABLES_KEY = "__leanplum_variables";
 
@@ -135,12 +133,14 @@ public class VarCache {
         if(context==null){return;}
         SharedPreferences defaults = context.getSharedPreferences(LEANPLUM, Context.MODE_PRIVATE);
         try {
-            String variables = CTVariableUtils.getFromPreference(defaults, VARIABLES_KEY, "{}");
-            Map<String,Object> variablesAsMap = CTVariableUtils.fromJson(variables);
+            String variablesFromCache = CTVariableUtils.getFromPreference(defaults, VARIABLES_KEY, "{}");
+            Logger.v("loadDiffs: variablesFromCache='"+variablesFromCache+"'");
+
+            Map<String,Object> variablesAsMap = CTVariableUtils.fromJson(variablesFromCache);
             applyVariableDiffs(variablesAsMap);
 
         } catch (Exception e) {
-            Log.e(TAG,"Could not load variable diffs.\n" + Log.getStackTraceString(e));
+            Logger.v("Could not load variable diffs.\n" ,e);
         }
     }
     public  static  void  loadDiffsAndTriggerHandlers(){
@@ -169,7 +169,7 @@ public class VarCache {
         String variablesCipher = CTVariableUtils.toJson(diffs); // aesContext.encrypt(CTVariableUtils.toJson(diffs));
         editor.putString(VARIABLES_KEY, variablesCipher);
 
-        CTVariableUtils.commitChanges(editor);
+        CTVariableUtils.commitChanges(editor); // todo @ hristo since saveDiffs is called when api response is called, this means cache will never get update if  api fails?
     }
 
     //will basically
@@ -178,6 +178,7 @@ public class VarCache {
     // (3.) call var.update() for every var in vars[g]
     // (4.)  if silent is false,  call saveDiffs() and triggerHasReceivedDiffs()
     private static void applyVariableDiffs(Map<String, Object> diffs) {
+        Logger.v( "applyVariableDiffs() called with: diffs = [" + diffs + "]");
         if (diffs != null) {
             synchronized (valuesFromClient) {
                 VarCache.diffs = diffs;
@@ -212,8 +213,12 @@ public class VarCache {
             HashMap<String, Object> params = new HashMap<>();
             params.put("vars", CTVariableUtils.toJson(valuesFromClient));
             params.put("kinds", CTVariableUtils.toJson(defaultKinds));
-            // todo : ct code to send to server
-            //Request request = RequestBuilder.withSetVarsAction().andParams(params).andType(RequestType.IMMEDIATE).create();// todo : ct code to send to server
+            // todo : ct code to send to server // @piyush
+            FakeServer.sendVariables(jsonObject -> {
+                callback.run();
+                return kotlin.Unit.INSTANCE;
+            });
+            //Request request = RequestBuilder.withSetVarsAction().andParams(params).andType(RequestType.IMMEDIATE).create();
             //RequestSender.getInstance().send(request); ;
         }
 
