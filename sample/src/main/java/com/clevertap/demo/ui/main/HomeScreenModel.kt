@@ -73,7 +73,8 @@ object HomeScreenModel {
                 "Alert Local IAM with fallbackToSettings - true",
                 "Hard permission dialog with fallbackToSettings - false",
                 "Hard permission dialog with fallbackToSettings - true"
-            )
+            ),
+            "INAPP" to listOf("Footer InApp", "Footer InApp without image")
         )
     }
 }
