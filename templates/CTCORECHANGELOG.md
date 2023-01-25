@@ -1,6 +1,6 @@
 ## CleverTap Android SDK CHANGE LOG
 
-### Version 4.7.3 (January 23, 2023)
+### Version 4.7.3 (January 25, 2023)
 * Fixes message UI for footer in-app. 
 * Fixes NPE when clicked on body of InboxMessage with deep link in `CTInboxListFragment`
 * Other bug fixes and performance improvements.
