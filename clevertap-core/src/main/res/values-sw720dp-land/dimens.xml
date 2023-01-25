@@ -10,5 +10,7 @@
     <dimen name="txt_size_inapp_message">24sp</dimen>
     <dimen name="txt_size_inapp_button">22sp</dimen>
 
-
+    <dimen name="txt_size_inapp_footer_title">24sp</dimen>
+    <dimen name="txt_size_inapp_footer_message">20sp</dimen>
+    <dimen name="txt_size_inapp_footer_button">22sp</dimen>
 </resources>

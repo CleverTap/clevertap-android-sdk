@@ -24,7 +24,6 @@ public abstract class CTInAppBasePartialFragment extends CTInAppBaseFragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        didDismiss(null);
     }
 
     @Override
