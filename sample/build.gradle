@@ -72,19 +72,24 @@ dependencies {
     implementation project(':clevertap-core')
 
     implementation fileTree(include: ['*.aar'], dir: 'libs')
-    //implementation "com.clevertap.android:clevertap-android-sdk:4.6.6"
+    //implementation "com.clevertap.android:clevertap-android-sdk:4.7.3"
 
     implementation project(':clevertap-geofence')
-    //implementation "com.clevertap.android:clevertap-geofence-sdk:1.1.0"
-    implementation project(':clevertap-xps')
+    //implementation "com.clevertap.android:clevertap-geofence-sdk:1.2.0"
+
     // For Xiaomi Push use
-    //implementation 'com.clevertap.android:clevertap-xiaomi-sdk:1.5.0'
-    implementation project(':clevertap-hms')
+    implementation project(':clevertap-xps')
+    //implementation 'com.clevertap.android:clevertap-xiaomi-sdk:1.5.2'
+
     implementation project(':clevertap-pushtemplates')
-//    implementation "com.clevertap.android:push-templates:1.0.4"
+//    implementation "com.clevertap.android:push-templates:1.0.7"
+
     // For Huawei Push use
-    //implementation 'com.clevertap.android:clevertap-hms-sdk:1.3.1'
+    implementation project(':clevertap-hms')
+    //implementation 'com.clevertap.android:clevertap-hms-sdk:1.3.2'
     //implementation 'com.huawei.hms:push:6.5.0.300'
+
+    implementation "com.clevertap.android:clevertap-rendermax-sdk:1.0.2"//Add for renderMax SDK support
 
     implementation 'com.google.android.gms:play-services-location:21.0.0'// Needed for geofence
     implementation 'androidx.work:work-runtime:2.7.1'// Needed for geofence
