@@ -55,6 +55,7 @@ task copyTemplates {
     file("versions.properties").withInputStream { props.load(it) }
     outputs.upToDateWhen { false }
     props.put("clevertap_android_sdk",Libs.clevertap_android_sdk.dropRight(1))
+    props.put("clevertap_rendermax_sdk", Libs.clevertap_rendermax_sdk.dropRight(1))
     props.put("clevertap_geofence_sdk",Libs.clevertap_geofence_sdk.dropRight(1))
     props.put("clevertap_hms_sdk",Libs.clevertap_hms_sdk.dropRight(1))
     props.put("clevertap_xiaomi_sdk",Libs.clevertap_xiaomi_sdk.dropRight(1))
