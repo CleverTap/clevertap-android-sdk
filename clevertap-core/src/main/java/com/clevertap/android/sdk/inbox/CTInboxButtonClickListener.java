@@ -66,11 +66,11 @@ class CTInboxButtonClickListener implements View.OnClickListener {
                         }
                     }
 
-                    fragment.handleClick(this.position, buttonText, buttonObject, getKeyValues(inboxMessage),isBodyClick);
+                    fragment.handleClick(this.position, buttonText, buttonObject, getKeyValues(inboxMessage));
                 }
             } else {
                 if (fragment != null) {
-                    fragment.handleClick(this.position, null, null, null,isBodyClick);
+                    fragment.handleClick(this.position, null, null, null);
                 }
             }
         }
