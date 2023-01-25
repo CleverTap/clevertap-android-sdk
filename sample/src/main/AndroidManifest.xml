@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest package="com.clevertap.demo"
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.clevertap.demo">
     <!-- Add Permissions needed for CleverTap -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-
-    <!--Enable below line to test for Android GO devices-->
-    <!--<uses-feature android:name="android.hardware.ram.low" android:required="true"/>-->
 
     <application
         android:name=".MyApplication"
@@ -17,38 +14,51 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".HomeScreenActivity"
-            android:exported="true"
-            android:theme="@style/AppTheme.NoActionBar">
-
-            <!-- This intent filter handles app launch -->
+            android:name=".TestActivity"
+            android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
 
-            <!-- This intent filter used for handling deep link -->
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-
-                <!-- If a user clicks on a shared link that uses the "http" scheme, your
-                     app should be able to delegate that traffic to "https". -->
-                <data
-                    android:host="${applicationId}"
-                    android:pathPrefix="/HomeScreenActivity"
-                    android:scheme="ctdemo" />
-            </intent-filter>
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="" />
         </activity>
+<!--        <activity-->
+<!--            android:name=".HomeScreenActivity"-->
+<!--            android:exported="true"-->
+<!--            android:theme="@style/AppTheme.NoActionBar">-->
+
+<!--            &lt;!&ndash; This intent filter handles app launch &ndash;&gt;-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.MAIN" />-->
+
+<!--                <category android:name="android.intent.category.LAUNCHER" />-->
+<!--            </intent-filter>-->
+
+<!--            &lt;!&ndash; This intent filter used for handling deep link &ndash;&gt;-->
+<!--            <intent-filter>-->
+<!--                <action android:name="android.intent.action.VIEW" />-->
+
+<!--                <category android:name="android.intent.category.DEFAULT" />-->
+<!--                <category android:name="android.intent.category.BROWSABLE" />-->
+
+<!--                &lt;!&ndash;-->
+<!--                     If a user clicks on a shared link that uses the "http" scheme, your-->
+<!--                     app should be able to delegate that traffic to "https".-->
+<!--                &ndash;&gt;-->
+<!--                <data-->
+<!--                    android:host="${applicationId}"-->
+<!--                    android:pathPrefix="/HomeScreenActivity"-->
+<!--                    android:scheme="ctdemo" />-->
+<!--            </intent-filter>-->
+<!--        </activity>-->
 
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
-
-        <!-- Add meta data for CleverTap Account Id and Account Token -->
+            android:value="ca-app-pub-3940256099942544~3347511713" /> <!-- Add meta data for CleverTap Account Id and Account Token -->
         <meta-data
             android:name="CLEVERTAP_ACCOUNT_ID"
             android:value="YOUR ACCT ID" />
@@ -57,23 +67,20 @@
             android:value="YOUR ACCT TOKEN" />
         <meta-data
             android:name="CLEVERTAP_REGION"
-            android:value="eu1"/>
-
-        <!-- Xiaomi Push -->
+            android:value="eu1" /> <!-- Xiaomi Push -->
         <meta-data
             android:name="CLEVERTAP_XIAOMI_APP_KEY"
             android:value="@string/xiaomi_app_key" />
-
         <meta-data
             android:name="CLEVERTAP_XIAOMI_APP_ID"
-            android:value="@string/xiaomi_app_id" />
-
-        <!-- android:name="CLEVERTAP_REGION" -->
+            android:value="@string/xiaomi_app_id" /> <!-- android:name="CLEVERTAP_REGION" -->
         <!-- android:value="eu1"/> -->
         <!-- IMPORTANT: To force use Google AD ID to uniquely identify  users, use the following meta tag. GDPR mandates that if you are using this tag, there is prominent disclousure to your end customer in their application. Read more about GDPR here - https://clevertap.com/blog/in-preparation-of-gdpr-compliance/ -->
-        <!--<meta-data
+        <!--
+<meta-data
             android:name="CLEVERTAP_USE_GOOGLE_AD_ID"
-            android:value="1" />-->
+            android:value="1" />
+        -->
         <meta-data
             android:name="CLEVERTAP_SSL_PINNING"
             android:value="0" /> <!-- Add meta data for CleverTap Notification Icon -->
@@ -89,9 +96,11 @@
         <meta-data
             android:name="CLEVERTAP_USE_CUSTOM_ID"
             android:value="0" /> <!-- Add CleverTap Push Notification Services & Install Referrer Receivers -->
-        <!-- <meta-data
+        <!--
+ <meta-data
              android:name="CLEVERTAP_IDENTIFIER"
-             android:value="Email,Phone" />-->
+             android:value="Email,Phone" />
+        -->
         <meta-data
             android:name="CLEVERTAP_ACTIVITY_EXCLUDE"
             android:value="HomeScreenActivity" />
@@ -103,13 +112,15 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-        <!--        <service
+        <!--
+        <service
                     android:name="com.clevertap.demo.MyFcmMessageListenerService"
                     android:exported="true">
                     <intent-filter>
                         <action android:name="com.google.firebase.MESSAGING_EVENT" />
                     </intent-filter>
-                </service>-->
+                </service>
+        -->
         <service
             android:name="com.clevertap.android.sdk.pushnotification.CTNotificationIntentService"
             android:exported="false">
@@ -117,6 +128,7 @@
                 <action android:name="com.clevertap.PUSH_EVENT" />
             </intent-filter>
         </service>
+
         <activity
             android:name=".WebViewActivity"
             android:exported="true"
@@ -127,20 +139,21 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
-                <!-- If a user clicks on a shared link that uses the "http" scheme, your
-                     app should be able to delegate that traffic to "https". -->
+                <!--
+                     If a user clicks on a shared link that uses the "http" scheme, your
+                     app should be able to delegate that traffic to "https".
+                -->
                 <data
                     android:host="${applicationId}"
                     android:pathPrefix="/WebViewActivity"
                     android:scheme="ctdemo" />
-
             </intent-filter>
-
-            <intent-filter
-                android:autoVerify="true">
+            <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
+
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
+
                 <data
                     android:host="google.com"
                     android:scheme="https" />

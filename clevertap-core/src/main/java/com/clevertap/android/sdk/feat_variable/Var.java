@@ -183,7 +183,6 @@ public class Var<T> {
     }
 
     // updates the values of value[g] from cached value to server value  . called by VarCahe.applyVariableDiffs()
-    //todo : check what would happen when we start application, and then request variables from server again after sometime (after changing values in server)
     public synchronized void update() {
         T oldValue = value;
         value = VarCache.getMergedValueFromComponentArray(nameComponents);

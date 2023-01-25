@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    tools:context=".TestActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#efefef"
+        android:orientation="vertical">
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:padding="8dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/btCheckLocal"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="8dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:padding="4dp"
+                    android:text="check local data"
+                    android:textSize="16sp" />
+
+                <Button
+                    android:id="@+id/btCheckLocalWithApiFailure"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="8dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:padding="4dp"
+                    android:text="check data after api failure"
+                    android:textSize="16sp" />
+
+
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <HorizontalScrollView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+
+
+                <Button
+                    android:id="@+id/btInit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="8dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:padding="4dp"
+                    android:text="init"
+
+
+                    android:textSize="16sp" />
+
+
+                <Button
+                    android:id="@+id/btrequestFromServer"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="8dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:padding="4dp"
+                    android:text="request for server data"
+                    android:textSize="16sp"
+
+                    />
+
+                <Button
+                    android:id="@+id/btForceSync"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="8dp"
+                    android:minWidth="0dp"
+                    android:minHeight="0dp"
+                    android:padding="4dp"
+                    android:text="force sync local data to server"
+                    android:textSize="16sp" />
+
+
+
+
+            </LinearLayout>
+        </HorizontalScrollView>
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="value on demand" />
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="130dp"
+            android:fillViewport="true">
+
+            <TextView
+                android:id="@+id/tvTerminalValueOnDemand"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_margin="8dp"
+                android:background="#fff"
+                android:minHeight="50dp"
+                android:textSize="18sp" />
+        </androidx.core.widget.NestedScrollView>
+
+
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="global listener multiple time" />
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="130dp"
+            android:fillViewport="true">
+
+            <TextView
+                android:id="@+id/tvTerminalWithGlobalListenerMultiple"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_margin="8dp"
+                android:background="#fff"
+                android:minHeight="50dp"
+                android:textSize="18sp" />
+        </androidx.core.widget.NestedScrollView>
+
+
+
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="global listener one time" />
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="130dp"
+            android:fillViewport="true">
+
+            <TextView
+                android:id="@+id/tvTerminalWithGlobalListenerOneTime"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_margin="8dp"
+                android:background="#fff"
+                android:textSize="18sp" />
+        </androidx.core.widget.NestedScrollView>
+
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="individual listeners" />
+
+        <androidx.core.widget.NestedScrollView
+            android:layout_width="match_parent"
+            android:layout_height="130dp"
+            android:fillViewport="true">
+
+            <TextView
+                android:id="@+id/tvTerminalWithIndividualListeners"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_margin="8dp"
+                android:background="#fff"
+                android:minHeight="50dp"
+                android:textSize="18sp" />
+        </androidx.core.widget.NestedScrollView>
+
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            />
+
+
+       
+
+
+    </LinearLayout>
+
+
+</androidx.core.widget.NestedScrollView>
