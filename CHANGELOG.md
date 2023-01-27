@@ -1,5 +1,8 @@
 ## CHANGE LOG.
 
+### January 27, 2023
+* [CleverTap Android SDK v4.7.4](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md)
+
 ### January 25, 2023
 * [CleverTap Android SDK v4.7.3](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md)
 * [CleverTap RenderMax SDK v1.0.2](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTRENDERMAXCHANGELOG.md)
