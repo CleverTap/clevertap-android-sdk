@@ -75,6 +75,8 @@ object Libs {
 
     const val clevertap_android_sdk: String = "com.clevertap.android:clevertap-android-sdk:_"
 
+    const val clevertap_rendermax_sdk: String = "com.clevertap.android:clevertap-rendermax-sdk:_"
+
     const val clevertap_geofence_sdk: String = "com.clevertap.android:clevertap-geofence-sdk:_"
 
     const val clevertap_hms_sdk: String = "com.clevertap.android:clevertap-hms-sdk:_"
