@@ -3,6 +3,7 @@ package com.clevertap.android.sdk.pushnotification;
 import static android.content.Context.JOB_SCHEDULER_SERVICE;
 import static android.content.Context.NOTIFICATION_SERVICE;
 import static com.clevertap.android.sdk.BuildConfig.VERSION_CODE;
+import static com.clevertap.android.sdk.CTXtensions.isNotificationChannelEnabled;
 import static com.clevertap.android.sdk.pushnotification.PushNotificationUtil.getPushTypes;
 
 import android.annotation.SuppressLint;
@@ -88,6 +89,7 @@ public class PushProviders implements CTPushProviderListener {
     private final ValidationResultStack validationResultStack;
 
     private final Object tokenLock = new Object();
+
     private final Object pushRenderingLock = new Object();
 
     private DevicePushTokenRefreshListener tokenRefreshListener;
@@ -151,10 +153,10 @@ public class PushProviders implements CTPushProviderListener {
         }
 
         try {
-            boolean isSilent = extras.getString(Constants.WZRK_PUSH_SILENT,"").equalsIgnoreCase("true");
-            if(isSilent){
+            boolean isSilent = extras.getString(Constants.WZRK_PUSH_SILENT, "").equalsIgnoreCase("true");
+            if (isSilent) {
                 analyticsManager.pushNotificationViewedEvent(extras);
-                return ;
+                return;
             }
             String extrasFrom = extras.getString(Constants.EXTRAS_FROM);
             if (extrasFrom == null || !extrasFrom.equals("PTReceiver")) {
@@ -189,6 +191,13 @@ public class PushProviders implements CTPushProviderListener {
                     }
                     return;
                 }
+            }
+            if (!isNotificationChannelEnabled(context, extras.getString(Constants.WZRK_CHANNEL_ID, ""))) {
+                config.getLogger()
+                        .verbose(config.getAccountId(),
+                                "Not rendering push notification as channel = " + extras.getString(
+                                        Constants.WZRK_CHANNEL_ID, "") + " is blocked by user");
+                return;
             }
             String notifTitle = iNotificationRenderer.getTitle(extras,
                     context);//extras.getString(Constants.NOTIF_TITLE, "");// uncommon - getTitle()
@@ -854,9 +863,9 @@ public class PushProviders implements CTPushProviderListener {
                 data.put("action", action);
                 data.put("id", token);
                 data.put("type", pushType.getType());
-                if(pushType== PushType.XPS){
+                if (pushType == PushType.XPS) {
                     config.getLogger().verbose("PushProviders: pushDeviceTokenEvent requesting device region");
-                    data.put("region",pushType.getServerRegion());
+                    data.put("region", pushType.getServerRegion());
                 }
                 event.put("data", data);
                 config.getLogger().verbose(config.getAccountId(), pushType + action + " device token " + token);

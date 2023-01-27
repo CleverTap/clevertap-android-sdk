@@ -72,7 +72,7 @@ dependencies {
     implementation project(':clevertap-core')
 
     implementation fileTree(include: ['*.aar'], dir: 'libs')
-    //implementation "com.clevertap.android:clevertap-android-sdk:4.7.3"
+    //implementation "com.clevertap.android:clevertap-android-sdk:4.7.4"
 
     implementation project(':clevertap-geofence')
     //implementation "com.clevertap.android:clevertap-geofence-sdk:1.2.0"
