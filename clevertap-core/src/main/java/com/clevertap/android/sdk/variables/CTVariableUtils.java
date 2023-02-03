@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.feat_variable.utils;
+package com.clevertap.android.sdk.variables;
 
 import android.content.SharedPreferences;
 import android.text.Editable;
@@ -7,7 +7,6 @@ import androidx.annotation.RestrictTo;
 
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
-import com.clevertap.android.sdk.feat_variable.CTVariables;
 
 import org.json.JSONArray;
 import org.json.JSONException;

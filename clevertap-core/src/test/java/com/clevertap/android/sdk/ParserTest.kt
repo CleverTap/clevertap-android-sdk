@@ -1,14 +1,5 @@
 package com.clevertap.android.sdk
 
-import com.clevertap.android.sdk.feat_variable.Parser
-import com.clevertap.android.sdk.feat_variable.VarCache
-import com.clevertap.android.shared.test.BaseTestCase
-import org.junit.Assert
-import org.junit.Test
-import org.junit.runner.RunWith
-import org.robolectric.RobolectricTestRunner
-import java.io.InputStream
-
 ////ParserTestInputVariables TestStaticTesting // VarCacheTest
 //@RunWith(RobolectricTestRunner::class)
 //class ParserTest :BaseTestCase(){

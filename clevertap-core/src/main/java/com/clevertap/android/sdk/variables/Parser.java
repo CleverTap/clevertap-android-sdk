@@ -19,13 +19,13 @@
  * under the License.
  */
 
-package com.clevertap.android.sdk.feat_variable;
+package com.clevertap.android.sdk.variables;
 
 import android.text.TextUtils;
 
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.feat_variable.annotations.Variable;
-import com.clevertap.android.sdk.feat_variable.callbacks.VariableCallback;
+import com.clevertap.android.sdk.variables.annotations.Variable;
+import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
@@ -34,7 +34,7 @@ import java.util.Map;
 
 /**
  * Parses CleverTap annotations when called via Parser.parseVariables(...)
- * or Parser.parseVariablesForClasses(...)
+ * or Parser.parseVariablesForClasses(...).
  *
  * @author Ansh Sachdeva
  */
@@ -46,7 +46,10 @@ public class Parser {
 
   /**
    * Parses CleverTap annotations for all given object instances(eg, if variables are defined in
-   * Activity class, then Parser.parseVariables(this) can be called)
+   * Activity class, then Parser.parseVariables(this) can be called).
+   *
+   *  @param instances :
+   *
    */
   public static void parseVariables(Object... instances) {
     try {

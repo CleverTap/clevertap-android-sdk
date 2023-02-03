@@ -1,11 +1,11 @@
-package com.clevertap.android.sdk.feat_variable;
+package com.clevertap.android.sdk.variables;
 
 
 import android.text.TextUtils;
+
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
-import com.clevertap.android.sdk.feat_variable.callbacks.VariableCallback;
-import com.clevertap.android.sdk.feat_variable.utils.CTVariableUtils;
+import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,8 +67,11 @@ public class Var<T> {
         }
 
         // make sure the handler is called evenm after the value has been updated
-        if (CTVariables.variableResponseReceived()) {
+        if (CTVariables.isVariableResponseReceived()) {
             handler.handle(this);
+        }
+        else {
+            Logger.v( "The added listener will get triggered once the values are successfully retrieved");
         }
     }
     public void removeValueChangedHandler(VariableCallback<T> handler) {
@@ -194,15 +197,17 @@ public class Var<T> {
             return;
         }
         cacheComputedValues();
-        Logger.v("CTVariables.variableResponseReceived()="+CTVariables.variableResponseReceived());
-        if (CTVariables.variableResponseReceived()) {
+        if (CTVariables.isVariableResponseReceived()) {
             hadStarted = true;
             triggerValueChanged();
         }
+        else {
+            Logger.v( "CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered");
+        }
     }
 
-    private void warnIfNotStarted() {
-        if ( !CTVariables.variableResponseReceived() && !printedCallbackWarning) {
+    void warnIfNotStarted() {
+        if ( !CTVariables.isVariableResponseReceived() && !printedCallbackWarning) {
             Logger.v( "CleverTap hasn't finished retrieving values from the server. You should use a callback to make sure the value for "+name+" is ready. Otherwise, your app may not use the most up-to-date value.");
             printedCallbackWarning = true;
         }

@@ -1,6 +1,6 @@
 package com.clevertap.demo;
 
-import com.clevertap.android.sdk.feat_variable.annotations.Variable;
+import com.clevertap.android.sdk.variables.annotations.Variable;
 
 import org.json.JSONException;
 import org.json.JSONObject;

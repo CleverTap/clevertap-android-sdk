@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.feat_variable
+package com.clevertap.android.sdk.variables
 
 import org.junit.Test
 

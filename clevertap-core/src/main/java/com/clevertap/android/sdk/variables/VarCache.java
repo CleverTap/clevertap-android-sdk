@@ -19,15 +19,14 @@
  * under the License.
  */
 
-package com.clevertap.android.sdk.feat_variable;
+package com.clevertap.android.sdk.variables;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import androidx.annotation.VisibleForTesting;
 
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.feat_variable.callbacks.CacheUpdateBlock;
-import com.clevertap.android.sdk.feat_variable.utils.CTVariableUtils;
+import com.clevertap.android.sdk.variables.callbacks.CacheUpdateBlock;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -38,7 +37,7 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author Ansh Sachdeva.
  */
-public class VarCache {
+class VarCache {
     private static final String LEANPLUM = "__leanplum__";
     public static final String VARIABLES_KEY = "__leanplum_variables";
 
@@ -127,7 +126,6 @@ public class VarCache {
     //will basically call applyVariableDiffs(..) with values stored in pref
     public static void loadDiffs() {
         // if CTVariables.hasSdkError we return w/o doing anything
-        if (CTVariables.hasSdkError) {return;}
         Context context = CTVariables.getContext();
 
         if(context==null){return;}
@@ -143,22 +141,22 @@ public class VarCache {
             Logger.v("Could not load variable diffs.\n" ,e);
         }
     }
-    public  static  void  loadDiffsAndTriggerHandlers(){
+
+    //same as loadiffs, but will also trigger one/multi time listeners
+    public static void loadDiffsAndTriggerHandlers() {
         loadDiffs();
         triggerHasReceivedDiffs();
     }
 
-    public  static  void  updateDiffs(Map<String, Object> diffs){
+    //same as loadiffs, but differs in 2 aspects: 1) instead of picking data from cache, it receives data as param and 2) it will also trigger one/mult time listeners
+    public  static  void updateDiffsAndTriggerHandlers(Map<String, Object> diffs){
         applyVariableDiffs(diffs);
         saveDiffs();
         triggerHasReceivedDiffs();
     }
 
     // saveDiffs() is opposite of loadDiffs() and will save diffs[g]  to cache
-    private static void saveDiffs() {
-        if (CTVariables.hasSdkError) {
-            return;
-        }
+    public static void saveDiffs() {
         Context context = CTVariables.getContext();
         if(context==null){
             return;

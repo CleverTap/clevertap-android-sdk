@@ -6,16 +6,15 @@ import android.os.Bundle
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
-import com.clevertap.android.sdk.feat_variable.CTVariables
-import com.clevertap.android.sdk.feat_variable.FakeServer
-import com.clevertap.android.sdk.feat_variable.Parser
-import com.clevertap.android.sdk.feat_variable.VarCache
-import com.clevertap.android.sdk.feat_variable.callbacks.VariablesChangedCallback
+import com.clevertap.android.sdk.ActivityLifecycleCallback
+import com.clevertap.android.sdk.variables.CTVariablesPublic
+import com.clevertap.android.sdk.variables.CTVariables
+import com.clevertap.android.sdk.variables.FakeServer
+import com.clevertap.android.sdk.variables.Parser
+import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
 import com.clevertap.demo.databinding.ActivityTestBinding
 import java.util.Date
 import kotlin.concurrent.thread
-import kotlin.math.log
-
 
 
 //todo
@@ -41,15 +40,15 @@ class TestActivity : AppCompatActivity() {
     }
 
     private fun checkLocalValuesAfterApiFailure(view: View?) {
-        CTVariables.removeAllVariablesChangedHandler()
-        CTVariables.removeAllOneTimeVariablesChangedHandler()
-        CTVariables.addVariablesChangedHandler(object : VariablesChangedCallback(){
+        CTVariablesPublic.removeAllVariablesChangedHandler()
+        CTVariablesPublic.removeAllOneTimeVariablesChangedHandler()
+        CTVariablesPublic.addVariablesChangedHandler(object : VariablesChangedCallback(){
             override fun variablesChanged() {
                 binding.tvTerminalWithGlobalListenerMultiple.text = ("CALLED BY <multi,failure> variablesChanged()\n${getVarsString()}")
                 flashTextView(binding.tvTerminalWithGlobalListenerMultiple)
             }
         })
-        CTVariables.addOneTimeVariablesChangedHandler( object :VariablesChangedCallback(){
+        CTVariablesPublic.addOneTimeVariablesChangedHandler( object :VariablesChangedCallback(){
             override fun variablesChanged() {
                 binding.tvTerminalWithGlobalListenerOneTime.text = ("CALLED BY <onetime,failure> variablesChanged()\n${getVarsString()}")
                 flashTextView(binding.tvTerminalWithGlobalListenerOneTime)
@@ -61,7 +60,8 @@ class TestActivity : AppCompatActivity() {
         Parser.parseVariablesForClasses(TestMyVars::class.java)
 
         // user will do this after app.onCreate or in activity.onCreate
-        CTVariables.initWithApiFailure()
+        CTVariables.init()
+        CTVariables.onAppLaunchFail()
     }
 
     private fun checkLocalValues(view: View?) {
@@ -76,27 +76,33 @@ class TestActivity : AppCompatActivity() {
 
         // user will do this after app.onCreate or in activity.onCreate
 
-        CTVariables.removeAllVariablesChangedHandler()
-        CTVariables.removeAllOneTimeVariablesChangedHandler()
-        CTVariables.addVariablesChangedHandler(object : VariablesChangedCallback(){
+        CTVariablesPublic.removeAllVariablesChangedHandler()
+        CTVariablesPublic.removeAllOneTimeVariablesChangedHandler()
+        CTVariablesPublic.addVariablesChangedHandler(object : VariablesChangedCallback(){
             override fun variablesChanged() {
                 binding.tvTerminalWithGlobalListenerMultiple.text = ("CALLED BY <multi> variablesChanged()\n${getVarsString()}")
                 flashTextView(binding.tvTerminalWithGlobalListenerMultiple)
             }
         })
-        CTVariables.addOneTimeVariablesChangedHandler( object :VariablesChangedCallback(){
+        CTVariablesPublic.addOneTimeVariablesChangedHandler( object :VariablesChangedCallback(){
             override fun variablesChanged() {
                 binding.tvTerminalWithGlobalListenerOneTime.text = ("CALLED BY <onetime> variablesChanged()\n${getVarsString()}")
                 flashTextView(binding.tvTerminalWithGlobalListenerOneTime)
             }
         })
 
+        Parser.parseVariablesForClasses(TestMyVars::class.java)
+        ActivityLifecycleCallback.register(this.application)
+
         // user will do this before app.onCreate
         CTVariables.setContext(this)
-        Parser.parseVariablesForClasses(TestMyVars::class.java)
+
 
         // user will do this after app.onCreate or in activity.onCreate
         CTVariables.init()
+        CTVariablesPublic.fetchVariables()
+
+
     }
 
 
@@ -104,7 +110,7 @@ class TestActivity : AppCompatActivity() {
     private fun onForceRequestFromServer(view: View?) {
         FakeServer.expectedBackendData = if(toggle)FakeServer.Companion.ResposnseType.VARS2_VARSCODE else FakeServer.Companion.ResposnseType.VARS1_VARSCODE
         toggle = !toggle
-        CTVariables.requestVariableDataFromServer()
+        CTVariablesPublic.fetchVariables()
         toast("requesting data from server...")
 
     }
@@ -112,7 +118,7 @@ class TestActivity : AppCompatActivity() {
 
     private fun onForceSyncClick(view: View?) {
         FakeServer.localVarsJson = TestMyVars.getUpdatedJSon()
-        CTVariables.pushVariablesToServer{}
+        CTVariablesPublic.pushVariablesToServer{}
     }
 
     fun toast(str:String){
@@ -131,6 +137,8 @@ class TestActivity : AppCompatActivity() {
 
     private fun getVarsString():String {
         return StringBuilder().run {
+            appendLine("response received="+ CTVariablesPublic.isVariableResponseReceived())
+            appendLine("response received="+ CTVariablesPublic.isInDevelopmentMode())
             appendLine("- checked on : ${Date()}")
             appendLine("- DirectAccess:")
             appendLine("- welcomeMsg = ${TestMyVars.welcomeMsg}")
@@ -146,21 +154,21 @@ class TestActivity : AppCompatActivity() {
             appendLine("- appleI15 = ${TestMyVars.appleI15}")
             appendLine("-------------------------------------------------------------------")
             appendLine("Access via cache:")
-            appendLine("welcomeMsg = ${VarCache.getVariable<String>("welcomeMsg")}")
-            appendLine("isOptedForOffers = ${VarCache.getVariable<Boolean>("isOptedForOffers")}")
-            appendLine("initialCoins = ${VarCache.getVariable<Int>("initialCoins")}")
-            appendLine("correctGuessPercentage = ${VarCache.getVariable<Float>("correctGuessPercentage")}")
-            appendLine("userConfigurableProps = ${VarCache.getVariable<HashMap<String,Any>>("userConfigurableProps")}")
-            appendLine("aiNames = ${VarCache.getVariable<ArrayList<String>>("aiNames")}")
-            appendLine("userConfigurableProps = ${VarCache.getVariable<String>("userConfigurableProps")}")
-            appendLine("android.samsung.s22 = ${VarCache.getVariable<Double>("android.samsung.s22")}")
-            appendLine("android.samsung.s23 = ${VarCache.getVariable<String>("android.samsung.s23")}")
-            appendLine("android.nokia.6a = ${VarCache.getVariable<Double>("android.nokia.6a")}")
-            appendLine("android.nokia.12 = ${VarCache.getVariable<String>("android.nokia.12")}")
-            appendLine("apple.iphone15 = ${VarCache.getVariable<String>("apple.iphone15")}")
+            appendLine("welcomeMsg = ${CTVariablesPublic.getVariable<String>("welcomeMsg")}")
+            appendLine("isOptedForOffers = ${CTVariablesPublic.getVariable<Boolean>("isOptedForOffers")}")
+            appendLine("initialCoins = ${CTVariablesPublic.getVariable<Int>("initialCoins")}")
+            appendLine("correctGuessPercentage = ${CTVariablesPublic.getVariable<Float>("correctGuessPercentage")}")
+            appendLine("userConfigurableProps = ${CTVariablesPublic.getVariable<HashMap<String,Any>>("userConfigurableProps")}")
+            appendLine("aiNames = ${CTVariablesPublic.getVariable<ArrayList<String>>("aiNames")}")
+            appendLine("userConfigurableProps = ${CTVariablesPublic.getVariable<String>("userConfigurableProps")}")
+            appendLine("android.samsung.s22 = ${CTVariablesPublic.getVariable<Double>("android.samsung.s22")}")
+            appendLine("android.samsung.s23 = ${CTVariablesPublic.getVariable<String>("android.samsung.s23")}")
+            appendLine("android.nokia.6a = ${CTVariablesPublic.getVariable<Double>("android.nokia.6a")}")
+            appendLine("android.nokia.12 = ${CTVariablesPublic.getVariable<String>("android.nokia.12")}")
+            appendLine("apple.iphone15 = ${CTVariablesPublic.getVariable<String>("apple.iphone15")}")
 
-            appendLine("group:android = ${VarCache.getVariable<Any>("android")}")
-            appendLine("group:apple = ${VarCache.getVariable<Any>("apple")}")
+            appendLine("group:android = ${CTVariablesPublic.getVariable<Any>("android")}")
+            appendLine("group:apple = ${CTVariablesPublic.getVariable<Any>("apple")}")
             this.toString()
         }
     }
