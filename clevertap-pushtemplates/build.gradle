@@ -31,8 +31,7 @@ dependencies {
     implementation Libs.appcompat
     compileOnly Libs.material
 
-
-    testImplementation Libs.junit_junit
+    testImplementation project(':test_shared')
     androidTestImplementation Libs.androidx_test_ext_junit
     androidTestImplementation Libs.espresso_core
 }
