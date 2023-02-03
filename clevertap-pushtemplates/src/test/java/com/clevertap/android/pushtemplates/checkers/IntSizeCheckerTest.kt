@@ -10,39 +10,47 @@ import org.robolectric.RobolectricTestRunner
 class IntSizeCheckerTest: BaseTestCase() {
 
     @Test
-    fun test_check_correct_params_returns_true() {
+    fun test_check_correctParamsGiven_ReturnsTrue() {
+        //When
         val entity = 12345
         val size = 1
         val errorMsg = "Sample error message"
         val intSizeChecker = IntSizeChecker(entity,size,errorMsg)
-        //when
-        val result = intSizeChecker.check()
 
         //Act
-       assertEquals(result,true)
+        val result = intSizeChecker.check()
+
+        //Assert
+       assertTrue(result)
     }
 
     @Test
-    fun test_check_empty_entity_returns_true() {
+    fun test_check_entityIsLessThanGivenSize_ReturnsFalse() {
+        //When
         val entity = -112345
         val size = 1
         val errorMsg = "Sample error message"
         val intSizeChecker = IntSizeChecker(entity,size,errorMsg)
-        //when
+
+        //Act
         val result = intSizeChecker.check()
 
-        assertEquals(result,false)
+        //Assert
+        assertFalse(result)
     }
 
     @Test
-    fun test_check_entity_is_same_as_int_min_value_returns_false() {
+    fun test_check_entitySameAsIntMinValue_ReturnsFalse() {
+        //When
         val entity = Int.MIN_VALUE
         val size = 1
         val errorMsg = "Sample error message"
         val intSizeChecker = IntSizeChecker(entity,size,errorMsg)
-        //when
+
+        //Act
         val result = intSizeChecker.check()
 
+        //Assert
         assertFalse(result)
     }
 
