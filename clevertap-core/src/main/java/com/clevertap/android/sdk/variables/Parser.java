@@ -40,16 +40,11 @@ import java.util.Map;
  */
 public class Parser {
 
-
-  private static final String TAG = "Parser>";
-
-
   /**
-   * Parses CleverTap annotations for all given object instances(eg, if variables are defined in
-   * Activity class, then Parser.parseVariables(this) can be called).
+   * Parses annotations for all given object instances(eg, if variables are defined in
+   * Activity class, then Parser.parseVariables(activityObj) can be called).
    *
-   *  @param instances :
-   *
+   *  @param instances Objects of a class
    */
   public static void parseVariables(Object... instances) {
     try {
@@ -62,7 +57,7 @@ public class Parser {
   }
 
   /**
-   * Parses CleverTap annotations for all given classes.(eg, if variables are defined in a
+   * Parses annotations for all given classes.(eg, if variables are defined in a
    * separate 'MyVariables' class, then Parser.parseVariablesForClasses(MyVariables.class) can be
    * called)
    */
@@ -77,25 +72,21 @@ public class Parser {
   }
 
 
-  // note : changes: removed all errors and try catch them here only
-  //parseVariablesHelper(context,MainActivity::class.java)//<-- call that occurred when Parser.parseVariables(this) in MainActivity onCreate got called
-  //parseVariablesHelper(null,MyVars::class.java);        //<-- call that occurred when Parser.parseVariablesForClasses(MyVars::class.java) got called
+  /**
+   * Generic function to parse variables defined in a class or an object
+   *
+   * For each field defined in the class (i.e clazz instance) with @{@link Variable} annotation, this function
+   * calls {@link #defineVariable(Object, String, Object, String, Field)} , where:
+   *
+   *
+   * @param instance object of a class
+   * @param clazz class instance of a class
+   */
   private static void parseVariablesHelper(Object instance, Class<?> clazz) {
 
     try {
-      //fields = array of all variables in clazz
       Field[] fields = clazz.getFields();
 
-      /*
-         for each field  in fields , if @Variable or @File annotation is present, it will try to call
-         defineVariable(a,b,c,d,e) else continue with iteration. the parameters are:
-           a) instance = null/context/activity/application obj
-           b) variableName = either "abc.xyz" from @Variable(name="xyz",group="abc")/@File(name="xyz",group="abc")/ or field.getName()
-           c) value of field. via field.getX() (x= Int/Float/Double/Boolean/etc.)
-           d) a string : "integer" or "float" or "bool" or "group" or "string"
-           e) the field itself
-         it will also try to call defineFileVariable(...) if it has @File annotation
-       */
       for (final Field field : fields) {
         String group = "", name = "";
         boolean isFile = false;
@@ -166,8 +157,17 @@ public class Parser {
   }
 
 
-  //defineVariable(activity,"some_global_var_name",12.4,"float",Field("some_global_var_name",12.4));
-  //defineVariable(null,"some_global_var_name",12.4,"float",Field("some_global_var_name",12.4));
+  /**
+   * This function simply calls {@link Var#define(String, Object, String)} and attached a variable
+   * update listener. When variable update listener is called, it sets the values in the field with
+   * new data using reflection.
+   *
+   * @param instance obj of a class
+   * @param name name of the field from class
+   * @param value  value of the field
+   * @param kind a string representing the type of field
+   * @param field instance of field itself
+   */
   private static <T> void defineVariable(final Object instance, String name, T value, String kind, final Field field) {
     // we first call var.define(..) with field name, value and kind
     final Var<T> var = Var.define(name, value, kind);
@@ -179,13 +179,6 @@ public class Parser {
     final boolean hasInstance = instance != null;
     final WeakReference<Object> weakInstance = new WeakReference<>(instance);
 
-    // if vars are defined via @Variable annotation, we always attach a value change listener(VariableCallback) , but if they are defined via Var.define(), its upto user to add such listers if needed.
-
-    //then we set a listener on var instance which will give a callback with new var<x> instance
-    // whenever its triggered. when this happens, we update field's field.value = var.value
-    // (not variable.value, the one returned in callback
-    // also note that to set field's value, field must not be a non final(i.e mutable) value, therefore we first call
-    // field.setAccessible(true) to make it mutable
     var.addValueChangedHandler(new VariableCallback<T>() {
       @Override
       public void handle(Var<T> variable) {
