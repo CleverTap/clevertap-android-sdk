@@ -22,6 +22,8 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
+
+import androidx.annotation.Discouraged;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -57,18 +59,21 @@ import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ManifestValidator;
 import com.clevertap.android.sdk.validation.ValidationResult;
+import com.clevertap.android.sdk.variables.CTVariables;
+import com.clevertap.android.sdk.variables.Var;
+import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.messaging.FirebaseMessaging;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 
@@ -3007,4 +3012,139 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public static @XiaomiPush int getEnableXiaomiPushOn() {
         return PushType.XPS.getRunningDevices();
     }
+
+
+
+    // -------------------- CTVariables ----------------------------------------------------
+
+
+    /**
+     * This api can be used to request variable data from server at any time
+     */
+    void fetchVariables() {
+        Logger.v(  "Fetching  variables");
+
+        JSONObject event = new JSONObject();
+        JSONObject notif = new JSONObject();
+        try {
+            notif.put("t", Constants.FETCH_TYPE_VARIABLES);
+            event.put("evtName", Constants.WZRK_FETCH);
+            event.put("evtData", notif);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        coreState.getAnalyticsManager().sendFetchEvent(event);
+    }
+
+    /**
+     * Check if your app is in development mode. <br>
+     * the following function: {@link #pushVariablesToServer(Runnable)} will only work if the app is in development mode and user is set as test in CT Dashboard
+     * @return boolean
+     */
+    boolean isInDevelopmentMode(){
+        return CTVariables.isInDevelopmentMode();
+    }
+
+    /**
+     *  This flag indicates whether or not the SDK is still in process of receiving a response
+     *  from the server. <br>
+     */
+    boolean isVariableResponseReceived(){
+        return CTVariables.isVariableResponseReceived();
+    }
+
+    /**
+     * get current value of a particular variable.
+     */
+    <T> Var<T> getVariable(String name) {
+        return CTVariables.getVariable(name);
+    }
+
+
+    /**
+     * Api call to add VariablesChangedHandler
+     * @param handler VariablesChangedHandler
+     */
+    public static void addVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
+        CTVariables.addVariablesChangedHandler(handler);
+    }
+
+    /**
+     * Api call to add OneTimeVariablesChangedHandler
+     * @param handler VariablesChangedHandler
+     */
+    public static void addOneTimeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
+        CTVariables.addOneTimeVariablesChangedHandler(handler);
+    }
+
+    /**
+     * Api call to remove VariablesChangedHandler
+     * @param handler VariablesChangedHandler
+     */
+    public static void removeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
+        CTVariables.removeVariablesChangedHandler(handler);
+    }
+
+    /**
+     * Api call to remove OneTimeVariablesChangedHandler
+     * @param handler VariablesChangedHandler
+     */
+    public static void removeOneTimeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
+        CTVariables.removeOneTimeVariablesChangedHandler(handler);
+    }
+
+    /**
+     * Api call to remove all VariablesChangedHandlers
+     */
+    public static void removeAllVariablesChangedHandler() {
+        CTVariables.removeAllVariablesChangedHandler();
+    }
+
+    /**
+     * Api call to remove all OneTimeVariablesChangedHandlers
+     */
+    public static void removeAllOneTimeVariablesChangedHandler() {
+        CTVariables.removeAllOneTimeVariablesChangedHandler();
+    }
+
+
+
+    @Discouraged(message = "will be removed. only open for testing. this should be only called internally") //todo replace with ct flow
+    void setContext(Context context) {
+        CTVariables.setVariableContext(context);
+    }
+
+    @Discouraged(message = "will be removed. only open for testing. this should be only called internally") //todo replace with ct flow
+    synchronized void init(){CTVariables.init();}
+
+    /**
+     * clear current variable data.can be used during profile switch
+     */
+    @Discouraged(message = "will be removed. only open for testing. this should be only called internally") //todo replace with ct flow
+    public static void clearUserContent() {
+        CTVariables.clearUserContent();
+    }
+
+
+
+
+    @Discouraged(message = "will be removed. only open for testing.")
+    public static void onAppLaunchFail(){
+        CTVariables.handleVariableResponse(null);
+    }
+
+
+
+    /**
+     * This api is used to Force push the variables defined in code to server. This api will only
+     * work if App is in development mode and user is marked as test user on the CT Dashboard
+     * @param onComplete : a runnable to perform something once the api request is complete
+     */
+    @Discouraged(message = "Be Very careful when calling this api. This should only be called in debug mode")
+    public static void pushVariablesToServer(Runnable onComplete) {
+        CTVariables.pushVariablesToServer(onComplete);
+    }
+
+
 }

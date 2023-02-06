@@ -256,6 +256,7 @@ public interface Constants {
     String LOG_TAG_PRODUCT_CONFIG = "Product Config : ";
     int FETCH_TYPE_PC = 0;
     int FETCH_TYPE_FF = 1;
+    int FETCH_TYPE_VARIABLES = 4;
     String LOG_TAG_SIGNED_CALL = "SignedCall : ";
     String LOG_TAG_GEOFENCES = "Geofences : ";
     // error message codes

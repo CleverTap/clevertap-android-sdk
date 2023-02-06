@@ -44,6 +44,9 @@ public class BaseResponse extends CleverTapResponseDecorator {
             // in app
             cleverTapResponse.processResponse(response, responseStr, context);
 
+            // CT Variables //todo should be only called once testing is done //ensure that this is called for applaunched/wzrk_fetch only
+            //CTVariables.handleVariableResponse(jsonBody);
+
             try {
                 localDataStore.syncWithUpstream(context, response);
             } catch (Throwable t) {
@@ -51,6 +54,10 @@ public class BaseResponse extends CleverTapResponseDecorator {
             }
 
         } catch (Throwable t) {
+
+            // CT Variables //todo should be only called once testing is done
+            //CTVariables.handleVariableResponse(null);
+
             networkManager.incrementResponseFailureCount();
             logger.verbose(config.getAccountId(), "Problem process send queue response", t);
         }

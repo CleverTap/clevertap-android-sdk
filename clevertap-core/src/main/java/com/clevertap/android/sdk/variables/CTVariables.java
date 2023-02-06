@@ -3,7 +3,6 @@ package com.clevertap.android.sdk.variables;
 
 import android.content.Context;
 
-import androidx.annotation.Discouraged;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
@@ -25,7 +24,7 @@ import java.util.Map;
  * Package Private class to not allow external access to working of Variables
  * @author Ansh Sachdeva
  */
-class CTVariables {
+public class CTVariables {
 
     private static final ArrayList<VariablesChangedCallback> variablesChangedHandlers = new ArrayList<>();
     private static final ArrayList<VariablesChangedCallback> oneTimeVariablesChangedHandlers = new ArrayList<>();
@@ -43,7 +42,7 @@ class CTVariables {
 
 
     /** WORKING: <br>
-     * -2. CleverTapInstanceConfig calls {@link CTVariables#setContext(Context)} <br><br>
+     * -2. CleverTapInstanceConfig calls {@link CTVariables#setVariableContext(Context)} <br><br>
      * -1. User Calls  {@link Parser#parseVariables} or {@link Parser#parseVariablesForClasses} which creates a {@link Var} instance and ends up calling {@link VarCache#registerVariable(Var)} which sets : <br><br>
      *      *** {@link VarCache#vars} to mapOf(varname -> Var("varname",..) ) <br><br>
      *      *** {@link VarCache#valuesFromClient}  to mapOf("varNameG"->"varNameL"->value) (check VarCache.registerVariable()) and <br><br>
@@ -64,7 +63,7 @@ class CTVariables {
      * -- else we call {@link VarCache#loadDiffsAndTriggerHandlers()} to set data from cache again
      * @param response JSONObject
      */
-    static void handleVariableResponse(@Nullable final JSONObject response) {
+    public static void handleVariableResponse(@Nullable final JSONObject response) {
         setVariableResponseReceived(true);
 
         boolean jsonHasVariableData = response!=null && true; //check if response was successful, like response.data!=null //todo add logic as per backend response structure
@@ -99,7 +98,9 @@ class CTVariables {
     }
 
 
-    /** check {@link CTVariablesPublic#clearUserContent()} for more info*/
+    /**
+     * clear current variable data.can be used during profile switch
+     */
     public static void clearUserContent() {
         VarCache.clearUserContent();
     }
@@ -185,7 +186,7 @@ class CTVariables {
     /**
      * sets Context
      * */
-    public static void setContext(Context context) {
+    public static void setVariableContext(Context context) {
         CTVariables.context = context;
     }
 
@@ -207,7 +208,6 @@ class CTVariables {
      * originally <a href="https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/internal/LeanplumInternal.java#L705">LeanplumInternal.setHasStarted(started)</a> <br><br>
      * This is set to : <br>
      * - true, when SDK receives a response for Variable data (in {@link #handleVariableResponse}) (The function is  always triggerred, even when api fails) <br> <br>
-     * - (in testing. for now, ignore this statement) false, whenever the request for new Variable data is again triggered, i.e in {@link CTVariablesPublic#fetchVariables()}
      *
      * <br>
      * <br>
