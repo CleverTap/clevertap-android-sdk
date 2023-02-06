@@ -2,13 +2,15 @@ package com.clevertap.demo
 
 import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.clevertap.android.sdk.*
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.FakeServer
+import com.clevertap.android.sdk.variables.FakeServer.Companion.ResposnseType.VARS1_VARSCODE
+import com.clevertap.android.sdk.variables.FakeServer.Companion.ResposnseType.VARS2_VARSCODE
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
 import com.clevertap.demo.databinding.ActivityTestBinding
@@ -27,7 +29,6 @@ import kotlin.concurrent.thread
 class TestActivity : AppCompatActivity() {
     val binding :ActivityTestBinding by lazy { ActivityTestBinding.inflate(layoutInflater) }
 
-    private lateinit var ct:CleverTapAPI;
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
@@ -35,16 +36,26 @@ class TestActivity : AppCompatActivity() {
         with(binding){
             btCheckLocalWithApiFailure.setOnClickListener(::checkLocalValuesAfterApiFailure)
             btCheckLocal.setOnClickListener(::checkLocalValues)
-            btInit.setOnClickListener(::onAppLaunchClick)
+            btInit.setOnClickListener(this@TestActivity::init)
             btForceSync.setOnClickListener(::onForceSyncClick)
-            btrequestFromServer.setOnClickListener(::onForceRequestFromServer)
+            btrequestFromServer.setOnClickListener(::wzrkFetch)
         }
-        ct = CleverTapAPI.getDefaultInstance(this)!!
     }
 
     private fun checkLocalValuesAfterApiFailure(view: View?) {
-        CTVariables.removeAllVariablesChangedHandler()
-        CTVariables.removeAllOneTimeVariablesChangedHandler()
+
+        Parser.parseVariablesForClasses(TestMyVars::class.java) //user's  will do this in Application#onCreate before super.onCreate()
+        attachListeners() //user's  will do this at any point of time. for now, assuming its done in Application#onCreate before super.onCreate()
+
+        CTVariables.setVariableContext(this)// ActivityLifeCycleManager will do this. for assuming its done in Application#onCreate after super.onCreate()
+        CTVariables.init()  // ActivityLifeCycleManager will do this. for assuming its done in Application#onCreate after super.onCreate()
+        CTVariables.handleVariableResponse(null) // BaseResponse#processResponse will do this once data is available
+
+    }
+
+    var hasAttachedListenrs = false
+    private fun attachListeners() {
+        if(hasAttachedListenrs) return
         CTVariables.addVariablesChangedHandler(object : VariablesChangedCallback(){
             override fun variablesChanged() {
                 binding.tvTerminalWithGlobalListenerMultiple.text = ("CALLED BY <multi,failure> variablesChanged()\n${getVarsString()}")
@@ -57,14 +68,7 @@ class TestActivity : AppCompatActivity() {
                 flashTextView(binding.tvTerminalWithGlobalListenerOneTime)
             }
         })
-
-        // user will do this before app.onCreate
-        CTVariables.setVariableContext(this)
-        Parser.parseVariablesForClasses(TestMyVars::class.java)
-
-        // user will do this after app.onCreate or in activity.onCreate
-        CTVariables.init()
-        CTVariables.handleVariableResponse(null)
+        hasAttachedListenrs = true
     }
 
     private fun checkLocalValues(view: View?) {
@@ -72,46 +76,26 @@ class TestActivity : AppCompatActivity() {
         flashTextView(binding.tvTerminalValueOnDemand)
     }
 
-    private fun onAppLaunchClick(view: View?) {
-        // user will do this before app.onCreate
-        //CTVariables.setContext(this)
-        //Parser.parseVariablesForClasses(TestMyVars::class.java)
-
-        // user will do this after app.onCreate or in activity.onCreate
-
-        CTVariables.removeAllVariablesChangedHandler()
-        CTVariables.removeAllOneTimeVariablesChangedHandler()
-        CTVariables.addVariablesChangedHandler(object : VariablesChangedCallback(){
-            override fun variablesChanged() {
-                binding.tvTerminalWithGlobalListenerMultiple.text = ("CALLED BY <multi> variablesChanged()\n${getVarsString()}")
-                flashTextView(binding.tvTerminalWithGlobalListenerMultiple)
-            }
-        })
-        CTVariables.addOneTimeVariablesChangedHandler( object :VariablesChangedCallback(){
-            override fun variablesChanged() {
-                binding.tvTerminalWithGlobalListenerOneTime.text = ("CALLED BY <onetime> variablesChanged()\n${getVarsString()}")
-                flashTextView(binding.tvTerminalWithGlobalListenerOneTime)
-            }
-        })
-
-        Parser.parseVariablesForClasses(TestMyVars::class.java)
-        ActivityLifecycleCallback.register(this.application)
-
-        // user will do this before app.onCreate
-        CTVariables.setVariableContext(this)
-
-
+    private fun init(view: View?) {
         // user will do this after app.onCreate or in activity.onCreate
         CTVariables.init()
 
         //---- remove once done ---
-        fakeServerRequestForData()
+
+
+
+        Parser.parseVariablesForClasses(TestMyVars::class.java) //user's  will do this in Application#onCreate before super.onCreate()
+        attachListeners() //user's  will do this at any point of time. for now, assuming its done in Application#onCreate before super.onCreate()
+
+        CTVariables.setVariableContext(this)// ActivityLifeCycleManager will do this. for assuming its done in Application#onCreate after super.onCreate()
+        CTVariables.init()  // ActivityLifeCycleManager will do this. for assuming its done in Application#onCreate after super.onCreate()
+        fakeServerRequestForData() // similar to calling app launched  once sdk is iniitalised . its response via  BaseResponse#processResponse  will call CTVariables.handleVariableResponse(jsonObject)
 
 
     }
 
     private fun fakeServerRequestForData() {
-        Logger.v("requesting data from server")
+        Log.v("TAG","requesting data from server")
         FakeServer.simulateBERequest { jsonObject: JSONObject? ->
             CTVariables.handleVariableResponse(jsonObject)
         }
@@ -119,8 +103,8 @@ class TestActivity : AppCompatActivity() {
 
 
     var toggle= true
-    private fun onForceRequestFromServer(view: View?) {
-        FakeServer.expectedBackendData = if(toggle)FakeServer.Companion.ResposnseType.VARS2_VARSCODE else FakeServer.Companion.ResposnseType.VARS1_VARSCODE
+    private fun wzrkFetch(view: View?) {
+        FakeServer.expectedBackendData = if(toggle) VARS2_VARSCODE else VARS1_VARSCODE
         toggle = !toggle
         fakeServerRequestForData()
         toast("requesting data from server...")
