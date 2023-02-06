@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.variables;
 
+import android.content.Context;
+
 import androidx.annotation.Discouraged;
 import androidx.annotation.NonNull;
 
@@ -13,6 +15,21 @@ import com.clevertap.android.sdk.feat_variable.callbacks.VariablesChangedCallbac
 
 
 public class CTVariablesPublic {
+
+
+    @Discouraged(message = "Should be only called by internal apis")
+    public static void setContext(Context context) {
+        CTVariables.setContext(context);
+    }
+
+    @Discouraged(message = "should be only called internally")
+    public static synchronized void init(){CTVariables.init();}
+
+    @Discouraged(message = "should be only called internally")
+    public static void onAppLaunchFail(){
+        CTVariables.handleVariableResponse(null);
+    }
+
 
     /**
      * Check if your app is in development mode. <br>

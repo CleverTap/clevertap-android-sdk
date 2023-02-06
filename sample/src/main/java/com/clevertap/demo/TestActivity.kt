@@ -8,7 +8,6 @@ import android.widget.TextView
 import android.widget.Toast
 import com.clevertap.android.sdk.ActivityLifecycleCallback
 import com.clevertap.android.sdk.variables.CTVariablesPublic
-import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.FakeServer
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
@@ -56,12 +55,12 @@ class TestActivity : AppCompatActivity() {
         })
 
         // user will do this before app.onCreate
-        CTVariables.setContext(this)
+        CTVariablesPublic.setContext(this)
         Parser.parseVariablesForClasses(TestMyVars::class.java)
 
         // user will do this after app.onCreate or in activity.onCreate
-        CTVariables.init()
-        CTVariables.onAppLaunchFail()
+        CTVariablesPublic.init()
+        CTVariablesPublic.onAppLaunchFail()
     }
 
     private fun checkLocalValues(view: View?) {
@@ -95,11 +94,11 @@ class TestActivity : AppCompatActivity() {
         ActivityLifecycleCallback.register(this.application)
 
         // user will do this before app.onCreate
-        CTVariables.setContext(this)
+        CTVariablesPublic.setContext(this)
 
 
         // user will do this after app.onCreate or in activity.onCreate
-        CTVariables.init()
+        CTVariablesPublic.init()
         CTVariablesPublic.fetchVariables()
 
 

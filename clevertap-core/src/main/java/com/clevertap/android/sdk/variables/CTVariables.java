@@ -1,8 +1,6 @@
 package com.clevertap.android.sdk.variables;
 
 
-import static com.clevertap.android.sdk.Constants.APP_LAUNCHED_EVENT;
-
 import android.content.Context;
 
 import androidx.annotation.Discouraged;
@@ -22,12 +20,12 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.Map;
 
-//todo : make class as package-private and functions/vars as  either package-private or just private . currently being accessed by TestActivity
 
 /**
  * Package Private class to not allow external access to working of Variables
+ * @author Ansh Sachdeva
  */
-public class CTVariables {
+class CTVariables {
 
     private static final ArrayList<VariablesChangedCallback> variablesChangedHandlers = new ArrayList<>();
     private static final ArrayList<VariablesChangedCallback> oneTimeVariablesChangedHandlers = new ArrayList<>();
@@ -36,57 +34,7 @@ public class CTVariables {
     public static final String VARS = "vars";
 
 
-    /**
-     * required by {@link VarCache#loadDiffs()} and {@link VarCache#saveDiffs()} to
-     * get/store data from/to SharedPreferences.
-     * @return context
-     */
-    @Nullable
-    public static Context getContext() {
-        if (context == null) {
-            Logger.v("Your application context is not set. You should call CTVariablesInternal.setApplicationContext(this) or CTActivityHelper.enableLifecycleCallbacks(this) in your application's onCreate method, or have your application extend CleverTapApplication.");
-        }
-        return context;
-    }
-
-    /**
-     * sets Context
-     * */
-    @Discouraged(message = "Should be only called by internal apis")
-    public static void setContext(Context context) {
-        CTVariables.context = context;
-    }
-
-    /**
-     *  originally <a href="https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/Leanplum.java#L1195">Leanplum.hasStarted()</a> <br>
-     *  This flag indicates whether or not the SDK is still in process of receiving a response
-     *  from the server. <br>
-     *  This is used to print warnings in logs (see {@link Var#warnIfNotStarted()},
-     *  and prevent listeners from triggering ( see {@link Var#update()} and {@link Var#addValueChangedHandler(VariableCallback)}
-     *  <br>
-     *  <br>
-     * @return value of {@link #variableResponseReceived  }
-     */
-    public static Boolean isVariableResponseReceived(){
-        return variableResponseReceived;
-    }
-
-    /**
-     * originally <a href="https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/internal/LeanplumInternal.java#L705">LeanplumInternal.setHasStarted(started)</a> <br><br>
-     * This is set to : <br>
-     * - true, when SDK receives a response for Variable data (in {@link #handleVariableResponse}) (The function is  always triggerred, even when api fails) <br> <br>
-     * - (in testing. for now, ignore this statement) false, whenever the request for new Variable data is again triggered, i.e in {@link CTVariablesPublic#fetchVariables()}
-     *
-     * <br>
-     * <br>
-     * @param responseReceived : a boolean to be set {@link #variableResponseReceived  }
-     */
-    public static void setVariableResponseReceived(boolean responseReceived){
-        variableResponseReceived = responseReceived; // might not be needed
-    }
-
-
-    /** check{@link CTVariablesPublic#getVariable(String)} for more info
+    /** get current value of a particular variable.
      * */
     public static <T> Var<T> getVariable(String name) {
         return VarCache.getVariable(name);
@@ -94,9 +42,7 @@ public class CTVariables {
 
 
 
-
-
-    /**
+    /** WORKING: <br>
      * -2. CleverTapInstanceConfig calls {@link CTVariables#setContext(Context)} <br><br>
      * -1. User Calls  {@link Parser#parseVariables} or {@link Parser#parseVariablesForClasses} which creates a {@link Var} instance and ends up calling {@link VarCache#registerVariable(Var)} which sets : <br><br>
      *      *** {@link VarCache#vars} to mapOf(varname -> Var("varname",..) ) <br><br>
@@ -107,7 +53,6 @@ public class CTVariables {
      *      *** {@link VarCache#loadDiffs()} : this loads the last cached values of Variables from Shared Preferences, and updates {@link VarCache#diffs} & {@link VarCache#merged} accordingly <br><br>
      *  Note that user's callbacks are *not* triggered during init call
      */
-    @Discouraged(message = "should be only called internally")
     public static synchronized void init(){
         VarCache.setCacheUpdateBlock(CTVariables::triggerVariablesChanged);
         VarCache.loadDiffs();
@@ -158,8 +103,6 @@ public class CTVariables {
     public static void clearUserContent() {
         VarCache.clearUserContent();
     }
-
-
 
     public static void pushVariablesToServer(Runnable onComplete) {
         VarCache.pushVariablesToServer(onComplete);
@@ -226,9 +169,54 @@ public class CTVariables {
         }
     }
 
-    public static void onAppLaunchFail(){
-        handleVariableResponse(null);
+    /**
+     * required by {@link VarCache#loadDiffs()} and {@link VarCache#saveDiffs()} to
+     * get/store data from/to SharedPreferences.
+     * @return context
+     */
+    @Nullable
+    public static Context getContext() {
+        if (context == null) {
+            Logger.v("Your application context is not set. You should call CTVariablesInternal.setApplicationContext(this) or CTActivityHelper.enableLifecycleCallbacks(this) in your application's onCreate method, or have your application extend CleverTapApplication.");
+        }
+        return context;
     }
+
+    /**
+     * sets Context
+     * */
+    public static void setContext(Context context) {
+        CTVariables.context = context;
+    }
+
+    /**
+     *  originally <a href="https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/Leanplum.java#L1195">Leanplum.hasStarted()</a> <br>
+     *  This flag indicates whether or not the SDK is still in process of receiving a response
+     *  from the server. <br>
+     *  This is used to print warnings in logs (see {@link Var#warnIfNotStarted()},
+     *  and prevent listeners from triggering ( see {@link Var#update()} and {@link Var#addValueChangedHandler(VariableCallback)}
+     *  <br>
+     *  <br>
+     * @return value of {@link #variableResponseReceived  }
+     */
+    public static Boolean isVariableResponseReceived(){
+        return variableResponseReceived;
+    }
+
+    /**
+     * originally <a href="https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/internal/LeanplumInternal.java#L705">LeanplumInternal.setHasStarted(started)</a> <br><br>
+     * This is set to : <br>
+     * - true, when SDK receives a response for Variable data (in {@link #handleVariableResponse}) (The function is  always triggerred, even when api fails) <br> <br>
+     * - (in testing. for now, ignore this statement) false, whenever the request for new Variable data is again triggered, i.e in {@link CTVariablesPublic#fetchVariables()}
+     *
+     * <br>
+     * <br>
+     * @param responseReceived : a boolean to be set {@link #variableResponseReceived  }
+     */
+    public static void setVariableResponseReceived(boolean responseReceived){
+        variableResponseReceived = responseReceived; // might not be needed
+    }
+
 
 }
 
