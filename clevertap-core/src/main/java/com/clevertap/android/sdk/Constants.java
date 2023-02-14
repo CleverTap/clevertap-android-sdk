@@ -111,7 +111,7 @@ public interface Constants {
     String WZRK_ACCT_ID_KEY = "wzrk_acct_id";
     String WZRK_FROM = "CTPushNotificationReceiver";
     String NETWORK_INFO = "NetworkInfo";
-    String PRIMARY_DOMAIN = "wzrkt.com";
+    String PRIMARY_DOMAIN = "clevertap-prod.com";
     String KEY_DOMAIN_NAME = "comms_dmn";
     String SPIKY_KEY_DOMAIN_NAME = "comms_dmn_spiky";
     String HEADER_DOMAIN_NAME = "X-WZRK-RD";
