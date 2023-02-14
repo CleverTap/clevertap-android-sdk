@@ -28,6 +28,8 @@ import androidx.annotation.VisibleForTesting;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.variables.callbacks.CacheUpdateBlock;
 
+import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -209,10 +211,8 @@ class VarCache {
     //will force upload vars from valuesFromClient[g] and  defaultKinds[g] map to server
     public static void pushVariablesToServer(Runnable callback) {
         if (CTVariables.isInDevelopmentMode()) {
-            HashMap<String, Object> params = new HashMap<>();
-            params.put("vars", CTVariableUtils.toJson(valuesFromClient));
-            params.put("kinds", CTVariableUtils.toJson(defaultKinds));
-            Logger.v("params="+params);
+            JSONObject varsJson = CTVariableUtils.getVarsJson(valuesFromClient,defaultKinds);
+            Logger.v("varsJson=\n"+varsJson);
             FakeServer.sendVariables(jsonObject -> {
                 callback.run();
                 return kotlin.Unit.INSTANCE;

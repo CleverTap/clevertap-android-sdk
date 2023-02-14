@@ -388,4 +388,30 @@ public final class CTVariableUtils {
     }
 
 
+    public static JSONObject getVarsJson(Map<String, Object> values, Map<String, String> kinds) {
+        Logger.v( "getVarsJson() called with: values = [" + values + "], kinds = [" + kinds + "]");
+       try {
+           JSONObject resultJson = new JSONObject();
+           resultJson.put("type","varsPayload");
+
+           JSONObject vars = new JSONObject();
+           for (String varname:values.keySet()) {
+               /*
+                  todo :need to handle map values (kind=group)
+                   this code will send maps as {mapname:{type:group,value:"{x:1,y:2,...}"}}, while the
+                   backend expects response as { mapname.x :{type:int,value:1} , mapname.y:{type:int,value:2} }
+               */
+               JSONObject varData = new JSONObject();
+               varData.put("kind",kinds.get(varname));
+               varData.put("value",values.get(varname));
+               vars.put(varname,varData);
+           }
+           resultJson.put("vars",vars);
+           return resultJson;
+       }
+       catch (Throwable t){
+           t.printStackTrace();
+           return new JSONObject();
+       }
+    }
 }
