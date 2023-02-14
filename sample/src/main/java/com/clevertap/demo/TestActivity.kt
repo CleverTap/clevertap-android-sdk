@@ -32,6 +32,7 @@ class TestActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
+        FakeServer.ctx = this
 
         with(binding){
             btCheckLocalWithApiFailure.setOnClickListener(::checkLocalValuesAfterApiFailure)
@@ -77,14 +78,7 @@ class TestActivity : AppCompatActivity() {
     }
 
     private fun init(view: View?) {
-        // user will do this after app.onCreate or in activity.onCreate
-        CTVariables.init()
-
-        //---- remove once done ---
-
-
-
-        Parser.parseVariablesForClasses(TestMyVars::class.java) //user's  will do this in Application#onCreate before super.onCreate()
+        Parser.parseVariablesForClasses(TestMyVars::class.java) //user will do this in Application#onCreate before super.onCreate()
         attachListeners() //user's  will do this at any point of time. for now, assuming its done in Application#onCreate before super.onCreate()
 
         CTVariables.setVariableContext(this)// ActivityLifeCycleManager will do this. for assuming its done in Application#onCreate after super.onCreate()

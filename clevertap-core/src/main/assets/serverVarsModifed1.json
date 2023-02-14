@@ -1,0 +1,23 @@
+{
+  "welcomeMsg": "Hey@{mateeee}",
+  "isOptedForOffers": false,
+  "initialCoins": "100",
+  "correctGuessPercentage": "80",
+  "aiNames": {"[0]": "s1a", "[1]": "s1b", "[2]": "s1c"},
+
+  "userConfigurableProps": {
+    "numberOfGuesses": 5,
+    "difficultyLevel": 3.3,
+    "ai_Gender": "F",
+    "watchAddForAnotherGuess": true
+  },
+
+
+
+  "android.samsung.s22": 64999.99,
+  "android.samsung.s23": "Announced",
+  "android.nokia.6a": 5400.50,
+  "android.nokia.12": "Announced",
+  "apple.iphone15" : "Announced"
+
+}

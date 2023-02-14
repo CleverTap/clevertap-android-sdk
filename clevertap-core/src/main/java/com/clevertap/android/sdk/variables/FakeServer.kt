@@ -1,6 +1,8 @@
 package com.clevertap.android.sdk.variables
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.content.res.AssetManager
 import androidx.annotation.Discouraged
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
@@ -26,13 +28,31 @@ class FakeServer {
 
         var hasForcedPushedVariables = false
 
+        var ctx : Context? = null
 
+
+        fun getJson(number: Int): JSONObject {
+            fun AssetManager.readAssetsFile(fileName : String): String = open(fileName).bufferedReader().use{it.readText()}
+            val ctx = ctx ?: return JSONObject()
+
+            val name = when(number){
+                0 -> "codeVarsFromServer.json"
+                1-> "serverVarsModifed1.json"
+                2 -> "serverVarsModifed2.json"
+                3 -> "codeVarsFromServer2.json"
+
+                else -> "codeVarsFromServer.json"
+            }
+            val jsonStr= ctx.assets.readAssetsFile(name)
+            return JSONObject(jsonStr)
+
+        }
 
         @JvmStatic
         fun simulateBERequest(onResponse:(JSONObject)->Unit){
-            val codeVarsFromServer = JSONObject("{\"welcomeMsg\":\"HelloUser\",\"correctGuessPercentage\":50,\"initialCoins\":45,\"isOptedForOffers\":true,\"aiNames\":[\"don2\",\"jason2\",\"shiela2\",\"may2\"],\"userConfigurableProps\":{\"difficultyLevel\":1.8,\"ai_Gender\":\"F\",\"numberOfGuesses\":10},\"android\":{\"nokia\":{\"12\":\"UnReleased\",\"6a\":6400},\"samsung\":{\"s22\":54999.99,\"s23\":\"UnReleased\"}},\"apple\":{\"iphone15\":\"UnReleased\"}}")
-            val vars1 = JSONObject("{\"aiNames\":{\"[0]\":\"s1a\",\"[1]\":\"s1b\",\"[2]\":\"s1c\"},\"userConfigurableProps\":{\"difficultyLevel\":3.3,\"ai_Gender\":\"F\",\"numberOfGuesses\":5,\"watchAddForAnotherGuess\":true},\"correctGuessPercentage\":\"80\",\"initialCoins\":\"100\",\"isOptedForOffers\":false,\"android\":{\"samsung\":{\"s22\":65000}},\"welcomeMsg\":\"Hey@{mateeee}\"}")
-            val vars2 = JSONObject("{\"aiNames\":{\"[0]\":\"s2a\",\"[1]\":\"s2b\",\"[2]\":\"s2c\"},\"userConfigurableProps\":{\"difficultyLevel\":6.6,\"ai_Gender\":\"X\",\"numberOfGuesses\":25,\"watchAddForAnotherGuess\":true},\"correctGuessPercentage\":\"90\",\"initialCoins\":\"80\",\"isOptedForOffers\":true,\"android\":{\"samsung\":{\"s22\":85000}},\"welcomeMsg\":\"Hey from server\"}")
+            val codeVarsFromServer = getJson(0)
+            val vars1 = getJson(1)
+            val vars2 = getJson(2)
 
             val resp = JSONObject()
             val (finalVars,finalVarsFromCode) = when(expectedBackendData){
@@ -73,3 +93,53 @@ class FakeServer {
     }
 
 }
+/*
+
+
+  "android": {
+    "samsung": {
+      "s22": 54999.99,
+      "s23": "UnReleased"
+    },
+    "nokia": {
+      "6a": 6400,
+      "12": "UnReleased"
+    }
+
+  },
+  "apple": {
+    "iphone15": "UnReleased"
+  }
+
+"android": {
+    "samsung": {
+      "s22": 64999.99,
+      "s23": "Announced"
+    },
+    "nokia": {
+      "6a": 6000,
+      "12": "UnReleased"
+    }
+
+  },
+  "apple": {
+    "iphone15": "Announced"
+  }
+
+//-----
+
+"android": {
+    "samsung": {
+      "s22": 34999.99,
+      "s23": "Unlisted"
+    },
+    "nokia": {
+      "6a": 8000,
+      "12": "Unlisted"
+    }
+
+  },
+  "apple": {
+    "iphone15": "Unlisted"
+  }
+* */

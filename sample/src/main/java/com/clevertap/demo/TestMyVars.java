@@ -1,5 +1,6 @@
 package com.clevertap.demo;
 
+import com.clevertap.android.sdk.variables.FakeServer;
 import com.clevertap.android.sdk.variables.annotations.Variable;
 
 import org.json.JSONException;
@@ -35,17 +36,11 @@ public class TestMyVars {
 
 
     public static JSONObject getUpdatedJSon(){
-        try {
-            welcomeMsg = "whyuser";
-            initialCoins = 42;
-            correctGuessPercentage = 21.4f;
-             JSONObject j = new JSONObject(
-                     "{\"welcomeMsg\":\"whyuser\",\"correctGuessPercentage\":21.4,\"initialCoins\":42,\"isOptedForOffers\":true,\"aiNames\":[\"don2\",\"jason2\",\"shiela2\"],\"userConfigurableProps\":{\"difficultyLevel\":1.8,\"ai_Gender\":\"F\",\"numberOfGuesses\":10},\"android\":{\"nokia\":{\"12\":\"UnReleased\",\"6a\":6400},\"samsung\":{\"s22\":54999.99,\"s23\":\"UnReleased\"}},\"apple\":{\"iphone15\":\"UnReleased\"}}"
-             );
-            return j;
-        } catch (JSONException e) {
-            return null;
-        }
+        welcomeMsg = "whyuser";
+        initialCoins = 42;
+        correctGuessPercentage = 21.4f;
+        JSONObject j = FakeServer.Companion.getJson(3);
+        return j;
 
 
     }

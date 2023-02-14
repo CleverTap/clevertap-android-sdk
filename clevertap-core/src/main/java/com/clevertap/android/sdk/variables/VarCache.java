@@ -135,6 +135,7 @@ class VarCache {
             Logger.v("loadDiffs: variablesFromCache='"+variablesFromCache+"'");
 
             Map<String,Object> variablesAsMap = CTVariableUtils.fromJson(variablesFromCache);
+            //todo : concerning call^
             applyVariableDiffs(variablesAsMap);
 
         } catch (Exception e) {
@@ -167,7 +168,7 @@ class VarCache {
         String variablesCipher = CTVariableUtils.toJson(diffs); // aesContext.encrypt(CTVariableUtils.toJson(diffs));
         editor.putString(VARIABLES_KEY, variablesCipher);
 
-        CTVariableUtils.commitChanges(editor); // todo @ hristo since saveDiffs is called when api response is called, this means cache will never get update if  api fails?
+        CTVariableUtils.commitChanges(editor);
     }
 
     //will basically
@@ -211,7 +212,7 @@ class VarCache {
             HashMap<String, Object> params = new HashMap<>();
             params.put("vars", CTVariableUtils.toJson(valuesFromClient));
             params.put("kinds", CTVariableUtils.toJson(defaultKinds));
-            // todo : ct code to send to server // @piyush
+            Logger.v("params="+params);
             FakeServer.sendVariables(jsonObject -> {
                 callback.run();
                 return kotlin.Unit.INSTANCE;
