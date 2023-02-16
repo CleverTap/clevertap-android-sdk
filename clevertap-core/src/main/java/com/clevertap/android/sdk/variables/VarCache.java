@@ -19,14 +19,17 @@
  * under the License.
  */
 
-package com.clevertap.android.sdk.feat_variable;
+package com.clevertap.android.sdk.variables;
 
 import android.content.Context;
 import android.content.SharedPreferences;
 import androidx.annotation.VisibleForTesting;
+
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.feat_variable.callbacks.CacheUpdateBlock;
-import com.clevertap.android.sdk.feat_variable.utils.CTVariableUtils;
+import com.clevertap.android.sdk.variables.callbacks.CacheUpdateBlock;
+
+import org.json.JSONObject;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -127,44 +130,40 @@ public class VarCache {
     //will basically call applyVariableDiffs(..) with values stored in pref
     public static void loadDiffs() { //TODO:@Ansh preference access should be on a background thread
         // if CTVariables.hasSdkError we return w/o doing anything
-        if (CTVariables.hasSdkError) {
-            return;
-        }
         Context context = CTVariables.getContext();
 
-        if (context == null) {
-            return;
-        }
+        if(context==null){return;}
         SharedPreferences defaults = context.getSharedPreferences(LEANPLUM, Context.MODE_PRIVATE);
         try {
             String variablesFromCache = CTVariableUtils.getFromPreference(defaults, VARIABLES_KEY, "{}");
-            Logger.v("loadDiffs: variablesFromCache='" + variablesFromCache + "'");
+            Logger.v("loadDiffs: variablesFromCache='"+variablesFromCache+"'");
 
             Map<String,Object> variablesAsMap = CTVariableUtils.fromJson(variablesFromCache);
+            //todo : concerning call^
             applyVariableDiffs(variablesAsMap);
 
         } catch (Exception e) {
             Logger.v("Could not load variable diffs.\n" ,e);
         }
     }
-    public  static  void  loadDiffsAndTriggerHandlers(){
+
+    //same as loadiffs, but will also trigger one/multi time listeners
+    public static void loadDiffsAndTriggerHandlers() {
         loadDiffs();
         triggerHasReceivedDiffs();
     }
 
-    public  static  void  updateDiffs(Map<String, Object> diffs){
+    //same as loadiffs, but differs in 2 aspects: 1) instead of picking data from cache, it receives data as param and 2) it will also trigger one/mult time listeners
+    public  static  void updateDiffsAndTriggerHandlers(Map<String, Object> diffs){
         applyVariableDiffs(diffs);
         saveDiffs();
         triggerHasReceivedDiffs();
     }
 
     // saveDiffs() is opposite of loadDiffs() and will save diffs[g]  to cache
-    private static void saveDiffs() {//TODO:@Ansh make sure to call on bg thread
-        if (CTVariables.hasSdkError) {
-            return;
-        }
+    public static void saveDiffs() {//TODO:@Ansh make sure to call on bg thread
         Context context = CTVariables.getContext();
-        if (context == null) {
+        if(context==null){
             return;
         }
         SharedPreferences defaults = context.getSharedPreferences(LEANPLUM, Context.MODE_PRIVATE);
@@ -173,7 +172,7 @@ public class VarCache {
         String variablesCipher = CTVariableUtils.toJson(diffs); // aesContext.encrypt(CTVariableUtils.toJson(diffs));
         editor.putString(VARIABLES_KEY, variablesCipher);
 
-        CTVariableUtils.commitChanges(editor); // todo @ hristo since saveDiffs is called when api response is called, this means cache will never get update if  api fails?
+        CTVariableUtils.commitChanges(editor);
     }
 
     //will basically
@@ -214,10 +213,8 @@ public class VarCache {
     //will force upload vars from valuesFromClient[g] and  defaultKinds[g] map to server
     public static void pushVariablesToServer(Runnable callback) {
         if (CTVariables.isInDevelopmentMode()) {
-            HashMap<String, Object> params = new HashMap<>();
-            params.put("vars", CTVariableUtils.toJson(valuesFromClient));
-            params.put("kinds", CTVariableUtils.toJson(defaultKinds));
-            // todo : ct code to send to server // @piyush
+            JSONObject varsJson = CTVariableUtils.getVarsJson(valuesFromClient,defaultKinds);
+            Logger.v("varsJson=\n"+varsJson);
             FakeServer.sendVariables(jsonObject -> {
                 callback.run();
                 return kotlin.Unit.INSTANCE;

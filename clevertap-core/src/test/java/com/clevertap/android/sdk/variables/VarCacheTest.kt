@@ -1,7 +1,6 @@
-package com.clevertap.android.sdk.feat_variable
+package com.clevertap.android.sdk.variables
 
 
-import com.clevertap.android.sdk.feat_variable.utils.CTVariableUtils
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.Test
 import org.junit.runner.RunWith

@@ -1,0 +1,21 @@
+{
+  "welcomeMsg": "Hey from server",
+  "isOptedForOffers": true,
+  "initialCoins": "80",
+  "correctGuessPercentage": "90",
+  "aiNames": {"[0]": "s2a", "[1]": "s2b", "[2]": "s2c"},
+
+  "userConfigurableProps": {
+    "difficultyLevel": 6.6,
+    "ai_Gender": "X",
+    "numberOfGuesses": 25,
+    "watchAddForAnotherGuess": true
+  },
+
+  "android.samsung.s22": 34999.99,
+  "android.samsung.s23": "Unlisted",
+  "android.nokia.6a": 8000,
+  "android.nokia.12": "Unlisted",
+  "apple.iphone15" : "Unlisted"
+
+}

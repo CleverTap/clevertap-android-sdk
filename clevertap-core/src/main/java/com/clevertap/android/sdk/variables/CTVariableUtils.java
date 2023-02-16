@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.feat_variable.utils;
+package com.clevertap.android.sdk.variables;
 
 import android.content.SharedPreferences;
 import android.text.Editable;
@@ -7,7 +7,7 @@ import androidx.annotation.RestrictTo;
 
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
-import com.clevertap.android.sdk.feat_variable.CTVariables;
+import com.clevertap.android.sdk.variables.annotations.Variable;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -21,8 +21,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public final class CTVariableUtils {
@@ -223,9 +221,18 @@ public final class CTVariableUtils {
     }
 
 
-    // check test for more info
+    /**
+     * Originally this was used to split  the string generated from combining {@link  Variable#group()} &
+     * {@link  Variable#name()}  into array of strings, but now it returns
+     * just the string as array. This is because LP server would send/consume grouped variables as <br><br>
+     * <code>{"group1":{"group2":{"varname":"value"}}}</code> <br><br>
+     * and CT server would send/consume group variables as<br><br>
+     * <code>{"group1.group2.varname":"value"}</code>
+     *
+     * */
     public static String[] getNameComponents(String name) {
-        //Logger.v("getNameComponents() called with: name = [" + name + "]");
+        return new String[]{name};
+    /*
         final String NAME_COMPONENT_REGEX = "(?:[^\\.\\[.(\\\\]+|\\\\.)+";
         final Pattern NAME_COMPONENT_PATTERN = Pattern.compile(NAME_COMPONENT_REGEX);
         Matcher matcher = NAME_COMPONENT_PATTERN.matcher(name);
@@ -235,6 +242,7 @@ public final class CTVariableUtils {
         }
         //Logger.v("getNameComponents: returns components="+components);
         return components.toArray(new String[0]);
+    */
     }
 
 
@@ -380,4 +388,30 @@ public final class CTVariableUtils {
     }
 
 
+    public static JSONObject getVarsJson(Map<String, Object> values, Map<String, String> kinds) {
+        Logger.v( "getVarsJson() called with: values = [" + values + "], kinds = [" + kinds + "]");
+       try {
+           JSONObject resultJson = new JSONObject();
+           resultJson.put("type","varsPayload");
+
+           JSONObject vars = new JSONObject();
+           for (String varname:values.keySet()) {
+               /*
+                  todo :need to handle map values (kind=group)
+                   this code will send maps as {mapname:{type:group,value:"{x:1,y:2,...}"}}, while the
+                   backend expects response as { mapname.x :{type:int,value:1} , mapname.y:{type:int,value:2} }
+               */
+               JSONObject varData = new JSONObject();
+               varData.put("kind",kinds.get(varname));
+               varData.put("value",values.get(varname));
+               vars.put(varname,varData);
+           }
+           resultJson.put("vars",vars);
+           return resultJson;
+       }
+       catch (Throwable t){
+           t.printStackTrace();
+           return new JSONObject();
+       }
+    }
 }

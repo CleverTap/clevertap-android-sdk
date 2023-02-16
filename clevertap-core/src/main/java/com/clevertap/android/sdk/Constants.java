@@ -111,7 +111,7 @@ public interface Constants {
     String WZRK_ACCT_ID_KEY = "wzrk_acct_id";
     String WZRK_FROM = "CTPushNotificationReceiver";
     String NETWORK_INFO = "NetworkInfo";
-    String PRIMARY_DOMAIN = "wzrkt.com";
+    String PRIMARY_DOMAIN = "clevertap-prod.com";
     String KEY_DOMAIN_NAME = "comms_dmn";
     String SPIKY_KEY_DOMAIN_NAME = "comms_dmn_spiky";
     String HEADER_DOMAIN_NAME = "X-WZRK-RD";
@@ -256,6 +256,7 @@ public interface Constants {
     String LOG_TAG_PRODUCT_CONFIG = "Product Config : ";
     int FETCH_TYPE_PC = 0;
     int FETCH_TYPE_FF = 1;
+    int FETCH_TYPE_VARIABLES = 4;
     String LOG_TAG_SIGNED_CALL = "SignedCall : ";
     String LOG_TAG_GEOFENCES = "Geofences : ";
     // error message codes

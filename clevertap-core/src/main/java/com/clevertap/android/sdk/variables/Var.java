@@ -1,11 +1,15 @@
-package com.clevertap.android.sdk.feat_variable;
+package com.clevertap.android.sdk.variables;
 
 
 import android.text.TextUtils;
+import android.util.Log;
+
+import androidx.annotation.NonNull;
+
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
-import com.clevertap.android.sdk.feat_variable.callbacks.VariableCallback;
-import com.clevertap.android.sdk.feat_variable.utils.CTVariableUtils;
+import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +22,6 @@ import java.util.Map;
  * @author Ansh Sachdeva
  */
 public class Var<T> {
-    //constructor
     public Var() {}
 
     private String name;
@@ -28,105 +31,78 @@ public class Var<T> {
     private T defaultValue;
     private T value;
     private String kind;
-    private boolean hadStarted = false;// todo @hristo @darshan this seems dangerous as it will stop update() from working after 1sr call. should we remove it?
+    private boolean hadStarted = false;
     private final List<VariableCallback<T>> valueChangedHandlers = new ArrayList<>();
     private static boolean printedCallbackWarning;
-
-    public static final String RESOURCES_VARIABLE = "__Android Resources";
-//TODO @Ansh Are we gonna use this? if not, remove it and related code
-
-
-
-    /*<basic getter-setters>*/
-    @Override public String toString() {
-        return "Var(" + name + ","+value+")" ;
-    }
-    public String name() {
-        return name;
-    }
-    public String[] nameComponents() {
-        return nameComponents;
-    }
-    public String kind() {
-        return kind;
-    }
-    public T defaultValue() {
-        return defaultValue;
-    }
-    public T value() {
-        warnIfNotStarted();
-        return value;
-    }
-    public void addValueChangedHandler(VariableCallback<T> handler) {
-        if (handler == null) {
-            Logger.v( "Invalid handler parameter provided.");
-            return;
-        }
-
-        synchronized (valueChangedHandlers) {
-            valueChangedHandlers.add(handler);
-        }
-
-        // make sure the handler is called evenm after the value has been updated
-        if (CTVariables.variableResponseReceived()) {
-            handler.handle(this);
-        }
-    }
-    public void removeValueChangedHandler(VariableCallback<T> handler) {
-        synchronized (valueChangedHandlers) {
-            valueChangedHandlers.remove(handler);
-        }
-    }
-    public Number numberValue() {
-        warnIfNotStarted();
-        return numberValue;
-    }
-
-
 
     public static <T> Var<T> define(String name, T defaultValue) {
         String type = CTVariableUtils.kindFromValue(defaultValue);
         return define(name, defaultValue, type);
     }
 
-    // define<Double>("some_global_var_name",12.4,"float",null)
-    // define<String>("some_global_var_name2","hi","string",null)
-    // this is called by parser( via define( name, value,kind)) when parsing code define @Variable variables for the first time
+    /**
+     * creates a  {@link  Var} object from given params and calls {@link VarCache#registerVariable(Var)}
+     * @param name name of variable
+     * @param defaultValue value
+     * @param kind datatype as string
+     * @param <T> Type of the variable.
+     * @return instance of a {@link  Var} class
+     */
     public static <T> Var<T> define(String name, T defaultValue,String kind) {
-        //checks if name is correct . if correct continues or  returns null
+        Logger.v( "define() called with: name = [" + name + "], defaultValue = [" + defaultValue + "], kind = [" + kind + "]");
         if (TextUtils.isEmpty(name)) {
-            Logger.v("Empty name parameter provided.");
+            Logger.v("Empty name parameter provided. aborting define operation");
             return null;
         }
 
-        // checks if var exists  in  VarCache.getVariable(name) . if exists, then returns the var, otherwise continues .
         Var<T> existing = VarCache.getVariable(name);
-        Logger.v("current variable value for name='"+name+"' is : '"+existing+"'");
         if (existing != null) {
+            Logger.v("A variable exists for current field name. returning existing variable");
             return existing;
         }
 
-        // check if  name is not a special name. if either fails, then generates a log else continues // todo piyush : discuss our conditions for this check
-        if (!name.startsWith(RESOURCES_VARIABLE)) {
-            Logger.v("You should not create new variables after calling start (name=" + name + ")");
-        }
         Var<T> var = new Var<>();
         try {
             var.name = name;
-            var.nameComponents = CTVariableUtils.getNameComponents(name);// "group1.group2.name" -> ["group1","group2","name"]
+            var.nameComponents = CTVariableUtils.getNameComponents(name);
             var.defaultValue = defaultValue;
             var.value = defaultValue;
             var.kind = kind;
-
             var.cacheComputedValues();
-            VarCache.registerVariable(var);  // will put var in VarCache.vars , & update VarCache.valueFromClient , VarCache.defaultKinds
-
+            VarCache.registerVariable(var);
             var.update();
         } catch (Throwable t) {
             t.printStackTrace();
         }
         return var;
     }
+
+
+    /**
+     * updates the value in {@link #value} by getting the final merged value from
+     * {@link  VarCache#getMergedValueFromComponentArray(Object[])}
+     * optionally calls {@link #triggerValueChanged()}
+     */
+    public synchronized void update() {
+        Logger.v( "update() called");
+        T oldValue = value;
+        value = VarCache.getMergedValueFromComponentArray(nameComponents);
+        if (value == null && oldValue == null) {
+            return;
+        }
+        if (value != null && oldValue != null && value.equals(oldValue) && hadStarted) {
+            return;
+        }
+        cacheComputedValues();
+        if (CTVariables.isVariableResponseReceived()) {
+            hadStarted = true;
+            triggerValueChanged();
+        }
+        else {
+            Logger.v( "CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered");
+        }
+    }
+
 
 
     private void cacheComputedValues() {
@@ -149,7 +125,10 @@ public class Var<T> {
         }
     }
 
-    // values come from the server as Number type. so we type cast in here to the actual  java type accordingly  using the defaultValue's type
+    /**
+     * values come from the server as Number type. so we type cast in here to the actual
+     * java type accordingly  using the defaultValue's type
+     */
     private void modifyValue(Number src) {
         if (src == null)
             return;
@@ -183,34 +162,6 @@ public class Var<T> {
         }
     }
 
-    // updates the values of value[g] from cached value to server value  . called by VarCahe.applyVariableDiffs()
-    public synchronized void update() {
-        T oldValue = value;
-        value = VarCache.getMergedValueFromComponentArray(nameComponents);
-        Logger.v("update: value='"+value+"', oldValue='"+oldValue+"', hadStarted="+hadStarted);
-        if (value == null && oldValue == null) {
-            return;
-        }
-        if (value != null && oldValue != null && value.equals(oldValue)
-                && hadStarted) {//TODO:@Ansh remove oldValue != null check as not needed
-            return;
-        }
-        cacheComputedValues();
-        Logger.v("CTVariables.variableResponseReceived()="+CTVariables.variableResponseReceived());
-        if (CTVariables.variableResponseReceived()) {
-            hadStarted = true;
-            triggerValueChanged();
-        }
-    }
-
-    private void warnIfNotStarted() { //TODO:@Ansh change started related texts
-        if (!CTVariables.variableResponseReceived() && !printedCallbackWarning) {
-            Logger.v(
-                    "CleverTap hasn't finished retrieving values from the server. You should use a callback to make sure the value for "
-                            + name + " is ready. Otherwise, your app may not use the most up-to-date value.");
-            printedCallbackWarning = true;
-        }
-    }
 
     //triggers the user's callbacks of variable changing (VariableCallback)
     private void triggerValueChanged() {
@@ -239,6 +190,61 @@ public class Var<T> {
         return 0;
     }
 
+
+    @Override @NonNull
+    public String toString() {
+        return "Var(" + name + ","+value+")" ;
+    }
+
+    void warnIfNotStarted() {
+        if ( !CTVariables.isVariableResponseReceived() && !printedCallbackWarning) {
+            Logger.v( "CleverTap hasn't finished retrieving values from the server. You should use a callback to make sure the value for "+name+" is ready. Otherwise, your app may not use the most up-to-date value.");
+            printedCallbackWarning = true;
+        }
+    }
+
+    public String name() {
+        return name;
+    }
+    public String[] nameComponents() {
+        return nameComponents;
+    }
+    public String kind() {
+        return kind;
+    }
+    public T defaultValue() {
+        return defaultValue;
+    }
+    public T value() {
+        warnIfNotStarted();
+        return value;
+    }
+    public void addValueChangedHandler(VariableCallback<T> handler) {
+        if (handler == null) {
+            Logger.v( "Invalid handler parameter provided.");
+            return;
+        }
+
+        synchronized (valueChangedHandlers) {
+            valueChangedHandlers.add(handler);
+        }
+
+        if (CTVariables.isVariableResponseReceived()) {
+            handler.handle(this);
+        }
+        else {
+            Logger.v( "The added listener will get triggered once the values are successfully retrieved");
+        }
+    }
+    public void removeValueChangedHandler(VariableCallback<T> handler) {
+        synchronized (valueChangedHandlers) {
+            valueChangedHandlers.remove(handler);
+        }
+    }
+    public Number numberValue() {
+        warnIfNotStarted();
+        return numberValue;
+    }
     public String stringValue() {
         warnIfNotStarted();
         return stringValue;
