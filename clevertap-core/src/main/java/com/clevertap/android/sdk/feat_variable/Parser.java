@@ -22,11 +22,9 @@
 package com.clevertap.android.sdk.feat_variable;
 
 import android.text.TextUtils;
-
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.feat_variable.annotations.Variable;
 import com.clevertap.android.sdk.feat_variable.callbacks.VariableCallback;
-
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -95,7 +93,7 @@ public class Parser {
        */
       for (final Field field : fields) {
         String group = "", name = "";
-        boolean isFile = false;
+        boolean isFile = false; //TODO @Ansh no use of boolean, remove it and related code
         if (field.isAnnotationPresent(Variable.class)) {
           Variable annotation = field.getAnnotation(Variable.class);
           if(annotation!=null){

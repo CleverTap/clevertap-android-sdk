@@ -1,23 +1,19 @@
 package com.clevertap.android.sdk.feat_variable;
 
 import android.content.Context;
-
 import androidx.annotation.Discouraged;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RestrictTo;
-
 import com.clevertap.android.sdk.BuildConfig;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.feat_variable.callbacks.VariablesChangedCallback;
 import com.clevertap.android.sdk.feat_variable.utils.CTVariableUtils;
-
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import org.json.JSONObject;
 
 
 public class CTVariables {
@@ -45,7 +41,7 @@ public class CTVariables {
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
     public static Boolean variableResponseReceived(){ //originally hasStarted
         //its true if server response for "start" api is received.
-        return variableResponseReceived;
+        return variableResponseReceived;//TODO:@Ansh is variableResponseReceived and hasStarted same?
     }
 
     @RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)

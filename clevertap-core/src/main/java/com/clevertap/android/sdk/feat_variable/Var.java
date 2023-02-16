@@ -6,7 +6,6 @@ import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.feat_variable.callbacks.VariableCallback;
 import com.clevertap.android.sdk.feat_variable.utils.CTVariableUtils;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +31,9 @@ public class Var<T> {
     private boolean hadStarted = false;// todo @hristo @darshan this seems dangerous as it will stop update() from working after 1sr call. should we remove it?
     private final List<VariableCallback<T>> valueChangedHandlers = new ArrayList<>();
     private static boolean printedCallbackWarning;
+
     public static final String RESOURCES_VARIABLE = "__Android Resources";
+//TODO @Ansh Are we gonna use this? if not, remove it and related code
 
 
 
@@ -190,7 +191,8 @@ public class Var<T> {
         if (value == null && oldValue == null) {
             return;
         }
-        if (value != null && oldValue != null && value.equals(oldValue) && hadStarted) {
+        if (value != null && oldValue != null && value.equals(oldValue)
+                && hadStarted) {//TODO:@Ansh remove oldValue != null check as not needed
             return;
         }
         cacheComputedValues();
@@ -201,9 +203,11 @@ public class Var<T> {
         }
     }
 
-    private void warnIfNotStarted() {
-        if ( !CTVariables.variableResponseReceived() && !printedCallbackWarning) {
-            Logger.v( "CleverTap hasn't finished retrieving values from the server. You should use a callback to make sure the value for "+name+" is ready. Otherwise, your app may not use the most up-to-date value.");
+    private void warnIfNotStarted() { //TODO:@Ansh change started related texts
+        if (!CTVariables.variableResponseReceived() && !printedCallbackWarning) {
+            Logger.v(
+                    "CleverTap hasn't finished retrieving values from the server. You should use a callback to make sure the value for "
+                            + name + " is ready. Otherwise, your app may not use the most up-to-date value.");
             printedCallbackWarning = true;
         }
     }

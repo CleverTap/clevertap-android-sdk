@@ -24,11 +24,9 @@ package com.clevertap.android.sdk.feat_variable;
 import android.content.Context;
 import android.content.SharedPreferences;
 import androidx.annotation.VisibleForTesting;
-
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.feat_variable.callbacks.CacheUpdateBlock;
 import com.clevertap.android.sdk.feat_variable.utils.CTVariableUtils;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -39,8 +37,10 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author Ansh Sachdeva.
  */
 public class VarCache {
-    private static final String LEANPLUM = "__leanplum__";
-    public static final String VARIABLES_KEY = "__leanplum_variables";
+
+    private static final String LEANPLUM = "__leanplum__";//TODO:@Ansh  Can't we change to clevertap?
+
+    public static final String VARIABLES_KEY = "__leanplum_variables";//TODO:@Ansh  Can't we change to clevertap?
 
     /*
      * - gets set in init() and unset in reset()
@@ -125,16 +125,20 @@ public class VarCache {
     }
 
     //will basically call applyVariableDiffs(..) with values stored in pref
-    public static void loadDiffs() {
+    public static void loadDiffs() { //TODO:@Ansh preference access should be on a background thread
         // if CTVariables.hasSdkError we return w/o doing anything
-        if (CTVariables.hasSdkError) {return;}
+        if (CTVariables.hasSdkError) {
+            return;
+        }
         Context context = CTVariables.getContext();
 
-        if(context==null){return;}
+        if (context == null) {
+            return;
+        }
         SharedPreferences defaults = context.getSharedPreferences(LEANPLUM, Context.MODE_PRIVATE);
         try {
             String variablesFromCache = CTVariableUtils.getFromPreference(defaults, VARIABLES_KEY, "{}");
-            Logger.v("loadDiffs: variablesFromCache='"+variablesFromCache+"'");
+            Logger.v("loadDiffs: variablesFromCache='" + variablesFromCache + "'");
 
             Map<String,Object> variablesAsMap = CTVariableUtils.fromJson(variablesFromCache);
             applyVariableDiffs(variablesAsMap);
@@ -155,12 +159,12 @@ public class VarCache {
     }
 
     // saveDiffs() is opposite of loadDiffs() and will save diffs[g]  to cache
-    private static void saveDiffs() {
+    private static void saveDiffs() {//TODO:@Ansh make sure to call on bg thread
         if (CTVariables.hasSdkError) {
             return;
         }
         Context context = CTVariables.getContext();
-        if(context==null){
+        if (context == null) {
             return;
         }
         SharedPreferences defaults = context.getSharedPreferences(LEANPLUM, Context.MODE_PRIVATE);
