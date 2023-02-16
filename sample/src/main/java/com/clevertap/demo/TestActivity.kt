@@ -8,9 +8,8 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.clevertap.android.sdk.variables.CTVariables
-import com.clevertap.android.sdk.variables.FakeServer
-import com.clevertap.android.sdk.variables.FakeServer.Companion.ResposnseType.VARS1_VARSCODE
-import com.clevertap.android.sdk.variables.FakeServer.Companion.ResposnseType.VARS2_VARSCODE
+import com.clevertap.demo.FakeServer.Companion.ResposnseType.VARS1_VARSCODE
+import com.clevertap.demo.FakeServer.Companion.ResposnseType.VARS2_VARSCODE
 import com.clevertap.android.sdk.variables.Parser
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
 import com.clevertap.demo.databinding.ActivityTestBinding
@@ -107,7 +106,6 @@ class TestActivity : AppCompatActivity() {
 
 
     private fun onForceSyncClick(view: View?) {
-        FakeServer.localVarsJson = TestMyVars.getUpdatedJSon()
         CTVariables.pushVariablesToServer{}
     }
 

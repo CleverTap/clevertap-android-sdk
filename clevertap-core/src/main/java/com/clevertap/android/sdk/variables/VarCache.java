@@ -23,6 +23,7 @@ package com.clevertap.android.sdk.variables;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Handler;
 import androidx.annotation.VisibleForTesting;
 
 import com.clevertap.android.sdk.Logger;
@@ -210,17 +211,20 @@ class VarCache {
 
     //will force upload vars from valuesFromClient[g] and  defaultKinds[g] map to server
     public static void pushVariablesToServer(Runnable callback) {
+        Logger.v("pushVariablesToServer() called");
         if (CTVariables.isInDevelopmentMode()) {
-            JSONObject varsJson = CTVariableUtils.getVarsJson(valuesFromClient,defaultKinds);
-            Logger.v("varsJson=\n"+varsJson);
-            FakeServer.sendVariables(jsonObject -> {
-                callback.run();
-                return kotlin.Unit.INSTANCE;
-            });
-            //Request request = RequestBuilder.withSetVarsAction().andParams(params).andType(RequestType.IMMEDIATE).create();
-            //RequestSender.getInstance().send(request); ;
-        }
 
+            JSONObject varsJson = CTVariableUtils.getVarsJson(valuesFromClient,defaultKinds);
+            Logger.v("pushVariablesToServer: sending following vars info to server:"+varsJson);
+
+            //todo replace with server logic
+            Handler handler = new Handler();
+            handler.postDelayed(callback,2000);
+
+        }
+        else {
+            Logger.v("Since your app is NOT in development mode, vars data will not be sent to server");
+        }
     }
 
 

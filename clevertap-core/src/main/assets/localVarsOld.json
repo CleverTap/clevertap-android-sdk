@@ -3,7 +3,6 @@
   "isOptedForOffers": true,
   "initialCoins": 45,
   "correctGuessPercentage": 50.0,
-  "aiNames": ["don2", "jason2", "shiela2", "may2"],
 
   "userConfigurableProps": {
     "numberOfGuesses": 10,
@@ -12,9 +11,14 @@
   },
 
 
-  "android.samsung.s22": 54999.99,
-  "android.samsung.s23": "UnReleased",
-  "android.nokia.6a": 6400,
-  "android.nokia.12": "UnReleased",
-  "apple.iphone15" : "UnReleased"
+  "android": {
+    "samsung": {"s22": 54999.99, "s23": "UnReleased"},
+    "nokia": {"6a": 6400, "12": "UnReleased"}
+  },
+
+  "apple": {
+    "iphone15": "UnReleased"
+  },
+
+  "aiNames": ["don2", "jason2", "shiela2", "may2"]
 }

@@ -3,14 +3,11 @@
   "isOptedForOffers": true,
   "initialCoins": "80",
   "correctGuessPercentage": "90",
-  "aiNames": {"[0]": "s2a", "[1]": "s2b", "[2]": "s2c"},
 
-  "userConfigurableProps": {
-    "difficultyLevel": 6.6,
-    "ai_Gender": "X",
-    "numberOfGuesses": 25,
-    "watchAddForAnotherGuess": true
-  },
+  "userConfigurableProps.difficultyLevel": 6.6,
+  "userConfigurableProps.ai_Gender": "X",
+  "userConfigurableProps.numberOfGuesses": 25,
+  "userConfigurableProps.watchAddForAnotherGuess": true,
 
   "android.samsung.s22": 34999.99,
   "android.samsung.s23": "Unlisted",
