@@ -114,7 +114,7 @@
 
         <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
-            android:layout_height="130dp"
+            android:layout_height="230dp"
             android:fillViewport="true">
 
             <TextView
@@ -124,7 +124,7 @@
                 android:layout_margin="8dp"
                 android:background="#fff"
                 android:minHeight="50dp"
-                android:textSize="18sp" />
+                android:textSize="11sp" />
         </androidx.core.widget.NestedScrollView>
 
 
@@ -136,7 +136,7 @@
 
         <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
-            android:layout_height="130dp"
+            android:layout_height="230dp"
             android:fillViewport="true">
 
             <TextView
@@ -146,7 +146,7 @@
                 android:layout_margin="8dp"
                 android:background="#fff"
                 android:minHeight="50dp"
-                android:textSize="18sp" />
+                android:textSize="11sp" />
         </androidx.core.widget.NestedScrollView>
 
 
@@ -159,7 +159,7 @@
 
         <androidx.core.widget.NestedScrollView
             android:layout_width="match_parent"
-            android:layout_height="130dp"
+            android:layout_height="230dp"
             android:fillViewport="true">
 
             <TextView
@@ -168,7 +168,7 @@
                 android:layout_height="match_parent"
                 android:layout_margin="8dp"
                 android:background="#fff"
-                android:textSize="18sp" />
+                android:textSize="11sp" />
         </androidx.core.widget.NestedScrollView>
 
 
@@ -189,7 +189,7 @@
                 android:layout_margin="8dp"
                 android:background="#fff"
                 android:minHeight="50dp"
-                android:textSize="18sp" />
+                android:textSize="11sp" />
         </androidx.core.widget.NestedScrollView>
 
 

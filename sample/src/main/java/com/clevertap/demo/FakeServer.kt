@@ -1,4 +1,4 @@
-package com.clevertap.android.sdk.variables
+package com.clevertap.demo
 
 import android.annotation.SuppressLint
 import android.content.Context
@@ -6,7 +6,7 @@ import android.content.res.AssetManager
 import androidx.annotation.Discouraged
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
-import com.clevertap.android.sdk.variables.FakeServer.Companion.ResposnseType.*
+import com.clevertap.demo.FakeServer.Companion.ResposnseType.*
 import org.json.JSONObject
 import kotlin.concurrent.thread
 
@@ -21,7 +21,7 @@ class FakeServer {
             VARSLOCAL_VARSLOCAL,
         }
 
-        var expectedBackendData :ResposnseType = VARS1_VARSCODE
+        var expectedBackendData : ResposnseType = VARS1_VARSCODE
 
         var localVarsJson : JSONObject = JSONObject()
 
@@ -36,12 +36,12 @@ class FakeServer {
             val ctx = ctx ?: return JSONObject()
 
             val name = when(number){
-                0 -> "codeVarsFromServer.json"
-                1-> "serverVarsModifed1.json"
-                2 -> "serverVarsModifed2.json"
-                3 -> "codeVarsFromServer2.json"
+                0 -> "localVarsOld.json"
+                1-> "serverResponse1.json"
+                2 -> "serverResponse2.json"
+                3 -> "localVarsRequest.json"
 
-                else -> "codeVarsFromServer.json"
+                else -> "localVarsOld.json"
             }
             val jsonStr= ctx.assets.readAssetsFile(name)
             return JSONObject(jsonStr)
@@ -50,18 +50,16 @@ class FakeServer {
 
         @JvmStatic
         fun simulateBERequest(onResponse:(JSONObject)->Unit){
-            val codeVarsFromServer = getJson(0)
             val vars1 = getJson(1)
             val vars2 = getJson(2)
 
             val resp = JSONObject()
-            val (finalVars,finalVarsFromCode) = when(expectedBackendData){
-                VARS1_VARSCODE -> vars1 to (if (hasForcedPushedVariables) localVarsJson else codeVarsFromServer)
-                VARS2_VARSCODE -> vars2 to (if (hasForcedPushedVariables) localVarsJson else codeVarsFromServer)
-                VARSLOCAL_VARSLOCAL -> localVarsJson to localVarsJson
+            val finalVars = when(expectedBackendData){
+                VARS1_VARSCODE -> vars1
+                VARS2_VARSCODE -> vars2
+                VARSLOCAL_VARSLOCAL -> localVarsJson
             }
             resp.put("vars",finalVars)
-            resp.put("varsFromCode", finalVarsFromCode)
 
             thread {
                 Thread.sleep(2000)
@@ -74,16 +72,14 @@ class FakeServer {
         }
 
         @JvmStatic
-        fun sendVariables(onResponse:(JSONObject)->Unit){
+        fun sendVariables(requestData: JSONObject,onResponse: Runnable){
+            Logger.v("sendVariables() called with: requestData = $requestData, onResponse = $onResponse")
             hasForcedPushedVariables = true
-            val resp = localVarsJson
-
             thread {
                 Thread.sleep(2000)
                 Utils.runOnUiThread {
-                    Logger.v("request complete. sending data from server to handleStartResponse")
-                    Logger.v(resp.toString(2))
-                    onResponse.invoke(resp)
+                    Logger.v("request complete. sent data from sdk to server.")
+                    onResponse.run()
                 }
             }
         }

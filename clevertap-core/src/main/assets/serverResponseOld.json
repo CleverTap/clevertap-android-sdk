@@ -13,11 +13,12 @@
   },
 
 
+  "android": {
+    "samsung": {"s22": 64999.99, "s23": "Announced"},
+    "nokia": {"6a": 6000, "12": "UnReleased"}
+  },
 
-  "android.samsung.s22": 64999.99,
-  "android.samsung.s23": "Announced",
-  "android.nokia.6a": 5400.50,
-  "android.nokia.12": "Announced",
-  "apple.iphone15" : "Announced"
-
+  "apple": {
+    "iphone15": "Announced"
+  }
 }

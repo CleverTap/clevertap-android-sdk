@@ -7,7 +7,6 @@ import androidx.annotation.RestrictTo;
 
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
-import com.clevertap.android.sdk.variables.annotations.Variable;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -21,6 +20,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public final class CTVariableUtils {
@@ -55,11 +56,69 @@ public final class CTVariableUtils {
         }
     }
 
+    /**
+     *
+     *
+     * converts a map like following: <br>
+     * <code>
+     * &emsp;[<br>
+     * &emsp;&emsp;"android.samsung.s22" : 54000,<br>
+     * &emsp;&emsp;"android.samsung.s23" : "unreleased",<br>
+     *&emsp;&emsp;"welcomeMsg": "hello"<br>
+     * &emsp;]<br>
+     * </code>
+     * to: <br>
+     * <code>
+     * &emsp;[<br>
+     * &emsp;&emsp;"android": [<br>
+     * &emsp;&emsp;&emsp;&emsp;"samsung: ["s22": 54000, "s23" : "unreleased"]<br>
+     * &emsp;&emsp;],<br>
+     * &emsp;&emsp;"welcomeMsg" : "hello"<br>
+     * &emsp;]<br>
+     * </code>
+     * to support legacy parsing implementation <br>
+     **/
+    private static Map<String, Object> convertEntriesWithGroupedKeysToNestedMaps(Map<String, Object> map) {
+        Map<String, Object> result = new HashMap<>();
+
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            String key = entry.getKey();
+            if (key.contains(".")) {
+                String[] components = getNameComponents(key) ;
+                int namePosition = components.length - 1;
+                Map<String, Object> currentMap = result;
+
+                for (int i = 0; i < components.length; i++) {
+                    String component = components[i];
+                    if (i == namePosition) {
+                        currentMap.put(component, entry.getValue());
+                    } else {
+                        if (!currentMap.containsKey(component)) {
+                            Map<String, Object> nestedMap = new HashMap<String, Object>();
+                            currentMap.put(component, nestedMap);
+                            currentMap = nestedMap;
+                        } else {
+                            currentMap = (Map<String, Object>) currentMap.get(component);
+                        }
+                    }
+                }
+            } else {
+                result.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return result;
+    }
+
+
     // check test for more info
     public static Object mergeHelper(Object vars, Object diff) {
         //Logger.v( "mergeHelper() called with: vars = [" + vars + "], diff = [" + diff + "]");
         if (diff == null) {
             return vars;
+        }
+        if (diff instanceof Map) {
+            diff = convertEntriesWithGroupedKeysToNestedMaps(uncheckedCast(diff));
         }
         if (diff instanceof Number
                 || diff instanceof Boolean
@@ -222,27 +281,57 @@ public final class CTVariableUtils {
 
 
     /**
-     * Originally this was used to split  the string generated from combining {@link  Variable#group()} &
-     * {@link  Variable#name()}  into array of strings, but now it returns
-     * just the string as array. This is because LP server would send/consume grouped variables as <br><br>
-     * <code>{"group1":{"group2":{"varname":"value"}}}</code> <br><br>
-     * and CT server would send/consume group variables as<br><br>
-     * <code>{"group1.group2.varname":"value"}</code>
-     *
+     * converts a string of this format : "a.b.c" to  an array of strings, i.e ["a","b","c"]
      * */
     public static String[] getNameComponents(String name) {
-        return new String[]{name};
-    /*
-        final String NAME_COMPONENT_REGEX = "(?:[^\\.\\[.(\\\\]+|\\\\.)+";
-        final Pattern NAME_COMPONENT_PATTERN = Pattern.compile(NAME_COMPONENT_REGEX);
-        Matcher matcher = NAME_COMPONENT_PATTERN.matcher(name);
-        List<String> components = new ArrayList<>();
-        while (matcher.find()) {
-            components.add(name.substring(matcher.start(), matcher.end()));
+        try {
+            return name.split("\\.");
         }
-        //Logger.v("getNameComponents: returns components="+components);
-        return components.toArray(new String[0]);
-    */
+        catch (Throwable t){
+            t.printStackTrace();
+            return new String[]{};
+        }
+    }
+
+
+    /**
+     *
+     *
+     * converts a map like following: <br>
+     * <code>
+     * &emsp;[<br>
+     * &emsp;&emsp;"android": [<br><br>
+     * &emsp;&emsp;&emsp;&emsp;"samsung: [<br>
+     * &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;"s22": 54000, <br>
+     * &emsp;&emsp;&emsp;&emsp;&emsp;&emsp;"s23" : "unreleased"<br>
+     * &emsp;&emsp;&emsp;&emsp]<br>
+     * &emsp;&emsp;],<br><br>
+     * &emsp;&emsp;"welcomeMsg" : "hello"<br>
+     * &emsp;]<br>
+     * </code> <br><br>
+     * to: <br><br>
+     * <code>
+     * &emsp;[<br>
+     * &emsp;&emsp;"android.samsung.s22" : 54000,<br>
+     * &emsp;&emsp;"android.samsung.s23" : "unreleased",<br>
+     * &emsp;&emsp;"welcomeMsg": "hello"<br>
+     * &emsp;]<br>
+     * </code>
+
+
+     * -------------------------------------- <br>
+     * @author ChatGPT, Ansh Sachdeva
+     */
+    private static void flattenNestedMaps(String prefix, Map<String, Object> map, Map<String, Object> result) {
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            String key = entry.getKey();
+            Object value = entry.getValue();
+            if (value instanceof Map) {
+                flattenNestedMaps(prefix + key + ".", (Map<String, Object>) value, result);
+            } else {
+                result.put(prefix + key, value);
+            }
+        }
     }
 
 
@@ -389,22 +478,36 @@ public final class CTVariableUtils {
 
 
     public static JSONObject getVarsJson(Map<String, Object> values, Map<String, String> kinds) {
-        Logger.v( "getVarsJson() called with: values = [" + values + "], kinds = [" + kinds + "]");
        try {
            JSONObject resultJson = new JSONObject();
            resultJson.put("type","varsPayload");
 
            JSONObject vars = new JSONObject();
-           for (String varname:values.keySet()) {
-               /*
-                  todo :need to handle map values (kind=group)
-                   this code will send maps as {mapname:{type:group,value:"{x:1,y:2,...}"}}, while the
-                   backend expects response as { mapname.x :{type:int,value:1} , mapname.y:{type:int,value:2} }
-               */
-               JSONObject varData = new JSONObject();
-               varData.put("kind",kinds.get(varname));
-               varData.put("value",values.get(varname));
-               vars.put(varname,varData);
+           for (String valueKey:values.keySet()) {
+
+               String kind = kinds.get(valueKey);
+               Object value = values.get(valueKey);
+               if(value instanceof Map){
+                   Map<String,Object> valueMap = new HashMap<>();
+                   valueMap.put(valueKey,value);
+                   Map<String,Object> flattenedValueMap = new HashMap<>();
+                   flattenNestedMaps("",valueMap,flattenedValueMap);
+                   for (HashMap.Entry<String,Object> entry :flattenedValueMap.entrySet()) {
+                       String flattenedKey = entry.getKey();
+                       Object flattenedValue = entry.getValue();
+                       String flattenedValueKind = kindFromValue(flattenedValue);
+                       JSONObject varData = new JSONObject();
+                       varData.put("kind",flattenedValueKind);
+                       varData.put("value",flattenedValue);
+                       vars.put(flattenedKey,varData);
+                   }
+               }
+               else {
+                   JSONObject varData = new JSONObject();
+                   varData.put("kind",kind);
+                   varData.put("value",value);
+                   vars.put(valueKey,varData);
+               }
            }
            resultJson.put("vars",vars);
            return resultJson;

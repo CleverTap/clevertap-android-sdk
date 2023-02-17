@@ -1,9 +1,7 @@
 package com.clevertap.demo;
 
-import com.clevertap.android.sdk.variables.FakeServer;
 import com.clevertap.android.sdk.variables.annotations.Variable;
 
-import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
