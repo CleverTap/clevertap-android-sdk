@@ -22,7 +22,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
-
 import androidx.annotation.Discouraged;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -3039,111 +3038,155 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     /**
      * Check if your app is in development mode. <br>
-     * the following function: {@link #pushVariablesToServer(Runnable)} will only work if the app is in development mode and user is set as test in CT Dashboard
+     * the following function: {@link CTVariables#pushVariablesToServer(Runnable)} will only work if the app is in
+     * development mode and user is set as test in CT Dashboard
+     *
      * @return boolean
      */
-    boolean isInDevelopmentMode(){
+    boolean isInDevelopmentMode() {
         return CTVariables.isInDevelopmentMode();
     }
 
+    public void pushVariablesToServer(Runnable onComplete) {
+        coreState.getCTVariables().pushVariablesToServer(onComplete);
+    }
+
     /**
-     *  This flag indicates whether or not the SDK is still in process of receiving a response
-     *  from the server. <br>
+     * This flag indicates whether or not the SDK is still in process of receiving a response
+     * from the server. <br>
      */
-    boolean isVariableResponseReceived(){
-        return CTVariables.isVariableResponseReceived();
+    public boolean isVariableResponseReceived() {
+        return coreState.getCTVariables().isVariableResponseReceived();
     }
 
     /**
      * get current value of a particular variable.
      */
-    <T> Var<T> getVariable(String name) {
-        return CTVariables.getVariable(name);
+    public <T> Var<T> getVariable(String name) {
+        return coreState.getVarCache().getVariable(name);
     }
 
 
     /**
      * Api call to add VariablesChangedHandler
+     *
      * @param handler VariablesChangedHandler
      */
-    public static void addVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
-        CTVariables.addVariablesChangedHandler(handler);
+    public void addVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
+        coreState.getCTVariables().addVariablesChangedHandler(handler);
     }
 
     /**
      * Api call to add OneTimeVariablesChangedHandler
+     *
      * @param handler VariablesChangedHandler
      */
-    public static void addOneTimeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
-        CTVariables.addOneTimeVariablesChangedHandler(handler);
+    public void addOneTimeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
+        coreState.getCTVariables().addOneTimeVariablesChangedHandler(handler);
     }
 
     /**
      * Api call to remove VariablesChangedHandler
+     *
      * @param handler VariablesChangedHandler
      */
-    public static void removeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
-        CTVariables.removeVariablesChangedHandler(handler);
+    public void removeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
+        coreState.getCTVariables().removeVariablesChangedHandler(handler);
     }
 
     /**
      * Api call to remove OneTimeVariablesChangedHandler
+     *
      * @param handler VariablesChangedHandler
      */
-    public static void removeOneTimeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
-        CTVariables.removeOneTimeVariablesChangedHandler(handler);
+    public void removeOneTimeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
+        coreState.getCTVariables().removeOneTimeVariablesChangedHandler(handler);
     }
 
     /**
      * Api call to remove all VariablesChangedHandlers
      */
-    public static void removeAllVariablesChangedHandler() {
-        CTVariables.removeAllVariablesChangedHandler();
+    public void removeAllVariablesChangedHandler() {
+        coreState.getCTVariables().removeAllVariablesChangedHandler();
     }
 
     /**
      * Api call to remove all OneTimeVariablesChangedHandlers
      */
-    public static void removeAllOneTimeVariablesChangedHandler() {
-        CTVariables.removeAllOneTimeVariablesChangedHandler();
+    public void removeAllOneTimeVariablesChangedHandler() {
+        coreState.getCTVariables().removeAllOneTimeVariablesChangedHandler();
     }
 
 
 
-    @Discouraged(message = "will be removed. only open for testing. this should be only called internally") //todo replace with ct flow
+ /*   @Discouraged(message = "will be removed. only open for testing. this should be only called internally") //todo replace with ct flow
     void setContext(Context context) {
         CTVariables.setVariableContext(context);
-    }
+    }*/
 
-    @Discouraged(message = "will be removed. only open for testing. this should be only called internally") //todo replace with ct flow
-    synchronized void init(){CTVariables.init();}
+    @Discouraged(message = "will be removed. only open for testing. this should be only called internally")
+    //todo replace with ct flow
+    synchronized public void init(){coreState.getCTVariables().init();
+    }
 
     /**
      * clear current variable data.can be used during profile switch
      */
-    @Discouraged(message = "will be removed. only open for testing. this should be only called internally") //todo replace with ct flow
-    public static void clearUserContent() {
-        CTVariables.clearUserContent();
+    @Discouraged(message = "will be removed. only open for testing. this should be only called internally")
+    //todo replace with ct flow
+    public void clearUserContent() {
+        coreState.getCTVariables().clearUserContent();
     }
-
-
 
 
     @Discouraged(message = "will be removed. only open for testing.")
-    public static void onAppLaunchFail(){
-        CTVariables.handleVariableResponse(null);
+    public void onAppLaunchFail() {
+        coreState.getCTVariables().handleVariableResponse(null);
+    }
+
+    @Discouraged(message = "will be removed. only open for testing.")
+    public void onAppLaunchSuccess(JSONObject jsonObject) {
+        coreState.getCTVariables().handleVariableResponse(jsonObject);
     }
 
 
+    /**
+     * ======================== Variables API ===============================
+     */
+
+    public <T> Var<T> define(String name, T defaultValue) {
+        return Var.define(name, defaultValue, coreState.getVarCache(), coreState.getCTVariables());
+    }
+
+    public <T> Var<T> define(String name, T defaultValue, String kind) {
+        return Var.define(name, defaultValue, kind, coreState.getVarCache(), coreState.getCTVariables());
+    }
 
     /**
-     * This api is used to Force push the variables defined in code to server. This api will only
-     * work if App is in development mode and user is marked as test user on the CT Dashboard
-     * @param onComplete : a runnable to perform something once the api request is complete
+     * Forces content to update from the server. If variables have changed, the appropriate callbacks
+     * will fire. Use sparingly as if the app is updated, you'll have to deal with potentially
+     * inconsistent state or user experience.
+     *
+     * @param callback The callback to invoke when the call completes from the server. The callback
+     *                 will fire regardless of whether the variables have changed.
      */
     @Discouraged(message = "Be Very careful when calling this api. This should only be called in debug mode")
-    public static void pushVariablesToServer(Runnable onComplete) {
-        CTVariables.pushVariablesToServer(onComplete);
+    public void forceContentUpdate(VariablesChangedCallback callback) {
+      /*  if (CTVariables.isInDevelopmentMode()) {
+            JSONObject varsJson = CTVariableUtils.getVarsJson(valuesFromClient,defaultKinds);
+            Logger.v("varsJson=\n"+varsJson);
+            FakeServer.sendVariables(jsonObject -> {
+                callback.run();
+                return kotlin.Unit.INSTANCE;
+            });*/
+    }
+
+    public void parseVariables(Object... instances) {
+        coreState.getParser().parseVariables(instances);
+    }
+
+    public void parseVariablesForClasses(Class<?>... classes) {
+        coreState.getParser().parseVariablesForClasses(classes);
     }
 
 

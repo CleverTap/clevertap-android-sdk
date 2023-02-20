@@ -25,15 +25,12 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Handler;
 import androidx.annotation.VisibleForTesting;
-
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.variables.callbacks.CacheUpdateBlock;
-
-import org.json.JSONObject;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.json.JSONObject;
 
 /**
  * Variable cache.
@@ -52,44 +49,40 @@ public class VarCache {
      * - its function is implemented as CTVariables::triggerVariablesChanged()
      * - so whenever updateCache() is called,triggerVariablesChanged() is called which basically triggers users' listeners
      * */
-    private static CacheUpdateBlock updateBlock;
+    private CacheUpdateBlock updateBlock;
 
     /*
      *
      * */
     @VisibleForTesting
-    public static final Map<String, Object> valuesFromClient = new HashMap<>();
+    public final Map<String, Object> valuesFromClient = new HashMap<>();
 
     /*
      *
      * */
     @VisibleForTesting
-    public static final Map<String, Var<?>> vars = new ConcurrentHashMap<>();
+    public final Map<String, Var<?>> vars = new ConcurrentHashMap<>();
 
     /*
      *
      * */
     @VisibleForTesting
-    public static final Map<String, String> defaultKinds = new HashMap<>();
+    public final Map<String, String> defaultKinds = new HashMap<>();
 
     /*
      *
      * */
     @VisibleForTesting
-    public static Map<String, Object> diffs = new HashMap<>();
+    public Map<String, Object> diffs = new HashMap<>();
 
     /*
      *
      * */
     @VisibleForTesting
-    public static Object merged;
+    public Object merged;
 
 
-
-
-    private static boolean hasReceivedDiffs = false;
-
-
+    private boolean hasReceivedDiffs = false;
 
 
     // v: Var("group1.myVariable",12.4,"float") -> unit
@@ -101,26 +94,26 @@ public class VarCache {
     //     for kinds[g] it will simply change from mapOf() to mapOf("group1.myVariable": "float")
     //     for valuesFromClient, it will changed from mapOf() to mapOf("group1":mapOf('myvariable':12.4))
     //    for every next value added, the internal maps of valuesFromClient will get updated accordingly
-    public static void registerVariable(Var<?> var) {
+    public void registerVariable(Var<?> var) {
         vars.put(var.name(), var);
         synchronized (valuesFromClient) {
-            CTVariableUtils.updateValuesAndKinds(var.name(), var.nameComponents(), var.defaultValue(), var.kind(), valuesFromClient, defaultKinds);
+            CTVariableUtils.updateValuesAndKinds(var.name(), var.nameComponents(), var.defaultValue(), var.kind(),
+                    valuesFromClient, defaultKinds);
         }
     }
-
 
 
     //components:["group1","myVariable"]
     //----
     //basically calls getMergedValueFromComponentArray(components,merged[g] or valuesFromClient[g]) and returns its value
-    public static <T> T getMergedValueFromComponentArray(Object[] components) {
+    public <T> T getMergedValueFromComponentArray(Object[] components) {
         return getMergedValueFromComponentArray(components, merged != null ? merged : valuesFromClient);
     }
 
     //components : ["group1","myVariable"]  , values : merged[g] or valuesFromClient[g]
     // will basically set values(i.e merged[g] or valuesFromClient[g]) to mapOf("group1"to mapOf('myVariable' to 12.4))
     @VisibleForTesting
-    public static <T> T getMergedValueFromComponentArray(Object[] components, Object values) {
+    public <T> T getMergedValueFromComponentArray(Object[] components, Object values) {
         Object mergedPtr = values;
         for (Object component : components) {
             mergedPtr = CTVariableUtils.traverse(mergedPtr, component, false);
@@ -129,17 +122,18 @@ public class VarCache {
     }
 
     //will basically call applyVariableDiffs(..) with values stored in pref
-    public static void loadDiffs() { //TODO:@Ansh preference access should be on a background thread
+    public void loadDiffs(Context context) { //TODO:@Ansh preference access should be on a background thread
         // if CTVariables.hasSdkError we return w/o doing anything
-        Context context = CTVariables.getContext();
 
-        if(context==null){return;}
+        if (context == null) {
+            return;
+        }
         SharedPreferences defaults = context.getSharedPreferences(LEANPLUM, Context.MODE_PRIVATE);
         try {
             String variablesFromCache = CTVariableUtils.getFromPreference(defaults, VARIABLES_KEY, "{}");
-            Logger.v("loadDiffs: variablesFromCache='"+variablesFromCache+"'");
+            Logger.v("loadDiffs: variablesFromCache='" + variablesFromCache + "'");
 
-            Map<String,Object> variablesAsMap = CTVariableUtils.fromJson(variablesFromCache);
+            Map<String, Object> variablesAsMap = CTVariableUtils.fromJson(variablesFromCache);
             //todo : concerning call^
             applyVariableDiffs(variablesAsMap);
 
@@ -149,22 +143,21 @@ public class VarCache {
     }
 
     //same as loadiffs, but will also trigger one/multi time listeners
-    public static void loadDiffsAndTriggerHandlers() {
-        loadDiffs();
+    public void loadDiffsAndTriggerHandlers(final Context context) {
+        loadDiffs(context);
         triggerHasReceivedDiffs();
     }
 
     //same as loadiffs, but differs in 2 aspects: 1) instead of picking data from cache, it receives data as param and 2) it will also trigger one/mult time listeners
-    public  static  void updateDiffsAndTriggerHandlers(Map<String, Object> diffs){
+    public void updateDiffsAndTriggerHandlers(Map<String, Object> diffs, final Context context) {
         applyVariableDiffs(diffs);
-        saveDiffs();
+        saveDiffs(context);
         triggerHasReceivedDiffs();
     }
 
     // saveDiffs() is opposite of loadDiffs() and will save diffs[g]  to cache
-    public static void saveDiffs() {//TODO:@Ansh make sure to call on bg thread
-        Context context = CTVariables.getContext();
-        if(context==null){
+    public void saveDiffs(Context context) {//TODO:@Ansh make sure to call on bg thread
+        if (context == null) {
             return;
         }
         SharedPreferences defaults = context.getSharedPreferences(LEANPLUM, Context.MODE_PRIVATE);
@@ -181,12 +174,12 @@ public class VarCache {
     // (2.) call computeMergedDictionary()
     // (3.) call var.update() for every var in vars[g]
     // (4.)  if silent is false,  call saveDiffs() and triggerHasReceivedDiffs()
-    private static void applyVariableDiffs(Map<String, Object> diffs) {
-        Logger.v( "applyVariableDiffs() called with: diffs = [" + diffs + "]");
+    private void applyVariableDiffs(Map<String, Object> diffs) {
+        Logger.v("applyVariableDiffs() called with: diffs = [" + diffs + "]");
         if (diffs != null) {
             synchronized (valuesFromClient) {
-                VarCache.diffs = diffs;
-                merged = CTVariableUtils.mergeHelper(valuesFromClient, VarCache.diffs);
+                this.diffs = diffs;
+                merged = CTVariableUtils.mergeHelper(valuesFromClient, this.diffs);
             }
             // Update variables with new values. Have to copy the dictionary because a
             // dictionary variable may add a new sub-variable, modifying the variable dictionary.
@@ -203,7 +196,7 @@ public class VarCache {
 
     //will simply  set hasReceivedDiffs[g] = true; and call updateBlock[g].updateCache() which further triggers the callbacks set by user for listening to variables update
     @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
-    public static void triggerHasReceivedDiffs() {
+    public void triggerHasReceivedDiffs() {
         // update block is a callback registered by CTVariables to trigger user's callback once the diffs are changed
         hasReceivedDiffs = true;
         if (updateBlock != null) {
@@ -212,16 +205,16 @@ public class VarCache {
     }
 
     //will force upload vars from valuesFromClient[g] and  defaultKinds[g] map to server
-    public static void pushVariablesToServer(Runnable callback) {
+    public void pushVariablesToServer(Runnable callback) {
         Logger.v("pushVariablesToServer() called");
         if (CTVariables.isInDevelopmentMode()) {
 
-            JSONObject varsJson = CTVariableUtils.getVarsJson(valuesFromClient,defaultKinds);
-            Logger.v("pushVariablesToServer: sending following vars info to server:"+varsJson);
+            JSONObject varsJson = CTVariableUtils.getVarsJson(valuesFromClient, defaultKinds);
+            Logger.v("pushVariablesToServer: sending following vars info to server:" + varsJson);
 
             //todo replace with server logic
             Handler handler = new Handler();
-            handler.postDelayed(callback,2000);
+            handler.postDelayed(callback, 2000);
 
         }
         else {
@@ -231,7 +224,7 @@ public class VarCache {
 
 
     // will reset few global variables
-    public static void clearUserContent() {
+    public void clearUserContent() {
         //devModeValuesFromServer = null;
         diffs.clear();
         merged = null;
@@ -240,7 +233,7 @@ public class VarCache {
 
 
     // will reset a lot of global variables
-    public static void reset() {
+    public void reset() {
         defaultKinds.clear();
         //devModeValuesFromServer = null;
         diffs.clear();
@@ -252,24 +245,24 @@ public class VarCache {
     }
 
 
-
-
     //public static void setDevModeValuesFromServer(Map<String, Object> values) {
     //    devModeValuesFromServer = values;
     //}
     //public static boolean sendContentIfChanged() {..}
-    public static <T> Var<T> getVariable(String name) {
+    public <T> Var<T> getVariable(String name) {
         return (Var<T>) vars.get(name);
     }
 
 
-    public static void setCacheUpdateBlock(CacheUpdateBlock block) {
+    public void setCacheUpdateBlock(CacheUpdateBlock block) {
         updateBlock = block;
     }
-    public static Map<String, Object> getDiffs() {
+
+    public Map<String, Object> getDiffs() {
         return diffs;
     }
-    public static boolean hasReceivedDiffs() {
+
+    public boolean hasReceivedDiffs() {
         return hasReceivedDiffs;
     }
 }

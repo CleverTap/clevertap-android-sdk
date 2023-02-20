@@ -22,11 +22,9 @@
 package com.clevertap.android.sdk.variables;
 
 import android.text.TextUtils;
-
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.variables.annotations.Variable;
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
-
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.util.List;
@@ -40,13 +38,22 @@ import java.util.Map;
  */
 public class Parser {
 
+  private final CTVariables ctVariables;
+
+  private final VarCache varCache;
+
+  public Parser(final VarCache varCache, final CTVariables ctVariables) {
+    this.varCache = varCache;
+    this.ctVariables = ctVariables;
+  }
+
   /**
    * Parses annotations for all given object instances(eg, if variables are defined in
    * Activity class, then Parser.parseVariables(activityObj) can be called).
    *
-   *  @param instances Objects of a class
+   * @param instances Objects of a class
    */
-  public static void parseVariables(Object... instances) {
+  public void parseVariables(Object... instances) {
     try {
       for (Object instance : instances) {
         parseVariablesHelper(instance, instance.getClass());
@@ -61,7 +68,7 @@ public class Parser {
    * separate 'MyVariables' class, then Parser.parseVariablesForClasses(MyVariables.class) can be
    * called)
    */
-  public static void parseVariablesForClasses(Class<?>... classes) {
+  public void parseVariablesForClasses(Class<?>... classes) {
     try {
       for (Class<?> clazz : classes) {
         parseVariablesHelper(null, clazz);
@@ -78,11 +85,10 @@ public class Parser {
    * For each field defined in the class (i.e clazz instance) with @{@link Variable} annotation, this function
    * calls {@link #defineVariable(Object, String, Object, String, Field)} , where:
    *
-   *
    * @param instance object of a class
-   * @param clazz class instance of a class
+   * @param clazz    class instance of a class
    */
-  private static void parseVariablesHelper(Object instance, Class<?> clazz) {
+  private void parseVariablesHelper(Object instance, Class<?> clazz) {
 
     try {
       Field[] fields = clazz.getFields();
@@ -92,7 +98,7 @@ public class Parser {
         boolean isFile = false; //TODO @Ansh no use of boolean, remove it and related code
         if (field.isAnnotationPresent(Variable.class)) {
           Variable annotation = field.getAnnotation(Variable.class);
-          if(annotation!=null){
+          if (annotation!=null){
             group = annotation.group();
             name = annotation.name();
           }
@@ -158,19 +164,20 @@ public class Parser {
 
 
   /**
-   * This function simply calls {@link Var#define(String, Object, String)} and attached a variable
+   * This function simply calls {@link Var#define(String, Object, String, VarCache, CTVariables)} and attached a
+   * variable
    * update listener. When variable update listener is called, it sets the values in the field with
    * new data using reflection.
    *
    * @param instance obj of a class
-   * @param name name of the field from class
-   * @param value  value of the field
-   * @param kind a string representing the type of field
-   * @param field instance of field itself
+   * @param name     name of the field from class
+   * @param value    value of the field
+   * @param kind     a string representing the type of field
+   * @param field    instance of field itself
    */
-  private static <T> void defineVariable(final Object instance, String name, T value, String kind, final Field field) {
+  private <T> void defineVariable(final Object instance, String name, T value, String kind, final Field field) {
     // we first call var.define(..) with field name, value and kind
-    final Var<T> var = Var.define(name, value, kind);
+    final Var<T> var = Var.define(name, value, kind, varCache, ctVariables);
     if (var == null) {
       Logger.v("Something went wrong, var is null, returning");
       return;
