@@ -2,16 +2,15 @@ package com.clevertap.android.sdk.variables.utils
 
 import com.clevertap.android.sdk.variables.CTVariableUtils
 import com.clevertap.android.shared.test.BaseTestCase
-import org.junit.Assert
+import org.junit.*
 import org.junit.Assert.*
-import org.junit.Test
-import org.junit.runner.RunWith
+import org.junit.runner.*
 import org.robolectric.RobolectricTestRunner
 import java.util.*
-import kotlin.collections.HashMap
 
 @RunWith(RobolectricTestRunner::class)
-class CTVariableUtilsTest:BaseTestCase() {
+class CTVariableUtilsTest : BaseTestCase() {
+
     @Test
     fun test_mergeHelper() {
         // inputs 'vars' : a hashmap  and 'diffs' :a hashmap | output : a new hashmap 'res'
@@ -23,13 +22,13 @@ class CTVariableUtilsTest:BaseTestCase() {
         //          res[key] = diff[key]!=null ? diff[key] : vars[key]   <--imp
 
         val vars1 = hashMapOf("k1" to 20, "k2" to "hi", "k3" to true, "k4" to 4.3)
-        val diffs1 = hashMapOf("k1" to 21, "k3" to false , "k4" to 4.8)
-        val res1 = CTVariableUtils.mergeHelper(vars1,diffs1)
+        val diffs1 = hashMapOf("k1" to 21, "k3" to false, "k4" to 4.8)
+        val res1 = CTVariableUtils.mergeHelper(vars1, diffs1)
         println("CTVariableUtils.mergeHelper(vars,diffs) --> $res1")
 
-        assertTrue(res1 is HashMap<*,*>)
-        (res1 as HashMap<*,*>).entries.forEach {
-            assertEquals(diffs1[it.key]?:vars1[it.key],it.value)
+        assertTrue(res1 is HashMap<*, *>)
+        (res1 as HashMap<*, *>).entries.forEach {
+            assertEquals(diffs1[it.key] ?: vars1[it.key], it.value)
         }
 
         // case 2 : when entries of vars  is a map with string-object pairs
@@ -53,29 +52,30 @@ class CTVariableUtilsTest:BaseTestCase() {
             "k1" to listOf(1, "bye", true), // list changing
             "k2" to hashMapOf("m1" to 1, "m2" to "hello", "m3" to false), //map not changing
             "k3" to hashMapOf("m1" to 2, "m2" to "bye", "m3" to true),// map changing
-            "k4" to hashMapOf("m1" to 2, "m3" to true,"m4" to "new key"),// map changing and adding new items while removing old items
+            "k4" to hashMapOf(
+                "m1" to 2,
+                "m3" to true,
+                "m4" to "new key"
+            ),// map changing and adding new items while removing old items
         )
-        val res2 = CTVariableUtils.mergeHelper(vars2,diffs2)
+        val res2 = CTVariableUtils.mergeHelper(vars2, diffs2)
         println(" res2 CTVariableUtils.mergeHelper(vars,diffs) --> $res2")
-
     }
 
-
-
     /*
-         summary :
-         it will either return the value of key from the collection, or empty map if key
-         is not in  collection; and it will also add the empty map against
-         that key in collection
+        summary :
+        it will either return the value of key from the collection, or empty map if key
+        is not in  collection; and it will also add the empty map against
+        that key in collection
 
-         eg :
-         c1: traverse(mapOf("key" to 1234) , "key" , true/false) ->   1234
-         c2: traverse(mapOf("key" to 1234) , "unknownKey" , true) ->  hashMap() | also,changes collection to : mapOf("key" to 1234, "unknownKey" to hashMap())
-         c3: traverse(mapOf("key" to 1234) , "unknownKey" , false) ->  null
-         c4: traverse(listOf(1234,5678,1111,null),2, true/false) ->  1111
-         c5: traverse(listOf(1234,5678,1111,null),3, true) -> hashMap() | also changes collection to : listOf(1234,5678,1111,hashMap() )
-         c6: traverse(listOf(1234,5678,1111,null),3, false) -> null()
-     */
+        eg :
+        c1: traverse(mapOf("key" to 1234) , "key" , true/false) ->   1234
+        c2: traverse(mapOf("key" to 1234) , "unknownKey" , true) ->  hashMap() | also,changes collection to : mapOf("key" to 1234, "unknownKey" to hashMap())
+        c3: traverse(mapOf("key" to 1234) , "unknownKey" , false) ->  null
+        c4: traverse(listOf(1234,5678,1111,null),2, true/false) ->  1111
+        c5: traverse(listOf(1234,5678,1111,null),3, true) -> hashMap() | also changes collection to : listOf(1234,5678,1111,hashMap() )
+        c6: traverse(listOf(1234,5678,1111,null),3, false) -> null()
+    */
     @Test
     fun test_traverse1() {
         val collection = mutableListOf("a",1.2,'c',24,false)
@@ -239,5 +239,162 @@ class CTVariableUtilsTest:BaseTestCase() {
 
     @Test
     fun test_toJson() {
+    }
+
+    @Test
+    fun `test mergeHelper with null diff`() {
+        val vars = mapOf("a" to 1, "b" to 2)
+        val result = mergeHelper(vars, null)
+        assertEquals(vars, result)
+    }
+
+    @Test
+    fun `test mergeHelper with primitives`() {
+        val vars = "hello"
+        val diff = 42
+        val result = mergeHelper(vars, diff)
+        assertEquals(diff, result)
+    }
+
+    @Test
+    fun `test mergeHelper with arrays`() {
+        val vars = listOf("hello", "world")
+        val diff = mapOf("[0]" to "foo", "[1]" to "bar")
+        val result = mergeHelper(vars, diff)
+        assertEquals(listOf("foo", "bar"), result)
+    }
+
+    @Test
+    fun `test mergeHelper with dictionaries`() {
+        val vars = mapOf("a" to 1, "b" to 2)
+        val diff = mapOf("b" to 42, "c" to 3)
+        val result = mergeHelper(vars, diff)
+        assertEquals(mapOf("a" to 1, "b" to 42, "c" to 3), result)
+    }
+
+    @Test
+    fun testMergeHelper1() {
+        //Test Case 5
+        val map1 = mapOf("Key1" to "Value1", "Key2" to "Value2")
+        val map2 = mapOf("Key1" to "Value3", "Key3" to "Value3")
+        val result = mergeHelper(map1, map2)
+        assertTrue(result is Map<*, *>)
+        val resultMap = result as Map<*, *>
+        assertEquals("Value3", resultMap["Key1"])
+        assertEquals("Value2", resultMap["Key2"])
+        assertEquals("Value3", resultMap["Key3"])
+    }
+
+    @Test
+    fun testMergeHelper2() {
+        //Test Case 6
+        val vars = mapOf("key1" to "value1", "key2" to "value2")
+        val diff = "diff"
+        val expectedResult = "diff"
+
+        assertEquals(expectedResult, mergeHelper(vars, diff))
+    }
+
+    @Test
+    fun testMergeHelper3() {
+
+        //Test Case 7
+        val string1 = "Value1"
+        val string2 = "Value2"
+        val result = mergeHelper(string1, string2)
+        assertTrue(result is String)
+        assertEquals("Value2", result)
+    }
+
+    @Test
+    fun testMergeHelper4() {
+
+        //Test Case 8
+        val boolean1 = true
+        val boolean2 = false
+        val result = mergeHelper(boolean1, boolean2)
+        assertTrue(result is Boolean)
+        assertEquals(false, result)
+    }
+
+    @Test
+    fun testMergeHelper10() {
+        val vars = mapOf("key1" to "value1", "key2" to "value2")
+        val diff = 123
+        val expectedResult = 123
+
+        assertEquals(expectedResult, mergeHelper(vars, diff))
+    }
+
+    @Test
+    fun testMergeHelper5() {
+        val vars = mapOf("key1" to "value1", "key2" to "value2")
+        val diff = true
+        val expectedResult = true
+
+        assertEquals(expectedResult, mergeHelper(vars, diff))
+    }
+
+    @Test
+    fun testMergeHelper6() {
+        val vars = mapOf("key1" to "value1", "key2" to "value2")
+        val diff = 'A'
+        val expectedResult = 'A'
+
+        assertEquals(expectedResult, mergeHelper(vars, diff))
+    }
+
+    @Test
+    fun testMergeHelper7() {
+        val vars = listOf("value1", "value2")
+        val diff = mapOf("[0]" to "diff1", "[1]" to "diff2")
+        val expectedResult = listOf("diff1", "diff2")
+
+        assertEquals(expectedResult, mergeHelper(vars, diff))
+    }
+
+    @Test
+    fun testMergeHelper8() {
+        val vars = listOf("value1", "value2")
+        val diff = "diff"
+        val expectedResult = "diff"
+
+        assertEquals(expectedResult, mergeHelper(vars, diff))
+    }
+
+    @Test
+    fun testMergeHelper9() {
+        val vars = listOf("value1", "value2")
+        val diff = 123
+        val expectedResult = 123
+
+        assertEquals(expectedResult, mergeHelper(vars, diff))
+    }
+
+    @Test
+    fun `test merging arrays`() {
+        val vars = listOf("value1", "value2")
+        val diff = mapOf("[1]" to "newValue2", "[2]" to "value3")
+        val result = mergeHelper(vars, diff)
+        assertEquals(listOf("value1", "newValue2", "value3"), result)
+    }
+
+    @Test
+    fun `test mergeHelper with nested dictionaries`() {
+        val vars = mapOf(
+            "key1" to mapOf("key2" to 2, "key3" to 3),
+            "key4" to mapOf("key5" to 5, "key6" to 6)
+        )
+        val diff = mapOf(
+            "key1" to mapOf("key3" to 33, "key7" to 7),
+            "key4" to mapOf("key5" to 55)
+        )
+
+        val expected = mapOf(
+            "key1" to mapOf("key2" to 2, "key3" to 33, "key7" to 7),
+            "key4" to mapOf("key5" to 55, "key6" to 6)
+        )
+
+        assertEquals(expected, mergeHelper(vars, diff))
     }
 }

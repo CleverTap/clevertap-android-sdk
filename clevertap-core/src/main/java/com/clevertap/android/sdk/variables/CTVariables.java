@@ -2,43 +2,48 @@ package com.clevertap.android.sdk.variables;
 
 
 import android.content.Context;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
 import com.clevertap.android.sdk.BuildConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.variables.callbacks.CacheUpdateBlock;
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
-
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.Map;
+import org.json.JSONObject;
 
 
 /**
  * Package Private class to not allow external access to working of Variables
+ *
  * @author Ansh Sachdeva
  */
 public class CTVariables {
 
-    private static final ArrayList<VariablesChangedCallback> variablesChangedHandlers = new ArrayList<>();
-    private static final ArrayList<VariablesChangedCallback> oneTimeVariablesChangedHandlers = new ArrayList<>();
-    private static Context context;
-    private static boolean variableResponseReceived = false;
+    private final ArrayList<VariablesChangedCallback> variablesChangedHandlers = new ArrayList<>();
+
+    private final ArrayList<VariablesChangedCallback> oneTimeVariablesChangedHandlers = new ArrayList<>();
+
+    private Context context;
+
+    private boolean variableResponseReceived = false;
+
     public static final String VARS = "vars";
 
+    private final VarCache varCache;
+
+    public CTVariables(final VarCache varCache, final Context context) {
+        this.varCache = varCache;
+        this.context = context;
+    }
 
     /** get current value of a particular variable.
      * */
-    public static <T> Var<T> getVariable(String name) {
+    /*public static <T> Var<T> getVariable(String name) {
         return VarCache.getVariable(name);
-    }
-
+    }*/
 
 
     /** WORKING: <br>
@@ -52,29 +57,35 @@ public class CTVariables {
      *      *** {@link VarCache#loadDiffs()} : this loads the last cached values of Variables from Shared Preferences, and updates {@link VarCache#diffs} & {@link VarCache#merged} accordingly <br><br>
      *  Note that user's callbacks are *not* triggered during init call
      */
-    public static synchronized void init(){
-        VarCache.setCacheUpdateBlock(CTVariables::triggerVariablesChanged);
-        VarCache.loadDiffs();
+    public synchronized void init() {
+        varCache.setCacheUpdateBlock(triggerVariablesChanged);
+        varCache.loadDiffs(context);
     }
 
-    /** originally  <a href="https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/Leanplum.java#L843">handleStartResponse()</a> <br><br>
-     * This function is called once the variable data is available in the response of {@link Constants#APP_LAUNCHED_EVENT}/ {@link Constants#WZRK_FETCH} request  <br><br>
-     * -- if the json data is correct we convert json to map and call {@link VarCache#updateDiffsAndTriggerHandlers(Map)}.<br>
-     * -- else we call {@link VarCache#loadDiffsAndTriggerHandlers()} to set data from cache again
+    /**
+     * originally  <a href="https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/Leanplum.java#L843">handleStartResponse()</a>
+     * <br><br>
+     * This function is called once the variable data is available in the response of {@link
+     * Constants#APP_LAUNCHED_EVENT}/ {@link Constants#WZRK_FETCH} request  <br><br>
+     * -- if the json data is correct we convert json to map and call {@link VarCache#updateDiffsAndTriggerHandlers(Map,
+     * Context)}.<br>
+     * -- else we call {@link VarCache#loadDiffsAndTriggerHandlers(Context)} to set data from cache again
+     *
      * @param response JSONObject
      */
-    public static void handleVariableResponse(@Nullable final JSONObject response) {
+    public void handleVariableResponse(@Nullable final JSONObject response) {
         setVariableResponseReceived(true);
 
-        boolean jsonHasVariableData = response!=null && true; //check if response was successful, like response.data!=null //todo add logic as per backend response structure
+        boolean jsonHasVariableData = response != null
+                && true; //check if response was successful, like response.data!=null //todo add logic as per backend response structure
         try {
             if (!jsonHasVariableData) {
                 // Load the variables that were stored on the device from the last session.
                 // this will also invoke user's callback, but with values from last session/shared prefs
-                VarCache.loadDiffsAndTriggerHandlers();
+                varCache.loadDiffsAndTriggerHandlers(context);
             } else {
                 Map<String, Object> variableDiffs = CTVariableUtils.mapFromJson(response.optJSONObject(VARS));
-                VarCache.updateDiffsAndTriggerHandlers(variableDiffs);
+                varCache.updateDiffsAndTriggerHandlers(variableDiffs,context);
 
             }
         } catch (Throwable t) {
@@ -83,7 +94,7 @@ public class CTVariables {
     }
 
 
-    private static void triggerVariablesChanged() {
+    private CacheUpdateBlock triggerVariablesChanged = () -> {
         synchronized (variablesChangedHandlers) {
             for (VariablesChangedCallback callback : variablesChangedHandlers) {
                 Utils.runOnUiThread(callback);
@@ -95,20 +106,21 @@ public class CTVariables {
             }
             oneTimeVariablesChangedHandlers.clear();
         }
-    }
+    };
 
 
     /**
      * clear current variable data.can be used during profile switch
      */
-    public static void clearUserContent() {
-        VarCache.clearUserContent();
+    public void clearUserContent() {
+        varCache.clearUserContent();
     }
 
-    public static void pushVariablesToServer(Runnable onComplete) {
-        VarCache.pushVariablesToServer(onComplete);
+    public void pushVariablesToServer(Runnable onComplete) {
+        varCache.pushVariablesToServer(onComplete);
     }
-    public static boolean isInDevelopmentMode(){
+
+    public static boolean isInDevelopmentMode() {
         return BuildConfig.DEBUG;
     }
 
@@ -119,12 +131,12 @@ public class CTVariables {
      * so if client registers the listeners after such events have triggered,
      * they should still be able to get those previously updated values
      */
-    public static void addVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
+    public void addVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
         synchronized (variablesChangedHandlers) {
             variablesChangedHandlers.add(handler);
         }
 
-        if (VarCache.hasReceivedDiffs()) {
+        if (varCache.hasReceivedDiffs()) {
             handler.variablesChanged();
         }
     }
@@ -136,8 +148,8 @@ public class CTVariables {
      * added handlers triggered ever. therefore, it is necessary to trigger the user's handlers
      * immediately once this function is called
      */
-    public static void addOneTimeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
-        if (VarCache.hasReceivedDiffs()) {
+    public void addOneTimeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
+        if (varCache.hasReceivedDiffs()) {
             handler.variablesChanged();
         } else {
             synchronized (oneTimeVariablesChangedHandlers) {
@@ -146,74 +158,83 @@ public class CTVariables {
         }
     }
 
-    public static void removeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
+    public void removeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
         synchronized (variablesChangedHandlers) {
             variablesChangedHandlers.remove(handler);
         }
     }
-    public static void removeOneTimeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) { //removeOnceVariablesChangedAndNoDownloadsPendingHandler
+
+    public void removeOneTimeVariablesChangedHandler(
+            @NonNull VariablesChangedCallback handler) { //removeOnceVariablesChangedAndNoDownloadsPendingHandler
 
         synchronized (oneTimeVariablesChangedHandlers) {
             oneTimeVariablesChangedHandlers.remove(handler);
         }
     }
 
-    public static void removeAllVariablesChangedHandler() {
+    public void removeAllVariablesChangedHandler() {
         synchronized (variablesChangedHandlers) {
             variablesChangedHandlers.clear();
         }
     }
-    public static void removeAllOneTimeVariablesChangedHandler() { //removeOnceVariablesChangedAndNoDownloadsPendingHandler
+
+    public void removeAllOneTimeVariablesChangedHandler() { //removeOnceVariablesChangedAndNoDownloadsPendingHandler
 
         synchronized (oneTimeVariablesChangedHandlers) {
             oneTimeVariablesChangedHandlers.clear();
         }
     }
 
-    /**
+    /*   *//**
      * required by {@link VarCache#loadDiffs()} and {@link VarCache#saveDiffs()} to
      * get/store data from/to SharedPreferences.
      * @return context
-     */
+     *//*
     @Nullable
-    public static Context getContext() {
+    public Context getContext() {
         if (context == null) {
             Logger.v("Your application context is not set. You should call CTVariablesInternal.setApplicationContext(this) or CTActivityHelper.enableLifecycleCallbacks(this) in your application's onCreate method, or have your application extend CleverTapApplication.");
         }
         return context;
-    }
+    }*/
 
-    /**
+    /*  *//**
      * sets Context
-     * */
-    public static void setVariableContext(Context context) {
-        CTVariables.context = context;
-    }
+     * *//*
+    public void setVariableContext(Context context) {
+        this.context = context;
+    }*/
 
     /**
-     *  originally <a href="https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/Leanplum.java#L1195">Leanplum.hasStarted()</a> <br>
-     *  This flag indicates whether or not the SDK is still in process of receiving a response
-     *  from the server. <br>
-     *  This is used to print warnings in logs (see {@link Var#warnIfNotStarted()},
-     *  and prevent listeners from triggering ( see {@link Var#update()} and {@link Var#addValueChangedHandler(VariableCallback)}
-     *  <br>
-     *  <br>
+     * originally <a href="https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/Leanplum.java#L1195">Leanplum.hasStarted()</a>
+     * <br>
+     * This flag indicates whether or not the SDK is still in process of receiving a response
+     * from the server. <br>
+     * This is used to print warnings in logs (see {@link Var#warnIfNotStarted()},
+     * and prevent listeners from triggering ( see {@link Var#update()} and {@link
+     * Var#addValueChangedHandler(VariableCallback)}
+     * <br>
+     * <br>
+     *
      * @return value of {@link #variableResponseReceived  }
      */
-    public static Boolean isVariableResponseReceived(){
+    public Boolean isVariableResponseReceived() {
         return variableResponseReceived;
     }
 
     /**
-     * originally <a href="https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/internal/LeanplumInternal.java#L705">LeanplumInternal.setHasStarted(started)</a> <br><br>
+     * originally <a href="https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/internal/LeanplumInternal.java#L705">LeanplumInternal.setHasStarted(started)</a>
+     * <br><br>
      * This is set to : <br>
-     * - true, when SDK receives a response for Variable data (in {@link #handleVariableResponse}) (The function is  always triggerred, even when api fails) <br> <br>
+     * - true, when SDK receives a response for Variable data (in {@link #handleVariableResponse}) (The function is
+     * always triggerred, even when api fails) <br> <br>
      *
      * <br>
      * <br>
+     *
      * @param responseReceived : a boolean to be set {@link #variableResponseReceived  }
      */
-    public static void setVariableResponseReceived(boolean responseReceived){
+    public void setVariableResponseReceived(boolean responseReceived) {
         variableResponseReceived = responseReceived; // might not be needed
     }
 

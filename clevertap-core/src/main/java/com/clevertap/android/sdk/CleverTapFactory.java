@@ -14,6 +14,9 @@ import com.clevertap.android.sdk.task.MainLooperHandler;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import com.clevertap.android.sdk.validation.Validator;
+import com.clevertap.android.sdk.variables.CTVariables;
+import com.clevertap.android.sdk.variables.Parser;
+import com.clevertap.android.sdk.variables.VarCache;
 import java.util.concurrent.Callable;
 
 class CleverTapFactory {
@@ -133,6 +136,15 @@ class CleverTapFactory {
                 coreMetaData, controllerManager, sessionManager,
                 localDataStore, callbackManager, baseDatabaseManager, ctLockManager);
         coreState.setLoginController(loginController);
+
+        VarCache varCache = new VarCache();
+        coreState.setVarCache(varCache);
+
+        CTVariables ctVariables = new CTVariables(varCache, context);
+        coreState.setCTVariables(ctVariables);
+
+        Parser parser = new Parser(varCache, ctVariables);
+        coreState.setParser(parser);
         return coreState;
     }
 
