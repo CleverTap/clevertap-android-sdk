@@ -1,5 +1,6 @@
 package com.clevertap.demo
 
+import android.annotation.SuppressLint
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -10,8 +11,6 @@ import androidx.appcompat.app.AppCompatActivity
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
-import com.clevertap.demo.FakeServer.Companion.ResposnseType.VARS1_VARSCODE
-import com.clevertap.demo.FakeServer.Companion.ResposnseType.VARS2_VARSCODE
 import com.clevertap.demo.databinding.ActivityTestBinding
 import org.json.JSONObject
 import java.util.Date
@@ -23,17 +22,18 @@ import kotlin.concurrent.thread
 //observation  on successful api request, nested variables are set correctly via variable access, but not available via VarCache.getVariable("name") . guessing they are only available via VarCache.getVariable("groupx.groupy.name") instead , probably because ...
 // missed case hadStarted issue in vars api
 // missed case : var handlers
-
+@SuppressLint("SetTextI18n")
 class TestActivity : AppCompatActivity() {
+    var hasAttachedListenrs = false
 
-    private var defaultInstance: CleverTapAPI? = null
+    private var ctApi: CleverTapAPI? = null
     val binding: ActivityTestBinding by lazy { ActivityTestBinding.inflate(layoutInflater) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(binding.root)
         FakeServer.ctx = this
-        defaultInstance = CleverTapAPI.getDefaultInstance(this)
+        ctApi = CleverTapAPI.getDefaultInstance(this)
 
         with(binding) {
             btCheckLocalWithApiFailure.setOnClickListener(::checkLocalValuesAfterApiFailure)
@@ -45,29 +45,26 @@ class TestActivity : AppCompatActivity() {
     }
 
     private fun checkLocalValuesAfterApiFailure(view: View?) {
+        //CTVariables.setVariableContext(this)// ActivityLifeCycleManager will do this. for assuming its done in Application#onCreate after super.onCreate()
 
-        defaultInstance?.parseVariablesForClasses(TestMyVars::class.java) //user's  will do this in Application#onCreate before super.onCreate()
+        ctApi?.parseVariablesForClasses(TestMyVars::class.java) //user's  will do this in Application#onCreate before super.onCreate()
         attachListeners() //user's  will do this at any point of time. for now, assuming its done in Application#onCreate before super.onCreate()
 
-        //CTVariables.setVariableContext(this)// ActivityLifeCycleManager will do this. for assuming its done in Application#onCreate after super.onCreate()
-        defaultInstance?.init()  // ActivityLifeCycleManager will do this. for assuming its done in Application#onCreate after super.onCreate()
-        defaultInstance?.onAppLaunchFail() // BaseResponse#processResponse will do this once data is available
+        ctApi?.init()  // ActivityLifeCycleManager will do this. for assuming its done in Application#onCreate after super.onCreate()
+        ctApi?.onAppLaunchFail() // BaseResponse#processResponse will do this once data is available
     }
 
-    var hasAttachedListenrs = false
     private fun attachListeners() {
         if(hasAttachedListenrs) return
-        defaultInstance?.addVariablesChangedHandler(object : VariablesChangedCallback() {
+        ctApi?.addVariablesChangedHandler(object : VariablesChangedCallback() {
             override fun variablesChanged() {
-                binding.tvTerminalWithGlobalListenerMultiple.text =
-                    ("CALLED BY <multi,failure> variablesChanged()\n${getVarsString()}")
+                binding.tvTerminalWithGlobalListenerMultiple.text = ("variablesChanged()\n${getVarsString()}")
                 flashTextView(binding.tvTerminalWithGlobalListenerMultiple)
             }
         })
-        defaultInstance?.addOneTimeVariablesChangedHandler(object : VariablesChangedCallback() {
+        ctApi?.addOneTimeVariablesChangedHandler(object : VariablesChangedCallback() {
             override fun variablesChanged() {
-                binding.tvTerminalWithGlobalListenerOneTime.text =
-                    ("CALLED BY <onetime,failure> variablesChanged()\n${getVarsString()}")
+                binding.tvTerminalWithGlobalListenerOneTime.text = ("variablesChanged()\n${getVarsString()}")
                 flashTextView(binding.tvTerminalWithGlobalListenerOneTime)
             }
         })
@@ -80,34 +77,32 @@ class TestActivity : AppCompatActivity() {
     }
 
     private fun init(view: View?) {
-        defaultInstance?.parseVariablesForClasses(TestMyVars::class.java) //user will do this in Application#onCreate before super.onCreate()
+        ctApi?.parseVariablesForClasses(TestMyVars::class.java) //user will do this in Application#onCreate before super.onCreate()
         attachListeners() //user's  will do this at any point of time. for now, assuming its done in Application#onCreate before super.onCreate()
 
         //CTVariables.setVariableContext(this)// ActivityLifeCycleManager will do this. for assuming its done in Application#onCreate after super.onCreate()
-        defaultInstance?.init()  // ActivityLifeCycleManager will do this. for assuming its done in Application#onCreate after super.onCreate()
-        fakeServerRequestForData() // similar to calling app launched  once sdk is iniitalised . its response via  BaseResponse#processResponse  will call CTVariables.handleVariableResponse(jsonObject)
+        ctApi?.init()  // ActivityLifeCycleManager will do this. for assuming its done in Application#onCreate after super.onCreate()
+
+        fakeServerRequestForData(1) // similar to calling app launched  once sdk is iniitalised . its response via  BaseResponse#processResponse  will call CTVariables.handleVariableResponse(jsonObject)
     }
 
-    private fun fakeServerRequestForData() {
+    private fun fakeServerRequestForData(jsonId: Int) {
         Log.v("TAG","requesting data from server")
-        FakeServer.simulateBERequest { jsonObject: JSONObject? ->
-            defaultInstance?.onAppLaunchSuccess(jsonObject)
+        FakeServer.simulateGetVarsRequest(jsonId) { jsonObject: JSONObject? ->
+            ctApi?.onAppLaunchSuccess(jsonObject)
         }
     }
 
 
     var toggle= true
     private fun wzrkFetch(view: View?) {
-        FakeServer.expectedBackendData = if(toggle) VARS2_VARSCODE else VARS1_VARSCODE
         toggle = !toggle
-        fakeServerRequestForData()
+        fakeServerRequestForData(if(toggle)2 else 1)
         toast("requesting data from server...")
-
     }
 
-
     private fun onForceSyncClick(view: View?) {
-        defaultInstance?.pushVariablesToServer {}
+        ctApi?.pushVariablesToServer {}
     }
 
     fun toast(str:String){
@@ -126,7 +121,7 @@ class TestActivity : AppCompatActivity() {
 
     private fun getVarsString():String {
         return StringBuilder().run {
-            appendLine("response received=" + defaultInstance?.isVariableResponseReceived())
+            appendLine("response received=" + ctApi?.isVariableResponseReceived())
             appendLine("response received=" + CTVariables.isInDevelopmentMode())
             appendLine("- checked on : ${Date()}")
             appendLine("- DirectAccess:")
@@ -143,21 +138,21 @@ class TestActivity : AppCompatActivity() {
             appendLine("- appleI15 = ${TestMyVars.appleI15}")
             appendLine("-------------------------------------------------------------------")
             appendLine("Access via cache:")
-            appendLine("welcomeMsg = ${defaultInstance?.getVariable<String>("welcomeMsg")}")
-            appendLine("isOptedForOffers = ${defaultInstance?.getVariable<Boolean>("isOptedForOffers")}")
-            appendLine("initialCoins = ${defaultInstance?.getVariable<Int>("initialCoins")}")
-            appendLine("correctGuessPercentage = ${defaultInstance?.getVariable<Float>("correctGuessPercentage")}")
-            appendLine("userConfigurableProps = ${defaultInstance?.getVariable<HashMap<String, Any>>("userConfigurableProps")}")
-            appendLine("aiNames = ${defaultInstance?.getVariable<ArrayList<String>>("aiNames")}")
-            appendLine("userConfigurableProps = ${defaultInstance?.getVariable<String>("userConfigurableProps")}")
-            appendLine("android.samsung.s22 = ${defaultInstance?.getVariable<Double>("android.samsung.s22")}")
-            appendLine("android.samsung.s23 = ${defaultInstance?.getVariable<String>("android.samsung.s23")}")
-            appendLine("android.nokia.6a = ${defaultInstance?.getVariable<Double>("android.nokia.6a")}")
-            appendLine("android.nokia.12 = ${defaultInstance?.getVariable<String>("android.nokia.12")}")
-            appendLine("apple.iphone15 = ${defaultInstance?.getVariable<String>("apple.iphone15")}")
+            appendLine("welcomeMsg = ${ctApi?.getVariable<String>("welcomeMsg")}")
+            appendLine("isOptedForOffers = ${ctApi?.getVariable<Boolean>("isOptedForOffers")}")
+            appendLine("initialCoins = ${ctApi?.getVariable<Int>("initialCoins")}")
+            appendLine("correctGuessPercentage = ${ctApi?.getVariable<Float>("correctGuessPercentage")}")
+            appendLine("userConfigurableProps = ${ctApi?.getVariable<HashMap<String, Any>>("userConfigurableProps")}")
+            appendLine("aiNames = ${ctApi?.getVariable<ArrayList<String>>("aiNames")}")
+            appendLine("userConfigurableProps = ${ctApi?.getVariable<String>("userConfigurableProps")}")
+            appendLine("android.samsung.s22 = ${ctApi?.getVariable<Double>("android.samsung.s22")}")
+            appendLine("android.samsung.s23 = ${ctApi?.getVariable<String>("android.samsung.s23")}")
+            appendLine("android.nokia.6a = ${ctApi?.getVariable<Double>("android.nokia.6a")}")
+            appendLine("android.nokia.12 = ${ctApi?.getVariable<String>("android.nokia.12")}")
+            appendLine("apple.iphone15 = ${ctApi?.getVariable<String>("apple.iphone15")}")
 
-            appendLine("group:android = ${defaultInstance?.getVariable<Any>("android")}")
-            appendLine("group:apple = ${defaultInstance?.getVariable<Any>("apple")}")
+            appendLine("group:android = ${ctApi?.getVariable<Any>("android")}")
+            appendLine("group:apple = ${ctApi?.getVariable<Any>("apple")}")
             this.toString()
         }
     }

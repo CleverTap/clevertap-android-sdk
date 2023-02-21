@@ -39,7 +39,6 @@ import java.util.Map;
 public class Parser {
 
   private final CTVariables ctVariables;
-
   private final VarCache varCache;
 
   public Parser(final VarCache varCache, final CTVariables ctVariables) {
@@ -95,7 +94,6 @@ public class Parser {
 
       for (final Field field : fields) {
         String group = "", name = "";
-        boolean isFile = false; //TODO @Ansh no use of boolean, remove it and related code
         if (field.isAnnotationPresent(Variable.class)) {
           Variable annotation = field.getAnnotation(Variable.class);
           if (annotation!=null){
@@ -144,9 +142,7 @@ public class Parser {
         } else {
           Object value = field.get(instance);
           String stringValue = value == null ? null : value.toString();
-          if (!isFile) {
-            defineVariable(instance, variableName, stringValue, "string", field);
-          }
+          defineVariable(instance, variableName, stringValue, "string", field);
         }
       }
     } catch (IllegalArgumentException t) {

@@ -3119,21 +3119,15 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
 
 
- /*   @Discouraged(message = "will be removed. only open for testing. this should be only called internally") //todo replace with ct flow
-    void setContext(Context context) {
-        CTVariables.setVariableContext(context);
-    }*/
-
     @Discouraged(message = "will be removed. only open for testing. this should be only called internally")
-    //todo replace with ct flow
-    synchronized public void init(){coreState.getCTVariables().init();
+    public void init(){
+        coreState.getCTVariables().init();
     }
 
     /**
      * clear current variable data.can be used during profile switch
      */
     @Discouraged(message = "will be removed. only open for testing. this should be only called internally")
-    //todo replace with ct flow
     public void clearUserContent() {
         coreState.getCTVariables().clearUserContent();
     }

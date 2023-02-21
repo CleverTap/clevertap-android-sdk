@@ -5,8 +5,10 @@ import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.clevertap.android.sdk.BuildConfig;
+import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Utils;
+import com.clevertap.android.sdk.task.CTExecutors;
 import com.clevertap.android.sdk.variables.callbacks.CacheUpdateBlock;
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
@@ -22,79 +24,10 @@ import org.json.JSONObject;
  */
 public class CTVariables {
 
-    private final ArrayList<VariablesChangedCallback> variablesChangedHandlers = new ArrayList<>();
-
-    private final ArrayList<VariablesChangedCallback> oneTimeVariablesChangedHandlers = new ArrayList<>();
-
-    private Context context;
-
     private boolean variableResponseReceived = false;
-
-    public static final String VARS = "vars";
-
-    private final VarCache varCache;
-
-    public CTVariables(final VarCache varCache, final Context context) {
-        this.varCache = varCache;
-        this.context = context;
-    }
-
-    /** get current value of a particular variable.
-     * */
-    /*public static <T> Var<T> getVariable(String name) {
-        return VarCache.getVariable(name);
-    }*/
-
-
-    /** WORKING: <br>
-     * -2. CleverTapInstanceConfig calls {@link CTVariables#setVariableContext(Context)} <br><br>
-     * -1. User Calls  {@link Parser#parseVariables} or {@link Parser#parseVariablesForClasses} which creates a {@link Var} instance and ends up calling {@link VarCache#registerVariable(Var)} which sets : <br><br>
-     *      *** {@link VarCache#vars} to mapOf(varname -> Var("varname",..) ) <br><br>
-     *      *** {@link VarCache#valuesFromClient}  to mapOf("varNameG"->"varNameL"->value) (check VarCache.registerVariable()) and <br><br>
-     *      *** {@link VarCache#defaultKinds} to mapOf("varname"->varObj.kind) <br><br>
-     *  0. user calls this function which triggers calls the following functions synchronously :<br><br>
-     *      *** {@link VarCache#setCacheUpdateBlock(CacheUpdateBlock)} : this sets a callback in {@link VarCache} class, which will be triggered once the values are loaded/updated from the server/cache <br><br>
-     *      *** {@link VarCache#loadDiffs()} : this loads the last cached values of Variables from Shared Preferences, and updates {@link VarCache#diffs} & {@link VarCache#merged} accordingly <br><br>
-     *  Note that user's callbacks are *not* triggered during init call
-     */
-    public synchronized void init() {
-        varCache.setCacheUpdateBlock(triggerVariablesChanged);
-        varCache.loadDiffs(context);
-    }
-
-    /**
-     * originally  <a href="https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/Leanplum.java#L843">handleStartResponse()</a>
-     * <br><br>
-     * This function is called once the variable data is available in the response of {@link
-     * Constants#APP_LAUNCHED_EVENT}/ {@link Constants#WZRK_FETCH} request  <br><br>
-     * -- if the json data is correct we convert json to map and call {@link VarCache#updateDiffsAndTriggerHandlers(Map,
-     * Context)}.<br>
-     * -- else we call {@link VarCache#loadDiffsAndTriggerHandlers(Context)} to set data from cache again
-     *
-     * @param response JSONObject
-     */
-    public void handleVariableResponse(@Nullable final JSONObject response) {
-        setVariableResponseReceived(true);
-
-        boolean jsonHasVariableData = response != null
-                && true; //check if response was successful, like response.data!=null //todo add logic as per backend response structure
-        try {
-            if (!jsonHasVariableData) {
-                // Load the variables that were stored on the device from the last session.
-                // this will also invoke user's callback, but with values from last session/shared prefs
-                varCache.loadDiffsAndTriggerHandlers(context);
-            } else {
-                Map<String, Object> variableDiffs = CTVariableUtils.mapFromJson(response.optJSONObject(VARS));
-                varCache.updateDiffsAndTriggerHandlers(variableDiffs,context);
-
-            }
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
-    }
-
-
-    private CacheUpdateBlock triggerVariablesChanged = () -> {
+    private final ArrayList<VariablesChangedCallback> variablesChangedHandlers = new ArrayList<>();
+    private final ArrayList<VariablesChangedCallback> oneTimeVariablesChangedHandlers = new ArrayList<>();
+    private final CacheUpdateBlock triggerVariablesChanged = () -> {
         synchronized (variablesChangedHandlers) {
             for (VariablesChangedCallback callback : variablesChangedHandlers) {
                 Utils.runOnUiThread(callback);
@@ -108,12 +41,63 @@ public class CTVariables {
         }
     };
 
+    private final Context context;
+    private final VarCache varCache;
+
+    public CTVariables(final VarCache varCache, final Context context) {
+        this.varCache = varCache;
+        this.context = context;
+    }
+
+
+    /** WORKING: <br>
+     * -2. CleverTapInstanceConfig calls {@link CTVariables()#setVariableContext(Context)} <br><br>
+     * -1. User Calls  {@link Parser#parseVariables} or {@link Parser#parseVariablesForClasses} which creates a {@link Var} instance and ends up calling {@link VarCache#registerVariable(Var)} which sets : <br><br>
+     *      *** {@link VarCache()#vars} to mapOf(varname -> Var("varname",..) ) <br><br>
+     *      *** {@link VarCache()#valuesFromClient}  to mapOf("varNameG"->"varNameL"->value) (check VarCache.registerVariable()) and <br><br>
+     *      *** {@link VarCache()#defaultKinds} to mapOf("varname"->varObj.kind) <br><br>
+     *  0. user calls this function which triggers calls the following functions synchronously :<br><br>
+     *      *** {@link VarCache()#setCacheUpdateBlock(CacheUpdateBlock)} : this sets a callback in {@link VarCache} class, which will be triggered once the values are loaded/updated from the server/cache <br><br>
+     *      *** {@link VarCache()#loadDiffs()} : this loads the last cached values of Variables from Shared Preferences, and updates {@link VarCache()#diffs} & {@link VarCache()#merged} accordingly <br><br>
+     *  Note that user's callbacks are *not* triggered during init call
+     */
+    public synchronized void init() {
+        varCache.setCacheUpdateBlock(triggerVariablesChanged);
+        varCache.loadDiffs(context);
+    }
+
+    /**
+     * originally  <a href="https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/Leanplum.java#L843">handleStartResponse()</a><br><br>
+     * This function is called once the variable data is available in the response of {@link
+     * Constants#APP_LAUNCHED_EVENT}/ {@link Constants#WZRK_FETCH} request  <br><br>
+     * -- if the json data is correct we convert json to map and call {@link VarCache#updateDiffsAndTriggerHandlers(Map,Context)}.<br><br>
+     * -- else we call {@link VarCache#loadDiffsAndTriggerHandlers(Context)} to set data from cache again
+     *
+     * @param response JSONObject
+     */
+    public void handleVariableResponse(@Nullable final JSONObject response) {
+        setVariableResponseReceived(true);
+
+        boolean jsonHasVariableData = response != null && true; //check if response was successful, like response.data!=null //todo add logic as per backend response structure
+        try {
+            if (!jsonHasVariableData) {
+                varCache.loadDiffsAndTriggerHandlers(context);
+            } else {
+                Map<String, Object> variableDiffs = CTVariableUtils.mapFromJson(response.optJSONObject(CTVariableUtils.VARS));
+                varCache.updateDiffsAndTriggerHandlers(variableDiffs,context);
+
+            }
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+    }
+
 
     /**
      * clear current variable data.can be used during profile switch
      */
     public void clearUserContent() {
-        varCache.clearUserContent();
+        varCache.reset();
     }
 
     public void pushVariablesToServer(Runnable onComplete) {

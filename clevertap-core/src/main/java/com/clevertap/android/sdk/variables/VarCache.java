@@ -24,7 +24,7 @@ package com.clevertap.android.sdk.variables;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Handler;
-import androidx.annotation.VisibleForTesting;
+import androidx.annotation.WorkerThread;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.variables.callbacks.CacheUpdateBlock;
 import java.util.HashMap;
@@ -38,51 +38,29 @@ import org.json.JSONObject;
  * @author Ansh Sachdeva.
  */
 public class VarCache {
+    private final Map<String, Object> valuesFromClient = new HashMap<>();
 
-    private static final String LEANPLUM = "__leanplum__";//TODO:@Ansh  Can't we change to clevertap?
+    private final Map<String, Var<?>> vars = new ConcurrentHashMap<>();
 
-    public static final String VARIABLES_KEY = "__leanplum_variables";//TODO:@Ansh  Can't we change to clevertap?
-
-    /*
-     * - gets set in init() and unset in reset()
-     * - its function updateCache() gets called everytime triggerHasReceivedDiffs is called
-     * - its function is implemented as CTVariables::triggerVariablesChanged()
-     * - so whenever updateCache() is called,triggerVariablesChanged() is called which basically triggers users' listeners
-     * */
-    private CacheUpdateBlock updateBlock;
-
-    /*
-     *
-     * */
-    @VisibleForTesting
-    public final Map<String, Object> valuesFromClient = new HashMap<>();
-
-    /*
-     *
-     * */
-    @VisibleForTesting
-    public final Map<String, Var<?>> vars = new ConcurrentHashMap<>();
-
-    /*
-     *
-     * */
-    @VisibleForTesting
-    public final Map<String, String> defaultKinds = new HashMap<>();
-
-    /*
-     *
-     * */
-    @VisibleForTesting
-    public Map<String, Object> diffs = new HashMap<>();
-
-    /*
-     *
-     * */
-    @VisibleForTesting
-    public Object merged;
-
+    private final Map<String, String> defaultKinds = new HashMap<>();
 
     private boolean hasReceivedDiffs = false;
+
+    private CacheUpdateBlock updateBlock =null;
+
+    private Map<String, Object> diffs = new HashMap<>();
+
+    public Object merged = null;
+
+    private final String prefName;
+
+    public final String variablesKey;
+
+    public VarCache(String prefName, String variablesKey) {
+        this.prefName = prefName;
+        this.variablesKey = variablesKey;
+    }
+
 
 
     // v: Var("group1.myVariable",12.4,"float") -> unit
@@ -94,11 +72,11 @@ public class VarCache {
     //     for kinds[g] it will simply change from mapOf() to mapOf("group1.myVariable": "float")
     //     for valuesFromClient, it will changed from mapOf() to mapOf("group1":mapOf('myvariable':12.4))
     //    for every next value added, the internal maps of valuesFromClient will get updated accordingly
+
     public void registerVariable(Var<?> var) {
         vars.put(var.name(), var);
         synchronized (valuesFromClient) {
-            CTVariableUtils.updateValuesAndKinds(var.name(), var.nameComponents(), var.defaultValue(), var.kind(),
-                    valuesFromClient, defaultKinds);
+            CTVariableUtils.updateValuesAndKinds(var.name(), var.nameComponents(), var.defaultValue(), var.kind(), valuesFromClient, defaultKinds);
         }
     }
 
@@ -112,29 +90,21 @@ public class VarCache {
 
     //components : ["group1","myVariable"]  , values : merged[g] or valuesFromClient[g]
     // will basically set values(i.e merged[g] or valuesFromClient[g]) to mapOf("group1"to mapOf('myVariable' to 12.4))
-    @VisibleForTesting
     public <T> T getMergedValueFromComponentArray(Object[] components, Object values) {
         Object mergedPtr = values;
         for (Object component : components) {
             mergedPtr = CTVariableUtils.traverse(mergedPtr, component, false);
         }
-        return (T) mergedPtr;
+        return CTVariableUtils.uncheckedCast(mergedPtr);
     }
 
     //will basically call applyVariableDiffs(..) with values stored in pref
-    public void loadDiffs(Context context) { //TODO:@Ansh preference access should be on a background thread
-        // if CTVariables.hasSdkError we return w/o doing anything
-
-        if (context == null) {
-            return;
-        }
-        SharedPreferences defaults = context.getSharedPreferences(LEANPLUM, Context.MODE_PRIVATE);
+    public void loadDiffs(Context context) {
+        if (context == null) {return;}
+        SharedPreferences defaults = context.getSharedPreferences(prefName, Context.MODE_PRIVATE);
         try {
-            String variablesFromCache = CTVariableUtils.getFromPreference(defaults, VARIABLES_KEY, "{}");
-            Logger.v("loadDiffs: variablesFromCache='" + variablesFromCache + "'");
-
+            String variablesFromCache = CTVariableUtils.getFromPreference(defaults, variablesKey, "{}");
             Map<String, Object> variablesAsMap = CTVariableUtils.fromJson(variablesFromCache);
-            //todo : concerning call^
             applyVariableDiffs(variablesAsMap);
 
         } catch (Exception e) {
@@ -155,18 +125,23 @@ public class VarCache {
         triggerHasReceivedDiffs();
     }
 
-    // saveDiffs() is opposite of loadDiffs() and will save diffs[g]  to cache
-    public void saveDiffs(Context context) {//TODO:@Ansh make sure to call on bg thread
+    // saveDiffs() is opposite of loadDiffs() and will save diffs[g]  to cache. must be called on a worker thread to prevent ANR
+    @WorkerThread
+    public void saveDiffs(Context context) {
         if (context == null) {
             return;
         }
-        SharedPreferences defaults = context.getSharedPreferences(LEANPLUM, Context.MODE_PRIVATE);
+        SharedPreferences defaults = context.getSharedPreferences(prefName, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = defaults.edit();
 
-        String variablesCipher = CTVariableUtils.toJson(diffs); // aesContext.encrypt(CTVariableUtils.toJson(diffs));
-        editor.putString(VARIABLES_KEY, variablesCipher);
+        String variablesCipher = CTVariableUtils.toJson(diffs);
+        editor.putString(variablesKey, variablesCipher);
 
-        CTVariableUtils.commitChanges(editor);
+        try {
+            editor.apply();
+        } catch (NoSuchMethodError e) {
+            editor.commit();
+        }
     }
 
     //will basically
@@ -195,7 +170,6 @@ public class VarCache {
 
 
     //will simply  set hasReceivedDiffs[g] = true; and call updateBlock[g].updateCache() which further triggers the callbacks set by user for listening to variables update
-    @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
     public void triggerHasReceivedDiffs() {
         // update block is a callback registered by CTVariables to trigger user's callback once the diffs are changed
         hasReceivedDiffs = true;
@@ -224,18 +198,16 @@ public class VarCache {
 
 
     // will reset few global variables
-    public void clearUserContent() {
-        //devModeValuesFromServer = null;
-        diffs.clear();
-        merged = null;
-        vars.clear();
-    }
+    // public void clearUserContent() {
+    //    diffs.clear();
+    //    merged = null;
+    //    vars.clear();
+    //}
 
 
     // will reset a lot of global variables
     public void reset() {
         defaultKinds.clear();
-        //devModeValuesFromServer = null;
         diffs.clear();
         hasReceivedDiffs = false;
         merged = null;
@@ -244,23 +216,14 @@ public class VarCache {
         valuesFromClient.clear();
     }
 
-
-    //public static void setDevModeValuesFromServer(Map<String, Object> values) {
-    //    devModeValuesFromServer = values;
-    //}
-    //public static boolean sendContentIfChanged() {..}
     public <T> Var<T> getVariable(String name) {
-        return (Var<T>) vars.get(name);
+        return CTVariableUtils.uncheckedCast(vars.get(name));
     }
-
 
     public void setCacheUpdateBlock(CacheUpdateBlock block) {
         updateBlock = block;
     }
 
-    public Map<String, Object> getDiffs() {
-        return diffs;
-    }
 
     public boolean hasReceivedDiffs() {
         return hasReceivedDiffs;

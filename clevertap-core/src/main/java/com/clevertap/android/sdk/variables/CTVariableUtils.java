@@ -20,11 +20,11 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+
 
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public final class CTVariableUtils {
+    public static final String VARS = "vars";
     public static final String INT = "integer";
     public static final String FLOAT = "float";
     public static final String STRING = "string";
@@ -40,7 +40,6 @@ public final class CTVariableUtils {
     // kinds from mapOf() to mapOf("group1.myVariable" : "float")
     // check test for a more clarity
     public static void updateValuesAndKinds(String name, String[] nameComponents, Object value, String kind, Map<String, Object> values, Map<String, String> kinds) {
-        //Logger.v( "updateValuesAndKinds() called with: name = [" + name + "], nameComponents = [" + Arrays.toString(nameComponents) + "], value = [" + value + "], kind = [" + kind + "], values = [" + values + "], kinds = [" + kinds + "]");
         Object valuesPtr = values;
         if (nameComponents != null && nameComponents.length > 0) {
             for (int i = 0; i < nameComponents.length - 1; i++) {
@@ -87,18 +86,17 @@ public final class CTVariableUtils {
                 String[] components = getNameComponents(key) ;
                 int namePosition = components.length - 1;
                 Map<String, Object> currentMap = result;
-
                 for (int i = 0; i < components.length; i++) {
                     String component = components[i];
                     if (i == namePosition) {
                         currentMap.put(component, entry.getValue());
                     } else {
                         if (!currentMap.containsKey(component)) {
-                            Map<String, Object> nestedMap = new HashMap<String, Object>();
+                            Map<String, Object> nestedMap = new HashMap<>();
                             currentMap.put(component, nestedMap);
                             currentMap = nestedMap;
                         } else {
-                            currentMap = (Map<String, Object>) currentMap.get(component);
+                            currentMap = uncheckedCast(currentMap.get(component)) ;
                         }
                     }
                 }
@@ -113,7 +111,6 @@ public final class CTVariableUtils {
 
     // check test for more info
     public static Object mergeHelper(Object vars, Object diff) {
-        //Logger.v( "mergeHelper() called with: vars = [" + vars + "], diff = [" + diff + "]");
         if (diff == null) {
             return vars;
         }
@@ -168,19 +165,6 @@ public final class CTVariableUtils {
                     merged.add(var);
                 }
             }
-
-            // Merge values from server
-            // Array values from server come as Dictionary
-            // Example:
-            // string[] items = new string[] { "Item 1", "Item 2"};
-            // args.With<string[]>("Items", items); // Action Context arg value
-            // "vars": {
-            //      "Items": {
-            //                  "[1]": "Item 222", // Modified value from server
-            //                  "[0]": "Item 111"  // Modified value from server
-            //              }
-            //  }
-            // Prevent error when loading variable diffs where the diff is an Array and not Dictionary
             if (diffMap != null) {
                 for (Object varSubscript : diffKeys) {
                     if (varSubscript instanceof String) {
@@ -227,7 +211,6 @@ public final class CTVariableUtils {
 
     // check test for more info
     public static Object traverse(Object collection, Object key, boolean autoInsert) {
-        //Logger.v("traverse() called with: collection = [" + collection + "], key = [" + key + "], autoInsert = [" + autoInsert + "]");
         if (collection == null) {
             return null;
         }
@@ -255,7 +238,6 @@ public final class CTVariableUtils {
 
     // check test for more info
     public static <T> String kindFromValue(T defaultValue) {
-        //Logger.v("kindFromValue() called with: defaultValue = [" + defaultValue + "]");
         String kind = null;
         if (defaultValue instanceof Integer || defaultValue instanceof Long || defaultValue instanceof Short || defaultValue instanceof Character || defaultValue instanceof Byte || defaultValue instanceof BigInteger) {
             kind = INT;
@@ -317,17 +299,15 @@ public final class CTVariableUtils {
      * &emsp;&emsp;"welcomeMsg": "hello"<br>
      * &emsp;]<br>
      * </code>
-
-
      * -------------------------------------- <br>
-     * @author ChatGPT, Ansh Sachdeva
+     * @author Ansh Sachdeva
      */
     private static void flattenNestedMaps(String prefix, Map<String, Object> map, Map<String, Object> result) {
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
             if (value instanceof Map) {
-                flattenNestedMaps(prefix + key + ".", (Map<String, Object>) value, result);
+                flattenNestedMaps(prefix + key + ".", uncheckedCast(value) , result);
             } else {
                 result.put(prefix + key, value);
             }
@@ -455,13 +435,7 @@ public final class CTVariableUtils {
         }
         return text;
     }
-    public static void commitChanges(SharedPreferences.Editor editor){
-        try {
-            editor.apply();
-        } catch (NoSuchMethodError e) {
-            editor.commit();
-        }
-    }
+
     public static void maybeThrowException(RuntimeException e) {
         if (CTVariables.isInDevelopmentMode()) {
             throw e;
@@ -470,11 +444,6 @@ public final class CTVariableUtils {
         }
     }
 
-
-    // alt for: OperationQueue.sharedInstance().addUiOperation(callback) :
-    public static  void runOnUiThread(Runnable callback) {
-        Utils.runOnUiThread(callback);
-    }
 
 
     public static JSONObject getVarsJson(Map<String, Object> values, Map<String, String> kinds) {

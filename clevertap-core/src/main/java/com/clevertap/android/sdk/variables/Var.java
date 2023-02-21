@@ -18,9 +18,7 @@ import java.util.Map;
  * @author Ansh Sachdeva
  */
 public class Var<T> {
-
     private final CTVariables ctVariables;
-
     private final VarCache varCache;
 
     public Var(final VarCache varCache, final CTVariables ctVariables) {

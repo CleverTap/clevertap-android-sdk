@@ -6,7 +6,6 @@ import android.content.res.AssetManager
 import androidx.annotation.Discouraged
 import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
-import com.clevertap.demo.FakeServer.Companion.ResposnseType.*
 import org.json.JSONObject
 import kotlin.concurrent.thread
 
@@ -15,19 +14,6 @@ import kotlin.concurrent.thread
 class FakeServer {
 
     companion object{
-        enum class ResposnseType{
-            VARS1_VARSCODE,
-            VARS2_VARSCODE,
-            VARSLOCAL_VARSLOCAL,
-        }
-
-        var expectedBackendData : ResposnseType = VARS1_VARSCODE
-
-        var localVarsJson : JSONObject = JSONObject()
-
-
-        var hasForcedPushedVariables = false
-
         var ctx : Context? = null
 
 
@@ -49,17 +35,10 @@ class FakeServer {
         }
 
         @JvmStatic
-        fun simulateBERequest(onResponse:(JSONObject)->Unit){
-            val vars1 = getJson(1)
-            val vars2 = getJson(2)
-
+        fun simulateGetVarsRequest(id:Int, onResponse:(JSONObject)->Unit){
+            val vars1 = getJson(id)
             val resp = JSONObject()
-            val finalVars = when(expectedBackendData){
-                VARS1_VARSCODE -> vars1
-                VARS2_VARSCODE -> vars2
-                VARSLOCAL_VARSLOCAL -> localVarsJson
-            }
-            resp.put("vars",finalVars)
+            resp.put("vars", vars1)
 
             thread {
                 Thread.sleep(2000)
@@ -74,7 +53,6 @@ class FakeServer {
         @JvmStatic
         fun sendVariables(requestData: JSONObject,onResponse: Runnable){
             Logger.v("sendVariables() called with: requestData = $requestData, onResponse = $onResponse")
-            hasForcedPushedVariables = true
             thread {
                 Thread.sleep(2000)
                 Utils.runOnUiThread {
