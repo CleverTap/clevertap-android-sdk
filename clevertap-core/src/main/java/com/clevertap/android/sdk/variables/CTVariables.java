@@ -67,6 +67,7 @@ public class CTVariables {
     }
 
     /**
+     * //todo make sure this receives a response from wzrk fetch and app launched
      * originally  <a href="https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/Leanplum.java#L843">handleStartResponse()</a><br><br>
      * This function is called once the variable data is available in the response of {@link
      * Constants#APP_LAUNCHED_EVENT}/ {@link Constants#WZRK_FETCH} request  <br><br>
@@ -241,7 +242,7 @@ public class CTVariables {
 // *
 // * * 2.3.1 set var.value = getMergedValueFromComponentArray() : which is basically the value from VarCache.merged or VarCache.valuesFromClient(if merged is null)<br><br>
 // * * 2.3.2 update var's other private variables<br><br>
-// * * 2.3.3 optionally trigger var's individual callbacks if CTVariablesInternal.hasStarted() is true // todo can be  set to always as we are updating the global registers to always too, or maybe based on silent? <br><br>
+// * * 2.3.3 optionally trigger var's individual callbacks if CTVariablesInternal.hasStarted() is true
 // *
 // * * 2.4 if silent is false(currently its true, so skip for now) <br><br>
 // * * * 2.4.1 call safeDiffs() : which saves Varcache.diffs (from 2.1) to cache<br><br>
