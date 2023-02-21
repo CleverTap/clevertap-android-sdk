@@ -70,9 +70,9 @@ public final class CTVariableUtils {
      * to: <br>
      * <code>
      * &emsp;[<br>
-     * &emsp;&emsp;"android": [<br>
-     * &emsp;&emsp;&emsp;&emsp;"samsung: ["s22": 54000, "s23" : "unreleased"]<br>
-     * &emsp;&emsp;],<br>
+     * &emsp;&emsp;"android": {<br>
+     * &emsp;&emsp;&emsp;&emsp;"samsung: {"s22": 54000, "s23" : "unreleased"}<br>
+     * &emsp;&emsp;},<br>
      * &emsp;&emsp;"welcomeMsg" : "hello"<br>
      * &emsp;]<br>
      * </code>
