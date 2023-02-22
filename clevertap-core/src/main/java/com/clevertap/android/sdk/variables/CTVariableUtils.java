@@ -24,7 +24,7 @@ import java.util.Map;
 public final class CTVariableUtils {
     public static final String VARS = "vars";
     public static final String STRING = "string";
-    public static final String BOOLEAN = "bool";
+    public static final String BOOLEAN = "boolean";
     public static final String DICTIONARY = "group";
     public static final String ARRAY = "list";
     public static final String NUMBER = "number";

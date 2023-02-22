@@ -130,7 +130,7 @@ class TestActivity : AppCompatActivity() {
             appendLine("- initialCoins = ${TestMyVars.initialCoins}")
             appendLine("- correctGuessPercentage = ${TestMyVars.correctGuessPercentage}")
             appendLine("- userConfigurableProps = ${TestMyVars.userConfigurableProps}")
-            appendLine("- aiNames = ${TestMyVars.aiNames}")
+//            appendLine("- aiNames = ${TestMyVars.aiNames}")
             appendLine("- samsungS22 = ${TestMyVars.samsungS22}")
             appendLine("- samsungS23 = ${TestMyVars.samsungS23}")
             appendLine("- nokia12 = ${TestMyVars.nokia12}")

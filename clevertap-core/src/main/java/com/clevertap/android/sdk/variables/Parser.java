@@ -21,6 +21,12 @@
 
 package com.clevertap.android.sdk.variables;
 
+import static com.clevertap.android.sdk.variables.CTVariableUtils.ARRAY;
+import static com.clevertap.android.sdk.variables.CTVariableUtils.BOOLEAN;
+import static com.clevertap.android.sdk.variables.CTVariableUtils.DICTIONARY;
+import static com.clevertap.android.sdk.variables.CTVariableUtils.NUMBER;
+import static com.clevertap.android.sdk.variables.CTVariableUtils.STRING;
+
 import android.text.TextUtils;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.variables.annotations.Variable;
@@ -114,33 +120,33 @@ public class Parser {
         Class<?> fieldType = field.getType();
         String fieldTypeString = fieldType.toString();
         if (fieldTypeString.equals("int")) {
-          defineVariable(instance, variableName, field.getInt(instance), "integer", field);
+          defineVariable(instance, variableName, field.getInt(instance), NUMBER, field);
         } else if (fieldTypeString.equals("byte")) {
-          defineVariable(instance, variableName, field.getByte(instance), "integer", field);
+          defineVariable(instance, variableName, field.getByte(instance), NUMBER, field);
         } else if (fieldTypeString.equals("short")) {
-          defineVariable(instance, variableName, field.getShort(instance), "integer", field);
+          defineVariable(instance, variableName, field.getShort(instance), NUMBER, field);
         } else if (fieldTypeString.equals("long")) {
-          defineVariable(instance, variableName, field.getLong(instance), "integer", field);
+          defineVariable(instance, variableName, field.getLong(instance), NUMBER, field);
         } else if (fieldTypeString.equals("char")) {
-          defineVariable(instance, variableName, field.getChar(instance), "integer", field);
+          defineVariable(instance, variableName, field.getChar(instance), NUMBER, field);
         } else if (fieldTypeString.equals("float")) {
-          defineVariable(instance, variableName, field.getFloat(instance), "float", field);
+          defineVariable(instance, variableName, field.getFloat(instance), NUMBER, field);
         } else if (fieldTypeString.equals("double")) {
-          defineVariable(instance, variableName, field.getDouble(instance), "float", field);
+          defineVariable(instance, variableName, field.getDouble(instance), NUMBER, field);
         } else if (fieldTypeString.equals("boolean")) {
-          defineVariable(instance, variableName, field.getBoolean(instance), "bool", field);
+          defineVariable(instance, variableName, field.getBoolean(instance), BOOLEAN, field);
         } else if (fieldType.isPrimitive()) {
           Logger.v( "Variable " + variableName + " is an unsupported primitive type.");
         } else if (fieldType.isArray()) {
           Logger.v( "Variable " + variableName + " should be a List instead of an Array.");
         } else if (List.class.isAssignableFrom(fieldType)) {
-          defineVariable(instance, variableName, field.get(instance), "list", field);
+          defineVariable(instance, variableName, field.get(instance), ARRAY, field);
         } else if (Map.class.isAssignableFrom(fieldType)) {
-          defineVariable(instance, variableName, field.get(instance), "group", field);
+          defineVariable(instance, variableName, field.get(instance), DICTIONARY, field);
         } else {
           Object value = field.get(instance);
           String stringValue = value == null ? null : value.toString();
-          defineVariable(instance, variableName, stringValue, "string", field);
+          defineVariable(instance, variableName, stringValue, STRING, field);
         }
       }
     } catch (IllegalArgumentException t) {
@@ -158,7 +164,7 @@ public class Parser {
 
 
   /**
-   * This function simply calls {@link Var#define(String, Object, String, VarCache, CTVariables)} and attached a
+   * This function simply calls {@link Var#define(String, Object, String, CTVariables)} and attached a
    * variable
    * update listener. When variable update listener is called, it sets the values in the field with
    * new data using reflection.

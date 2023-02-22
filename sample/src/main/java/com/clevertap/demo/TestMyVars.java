@@ -15,7 +15,7 @@ public class TestMyVars {
     @Variable public static boolean isOptedForOffers = true;
     @Variable public static int initialCoins = 45;
     @Variable public static float correctGuessPercentage = 50.0F;
-    @Variable public static List<String> aiNames = new ArrayList<>(Arrays.asList("don2", "jason2", "shiela2"));
+//    @Variable public static List<String> aiNames = new ArrayList<>(Arrays.asList("don2", "jason2", "shiela2"));
 
     @Variable public static Map<String, Object> userConfigurableProps = new HashMap<>();
 
