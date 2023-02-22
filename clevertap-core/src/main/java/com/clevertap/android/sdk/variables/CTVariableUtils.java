@@ -1,12 +1,10 @@
 package com.clevertap.android.sdk.variables;
 
-import android.content.SharedPreferences;
 import android.text.Editable;
 
 import androidx.annotation.RestrictTo;
 
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.Utils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -25,12 +23,11 @@ import java.util.Map;
 @RestrictTo(RestrictTo.Scope.LIBRARY)
 public final class CTVariableUtils {
     public static final String VARS = "vars";
-    public static final String INT = "integer";
-    public static final String FLOAT = "float";
     public static final String STRING = "string";
     public static final String BOOLEAN = "bool";
     public static final String DICTIONARY = "group";
     public static final String ARRAY = "list";
+    public static final String NUMBER = "number";
 
 
     // name: "group1.myVariable", nameComponents: ['group1','myVariable'], value: 12.4, kind: "float", values:valuesFromClient[G],kinds: defaultKinds[G]
@@ -240,10 +237,10 @@ public final class CTVariableUtils {
     public static <T> String kindFromValue(T defaultValue) {
         String kind = null;
         if (defaultValue instanceof Integer || defaultValue instanceof Long || defaultValue instanceof Short || defaultValue instanceof Character || defaultValue instanceof Byte || defaultValue instanceof BigInteger) {
-            kind = INT;
+            kind = NUMBER;
         }
         else if (defaultValue instanceof Float || defaultValue instanceof Double || defaultValue instanceof BigDecimal) {
-            kind = FLOAT;
+            kind = NUMBER;
         }
         else if (defaultValue instanceof String) {
             kind = STRING;
@@ -427,14 +424,6 @@ public final class CTVariableUtils {
             return null;
         }
     }
-    public static String getFromPreference(SharedPreferences preferences, String key, String defaultValue) {
-
-        String text = preferences.getString(key, null);
-        if (text == null) {
-            return defaultValue;
-        }
-        return text;
-    }
 
     public static void maybeThrowException(RuntimeException e) {
         if (CTVariables.isInDevelopmentMode()) {
@@ -466,7 +455,7 @@ public final class CTVariableUtils {
                        Object flattenedValue = entry.getValue();
                        String flattenedValueKind = kindFromValue(flattenedValue);
                        JSONObject varData = new JSONObject();
-                       varData.put("kind",flattenedValueKind);
+                       varData.put("type",flattenedValueKind);
                        varData.put("value",flattenedValue);
                        vars.put(flattenedKey,varData);
                    }

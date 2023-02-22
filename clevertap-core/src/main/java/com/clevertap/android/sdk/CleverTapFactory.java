@@ -137,13 +137,13 @@ class CleverTapFactory {
                 localDataStore, callbackManager, baseDatabaseManager, ctLockManager);
         coreState.setLoginController(loginController);
 
-        VarCache varCache = new VarCache("todo","todo");//todo
+        VarCache varCache = new VarCache(config,context);
         coreState.setVarCache(varCache);
 
-        CTVariables ctVariables = new CTVariables(varCache, context);
+        CTVariables ctVariables = new CTVariables(varCache );
         coreState.setCTVariables(ctVariables);
 
-        Parser parser = new Parser(varCache, ctVariables);
+        Parser parser = new Parser(ctVariables);
         coreState.setParser(parser);
         return coreState;
     }

@@ -3149,11 +3149,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
 
     public <T> Var<T> define(String name, T defaultValue) {
-        return Var.define(name, defaultValue, coreState.getVarCache(), coreState.getCTVariables());
+        return Var.define(name, defaultValue,coreState.getCTVariables());
     }
 
     public <T> Var<T> define(String name, T defaultValue, String kind) {
-        return Var.define(name, defaultValue, kind, coreState.getVarCache(), coreState.getCTVariables());
+        return Var.define(name, defaultValue, kind, coreState.getCTVariables());
     }
 
     /**

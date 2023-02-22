@@ -19,10 +19,8 @@ import java.util.Map;
  */
 public class Var<T> {
     private final CTVariables ctVariables;
-    private final VarCache varCache;
 
-    public Var(final VarCache varCache, final CTVariables ctVariables) {
-        this.varCache = varCache;
+    public Var( final CTVariables ctVariables) {
         this.ctVariables = ctVariables;
     }
 
@@ -45,9 +43,9 @@ public class Var<T> {
     private final List<VariableCallback<T>> valueChangedHandlers = new ArrayList<>();
     private static boolean printedCallbackWarning;
 
-    public static <T> Var<T> define(String name, T defaultValue, VarCache varCache, CTVariables ctVariables) {
+    public static <T> Var<T> define(String name, T defaultValue, CTVariables ctVariables) {
         String type = CTVariableUtils.kindFromValue(defaultValue);
-        return define(name, defaultValue, type, varCache, ctVariables);
+        return define(name, defaultValue, type, ctVariables);
     }
 
     /**
@@ -59,22 +57,19 @@ public class Var<T> {
      * @param <T>          Type of the variable.
      * @return instance of a {@link  Var} class
      */
-    public static <T> Var<T> define(String name, T defaultValue, String kind, VarCache varCache,
-            CTVariables ctVariables) {
-        Logger.v("define() called with: name = [" + name + "], defaultValue = [" + defaultValue + "], kind = [" + kind
-                + "]");
+    public static <T> Var<T> define(String name, T defaultValue, String kind, CTVariables ctVariables) {
         if (TextUtils.isEmpty(name)) {
             Logger.v("Empty name parameter provided. aborting define operation");
             return null;
         }
 
-        Var<T> existing = varCache.getVariable(name);
+        Var<T> existing = ctVariables.getVarCache().getVariable(name);
         if (existing != null) {
             Logger.v("A variable exists for current field name. returning existing variable");
             return existing;
         }
 
-        Var<T> var = new Var<>(varCache,ctVariables);
+        Var<T> var = new Var<>(ctVariables);
         try {
             var.name = name;
             var.nameComponents = CTVariableUtils.getNameComponents(name);
@@ -82,7 +77,7 @@ public class Var<T> {
             var.value = defaultValue;
             var.kind = kind;
             var.cacheComputedValues();
-            varCache.registerVariable(var);
+            ctVariables.getVarCache().registerVariable(var);
             var.update();
         } catch (Throwable t) {
             t.printStackTrace();
@@ -99,7 +94,7 @@ public class Var<T> {
     public synchronized void update() {
         Logger.v( "update() called");
         T oldValue = value;
-        value = varCache.getMergedValueFromComponentArray(nameComponents);
+        value = ctVariables.getVarCache().getMergedValueFromComponentArray(nameComponents);
         if (value == null && oldValue == null) {
             return;
         }
@@ -111,8 +106,7 @@ public class Var<T> {
             hadStarted = true;
             triggerValueChanged();
         } else {
-            Logger.v(
-                    "CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered");
+            Logger.v("CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered");
         }
     }
 
@@ -191,7 +185,7 @@ public class Var<T> {
     public int count() {
         try {
             warnIfNotStarted();
-            Object result = varCache.getMergedValueFromComponentArray(nameComponents);
+            Object result = ctVariables.getVarCache().getMergedValueFromComponentArray(nameComponents);
             if (result instanceof List) {
                 return ((List<?>) result).size();
             }

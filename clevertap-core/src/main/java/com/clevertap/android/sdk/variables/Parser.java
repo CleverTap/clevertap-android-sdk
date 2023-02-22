@@ -39,10 +39,8 @@ import java.util.Map;
 public class Parser {
 
   private final CTVariables ctVariables;
-  private final VarCache varCache;
 
-  public Parser(final VarCache varCache, final CTVariables ctVariables) {
-    this.varCache = varCache;
+  public Parser(final CTVariables ctVariables) {
     this.ctVariables = ctVariables;
   }
 
@@ -173,7 +171,7 @@ public class Parser {
    */
   private <T> void defineVariable(final Object instance, String name, T value, String kind, final Field field) {
     // we first call var.define(..) with field name, value and kind
-    final Var<T> var = Var.define(name, value, kind, varCache, ctVariables);
+    final Var<T> var = Var.define(name, value, kind, ctVariables);
     if (var == null) {
       Logger.v("Something went wrong, var is null, returning");
       return;

@@ -22,10 +22,15 @@
 package com.clevertap.android.sdk.variables;
 
 import android.content.Context;
-import android.content.SharedPreferences;
 import android.os.Handler;
+
+import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
+
+import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
+import com.clevertap.android.sdk.StorageHelper;
 import com.clevertap.android.sdk.variables.callbacks.CacheUpdateBlock;
 import java.util.HashMap;
 import java.util.Map;
@@ -52,13 +57,24 @@ public class VarCache {
 
     public Object merged = null;
 
-    private final String prefName;
+    private final String cacheKey;
 
-    public final String variablesKey;
+    private final Context variablesCtx;
 
-    public VarCache(String prefName, String variablesKey) {
-        this.prefName = prefName;
-        this.variablesKey = variablesKey;
+    public VarCache(CleverTapInstanceConfig config, Context ctx) {
+        this.cacheKey = StorageHelper.storageKeyWithSuffix(config, Constants.CACHED_VARIABLES_KEY);
+        this.variablesCtx = ctx;
+    }
+
+    private void storeDataInCache(@NonNull String data){
+        try {
+            StorageHelper.putString(variablesCtx, cacheKey, data);
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+    }
+    private String loadDataFromCache(){
+        return StorageHelper.getString(variablesCtx,cacheKey, "{}");
     }
 
 
@@ -99,11 +115,9 @@ public class VarCache {
     }
 
     //will basically call applyVariableDiffs(..) with values stored in pref
-    public void loadDiffs(Context context) {
-        if (context == null) {return;}
-        SharedPreferences defaults = context.getSharedPreferences(prefName, Context.MODE_PRIVATE);
+    public void loadDiffs() {
         try {
-            String variablesFromCache = CTVariableUtils.getFromPreference(defaults, variablesKey, "{}");
+            String variablesFromCache = loadDataFromCache();
             Map<String, Object> variablesAsMap = CTVariableUtils.fromJson(variablesFromCache);
             applyVariableDiffs(variablesAsMap);
 
@@ -113,35 +127,23 @@ public class VarCache {
     }
 
     //same as loadiffs, but will also trigger one/multi time listeners
-    public void loadDiffsAndTriggerHandlers(final Context context) {
-        loadDiffs(context);
+    public void loadDiffsAndTriggerHandlers() {
+        loadDiffs();
         triggerHasReceivedDiffs();
     }
 
     //same as loadiffs, but differs in 2 aspects: 1) instead of picking data from cache, it receives data as param and 2) it will also trigger one/mult time listeners
-    public void updateDiffsAndTriggerHandlers(Map<String, Object> diffs, final Context context) {
+    public void updateDiffsAndTriggerHandlers(Map<String, Object> diffs) {
         applyVariableDiffs(diffs);
-        saveDiffs(context);
+        saveDiffs();
         triggerHasReceivedDiffs();
     }
 
     // saveDiffs() is opposite of loadDiffs() and will save diffs[g]  to cache. must be called on a worker thread to prevent ANR
     @WorkerThread
-    public void saveDiffs(Context context) {
-        if (context == null) {
-            return;
-        }
-        SharedPreferences defaults = context.getSharedPreferences(prefName, Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = defaults.edit();
-
+    public void saveDiffs() {
         String variablesCipher = CTVariableUtils.toJson(diffs);
-        editor.putString(variablesKey, variablesCipher);
-
-        try {
-            editor.apply();
-        } catch (NoSuchMethodError e) {
-            editor.commit();
-        }
+        storeDataInCache(variablesCipher);
     }
 
     //will basically

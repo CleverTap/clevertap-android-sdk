@@ -41,12 +41,10 @@ public class CTVariables {
         }
     };
 
-    private final Context context;
     private final VarCache varCache;
 
-    public CTVariables(final VarCache varCache, final Context context) {
+    public CTVariables(final VarCache varCache) {
         this.varCache = varCache;
-        this.context = context;
     }
 
 
@@ -63,16 +61,17 @@ public class CTVariables {
      */
     public synchronized void init() {
         varCache.setCacheUpdateBlock(triggerVariablesChanged);
-        varCache.loadDiffs(context);
+        varCache.loadDiffs();
     }
+
 
     /**
      * //todo make sure this receives a response from wzrk fetch and app launched
      * originally  <a href="https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/Leanplum.java#L843">handleStartResponse()</a><br><br>
      * This function is called once the variable data is available in the response of {@link
      * Constants#APP_LAUNCHED_EVENT}/ {@link Constants#WZRK_FETCH} request  <br><br>
-     * -- if the json data is correct we convert json to map and call {@link VarCache#updateDiffsAndTriggerHandlers(Map,Context)}.<br><br>
-     * -- else we call {@link VarCache#loadDiffsAndTriggerHandlers(Context)} to set data from cache again
+     * -- if the json data is correct we convert json to map and call {@link VarCache#updateDiffsAndTriggerHandlers(Map)}.<br><br>
+     * -- else we call {@link VarCache#loadDiffsAndTriggerHandlers()} to set data from cache again
      *
      * @param response JSONObject
      */
@@ -82,10 +81,10 @@ public class CTVariables {
         boolean jsonHasVariableData = response != null && true; //check if response was successful, like response.data!=null //todo add logic as per backend response structure
         try {
             if (!jsonHasVariableData) {
-                varCache.loadDiffsAndTriggerHandlers(context);
+                varCache.loadDiffsAndTriggerHandlers();
             } else {
                 Map<String, Object> variableDiffs = CTVariableUtils.mapFromJson(response.optJSONObject(CTVariableUtils.VARS));
-                varCache.updateDiffsAndTriggerHandlers(variableDiffs,context);
+                varCache.updateDiffsAndTriggerHandlers(variableDiffs);
 
             }
         } catch (Throwable t) {
@@ -170,26 +169,6 @@ public class CTVariables {
         }
     }
 
-    /*   *//**
-     * required by {@link VarCache#loadDiffs()} and {@link VarCache#saveDiffs()} to
-     * get/store data from/to SharedPreferences.
-     * @return context
-     *//*
-    @Nullable
-    public Context getContext() {
-        if (context == null) {
-            Logger.v("Your application context is not set. You should call CTVariablesInternal.setApplicationContext(this) or CTActivityHelper.enableLifecycleCallbacks(this) in your application's onCreate method, or have your application extend CleverTapApplication.");
-        }
-        return context;
-    }*/
-
-    /*  *//**
-     * sets Context
-     * *//*
-    public void setVariableContext(Context context) {
-        this.context = context;
-    }*/
-
     /**
      * originally <a href="https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/Leanplum.java#L1195">Leanplum.hasStarted()</a>
      * <br>
@@ -222,6 +201,11 @@ public class CTVariables {
     public void setVariableResponseReceived(boolean responseReceived) {
         variableResponseReceived = responseReceived; // might not be needed
     }
+
+    VarCache getVarCache(){
+        return varCache;
+    }
+
 
 
 }
