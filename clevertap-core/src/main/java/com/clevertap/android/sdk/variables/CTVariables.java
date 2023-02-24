@@ -100,9 +100,6 @@ public class CTVariables {
         varCache.reset();
     }
 
-    public void pushVariablesToServer(Runnable onComplete) {
-        varCache.pushVariablesToServer(onComplete);
-    }
 
     public static boolean isInDevelopmentMode() {
         return BuildConfig.DEBUG;

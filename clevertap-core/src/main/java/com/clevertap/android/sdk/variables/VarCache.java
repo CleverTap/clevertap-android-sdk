@@ -180,22 +180,9 @@ public class VarCache {
         }
     }
 
-    //will force upload vars from valuesFromClient[g] and  defaultKinds[g] map to server
-    public void pushVariablesToServer(Runnable callback) {
-        Logger.v("pushVariablesToServer() called");
-        if (CTVariables.isInDevelopmentMode()) {
 
-            JSONObject varsJson = CTVariableUtils.getVarsJson(valuesFromClient, defaultKinds);
-            Logger.v("pushVariablesToServer: sending following vars info to server:" + varsJson);
-
-            //todo replace with server logic
-            Handler handler = new Handler();
-            handler.postDelayed(callback, 2000);
-
-        }
-        else {
-            Logger.v("Since your app is NOT in development mode, vars data will not be sent to server");
-        }
+    public JSONObject getDefineVarsData(){
+        return CTVariableUtils.getVarsJson(valuesFromClient,defaultKinds);
     }
 
 

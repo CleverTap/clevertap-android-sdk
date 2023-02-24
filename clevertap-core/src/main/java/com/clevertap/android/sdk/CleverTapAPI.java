@@ -21,6 +21,7 @@ import android.media.AudioAttributes;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.text.TextUtils;
 import androidx.annotation.Discouraged;
 import androidx.annotation.NonNull;
@@ -58,6 +59,7 @@ import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ManifestValidator;
 import com.clevertap.android.sdk.validation.ValidationResult;
+import com.clevertap.android.sdk.variables.CTVariableUtils;
 import com.clevertap.android.sdk.variables.CTVariables;
 import com.clevertap.android.sdk.variables.Var;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
@@ -3033,12 +3035,13 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             e.printStackTrace();
         }
 
+
         coreState.getAnalyticsManager().sendFetchEvent(event);
     }
 
     /**
      * Check if your app is in development mode. <br>
-     * the following function: {@link CTVariables#pushVariablesToServer(Runnable)} will only work if the app is in
+     * the following function: {@link CleverTapAPI#pushVariablesToServer(Runnable)} will only work if the app is in
      * development mode and user is set as test in CT Dashboard
      *
      * @return boolean
@@ -3047,8 +3050,25 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return CTVariables.isInDevelopmentMode();
     }
 
-    public void pushVariablesToServer(Runnable onComplete) {
-        coreState.getCTVariables().pushVariablesToServer(onComplete);
+    public void pushVariablesToServer() {
+        if(isInDevelopmentMode()){
+            getCleverTapID(x -> {
+                JSONObject js = coreState.getVarCache().getDefineVarsData();
+                coreState.getAnalyticsManager().pushDefineVarsEvent(js);
+            });
+
+        }
+
+
+        String id = null;
+        if(isInDevelopmentMode() ){
+            JSONObject varsData = coreState.getVarCache().getDefineVarsData();
+            Logger.v("pushVariablesToServer: sending following vars info to server:" + varsData);
+            coreState.getAnalyticsManager().pushDefineVarsEvent(varsData);
+        }
+        else {
+            Logger.v("Since your app is NOT in development mode, variables data will not be sent to server");
+        }
     }
 
     /**

@@ -3,6 +3,9 @@ package com.clevertap.android.sdk.events;
 import static com.clevertap.android.sdk.utils.CTJsonConverter.getErrorObject;
 
 import android.content.Context;
+
+import androidx.annotation.Nullable;
+
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -103,9 +106,15 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             config.getLogger()
                     .verbose(config.getAccountId(), "Pushing Notification Viewed event onto separate queue");
             processPushNotificationViewedEvent(context, event);
+        } else if(eventType == Constants.DEFINE_VARS_EVENT) {
+            processDefineVarsEvent(context, event);
         } else {
             processEvent(context, event, eventType);
         }
+    }
+
+    private void processDefineVarsEvent(Context context, JSONObject event) {
+        flushQueueSync(context, EventGroup.VARIABLES,event);
     }
 
     @Override
@@ -116,6 +125,11 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
     @Override
     public void flush() {
         flushQueueAsync(context, EventGroup.REGULAR);
+    }
+
+    @Override
+    public void flushVariables(){
+        flushQueueAsync(context,EventGroup.VARIABLES);
     }
 
     @Override
@@ -130,14 +144,14 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
                 } else {
                     logger.verbose(config.getAccountId(), "Pushing event onto queue flush sync");
                 }
-                flushQueueSync(context, eventGroup);
+                flushQueueSync(context, eventGroup,null);
                 return null;
             }
         });
     }
 
     @Override
-    public void flushQueueSync(final Context context, final EventGroup eventGroup) {
+    public void flushQueueSync(final Context context, final EventGroup eventGroup, @Nullable final JSONObject immediateSendJson) {
         if (!NetworkManager.isNetworkOnline(context)) {
             logger.verbose(config.getAccountId(), "Network connectivity unavailable. Will retry later");
             return;
@@ -149,17 +163,28 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             return;
         }
 
+        Runnable queueOrRunImmediately = () -> {
+            if(immediateSendJson!=null){
+                //logic
+                //networkManager.
+            }
+            else {
+                networkManager.flushDBQueue(context, eventGroup);
+            }
+        };
+
+
+
         if (networkManager.needsHandshakeForDomain(eventGroup)) {
-            networkManager.initHandshake(eventGroup, new Runnable() {
-                @Override
-                public void run() {
-                    networkManager.flushDBQueue(context, eventGroup);
-                }
-            });
+            networkManager.initHandshake(eventGroup, queueOrRunImmediately);
         } else {
             logger.verbose(config.getAccountId(), "Pushing Notification Viewed event onto queue DB flush");
-            networkManager.flushDBQueue(context, eventGroup);
+            queueOrRunImmediately.run();
         }
+
+
+
+
     }
 
     public LoginInfoProvider getLoginInfoProvider() {
@@ -469,9 +494,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             pushNotificationViewedRunnable = new Runnable() {
                 @Override
                 public void run() {
-                    config.getLogger()
-                            .verbose(config.getAccountId(),
-                                    "Pushing Notification Viewed event onto queue flush async");
+                    config.getLogger().verbose(config.getAccountId(), "Pushing Notification Viewed event onto queue flush async");
                     flushQueueAsync(context, EventGroup.PUSH_NOTIFICATION_VIEWED);
                 }
             };

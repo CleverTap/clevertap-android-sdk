@@ -1,6 +1,9 @@
 package com.clevertap.android.sdk.events;
 
 import android.content.Context;
+
+import androidx.annotation.Nullable;
+
 import java.util.concurrent.Future;
 import org.json.JSONObject;
 
@@ -11,6 +14,7 @@ public abstract class BaseEventQueueManager {
     public abstract void addToQueue(final Context context, final JSONObject event, final int eventType);
 
     public abstract void flush();
+    public abstract void flushVariables();
 
     public abstract void flushQueueAsync(final Context context, final EventGroup eventGroup);
 
@@ -18,7 +22,7 @@ public abstract class BaseEventQueueManager {
 
     public abstract void pushInitialEventsAsync();
 
-    public abstract void flushQueueSync(final Context context, final EventGroup eventGroup);
+    public abstract void flushQueueSync(final Context context, final EventGroup eventGroup, @Nullable final  JSONObject immediateSendJson);
 
     public abstract void scheduleQueueFlush(final Context context);
 }

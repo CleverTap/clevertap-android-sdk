@@ -328,11 +328,8 @@ public class NetworkManager extends BaseNetworkManager {
             if (region != null && region.trim().length() > 0) {
                 // Always set this to 0 so that the handshake is not performed during a HTTP failure
                 setResponseFailureCount(0);
-                if (eventGroup.equals(EventGroup.PUSH_NOTIFICATION_VIEWED)) {
-                    return region.trim().toLowerCase() + eventGroup.httpResource + "." + Constants.PRIMARY_DOMAIN;
-                } else {
-                    return region.trim().toLowerCase() + "." + Constants.PRIMARY_DOMAIN;
-                }
+                String primaryDomain = Constants.PRIMARY_DOMAIN;
+                return region.trim().toLowerCase() + eventGroup.httpResource+"."+primaryDomain+eventGroup.additionalPath;
             }
         } catch (Throwable t) {
             // Ignore

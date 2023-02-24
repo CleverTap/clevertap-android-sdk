@@ -4,6 +4,7 @@ import android.text.Editable;
 
 import androidx.annotation.RestrictTo;
 
+import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 
 import org.json.JSONArray;
@@ -438,7 +439,7 @@ public final class CTVariableUtils {
     public static JSONObject getVarsJson(Map<String, Object> values, Map<String, String> kinds) {
        try {
            JSONObject resultJson = new JSONObject();
-           resultJson.put("type","varsPayload");
+           resultJson.put("type", Constants.variablePayloadType);
 
            JSONObject vars = new JSONObject();
            for (String valueKey:values.keySet()) {
@@ -462,7 +463,7 @@ public final class CTVariableUtils {
                }
                else {
                    JSONObject varData = new JSONObject();
-                   varData.put("kind",kind);
+                   varData.put("type",kind);
                    varData.put("value",value);
                    vars.put(valueKey,varData);
                }

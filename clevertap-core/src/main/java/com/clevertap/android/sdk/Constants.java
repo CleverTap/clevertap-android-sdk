@@ -54,6 +54,8 @@ public interface Constants {
     int DATA_EVENT = 5;
     int NV_EVENT = 6;
     int FETCH_EVENT = 7;
+    int DEFINE_VARS_EVENT = 8;
+    String variablePayloadType = "varsPayload";
     String WZRK_FETCH = "wzrk_fetch";
     String ICON_BASE_URL = "http://static.wizrocket.com/android/ico/";
     String NOTIFICATION_CLICKED_EVENT_NAME = "Notification Clicked";
