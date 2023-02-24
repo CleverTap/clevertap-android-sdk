@@ -10,7 +10,7 @@ import java.security.cert.X509Certificate;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManagerFactory;
 
-final class SSLContextBuilder {
+final class SSLContextBuilderTest {
 
     SSLContext build() {
         try {
