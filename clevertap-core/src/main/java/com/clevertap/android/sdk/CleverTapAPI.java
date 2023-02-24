@@ -3041,7 +3041,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     /**
      * Check if your app is in development mode. <br>
-     * the following function: {@link CleverTapAPI#pushVariablesToServer(Runnable)} will only work if the app is in
+     * the following function: {@link CleverTapAPI#pushVariablesToServer()} will only work if the app is in
      * development mode and user is set as test in CT Dashboard
      *
      * @return boolean
@@ -3051,22 +3051,14 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     public void pushVariablesToServer() {
-        if(isInDevelopmentMode()){
+        if (isInDevelopmentMode()) {
+            Logger.v("pushVariablesToServer: waiting for id to be available");
             getCleverTapID(x -> {
                 JSONObject js = coreState.getVarCache().getDefineVarsData();
+                Logger.v("pushVariablesToServer: sending following vars info to server:" + js);
                 coreState.getAnalyticsManager().pushDefineVarsEvent(js);
             });
-
-        }
-
-
-        String id = null;
-        if(isInDevelopmentMode() ){
-            JSONObject varsData = coreState.getVarCache().getDefineVarsData();
-            Logger.v("pushVariablesToServer: sending following vars info to server:" + varsData);
-            coreState.getAnalyticsManager().pushDefineVarsEvent(varsData);
-        }
-        else {
+        } else {
             Logger.v("Since your app is NOT in development mode, variables data will not be sent to server");
         }
     }
