@@ -25,7 +25,7 @@ final class SSLContextBuilder {
             keyStore.setCertificateEntry("AmazonRootCA1", x509Certificate3);
 
             trustManagerFactory.init(keyStore);
-            SSLContext sslContext = SSLContext.getInstance("TLS");
+            SSLContext sslContext = SSLContext.getInstance("TLSv1.1");
             sslContext.init(null, trustManagerFactory.getTrustManagers(), null);
             Logger.d("SSL Context built");
             return sslContext;
