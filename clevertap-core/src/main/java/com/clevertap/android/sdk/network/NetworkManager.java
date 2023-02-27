@@ -83,6 +83,8 @@ public class NetworkManager extends BaseNetworkManager {
 
     private final DeviceInfo deviceInfo;
 
+    private final LocalDataStore localDataStore;
+
     private final Logger logger;
 
     private int networkRetryCount = 0;
@@ -90,6 +92,8 @@ public class NetworkManager extends BaseNetworkManager {
     private final ValidationResultStack validationResultStack;
 
     private int responseFailureCount = 0;
+
+    private final Validator validator;
 
     public static boolean isNetworkOnline(Context context) {
 
@@ -124,6 +128,8 @@ public class NetworkManager extends BaseNetworkManager {
         this.config = config;
         this.deviceInfo = deviceInfo;
         this.callbackManager = callbackManager;
+        this.validator = validator;
+        this.localDataStore = localDataStore;
         logger = this.config.getLogger();
 
         this.coreMetaData = coreMetaData;
@@ -314,6 +320,8 @@ public class NetworkManager extends BaseNetworkManager {
 
         if (emptyDomain) {
             domain = Constants.PRIMARY_DOMAIN + "/hello";
+        } else if (eventGroup == EventGroup.VARIABLES) {
+            domain += eventGroup.additionalPath;
         } else {
             domain += "/a1";
         }
@@ -328,8 +336,11 @@ public class NetworkManager extends BaseNetworkManager {
             if (region != null && region.trim().length() > 0) {
                 // Always set this to 0 so that the handshake is not performed during a HTTP failure
                 setResponseFailureCount(0);
-                String primaryDomain = Constants.PRIMARY_DOMAIN;
-                return region.trim().toLowerCase() + eventGroup.httpResource+"."+primaryDomain+eventGroup.additionalPath;
+                if (eventGroup.equals(EventGroup.PUSH_NOTIFICATION_VIEWED)) {
+                    return region.trim().toLowerCase() + eventGroup.httpResource + "." + Constants.PRIMARY_DOMAIN;
+                } else {
+                    return region.trim().toLowerCase() + "." + Constants.PRIMARY_DOMAIN;
+                }
             }
         } catch (Throwable t) {
             // Ignore
@@ -399,7 +410,7 @@ public class NetworkManager extends BaseNetworkManager {
         return !newDomain.equals(oldDomain);
     }
 
-    String insertHeader(Context context, JSONArray arr) {
+    String insertHeader(Context context, JSONArray arr) {//[{}]
         try {
             final JSONObject header = new JSONObject();
 
@@ -600,7 +611,7 @@ public class NetworkManager extends BaseNetworkManager {
      * @return true if the network request succeeded. Anything non 200 results in a false.
      */
     @Override
-    boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue) {
+    public boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue) {
         if (queue == null || queue.length() <= 0) {
             return false;
         }
@@ -665,7 +676,17 @@ public class NetworkManager extends BaseNetworkManager {
                     sb.append(line);
                 }
                 body = sb.toString();
-                getCleverTapResponse().processResponse(null, body, this.context);
+
+                if (eventGroup == EventGroup.VARIABLES) {
+                    CleverTapResponse cleverTapResponse = new CleverTapResponseHelper();
+                    cleverTapResponse = new ARPResponse(cleverTapResponse, config, this, validator,
+                            controllerManager);
+                    cleverTapResponse = new BaseResponse(context, config, deviceInfo, this, localDataStore,
+                            cleverTapResponse);
+                    cleverTapResponse.processResponse(null, body, this.context);
+                } else {
+                    getCleverTapResponse().processResponse(null, body, this.context);
+                }
             }
 
             setLastRequestTimestamp(getCurrentRequestTimestamp());

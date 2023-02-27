@@ -102,7 +102,7 @@ class TestActivity : AppCompatActivity() {
     }
 
     private fun onForceSyncClick(view: View?) {
-        ctApi?.pushVariablesToServer {}
+        ctApi?.pushVariablesToServer()
     }
 
     fun toast(str:String){

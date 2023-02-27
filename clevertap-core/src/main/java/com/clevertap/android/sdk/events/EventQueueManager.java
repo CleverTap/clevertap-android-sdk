@@ -3,9 +3,7 @@ package com.clevertap.android.sdk.events;
 import static com.clevertap.android.sdk.utils.CTJsonConverter.getErrorObject;
 
 import android.content.Context;
-
 import androidx.annotation.Nullable;
-
 import com.clevertap.android.sdk.BaseCallbackManager;
 import com.clevertap.android.sdk.CTLockManager;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -32,6 +30,7 @@ import java.util.Iterator;
 import java.util.TimeZone;
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -167,14 +166,15 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             if(immediateSendJson!=null){
                 //logic
                 //networkManager.
-            }
-            else {
+                boolean isSucess = networkManager.sendQueue(context, eventGroup,
+                        new JSONArray().put(immediateSendJson));
+            } else {
                 networkManager.flushDBQueue(context, eventGroup);
             }
         };
 
-
-
+        // First request is defineVars
+        // First request is normal clevertap event
         if (networkManager.needsHandshakeForDomain(eventGroup)) {
             networkManager.initHandshake(eventGroup, queueOrRunImmediately);
         } else {

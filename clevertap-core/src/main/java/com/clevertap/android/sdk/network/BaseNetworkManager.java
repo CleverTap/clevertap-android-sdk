@@ -15,6 +15,6 @@ public abstract class BaseNetworkManager {
 
     public abstract boolean needsHandshakeForDomain(final EventGroup eventGroup);
 
-    abstract boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue);
+    public abstract boolean sendQueue(final Context context, final EventGroup eventGroup, final JSONArray queue);
 
 }
