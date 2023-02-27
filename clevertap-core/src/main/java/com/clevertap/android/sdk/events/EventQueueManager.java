@@ -126,10 +126,7 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
         flushQueueAsync(context, EventGroup.REGULAR);
     }
 
-    @Override
-    public void flushVariables(){
-        flushQueueAsync(context,EventGroup.VARIABLES);
-    }
+
 
     @Override
     public void flushQueueAsync(final Context context, final EventGroup eventGroup) {
@@ -181,10 +178,6 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
             logger.verbose(config.getAccountId(), "Pushing Notification Viewed event onto queue DB flush");
             queueOrRunImmediately.run();
         }
-
-
-
-
     }
 
     public LoginInfoProvider getLoginInfoProvider() {
