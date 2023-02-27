@@ -161,8 +161,6 @@ public class EventQueueManager extends BaseEventQueueManager implements FailureF
 
         Runnable queueOrRunImmediately = () -> {
             if(immediateSendJson!=null){
-                //logic
-                //networkManager.
                 boolean isSucess = networkManager.sendQueue(context, eventGroup,
                         new JSONArray().put(immediateSendJson));
             } else {

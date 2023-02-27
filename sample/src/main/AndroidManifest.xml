@@ -59,15 +59,11 @@
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-3940256099942544~3347511713" /> <!-- Add meta data for CleverTap Account Id and Account Token -->
-        <meta-data
-            android:name="CLEVERTAP_ACCOUNT_ID"
-            android:value="YOUR ACCT ID" />
-        <meta-data
-            android:name="CLEVERTAP_TOKEN"
-            android:value="YOUR ACCT TOKEN" />
-        <meta-data
-            android:name="CLEVERTAP_REGION"
-            android:value="eu1" /> <!-- Xiaomi Push -->
+
+        <meta-data android:name="CLEVERTAP_ACCOUNT_ID" android:value="468-RZW-ZK6Z" />
+        <meta-data android:name="CLEVERTAP_TOKEN" android:value="012-b64" />
+        <meta-data android:name="CLEVERTAP_REGION" android:value="sk1-staging-25"/>
+        <!-- Xiaomi Push -->
         <meta-data
             android:name="CLEVERTAP_XIAOMI_APP_KEY"
             android:value="@string/xiaomi_app_key" />

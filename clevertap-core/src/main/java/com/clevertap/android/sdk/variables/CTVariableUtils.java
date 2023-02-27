@@ -457,14 +457,14 @@ public final class CTVariableUtils {
                        String flattenedValueKind = kindFromValue(flattenedValue);
                        JSONObject varData = new JSONObject();
                        varData.put("type",flattenedValueKind);
-                       varData.put("value",flattenedValue);
+                       varData.put("defaultValue",flattenedValue);
                        vars.put(flattenedKey,varData);
                    }
                }
                else {
                    JSONObject varData = new JSONObject();
                    varData.put("type",kind);
-                   varData.put("value",value);
+                   varData.put("defaultValue",value);
                    vars.put(valueKey,varData);
                }
            }
