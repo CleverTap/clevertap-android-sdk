@@ -33,6 +33,7 @@ import com.clevertap.android.sdk.variables.annotations.Variable;
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -46,7 +47,16 @@ public class Parser {
 
   private final CTVariables ctVariables;
 
+  private static void log(String msg){
+    Logger.v("ctv_PARSER",msg);
+  }
+
+  private static void log(String msg,Throwable t){
+    Logger.v("ctv_PARSER",msg,t);
+  }
+
   public Parser(final CTVariables ctVariables) {
+    log("Parser() called with: ctVariables = [" + ctVariables + "]");
     this.ctVariables = ctVariables;
   }
 
@@ -57,12 +67,13 @@ public class Parser {
    * @param instances Objects of a class
    */
   public void parseVariables(Object... instances) {
+    log("parseVariables() called with: instances = [" + Arrays.toString(instances) + "]");
     try {
       for (Object instance : instances) {
         parseVariablesHelper(instance, instance.getClass());
       }
     } catch (Throwable t) {
-      Logger.v("Error parsing variables", t);
+      log("Error parsing variables", t);
     }
   }
 
@@ -72,12 +83,13 @@ public class Parser {
    * called)
    */
   public void parseVariablesForClasses(Class<?>... classes) {
+    log("parseVariablesForClasses() called with: classes = [" + Arrays.toString(classes) + "]");
     try {
       for (Class<?> clazz : classes) {
         parseVariablesHelper(null, clazz);
       }
     } catch (Throwable t) {
-      Logger.v("Error parsing variables", t);
+      log("Error parsing variables", t);
     }
   }
 
@@ -136,9 +148,9 @@ public class Parser {
         } else if (fieldTypeString.equals("boolean")) {
           defineVariable(instance, variableName, field.getBoolean(instance), BOOLEAN, field);
         } else if (fieldType.isPrimitive()) {
-          Logger.v( "Variable " + variableName + " is an unsupported primitive type.");
+          log( "Variable " + variableName + " is an unsupported primitive type.");
         } else if (fieldType.isArray()) {
-          Logger.v( "Variable " + variableName + " should be a List instead of an Array.");
+          log( "Variable " + variableName + " should be a List instead of an Array.");
         } else if (List.class.isAssignableFrom(fieldType)) {
           defineVariable(instance, variableName, field.get(instance), ARRAY, field);
         } else if (Map.class.isAssignableFrom(fieldType)) {
@@ -150,13 +162,13 @@ public class Parser {
         }
       }
     } catch (IllegalArgumentException t) {
-      Logger.v( "Error parsing variables(IllegalArgumentException):", t);
+      log( "Error parsing variables(IllegalArgumentException):", t);
       t.printStackTrace();
     } catch (IllegalAccessException t) {
-      Logger.v( "Error parsing variables(IllegalAccessException):", t);
+      log( "Error parsing variables(IllegalAccessException):", t);
       t.printStackTrace();
     } catch (Throwable t) {
-      Logger.v( "Error parsing variables:", t);
+      log( "Error parsing variables:", t);
       t.printStackTrace();
     }
 
@@ -179,7 +191,7 @@ public class Parser {
     // we first call var.define(..) with field name, value and kind
     final Var<T> var = Var.define(name, value, kind, ctVariables);
     if (var == null) {
-      Logger.v("Something went wrong, var is null, returning");
+      log("Something went wrong, var is null, returning");
       return;
     }
 
@@ -204,9 +216,9 @@ public class Parser {
             field.setAccessible(false);
           }
         } catch (IllegalArgumentException e) {
-          Logger.v("Invalid value " + var.value() + " for field " + var.name(), e);
+          log("Invalid value " + var.value() + " for field " + var.name(), e);
         } catch (IllegalAccessException e) {
-          Logger.v("Error setting value for field " + var.name(), e);
+          log("Error setting value for field " + var.name(), e);
         }
       }
     });

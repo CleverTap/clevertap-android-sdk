@@ -1,20 +1,21 @@
 package com.clevertap.android.sdk.variables;
 
 
-import android.content.Context;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import com.clevertap.android.sdk.BuildConfig;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
-import com.clevertap.android.sdk.task.CTExecutors;
 import com.clevertap.android.sdk.variables.callbacks.CacheUpdateBlock;
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
+
+import org.json.JSONObject;
+
 import java.util.ArrayList;
 import java.util.Map;
-import org.json.JSONObject;
 
 
 /**
@@ -43,30 +44,36 @@ public class CTVariables {
 
     private final VarCache varCache;
 
+    private static void log(String msg){
+        Logger.v("ctv_VARIABLES",msg);
+    }
+
     public CTVariables(final VarCache varCache) {
         this.varCache = varCache;
+        this.varCache.setCacheUpdateBlock(triggerVariablesChanged);
+        log("CTVariables(id: "+this.hashCode()+") initialised with varCache:"+varCache.hashCode());
     }
 
 
     /** WORKING: <br>
-     * -2. CleverTapInstanceConfig calls {@link CTVariables()#setVariableContext(Context)} <br><br>
-     * -1. User Calls  {@link Parser#parseVariables} or {@link Parser#parseVariablesForClasses} which creates a {@link Var} instance and ends up calling {@link VarCache#registerVariable(Var)} which sets : <br><br>
-     *      *** {@link VarCache()#vars} to mapOf(varname -> Var("varname",..) ) <br><br>
-     *      *** {@link VarCache()#valuesFromClient}  to mapOf("varNameG"->"varNameL"->value) (check VarCache.registerVariable()) and <br><br>
-     *      *** {@link VarCache()#defaultKinds} to mapOf("varname"->varObj.kind) <br><br>
      *  0. user calls this function which triggers calls the following functions synchronously :<br><br>
-     *      *** {@link VarCache()#setCacheUpdateBlock(CacheUpdateBlock)} : this sets a callback in {@link VarCache} class, which will be triggered once the values are loaded/updated from the server/cache <br><br>
-     *      *** {@link VarCache()#loadDiffs()} : this loads the last cached values of Variables from Shared Preferences, and updates {@link VarCache()#diffs} & {@link VarCache()#merged} accordingly <br><br>
+     *      *** {@link VarCache#setCacheUpdateBlock(CacheUpdateBlock)} : this sets a callback in
+     *          {@link VarCache} class, which will be triggered once the values are loaded/updated
+     *          from the server/cache <br><br>
+     *      *** {@link VarCache#loadDiffs()} : this loads the last cached values of Variables from
+     *          Shared Preferences, and updates {@link VarCache()#diffs} & {@link VarCache()#merged}
+     *          accordingly <br><br>
+     *
      *  Note that user's callbacks are *not* triggered during init call
      */
     public synchronized void init() {
-        varCache.setCacheUpdateBlock(triggerVariablesChanged);
+        log("init() called");
         varCache.loadDiffs();
     }
 
 
     /**
-     * //todo make sure this receives a response from wzrk fetch and app launched
+     * //todo make sure this receives a response from wzrk fetch and app launched and even when these 2 fail
      * originally  <a href="https://github.com/Leanplum/Leanplum-Android-SDK/blob/master/AndroidSDKCore/src/main/java/com/leanplum/Leanplum.java#L843">handleStartResponse()</a><br><br>
      * This function is called once the variable data is available in the response of {@link
      * Constants#APP_LAUNCHED_EVENT}/ {@link Constants#WZRK_FETCH} request  <br><br>
@@ -76,6 +83,7 @@ public class CTVariables {
      * @param response JSONObject
      */
     public void handleVariableResponse(@Nullable final JSONObject response) {
+        log("handleVariableResponse() called with: response = [" + response + "]");
         setVariableResponseReceived(true);
 
         boolean jsonHasVariableData = response != null && true; //check if response was successful, like response.data!=null //todo add logic as per backend response structure
@@ -113,6 +121,7 @@ public class CTVariables {
      * they should still be able to get those previously updated values
      */
     public void addVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
+        log( "addVariablesChangedHandler() called with: handler = [" + handler + "]");
         synchronized (variablesChangedHandlers) {
             variablesChangedHandlers.add(handler);
         }

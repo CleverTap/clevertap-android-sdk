@@ -22,7 +22,6 @@
 package com.clevertap.android.sdk.variables;
 
 import android.content.Context;
-import android.os.Handler;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
@@ -43,6 +42,15 @@ import org.json.JSONObject;
  * @author Ansh Sachdeva.
  */
 public class VarCache {
+    private static void log(String msg){
+        Logger.v("ctv_VARCACHE",msg);
+    }
+
+    private static void log(String msg,Throwable t){
+        Logger.v("ctv_VARCACHE",msg,t);
+    }
+
+
     private final Map<String, Object> valuesFromClient = new HashMap<>();
 
     private final Map<String, Var<?>> vars = new ConcurrentHashMap<>();
@@ -62,11 +70,13 @@ public class VarCache {
     private final Context variablesCtx;
 
     public VarCache(CleverTapInstanceConfig config, Context ctx) {
+        log("VarCache() called with: config = [" + config + "], ctx = [" + ctx + "]");
         this.cacheKey = StorageHelper.storageKeyWithSuffix(config, Constants.CACHED_VARIABLES_KEY);
         this.variablesCtx = ctx;
     }
 
     private void storeDataInCache(@NonNull String data){
+        log("storeDataInCache() called with: data = [" + data + "]");
         try {
             StorageHelper.putString(variablesCtx, cacheKey, data);
         } catch (Throwable t) {
@@ -74,7 +84,10 @@ public class VarCache {
         }
     }
     private String loadDataFromCache(){
-        return StorageHelper.getString(variablesCtx,cacheKey, "{}");
+        log("loadDataFromCache() called");
+        String cache =  StorageHelper.getString(variablesCtx,cacheKey, "{}");
+        log("shared pref cache returned string:\n"+cache+"\n========");
+        return  cache;
     }
 
 
@@ -90,6 +103,7 @@ public class VarCache {
     //    for every next value added, the internal maps of valuesFromClient will get updated accordingly
 
     public void registerVariable(Var<?> var) {
+        log( "registerVariable() called with: var = [" + var + "]");
         vars.put(var.name(), var);
         synchronized (valuesFromClient) {
             CTVariableUtils.updateValuesAndKinds(var.name(), var.nameComponents(), var.defaultValue(), var.kind(), valuesFromClient, defaultKinds);
@@ -116,24 +130,27 @@ public class VarCache {
 
     //will basically call applyVariableDiffs(..) with values stored in pref
     public void loadDiffs() {
+        log( "loadDiffs() called");
         try {
             String variablesFromCache = loadDataFromCache();
             Map<String, Object> variablesAsMap = CTVariableUtils.fromJson(variablesFromCache);
             applyVariableDiffs(variablesAsMap);
 
         } catch (Exception e) {
-            Logger.v("Could not load variable diffs.\n" ,e);
+            log("Could not load variable diffs.\n" ,e);
         }
     }
 
     //same as loadiffs, but will also trigger one/multi time listeners
     public void loadDiffsAndTriggerHandlers() {
+        log( "loadDiffsAndTriggerHandlers() called");
         loadDiffs();
         triggerHasReceivedDiffs();
     }
 
     //same as loadiffs, but differs in 2 aspects: 1) instead of picking data from cache, it receives data as param and 2) it will also trigger one/mult time listeners
     public void updateDiffsAndTriggerHandlers(Map<String, Object> diffs) {
+        log( "updateDiffsAndTriggerHandlers() called with: diffs = [" + diffs + "]");
         applyVariableDiffs(diffs);
         saveDiffs();
         triggerHasReceivedDiffs();
@@ -142,6 +159,7 @@ public class VarCache {
     // saveDiffs() is opposite of loadDiffs() and will save diffs[g]  to cache. must be called on a worker thread to prevent ANR
     @WorkerThread
     public void saveDiffs() {
+        log( "saveDiffs() called");
         String variablesCipher = CTVariableUtils.toJson(diffs);
         storeDataInCache(variablesCipher);
     }
@@ -152,7 +170,7 @@ public class VarCache {
     // (3.) call var.update() for every var in vars[g]
     // (4.)  if silent is false,  call saveDiffs() and triggerHasReceivedDiffs()
     private void applyVariableDiffs(Map<String, Object> diffs) {
-        Logger.v("applyVariableDiffs() called with: diffs = [" + diffs + "]");
+        log("applyVariableDiffs() called with: diffs = [" + diffs + "]");
         if (diffs != null) {
             synchronized (valuesFromClient) {
                 this.diffs = diffs;

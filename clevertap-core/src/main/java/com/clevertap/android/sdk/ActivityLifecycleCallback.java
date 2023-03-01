@@ -38,6 +38,7 @@ public final class ActivityLifecycleCallback {
 
                     @Override
                     public void onActivityCreated(Activity activity, Bundle bundle) {
+                        Logger.v("ctv","ActivityLifecycleCallbacks#onActivityCreated called for activity#"+activity+",bundle#"+bundle);
                         if (cleverTapID != null) {
                             CleverTapAPI.onActivityCreated(activity, cleverTapID);
                         } else {
@@ -47,15 +48,19 @@ public final class ActivityLifecycleCallback {
 
                     @Override
                     public void onActivityDestroyed(Activity activity) {
+                        Logger.v("ctv","ActivityLifecycleCallbacks#onActivityDestroyed called for activity#"+activity);
+
                     }
 
                     @Override
                     public void onActivityPaused(Activity activity) {
+                        Logger.v("ctv","ActivityLifecycleCallbacks#onActivityPaused called for activity#"+activity);
                         CleverTapAPI.onActivityPaused();
                     }
 
                     @Override
                     public void onActivityResumed(Activity activity) {
+                        Logger.v("ctv","ActivityLifecycleCallbacks#onActivityResumed called for activity#"+activity);
                         if (cleverTapID != null) {
                             CleverTapAPI.onActivityResumed(activity, cleverTapID);
                         } else {

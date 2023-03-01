@@ -965,6 +965,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
             try {
                 if (instance != null) {
+                    instance.coreState.getCTVariables().init();
                     instance.coreState.getActivityLifeCycleManager().activityResumed(activity);
                 }
             } catch (Throwable t) {
@@ -3127,13 +3128,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     public void removeAllOneTimeVariablesChangedHandler() {
         coreState.getCTVariables().removeAllOneTimeVariablesChangedHandler();
-    }
-
-
-
-    @Discouraged(message = "will be removed. only open for testing. this should be only called internally")
-    public void init(){
-        coreState.getCTVariables().init();
     }
 
     /**

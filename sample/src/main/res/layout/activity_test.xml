@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    tools:context=".TestActivity">
+    tools:ignore="HardcodedText">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -13,193 +12,291 @@
         android:background="#efefef"
         android:orientation="vertical">
 
-        <HorizontalScrollView
+        <GridLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="8dp">
+            android:columnCount="2"
 
+            >
+
+            <TextView
+                android:id="@+id/btCheckLocal"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="1"
+                android:layout_columnWeight="1"
+                android:layout_margin="2dp"
+                android:background="@drawable/bg_btn"
+                android:gravity="center"
+                android:padding="8dp"
+                android:text="check current data"
+                android:textAllCaps="true"
+                android:textColor="@color/white"
+                android:textSize="12sp" />
+
+
+            <TextView
+                android:id="@+id/btParse"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="1"
+                android:layout_columnWeight="1"
+                android:layout_margin="2dp"
+                android:background="@drawable/bg_btn"
+                android:gravity="center"
+                android:padding="8dp"
+                android:text="parse variables"
+                android:textAllCaps="true"
+                android:textColor="@color/white"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/btDefineVars"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="1"
+                android:layout_columnWeight="1"
+                android:layout_margin="2dp"
+                android:background="@drawable/bg_btn"
+                android:gravity="center"
+                android:padding="8dp"
+                android:text="define variables"
+                android:textAllCaps="true"
+                android:textColor="@color/white"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/btAttachListeners"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="1"
+                android:layout_columnWeight="1"
+                android:layout_margin="2dp"
+                android:background="@drawable/bg_btn"
+                android:gravity="center"
+                android:padding="8dp"
+                android:text="attach listeners"
+                android:textAllCaps="true"
+                android:textColor="@color/white"
+                android:textSize="12sp" />
+
+
+            <TextView
+                android:id="@+id/btAppLaunch"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="1"
+                android:layout_columnWeight="1"
+                android:layout_margin="2dp"
+                android:background="@drawable/bg_btn"
+                android:gravity="center"
+                android:padding="8dp"
+                android:text="request app launch"
+                android:textAllCaps="true"
+                android:textColor="@color/white"
+                android:textSize="12sp" />
+
+
+
+            <TextView
+                android:id="@+id/btRequestWzrkFetch"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="1"
+                android:layout_columnWeight="1"
+                android:layout_margin="2dp"
+                android:background="@drawable/bg_btn"
+                android:gravity="center"
+                android:padding="8dp"
+                android:text="request wzrk fetch"
+                android:textAllCaps="true"
+                android:textColor="@color/white"
+                android:textSize="12sp" />
+
+
+            <TextView
+                android:id="@+id/btServerReqFail"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:layout_columnWeight="1"
+                android:layout_margin="2dp"
+                android:background="@drawable/bg_btn"
+                android:gravity="center"
+                android:padding="8dp"
+                android:text="app launch/wzrk fetch fail"
+                android:textAllCaps="true"
+                android:textColor="@color/white"
+                android:textSize="12sp" />
+
+
+            <TextView
+                android:id="@+id/btSync"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:layout_columnWeight="1"
+                android:layout_margin="2dp"
+                android:background="@drawable/bg_btn"
+                android:gravity="center"
+                android:padding="8dp"
+                android:text="sync local vars to server"
+                android:textAllCaps="true"
+                android:textColor="@color/white"
+                android:textSize="12sp" />
+
+
+        </GridLayout>
+
+        <HorizontalScrollView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            >
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-                <Button
-                    android:id="@+id/btCheckLocal"
+                <LinearLayout
+         
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="8dp"
-                    android:minWidth="0dp"
-                    android:minHeight="0dp"
-                    android:padding="4dp"
-                    android:text="check local data"
-                    android:textSize="16sp" />
+                    android:orientation="vertical"
+                    >
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="global listener multiple time" />
+                    <androidx.core.widget.NestedScrollView
+                        android:layout_width="250dp"
+                        android:layout_height="130dp"
+                        android:fillViewport="true">
 
-                <Button
-                    android:id="@+id/btCheckLocalWithApiFailure"
+                        <TextView
+                            android:id="@+id/tvTerminalWithGlobalListenerMultiple"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_margin="8dp"
+                            android:background="#fff"
+                            android:minHeight="50dp"
+                            android:textColor="#000"
+                            android:textSize="9sp" />
+                    </androidx.core.widget.NestedScrollView>
+                </LinearLayout>
+
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="8dp"
-                    android:minWidth="0dp"
-                    android:minHeight="0dp"
-                    android:padding="4dp"
-                    android:text="check data after api failure"
-                    android:textSize="16sp" />
+                    android:orientation="vertical">
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="global listener one time" />
+                    <androidx.core.widget.NestedScrollView
+                        android:layout_width="250dp"
+                        android:layout_height="130dp"
+                        android:fillViewport="true">
+
+                        <TextView
+                            android:id="@+id/tvTerminalWithGlobalListenerOneTime"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_margin="8dp"
+                            android:background="#fff"
+
+                            android:textColor="#000"
+                            android:textSize="9sp" />
+                    </androidx.core.widget.NestedScrollView>
+                </LinearLayout>
 
 
             </LinearLayout>
         </HorizontalScrollView>
 
         <HorizontalScrollView
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="8dp">
-
+            >
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:gravity="center_vertical"
                 android:orientation="horizontal">
 
-
-
-                <Button
-                    android:id="@+id/btInit"
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="8dp"
-                    android:minWidth="0dp"
-                    android:minHeight="0dp"
-                    android:padding="4dp"
-                    android:text="init"
+                    android:orientation="vertical"
+                    >
 
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="value on demand" />
 
-                    android:textSize="16sp" />
+                    <androidx.core.widget.NestedScrollView
+                        android:layout_width="250dp"
+                        android:layout_height="130dp"
+                        android:fillViewport="true">
 
+                        <TextView
+                            android:id="@+id/tvTerminalValueOnDemand"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_margin="8dp"
+                            android:background="#fff"
+                            android:minHeight="50dp"
+                            android:textColor="#000"
+                            android:textSize="9sp" />
+                    </androidx.core.widget.NestedScrollView>
 
-                <Button
-                    android:id="@+id/btrequestFromServer"
+                </LinearLayout>
+
+                <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="8dp"
-                    android:minWidth="0dp"
-                    android:minHeight="0dp"
-                    android:padding="4dp"
-                    android:text="request for server data"
-                    android:textSize="16sp"
+                    android:orientation="vertical"
+                    >
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="individual listeners" />
+                    <androidx.core.widget.NestedScrollView
+                        android:layout_width="250dp"
+                        android:layout_height="130dp"
+                        android:fillViewport="true">
 
-                    />
-
-                <Button
-                    android:id="@+id/btForceSync"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginHorizontal="8dp"
-                    android:minWidth="0dp"
-                    android:minHeight="0dp"
-                    android:padding="4dp"
-                    android:text="force sync local data to server"
-                    android:textSize="16sp" />
-
-
+                        <TextView
+                            android:id="@+id/tvTerminalWithIndividualListeners"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_margin="8dp"
+                            android:background="#fff"
+                            android:minHeight="50dp"
+                            android:textColor="#000"
+                            android:textSize="9sp"/>
+                    </androidx.core.widget.NestedScrollView>
+                </LinearLayout>
 
 
             </LinearLayout>
+
         </HorizontalScrollView>
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="value on demand" />
-
-        <androidx.core.widget.NestedScrollView
-            android:layout_width="match_parent"
-            android:layout_height="230dp"
-            android:fillViewport="true">
-
-            <TextView
-                android:id="@+id/tvTerminalValueOnDemand"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_margin="8dp"
-                android:background="#fff"
-                android:minHeight="50dp"
-                android:textSize="11sp" />
-        </androidx.core.widget.NestedScrollView>
-
-
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="global listener multiple time" />
-
-        <androidx.core.widget.NestedScrollView
-            android:layout_width="match_parent"
-            android:layout_height="230dp"
-            android:fillViewport="true">
-
-            <TextView
-                android:id="@+id/tvTerminalWithGlobalListenerMultiple"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_margin="8dp"
-                android:background="#fff"
-                android:minHeight="50dp"
-                android:textSize="11sp" />
-        </androidx.core.widget.NestedScrollView>
 
 
 
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="global listener one time" />
-
-        <androidx.core.widget.NestedScrollView
-            android:layout_width="match_parent"
-            android:layout_height="230dp"
-            android:fillViewport="true">
-
-            <TextView
-                android:id="@+id/tvTerminalWithGlobalListenerOneTime"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_margin="8dp"
-                android:background="#fff"
-                android:textSize="11sp" />
-        </androidx.core.widget.NestedScrollView>
 
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="individual listeners" />
 
-        <androidx.core.widget.NestedScrollView
-            android:layout_width="match_parent"
-            android:layout_height="130dp"
-            android:fillViewport="true">
 
-            <TextView
-                android:id="@+id/tvTerminalWithIndividualListeners"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_margin="8dp"
-                android:background="#fff"
-                android:minHeight="50dp"
-                android:textSize="11sp" />
-        </androidx.core.widget.NestedScrollView>
+
+
 
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="100dp"
-            />
-
-
-       
+            android:layout_height="100dp" />
 
 
     </LinearLayout>

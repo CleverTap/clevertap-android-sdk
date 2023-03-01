@@ -21,6 +21,7 @@ public class Var<T> {
     private final CTVariables ctVariables;
 
     public Var( final CTVariables ctVariables) {
+        log("Var() called with: ctVariables = [" + ctVariables + "]");
         this.ctVariables = ctVariables;
     }
 
@@ -43,6 +44,15 @@ public class Var<T> {
     private final List<VariableCallback<T>> valueChangedHandlers = new ArrayList<>();
     private static boolean printedCallbackWarning;
 
+    private static void log(String msg){
+        Logger.v("ctv_VAR",msg);
+    }
+
+    private static void log(String msg,Throwable t){
+        Logger.v("ctv_VAR",msg,t);
+    }
+
+
     public static <T> Var<T> define(String name, T defaultValue, CTVariables ctVariables) {
         String type = CTVariableUtils.kindFromValue(defaultValue);
         return define(name, defaultValue, type, ctVariables);
@@ -58,14 +68,15 @@ public class Var<T> {
      * @return instance of a {@link  Var} class
      */
     public static <T> Var<T> define(String name, T defaultValue, String kind, CTVariables ctVariables) {
+        log( "define() called with: name = [" + name + "], defaultValue = [" + defaultValue + "], kind = [" + kind + "], ctVariables = [" + ctVariables.hashCode() + "]");
         if (TextUtils.isEmpty(name)) {
-            Logger.v("Empty name parameter provided. aborting define operation");
+            log("Empty name parameter provided. aborting define operation");
             return null;
         }
 
         Var<T> existing = ctVariables.getVarCache().getVariable(name);
         if (existing != null) {
-            Logger.v("A variable exists for current field name. returning existing variable");
+            log("A variable exists for current field name. returning existing variable");
             return existing;
         }
 
@@ -92,7 +103,7 @@ public class Var<T> {
      * optionally calls {@link #triggerValueChanged()}
      */
     public synchronized void update() {
-        Logger.v( "update() called");
+        log( "update() called");
         T oldValue = value;
         value = ctVariables.getVarCache().getMergedValueFromComponentArray(nameComponents);
         if (value == null && oldValue == null) {
@@ -106,7 +117,7 @@ public class Var<T> {
             hadStarted = true;
             triggerValueChanged();
         } else {
-            Logger.v("CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered");
+            log("CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered");
         }
     }
 
@@ -205,7 +216,7 @@ public class Var<T> {
 
     void warnIfNotStarted() {
         if (!ctVariables.isVariableResponseReceived() && !printedCallbackWarning) {
-            Logger.v(
+            log(
                     "CleverTap hasn't finished retrieving values from the server. You should use a callback to make sure the value for "
                             + name + " is ready. Otherwise, your app may not use the most up-to-date value.");
             printedCallbackWarning = true;
@@ -230,7 +241,7 @@ public class Var<T> {
     }
     public void addValueChangedHandler(VariableCallback<T> handler) {
         if (handler == null) {
-            Logger.v( "Invalid handler parameter provided.");
+            log( "Invalid handler parameter provided.");
             return;
         }
 
@@ -241,7 +252,7 @@ public class Var<T> {
         if (ctVariables.isVariableResponseReceived()) {
             handler.handle(this);
         } else {
-            Logger.v("The added listener will get triggered once the values are successfully retrieved");
+            log("The added listener will get triggered once the values are successfully retrieved");
         }
     }
     public void removeValueChangedHandler(VariableCallback<T> handler) {

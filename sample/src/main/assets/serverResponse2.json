@@ -1,18 +1,23 @@
 {
-  "welcomeMsg": "Hey from server",
-  "isOptedForOffers": true,
-  "initialCoins": "80",
-  "correctGuessPercentage": "90",
+  "vars": {
+    "welcomeMsg": "Hey from server",
+    "isOptedForOffers": true,
+    "initialCoins": "80",
+    "correctGuessPercentage": "90",
+    "userConfigurableProps.difficultyLevel": 6.6,
+    "userConfigurableProps.ai_Gender": "X",
+    "userConfigurableProps.numberOfGuesses": 25,
+    "userConfigurableProps.watchAddForAnotherGuess": true,
+    "android.samsung.s22": 34999.99,
+    "android.samsung.s23": "Unlisted",
+    "android.nokia.6a": 8000,
+    "android.nokia.12": "Unlisted",
+    "apple.iphone15": "Unlisted",
 
-  "userConfigurableProps.difficultyLevel": 6.6,
-  "userConfigurableProps.ai_Gender": "X",
-  "userConfigurableProps.numberOfGuesses": 25,
-  "userConfigurableProps.watchAddForAnotherGuess": true,
 
-  "android.samsung.s22": 34999.99,
-  "android.samsung.s23": "Unlisted",
-  "android.nokia.6a": 8000,
-  "android.nokia.12": "Unlisted",
-  "apple.iphone15" : "Unlisted"
-
+    "javaIStr": "server2",
+    "javaIBool": false,
+    "javaIInt": 3,
+    "javaIDouble": 3.42
+  }
 }

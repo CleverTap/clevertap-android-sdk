@@ -14,16 +14,12 @@ import kotlin.concurrent.thread
 class FakeServer {
 
     companion object{
-        var ctx : Context? = null
-
-
-        fun getJson(number: Int): JSONObject {
+        fun getJson(number: Int,ctx:Context): JSONObject {
             fun AssetManager.readAssetsFile(fileName : String): String = open(fileName).bufferedReader().use{it.readText()}
-            val ctx = ctx ?: return JSONObject()
 
             val name = when(number){
                 0 -> "localVarsOld.json"
-                1-> "serverResponse1.json"
+                1 -> "serverResponse1.json"
                 2 -> "serverResponse2.json"
                 3 -> "localVarsRequest.json"
 
@@ -33,36 +29,6 @@ class FakeServer {
             return JSONObject(jsonStr)
 
         }
-
-        @JvmStatic
-        fun simulateGetVarsRequest(id:Int, onResponse:(JSONObject)->Unit){
-            val vars1 = getJson(id)
-            val resp = JSONObject()
-            resp.put("vars", vars1)
-
-            thread {
-                Thread.sleep(2000)
-                Utils.runOnUiThread {
-                    Logger.v("request complete. sending data from server to handleStartResponse")
-                    Logger.v(resp.toString(2))
-                    onResponse.invoke(resp)
-                }
-            }
-        }
-
-        @JvmStatic
-        fun sendVariables(requestData: JSONObject,onResponse: Runnable){
-            Logger.v("sendVariables() called with: requestData = $requestData, onResponse = $onResponse")
-            thread {
-                Thread.sleep(2000)
-                Utils.runOnUiThread {
-                    Logger.v("request complete. sent data from sdk to server.")
-                    onResponse.run()
-                }
-            }
-        }
-
-
 
     }
 
