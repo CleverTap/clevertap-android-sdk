@@ -1,5 +1,5 @@
 {
-  "vars": {
+
     "welcomeMsg": "Hey from server",
     "isOptedForOffers": true,
     "initialCoins": "80",
@@ -19,5 +19,5 @@
     "javaIBool": false,
     "javaIInt": 3,
     "javaIDouble": 3.42
-  }
+
 }

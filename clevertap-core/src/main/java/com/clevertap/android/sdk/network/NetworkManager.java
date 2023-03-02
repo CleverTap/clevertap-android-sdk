@@ -38,6 +38,7 @@ import com.clevertap.android.sdk.response.InboxResponse;
 import com.clevertap.android.sdk.response.MetadataResponse;
 import com.clevertap.android.sdk.response.ProductConfigResponse;
 import com.clevertap.android.sdk.response.PushAmpResponse;
+import com.clevertap.android.sdk.response.RequestVariablesResponse;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
@@ -144,6 +145,7 @@ public class NetworkManager extends BaseNetworkManager {
         cleverTapResponse = new FeatureFlagResponse(cleverTapResponse, config, controllerManager);
         cleverTapResponse = new DisplayUnitResponse(cleverTapResponse, config,
                 callbackManager, controllerManager);
+        cleverTapResponse = new RequestVariablesResponse(cleverTapResponse,config,controllerManager,callbackManager);
         cleverTapResponse = new PushAmpResponse(cleverTapResponse, context, config,
                 baseDatabaseManager, callbackManager, controllerManager);
         cleverTapResponse = new InboxResponse(cleverTapResponse, config, ctLockManager,

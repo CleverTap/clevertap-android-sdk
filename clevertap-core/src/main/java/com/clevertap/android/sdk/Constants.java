@@ -89,6 +89,7 @@ public interface Constants {
     String INBOX_JSON_RESPONSE_KEY = "inbox_notifs";
     String DISPLAY_UNIT_JSON_RESPONSE_KEY = "adUnit_notifs";
     String FEATURE_FLAG_JSON_RESPONSE_KEY = "ff_notifs";
+    String REQUEST_VARIABLES_JSON_RESPONSE_KEY = "vars";
     String REMOTE_CONFIG_FLAG_JSON_RESPONSE_KEY = "pc_notifs";
     String GEOFENCES_JSON_RESPONSE_KEY = "geofences";
     String DISCARDED_EVENT_JSON_KEY = "d_e";

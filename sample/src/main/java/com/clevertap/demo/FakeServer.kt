@@ -1,16 +1,9 @@
 package com.clevertap.demo
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.res.AssetManager
-import androidx.annotation.Discouraged
-import com.clevertap.android.sdk.Logger
-import com.clevertap.android.sdk.Utils
 import org.json.JSONObject
-import kotlin.concurrent.thread
 
-@Discouraged(message = "remove once backend is available")
-@SuppressLint("DiscouragedApi")
 class FakeServer {
 
     companion object{

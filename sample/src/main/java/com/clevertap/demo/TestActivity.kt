@@ -68,7 +68,7 @@ class TestActivity : AppCompatActivity() {
         toast("defining variables")
 
 
-        definedVar = cleverTapAPI.define("definedVar","hello")
+        definedVar = cleverTapAPI.defineVariable("definedVar","hello")
     }
     private fun attachListeners(cleverTapAPI: CleverTapAPI){
         toast("attaching various listeners")
@@ -99,21 +99,29 @@ class TestActivity : AppCompatActivity() {
     //wzrk_fetch/ app_launch
     private fun appLaunchRequest(cleverTapAPI: CleverTapAPI){
         toast("requesting app launch")
-        cleverTapAPI.onAppLaunchSuccess(FakeServer.getJson(1,this))
+        val response = FakeServer.getJson(1,this)
+        cleverTapAPI.tempGetVariablesApi().handleVariableResponse(response,null)
     }
 
     private fun wzrkFetchRequest(cleverTapAPI: CleverTapAPI ){
         toast("requesting wzrk fetch")
-
-        cleverTapAPI.onAppLaunchSuccess(FakeServer.getJson(if(toggle)1 else 2,this))
+        val response = FakeServer.getJson(if(toggle)1 else 2,this)
+        cleverTapAPI.tempGetVariablesApi().handleVariableResponse(response) { log("handleVariableResponse:$it") }
         toggle!=toggle
-
     }
+    private fun wzrkFetchRequestActual(cleverTapAPI: CleverTapAPI ){
+        toast("requesting wzrk fetch")
+        val response = FakeServer.getJson(if(toggle)1 else 2,this)
+        cleverTapAPI.wzrkFetchVariables { log("handleVariableResponse:$it") }
+        toggle!=toggle
+    }
+
 
     //app launch fail
     private fun serverDataRequestFail(cleverTapAPI: CleverTapAPI){
         toast("requesting app launch(failed)")
-        cleverTapAPI.onAppLaunchFail()
+        cleverTapAPI.tempGetVariablesApi().handleVariableResponse(null) { log("handleVariableResponse:$it") }
+
     }
 
     private fun sync(cleverTapAPI: CleverTapAPI){
@@ -179,7 +187,7 @@ class TestActivity : AppCompatActivity() {
         return definedVar.toString()
     }
 
-    public inline fun StringBuilder.appendy(value: String?): StringBuilder = append(value).appendLine().appendLine()
+    fun StringBuilder.appendy(value: String?): StringBuilder = append(value).appendLine().appendLine()
 
     private fun toast(str:String){
         Toast.makeText(this, str, Toast.LENGTH_LONG).show()

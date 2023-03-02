@@ -142,6 +142,7 @@ class CleverTapFactory {
 
         CTVariables ctVariables = new CTVariables(varCache );
         coreState.setCTVariables(ctVariables);
+        coreState.getControllerManager().setCtVariables(ctVariables);
 
         Parser parser = new Parser(ctVariables);
         coreState.setParser(parser);

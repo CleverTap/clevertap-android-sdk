@@ -10,12 +10,14 @@ import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.variables.callbacks.CacheUpdateBlock;
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
+import com.clevertap.android.sdk.variables.callbacks.VariableRequestHandledCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
 
 import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Map;
+import java.util.concurrent.Callable;
 
 
 /**
@@ -80,19 +82,21 @@ public class CTVariables {
      * -- if the json data is correct we convert json to map and call {@link VarCache#updateDiffsAndTriggerHandlers(Map)}.<br><br>
      * -- else we call {@link VarCache#loadDiffsAndTriggerHandlers()} to set data from cache again
      *
-     * @param response JSONObject
+     * @param response JSONObject . must pass the the json directly (i.e {key:value} and not {vars:{key:value}})
      */
-    public void handleVariableResponse(@Nullable final JSONObject response) {
+    public void handleVariableResponse(@Nullable final JSONObject response, @Nullable VariableRequestHandledCallback callback) {
         log("handleVariableResponse() called with: response = [" + response + "]");
         setVariableResponseReceived(true);
 
-        boolean jsonHasVariableData = response != null && true; //check if response was successful, like response.data!=null //todo add logic as per backend response structure
+        boolean jsonHasVariableData = response != null ; //check if response was successful, like response.data!=null //todo add logic as per backend response structure
         try {
             if (!jsonHasVariableData) {
                 varCache.loadDiffsAndTriggerHandlers();
+                if(callback!=null)callback.onResponseReceived(false);
             } else {
-                Map<String, Object> variableDiffs = CTVariableUtils.mapFromJson(response.optJSONObject(CTVariableUtils.VARS));
+                Map<String, Object> variableDiffs = CTVariableUtils.mapFromJson(response);
                 varCache.updateDiffsAndTriggerHandlers(variableDiffs);
+                if(callback!=null)callback.onResponseReceived(true);
 
             }
         } catch (Throwable t) {

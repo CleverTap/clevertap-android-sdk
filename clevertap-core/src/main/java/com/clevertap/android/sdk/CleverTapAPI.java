@@ -21,7 +21,6 @@ import android.media.AudioAttributes;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.text.TextUtils;
 import androidx.annotation.Discouraged;
 import androidx.annotation.NonNull;
@@ -59,9 +58,9 @@ import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.utils.UriHelper;
 import com.clevertap.android.sdk.validation.ManifestValidator;
 import com.clevertap.android.sdk.validation.ValidationResult;
-import com.clevertap.android.sdk.variables.CTVariableUtils;
 import com.clevertap.android.sdk.variables.CTVariables;
 import com.clevertap.android.sdk.variables.Var;
+import com.clevertap.android.sdk.variables.callbacks.VariableRequestHandledCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -965,7 +964,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
             try {
                 if (instance != null) {
-                    instance.coreState.getCTVariables().init();
+                    instance.coreState.getCTVariables().init();//todo : concern : activity resumed is called multiple times in activity lifecycle
                     instance.coreState.getActivityLifeCycleManager().activityResumed(activity);
                 }
             } catch (Throwable t) {
@@ -2007,6 +2006,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings({"unused", "WeakerAccess"})
     public void onUserLogin(final Map<String, Object> profile, final String cleverTapID) {
         coreState.getLoginController().onUserLogin(profile, cleverTapID);
+        clearAllVariablesForCurrentUser();
     }
 
     /**
@@ -3021,10 +3021,70 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
 
     /**
-     * This api can be used to request variable data from server at any time
+     * Check if your app is in development mode. <br>
+     * the following function: {@link CleverTapAPI#pushVariablesToServer()} will only work if the app is in
+     * development mode and user is set as test in CT Dashboard
+     *
+     * @return boolean
      */
-    void fetchVariables() {
+    boolean isInDevelopmentMode() {
+        return CTVariables.isInDevelopmentMode();
+    }
+
+
+    /**
+     * Defines a new variable
+     * */
+    public <T> Var<T> defineVariable(String name, T defaultValue) {
+        return Var.define(name, defaultValue,coreState.getCTVariables());
+    }
+
+
+    /**
+     * Parses annotations for all given object instances(eg, if variables are defined in
+     * Activity class, then Parser.parseVariables(activityObj) can be called).
+     *
+     * @param instances Objects of a class
+     */
+    public void parseVariables(Object... instances) {
+        coreState.getParser().parseVariables(instances);
+    }
+
+    /**
+     * Parses annotations for all given classes.(eg, if variables are defined in a
+     * separate 'MyVariables' class, then Parser.parseVariablesForClasses(MyVariables.class) can be
+     * called)
+     */
+    public void parseVariablesForClasses(Class<?>... classes) {
+        coreState.getParser().parseVariablesForClasses(classes);
+    }
+
+    /**
+     * get current value of a particular variable.
+     */
+    public <T> Var<T> getVariable(String name) {
+        return coreState.getVarCache().getVariable(name);
+    }
+
+
+
+    /**
+     * clear current variable data.can be used during profile switch
+     */
+    private void clearAllVariablesForCurrentUser() {
+        coreState.getCTVariables().clearUserContent();
+    }
+
+
+    /**
+     * request variable data from server at any time
+     */
+    public void wzrkFetchVariables(VariableRequestHandledCallback callback) {
+        if (coreState.getConfig().isAnalyticsOnly()) {
+            return;
+        }
         Logger.v(  "Fetching  variables");
+        coreState.getCallbackManager().setVariableRequestHandledCallback(callback);
 
         JSONObject event = new JSONObject();
         JSONObject notif = new JSONObject();
@@ -3040,17 +3100,14 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         coreState.getAnalyticsManager().sendFetchEvent(event);
     }
 
-    /**
-     * Check if your app is in development mode. <br>
-     * the following function: {@link CleverTapAPI#pushVariablesToServer()} will only work if the app is in
-     * development mode and user is set as test in CT Dashboard
-     *
-     * @return boolean
-     */
-    boolean isInDevelopmentMode() {
-        return CTVariables.isInDevelopmentMode();
-    }
 
+    /**
+     * Forces content to update from the server. If variables have changed, the appropriate callbacks
+     * will fire.
+     *
+     * Use sparingly as if the app is updated, you'll have to deal with potentially
+     * inconsistent state or user experience.
+     */
     public void pushVariablesToServer() {
         if (isInDevelopmentMode()) {
             Logger.v("pushVariablesToServer: waiting for id to be available");
@@ -3064,24 +3121,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
-    /**
-     * This flag indicates whether or not the SDK is still in process of receiving a response
-     * from the server. <br>
-     */
-    public boolean isVariableResponseReceived() {
-        return coreState.getCTVariables().isVariableResponseReceived();
-    }
-
-    /**
-     * get current value of a particular variable.
-     */
-    public <T> Var<T> getVariable(String name) {
-        return coreState.getVarCache().getVariable(name);
-    }
 
 
     /**
-     * Api call to add VariablesChangedHandler
+     * add VariablesChangedHandler
      *
      * @param handler VariablesChangedHandler
      */
@@ -3090,7 +3133,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Api call to add OneTimeVariablesChangedHandler
+     *add OneTimeVariablesChangedHandler
      *
      * @param handler VariablesChangedHandler
      */
@@ -3099,7 +3142,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Api call to remove VariablesChangedHandler
+     *  remove VariablesChangedHandler
      *
      * @param handler VariablesChangedHandler
      */
@@ -3108,7 +3151,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Api call to remove OneTimeVariablesChangedHandler
+     * remove OneTimeVariablesChangedHandler
      *
      * @param handler VariablesChangedHandler
      */
@@ -3117,76 +3160,24 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Api call to remove all VariablesChangedHandlers
+     *  remove all VariablesChangedHandlers
      */
     public void removeAllVariablesChangedHandler() {
         coreState.getCTVariables().removeAllVariablesChangedHandler();
     }
 
     /**
-     * Api call to remove all OneTimeVariablesChangedHandlers
+     *  remove all OneTimeVariablesChangedHandlers
      */
     public void removeAllOneTimeVariablesChangedHandler() {
         coreState.getCTVariables().removeAllOneTimeVariablesChangedHandler();
     }
 
-    /**
-     * clear current variable data.can be used during profile switch
-     */
-    @Discouraged(message = "will be removed. only open for testing. this should be only called internally")
-    public void clearUserContent() {
-        coreState.getCTVariables().clearUserContent();
-    }
 
 
     @Discouraged(message = "will be removed. only open for testing.")
-    public void onAppLaunchFail() {
-        coreState.getCTVariables().handleVariableResponse(null);
-    }
-
-    @Discouraged(message = "will be removed. only open for testing.")
-    public void onAppLaunchSuccess(JSONObject jsonObject) {
-        coreState.getCTVariables().handleVariableResponse(jsonObject);
-    }
-
-
-    /**
-     * ======================== Variables API ===============================
-     */
-
-    public <T> Var<T> define(String name, T defaultValue) {
-        return Var.define(name, defaultValue,coreState.getCTVariables());
-    }
-
-    public <T> Var<T> define(String name, T defaultValue, String kind) {
-        return Var.define(name, defaultValue, kind, coreState.getCTVariables());
-    }
-
-    /**
-     * Forces content to update from the server. If variables have changed, the appropriate callbacks
-     * will fire. Use sparingly as if the app is updated, you'll have to deal with potentially
-     * inconsistent state or user experience.
-     *
-     * @param callback The callback to invoke when the call completes from the server. The callback
-     *                 will fire regardless of whether the variables have changed.
-     */
-    @Discouraged(message = "Be Very careful when calling this api. This should only be called in debug mode")
-    public void forceContentUpdate(VariablesChangedCallback callback) {
-      /*  if (CTVariables.isInDevelopmentMode()) {
-            JSONObject varsJson = CTVariableUtils.getVarsJson(valuesFromClient,defaultKinds);
-            Logger.v("varsJson=\n"+varsJson);
-            FakeServer.sendVariables(jsonObject -> {
-                callback.run();
-                return kotlin.Unit.INSTANCE;
-            });*/
-    }
-
-    public void parseVariables(Object... instances) {
-        coreState.getParser().parseVariables(instances);
-    }
-
-    public void parseVariablesForClasses(Class<?>... classes) {
-        coreState.getParser().parseVariablesForClasses(classes);
+    public CTVariables tempGetVariablesApi(){
+        return coreState.getCTVariables();
     }
 
 
