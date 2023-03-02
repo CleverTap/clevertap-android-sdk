@@ -22,7 +22,6 @@ class TestActivity : AppCompatActivity() {
     private val binding: ActivityTestBinding by lazy { ActivityTestBinding.inflate(layoutInflater) }
 
     private val javaInstance = TestMyVarsJavaInstance()
-    private val ktInstance = TestMyVarsKTInstance()
     private var toggle= false
 
     private var definedVar:Var<String>? = null
@@ -36,6 +35,7 @@ class TestActivity : AppCompatActivity() {
         parseVariables(ctApi!!).also { binding.btParse.isEnabled=false }
         defineVariables(ctApi!!).also { binding.btDefineVars.isEnabled=false }
         attachListeners(ctApi!!).also { binding.btAttachListeners.isEnabled=false }
+
 
         with(binding) {
             btCheckLocal.setOnClickListener{checkLocalValues()}
@@ -57,17 +57,11 @@ class TestActivity : AppCompatActivity() {
     private fun parseVariables(cleverTapAPI: CleverTapAPI){
         toast("parsing various classes")
 
-        cleverTapAPI.parseVariablesForClasses(
-            TestMyVarsJava::class.java,
-            TestMyVarsKTObject::class.java,
-            TestMyVarsKTCompanion::class.java
-        )
-        cleverTapAPI.parseVariables(javaInstance,ktInstance)
+        cleverTapAPI.parseVariablesForClasses(TestMyVarsJava::class.java)
+        cleverTapAPI.parseVariables(javaInstance)
     }
     private fun defineVariables(cleverTapAPI: CleverTapAPI){
         toast("defining variables")
-
-
         definedVar = cleverTapAPI.defineVariable("definedVar","hello")
     }
     private fun attachListeners(cleverTapAPI: CleverTapAPI){
@@ -111,7 +105,6 @@ class TestActivity : AppCompatActivity() {
     }
     private fun wzrkFetchRequestActual(cleverTapAPI: CleverTapAPI ){
         toast("requesting wzrk fetch")
-        val response = FakeServer.getJson(if(toggle)1 else 2,this)
         cleverTapAPI.wzrkFetchVariables { log("handleVariableResponse:$it") }
         toggle!=toggle
     }
@@ -155,28 +148,6 @@ class TestActivity : AppCompatActivity() {
             appendy("- javaIBool = ${javaInstance.javaIBool}| var:${ctApi.getVariable<Boolean>("javaIBool")}")
             appendy("- javaIInt = ${javaInstance.javaIInt} | var:${ctApi.getVariable<Int>("javaIInt")}")
             appendy("- javaIDouble = ${javaInstance.javaIDouble}  | var:${ctApi.getVariable<Double>("javaIDouble")}")
-
-            appendLine("-------------------------------------------------------------------")
-            appendLine("- Kotlin dynamic:")
-            appendy("- ktoStr = ${ktInstance.ktStr} | var:${ctApi.getVariable<String>("ktStr")}")
-            appendy("- ktoBool = ${ktInstance.ktBool}| var:${ctApi.getVariable<Boolean>("ktBool")}")
-            appendy("- ktoInt = ${ktInstance.ktInt} | var:${ctApi.getVariable<Int>("ktInt")}")
-            appendy("- ktoDouble = ${ktInstance.ktDouble}  | var:${ctApi.getVariable<Double>("ktDouble")}")
-
-
-            appendLine("-------------------------------------------------------------------")
-            appendLine("- Kotlin Object:")
-            appendy("- ktoStr = ${TestMyVarsKTObject.ktoStr} | var:${ctApi.getVariable<String>("ktoStr")}")
-            appendy("- ktoBool = ${TestMyVarsKTObject.ktoBool}| var:${ctApi.getVariable<Boolean>("ktoBool")}")
-            appendy("- ktoInt = ${TestMyVarsKTObject.ktoInt} | var:${ctApi.getVariable<Int>("ktoInt")}")
-            appendy("- ktoDouble = ${TestMyVarsKTObject.ktoDouble}  | var:${ctApi.getVariable<Double>("ktoDouble")}")
-
-            appendLine("-------------------------------------------------------------------")
-            appendLine("- Kotlin Companion:")
-            appendy("- tmv2String = ${TestMyVarsKTCompanion.tmv2String} | var:${ctApi.getVariable<String>("tmv2String")}")
-            appendy("- tmv2Boolean = ${TestMyVarsKTCompanion.tmv2Boolean} | var:${ctApi.getVariable<Boolean>("tmv2Boolean")}")
-            appendy("- tmv2Int = ${TestMyVarsKTCompanion.tmv2Int} | var:${ctApi.getVariable<Int>("tmv2Int")}")
-            appendy("- tmv2Float = ${TestMyVarsKTCompanion.tmv2Float} | var:${ctApi.getVariable<Float>("tmv2Float")}")
 
             this.toString()
         }
