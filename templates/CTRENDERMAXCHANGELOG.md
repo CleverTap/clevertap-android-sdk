@@ -1,6 +1,6 @@
 ## CleverTap RenderMax SDK CHANGE LOG
 
-### Version 1.0.3 (March 3, 2023)
+### Version 1.0.3 (March 6, 2023)
 * Fix ANR while receiving push through RenderMax
 * Fix crash - java.lang.IllegalStateException
 
