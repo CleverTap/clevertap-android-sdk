@@ -21,7 +21,7 @@ To use CleverTap's RenderMax SDK with your app, add the following code snippet i
 
 ```groovy
     dependencies {
-         implementation "com.clevertap.android:clevertap-rendermax-sdk:1.0.2"
+         implementation "com.clevertap.android:clevertap-rendermax-sdk:1.0.3"
     }
 ```
 
