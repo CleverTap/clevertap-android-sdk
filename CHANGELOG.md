@@ -1,7 +1,11 @@
 ## CHANGE LOG.
 
+### March 8, 2023
+* [CleverTap Push Templates SDK v1.0.8](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTPUSHTEMPLATESCHANGELOG.md). CleverTap Push Templates SDK `v1.0.8` requires [CleverTap Android SDK v4.7.5](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md) to work properly.
+
 ### March 6, 2023
 * [CleverTap Android SDK v4.7.5](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md)
+* [CleverTap RenderMax SDK v1.0.3](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTRENDERMAXCHANGELOG.md)
 
 ### January 27, 2023
 * [CleverTap Android SDK v4.7.4](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md)

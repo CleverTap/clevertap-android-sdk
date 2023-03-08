@@ -1,5 +1,8 @@
 ## CleverTap Push Templates SDK CHANGE LOG
 
+### Version 1.0.8 (March 8, 2023)
+* Supports CleverTap Android SDK v4.7.5. CleverTap Push Templates SDK `v1.0.8` requires [CleverTap Android SDK v4.7.5](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md) to work properly.
+
 ### Version 1.0.7 (December 5, 2022)
 * UI bug fixes for Non-linear Product Catalogue template.
 * Supports CleverTap Android SDK v4.7.2.
