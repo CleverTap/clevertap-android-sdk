@@ -175,6 +175,7 @@ public class VarCache {
             synchronized (valuesFromClient) {
                 this.diffs = diffs;
                 merged = CTVariableUtils.mergeHelper(valuesFromClient, this.diffs);
+                log("applyVariableDiffs: updated value of merged=["+merged+"]" );
             }
             // Update variables with new values. Have to copy the dictionary because a
             // dictionary variable may add a new sub-variable, modifying the variable dictionary.

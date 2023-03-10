@@ -146,6 +146,14 @@ class CleverTapFactory {
 
         Parser parser = new Parser(ctVariables);
         coreState.setParser(parser);
+
+        CTExecutorFactory.executors(config).postAsyncSafelyTask().execute(
+                "ctv_CleverTapFactory#postAsyncSafelyTask ctVariables.init()",
+                () -> {
+                    ctVariables.init();
+                    return null;
+                }
+        );
         return coreState;
     }
 

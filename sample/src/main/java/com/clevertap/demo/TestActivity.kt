@@ -8,6 +8,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.clevertap.android.sdk.CleverTapAPI
+import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Var
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback
@@ -35,6 +36,7 @@ class TestActivity : AppCompatActivity() {
         parseVariables(ctApi!!).also { binding.btParse.isEnabled=false }
         defineVariables(ctApi!!).also { binding.btDefineVars.isEnabled=false }
         attachListeners(ctApi!!).also { binding.btAttachListeners.isEnabled=false }
+        binding.btAppLaunch.isEnabled = false
 
 
         with(binding) {
@@ -48,6 +50,11 @@ class TestActivity : AppCompatActivity() {
             btSync.setOnClickListener { sync(ctApi!!) }
 
         }
+    }
+
+    override fun onResume() {
+        appLaunchRequest(ctApi!!)
+        super.onResume()
     }
     private fun checkLocalValues() {
         binding.tvTerminalValueOnDemand.text = "definedVars="+getDefinedVarsStr()+"\n========\n"+getParsedVarsString()
@@ -93,15 +100,26 @@ class TestActivity : AppCompatActivity() {
     //wzrk_fetch/ app_launch
     private fun appLaunchRequest(cleverTapAPI: CleverTapAPI){
         toast("requesting app launch")
-        val response = FakeServer.getJson(1,this)
-        cleverTapAPI.tempGetVariablesApi().handleVariableResponse(response,null)
+        CTExecutorFactory
+            .executors(cleverTapAPI.tempGetConfig())
+            .postAsyncSafelyTask<Unit>()
+            .execute("ctv_CleverTap#APP_LAUNCH(fake)") {
+                val response = FakeServer.getJson(1, this)
+                cleverTapAPI.tempGetVariablesApi().handleVariableResponse(response, null)
+            }
+
     }
 
     private fun wzrkFetchRequest(cleverTapAPI: CleverTapAPI ){
         toast("requesting wzrk fetch")
-        val response = FakeServer.getJson(if(toggle)1 else 2,this)
-        cleverTapAPI.tempGetVariablesApi().handleVariableResponse(response) { log("handleVariableResponse:$it") }
-        toggle!=toggle
+        CTExecutorFactory
+            .executors(cleverTapAPI.tempGetConfig())
+            .postAsyncSafelyTask<Unit>()
+            .execute("ctv_CleverTap#WZRK_FETCH(fake)") {
+                val response =  FakeServer.getJson(if(toggle)1 else 2,this)
+                cleverTapAPI.tempGetVariablesApi().handleVariableResponse(response){ log("handleVariableResponse:$it") }
+                toggle!=toggle
+            }
     }
     private fun wzrkFetchRequestActual(cleverTapAPI: CleverTapAPI ){
         toast("requesting wzrk fetch")

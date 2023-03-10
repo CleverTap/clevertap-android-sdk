@@ -1,0 +1,698 @@
+6911-6911(t_main) V/CleverTap:ctv_VARCACHE: VarCache() called with: config = [com.clevertap.android.sdk.CleverTapInstanceConfig@df45b18], ctx = [com.clevertap.demo.MyApplication@6f69c5f]
+6911-6911(t_main) V/CleverTap:ctv_VARIABLES: CTVariables(id: 22825329) initialised with varCache:17949526
+6911-6911(t_main) V/CleverTap:ctv_PARSER: Parser() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@15c4971]
+6911-6967(t1     ) V/CleverTap: PostAsyncSafely Task: ctv_CleverTapFactory#postAsyncSafelyTask ctVariables.init() starting on...pool-17-thread-1
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLES: init() called
+6911-6967(t1     ) V/CleverTap:ctv_VARCACHE: loadDiffs() called
+6911-6967(t1     ) V/CleverTap:ctv_VARCACHE: loadDataFromCache() called
+6911-6967(t1     ) V/CleverTap:ctv_VARCACHE: shared pref cache returned string:
+    {}
+    ========
+6911-6967(t1     ) V/CleverTap:ctv_VARCACHE: applyVariableDiffs() called with: diffs = [{}]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{}], diff = [{}]
+6911-6967(t1     ) V/CleverTap:ctv_VARCACHE: applyVariableDiffs: updated value of merged=[{}]
+6911-6967(t1     ) V/CleverTap: PostAsyncSafely Task: ctv_CleverTapFactory#postAsyncSafelyTask ctVariables.init() executed successfully on...pool-17-thread-1
+6911-6911(t_main) V/CleverTap:ctv: ActivityLifecycleCallbacks#onActivityCreated called for activity#com.clevertap.demo.TestActivity@c47c8b,bundle#null
+6911-6911(t_main) E/ctv_TestActivity: onCreate called
+6911-6911(t_main) E/ctv_TestActivity: parsing various classes
+6911-6911(t_main) V/CleverTap:ctv_PARSER: parseVariablesForClasses() called with: classes = [[class com.clevertap.demo.TestMyVarsJava]]
+6911-6911(t_main) V/CleverTap:ctv_VAR: define() called with: name = [apple.iphone15], defaultValue = [UnReleased], kind = [string], ctVariables = [22825329]
+6911-6911(t_main) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@15c4971]
+6911-6911(t_main) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(apple.iphone15,UnReleased)]
+6911-6911(t_main) V/CleverTap:ctv_VAR: update() called
+6911-6911(t_main) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+6911-6911(t_main) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+6911-6911(t_main) V/CleverTap:ctv_VAR: define() called with: name = [correctGuessPercentage], defaultValue = [50.0], kind = [number], ctVariables = [22825329]
+6911-6911(t_main) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@15c4971]
+6911-6911(t_main) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(correctGuessPercentage,50.0)]
+6911-6911(t_main) V/CleverTap:ctv_VAR: update() called
+6911-6911(t_main) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+6911-6911(t_main) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+6911-6911(t_main) V/CleverTap:ctv_VAR: define() called with: name = [initialCoins], defaultValue = [45], kind = [number], ctVariables = [22825329]
+6911-6911(t_main) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@15c4971]
+6911-6911(t_main) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(initialCoins,45)]
+6911-6911(t_main) V/CleverTap:ctv_VAR: update() called
+6911-6911(t_main) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+6911-6911(t_main) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+6911-6911(t_main) V/CleverTap:ctv_VAR: define() called with: name = [isOptedForOffers], defaultValue = [true], kind = [boolean], ctVariables = [22825329]
+6911-6911(t_main) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@15c4971]
+6911-6911(t_main) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(isOptedForOffers,true)]
+6911-6911(t_main) V/CleverTap:ctv_VAR: update() called
+6911-6911(t_main) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+6911-6911(t_main) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+6911-6911(t_main) V/CleverTap:ctv_VAR: define() called with: name = [android.nokia.12], defaultValue = [UnReleased], kind = [string], ctVariables = [22825329]
+6911-6911(t_main) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@15c4971]
+6911-6911(t_main) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(android.nokia.12,UnReleased)]
+6911-6911(t_main) V/CleverTap:ctv_VAR: update() called
+6911-6911(t_main) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+6911-6911(t_main) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+6911-6911(t_main) V/CleverTap:ctv_VAR: define() called with: name = [android.nokia.6a], defaultValue = [6400], kind = [number], ctVariables = [22825329]
+6911-6911(t_main) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@15c4971]
+6911-6911(t_main) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(android.nokia.6a,6400)]
+6911-6911(t_main) V/CleverTap:ctv_VAR: update() called
+6911-6911(t_main) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+6911-6911(t_main) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+6911-6911(t_main) V/CleverTap:ctv_VAR: define() called with: name = [android.samsung.s22], defaultValue = [54999.99], kind = [number], ctVariables = [22825329]
+6911-6911(t_main) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@15c4971]
+6911-6911(t_main) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(android.samsung.s22,54999.99)]
+6911-6911(t_main) V/CleverTap:ctv_VAR: update() called
+6911-6911(t_main) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+6911-6911(t_main) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+6911-6911(t_main) V/CleverTap:ctv_VAR: define() called with: name = [android.samsung.s23], defaultValue = [UnReleased], kind = [string], ctVariables = [22825329]
+6911-6911(t_main) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@15c4971]
+6911-6911(t_main) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(android.samsung.s23,UnReleased)]
+6911-6911(t_main) V/CleverTap:ctv_VAR: update() called
+6911-6911(t_main) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+6911-6911(t_main) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+6911-6911(t_main) V/CleverTap:ctv_VAR: define() called with: name = [userConfigurableProps], defaultValue = [{difficultyLevel=1.8, ai_Gender=F, numberOfGuesses=10}], kind = [group], ctVariables = [22825329]
+6911-6911(t_main) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@15c4971]
+6911-6911(t_main) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(userConfigurableProps,{difficultyLevel=1.8, ai_Gender=F, numberOfGuesses=10})]
+6911-6911(t_main) V/CleverTap:ctv_VAR: update() called
+6911-6911(t_main) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+6911-6911(t_main) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+6911-6911(t_main) V/CleverTap:ctv_VAR: define() called with: name = [welcomeMsg], defaultValue = [Hello User], kind = [string], ctVariables = [22825329]
+6911-6911(t_main) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@15c4971]
+6911-6911(t_main) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(welcomeMsg,Hello User)]
+6911-6911(t_main) V/CleverTap:ctv_VAR: update() called
+6911-6911(t_main) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+6911-6911(t_main) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+6911-6911(t_main) V/CleverTap:ctv_PARSER: parseVariables() called with: instances = [[com.clevertap.demo.TestMyVarsJavaInstance@534e2a4]]
+6911-6911(t_main) V/CleverTap:ctv_VAR: define() called with: name = [javaIBool], defaultValue = [false], kind = [boolean], ctVariables = [22825329]
+6911-6911(t_main) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@15c4971]
+6911-6911(t_main) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(javaIBool,false)]
+6911-6911(t_main) V/CleverTap:ctv_VAR: update() called
+6911-6911(t_main) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+6911-6911(t_main) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+6911-6911(t_main) V/CleverTap:ctv_VAR: define() called with: name = [javaIDouble], defaultValue = [1.42], kind = [number], ctVariables = [22825329]
+6911-6911(t_main) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@15c4971]
+6911-6911(t_main) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(javaIDouble,1.42)]
+6911-6911(t_main) V/CleverTap:ctv_VAR: update() called
+6911-6911(t_main) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+6911-6911(t_main) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+6911-6911(t_main) V/CleverTap:ctv_VAR: define() called with: name = [javaIInt], defaultValue = [1.0], kind = [number], ctVariables = [22825329]
+6911-6911(t_main) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@15c4971]
+6911-6911(t_main) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(javaIInt,1.0)]
+6911-6911(t_main) V/CleverTap:ctv_VAR: update() called
+6911-6911(t_main) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+6911-6911(t_main) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+6911-6911(t_main) V/CleverTap:ctv_VAR: define() called with: name = [javaIStr], defaultValue = [code_string], kind = [string], ctVariables = [22825329]
+6911-6911(t_main) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@15c4971]
+6911-6911(t_main) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(javaIStr,code_string)]
+6911-6911(t_main) V/CleverTap:ctv_VAR: update() called
+6911-6911(t_main) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+6911-6911(t_main) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+6911-6911(t_main) E/ctv_TestActivity: defining variables
+6911-6911(t_main) V/CleverTap:ctv_VAR: define() called with: name = [definedVar], defaultValue = [hello], kind = [string], ctVariables = [22825329]
+6911-6911(t_main) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@15c4971]
+6911-6911(t_main) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(definedVar,hello)]
+6911-6911(t_main) V/CleverTap:ctv_VAR: update() called
+6911-6911(t_main) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+6911-6911(t_main) E/ctv_TestActivity: attaching various listeners
+6911-6911(t_main) V/CleverTap:ctv_VARIABLES: addVariablesChangedHandler() called with: handler = [com.clevertap.demo.TestActivity$attachListeners$1@36aa80d]
+6911-6911(t_main) E/ctv_TestActivity: define var is Var(definedVar,null)
+6911-6911(t_main) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+6911-6911(t_main) E/ctv_TestActivity: requesting app launch
+6911-6967(t1     ) V/CleverTap: PostAsyncSafely Task: ctv_CleverTap#APP_LAUNCH(fake) starting on...pool-17-thread-1
+6911-6911(t_main) V/CleverTap:ctv: ActivityLifecycleCallbacks#onActivityResumed called for activity#com.clevertap.demo.TestActivity@c47c8b
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLES: handleVariableResponse() called with: response = [{"welcomeMsg":"Hey@{mateeee}","isOptedForOffers":false,"initialCoins":"100","correctGuessPercentage":"80","userConfigurableProps.numberOfGuesses":5,"userConfigurableProps.difficultyLevel":3.3,"userConfigurableProps.ai_Gender":"F","userConfigurableProps.watchAddForAnotherGuess":true,"android.samsung.s22":64999.99,"android.samsung.s23":"Announced","android.nokia.6a":5400.5,"android.nokia.12":"Announced","apple.iphone15":"Announced","javaIStr":"server1","javaIBool":true,"javaIInt":2,"javaIDouble":2.42}]
+6911-6967(t1     ) V/CleverTap:ctv_VARCACHE: updateDiffsAndTriggerHandlers() called with: diffs = [{javaIBool=true, correctGuessPercentage=80, userConfigurableProps.difficultyLevel=3.3, javaIStr=server1, javaIInt=2, android.samsung.s23=Announced, android.samsung.s22=64999.99, android.nokia.6a=5400.5, apple.iphone15=Announced, userConfigurableProps.watchAddForAnotherGuess=true, userConfigurableProps.numberOfGuesses=5, initialCoins=100, android.nokia.12=Announced, isOptedForOffers=false, userConfigurableProps.ai_Gender=F, welcomeMsg=Hey@{mateeee}, javaIDouble=2.42}]
+6911-6967(t1     ) V/CleverTap:ctv_VARCACHE: applyVariableDiffs() called with: diffs = [{javaIBool=true, correctGuessPercentage=80, userConfigurableProps.difficultyLevel=3.3, javaIStr=server1, javaIInt=2, android.samsung.s23=Announced, android.samsung.s22=64999.99, android.nokia.6a=5400.5, apple.iphone15=Announced, userConfigurableProps.watchAddForAnotherGuess=true, userConfigurableProps.numberOfGuesses=5, initialCoins=100, android.nokia.12=Announced, isOptedForOffers=false, userConfigurableProps.ai_Gender=F, welcomeMsg=Hey@{mateeee}, javaIDouble=2.42}]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{javaIBool=false, apple={iphone15=UnReleased}, userConfigurableProps={difficultyLevel=1.8, ai_Gender=F, numberOfGuesses=10}, correctGuessPercentage=50.0, initialCoins=45, javaIStr=code_string, isOptedForOffers=true, javaIInt=1.0, android={nokia={12=UnReleased, 6a=6400}, samsung={s22=54999.99, s23=UnReleased}}, definedVar=hello, welcomeMsg=Hello User, javaIDouble=1.42}], diff = [{javaIBool=true, correctGuessPercentage=80, userConfigurableProps.difficultyLevel=3.3, javaIStr=server1, javaIInt=2, android.samsung.s23=Announced, android.samsung.s22=64999.99, android.nokia.6a=5400.5, apple.iphone15=Announced, userConfigurableProps.watchAddForAnotherGuess=true, userConfigurableProps.numberOfGuesses=5, initialCoins=100, android.nokia.12=Announced, isOptedForOffers=false, userConfigurableProps.ai_Gender=F, welcomeMsg=Hey@{mateeee}, javaIDouble=2.42}]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [false], diff = [true]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{iphone15=UnReleased}], diff = [{iphone15=Announced}]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [UnReleased], diff = [Announced]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{difficultyLevel=1.8, ai_Gender=F, numberOfGuesses=10}], diff = [{watchAddForAnotherGuess=true, difficultyLevel=3.3, ai_Gender=F, numberOfGuesses=5}]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [true]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [1.8], diff = [3.3]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [F], diff = [F]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [10], diff = [5]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [50.0], diff = [80]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [code_string], diff = [server1]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [45], diff = [100]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [true], diff = [false]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [1.0], diff = [2]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{nokia={12=UnReleased, 6a=6400}, samsung={s22=54999.99, s23=UnReleased}}], diff = [{nokia={12=Announced, 6a=5400.5}, samsung={s22=64999.99, s23=Announced}}]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{12=UnReleased, 6a=6400}], diff = [{12=Announced, 6a=5400.5}]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [UnReleased], diff = [Announced]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [6400], diff = [5400.5]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{s22=54999.99, s23=UnReleased}], diff = [{s22=64999.99, s23=Announced}]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [54999.99], diff = [64999.99]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [UnReleased], diff = [Announced]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [Hello User], diff = [Hey@{mateeee}]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [1.42], diff = [2.42]
+6911-6967(t1     ) V/CleverTap:ctv_VARCACHE: applyVariableDiffs: updated value of merged=[{javaIBool=true, apple={iphone15=Announced}, userConfigurableProps={watchAddForAnotherGuess=true, difficultyLevel=3.3, ai_Gender=F, numberOfGuesses=5}, correctGuessPercentage=80, javaIStr=server1, initialCoins=100, isOptedForOffers=false, javaIInt=2, definedVar=hello, android={nokia={12=Announced, 6a=5400.5}, samsung={s22=64999.99, s23=Announced}}, welcomeMsg=Hey@{mateeee}, javaIDouble=2.42}]
+6911-6967(t1     ) V/CleverTap:ctv_VAR: update() called
+6911-6967(t1     ) V/CleverTap:ctv_VAR: update() called
+6911-6967(t1     ) V/CleverTap:ctv_VARCACHE: saveDiffs() called
+6911-6967(t1     ) V/CleverTap:ctv_VARCACHE: storeDataInCache() called with: data = [{"javaIBool":true,"correctGuessPercentage":"80","userConfigurableProps.difficultyLevel":3.3,"javaIStr":"server1","javaIInt":2,"android.samsung.s23":"Announced","android.samsung.s22":64999.99,"android.nokia.6a":5400.5,"apple.iphone15":"Announced","userConfigurableProps.watchAddForAnotherGuess":true,"userConfigurableProps.numberOfGuesses":5,"initialCoins":"100","android.nokia.12":"Announced","isOptedForOffers":false,"userConfigurableProps.ai_Gender":"F","welcomeMsg":"Hey@{mateeee}","javaIDouble":2.42}]
+6911-6967(t1     ) V/CleverTap: PostAsyncSafely Task: ctv_CleverTap#APP_LAUNCH(fake) executed successfully on...pool-17-thread-1
+6979-6979(t2     ) V/CleverTap:ctv_VARCACHE: VarCache() called with: config = [com.clevertap.android.sdk.CleverTapInstanceConfig@2ab5d8d], ctx = [com.clevertap.demo.MyApplication@185fb42]
+6979-6979(t2     ) V/CleverTap:ctv_VARIABLES: CTVariables(id: 262555475) initialised with varCache:12179600
+6979-6979(t2     ) V/CleverTap:ctv_PARSER: Parser() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@fa64753]
+6979-7022(t2.2   ) V/CleverTap: PostAsyncSafely Task: ctv_CleverTapFactory#postAsyncSafelyTask ctVariables.init() starting on...pool-4-thread-1
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLES: init() called
+6979-7022(t2.2   ) V/CleverTap:ctv_VARCACHE: loadDiffs() called
+6979-7022(t2.2   ) V/CleverTap:ctv_VARCACHE: loadDataFromCache() called
+6979-7022(t2.2   ) V/CleverTap:ctv_VARCACHE: shared pref cache returned string:
+    {"javaIBool":true,"correctGuessPercentage":"80","userConfigurableProps.difficultyLevel":3.3,"javaIStr":"server1","javaIInt":2,"android.samsung.s23":"Announced","android.samsung.s22":64999.99,"android.nokia.6a":5400.5,"apple.iphone15":"Announced","userConfigurableProps.watchAddForAnotherGuess":true,"userConfigurableProps.numberOfGuesses":5,"initialCoins":"100","android.nokia.12":"Announced","isOptedForOffers":false,"userConfigurableProps.ai_Gender":"F","welcomeMsg":"Hey@{mateeee}","javaIDouble":2.42}
+    ========
+6979-7022(t2.2   ) V/CleverTap:ctv_VARCACHE: applyVariableDiffs() called with: diffs = [{javaIBool=true, correctGuessPercentage=80, userConfigurableProps.difficultyLevel=3.3, javaIStr=server1, javaIInt=2, android.samsung.s23=Announced, android.samsung.s22=64999.99, android.nokia.6a=5400.5, apple.iphone15=Announced, userConfigurableProps.watchAddForAnotherGuess=true, userConfigurableProps.numberOfGuesses=5, initialCoins=100, android.nokia.12=Announced, isOptedForOffers=false, userConfigurableProps.ai_Gender=F, welcomeMsg=Hey@{mateeee}, javaIDouble=2.42}]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{}], diff = [{javaIBool=true, correctGuessPercentage=80, userConfigurableProps.difficultyLevel=3.3, javaIStr=server1, javaIInt=2, android.samsung.s23=Announced, android.samsung.s22=64999.99, android.nokia.6a=5400.5, apple.iphone15=Announced, userConfigurableProps.watchAddForAnotherGuess=true, userConfigurableProps.numberOfGuesses=5, initialCoins=100, android.nokia.12=Announced, isOptedForOffers=false, userConfigurableProps.ai_Gender=F, welcomeMsg=Hey@{mateeee}, javaIDouble=2.42}]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [true]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{iphone15=Announced}]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [Announced]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{watchAddForAnotherGuess=true, difficultyLevel=3.3, ai_Gender=F, numberOfGuesses=5}]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [true]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [3.3]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [F]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [5]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [80]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [server1]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [100]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [false]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [2]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{nokia={12=Announced, 6a=5400.5}, samsung={s22=64999.99, s23=Announced}}]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{12=Announced, 6a=5400.5}]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [Announced]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [5400.5]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{s22=64999.99, s23=Announced}]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [64999.99]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [Announced]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [Hey@{mateeee}]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6979-7022(t2.2   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [2.42]
+6979-7022(t2.2   ) V/CleverTap:ctv_VARCACHE: applyVariableDiffs: updated value of merged=[{javaIBool=true, apple={iphone15=Announced}, userConfigurableProps={watchAddForAnotherGuess=true, difficultyLevel=3.3, ai_Gender=F, numberOfGuesses=5}, correctGuessPercentage=80, javaIStr=server1, initialCoins=100, isOptedForOffers=false, javaIInt=2, android={nokia={12=Announced, 6a=5400.5}, samsung={s22=64999.99, s23=Announced}}, welcomeMsg=Hey@{mateeee}, javaIDouble=2.42}]
+6979-7022(t2.2   ) V/CleverTap: PostAsyncSafely Task: ctv_CleverTapFactory#postAsyncSafelyTask ctVariables.init() executed successfully on...pool-4-thread-1
+6911-6967(t1     ) V/CleverTap:468-RZW-ZK6Z: ctv_VARIABLE_RESPONSE:Processing Variable response...
+6911-6967(t1     ) V/CleverTap:468-RZW-ZK6Z: ctv_VARIABLE_RESPONSE:processResponse() called with: response = [{"arp":{"j_n":"Zw==","i_n":"Zm4=","d_ts":0,"dh":0,"v":1,"j_s":"{ }","id":"468-RZW-ZK6Z","e_ts":0,"d_e":[],"r_ts":1678440184,"wdt":2.25,"hgt":3.85,"av":"1.4.6-push-plus","sv":40704},"imc":1,"imp":10,"pushamp_notifs":{"list":[],"ack":true,"pf":240},"vars":{"var.hello":"hello, group","folder1.folder2.folder3.numberVariable":40,"userConfigurableProps.difficultyLevel":1.8,"correctGuessPercentage":50,"folder1.stringVariable":"test string","var_dict.nested_string":"hello, nested","var_dict.nested_double":10.5,"folder1.folder2.numberVariable":10.5,"android.samsung.s23":"UnReleased","android.samsung.s22":54999.99,"android.nokia.6a":6400,"var_int":10,"apple.iphone15":"UnReleased","userConfigurableProps.numberOfGuesses":10,"folder1.folder2.folder3.noDescription":100.2,"initialCoins":45,"android.nokia.12":"UnReleased","isOptedForOffers":true,"userConfigurableProps.ai_Gender":"F","var_string":"hello, world","var_bool":true,"welcomeMsg":"Hello User","hello":"hello, world","folder1.folder2.booleanVariable":true}}], stringBody = [{ "arp" : { "j_n" : "Zw==" , "i_n" : "Zm4=" , "d_ts" : 0 , "dh" : 0 , "v" : 1 , "j_s" : "{ }" , "id" : "468-RZW-ZK6Z" , "e_ts" : 0 , "d_e" : [ ] , "r_ts" : 1678440184 , "wdt" : 2.25 , "hgt" : 3.85 , "av" : "1.4.6-push-plus" , "sv" : 40704} , "imc" : 1 , "imp" : 10 , "pushamp_notifs" : { "list" : [ ] , "ack" : true , "pf" : 240} , "vars" : { "var.hello" : "hello, group" , "folder1.folder2.folder3.numberVariable" : 40.0 , "userConfigurableProps.difficultyLevel" : 1.8 , "correctGuessPercentage" : 50.0 , "folder1.stringVariable" : "test string" , "var_dict.nested_string" : "hello, nested" , "var_dict.nested_double" : 10.5 , "folder1.folder2.numberVariable" : 10.5 , "android.samsung.s23" : "UnReleased" , "android.samsung.s22" : 54999.99 , "android.nokia.6a" : 6400.0 , "var_int" : 10.0 , "apple.iphone15" : "UnReleased" , "userConfigurableProps.numberOfGuesses" : 10.0 , "folder1.folder2.folder3.noDescription" : 100.2 , "initialCoins" : 45.0 , "android.nokia.12" : "UnReleased" , "isOptedForOffers" : true , "userConfigurableProps.ai_Gender" : "F" , "var_string" : "hello, world" , "var_bool" : true , "welcomeMsg" : "Hello User" , "hello" : "hello, world" , "folder1.folder2.booleanVariable" : true}}], context = [com.clevertap.demo.MyApplication@6f69c5f]
+6911-6967(t1     ) V/CleverTap:468-RZW-ZK6Z: ctv_VARIABLE_RESPONSE:Processing Request Variables response
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLES: handleVariableResponse() called with: response = [{"var.hello":"hello, group","folder1.folder2.folder3.numberVariable":40,"userConfigurableProps.difficultyLevel":1.8,"correctGuessPercentage":50,"folder1.stringVariable":"test string","var_dict.nested_string":"hello, nested","var_dict.nested_double":10.5,"folder1.folder2.numberVariable":10.5,"android.samsung.s23":"UnReleased","android.samsung.s22":54999.99,"android.nokia.6a":6400,"var_int":10,"apple.iphone15":"UnReleased","userConfigurableProps.numberOfGuesses":10,"folder1.folder2.folder3.noDescription":100.2,"initialCoins":45,"android.nokia.12":"UnReleased","isOptedForOffers":true,"userConfigurableProps.ai_Gender":"F","var_string":"hello, world","var_bool":true,"welcomeMsg":"Hello User","hello":"hello, world","folder1.folder2.booleanVariable":true}]
+6911-6967(t1     ) V/CleverTap:ctv_VARCACHE: updateDiffsAndTriggerHandlers() called with: diffs = [{var.hello=hello, group, folder1.folder2.folder3.numberVariable=40.0, userConfigurableProps.difficultyLevel=1.8, correctGuessPercentage=50.0, folder1.stringVariable=test string, var_dict.nested_string=hello, nested, var_dict.nested_double=10.5, folder1.folder2.numberVariable=10.5, android.samsung.s23=UnReleased, android.samsung.s22=54999.99, android.nokia.6a=6400.0, var_int=10.0, apple.iphone15=UnReleased, userConfigurableProps.numberOfGuesses=10.0, folder1.folder2.folder3.noDescription=100.2, initialCoins=45.0, android.nokia.12=UnReleased, isOptedForOffers=true, userConfigurableProps.ai_Gender=F, var_string=hello, world, var_bool=true, welcomeMsg=Hello User, hello=hello, world, folder1.folder2.booleanVariable=true}]
+6911-6967(t1     ) V/CleverTap:ctv_VARCACHE: applyVariableDiffs() called with: diffs = [{var.hello=hello, group, folder1.folder2.folder3.numberVariable=40.0, userConfigurableProps.difficultyLevel=1.8, correctGuessPercentage=50.0, folder1.stringVariable=test string, var_dict.nested_string=hello, nested, var_dict.nested_double=10.5, folder1.folder2.numberVariable=10.5, android.samsung.s23=UnReleased, android.samsung.s22=54999.99, android.nokia.6a=6400.0, var_int=10.0, apple.iphone15=UnReleased, userConfigurableProps.numberOfGuesses=10.0, folder1.folder2.folder3.noDescription=100.2, initialCoins=45.0, android.nokia.12=UnReleased, isOptedForOffers=true, userConfigurableProps.ai_Gender=F, var_string=hello, world, var_bool=true, welcomeMsg=Hello User, hello=hello, world, folder1.folder2.booleanVariable=true}]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{javaIBool=false, apple={iphone15=UnReleased}, userConfigurableProps={difficultyLevel=1.8, ai_Gender=F, numberOfGuesses=10}, correctGuessPercentage=50.0, initialCoins=45, javaIStr=code_string, isOptedForOffers=true, javaIInt=1.0, android={nokia={12=UnReleased, 6a=6400}, samsung={s22=54999.99, s23=UnReleased}}, definedVar=hello, welcomeMsg=Hello User, javaIDouble=1.42}], diff = [{var.hello=hello, group, folder1.folder2.folder3.numberVariable=40.0, userConfigurableProps.difficultyLevel=1.8, correctGuessPercentage=50.0, folder1.stringVariable=test string, var_dict.nested_string=hello, nested, var_dict.nested_double=10.5, folder1.folder2.numberVariable=10.5, android.samsung.s23=UnReleased, android.samsung.s22=54999.99, android.nokia.6a=6400.0, var_int=10.0, apple.iphone15=UnReleased, userConfigurableProps.numberOfGuesses=10.0, folder1.folder2.folder3.noDescription=100.2, initialCoins=45.0, android.nokia.12=UnReleased, isOptedForOffers=true, userConfigurableProps.ai_Gender=F, var_string=hello, world, var_bool=true, welcomeMsg=Hello User, hello=hello, world, folder1.folder2.booleanVariable=true}]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{difficultyLevel=1.8, ai_Gender=F, numberOfGuesses=10}], diff = [{difficultyLevel=1.8, ai_Gender=F, numberOfGuesses=10.0}]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [1.8], diff = [1.8]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [F], diff = [F]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [10], diff = [10.0]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [50.0], diff = [50.0]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{folder2={folder3={numberVariable=40.0, noDescription=100.2}, numberVariable=10.5, booleanVariable=true}, stringVariable=test string}]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{folder3={numberVariable=40.0, noDescription=100.2}, numberVariable=10.5, booleanVariable=true}]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{numberVariable=40.0, noDescription=100.2}]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [40.0]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [100.2]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [10.5]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [true]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [test string]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{hello=hello, group}]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [hello, group]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{nokia={12=UnReleased, 6a=6400}, samsung={s22=54999.99, s23=UnReleased}}], diff = [{nokia={12=UnReleased, 6a=6400.0}, samsung={s22=54999.99, s23=UnReleased}}]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{12=UnReleased, 6a=6400}], diff = [{12=UnReleased, 6a=6400.0}]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [UnReleased], diff = [UnReleased]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [6400], diff = [6400.0]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{s22=54999.99, s23=UnReleased}], diff = [{s22=54999.99, s23=UnReleased}]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [54999.99], diff = [54999.99]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [UnReleased], diff = [UnReleased]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [10.0]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{iphone15=UnReleased}], diff = [{iphone15=UnReleased}]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [UnReleased], diff = [UnReleased]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [45], diff = [45.0]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [true], diff = [true]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{nested_string=hello, nested, nested_double=10.5}]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [hello, nested]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [10.5]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [hello, world]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [true]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [Hello User], diff = [Hello User]
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+6911-6967(t1     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [hello, world]
+6911-6967(t1     ) V/CleverTap:ctv_VARCACHE: applyVariableDiffs: updated value of merged=[{javaIBool=false, userConfigurableProps={difficultyLevel=1.8, ai_Gender=F, numberOfGuesses=10.0}, correctGuessPercentage=50.0, javaIStr=code_string, folder1={folder2={folder3={numberVariable=40.0, noDescription=100.2}, numberVariable=10.5, booleanVariable=true}, stringVariable=test string}, javaIInt=1.0, var={hello=hello, group}, android={nokia={12=UnReleased, 6a=6400.0}, samsung={s22=54999.99, s23=UnReleased}}, var_int=10.0, apple={iphone15=UnReleased}, initialCoins=45.0, isOptedForOffers=true, definedVar=hello, var_dict={nested_string=hello, nested, nested_double=10.5}, var_string=hello, world, var_bool=true, welcomeMsg=Hello User, hello=hello, world, javaIDouble=1.42}]
+6911-6967(t1     ) V/CleverTap:ctv_VAR: update() called
+6911-6967(t1     ) V/CleverTap:ctv_VAR: update() called
+6911-6967(t1     ) V/CleverTap:ctv_VARCACHE: saveDiffs() called
+6911-6967(t1     ) V/CleverTap:ctv_VARCACHE: storeDataInCache() called with: data = [{"var.hello":"hello, group","folder1.folder2.folder3.numberVariable":40,"userConfigurableProps.difficultyLevel":1.8,"correctGuessPercentage":50,"folder1.stringVariable":"test string","var_dict.nested_string":"hello, nested","var_dict.nested_double":10.5,"folder1.folder2.numberVariable":10.5,"android.samsung.s23":"UnReleased","android.samsung.s22":54999.99,"android.nokia.6a":6400,"var_int":10,"apple.iphone15":"UnReleased","userConfigurableProps.numberOfGuesses":10,"folder1.folder2.folder3.noDescription":100.2,"initialCoins":45,"android.nokia.12":"UnReleased","isOptedForOffers":true,"userConfigurableProps.ai_Gender":"F","var_string":"hello, world","var_bool":true,"welcomeMsg":"Hello User","hello":"hello, world","folder1.folder2.booleanVariable":true}]
+6911-6967(t1     ) V/CleverTap:468-RZW-ZK6Z: ctv_VARIABLE_RESPONSE:Processing Variable response...
+6911-6967(t1     ) V/CleverTap:468-RZW-ZK6Z: ctv_VARIABLE_RESPONSE:processResponse() called with: response = [{"arp":{"j_n":"Zw==","i_n":"Zm4=","d_ts":0,"dh":0,"v":1,"j_s":"{ }","id":"468-RZW-ZK6Z","e_ts":0,"r_ts":1678440184,"wdt":2.25,"hgt":3.85,"av":"1.4.6-push-plus","sv":40704},"imc":1,"imp":10}], stringBody = [{ "arp" : { "j_n" : "Zw==" , "i_n" : "Zm4=" , "d_ts" : 0 , "dh" : 0 , "v" : 1 , "j_s" : "{ }" , "id" : "468-RZW-ZK6Z" , "e_ts" : 0 , "r_ts" : 1678440184 , "wdt" : 2.25 , "hgt" : 3.85 , "av" : "1.4.6-push-plus" , "sv" : 40704} , "imc" : 1 , "imp" : 10}], context = [com.clevertap.demo.MyApplication@6f69c5f]
+6911-6967(t1     ) V/CleverTap:468-RZW-ZK6Z: ctv_VARIABLE_RESPONSE:JSON object doesn't contain the Request Variables key
+6911-6967(t1     ) V/CleverTap:468-RZW-ZK6Z: ctv_VARIABLE_RESPONSE:Processing Variable response...
+6911-6967(t1     ) V/CleverTap:468-RZW-ZK6Z: ctv_VARIABLE_RESPONSE:processResponse() called with: response = [{"arp":{"j_n":"Zw==","i_n":"Zm4=","d_ts":1678440184,"dh":-928622967,"v":1,"j_s":"{ }","id":"468-RZW-ZK6Z","e_ts":0,"r_ts":1678440186,"wdt":2.25,"hgt":3.85,"av":"1.4.6-push-plus","sv":40704},"imc":1,"imp":10,"pushamp_notifs":{"list":[],"ack":true,"pf":240}}], stringBody = [{ "arp" : { "j_n" : "Zw==" , "i_n" : "Zm4=" , "d_ts" : 1678440184 , "dh" : -928622967 , "v" : 1 , "j_s" : "{ }" , "id" : "468-RZW-ZK6Z" , "e_ts" : 0 , "r_ts" : 1678440186 , "wdt" : 2.25 , "hgt" : 3.85 , "av" : "1.4.6-push-plus" , "sv" : 40704} , "imc" : 1 , "imp" : 10 , "pushamp_notifs" : { "list" : [ ] , "ack" : true , "pf" : 240}}], context = [com.clevertap.demo.MyApplication@6f69c5f]
+6911-6967(t1     ) V/CleverTap:468-RZW-ZK6Z: ctv_VARIABLE_RESPONSE:JSON object doesn't contain the Request Variables key
+6911-6911(t_main) V/CleverTap:ctv: ActivityLifecycleCallbacks#onActivityPaused called for activity#com.clevertap.demo.TestActivity@c47c8b
+6911-6911(t_main) V/CleverTap:ctv: ActivityLifecycleCallbacks#onActivityDestroyed called for activity#com.clevertap.demo.TestActivity@c47c8b
+
+<---app killed and restarted-->
+
+7073-7073(t_main_n) V/CleverTap:ctv_VARCACHE: VarCache() called with: config = [com.clevertap.android.sdk.CleverTapInstanceConfig@4b327e8], ctx = [com.clevertap.demo.MyApplication@421b857]
+7073-7073(t_main_n) V/CleverTap:ctv_VARIABLES: CTVariables(id: 122011367) initialised with varCache:109501076
+7073-7073(t_main_n) V/CleverTap:ctv_PARSER: Parser() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@745bee7]
+7073-7128(t1_n     ) V/CleverTap: PostAsyncSafely Task: ctv_CleverTapFactory#postAsyncSafelyTask ctVariables.init() starting on...pool-15-thread-1
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLES: init() called
+7073-7128(t1_n     ) V/CleverTap:ctv_VARCACHE: loadDiffs() called
+7073-7128(t1_n     ) V/CleverTap:ctv_VARCACHE: loadDataFromCache() called
+7073-7128(t1_n     ) V/CleverTap:ctv_VARCACHE: shared pref cache returned string:
+    {"var.hello":"hello, group","folder1.folder2.folder3.numberVariable":40,"userConfigurableProps.difficultyLevel":1.8,"correctGuessPercentage":50,"folder1.stringVariable":"test string","var_dict.nested_string":"hello, nested","var_dict.nested_double":10.5,"folder1.folder2.numberVariable":10.5,"android.samsung.s23":"UnReleased","android.samsung.s22":54999.99,"android.nokia.6a":6400,"var_int":10,"apple.iphone15":"UnReleased","userConfigurableProps.numberOfGuesses":10,"folder1.folder2.folder3.noDescription":100.2,"initialCoins":45,"android.nokia.12":"UnReleased","isOptedForOffers":true,"userConfigurableProps.ai_Gender":"F","var_string":"hello, world","var_bool":true,"welcomeMsg":"Hello User","hello":"hello, world","folder1.folder2.booleanVariable":true}
+    ========
+7073-7128(t1_n     ) V/CleverTap:ctv_VARCACHE: applyVariableDiffs() called with: diffs = [{var.hello=hello, group, folder1.folder2.folder3.numberVariable=40, userConfigurableProps.difficultyLevel=1.8, correctGuessPercentage=50, folder1.stringVariable=test string, var_dict.nested_string=hello, nested, var_dict.nested_double=10.5, folder1.folder2.numberVariable=10.5, android.samsung.s23=UnReleased, android.samsung.s22=54999.99, android.nokia.6a=6400, var_int=10, apple.iphone15=UnReleased, userConfigurableProps.numberOfGuesses=10, folder1.folder2.folder3.noDescription=100.2, initialCoins=45, android.nokia.12=UnReleased, isOptedForOffers=true, userConfigurableProps.ai_Gender=F, var_string=hello, world, var_bool=true, welcomeMsg=Hello User, hello=hello, world, folder1.folder2.booleanVariable=true}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{}], diff = [{var.hello=hello, group, folder1.folder2.folder3.numberVariable=40, userConfigurableProps.difficultyLevel=1.8, correctGuessPercentage=50, folder1.stringVariable=test string, var_dict.nested_string=hello, nested, var_dict.nested_double=10.5, folder1.folder2.numberVariable=10.5, android.samsung.s23=UnReleased, android.samsung.s22=54999.99, android.nokia.6a=6400, var_int=10, apple.iphone15=UnReleased, userConfigurableProps.numberOfGuesses=10, folder1.folder2.folder3.noDescription=100.2, initialCoins=45, android.nokia.12=UnReleased, isOptedForOffers=true, userConfigurableProps.ai_Gender=F, var_string=hello, world, var_bool=true, welcomeMsg=Hello User, hello=hello, world, folder1.folder2.booleanVariable=true}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{difficultyLevel=1.8, ai_Gender=F, numberOfGuesses=10}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [1.8]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [F]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [10]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [50]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{folder2={folder3={numberVariable=40, noDescription=100.2}, numberVariable=10.5, booleanVariable=true}, stringVariable=test string}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{folder3={numberVariable=40, noDescription=100.2}, numberVariable=10.5, booleanVariable=true}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{numberVariable=40, noDescription=100.2}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [40]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [100.2]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [10.5]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [true]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [test string]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{hello=hello, group}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [hello, group]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{nokia={12=UnReleased, 6a=6400}, samsung={s22=54999.99, s23=UnReleased}}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{12=UnReleased, 6a=6400}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [UnReleased]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [6400]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{s22=54999.99, s23=UnReleased}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [54999.99]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [UnReleased]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [10]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{iphone15=UnReleased}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [UnReleased]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [45]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [true]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{nested_string=hello, nested, nested_double=10.5}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [hello, nested]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [10.5]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [hello, world]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [true]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [Hello User]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [hello, world]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARCACHE: applyVariableDiffs: updated value of merged=[{userConfigurableProps={difficultyLevel=1.8, ai_Gender=F, numberOfGuesses=10}, correctGuessPercentage=50, folder1={folder2={folder3={numberVariable=40, noDescription=100.2}, numberVariable=10.5, booleanVariable=true}, stringVariable=test string}, var={hello=hello, group}, android={nokia={12=UnReleased, 6a=6400}, samsung={s22=54999.99, s23=UnReleased}}, var_int=10, apple={iphone15=UnReleased}, initialCoins=45, isOptedForOffers=true, var_dict={nested_string=hello, nested, nested_double=10.5}, var_string=hello, world, var_bool=true, welcomeMsg=Hello User, hello=hello, world}]
+7073-7128(t1_n     ) V/CleverTap: PostAsyncSafely Task: ctv_CleverTapFactory#postAsyncSafelyTask ctVariables.init() executed successfully on...pool-15-thread-1
+7073-7073(t_main_n) V/CleverTap:ctv: ActivityLifecycleCallbacks#onActivityCreated called for activity#com.clevertap.demo.TestActivity@1f3f273,bundle#null
+7073-7073(t_main_n) E/ctv_TestActivity: onCreate called
+7073-7073(t_main_n) E/ctv_TestActivity: parsing various classes
+7073-7073(t_main_n) V/CleverTap:ctv_PARSER: parseVariablesForClasses() called with: classes = [[class com.clevertap.demo.TestMyVarsJava]]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: define() called with: name = [apple.iphone15], defaultValue = [UnReleased], kind = [string], ctVariables = [122011367]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@745bee7]
+7073-7073(t_main_n) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(apple.iphone15,UnReleased)]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: update() called
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: define() called with: name = [correctGuessPercentage], defaultValue = [50.0], kind = [number], ctVariables = [122011367]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@745bee7]
+7073-7073(t_main_n) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(correctGuessPercentage,50.0)]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: update() called
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: define() called with: name = [initialCoins], defaultValue = [45], kind = [number], ctVariables = [122011367]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@745bee7]
+7073-7073(t_main_n) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(initialCoins,45)]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: update() called
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: define() called with: name = [isOptedForOffers], defaultValue = [true], kind = [boolean], ctVariables = [122011367]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@745bee7]
+7073-7073(t_main_n) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(isOptedForOffers,true)]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: update() called
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: define() called with: name = [android.nokia.12], defaultValue = [UnReleased], kind = [string], ctVariables = [122011367]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@745bee7]
+7073-7073(t_main_n) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(android.nokia.12,UnReleased)]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: update() called
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: define() called with: name = [android.nokia.6a], defaultValue = [6400], kind = [number], ctVariables = [122011367]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@745bee7]
+7073-7073(t_main_n) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(android.nokia.6a,6400)]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: update() called
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: define() called with: name = [android.samsung.s22], defaultValue = [54999.99], kind = [number], ctVariables = [122011367]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@745bee7]
+7073-7073(t_main_n) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(android.samsung.s22,54999.99)]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: update() called
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: define() called with: name = [android.samsung.s23], defaultValue = [UnReleased], kind = [string], ctVariables = [122011367]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@745bee7]
+7073-7073(t_main_n) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(android.samsung.s23,UnReleased)]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: update() called
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: define() called with: name = [userConfigurableProps], defaultValue = [{difficultyLevel=1.8, ai_Gender=F, numberOfGuesses=10}], kind = [group], ctVariables = [122011367]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@745bee7]
+7073-7073(t_main_n) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(userConfigurableProps,{difficultyLevel=1.8, ai_Gender=F, numberOfGuesses=10})]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: update() called
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: define() called with: name = [welcomeMsg], defaultValue = [Hello User], kind = [string], ctVariables = [122011367]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@745bee7]
+7073-7073(t_main_n) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(welcomeMsg,Hello User)]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: update() called
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+7073-7073(t_main_n) V/CleverTap:ctv_PARSER: parseVariables() called with: instances = [[com.clevertap.demo.TestMyVarsJavaInstance@e117474]]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: define() called with: name = [javaIBool], defaultValue = [false], kind = [boolean], ctVariables = [122011367]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@745bee7]
+7073-7073(t_main_n) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(javaIBool,false)]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: update() called
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: define() called with: name = [javaIDouble], defaultValue = [1.42], kind = [number], ctVariables = [122011367]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@745bee7]
+7073-7073(t_main_n) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(javaIDouble,1.42)]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: update() called
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: define() called with: name = [javaIInt], defaultValue = [1.0], kind = [number], ctVariables = [122011367]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@745bee7]
+7073-7073(t_main_n) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(javaIInt,1.0)]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: update() called
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: define() called with: name = [javaIStr], defaultValue = [code_string], kind = [string], ctVariables = [122011367]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@745bee7]
+7073-7073(t_main_n) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(javaIStr,code_string)]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: update() called
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+7073-7073(t_main_n) E/ctv_TestActivity: defining variables
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: define() called with: name = [definedVar], defaultValue = [hello], kind = [string], ctVariables = [122011367]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: Var() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@745bee7]
+7073-7073(t_main_n) V/CleverTap:ctv_VARCACHE: registerVariable() called with: var = [Var(definedVar,hello)]
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: update() called
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered
+7073-7073(t_main_n) E/ctv_TestActivity: attaching various listeners
+7073-7073(t_main_n) V/CleverTap:ctv_VARIABLES: addVariablesChangedHandler() called with: handler = [com.clevertap.demo.TestActivity$attachListeners$1@4a21d9d]
+7073-7073(t_main_n) E/ctv_TestActivity: define var is Var(definedVar,null)
+7073-7073(t_main_n) V/CleverTap:ctv_VAR: The added listener will get triggered once the values are successfully retrieved
+7073-7073(t_main_n) E/ctv_TestActivity: requesting app launch
+7073-7073(t_main_n) V/CleverTap:ctv: ActivityLifecycleCallbacks#onActivityResumed called for activity#com.clevertap.demo.TestActivity@1f3f273
+7073-7128(t1_n     ) V/CleverTap: PostAsyncSafely Task: ctv_CleverTap#APP_LAUNCH(fake) starting on...pool-15-thread-1
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLES: handleVariableResponse() called with: response = [{"welcomeMsg":"Hey@{mateeee}","isOptedForOffers":false,"initialCoins":"100","correctGuessPercentage":"80","userConfigurableProps.numberOfGuesses":5,"userConfigurableProps.difficultyLevel":3.3,"userConfigurableProps.ai_Gender":"F","userConfigurableProps.watchAddForAnotherGuess":true,"android.samsung.s22":64999.99,"android.samsung.s23":"Announced","android.nokia.6a":5400.5,"android.nokia.12":"Announced","apple.iphone15":"Announced","javaIStr":"server1","javaIBool":true,"javaIInt":2,"javaIDouble":2.42}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARCACHE: updateDiffsAndTriggerHandlers() called with: diffs = [{javaIBool=true, correctGuessPercentage=80, userConfigurableProps.difficultyLevel=3.3, javaIStr=server1, javaIInt=2, android.samsung.s23=Announced, android.samsung.s22=64999.99, android.nokia.6a=5400.5, apple.iphone15=Announced, userConfigurableProps.watchAddForAnotherGuess=true, userConfigurableProps.numberOfGuesses=5, initialCoins=100, android.nokia.12=Announced, isOptedForOffers=false, userConfigurableProps.ai_Gender=F, welcomeMsg=Hey@{mateeee}, javaIDouble=2.42}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARCACHE: applyVariableDiffs() called with: diffs = [{javaIBool=true, correctGuessPercentage=80, userConfigurableProps.difficultyLevel=3.3, javaIStr=server1, javaIInt=2, android.samsung.s23=Announced, android.samsung.s22=64999.99, android.nokia.6a=5400.5, apple.iphone15=Announced, userConfigurableProps.watchAddForAnotherGuess=true, userConfigurableProps.numberOfGuesses=5, initialCoins=100, android.nokia.12=Announced, isOptedForOffers=false, userConfigurableProps.ai_Gender=F, welcomeMsg=Hey@{mateeee}, javaIDouble=2.42}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{javaIBool=false, apple={iphone15=UnReleased}, userConfigurableProps={difficultyLevel=1.8, ai_Gender=F, numberOfGuesses=10}, correctGuessPercentage=50.0, initialCoins=45, javaIStr=code_string, isOptedForOffers=true, javaIInt=1.0, android={nokia={12=UnReleased, 6a=6400}, samsung={s22=54999.99, s23=UnReleased}}, definedVar=hello, welcomeMsg=Hello User, javaIDouble=1.42}], diff = [{javaIBool=true, correctGuessPercentage=80, userConfigurableProps.difficultyLevel=3.3, javaIStr=server1, javaIInt=2, android.samsung.s23=Announced, android.samsung.s22=64999.99, android.nokia.6a=5400.5, apple.iphone15=Announced, userConfigurableProps.watchAddForAnotherGuess=true, userConfigurableProps.numberOfGuesses=5, initialCoins=100, android.nokia.12=Announced, isOptedForOffers=false, userConfigurableProps.ai_Gender=F, welcomeMsg=Hey@{mateeee}, javaIDouble=2.42}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [false], diff = [true]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{iphone15=UnReleased}], diff = [{iphone15=Announced}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [UnReleased], diff = [Announced]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{difficultyLevel=1.8, ai_Gender=F, numberOfGuesses=10}], diff = [{watchAddForAnotherGuess=true, difficultyLevel=3.3, ai_Gender=F, numberOfGuesses=5}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [true]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [1.8], diff = [3.3]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [F], diff = [F]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [10], diff = [5]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [50.0], diff = [80]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [code_string], diff = [server1]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [45], diff = [100]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [true], diff = [false]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [1.0], diff = [2]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{nokia={12=UnReleased, 6a=6400}, samsung={s22=54999.99, s23=UnReleased}}], diff = [{nokia={12=Announced, 6a=5400.5}, samsung={s22=64999.99, s23=Announced}}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{12=UnReleased, 6a=6400}], diff = [{12=Announced, 6a=5400.5}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [UnReleased], diff = [Announced]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [6400], diff = [5400.5]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{s22=54999.99, s23=UnReleased}], diff = [{s22=64999.99, s23=Announced}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [54999.99], diff = [64999.99]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [UnReleased], diff = [Announced]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [Hello User], diff = [Hey@{mateeee}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [1.42], diff = [2.42]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARCACHE: applyVariableDiffs: updated value of merged=[{javaIBool=true, apple={iphone15=Announced}, userConfigurableProps={watchAddForAnotherGuess=true, difficultyLevel=3.3, ai_Gender=F, numberOfGuesses=5}, correctGuessPercentage=80, javaIStr=server1, initialCoins=100, isOptedForOffers=false, javaIInt=2, definedVar=hello, android={nokia={12=Announced, 6a=5400.5}, samsung={s22=64999.99, s23=Announced}}, welcomeMsg=Hey@{mateeee}, javaIDouble=2.42}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VAR: update() called
+7073-7128(t1_n     ) V/CleverTap:ctv_VAR: update() called
+7073-7128(t1_n     ) V/CleverTap:ctv_VARCACHE: saveDiffs() called
+7073-7128(t1_n     ) V/CleverTap:ctv_VARCACHE: storeDataInCache() called with: data = [{"javaIBool":true,"correctGuessPercentage":"80","userConfigurableProps.difficultyLevel":3.3,"javaIStr":"server1","javaIInt":2,"android.samsung.s23":"Announced","android.samsung.s22":64999.99,"android.nokia.6a":5400.5,"apple.iphone15":"Announced","userConfigurableProps.watchAddForAnotherGuess":true,"userConfigurableProps.numberOfGuesses":5,"initialCoins":"100","android.nokia.12":"Announced","isOptedForOffers":false,"userConfigurableProps.ai_Gender":"F","welcomeMsg":"Hey@{mateeee}","javaIDouble":2.42}]
+7073-7128(t1_n     ) V/CleverTap: PostAsyncSafely Task: ctv_CleverTap#APP_LAUNCH(fake) executed successfully on...pool-15-thread-1
+7136-7136(t2_n     ) V/CleverTap:ctv_VARCACHE: VarCache() called with: config = [com.clevertap.android.sdk.CleverTapInstanceConfig@2ab5d8d], ctx = [com.clevertap.demo.MyApplication@185fb42]
+7136-7136(t2_n     ) V/CleverTap:ctv_VARIABLES: CTVariables(id: 262555475) initialised with varCache:12179600
+7136-7136(t2_n     ) V/CleverTap:ctv_PARSER: Parser() called with: ctVariables = [com.clevertap.android.sdk.variables.CTVariables@fa64753]
+7136-7182(t2.2_n   ) V/CleverTap: PostAsyncSafely Task: ctv_CleverTapFactory#postAsyncSafelyTask ctVariables.init() starting on...pool-4-thread-1
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLES: init() called
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARCACHE: loadDiffs() called
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARCACHE: loadDataFromCache() called
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARCACHE: shared pref cache returned string:
+    {"javaIBool":true,"correctGuessPercentage":"80","userConfigurableProps.difficultyLevel":3.3,"javaIStr":"server1","javaIInt":2,"android.samsung.s23":"Announced","android.samsung.s22":64999.99,"android.nokia.6a":5400.5,"apple.iphone15":"Announced","userConfigurableProps.watchAddForAnotherGuess":true,"userConfigurableProps.numberOfGuesses":5,"initialCoins":"100","android.nokia.12":"Announced","isOptedForOffers":false,"userConfigurableProps.ai_Gender":"F","welcomeMsg":"Hey@{mateeee}","javaIDouble":2.42}
+    ========
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARCACHE: applyVariableDiffs() called with: diffs = [{javaIBool=true, correctGuessPercentage=80, userConfigurableProps.difficultyLevel=3.3, javaIStr=server1, javaIInt=2, android.samsung.s23=Announced, android.samsung.s22=64999.99, android.nokia.6a=5400.5, apple.iphone15=Announced, userConfigurableProps.watchAddForAnotherGuess=true, userConfigurableProps.numberOfGuesses=5, initialCoins=100, android.nokia.12=Announced, isOptedForOffers=false, userConfigurableProps.ai_Gender=F, welcomeMsg=Hey@{mateeee}, javaIDouble=2.42}]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{}], diff = [{javaIBool=true, correctGuessPercentage=80, userConfigurableProps.difficultyLevel=3.3, javaIStr=server1, javaIInt=2, android.samsung.s23=Announced, android.samsung.s22=64999.99, android.nokia.6a=5400.5, apple.iphone15=Announced, userConfigurableProps.watchAddForAnotherGuess=true, userConfigurableProps.numberOfGuesses=5, initialCoins=100, android.nokia.12=Announced, isOptedForOffers=false, userConfigurableProps.ai_Gender=F, welcomeMsg=Hey@{mateeee}, javaIDouble=2.42}]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [true]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{iphone15=Announced}]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [Announced]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{watchAddForAnotherGuess=true, difficultyLevel=3.3, ai_Gender=F, numberOfGuesses=5}]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [true]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [3.3]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [F]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [5]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [80]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [server1]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [100]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [false]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [2]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{nokia={12=Announced, 6a=5400.5}, samsung={s22=64999.99, s23=Announced}}]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{12=Announced, 6a=5400.5}]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [Announced]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [5400.5]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{s22=64999.99, s23=Announced}]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [64999.99]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [Announced]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [Hey@{mateeee}]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [2.42]
+7136-7182(t2.2_n   ) V/CleverTap:ctv_VARCACHE: applyVariableDiffs: updated value of merged=[{javaIBool=true, apple={iphone15=Announced}, userConfigurableProps={watchAddForAnotherGuess=true, difficultyLevel=3.3, ai_Gender=F, numberOfGuesses=5}, correctGuessPercentage=80, javaIStr=server1, initialCoins=100, isOptedForOffers=false, javaIInt=2, android={nokia={12=Announced, 6a=5400.5}, samsung={s22=64999.99, s23=Announced}}, welcomeMsg=Hey@{mateeee}, javaIDouble=2.42}]
+7136-7182(t2.2_n   ) V/CleverTap: PostAsyncSafely Task: ctv_CleverTapFactory#postAsyncSafelyTask ctVariables.init() executed successfully on...pool-4-thread-1
+7073-7128(t1_n     ) V/CleverTap:468-RZW-ZK6Z: ctv_VARIABLE_RESPONSE:Processing Variable response...
+7073-7128(t1_n     ) V/CleverTap:468-RZW-ZK6Z: ctv_VARIABLE_RESPONSE:processResponse() called with: response = [{"arp":{"j_n":"Zw==","i_n":"Zm4=","d_ts":1678440184,"dh":-928622967,"v":1,"j_s":"{ }","id":"468-RZW-ZK6Z","e_ts":0,"d_e":[],"r_ts":1678440259,"wdt":2.25,"hgt":3.85,"av":"1.4.6-push-plus","sv":40704},"imc":1,"imp":10,"pushamp_notifs":{"list":[],"ack":true,"pf":240},"vars":{"var.hello":"hello, group","folder1.folder2.folder3.numberVariable":40,"userConfigurableProps.difficultyLevel":1.8,"correctGuessPercentage":50,"folder1.stringVariable":"test string","var_dict.nested_string":"hello, nested","var_dict.nested_double":10.5,"folder1.folder2.numberVariable":10.5,"android.samsung.s23":"UnReleased","android.samsung.s22":54999.99,"android.nokia.6a":6400,"var_int":10,"apple.iphone15":"UnReleased","userConfigurableProps.numberOfGuesses":10,"folder1.folder2.folder3.noDescription":100.2,"initialCoins":45,"android.nokia.12":"UnReleased","isOptedForOffers":true,"userConfigurableProps.ai_Gender":"F","var_string":"hello, world","var_bool":true,"welcomeMsg":"Hello User","hello":"hello, world","folder1.folder2.booleanVariable":true}}], stringBody = [{ "arp" : { "j_n" : "Zw==" , "i_n" : "Zm4=" , "d_ts" : 1678440184 , "dh" : -928622967 , "v" : 1 , "j_s" : "{ }" , "id" : "468-RZW-ZK6Z" , "e_ts" : 0 , "d_e" : [ ] , "r_ts" : 1678440259 , "wdt" : 2.25 , "hgt" : 3.85 , "av" : "1.4.6-push-plus" , "sv" : 40704} , "imc" : 1 , "imp" : 10 , "pushamp_notifs" : { "list" : [ ] , "ack" : true , "pf" : 240} , "vars" : { "var.hello" : "hello, group" , "folder1.folder2.folder3.numberVariable" : 40.0 , "userConfigurableProps.difficultyLevel" : 1.8 , "correctGuessPercentage" : 50.0 , "folder1.stringVariable" : "test string" , "var_dict.nested_string" : "hello, nested" , "var_dict.nested_double" : 10.5 , "folder1.folder2.numberVariable" : 10.5 , "android.samsung.s23" : "UnReleased" , "android.samsung.s22" : 54999.99 , "android.nokia.6a" : 6400.0 , "var_int" : 10.0 , "apple.iphone15" : "UnReleased" , "userConfigurableProps.numberOfGuesses" : 10.0 , "folder1.folder2.folder3.noDescription" : 100.2 , "initialCoins" : 45.0 , "android.nokia.12" : "UnReleased" , "isOptedForOffers" : true , "userConfigurableProps.ai_Gender" : "F" , "var_string" : "hello, world" , "var_bool" : true , "welcomeMsg" : "Hello User" , "hello" : "hello, world" , "folder1.folder2.booleanVariable" : true}}], context = [com.clevertap.demo.MyApplication@421b857]
+7073-7128(t1_n     ) V/CleverTap:468-RZW-ZK6Z: ctv_VARIABLE_RESPONSE:Processing Request Variables response
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLES: handleVariableResponse() called with: response = [{"var.hello":"hello, group","folder1.folder2.folder3.numberVariable":40,"userConfigurableProps.difficultyLevel":1.8,"correctGuessPercentage":50,"folder1.stringVariable":"test string","var_dict.nested_string":"hello, nested","var_dict.nested_double":10.5,"folder1.folder2.numberVariable":10.5,"android.samsung.s23":"UnReleased","android.samsung.s22":54999.99,"android.nokia.6a":6400,"var_int":10,"apple.iphone15":"UnReleased","userConfigurableProps.numberOfGuesses":10,"folder1.folder2.folder3.noDescription":100.2,"initialCoins":45,"android.nokia.12":"UnReleased","isOptedForOffers":true,"userConfigurableProps.ai_Gender":"F","var_string":"hello, world","var_bool":true,"welcomeMsg":"Hello User","hello":"hello, world","folder1.folder2.booleanVariable":true}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARCACHE: updateDiffsAndTriggerHandlers() called with: diffs = [{var.hello=hello, group, folder1.folder2.folder3.numberVariable=40.0, userConfigurableProps.difficultyLevel=1.8, correctGuessPercentage=50.0, folder1.stringVariable=test string, var_dict.nested_string=hello, nested, var_dict.nested_double=10.5, folder1.folder2.numberVariable=10.5, android.samsung.s23=UnReleased, android.samsung.s22=54999.99, android.nokia.6a=6400.0, var_int=10.0, apple.iphone15=UnReleased, userConfigurableProps.numberOfGuesses=10.0, folder1.folder2.folder3.noDescription=100.2, initialCoins=45.0, android.nokia.12=UnReleased, isOptedForOffers=true, userConfigurableProps.ai_Gender=F, var_string=hello, world, var_bool=true, welcomeMsg=Hello User, hello=hello, world, folder1.folder2.booleanVariable=true}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARCACHE: applyVariableDiffs() called with: diffs = [{var.hello=hello, group, folder1.folder2.folder3.numberVariable=40.0, userConfigurableProps.difficultyLevel=1.8, correctGuessPercentage=50.0, folder1.stringVariable=test string, var_dict.nested_string=hello, nested, var_dict.nested_double=10.5, folder1.folder2.numberVariable=10.5, android.samsung.s23=UnReleased, android.samsung.s22=54999.99, android.nokia.6a=6400.0, var_int=10.0, apple.iphone15=UnReleased, userConfigurableProps.numberOfGuesses=10.0, folder1.folder2.folder3.noDescription=100.2, initialCoins=45.0, android.nokia.12=UnReleased, isOptedForOffers=true, userConfigurableProps.ai_Gender=F, var_string=hello, world, var_bool=true, welcomeMsg=Hello User, hello=hello, world, folder1.folder2.booleanVariable=true}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{javaIBool=false, apple={iphone15=UnReleased}, userConfigurableProps={difficultyLevel=1.8, ai_Gender=F, numberOfGuesses=10}, correctGuessPercentage=50.0, initialCoins=45, javaIStr=code_string, isOptedForOffers=true, javaIInt=1.0, android={nokia={12=UnReleased, 6a=6400}, samsung={s22=54999.99, s23=UnReleased}}, definedVar=hello, welcomeMsg=Hello User, javaIDouble=1.42}], diff = [{var.hello=hello, group, folder1.folder2.folder3.numberVariable=40.0, userConfigurableProps.difficultyLevel=1.8, correctGuessPercentage=50.0, folder1.stringVariable=test string, var_dict.nested_string=hello, nested, var_dict.nested_double=10.5, folder1.folder2.numberVariable=10.5, android.samsung.s23=UnReleased, android.samsung.s22=54999.99, android.nokia.6a=6400.0, var_int=10.0, apple.iphone15=UnReleased, userConfigurableProps.numberOfGuesses=10.0, folder1.folder2.folder3.noDescription=100.2, initialCoins=45.0, android.nokia.12=UnReleased, isOptedForOffers=true, userConfigurableProps.ai_Gender=F, var_string=hello, world, var_bool=true, welcomeMsg=Hello User, hello=hello, world, folder1.folder2.booleanVariable=true}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{difficultyLevel=1.8, ai_Gender=F, numberOfGuesses=10}], diff = [{difficultyLevel=1.8, ai_Gender=F, numberOfGuesses=10.0}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [1.8], diff = [1.8]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [F], diff = [F]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [10], diff = [10.0]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [50.0], diff = [50.0]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{folder2={folder3={numberVariable=40.0, noDescription=100.2}, numberVariable=10.5, booleanVariable=true}, stringVariable=test string}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{folder3={numberVariable=40.0, noDescription=100.2}, numberVariable=10.5, booleanVariable=true}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{numberVariable=40.0, noDescription=100.2}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [40.0]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [100.2]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [10.5]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [true]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [test string]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{hello=hello, group}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [hello, group]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{nokia={12=UnReleased, 6a=6400}, samsung={s22=54999.99, s23=UnReleased}}], diff = [{nokia={12=UnReleased, 6a=6400.0}, samsung={s22=54999.99, s23=UnReleased}}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{12=UnReleased, 6a=6400}], diff = [{12=UnReleased, 6a=6400.0}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [UnReleased], diff = [UnReleased]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [6400], diff = [6400.0]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{s22=54999.99, s23=UnReleased}], diff = [{s22=54999.99, s23=UnReleased}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [54999.99], diff = [54999.99]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [UnReleased], diff = [UnReleased]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [10.0]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [{iphone15=UnReleased}], diff = [{iphone15=UnReleased}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [UnReleased], diff = [UnReleased]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [45], diff = [45.0]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [true], diff = [true]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [{nested_string=hello, nested, nested_double=10.5}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [hello, nested]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [10.5]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [hello, world]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [true]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [Hello User], diff = [Hello User]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() : recursive call
+7073-7128(t1_n     ) V/CleverTap:ctv_VARIABLEUTILS: mergeHelper() called with: vars = [null], diff = [hello, world]
+7073-7128(t1_n     ) V/CleverTap:ctv_VARCACHE: applyVariableDiffs: updated value of merged=[{javaIBool=false, userConfigurableProps={difficultyLevel=1.8, ai_Gender=F, numberOfGuesses=10.0}, correctGuessPercentage=50.0, javaIStr=code_string, folder1={folder2={folder3={numberVariable=40.0, noDescription=100.2}, numberVariable=10.5, booleanVariable=true}, stringVariable=test string}, javaIInt=1.0, var={hello=hello, group}, android={nokia={12=UnReleased, 6a=6400.0}, samsung={s22=54999.99, s23=UnReleased}}, var_int=10.0, apple={iphone15=UnReleased}, initialCoins=45.0, isOptedForOffers=true, definedVar=hello, var_dict={nested_string=hello, nested, nested_double=10.5}, var_string=hello, world, var_bool=true, welcomeMsg=Hello User, hello=hello, world, javaIDouble=1.42}]
+7073-7128(t1_n     ) V/CleverTap:ctv_VAR: update() called
+7073-7128(t1_n     ) V/CleverTap:ctv_VAR: update() called
+7073-7128(t1_n     ) V/CleverTap:ctv_VARCACHE: saveDiffs() called
+7073-7128(t1_n     ) V/CleverTap:ctv_VARCACHE: storeDataInCache() called with: data = [{"var.hello":"hello, group","folder1.folder2.folder3.numberVariable":40,"userConfigurableProps.difficultyLevel":1.8,"correctGuessPercentage":50,"folder1.stringVariable":"test string","var_dict.nested_string":"hello, nested","var_dict.nested_double":10.5,"folder1.folder2.numberVariable":10.5,"android.samsung.s23":"UnReleased","android.samsung.s22":54999.99,"android.nokia.6a":6400,"var_int":10,"apple.iphone15":"UnReleased","userConfigurableProps.numberOfGuesses":10,"folder1.folder2.folder3.noDescription":100.2,"initialCoins":45,"android.nokia.12":"UnReleased","isOptedForOffers":true,"userConfigurableProps.ai_Gender":"F","var_string":"hello, world","var_bool":true,"welcomeMsg":"Hello User","hello":"hello, world","folder1.folder2.booleanVariable":true}]
+7073-7128(t1_n     ) V/CleverTap:468-RZW-ZK6Z: ctv_VARIABLE_RESPONSE:Processing Variable response...
+7073-7128(t1_n     ) V/CleverTap:468-RZW-ZK6Z: ctv_VARIABLE_RESPONSE:processResponse() called with: response = [{"arp":{"j_n":"Zw==","i_n":"Zm4=","d_ts":1678440184,"dh":-928622967,"v":1,"j_s":"{ }","id":"468-RZW-ZK6Z","e_ts":0,"r_ts":1678440259,"wdt":2.25,"hgt":3.85,"av":"1.4.6-push-plus","sv":40704},"imc":1,"imp":10}], stringBody = [{ "arp" : { "j_n" : "Zw==" , "i_n" : "Zm4=" , "d_ts" : 1678440184 , "dh" : -928622967 , "v" : 1 , "j_s" : "{ }" , "id" : "468-RZW-ZK6Z" , "e_ts" : 0 , "r_ts" : 1678440259 , "wdt" : 2.25 , "hgt" : 3.85 , "av" : "1.4.6-push-plus" , "sv" : 40704} , "imc" : 1 , "imp" : 10}], context = [com.clevertap.demo.MyApplication@421b857]
+7073-7128(t1_n     ) V/CleverTap:468-RZW-ZK6Z: ctv_VARIABLE_RESPONSE:JSON object doesn't contain the Request Variables key

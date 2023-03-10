@@ -964,7 +964,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
             try {
                 if (instance != null) {
-                    instance.coreState.getCTVariables().init();//todo : concern : activity resumed is called multiple times in activity lifecycle
                     instance.coreState.getActivityLifeCycleManager().activityResumed(activity);
                 }
             } catch (Throwable t) {
@@ -3179,6 +3178,13 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public CTVariables tempGetVariablesApi(){
         return coreState.getCTVariables();
     }
+
+    @Discouraged(message = "will be removed. only open for testing.")
+    public CleverTapInstanceConfig tempGetConfig(){
+        return getConfig();
+    }
+
+
 
 
 }

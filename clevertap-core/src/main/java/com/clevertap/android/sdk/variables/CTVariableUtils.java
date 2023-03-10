@@ -30,6 +30,10 @@ public final class CTVariableUtils {
     public static final String ARRAY = "list";
     public static final String NUMBER = "number";
 
+    private static void log(String msg){
+        Logger.v("ctv_VARIABLEUTILS",msg);
+    }
+
 
     // name: "group1.myVariable", nameComponents: ['group1','myVariable'], value: 12.4, kind: "float", values:valuesFromClient[G],kinds: defaultKinds[G]
     //-----
@@ -109,6 +113,7 @@ public final class CTVariableUtils {
 
     // check test for more info
     public static Object mergeHelper(Object vars, Object diff) {
+        log("mergeHelper() called with: vars = [" + vars + "], diff = [" + diff + "]");
         if (diff == null) {
             return vars;
         }
@@ -199,6 +204,7 @@ public final class CTVariableUtils {
             for (Object var : diffKeys) {
                 Object diffsValue = diffMap != null ? diffMap.get(var) : null;
                 Object varsValue = varsMap != null ? varsMap.get(var) : null;
+                log("mergeHelper() : recursive call");
                 Object mergedValues = mergeHelper(varsValue, diffsValue);
                 merged.put(var, mergedValues);
             }
