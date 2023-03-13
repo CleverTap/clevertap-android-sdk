@@ -66,6 +66,7 @@ public class RequestVariablesResponse extends CleverTapResponseDecorator {
 
             if (controllerManager.getCtVariables() != null) {
                 VariableRequestHandledCallback callback = callbackMgr.getVariableRequestHandledCallback();
+                kvJson = getJson(callback!=null) ; //todo remove this line as it replaces server response with fake respnse
                 controllerManager.getCtVariables().handleVariableResponse(kvJson,callback);
                 callbackMgr.setVariableRequestHandledCallback(null);
             }
@@ -79,9 +80,32 @@ public class RequestVariablesResponse extends CleverTapResponseDecorator {
         finally {
             cleverTapResponse.processResponse(response, stringBody, context);
         }
+    }
 
+    private static final String[] jsons = new String[]{
+            "{\"welcomeMsg\":\"Hey{mateeee}\",\"isOptedForOffers\":false,\"initialCoins\":\"100\",\"correctGuessPercentage\":\"80\",\"userConfigurableProps.numberOfGuesses\":5,\"userConfigurableProps.difficultyLevel\":3.3,\"userConfigurableProps.ai_Gender\":\"F\",\"userConfigurableProps.watchAddForAnotherGuess\":true,\"android.samsung.s22\":64999.99,\"android.samsung.s23\":\"Announced\",\"android.nokia.6a\":5400.50,\"android.nokia.12\":\"Announced\",\"apple.iphone15\":\"Announced\",\"javaIStr\":\"server1\",\"javaIBool\":true,\"javaIInt\":2,\"javaIDouble\":2.42,\"definedVar\":\"server1\"}",
+            "{\"welcomeMsg\":\"Hey from server\",\"isOptedForOffers\":true,\"initialCoins\":\"80\",\"correctGuessPercentage\":\"90\",\"userConfigurableProps.difficultyLevel\":6.6,\"userConfigurableProps.ai_Gender\":\"X\",\"userConfigurableProps.numberOfGuesses\":25,\"userConfigurableProps.watchAddForAnotherGuess\":true,\"android.samsung.s22\":34999.99,\"android.samsung.s23\":\"Unlisted\",\"android.nokia.6a\":8000,\"android.nokia.12\":\"Unlisted\",\"apple.iphone15\":\"Unlisted\",\"javaIStr\":\"server2\",\"javaIBool\":false,\"javaIInt\":3,\"javaIDouble\":3.42,\"definedVar\":\"server2\"}"
+    };
 
+    private static int toggler = 0;
 
+    private static JSONObject getJson(boolean useToggler) {
+        JSONObject obj;
+        try {
+            if (!useToggler) obj =  new JSONObject(jsons[0]);
+            else {
+                toggler = toggler + 1;
+                if (toggler % 2 == 0)  obj =  new JSONObject(jsons[0]);
+                else  obj =  new JSONObject(jsons[1]);
+            }
+        } catch (Throwable t) {
+            t.printStackTrace();
+            obj =  null;
+        }
+
+        Logger.v("CleverTap","ctv_VARIABLE_RESPONSE:getJson called with useToggler = "+useToggler+" and returned following json object:"+obj);
+
+        return  obj;
     }
 
 

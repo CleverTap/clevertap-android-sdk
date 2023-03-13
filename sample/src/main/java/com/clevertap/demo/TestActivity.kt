@@ -33,10 +33,11 @@ class TestActivity : AppCompatActivity() {
         log("onCreate called")
         ctApi = CleverTapAPI.getDefaultInstance(this)
 
-        parseVariables(ctApi!!).also { binding.btParse.isEnabled=false }
         defineVariables(ctApi!!).also { binding.btDefineVars.isEnabled=false }
+        parseVariables(ctApi!!).also { binding.btParse.isEnabled=false }
         attachListeners(ctApi!!).also { binding.btAttachListeners.isEnabled=false }
         binding.btAppLaunch.isEnabled = false
+        checkLocalValues()
 
 
         with(binding) {
@@ -45,7 +46,7 @@ class TestActivity : AppCompatActivity() {
             btDefineVars.setOnClickListener{defineVariables(ctApi!!) }
             btAttachListeners.setOnClickListener { attachListeners(ctApi!!) }
             btAppLaunch.setOnClickListener { appLaunchRequest(ctApi!!) }
-            btRequestWzrkFetch.setOnClickListener { wzrkFetchRequest(ctApi!!) }
+            btRequestWzrkFetch.setOnClickListener { wzrkFetchRequestActual(ctApi!!) }
             btServerReqFail.setOnClickListener { serverDataRequestFail(ctApi!!) }
             btSync.setOnClickListener { sync(ctApi!!) }
 
@@ -53,8 +54,8 @@ class TestActivity : AppCompatActivity() {
     }
 
     override fun onResume() {
-        appLaunchRequest(ctApi!!)
         super.onResume()
+        //appLaunchRequest(ctApi!!)
     }
     private fun checkLocalValues() {
         binding.tvTerminalValueOnDemand.text = "definedVars="+getDefinedVarsStr()+"\n========\n"+getParsedVarsString()
@@ -99,31 +100,31 @@ class TestActivity : AppCompatActivity() {
 
     //wzrk_fetch/ app_launch
     private fun appLaunchRequest(cleverTapAPI: CleverTapAPI){
-        toast("requesting app launch")
-        CTExecutorFactory
-            .executors(cleverTapAPI.tempGetConfig())
-            .postAsyncSafelyTask<Unit>()
-            .execute("ctv_CleverTap#APP_LAUNCH(fake)") {
-                val response = FakeServer.getJson(1, this)
-                cleverTapAPI.tempGetVariablesApi().handleVariableResponse(response, null)
-            }
+//        toast("requesting app launch")
+//        CTExecutorFactory
+//            .executors(cleverTapAPI.tempGetConfig())
+//            .postAsyncSafelyTask<Unit>()
+//            .execute("ctv_CleverTap#APP_LAUNCH(fake)") {
+//                val response = FakeServer.getJson(1, this)
+//                cleverTapAPI.tempGetVariablesApi().handleVariableResponse(response, null)
+//            }
 
     }
 
-    private fun wzrkFetchRequest(cleverTapAPI: CleverTapAPI ){
-        toast("requesting wzrk fetch")
-        CTExecutorFactory
-            .executors(cleverTapAPI.tempGetConfig())
-            .postAsyncSafelyTask<Unit>()
-            .execute("ctv_CleverTap#WZRK_FETCH(fake)") {
-                val response =  FakeServer.getJson(if(toggle)1 else 2,this)
-                cleverTapAPI.tempGetVariablesApi().handleVariableResponse(response){ log("handleVariableResponse:$it") }
-                toggle!=toggle
-            }
-    }
+//    private fun wzrkFetchRequest(cleverTapAPI: CleverTapAPI ){
+//        toast("requesting wzrk fetch")
+//        CTExecutorFactory
+//            .executors(cleverTapAPI.tempGetConfig())
+//            .postAsyncSafelyTask<Unit>()
+//            .execute("ctv_CleverTap#WZRK_FETCH(fake)") {
+//                val response =  FakeServer.getJson(if(toggle)1 else 2,this)
+//                cleverTapAPI.tempGetVariablesApi().handleVariableResponse(response){ log("handleVariableResponse:$it") }
+//                toggle!=toggle
+//            }
+//    }
     private fun wzrkFetchRequestActual(cleverTapAPI: CleverTapAPI ){
         toast("requesting wzrk fetch")
-        cleverTapAPI.wzrkFetchVariables { log("handleVariableResponse:$it") }
+        cleverTapAPI.wzrkFetchVariables { log("wzrkFetchVariablesActual:$it") }
         toggle!=toggle
     }
 
@@ -131,7 +132,7 @@ class TestActivity : AppCompatActivity() {
     //app launch fail
     private fun serverDataRequestFail(cleverTapAPI: CleverTapAPI){
         toast("requesting app launch(failed)")
-        cleverTapAPI.tempGetVariablesApi().handleVariableResponse(null) { log("handleVariableResponse:$it") }
+        //cleverTapAPI.tempGetVariablesApi().handleVariableResponse(null) { log("handleVariableResponse:$it") }//todo: test
 
     }
 

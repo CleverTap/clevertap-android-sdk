@@ -5,9 +5,11 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.clevertap.android.sdk.BuildConfig;
+import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.variables.callbacks.CacheUpdateBlock;
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariableRequestHandledCallback;
@@ -45,6 +47,7 @@ public class CTVariables {
     };
 
     private final VarCache varCache;
+    private CleverTapInstanceConfig config = null;
 
     private static void log(String msg){
         Logger.v("ctv_VARIABLES",msg);
@@ -68,11 +71,29 @@ public class CTVariables {
      *
      *  Note that user's callbacks are *not* triggered during init call
      */
-    public synchronized void init() {
-        log("init() called");
-        varCache.loadDiffs();
+    public void initAsync() {
+        log("initAsync() called");
+        log("initAsync: config="+config);
+
+        Callable<Object> action = () -> {
+            synchronized (CTVariables.class){
+                log("init() called in sync block");
+                varCache.loadDiffs();
+                return null;
+            }
+        };
+        try {
+            if (config == null) action.call();
+            else CTExecutorFactory.executors(config).postAsyncSafelyTask().execute("ctv_past_CTVariables#init", action);
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
     }
 
+    public void handleVariableResponse(@Nullable final JSONObject response, @Nullable VariableRequestHandledCallback callback, boolean actual) {
+        log( "handleVariableResponse() called with: response = [" + response + "], callback = [" + callback + "], actual = [" + actual + "]");
+        log("ignoring response since its from server");
+    }
 
     /**
      * //todo make sure this receives a response from wzrk fetch and app launched and even when these 2 fail
@@ -85,7 +106,7 @@ public class CTVariables {
      * @param response JSONObject . must pass the the json directly (i.e {key:value} and not {vars:{key:value}})
      */
     public void handleVariableResponse(@Nullable final JSONObject response, @Nullable VariableRequestHandledCallback callback) {
-        log("handleVariableResponse() called with: response = [" + response + "]");
+        log("handleVariableResponse() called with: response = [" + response + "], callback = [" + callback + "]");
         setVariableResponseReceived(true);
 
         boolean jsonHasVariableData = response != null ; //check if response was successful, like response.data!=null //todo add logic as per backend response structure
@@ -217,7 +238,13 @@ public class CTVariables {
     }
 
 
+    public CleverTapInstanceConfig getConfig() {
+        return config;
+    }
 
+    public void setConfig(CleverTapInstanceConfig config) {
+        this.config = config;
+    }
 }
 
 /// old docs

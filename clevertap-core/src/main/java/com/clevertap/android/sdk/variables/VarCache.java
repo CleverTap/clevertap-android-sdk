@@ -222,7 +222,7 @@ public class VarCache {
         updateBlock = null;
         vars.clear();
         valuesFromClient.clear();
-        //todo should clear cache?
+        storeDataInCache("");
     }
 
     public <T> Var<T> getVariable(String name) {
