@@ -28,6 +28,9 @@ import static com.clevertap.android.sdk.variables.CTVariableUtils.NUMBER;
 import static com.clevertap.android.sdk.variables.CTVariableUtils.STRING;
 
 import android.text.TextUtils;
+
+import androidx.annotation.VisibleForTesting;
+
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.variables.annotations.Variable;
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
@@ -103,7 +106,8 @@ public class Parser {
    * @param instance object of a class
    * @param clazz    class instance of a class
    */
-  private void parseVariablesHelper(Object instance, Class<?> clazz) {
+  @VisibleForTesting
+  public void parseVariablesHelper(Object instance, Class<?> clazz) {
 
     try {
       Field[] fields = clazz.getFields();
@@ -188,7 +192,8 @@ public class Parser {
    * @param kind     a string representing the type of field
    * @param field    instance of field itself
    */
-  private <T> void defineVariable(final Object instance, String name, T value, String kind, final Field field) {
+  @VisibleForTesting
+  public  <T> void defineVariable(final Object instance, String name, T value, String kind, final Field field) {
     // we first call var.define(..) with field name, value and kind
     final Var<T> var = Var.define(name, value, kind, ctVariables);
     if (var == null) {
