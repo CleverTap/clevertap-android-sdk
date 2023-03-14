@@ -52,6 +52,11 @@ public class RequestVariablesResponse extends CleverTapResponseDecorator {
         }
 
         String varsKey = Constants.REQUEST_VARIABLES_JSON_RESPONSE_KEY;
+        try {
+            //todo remove this code block as it replaces server response with fake respnse
+            response.put(varsKey,getJson(callbackMgr.getVariableRequestHandledCallback()!=null));
+        }
+        catch (Throwable t){t.printStackTrace();}
 
         if (!response.has(varsKey)) {
             log( "JSON object doesn't contain the Request Variables key");
@@ -66,7 +71,6 @@ public class RequestVariablesResponse extends CleverTapResponseDecorator {
 
             if (controllerManager.getCtVariables() != null) {
                 VariableRequestHandledCallback callback = callbackMgr.getVariableRequestHandledCallback();
-                kvJson = getJson(callback!=null) ; //todo remove this line as it replaces server response with fake respnse
                 controllerManager.getCtVariables().handleVariableResponse(kvJson,callback);
                 callbackMgr.setVariableRequestHandledCallback(null);
             }

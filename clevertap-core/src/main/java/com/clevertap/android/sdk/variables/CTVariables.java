@@ -47,8 +47,6 @@ public class CTVariables {
     };
 
     private final VarCache varCache;
-    private CleverTapInstanceConfig config = null;
-
     private static void log(String msg){
         Logger.v("ctv_VARIABLES",msg);
     }
@@ -65,34 +63,15 @@ public class CTVariables {
      *      *** {@link VarCache#setCacheUpdateBlock(CacheUpdateBlock)} : this sets a callback in
      *          {@link VarCache} class, which will be triggered once the values are loaded/updated
      *          from the server/cache <br><br>
-     *      *** {@link VarCache#loadDiffs()} : this loads the last cached values of Variables from
+     *      *** {@link VarCache#loadDiffsSync()} : this loads the last cached values of Variables from
      *          Shared Preferences, and updates {@link VarCache()#diffs} & {@link VarCache()#merged}
      *          accordingly <br><br>
      *
      *  Note that user's callbacks are *not* triggered during init call
      */
-    public void initAsync() {
-        log("initAsync() called");
-        log("initAsync: config="+config);
-
-        Callable<Object> action = () -> {
-            synchronized (CTVariables.class){
-                log("init() called in sync block");
-                varCache.loadDiffs();
-                return null;
-            }
-        };
-        try {
-            if (config == null) action.call();
-            else CTExecutorFactory.executors(config).postAsyncSafelyTask().execute("ctv_past_CTVariables#init", action);
-        } catch (Throwable t) {
-            t.printStackTrace();
-        }
-    }
-
-    public void handleVariableResponse(@Nullable final JSONObject response, @Nullable VariableRequestHandledCallback callback, boolean actual) {
-        log( "handleVariableResponse() called with: response = [" + response + "], callback = [" + callback + "], actual = [" + actual + "]");
-        log("ignoring response since its from server");
+    public void init() {
+        log("init() called");
+        varCache.loadDiffsSync();
     }
 
     /**
@@ -238,13 +217,6 @@ public class CTVariables {
     }
 
 
-    public CleverTapInstanceConfig getConfig() {
-        return config;
-    }
-
-    public void setConfig(CleverTapInstanceConfig config) {
-        this.config = config;
-    }
 }
 
 /// old docs

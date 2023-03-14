@@ -30,9 +30,11 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.StorageHelper;
+import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.variables.callbacks.CacheUpdateBlock;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import org.json.JSONObject;
 
@@ -65,18 +67,18 @@ public class VarCache {
 
     public Object merged = null;
 
-    private final String cacheKey;
-
     private final Context variablesCtx;
+    private final CleverTapInstanceConfig instanceConfig;
 
     public VarCache(CleverTapInstanceConfig config, Context ctx) {
         log("VarCache() called with: config = [" + config + "], ctx = [" + ctx + "]");
-        this.cacheKey = StorageHelper.storageKeyWithSuffix(config, Constants.CACHED_VARIABLES_KEY);
         this.variablesCtx = ctx;
+        this.instanceConfig = config;
     }
 
     private void storeDataInCache(@NonNull String data){
         log("storeDataInCache() called with: data = [" + data + "]");
+        String cacheKey = StorageHelper.storageKeyWithSuffix(instanceConfig, Constants.CACHED_VARIABLES_KEY);
         try {
             StorageHelper.putString(variablesCtx, cacheKey, data);
         } catch (Throwable t) {
@@ -85,6 +87,7 @@ public class VarCache {
     }
     private String loadDataFromCache(){
         log("loadDataFromCache() called");
+        String cacheKey = StorageHelper.storageKeyWithSuffix(instanceConfig, Constants.CACHED_VARIABLES_KEY);
         String cache =  StorageHelper.getString(variablesCtx,cacheKey, "{}");
         log("shared pref cache returned string:\n"+cache+"\n========");
         return  cache;
@@ -129,7 +132,7 @@ public class VarCache {
     }
 
     //will basically call applyVariableDiffs(..) with values stored in pref
-    public void loadDiffs() {
+    private void loadDiffs() {
         log( "loadDiffs() called");
         try {
             String variablesFromCache = loadDataFromCache();
@@ -139,6 +142,28 @@ public class VarCache {
         } catch (Exception e) {
             log("Could not load variable diffs.\n" ,e);
         }
+    }
+    public void loadDiffsSync(){
+        synchronized (CTVariables.class){
+            log("loadDiffs() called in sync block");
+            loadDiffs();
+        }
+    }
+    public void loadDiffsAsync(){
+        log("initAsync() called");
+        log("initAsync: config="+instanceConfig);
+
+        Callable<Object> action = () -> {
+            loadDiffsSync();
+            return null;
+        };
+        try {
+            if (instanceConfig == null) action.call();
+            else CTExecutorFactory.executors(instanceConfig).postAsyncSafelyTask().execute("ctv_past_VarCache#loadDiffsAsync", action);
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+
     }
 
     //same as loadiffs, but will also trigger one/multi time listeners

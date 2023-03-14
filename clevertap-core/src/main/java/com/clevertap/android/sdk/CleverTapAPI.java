@@ -971,13 +971,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             }
         }
     }
-
-    public void initVariables() {
-        CleverTapInstanceConfig config = getConfig();
-        coreState.getCTVariables().setConfig(config);// pass null for sync
-        coreState.getCTVariables().initAsync();
-    }
-
     private static CleverTapAPI fromBundle(final Context context, final Bundle extras) {
         String _accountId = extras.getString(Constants.WZRK_ACCT_ID_KEY);
         return fromAccountId(context, _accountId);
