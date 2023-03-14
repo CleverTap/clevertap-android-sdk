@@ -1,5 +1,8 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 4.6.7 (March 14, 2023)
+* Bug fixes and performance improvements.
+
 ### Version 4.6.6 (October 31, 2022)
 * Fixes App Inbox bug where an Inbox message's video would not play when new Inbox messages were available
 

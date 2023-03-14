@@ -26,7 +26,12 @@ ext["sonatypeStagingProfileId"] = ''
 version = libraryVersion
 group = publishedGroupId
 
-def (major,minor,patch) = libraryVersion.split("\\.")
+def build = null
+def versionArr = libraryVersion.split("\\.")
+def (major, minor, patch) = versionArr
+if (versionArr.size() > 3) {
+    build = versionArr[3]
+}
 
 android {
     compileSdkVersion Android.compileSdkVersionVal
@@ -36,11 +41,14 @@ android {
         minSdkVersion minSdkVersionVal
         targetSdkVersion Android.targetSdkVersionVal
         versionCode "${major}0${minor}0${patch}".toInteger()
+        if (build != null) {
+            versionCode "${versionCode}0${build}".toInteger()
+        }
         versionName libraryVersion
 
         //AGP 4.1.0 change https://developer.android.com/studio/releases/gradle-plugin#version_properties_removed_from_buildconfig_class_in_library_projects
-        buildConfigField ("int", "VERSION_CODE", "$versionCode")
-        buildConfigField ("String", "VERSION_NAME", "\"$versionName\"")
+        buildConfigField("int", "VERSION_CODE", "$versionCode")
+        buildConfigField("String", "VERSION_NAME", "\"$versionName\"")
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles 'consumer-rules.pro'
@@ -52,14 +60,14 @@ android {
             System.out.println("coverage="+coverage)
             testCoverageEnabled (coverage) //To get coverage reports for instrumentation tests
             buildConfigField "String", "SDK_VERSION_STRING",
-                    "\"!SDK-VERSION-STRING!:$publishedGroupId:$artifact:$major.$minor.$patch.0\""
+                    "\"!SDK-VERSION-STRING!:$publishedGroupId:$artifact:$major.$minor.$patch.${build == null ? 0 : build}\""
         }
         release {
             Boolean coverage = project.hasProperty('coverage') //only true when a command is run with argument, like this : `gradle <command>  -Pcoverage='true'`
             System.out.println("coverage="+coverage)
             testCoverageEnabled (coverage) //To get coverage reports for instrumentation tests
             buildConfigField "String", "SDK_VERSION_STRING",
-                    "\"!SDK-VERSION-STRING!:$publishedGroupId:$artifact:$major.$minor.$patch.0\""
+                    "\"!SDK-VERSION-STRING!:$publishedGroupId:$artifact:$major.$minor.$patch.${build == null ? 0 : build}\""
             minifyEnabled false// keep it false we will supply proguard through consumerProguardFiles
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
