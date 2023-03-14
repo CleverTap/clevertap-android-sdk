@@ -3,7 +3,6 @@ package com.clevertap.android.sdk
 import android.os.Bundle
 import com.clevertap.android.sdk.inapp.CTInAppNotification
 import org.json.JSONObject
-import java.util.ArrayList
 
 class MockAnalyticsManager : BaseAnalyticsManager() {
 
@@ -37,6 +36,10 @@ class MockAnalyticsManager : BaseAnalyticsManager() {
     override fun removeValueForKey(key: String) {}
     override fun sendDataEvent(event: JSONObject) {}
     override fun sendFetchEvent(eventObject: JSONObject?) {
+        TODO("Not yet implemented")
+    }
+
+    override fun pushDefineVarsEvent(data: JSONObject?) {
         TODO("Not yet implemented")
     }
 }

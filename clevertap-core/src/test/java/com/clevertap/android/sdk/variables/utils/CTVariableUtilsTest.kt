@@ -1,6 +1,7 @@
 package com.clevertap.android.sdk.variables.utils
 
 import com.clevertap.android.sdk.variables.CTVariableUtils
+import com.clevertap.android.sdk.variables.CTVariableUtils.mergeHelper
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.*
 import org.junit.Assert.*
@@ -200,12 +201,12 @@ class CTVariableUtilsTest : BaseTestCase() {
     @Test
     fun test_kindFromValue() {
         arrayOf<Pair<Any,String>>(
-            1 to CTVariableUtils.INT,
-            1.1f to CTVariableUtils.FLOAT,
-            1.1 to CTVariableUtils.FLOAT,
+            1 to CTVariableUtils.NUMBER,
+            1.1f to CTVariableUtils.NUMBER,
+            1.1 to CTVariableUtils.NUMBER,
             "" to CTVariableUtils.STRING,
             false to CTVariableUtils.BOOLEAN,
-            arrayListOf(1,2,3) to CTVariableUtils.ARRAY,
+            arrayListOf(1, 2, 3) to CTVariableUtils.ARRAY,
             hashMapOf("a" to "b") to CTVariableUtils.DICTIONARY
 
         ).forEach {
@@ -367,6 +368,15 @@ class CTVariableUtilsTest : BaseTestCase() {
         val vars = listOf("value1", "value2")
         val diff = 123
         val expectedResult = 123
+
+        assertEquals(expectedResult, mergeHelper(vars, diff))
+    }
+
+    @Test
+    fun testMergeHelper11() {
+        val vars = null
+        val diff = mapOf("k" to "value")
+        val expectedResult = diff
 
         assertEquals(expectedResult, mergeHelper(vars, diff))
     }

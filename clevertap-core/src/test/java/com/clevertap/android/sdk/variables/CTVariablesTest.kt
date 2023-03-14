@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.variables
 
-import com.clevertap.android.sdk.feat_variable.utils.CTVariableUtils.getNameComponents
+import com.clevertap.android.sdk.variables.CTVariableUtils.getNameComponents
 import org.junit.*
 
 class CTVariablesTest {
