@@ -15,24 +15,7 @@
         <GridLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:columnCount="2"
-
-            >
-
-            <TextView
-                android:id="@+id/btCheckLocal"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_columnSpan="1"
-                android:layout_columnWeight="1"
-                android:layout_margin="2dp"
-                android:background="@drawable/bg_btn"
-                android:gravity="center"
-                android:padding="8dp"
-                android:text="check current data"
-                android:textAllCaps="true"
-                android:textColor="@color/white"
-                android:textSize="12sp" />
+            android:columnCount="2">
 
 
             <TextView
@@ -45,7 +28,7 @@
                 android:background="@drawable/bg_btn"
                 android:gravity="center"
                 android:padding="8dp"
-                android:text="parse variables"
+                android:text="parse variables pt1"
                 android:textAllCaps="true"
                 android:textColor="@color/white"
                 android:textSize="12sp" />
@@ -60,49 +43,31 @@
                 android:background="@drawable/bg_btn"
                 android:gravity="center"
                 android:padding="8dp"
-                android:text="define variables"
+                android:text="define variables pt1"
                 android:textAllCaps="true"
                 android:textColor="@color/white"
                 android:textSize="12sp" />
 
             <TextView
-                android:id="@+id/btAttachListeners"
+                android:id="@+id/btCheckLocal"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_columnSpan="1"
+                android:layout_columnSpan="2"
                 android:layout_columnWeight="1"
                 android:layout_margin="2dp"
                 android:background="@drawable/bg_btn"
                 android:gravity="center"
                 android:padding="8dp"
-                android:text="attach listeners"
+                android:text="check current data"
                 android:textAllCaps="true"
                 android:textColor="@color/white"
                 android:textSize="12sp" />
-
-
-            <TextView
-                android:id="@+id/btAppLaunch"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_columnSpan="1"
-                android:layout_columnWeight="1"
-                android:layout_margin="2dp"
-                android:background="@drawable/bg_btn"
-                android:gravity="center"
-                android:padding="8dp"
-                android:text="request app launch"
-                android:textAllCaps="true"
-                android:textColor="@color/white"
-                android:textSize="12sp" />
-
-
 
             <TextView
                 android:id="@+id/btRequestWzrkFetch"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_columnSpan="1"
+                android:layout_columnSpan="2"
                 android:layout_columnWeight="1"
                 android:layout_margin="2dp"
                 android:background="@drawable/bg_btn"
@@ -113,6 +78,47 @@
                 android:textColor="@color/white"
                 android:textSize="12sp" />
 
+            <TextView
+                android:id="@+id/btSync"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:layout_columnWeight="1"
+                android:layout_margin="2dp"
+                android:background="#E91E63"
+                android:gravity="center"
+                android:padding="8dp"
+                android:text="send local vars to server"
+                android:textAllCaps="true"
+                android:textColor="@color/white"
+                android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/btNextActivity"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:layout_columnWeight="1"
+                android:layout_margin="2dp"
+                android:background="#000"
+                android:gravity="center"
+                android:padding="8dp"
+                android:textStyle="bold"
+                android:text="Go to next activity >>"
+                android:textAllCaps="true"
+                android:textColor="@color/white"
+                android:textSize="16sp" />
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:layout_columnWeight="1"
+                android:gravity="center"
+                android:layout_margin="2dp"
+                android:padding="8dp"
+                android:text="(Listeners are already attached in oncreate/ whenever variables are defined)"
+                android:textSize="12sp" />
 
             <TextView
                 android:id="@+id/btServerReqFail"
@@ -121,44 +127,15 @@
                 android:layout_columnSpan="2"
                 android:layout_columnWeight="1"
                 android:layout_margin="2dp"
-                android:background="@drawable/bg_btn"
                 android:gravity="center"
                 android:padding="8dp"
-                android:text="app launch/wzrk fetch fail"
-                android:textAllCaps="true"
-                android:textColor="@color/white"
+                android:text="app launch fail cannot be tested for now"
                 android:textSize="12sp" />
 
 
-            <TextView
-                android:id="@+id/btSync"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_columnSpan="2"
-                android:layout_columnWeight="1"
-                android:layout_margin="2dp"
-                android:background="@drawable/bg_btn"
-                android:gravity="center"
-                android:padding="8dp"
-                android:text="sync local vars to server"
-                android:textAllCaps="true"
-                android:textColor="@color/white"
-                android:textSize="12sp" />
 
-            <TextView
-                android:id="@+id/btMultiActivity"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_columnSpan="2"
-                android:layout_columnWeight="1"
-                android:layout_margin="2dp"
-                android:background="#D33706"
-                android:gravity="center"
-                android:padding="8dp"
-                android:text="launch multi activity test"
-                android:textAllCaps="true"
-                android:textColor="@color/white"
-                android:textSize="12sp" />
+
+
 
 
 
@@ -174,7 +151,7 @@
                 android:orientation="horizontal">
 
                 <LinearLayout
-         
+
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"

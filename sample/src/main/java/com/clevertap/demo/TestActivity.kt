@@ -1,6 +1,8 @@
 package com.clevertap.demo
 
 import android.annotation.SuppressLint
+import android.app.Activity
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -8,17 +10,38 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.clevertap.android.sdk.CleverTapAPI
-import com.clevertap.android.sdk.task.CTExecutorFactory
 import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.Var
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
 import com.clevertap.demo.databinding.ActivityTestBinding
+import com.clevertap.demo.variables_test.VarActivity1
 import java.util.*
 import kotlin.concurrent.thread
 
+fun Activity.log(str:String,throwable: Throwable?=null){
+    Log.e("UI||",this::class.java.name.toString()+"||"+ str, throwable)
+}
+
 @SuppressLint("SetTextI18n")
 class TestActivity : AppCompatActivity() {
+    companion object{
+        fun Activity.toast(str:String){
+            Toast.makeText(this, str, Toast.LENGTH_LONG).show()
+            log(str)
+        }
+
+
+        fun TextView.flash(content:String?=null) {
+            if(content!=null) this.text = content
+            setBackgroundColor(Color.YELLOW)
+            thread {
+                Thread.sleep(300)
+                (context as? Activity)?.runOnUiThread { setBackgroundColor(Color.WHITE) }
+            }
+        }
+    }
+
     private var ctApi: CleverTapAPI? = null
     private val binding: ActivityTestBinding by lazy { ActivityTestBinding.inflate(layoutInflater) }
 
@@ -33,10 +56,10 @@ class TestActivity : AppCompatActivity() {
         log("onCreate called")
         ctApi = CleverTapAPI.getDefaultInstance(this)
 
-        defineVariables(ctApi!!).also { binding.btDefineVars.isEnabled=false }
-        parseVariables(ctApi!!).also { binding.btParse.isEnabled=false }
-        attachListeners(ctApi!!).also { binding.btAttachListeners.isEnabled=false }
-        binding.btAppLaunch.isEnabled = false
+//        defineVariables(ctApi!!).also { binding.btDefineVars.isEnabled=false }
+//        parseVariables(ctApi!!).also { binding.btParse.isEnabled=false }
+//        attachListeners(ctApi!!).also { binding.btAttachListeners.isEnabled=false }
+//        binding.btAppLaunch.isEnabled = false
         checkLocalValues()
 
 
@@ -49,6 +72,9 @@ class TestActivity : AppCompatActivity() {
             btRequestWzrkFetch.setOnClickListener { wzrkFetchRequestActual(ctApi!!) }
             btServerReqFail.setOnClickListener { serverDataRequestFail(ctApi!!) }
             btSync.setOnClickListener { sync(ctApi!!) }
+            btMultiActivity.setOnClickListener {
+                startActivity(Intent(this@TestActivity,VarActivity1::class.java))
+            }
 
         }
     }
@@ -59,7 +85,7 @@ class TestActivity : AppCompatActivity() {
     }
     private fun checkLocalValues() {
         binding.tvTerminalValueOnDemand.text = "definedVars="+getDefinedVarsStr()+"\n========\n"+getParsedVarsString()
-        flashTextView(binding.tvTerminalValueOnDemand)
+        binding.tvTerminalValueOnDemand.flash()
     }
 
     private fun parseVariables(cleverTapAPI: CleverTapAPI){
@@ -77,13 +103,13 @@ class TestActivity : AppCompatActivity() {
         cleverTapAPI.addVariablesChangedHandler(object : VariablesChangedCallback() {
             override fun variablesChanged() {
                 binding.tvTerminalWithGlobalListenerMultiple.text = ("variablesChanged()\n${getParsedVarsString()}")
-                flashTextView(binding.tvTerminalWithGlobalListenerMultiple)
+                binding.tvTerminalWithGlobalListenerMultiple.flash()
             }
         })
         cleverTapAPI.addOneTimeVariablesChangedHandler(object : VariablesChangedCallback() {
             override fun variablesChanged() {
                 binding.tvTerminalWithGlobalListenerOneTime.text = ("variablesChanged()\n${getParsedVarsString()}")
-                flashTextView(binding.tvTerminalWithGlobalListenerOneTime)
+                binding.tvTerminalWithGlobalListenerOneTime.flash()
             }
         })
 
@@ -91,7 +117,7 @@ class TestActivity : AppCompatActivity() {
         definedVar?.addValueChangedHandler(object :VariableCallback<String>(){
             override fun handle(variable: Var<String>?) {
                 binding.tvTerminalWithIndividualListeners.text = (getDefinedVarsStr())
-                flashTextView(binding.tvTerminalWithIndividualListeners)
+                binding.tvTerminalWithIndividualListeners.flash()
             }
 
         })
@@ -179,20 +205,5 @@ class TestActivity : AppCompatActivity() {
 
     fun StringBuilder.appendy(value: String?): StringBuilder = append(value).appendLine().appendLine()
 
-    private fun toast(str:String){
-        Toast.makeText(this, str, Toast.LENGTH_LONG).show()
-        log(str)
-    }
-    private fun log(str:String,throwable: Throwable?=null){
-        Log.e("ctv_TestActivity", str, throwable)
-    }
-    private fun flashTextView(tv: TextView) {
-        tv.setBackgroundColor(Color.YELLOW)
-        thread {
-            Thread.sleep(300)
-            runOnUiThread {
-                tv.setBackgroundColor(Color.WHITE)
-            }
-        }
-    }
+
 }

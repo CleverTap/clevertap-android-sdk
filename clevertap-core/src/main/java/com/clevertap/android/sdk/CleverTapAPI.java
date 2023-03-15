@@ -3034,7 +3034,9 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * Defines a new variable
      * */
     public <T> Var<T> defineVariable(String name, T defaultValue) {
-        return Var.define(name, defaultValue,coreState.getCTVariables());
+        Var<T> var =  Var.define(name, defaultValue,coreState.getCTVariables());
+        coreState.getCTVariables().init();
+        return var;
     }
 
 
