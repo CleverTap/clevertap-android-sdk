@@ -1,5 +1,11 @@
 ## CleverTap Push Templates SDK CHANGE LOG
 
+### Version 1.0.5.1 (March 14, 2023)
+* Supports CleverTap Android SDK v4.6.7. CleverTap Push Templates SDK `v1.0.5.1` requires [CleverTap Android SDK v4.6.7](https://github.com/CleverTap/clevertap-android-sdk/blob/master_android12/docs/CTCORECHANGELOG.md) to work properly.
+* **Note:** This release is being done for Android 12 targeted users, satisfying below points.
+  * Targeting Android 12 and
+  * Using RenderMax and/or using Push Templates
+
 ### Version 1.0.5 (September 13, 2022)
 * fixes a bug on android 12 where push template notification header was not displaying subtitle text.
 

@@ -26,7 +26,7 @@ We publish the SDK to `mavenCentral` as an `AAR` file. Just declare it as depend
 
 ```groovy
     dependencies {      
-         implementation "com.clevertap.android:clevertap-android-sdk:4.6.6"
+         implementation "com.clevertap.android:clevertap-android-sdk:4.6.7"
     }
 ```
 
@@ -34,7 +34,7 @@ Alternatively, you can download and add the AAR file included in this repo in yo
     
  ```groovy
     dependencies {      
-        implementation (name: "clevertap-android-sdk-4.6.6", ext: 'aar')
+        implementation (name: "clevertap-android-sdk-4.6.7", ext: 'aar')
     }
 ```
 
@@ -46,7 +46,7 @@ Add the Firebase Messaging library and Android Support Library v4 as dependencie
 
 ```groovy
      dependencies {      
-         implementation "com.clevertap.android:clevertap-android-sdk:4.6.6"
+         implementation "com.clevertap.android:clevertap-android-sdk:4.6.7"
          implementation "androidx.core:core:1.3.0"
          implementation "com.google.firebase:firebase-messaging:21.0.0"
          implementation "com.google.android.gms:play-services-ads:19.4.0" // Required only if you enable Google ADID collection in the SDK (turned off by default).
@@ -189,6 +189,12 @@ CleverTap Huawei Push SDK provides an out of the box service to use the Huawei M
 
 CleverTap Push Templates SDK helps you engage with your users using fancy push notification templates built specifically to work with [CleverTap](https://www.clevertap.com).
 Find the integration steps for the CleverTap Push Templates SDK [here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTPUSHTEMPLATES.md)
+
+## 📲 CleverTap RenderMax SDK
+[(Back to top)](#-table-of-contents)
+
+RenderMax SDK delivers and renders notifications on the user's device even if the FCM delivery fails or the device is optimized for battery consumption.
+Find the integration steps for the CleverTap RenderMax SDK [here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTRENDERMAX.md)
 
 ## 📄 License
 [(Back to top)](#-table-of-contents)
