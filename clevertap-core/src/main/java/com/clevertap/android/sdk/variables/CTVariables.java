@@ -131,7 +131,11 @@ public class CTVariables {
         }
 
         if (varCache.hasReceivedDiffs()) {
+            log("triggering the newly added VariablesChangedCallback as varCache.hasReceivedDiffs is true");
             handler.variablesChanged();
+        }
+        else {
+            log("not triggering the newly added VariablesChangedCallback");
         }
     }
 
@@ -144,8 +148,10 @@ public class CTVariables {
      */
     public void addOneTimeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
         if (varCache.hasReceivedDiffs()) {
+            log("triggering the newly added OneTimeVariablesChangedCallback as varCache.hasReceivedDiffs is true");
             handler.variablesChanged();
         } else {
+            log("not triggering the newly added OneTimeVariablesChangedCallback");
             synchronized (oneTimeVariablesChangedHandlers) {
                 oneTimeVariablesChangedHandlers.add(handler);
             }

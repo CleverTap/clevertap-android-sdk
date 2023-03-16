@@ -220,6 +220,7 @@ public class VarCache {
         // update block is a callback registered by CTVariables to trigger user's callback once the diffs are changed
         hasReceivedDiffs = true;
         if (updateBlock != null) {
+            log("triggering the VariableChangedCallbacks/OneTimeVariableChangedCallbacks because hasReceivedDiffs is now true");
             updateBlock.updateCache();
         }
     }
