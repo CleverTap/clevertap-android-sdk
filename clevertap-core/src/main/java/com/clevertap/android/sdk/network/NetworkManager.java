@@ -341,8 +341,7 @@ public class NetworkManager extends BaseNetworkManager {
                 if (eventGroup.equals(EventGroup.PUSH_NOTIFICATION_VIEWED)) {
                     return region.trim().toLowerCase() + eventGroup.httpResource + "." + Constants.PRIMARY_DOMAIN;
                 } else {
-                    return region.trim().toLowerCase() + "-staging-25." + Constants.PRIMARY_DOMAIN;
-                    //return region.trim().toLowerCase() + "." + Constants.PRIMARY_DOMAIN;
+                    return region.trim().toLowerCase() + "." + Constants.PRIMARY_DOMAIN;
                 }
             }
         } catch (Throwable t) {
