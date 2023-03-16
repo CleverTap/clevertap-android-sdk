@@ -93,6 +93,52 @@ public class VarCache {
         return  cache;
     }
 
+//// Use this method to merge default variable value with VarCache.merged value
+//// This is neccessary if variable was registered after VarCache.applyVariableDiffs
+//- (void)mergeVariable:(CTVar * _Nonnull)var {
+//        NSString *firsComponent = var.nameComponents.firstObject;
+//        id defaultValue = [self.valuesFromClient objectForKey:firsComponent];
+//        id mergedValue = [self.merged objectForKey:firsComponent];
+//        if (![defaultValue isEqual:mergedValue]) {
+//            id newValue = [ContentMerger mergeWithVars:defaultValue diff:mergedValue];
+//        [self.merged setObject:newValue forKey:firsComponent];
+//
+//            NSMutableString *name = [[NSMutableString alloc] initWithString:firsComponent];
+//            for (int i = 1; i < var.nameComponents.count; i++)
+//            {
+//                CTVar *existingVar = self.vars[name];
+//                if (existingVar) {
+//                [existingVar update];
+//                    break;
+//                }
+//            [name appendFormat:@".%@", var.nameComponents[i]];
+//            }
+//        }
+//    }
+    // a.b.c.d, updates a, a.b, a.b.c, but a.b.c.d is left for the Var.define
+    private void mergeVariable(Var var) {
+        String firstComponent = var.nameComponents()[0];
+        Object defaultValue = valuesFromClient.get(firstComponent);
+        Object mergedValue = ((Map<String, Object>)merged).get(firstComponent); // TODO fix cast
+
+        Object newValue;
+        if (!defaultValue.equals(mergedValue)) { // TODO check for null
+            newValue = CTVariableUtils.mergeHelper(defaultValue, mergedValue); // TODO
+
+            ((Map<String, Object>) merged).put(firstComponent, newValue);
+
+            StringBuilder name = new StringBuilder(firstComponent);
+            for (int i = 1; i < var.nameComponents().length; i++) {
+                Var existing = vars.get(name.toString());
+                if (existing != null) {
+                    existing.update();
+                }
+                name.append('.').append(var.nameComponents()[i]);
+            }
+
+        }
+
+    }
 
 
     // v: Var("group1.myVariable",12.4,"float") -> unit
@@ -111,6 +157,7 @@ public class VarCache {
         synchronized (valuesFromClient) {
             CTVariableUtils.updateValuesAndKinds(var.name(), var.nameComponents(), var.defaultValue(), var.kind(), valuesFromClient, defaultKinds);
         }
+        mergeVariable(var);
     }
 
 
@@ -149,7 +196,7 @@ public class VarCache {
             loadDiffs();
         }
     }
-    public void loadDiffsAsync(){
+    public void loadDiffsAsync(){ // TODO To make this method work you need to make parsing and defining of vars in the same async queue
         log("initAsync() called");
         log("initAsync: config="+instanceConfig);
 

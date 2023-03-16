@@ -161,7 +161,6 @@ public class Parser {
           defineVariable(instance, variableName, stringValue, STRING, field);
         }
       }
-      ctVariables.init();
     } catch (IllegalArgumentException t) {
       log( "Error parsing variables(IllegalArgumentException):", t);
       t.printStackTrace();
