@@ -226,7 +226,7 @@ public class VarCache {
 
 
     public JSONObject getDefineVarsData(){
-        return CTVariableUtils.getVarsJson(valuesFromClient,defaultKinds);
+        return CTVariableUtils.getFlattenVarsJson(valuesFromClient,defaultKinds);
     }
 
 

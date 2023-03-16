@@ -11,7 +11,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -78,7 +77,7 @@ public final class CTVariableUtils {
      * </code>
      * to support legacy parsing implementation <br>
      **/
-    private static Map<String, Object> convertEntriesWithGroupedKeysToNestedMaps(Map<String, Object> map) {
+    public static Map<String, Object> convertEntriesWithGroupedKeysToNestedMaps(Map<String, Object> map) {
         Map<String, Object> result = new HashMap<>();
 
         for (Map.Entry<String, Object> entry : map.entrySet()) {
@@ -115,9 +114,6 @@ public final class CTVariableUtils {
         log("mergeHelper() called with: vars = [" + vars + "], diff = [" + diff + "]");
         if (diff == null) {
             return vars;
-        }
-        if (diff instanceof Map) {
-            diff = convertEntriesWithGroupedKeysToNestedMaps(uncheckedCast(diff)); // TODO move before applyDiffs
         }
         if (diff instanceof Number
                 || diff instanceof Boolean
@@ -378,7 +374,7 @@ public final class CTVariableUtils {
 
 
 
-    public static JSONObject getVarsJson(Map<String, Object> values, Map<String, String> kinds) {
+    public static JSONObject getFlattenVarsJson(Map<String, Object> values, Map<String, String> kinds) {
        try {
            JSONObject resultJson = new JSONObject();
            resultJson.put("type", Constants.variablePayloadType);
