@@ -22,15 +22,15 @@ import java.util.*
  * case 3 : Define [in] anytime
  * case 4 : Parse  [in] anytime
  *
- * case 1 : Parse  [in] onCreate [then] Define [in] onCreate
- * case 2 : Define [in] onCreate [then] Parse  [in] onCreate
- * case 3 : Parse  [in] anyTime  [then] Define [in] anyTime
- * case 4 : Define [in] anyTime  [then] Parse  [in] anyTime
+ * case 5 : Parse  [in] onCreate [then] Define [in] onCreate
+ * case 6 : Define [in] onCreate [then] Parse  [in] onCreate
+ * case 7 : Parse  [in] anyTime  [then] Define [in] anyTime
+ * case 8 : Define [in] anyTime  [then] Parse  [in] anyTime
  *
- * case 5 : Parse  [in] onCreate [then] Define [in] anyTime
- * case 6 : Define [in] onCreate [then] Parse  [in] anyTime
- * case 7 : Parse  [in] anyTime  [then] Define [in] onCreate <--- ignore, same as 6
- * case 8 : Define [in] anyTime  [then] Parse  [in] onCreate <--- ignore, same as 5
+ * case 09 : Parse  [in] onCreate [then] Define [in] anyTime
+ * case 10 : Define [in] onCreate [then] Parse  [in] anyTime
+ * case 11 : Parse  [in] anyTime  [then] Define [in] onCreate <--- ignore, same as 10
+ * case 12 : Define [in] anyTime  [then] Parse  [in] onCreate <--- ignore, same as 9
  *
  * same cases for multiple restarts and app launches
  *
@@ -40,9 +40,11 @@ import java.util.*
  *    1. when listeners get set, they immediately call their callbacks(check code for reasoning). at that time, Varcache.getVariable(name) returns null for all vars // todo : is it ideal?
  *    2. this implies that variables are not accessible before parse
  *    3. but when accessed after on resume, these variables are available. these are also available when  app is again opened with/without internet
- *  - when when we try to set more listeners in other activities/access variables at any point after parse, these variables become available to those listeners,
+ *
+ * - when when we try to set more listeners in other activities/access variables at any point after parse, these variables become available to those listeners,
  *    1. this indicates that values are available across multiple apps due to common shared RUNTIME cache
- *  - when we try to kill app and open again, we DO NOT GET old values. we get null in listeners
+ *
+ * - when we try to kill app and open again, we DO NOT GET old values. we get null in listeners
  *    1. this is because storing to permanent cache only happens when response is received from the server
  *
  * case 1 : define  [in] onCreate
@@ -50,11 +52,14 @@ import java.util.*
  *    1. when listeners get set, they immediately call their callbacks(check code for reasoning). at that time, Varcache.getVariable(name) returns null for all vars // todo : is it ideal?
  *    2. this implies that variables are not accessible before parse
  *    3. but when accessed after on resume, these variables are available. these are also available when  app is again opened with/without internet
- *  - when when we try to set more listeners in other activities/access variables at any point after parse, these variables become available to those listeners,
+ *
+ *   - when when we try to set more listeners in other activities/access variables at any point after parse, these variables become available to those listeners,
  *    1. this indicates that values are available across multiple apps due to common shared RUNTIME cache
- *  - when we try to kill app and open again, we DO NOT GET old values. we get null in listeners
+ *
+ *   - when we try to kill app and open again, we DO NOT GET old values. we get null in listeners
  *    1. this is because storing to permanent cache only happens when response is received from the server
  *
+ * case 3,case4 : define/parse in anytime.
  */
 
 class VarActivity1:AppCompatActivity() {
@@ -86,7 +91,7 @@ class VarActivity1:AppCompatActivity() {
 
         //initial calls
         //parseVariables()
-        defineVariables()
+        //defineVariables()
     }
 
     private fun parseVariables(){
@@ -107,11 +112,11 @@ class VarActivity1:AppCompatActivity() {
         val str = StringBuilder()
             .appendLine("isDevelopmentMode:${CTVariables.isInDevelopmentMode()} |checked on : ${Date()} " )
             .appendLine("--------------------------------")
-            .appendLine("VarActivity1=========================:\n")
-            .appendLine("(Parsed----------------)\n")
-            .appendLine(Vars1.getParsedVars1(cleverTapAPI))
-            .appendLine("(Defined----------------)\n")
+            .appendLine("VarActivity1=========================:")
+            .appendLine("(Defined----------------)")
             .appendLine(Vars1.getDefinedVars1(cleverTapAPI))
+            .appendLine("(Parsed----------------)")
+            .appendLine(Vars1.getParsedVars1(cleverTapAPI))
 
         return str.toString()
     }
