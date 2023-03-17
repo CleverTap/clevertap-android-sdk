@@ -1,14 +1,89 @@
 package com.clevertap.demo.variables_test
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import com.clevertap.android.sdk.CleverTapAPI
-import com.clevertap.android.sdk.variables.CTVariables
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback
-import com.clevertap.demo.TestActivity.Companion.flash
-import com.clevertap.demo.TestActivity.Companion.toast
 import com.clevertap.demo.databinding.ActivityVarBinding
-import java.util.*
+import com.clevertap.demo.variables_test.models.Vars1
+import com.clevertap.demo.variables_test.models.Vars1.Vars1Instance
+
+
+// scenarios that work:
+// 1. no def/par call  at all , def/par calls in button click
+// 2. def/par call on every activity's on create
+// 3. def/par call before any activity create , i.e once per application session
+class VarActivity1:AppCompatActivity() {
+    private val binding by lazy { ActivityVarBinding.inflate(layoutInflater) }
+
+    private val cleverTapAPI:CleverTapAPI by lazy { CleverTapAPI.getDefaultInstance(this)!! }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(binding.root)
+
+        //initVariables
+       attachGlobalListeners()
+
+        //init ui
+        binding.run {
+            tvActivityName.text = this@VarActivity1::class.java.simpleName.toString()
+            btCheckLocal.setOnClickListener { tvTerminalValueOnDemand.flash(getAllVariablesStr(cleverTapAPI)) }
+            btParse.setOnClickListener { parseVariables() }
+            btSync.setOnClickListener { syncVariables() }
+            btRequestWzrkFetch.setOnClickListener { requestWzrkFetch() }
+            btDefineVars.setOnClickListener { defineVariablesAndAttachVariableListeners() }
+            btNextActivity.setOnClickListener {
+                startActivity(Intent(this@VarActivity1,VarActivity2::class.java))
+            }
+            btLogVarCache.setOnClickListener { cleverTapAPI.logVarCacheProperties() }
+        }
+    }
+
+    private fun requestWzrkFetch() {
+        cleverTapAPI.wzrkFetchVariables {
+            log("data received successfully? =$it")
+        }
+    }
+
+    private fun parseVariables(){
+        toast("calling:parseVariables")
+        cleverTapAPI.parseVariablesForClasses(Vars1::class.java)
+        cleverTapAPI.parseVariables(Vars1Instance.singleton())
+    }
+    private fun defineVariablesAndAttachVariableListeners(){
+        toast("calling:defineVariables")
+        Vars1.defineVarsWithListeners(cleverTapAPI)
+    }
+
+    private fun syncVariables(){
+        toast("calling:syncVariables")
+        cleverTapAPI.pushVariablesToServer()
+    }
+
+
+    private fun attachGlobalListeners() {
+        cleverTapAPI.run {
+            addVariablesChangedHandler(multiCallback)
+            addOneTimeVariablesChangedHandler(oneTimeCallback)
+        }
+    }
+    private val multiCallback = object : VariablesChangedCallback() { override fun variablesChanged() { binding.tvTerminalWithGlobalListenerMultiple.flash(getAllVariablesStr(cleverTapAPI)) } }
+    private val oneTimeCallback = object : VariablesChangedCallback() { override fun variablesChanged() { binding.tvTerminalWithGlobalListenerOneTime.flash(getAllVariablesStr(cleverTapAPI)) } }
+
+
+    override fun onDestroy() {
+        super.onDestroy()
+        cleverTapAPI.removeOneTimeVariablesChangedHandler(oneTimeCallback)
+        cleverTapAPI.removeVariablesChangedHandler(multiCallback)
+    }
+
+}
+
+
+
+
 
 /*
  * only Define once, only define multiple, only Parse,both
@@ -61,70 +136,3 @@ import java.util.*
  *
  * case 3,case4 : define/parse in anytime.
  */
-
-class VarActivity1:AppCompatActivity() {
-    private val binding by lazy { ActivityVarBinding.inflate(layoutInflater) }
-
-    private val cleverTapAPI:CleverTapAPI by lazy { CleverTapAPI.getDefaultInstance(this)!! }
-
-
-    private val multiCallback = object : VariablesChangedCallback() { override fun variablesChanged() { binding.tvTerminalWithGlobalListenerMultiple.flash(getAllVariablesStr()) } }
-    private val oneTimeCallback = object : VariablesChangedCallback() { override fun variablesChanged() { binding.tvTerminalWithGlobalListenerOneTime.flash(getAllVariablesStr()) } }
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setContentView(binding.root)
-
-        //initVariables
-       cleverTapAPI.run {
-           addVariablesChangedHandler(multiCallback)
-           addOneTimeVariablesChangedHandler(oneTimeCallback)
-       }
-
-        //init ui
-        binding.run {
-            btCheckLocal.setOnClickListener { tvTerminalValueOnDemand.flash(getAllVariablesStr()) }
-            btParse.setOnClickListener { parseVariables() }
-            btSync.setOnClickListener { syncVariables() }
-            btDefineVars.setOnClickListener { defineVariables() }
-            btNextActivity.setOnClickListener {  }
-        }
-
-        //initial calls
-        //parseVariables()
-        //defineVariables()
-    }
-
-    private fun parseVariables(){
-        toast("calling:parseVariables")
-        cleverTapAPI.parseVariablesForClasses(Vars1::class.java)
-    }
-    private fun defineVariables(){
-        toast("calling:defineVariables")
-        Vars1.defineVars1(cleverTapAPI)
-    }
-
-    private fun syncVariables(){
-        toast("calling:syncVariables")
-        cleverTapAPI.pushVariablesToServer()
-    }
-
-    private fun getAllVariablesStr():String{
-        val str = StringBuilder()
-            .appendLine("isDevelopmentMode:${CTVariables.isInDevelopmentMode()} |checked on : ${Date()} " )
-            .appendLine("--------------------------------")
-            .appendLine("VarActivity1=========================:")
-            .appendLine("(Defined----------------)")
-            .appendLine(Vars1.getDefinedVars1(cleverTapAPI))
-            .appendLine("(Parsed----------------)")
-            .appendLine(Vars1.getParsedVars1(cleverTapAPI))
-
-        return str.toString()
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        cleverTapAPI.removeOneTimeVariablesChangedHandler(oneTimeCallback)
-        cleverTapAPI.removeVariablesChangedHandler(multiCallback)
-    }
-
-}

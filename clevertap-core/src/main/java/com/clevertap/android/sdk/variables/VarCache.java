@@ -23,6 +23,7 @@ package com.clevertap.android.sdk.variables;
 
 import android.content.Context;
 
+import androidx.annotation.Discouraged;
 import androidx.annotation.NonNull;
 import androidx.annotation.WorkerThread;
 
@@ -45,11 +46,11 @@ import org.json.JSONObject;
  */
 public class VarCache {
     private static void log(String msg){
-        Logger.v("ctv_VARCACHE",msg);
+        Logger.i("ctv_VARCACHE",msg);
     }
 
     private static void log(String msg,Throwable t){
-        Logger.v("ctv_VARCACHE",msg,t);
+        Logger.i("ctv_VARCACHE",msg,t);
     }
 
 
@@ -309,5 +310,16 @@ public class VarCache {
 
     public boolean hasReceivedDiffs() {
         return hasReceivedDiffs;
+    }
+
+    @Discouraged(message = "only for testing")
+    public void logProperties(){
+        log("current_props:");
+        log("defaultKinds:"+defaultKinds);
+        log("diffs:"+diffs);
+        log("merged:"+merged);
+        log("vars:"+vars);
+        log("valuesFromClient:"+valuesFromClient);
+        log("hasReceivedDiffs:"+hasReceivedDiffs);
     }
 }

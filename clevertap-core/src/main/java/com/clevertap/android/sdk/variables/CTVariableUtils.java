@@ -32,7 +32,6 @@ public final class CTVariableUtils {
         Logger.v("ctv_VARIABLEUTILS",msg);
     }
 
-
     // name: "group1.myVariable", nameComponents: ['group1','myVariable'], value: 12.4, kind: "float", values:valuesFromClient[G],kinds: defaultKinds[G]
     //-----
     // this will basically update:

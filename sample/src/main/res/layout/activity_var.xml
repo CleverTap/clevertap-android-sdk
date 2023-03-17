@@ -17,6 +17,18 @@
             android:layout_height="wrap_content"
             android:columnCount="2">
 
+            <TextView
+                android:id="@+id/tvActivityName"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:layout_columnWeight="1"
+                android:layout_margin="2dp"
+                android:gravity="center"
+                android:padding="8dp"
+                android:text=""
+                android:textSize="12sp" />
+
 
             <TextView
                 android:id="@+id/btParse"
@@ -77,6 +89,22 @@
                 android:textAllCaps="true"
                 android:textColor="@color/white"
                 android:textSize="12sp" />
+
+            <TextView
+                android:id="@+id/btLogVarCache"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_columnSpan="2"
+                android:layout_columnWeight="1"
+                android:layout_margin="2dp"
+                android:background="@drawable/bg_btn"
+                android:gravity="center"
+                android:padding="8dp"
+                android:text="log VarCache State"
+                android:textAllCaps="true"
+                android:textColor="@color/white"
+                android:textSize="12sp" />
+
 
             <TextView
                 android:id="@+id/btSync"
@@ -263,10 +291,14 @@
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:layout_margin="8dp"
-                            android:background="#fff"
+                            android:background="#000"
                             android:minHeight="50dp"
-                            android:textColor="#000"
-                            android:textSize="9sp"/>
+                            android:textColor="#89FF00"
+                            android:gravity="center_vertical"
+                            android:text="in logs(search 'UI||' in logcat)"
+                            android:textStyle="bold"
+                            android:paddingHorizontal="8dp"
+                            android:textSize="18sp"/>
                     </androidx.core.widget.NestedScrollView>
                 </LinearLayout>
 
@@ -274,18 +306,6 @@
             </LinearLayout>
 
         </HorizontalScrollView>
-
-
-
-
-
-
-
-
-
-
-
-
 
         <View
             android:layout_width="match_parent"

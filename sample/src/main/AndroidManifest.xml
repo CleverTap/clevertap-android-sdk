@@ -13,15 +13,7 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity
-            android:name=".TestActivity"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
 
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter>
-        </activity>
 <!--        <activity-->
 <!--            android:name=".HomeScreenActivity"-->
 <!--            android:exported="true"-->
@@ -151,7 +143,15 @@
                     android:scheme="https" />
             </intent-filter>
         </activity>
-        <activity android:name=".variables_test.VarActivity1" android:exported="true"/>
+
+        <activity android:name=".variables_test.VarActivity1" android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".variables_test.VarActivity2"  android:exported="true"/>
     </application>
 
 </manifest>
