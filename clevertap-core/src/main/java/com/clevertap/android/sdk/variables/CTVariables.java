@@ -95,9 +95,9 @@ public class CTVariables {
                 if(callback!=null)callback.onResponseReceived(false);
             } else {
                 Map<String, Object> variableDiffs = CTVariableUtils.mapFromJson(response);
+                variableDiffs = CTVariableUtils.convertEntriesWithGroupedKeysToNestedMaps(variableDiffs);
                 varCache.updateDiffsAndTriggerHandlers(variableDiffs);
                 if(callback!=null)callback.onResponseReceived(true);
-
             }
         } catch (Throwable t) {
             t.printStackTrace();

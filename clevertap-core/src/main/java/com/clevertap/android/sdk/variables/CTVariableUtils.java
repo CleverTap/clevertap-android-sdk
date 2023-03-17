@@ -11,7 +11,6 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -27,7 +26,6 @@ public final class CTVariableUtils {
     public static final String STRING = "string";
     public static final String BOOLEAN = "boolean";
     public static final String DICTIONARY = "group";
-    public static final String ARRAY = "list";
     public static final String NUMBER = "number";
 
     private static void log(String msg){
@@ -79,7 +77,7 @@ public final class CTVariableUtils {
      * </code>
      * to support legacy parsing implementation <br>
      **/
-    private static Map<String, Object> convertEntriesWithGroupedKeysToNestedMaps(Map<String, Object> map) {
+    public static Map<String, Object> convertEntriesWithGroupedKeysToNestedMaps(Map<String, Object> map) {
         Map<String, Object> result = new HashMap<>();
 
         for (Map.Entry<String, Object> entry : map.entrySet()) {
@@ -117,9 +115,6 @@ public final class CTVariableUtils {
         if (diff == null) {
             return vars;
         }
-        if (diff instanceof Map) {
-            diff = convertEntriesWithGroupedKeysToNestedMaps(uncheckedCast(diff));
-        }
         if (diff instanceof Number
                 || diff instanceof Boolean
                 || diff instanceof String
@@ -135,57 +130,6 @@ public final class CTVariableUtils {
         Iterable<?> varsKeys = (vars instanceof Map) ? ((Map<?, ?>) vars).keySet() : (Iterable<?>) vars;
         Map<?, ?> diffMap = (diff instanceof Map) ? ((Map<?, ?>) diff) : null;
         Map<?, ?> varsMap = (vars instanceof Map) ? ((Map<?, ?>) vars) : null;
-
-        // Infer that the diffs is an array if the vars value doesn't exist to tell us the type.
-        boolean isArray = false;
-        if (vars == null) {
-            if (diff instanceof Map && ((Map<?, ?>) diff).size() > 0) {
-                isArray = true;
-                for (Object var : diffKeys) {
-                    if (!(var instanceof String)) {
-                        isArray = false;
-                        break;
-                    }
-                    String str = ((String) var);
-                    if (str.length() < 3 || str.charAt(0) != '[' || str.charAt(str.length() - 1) != ']') {
-                        isArray = false;
-                        break;
-                    }
-                    String varSubscript = str.substring(1, str.length() - 1);
-                    if (!("" + Integer.getInteger(varSubscript)).equals(varSubscript)) {
-                        isArray = false;
-                        break;
-                    }
-                }
-            }
-        }
-
-        // Merge arrays.
-        if (vars instanceof List || isArray) {
-            ArrayList<Object> merged = new ArrayList<>();
-            if(varsKeys!=null){
-                for (Object var : varsKeys) {
-                    merged.add(var);
-                }
-            }
-            if (diffMap != null) {
-                for (Object varSubscript : diffKeys) {
-                    if (varSubscript instanceof String) {
-                        String strSubscript = (String) varSubscript;
-                        if (strSubscript.length() > 2 && strSubscript.startsWith("[") && strSubscript.endsWith("]")) {
-                            // Get the index from the string key: "[0]" -> 0
-                            int subscript = Integer.parseInt(strSubscript.substring(1, strSubscript.length() - 1));
-                            Object var = diffMap.get(strSubscript);
-                            while (subscript >= merged.size() && merged.size() < Short.MAX_VALUE) {
-                                merged.add(null);
-                            }
-                            merged.set(subscript, mergeHelper(merged.get(subscript), var));
-                        }
-                    }
-                }
-            }
-            return merged;
-        }
 
         // Merge dictionaries.
         if (vars instanceof Map || diff instanceof Map) {
@@ -227,15 +171,6 @@ public final class CTVariableUtils {
             }
             return result;
         }
-        else if (collection instanceof List) {
-            List<Object> castedList = CTVariableUtils.uncheckedCast(collection);
-            Object result = castedList.get((Integer) key);
-            if (autoInsert && result == null) {
-                result = new HashMap<String, Object>();
-                castedList.set((Integer) key, result);
-            }
-            return result;
-        }
 
         return null;
     }
@@ -251,9 +186,6 @@ public final class CTVariableUtils {
         }
         else if (defaultValue instanceof String) {
             kind = STRING;
-        }
-        else if (defaultValue instanceof List || defaultValue instanceof Array) {
-            kind = ARRAY;
         }
         else if (defaultValue instanceof Map) {
             kind = DICTIONARY;
@@ -442,7 +374,7 @@ public final class CTVariableUtils {
 
 
 
-    public static JSONObject getVarsJson(Map<String, Object> values, Map<String, String> kinds) {
+    public static JSONObject getFlattenVarsJson(Map<String, Object> values, Map<String, String> kinds) {
        try {
            JSONObject resultJson = new JSONObject();
            resultJson.put("type", Constants.variablePayloadType);

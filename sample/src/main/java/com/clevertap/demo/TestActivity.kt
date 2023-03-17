@@ -56,10 +56,10 @@ class TestActivity : AppCompatActivity() {
         log("onCreate called")
         ctApi = CleverTapAPI.getDefaultInstance(this)
 
-//        defineVariables(ctApi!!).also { binding.btDefineVars.isEnabled=false }
-//        parseVariables(ctApi!!).also { binding.btParse.isEnabled=false }
-//        attachListeners(ctApi!!).also { binding.btAttachListeners.isEnabled=false }
-//        binding.btAppLaunch.isEnabled = false
+        defineVariables(ctApi!!).also { binding.btDefineVars.isEnabled=false }
+        parseVariables(ctApi!!).also { binding.btParse.isEnabled=false }
+        attachListeners(ctApi!!).also { binding.btAttachListeners.isEnabled=false }
+        binding.btAppLaunch.isEnabled = false
         checkLocalValues()
 
 

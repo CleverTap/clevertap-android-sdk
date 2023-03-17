@@ -21,7 +21,6 @@
 
 package com.clevertap.android.sdk.variables;
 
-import static com.clevertap.android.sdk.variables.CTVariableUtils.ARRAY;
 import static com.clevertap.android.sdk.variables.CTVariableUtils.BOOLEAN;
 import static com.clevertap.android.sdk.variables.CTVariableUtils.DICTIONARY;
 import static com.clevertap.android.sdk.variables.CTVariableUtils.NUMBER;
@@ -37,7 +36,6 @@ import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Field;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -154,9 +152,7 @@ public class Parser {
         } else if (fieldType.isPrimitive()) {
           log( "Variable " + variableName + " is an unsupported primitive type.");
         } else if (fieldType.isArray()) {
-          log( "Variable " + variableName + " should be a List instead of an Array.");
-        } else if (List.class.isAssignableFrom(fieldType)) {
-          defineVariable(instance, variableName, field.get(instance), ARRAY, field);
+          log( "Variable " + variableName + " is an unsupported type of Array.");
         } else if (Map.class.isAssignableFrom(fieldType)) {
           defineVariable(instance, variableName, field.get(instance), DICTIONARY, field);
         } else {
@@ -165,7 +161,6 @@ public class Parser {
           defineVariable(instance, variableName, stringValue, STRING, field);
         }
       }
-      ctVariables.init();
     } catch (IllegalArgumentException t) {
       log( "Error parsing variables(IllegalArgumentException):", t);
       t.printStackTrace();

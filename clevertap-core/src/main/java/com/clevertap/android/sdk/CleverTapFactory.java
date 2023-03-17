@@ -146,6 +146,9 @@ class CleverTapFactory {
 
         Parser parser = new Parser(ctVariables);
         coreState.setParser(parser);
+
+        ctVariables.init();
+
         return coreState;
     }
 
