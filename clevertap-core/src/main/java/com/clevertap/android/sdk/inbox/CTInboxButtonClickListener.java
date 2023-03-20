@@ -29,7 +29,7 @@ class CTInboxButtonClickListener implements View.OnClickListener {
 
     private final boolean isBodyClick;
 
-    private int buttonIndex;
+    private final int buttonIndex;
 
     CTInboxButtonClickListener(int position, CTInboxMessage inboxMessage, String buttonText, JSONObject jsonObject,
             CTInboxListViewFragment fragment, boolean isInboxMessageBodyClick, int buttonIndex) {
