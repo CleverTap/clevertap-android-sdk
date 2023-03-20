@@ -1856,19 +1856,24 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     @Override
-    public void messageDidClick(CTInboxActivity ctInboxActivity, int itemIndex, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue, boolean isBodyClick, int buttonIndex) {
+    public void messageDidClick(CTInboxActivity ctInboxActivity, int itemIndex, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue, int buttonIndex) {
 
         coreState.getAnalyticsManager().pushInboxMessageStateEvent(true, inboxMessage, data);
 
         if (keyValue != null && !keyValue.isEmpty()) {
             Logger.v("clicked button of an inbox notification.");
+            //notify the onInboxItemClicked and onInboxButtonClick callbacks as per the listener set.
+            if (inboxMessageListener != null && inboxMessageListener.get() != null) {
+                inboxMessageListener.get().onInboxItemClicked(inboxMessage, itemIndex, buttonIndex);
+            }
             if (inboxMessageButtonListener != null && inboxMessageButtonListener.get() != null) {
                 inboxMessageButtonListener.get().onInboxButtonClick(keyValue);
             }
         }
         else{
             Logger.v("clicked inbox notification.");
-            if (isBodyClick && inboxMessageListener != null && inboxMessageListener.get() != null) {
+            //only notify the onInboxItemClicked callback if the listener is set
+            if (inboxMessageListener != null && inboxMessageListener.get() != null) {
                 inboxMessageListener.get().onInboxItemClicked(inboxMessage, itemIndex, buttonIndex);
             }
         }

@@ -44,7 +44,7 @@ public class CTInboxListViewFragment extends Fragment {
     interface InboxListener {
 
         void messageDidClick(Context baseContext, int position, CTInboxMessage inboxMessage, Bundle data,
-                HashMap<String, String> keyValue,boolean isBodyClick, int buttonIndex);
+                HashMap<String, String> keyValue, int buttonIndex);
 
         void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data);
     }
@@ -212,11 +212,11 @@ public class CTInboxListViewFragment extends Fragment {
         }
     }
 
-    void didClick(Bundle data, int position, HashMap<String, String> keyValuePayload, boolean isInboxMessageBodyClick, int buttonIndex) {
+    void didClick(Bundle data, int position, HashMap<String, String> keyValuePayload, int buttonIndex) {
         CTInboxListViewFragment.InboxListener listener = getListener();
         if (listener != null) {
             //noinspection ConstantConditions
-            listener.messageDidClick(getActivity().getBaseContext(), position, inboxMessages.get(position), data, keyValuePayload, isInboxMessageBodyClick, buttonIndex);
+            listener.messageDidClick(getActivity().getBaseContext(), position, inboxMessages.get(position), data, keyValuePayload, buttonIndex);
         }
     }
 
@@ -284,7 +284,7 @@ public class CTInboxListViewFragment extends Fragment {
             if (buttonText != null && !buttonText.isEmpty()) {
                 data.putString("wzrk_c2a", buttonText);
             }
-            didClick(data, position, keyValuePayload,isInboxMessageButtonClick, buttonIndex);
+            didClick(data, position, keyValuePayload, buttonIndex);
 
             boolean isKVButton = keyValuePayload != null && !keyValuePayload.isEmpty();
             if (jsonObject != null) {
@@ -322,7 +322,7 @@ public class CTInboxListViewFragment extends Fragment {
                 }
             }
             //pass APP_INBOX_ITEM_INDEX as buttonIndex to indicate the viewPager/item click
-            didClick(data, position, null,isInboxMessageBodyClick, APP_INBOX_ITEM_INDEX);
+            didClick(data, position, null, APP_INBOX_ITEM_INDEX);
             String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(viewPagerPosition)
                     .getActionUrl();
             fireUrlThroughIntent(actionUrl);
