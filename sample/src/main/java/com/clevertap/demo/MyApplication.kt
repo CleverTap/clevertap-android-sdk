@@ -157,7 +157,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         Log.v("AppInbox", "onInboxButtonClick: $payload")
     }
 
-    override fun onInboxItemClicked(message: CTInboxMessage?, buttonIndex: Int) {
-        Log.v("AppInbox", "onInboxItemClicked: $message index: $buttonIndex")
+    override fun onInboxItemClicked(message: CTInboxMessage?, itemIndex: Int, buttonIndex: Int) {
+        Log.v("AppInbox", "InboxItemClicked at $itemIndex position with button-index: $buttonIndex")
     }
 }
