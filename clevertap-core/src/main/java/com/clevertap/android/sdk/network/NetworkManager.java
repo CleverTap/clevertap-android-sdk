@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.text.TextUtils;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.BaseCallbackManager;
@@ -45,8 +46,11 @@ import com.clevertap.android.sdk.validation.ValidationResultStack;
 import com.clevertap.android.sdk.validation.Validator;
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -57,6 +61,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSocketFactory;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 @RestrictTo(Scope.LIBRARY)
@@ -651,9 +656,15 @@ public class NetworkManager extends BaseNetworkManager {
 
             final int responseCode = conn.getResponseCode();
 
-            // Always check for a 200 OK
-            if (responseCode != 200) {
-                throw new IOException("Response code is not 200. It is " + responseCode);
+            if (eventGroup == EventGroup.VARIABLES) {
+                if (handleVariablesResponseError(responseCode, conn)) {
+                    return false;
+                }
+            } else {
+                // Always check for a 200 OK
+                if (responseCode != 200) {
+                    throw new IOException("Response code is not 200. It is " + responseCode);
+                }
             }
 
             // Check for a change in domain
@@ -745,6 +756,51 @@ public class NetworkManager extends BaseNetworkManager {
                     // Ignore
                 }
             }
+        }
+    }
+
+    private boolean handleVariablesResponseError(int responseCode, HttpsURLConnection conn) {
+        switch (responseCode) {
+            case 200:
+                logger.info(config.getAccountId(), "Vars synced successfully.");
+                return false;
+
+            case 400:
+                JSONObject errorStreamJson = getErrorStreamAsJson(conn);
+                if (errorStreamJson != null && !TextUtils.isEmpty(errorStreamJson.optString("error"))) {
+                    String errorMessage = errorStreamJson.optString("error");
+                    logger.info(config.getAccountId(), "Error while syncing vars: " + errorMessage);
+                } else {
+                    logger.info(config.getAccountId(), "Error while syncing vars.");
+                }
+                return true;
+
+            case 401:
+                logger.info(config.getAccountId(), "Unauthorized access from a non-test profile. "
+                    + "Please mark this profile as a test profile from the CleverTap dashboard.");
+                return true;
+
+            default:
+                logger.info(config.getAccountId(), "Response code " + responseCode + " while syncing vars.");
+                return true;
+        }
+    }
+
+    private JSONObject getErrorStreamAsJson(HttpsURLConnection conn) {
+        try {
+            BufferedReader br = new BufferedReader(
+                new InputStreamReader(conn.getErrorStream(), StandardCharsets.UTF_8));
+
+            StringBuilder text = new StringBuilder();
+            String line;
+            while ((line = br.readLine()) != null) {
+                text.append(line);
+            }
+
+            return new JSONObject(text.toString());
+
+        } catch (IOException | JSONException e) {
+            return null;
         }
     }
 

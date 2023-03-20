@@ -5,7 +5,7 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Logger;
 import org.json.JSONObject;
 
-class ErrorResponse extends CleverTapResponseDecorator {
+class ErrorResponse extends CleverTapResponseDecorator { // TODO Should we remove this implementation because error message is handled from the HttpURLConnection error stream?
 
     private final CleverTapResponse cleverTapResponse;
 
