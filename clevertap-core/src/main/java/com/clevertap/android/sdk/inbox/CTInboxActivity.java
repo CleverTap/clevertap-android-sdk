@@ -28,6 +28,7 @@ import com.clevertap.android.sdk.CTInboxStyleConfig;
 import com.clevertap.android.sdk.CTPreferenceCache;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DidClickForHardPermissionListener;
 import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.Logger;
@@ -103,6 +104,8 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         }
 
         setContentView(R.layout.inbox_activity);
+
+        CoreMetaData.setAppInboxActivity(this);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(styleConfig.getNavBarTitle());
@@ -266,6 +269,8 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
     @Override
     protected void onDestroy() {
+        CoreMetaData.setAppInboxActivity(null);
+
         if (styleConfig.isUsingTabs()) {
             List<Fragment> allFragments = getSupportFragmentManager().getFragments();
             for (Fragment fragment : allFragments) {
