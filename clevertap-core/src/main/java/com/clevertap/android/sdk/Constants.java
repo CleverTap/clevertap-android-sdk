@@ -295,6 +295,14 @@ public interface Constants {
 
     int MAX_DELAY_FREQUENCY = 1000 * 60 * 10;
 
+    /**
+     * Valid indexes for the App Inbox item and buttons.
+     */
+    int APP_INBOX_ITEM_INDEX = -1;
+    int APP_INBOX_CTA1_INDEX = 0;
+    int APP_INBOX_CTA2_INDEX = 1;
+    int APP_INBOX_CTA3_INDEX = 2;
+
     String[] NULL_STRING_ARRAY = new String[0];
     String PT_NOTIF_ID = "notificationId";
     String CLOSE_SYSTEM_DIALOGS = "close_system_dialogs";
