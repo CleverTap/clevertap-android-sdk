@@ -1856,7 +1856,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     @Override
-    public void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue, boolean isBodyClick, int buttonIndex) {
+    public void messageDidClick(CTInboxActivity ctInboxActivity, int itemIndex, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue, boolean isBodyClick, int buttonIndex) {
 
         coreState.getAnalyticsManager().pushInboxMessageStateEvent(true, inboxMessage, data);
 
@@ -1869,7 +1869,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         else{
             Logger.v("clicked inbox notification.");
             if (isBodyClick && inboxMessageListener != null && inboxMessageListener.get() != null) {
-                inboxMessageListener.get().onInboxItemClicked(inboxMessage, buttonIndex);
+                inboxMessageListener.get().onInboxItemClicked(inboxMessage, itemIndex, buttonIndex);
             }
         }
     }

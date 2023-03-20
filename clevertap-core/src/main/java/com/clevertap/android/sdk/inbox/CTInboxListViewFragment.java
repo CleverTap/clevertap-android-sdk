@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.inbox;
 
+import static com.clevertap.android.sdk.Constants.APP_INBOX_ITEM_INDEX;
+
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -41,7 +43,7 @@ public class CTInboxListViewFragment extends Fragment {
 
     interface InboxListener {
 
-        void messageDidClick(Context baseContext, CTInboxMessage inboxMessage, Bundle data,
+        void messageDidClick(Context baseContext, int position, CTInboxMessage inboxMessage, Bundle data,
                 HashMap<String, String> keyValue,boolean isBodyClick, int buttonIndex);
 
         void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data);
@@ -214,7 +216,7 @@ public class CTInboxListViewFragment extends Fragment {
         CTInboxListViewFragment.InboxListener listener = getListener();
         if (listener != null) {
             //noinspection ConstantConditions
-            listener.messageDidClick(getActivity().getBaseContext(), inboxMessages.get(position), data, keyValuePayload, isInboxMessageBodyClick, buttonIndex);
+            listener.messageDidClick(getActivity().getBaseContext(), position, inboxMessages.get(position), data, keyValuePayload, isInboxMessageBodyClick, buttonIndex);
         }
     }
 
@@ -319,8 +321,8 @@ public class CTInboxListViewFragment extends Fragment {
                     data.putString(keyName, wzrkParams.getString(keyName));
                 }
             }
-            //pass -1 as value of the buttonIndex to represent the viewPager/item click
-            didClick(data, position, null,isInboxMessageBodyClick, -1);
+            //pass APP_INBOX_ITEM_INDEX as buttonIndex to indicate the viewPager/item click
+            didClick(data, position, null,isInboxMessageBodyClick, APP_INBOX_ITEM_INDEX);
             String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(viewPagerPosition)
                     .getActionUrl();
             fireUrlThroughIntent(actionUrl);
