@@ -2641,10 +2641,10 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
             if(appInboxActivity == null) {
                 throw new IllegalStateException("AppInboxActivity reference not found");
             }
-            Logger.v("Finishing the App Inbox");
+            getConfigLogger().verbose(getAccountId(), "Finishing the App Inbox");
             appInboxActivity.finish();
         }catch (Throwable t) {
-            Logger.d("Can't dismiss AppInbox, please ensure to call this method after the usage of " +
+            getConfigLogger().debug(getAccountId(), "Can't dismiss AppInbox, please ensure to call this method after the usage of " +
                     "cleverTapApiInstance.showAppInbox(). \n" + t);
         }
     }
