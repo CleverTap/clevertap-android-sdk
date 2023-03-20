@@ -2565,6 +2565,23 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
+     * Dismisses the App Inbox Activity if already opened
+     */
+    public void dismissAppInbox() {
+        try {
+            Activity appInboxActivity = CoreMetaData.getAppInboxActivity();
+            if(appInboxActivity == null) {
+                throw new IllegalStateException("AppInboxActivity reference not found");
+            }
+            Logger.v("Finishing the App Inbox");
+            appInboxActivity.finish();
+        }catch (Throwable t) {
+            Logger.d("Can't dismiss AppInbox, please ensure to call this method after the usage of " +
+                    "cleverTapApiInstance.showAppInbox(). \n" + t);
+        }
+    }
+
+    /**
      * Opens {@link CTInboxActivity} to display Inbox Messages with default {@link CTInboxStyleConfig} object
      */
     @SuppressWarnings({"unused"})

@@ -147,10 +147,17 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
     }
 
     override fun onInboxButtonClick(payload: HashMap<String, String>?) {
-        Log.v("AppInbox", "onInboxButtonClick: $payload")
+        Log.v("AppInbox", "InboxButtonClick with payload: $payload")
+        //dismissAppInbox()
     }
 
     override fun onInboxItemClicked(message: CTInboxMessage?, itemIndex: Int, buttonIndex: Int) {
         Log.v("AppInbox", "InboxItemClicked at $itemIndex position with button-index: $buttonIndex")
+        //dismissAppInbox()
+    }
+
+    private fun dismissAppInbox() {
+        val defaultInstance = CleverTapAPI.getDefaultInstance(this)
+        defaultInstance?.dismissAppInbox()
     }
 }
