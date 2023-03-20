@@ -31,7 +31,6 @@ class CTInboxButtonClickListener implements View.OnClickListener {
 
     private int buttonIndex;
 
-
     CTInboxButtonClickListener(int position, CTInboxMessage inboxMessage, String buttonText, JSONObject jsonObject,
             CTInboxListViewFragment fragment, boolean isInboxMessageBodyClick, int buttonIndex) {
         this.position = position;
@@ -44,13 +43,14 @@ class CTInboxButtonClickListener implements View.OnClickListener {
     }
 
     CTInboxButtonClickListener(int position, CTInboxMessage inboxMessage, String buttonText,
-            CTInboxListViewFragment fragment, ViewPager viewPager, boolean isInboxMessageBodyClick) {
+            CTInboxListViewFragment fragment, ViewPager viewPager, boolean isInboxMessageBodyClick, int buttonIndex) {
         this.position = position;
         this.inboxMessage = inboxMessage;
         this.buttonText = buttonText;
         this.fragment = fragment; // be sure to pass this as a Weak Ref
         this.viewPager = viewPager;
         this.isBodyClick = isInboxMessageBodyClick;
+        this.buttonIndex = buttonIndex;
     }
 
 
