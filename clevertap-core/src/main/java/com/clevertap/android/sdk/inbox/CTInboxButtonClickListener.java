@@ -26,16 +26,21 @@ class CTInboxButtonClickListener implements View.OnClickListener {
     private final int position;
 
     private ViewPager viewPager;
-    private boolean isBodyClick;
+
+    private final boolean isBodyClick;
+
+    private int buttonIndex;
+
 
     CTInboxButtonClickListener(int position, CTInboxMessage inboxMessage, String buttonText, JSONObject jsonObject,
-            CTInboxListViewFragment fragment, boolean isInboxMessageBodyClick) {
+            CTInboxListViewFragment fragment, boolean isInboxMessageBodyClick, int buttonIndex) {
         this.position = position;
         this.inboxMessage = inboxMessage;
         this.buttonText = buttonText;
         this.fragment = fragment; // be sure to pass this as a Weak Ref
         this.buttonObject = jsonObject;
         this.isBodyClick = isInboxMessageBodyClick;
+        this.buttonIndex = buttonIndex;
     }
 
     CTInboxButtonClickListener(int position, CTInboxMessage inboxMessage, String buttonText,
@@ -46,7 +51,6 @@ class CTInboxButtonClickListener implements View.OnClickListener {
         this.fragment = fragment; // be sure to pass this as a Weak Ref
         this.viewPager = viewPager;
         this.isBodyClick = isInboxMessageBodyClick;
-
     }
 
 
@@ -66,11 +70,11 @@ class CTInboxButtonClickListener implements View.OnClickListener {
                         }
                     }
 
-                    fragment.handleClick(this.position, buttonText, buttonObject, getKeyValues(inboxMessage));
+                    fragment.handleClick(this.position, buttonText, buttonObject, getKeyValues(inboxMessage), buttonIndex);
                 }
             } else {
                 if (fragment != null) {
-                    fragment.handleClick(this.position, null, null, null);
+                    fragment.handleClick(this.position, null, null, null, buttonIndex);
                 }
             }
         }
