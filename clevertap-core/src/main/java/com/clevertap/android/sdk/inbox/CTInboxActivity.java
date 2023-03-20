@@ -30,6 +30,9 @@ import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.DidClickForHardPermissionListener;
 import com.clevertap.android.sdk.InAppNotificationActivity;
+import com.clevertap.android.sdk.CoreMetaData;
+import com.clevertap.android.sdk.DidClickForHardPermissionListener;
+import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.PushPermissionManager;
 import com.clevertap.android.sdk.R;
@@ -103,6 +106,8 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         }
 
         setContentView(R.layout.inbox_activity);
+
+        CoreMetaData.setAppInboxActivity(this);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(styleConfig.getNavBarTitle());
@@ -266,6 +271,8 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
     @Override
     protected void onDestroy() {
+        CoreMetaData.setAppInboxActivity(null);
+
         if (styleConfig.isUsingTabs()) {
             List<Fragment> allFragments = getSupportFragmentManager().getFragments();
             for (Fragment fragment : allFragments) {
@@ -287,8 +294,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
     @Override
     public void messageDidShow(Context baseContext, CTInboxMessage inboxMessage, Bundle data) {
-        Logger.v("CTInboxActivity:messageDidShow() called with: data = [" + data + "], inboxMessage = ["
-                + inboxMessage.getMessageId() + "]");
+        Logger.v("CTInboxActivity:messageDidShow() called with: data = [" + data + "], inboxMessage = [" + inboxMessage .getMessageId()+ "]");
         didShow(data, inboxMessage);
     }
 
@@ -300,8 +306,7 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
     }
 
     void didShow(Bundle data, CTInboxMessage inboxMessage) {
-        Logger.v("CTInboxActivity:didShow() called with: data = [" + data + "], inboxMessage = ["
-                + inboxMessage.getMessageId() + "]");
+        Logger.v( "CTInboxActivity:didShow() called with: data = [" + data + "], inboxMessage = [" + inboxMessage.getMessageId() + "]");
         InboxActivityListener listener = getListener();
         if (listener != null) {
             listener.messageDidShow(this, inboxMessage, data);
