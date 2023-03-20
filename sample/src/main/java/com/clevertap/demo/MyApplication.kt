@@ -14,10 +14,9 @@ import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
 import com.clevertap.android.pushtemplates.PushTemplateNotificationHandler
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.sdk.ActivityLifecycleCallback
-import com.clevertap.android.sdk.CleverTapAPI
+import com.clevertap.android.sdk.*
 import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
-import com.clevertap.android.sdk.SyncListener
+import com.clevertap.android.sdk.inbox.CTInboxMessage
 import com.clevertap.android.sdk.interfaces.NotificationHandler
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import com.clevertap.demo.ui.main.NotificationUtils
@@ -26,7 +25,8 @@ import com.google.android.gms.security.ProviderInstaller.ProviderInstallListener
 import org.json.JSONObject
 import kotlin.system.measureTimeMillis
 
-class MyApplication : MultiDexApplication(), CTPushNotificationListener, ActivityLifecycleCallbacks {
+class MyApplication : MultiDexApplication(), CTPushNotificationListener, ActivityLifecycleCallbacks,
+    InboxMessageButtonListener, InboxMessageListener {
 
     override fun onCreate() {
 
@@ -75,6 +75,9 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                 )
             }
         }
+
+        defaultInstance?.setInboxMessageButtonListener(this)
+        defaultInstance?.setCTInboxMessageListener(this)
 
         defaultInstance?.ctPushNotificationListener = this
 
@@ -141,5 +144,13 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
     }
 
     override fun onActivityDestroyed(activity: Activity) {
+    }
+
+    override fun onInboxButtonClick(payload: HashMap<String, String>?) {
+        Log.v("AppInbox", "onInboxButtonClick: $payload")
+    }
+
+    override fun onInboxItemClicked(message: CTInboxMessage?, buttonIndex: Int) {
+        Log.v("AppInbox", "onInboxItemClicked: $message index: $buttonIndex")
     }
 }
