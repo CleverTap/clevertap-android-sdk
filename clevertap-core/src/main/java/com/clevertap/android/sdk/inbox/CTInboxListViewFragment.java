@@ -279,24 +279,21 @@ public class CTInboxListViewFragment extends Fragment {
         boolean isInboxMessageButtonClick = jsonObject != null;
 
         try {
-            boolean isKVButton = keyValuePayload != null && !keyValuePayload.isEmpty();
             if (isInboxMessageButtonClick) {
-                String isRequestForPermissionStr = inboxMessages.get(position).getInboxMessageContents().
+                String linkType = inboxMessages.get(position).getInboxMessageContents().
                         get(0).getLinktype(jsonObject);
-                if (isRequestForPermissionStr.contains(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)
-                        && didClickForHardPermissionListener != null) {
-                    boolean isFallbackSettings = inboxMessages.get(position).
-                            getInboxMessageContents().get(0).isFallbackSettingsEnabled(jsonObject);
-                    didClickForHardPermissionListener.didClickForHardPermissionWithFallbackSettings(isFallbackSettings);
-                    return;
-                }
-                if (inboxMessages.get(position).getInboxMessageContents().get(0).getLinktype(jsonObject)
-                        .equalsIgnoreCase(Constants.KEY_URL)) {
+                if (linkType.equalsIgnoreCase(Constants.KEY_URL)) {
                     String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(0)
                             .getLinkUrl(jsonObject);
                     if (actionUrl != null) {
                         fireUrlThroughIntent(actionUrl);
                     }
+                }
+                else if (linkType.contains(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)
+                        && didClickForHardPermissionListener != null) {
+                    boolean isFallbackSettings = inboxMessages.get(position).
+                            getInboxMessageContents().get(0).isFallbackSettingsEnabled(jsonObject);
+                    didClickForHardPermissionListener.didClickForHardPermissionWithFallbackSettings(isFallbackSettings);
                 }
             } else {
                 String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(0).getActionUrl();
