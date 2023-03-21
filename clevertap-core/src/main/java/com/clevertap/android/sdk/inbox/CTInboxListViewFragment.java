@@ -279,6 +279,32 @@ public class CTInboxListViewFragment extends Fragment {
         boolean isInboxMessageButtonClick = jsonObject != null;
 
         try {
+            boolean isKVButton = keyValuePayload != null && !keyValuePayload.isEmpty();
+            if (isInboxMessageButtonClick) {
+                String isRequestForPermissionStr = inboxMessages.get(position).getInboxMessageContents().
+                        get(0).getLinktype(jsonObject);
+                if (isRequestForPermissionStr.contains(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)
+                        && didClickForHardPermissionListener != null) {
+                    boolean isFallbackSettings = inboxMessages.get(position).
+                            getInboxMessageContents().get(0).isFallbackSettingsEnabled(jsonObject);
+                    didClickForHardPermissionListener.didClickForHardPermissionWithFallbackSettings(isFallbackSettings);
+                    return;
+                }
+                if (inboxMessages.get(position).getInboxMessageContents().get(0).getLinktype(jsonObject)
+                        .equalsIgnoreCase(Constants.KEY_URL)) {
+                    String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(0)
+                            .getLinkUrl(jsonObject);
+                    if (actionUrl != null) {
+                        fireUrlThroughIntent(actionUrl);
+                    }
+                }
+            } else {
+                String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(0).getActionUrl();
+                if (actionUrl != null) {
+                    fireUrlThroughIntent(actionUrl);
+                }
+            }
+
             Bundle data = new Bundle();
             JSONObject wzrkParams = inboxMessages.get(position).getWzrkParams();
             Iterator<String> iterator = wzrkParams.keys();
@@ -293,35 +319,6 @@ public class CTInboxListViewFragment extends Fragment {
                 data.putString("wzrk_c2a", buttonText);
             }
             didClick(data, position, keyValuePayload, buttonIndex);
-
-            boolean isKVButton = keyValuePayload != null && !keyValuePayload.isEmpty();
-            if (jsonObject != null) {
-                String isRequestForPermissionStr = inboxMessages.get(position).getInboxMessageContents().
-                        get(0).getLinktype(jsonObject);
-                if (isRequestForPermissionStr.contains(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)
-                        && didClickForHardPermissionListener != null) {
-                    boolean isFallbackSettings = inboxMessages.get(position).
-                            getInboxMessageContents().get(0).isFallbackSettingsEnabled(jsonObject);
-                    didClickForHardPermissionListener.didClickForHardPermissionWithFallbackSettings(isFallbackSettings);
-                    return;
-                }
-                if (isKVButton || inboxMessages.get(position).getInboxMessageContents().get(0).getLinktype(jsonObject)
-                        .equalsIgnoreCase(Constants.COPY_TYPE)) {
-                    //noinspection UnnecessaryReturnStatement
-                    return;
-                } else {
-                    String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(0)
-                            .getLinkUrl(jsonObject);
-                    if (actionUrl != null) {
-                        fireUrlThroughIntent(actionUrl);
-                    }
-                }
-            } else {
-                String actionUrl = inboxMessages.get(position).getInboxMessageContents().get(0).getActionUrl();
-                if (actionUrl != null) {
-                    fireUrlThroughIntent(actionUrl);
-                }
-            }
         } catch (Throwable t) {
             Logger.d("Error handling notification button click: " + t.getCause());
         }
