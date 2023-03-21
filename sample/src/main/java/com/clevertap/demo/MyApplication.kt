@@ -189,7 +189,6 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                         //this type triggers the hard prompt of the notification permission
                         val rfpData = buttonObject.optString("text")
                         Log.i("MyApplication", "notification permission data: $rfpData")
-                        //dismissAppInbox()
                     }
                     else -> {
                         //do nothing here
