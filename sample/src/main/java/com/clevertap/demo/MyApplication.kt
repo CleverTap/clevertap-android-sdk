@@ -154,17 +154,63 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
     }
 
     override fun onInboxButtonClick(payload: HashMap<String, String>?) {
-        Log.v("AppInbox", "InboxButtonClick with payload: $payload")
+        Log.i("MyApplication", "InboxButtonClick with payload: $payload")
         //dismissAppInbox()
     }
 
     override fun onInboxItemClicked(message: CTInboxMessage?, itemIndex: Int, buttonIndex: Int) {
-        Log.v("AppInbox", "InboxItemClicked at $itemIndex position with button-index: $buttonIndex")
-        //dismissAppInbox()
+        Log.i(
+            "MyApplication",
+            "InboxItemClicked at $itemIndex position with button-index: $buttonIndex"
+        )
+
+        //The buttonIndex corresponds to the CTA button clicked (0, 1, or 2). A value of -1 indicates the app inbox body/message clicked.
+        if (buttonIndex != -1) {
+            //button is clicked
+            val buttonObject: JSONObject? =
+                message?.inboxMessageContents?.get(0)?.links?.get(buttonIndex) as JSONObject?
+            val buttonType = buttonObject?.optString("type")
+            buttonType?.let {
+                when (it) {
+                    "copy" -> {
+                        //this type copies the associated text to the clipboard
+                        val copiedText = buttonObject.optJSONObject("copyText")?.optString("text")
+                        Log.i("MyApplication", "copied text to Clipboard: $copiedText")
+                        //dismissAppInbox()
+                    }
+                    "url" -> {
+                        //this type fires the deeplink
+                        val firedDeepLinkUrl =
+                            buttonObject.optJSONObject("url")?.optJSONObject("android")
+                                ?.optString("text")
+                        Log.i("MyApplication", "fired deeplink url: $firedDeepLinkUrl")
+                        //dismissAppInbox()
+                    }
+                    "kv" -> {
+                        //this type contains the custom key-value pairs
+                        val kvPair = buttonObject.optJSONObject("kv")
+                        Log.i("MyApplication", "custom key-value pair: $kvPair")
+                        //dismissAppInbox()
+                    }
+                    "rfp" -> {
+                        //this type triggers the hard prompt of the notification permission
+                        val rfpData = buttonObject.optJSONObject("rfp")
+                        Log.i("MyApplication", "notification permission data: $rfpData")
+                        //dismissAppInbox()
+                    }
+                    else -> {
+                        //do nothing here
+                    }
+                }
+            }
+        } else {
+            //Item's body is clicked
+            Log.i("MyApplication", "type/template of App Inbox item: ${message?.type}")
+        }
     }
 
     private fun dismissAppInbox() {
         val defaultInstance = CleverTapAPI.getDefaultInstance(this)
-        defaultInstance?.dismissAppInbox()
+        //defaultInstance?.dismissAppInbox()
     }
 }
