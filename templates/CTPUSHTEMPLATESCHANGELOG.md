@@ -1,5 +1,8 @@
 ## CleverTap Push Templates SDK CHANGE LOG
 
+### Version 1.0.8 (March 8, 2023)
+* Supports CleverTap Android SDK v4.7.5. CleverTap Push Templates SDK `v1.0.8` requires [CleverTap Android SDK v4.7.5](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md) to work properly.
+
 ### Version 1.0.7 (December 5, 2022)
 * UI bug fixes for Non-linear Product Catalogue template.
 * Supports CleverTap Android SDK v4.7.2.
@@ -8,6 +11,12 @@
 * Targets Android 13
 * Supports CleverTap Android SDK v4.7.0
 * Minimum Android SDK version bumped to API 19 (Android 4.4).
+
+### Version 1.0.5.1 (March 15, 2023)
+* Supports CleverTap Android SDK v4.6.7. CleverTap Push Templates SDK `v1.0.5.1` requires [CleverTap Android SDK v4.6.7](https://github.com/CleverTap/clevertap-android-sdk/blob/master_android12/docs/CTCORECHANGELOG.md) to work properly.
+* **Note:** This release is being done for Android 12 targeted users, satisfying below points.
+  * Targeting Android 12 and
+  * Using RenderMax and/or using Push Templates
 
 ### Version 1.0.5 (September 13, 2022)
 * fixes a bug on android 12 where push template notification header was not displaying subtitle text.

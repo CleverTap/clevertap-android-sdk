@@ -2960,14 +2960,15 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     //TODO: start synchronizing entire flow from here
-    public void renderPushNotification(@NonNull INotificationRenderer iNotificationRenderer, Context context,
+    public Future<?> renderPushNotification(@NonNull INotificationRenderer iNotificationRenderer, Context context,
             Bundle extras) {
 
         CleverTapInstanceConfig config = coreState.getConfig();
+        Future<?> future = null;
 
         try {
             Task<Void> task = CTExecutorFactory.executors(config).postAsyncSafelyTask();
-            task.execute("CleverTapAPI#renderPushNotification",
+            future = task.submit("CleverTapAPI#renderPushNotification",
                     new Callable<Void>() {
                         @Override
                         public Void call() {
@@ -2976,9 +2977,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
                                 if (extras != null && extras.containsKey(Constants.PT_NOTIF_ID)) {
                                     coreState.getPushProviders()
-                                            ._createNotification(context, extras, extras.getInt(Constants.PT_NOTIF_ID));
+                                            ._createNotification(context, extras,
+                                                    extras.getInt(Constants.PT_NOTIF_ID));
                                 } else {
-                                    coreState.getPushProviders()._createNotification(context, extras, Constants.EMPTY_NOTIFICATION_ID);
+                                    coreState.getPushProviders()
+                                            ._createNotification(context, extras, Constants.EMPTY_NOTIFICATION_ID);
                                 }
                             }
                             return null;
@@ -2987,6 +2990,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         } catch (Throwable t) {
             config.getLogger().debug(config.getAccountId(), "Failed to process renderPushNotification()", t);
         }
+
+        return future;
 
     }
 

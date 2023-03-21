@@ -1,5 +1,8 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 4.7.5 (March 6, 2023)
+* Bug fixes and performance improvements.
+
 ### Version 4.7.4 (January 27, 2023)
 * Bug fixes and performance improvements.
 
@@ -32,6 +35,12 @@
 * From 4.7.0+ existing callback `InAppNotificationListener` will now have `onShow(CTInAppNotification)` method which needs to implemented
 * Minimum Android SDK version bumped to API 19 (Android 4.4)
 * Use v4.7.2, this version contains a bug which causes a crash (`ClassCastException`) in header/footer InApp templates.
+
+### Version 4.6.7 (March 15, 2023)
+* Bug fixes and performance improvements.
+* **Note:** This release is being done for Android 12 targeted users, satisfying below points.
+  * Targeting Android 12 and
+  * Using RenderMax and/or using Push Templates
 
 ### Version 4.6.6 (October 31, 2022)
 * Fixes App Inbox bug where an Inbox message's video would not play when new Inbox messages were available
