@@ -194,7 +194,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                     }
                     "rfp" -> {
                         //this type triggers the hard prompt of the notification permission
-                        val rfpData = buttonObject.optJSONObject("rfp")
+                        val rfpData = buttonObject.optString("text")
                         Log.i("MyApplication", "notification permission data: $rfpData")
                         //dismissAppInbox()
                     }
@@ -206,11 +206,12 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         } else {
             //Item's body is clicked
             Log.i("MyApplication", "type/template of App Inbox item: ${message?.type}")
+            //dismissAppInbox()
         }
     }
 
     private fun dismissAppInbox() {
         val defaultInstance = CleverTapAPI.getDefaultInstance(this)
-        //defaultInstance?.dismissAppInbox()
+        defaultInstance?.dismissAppInbox()
     }
 }
