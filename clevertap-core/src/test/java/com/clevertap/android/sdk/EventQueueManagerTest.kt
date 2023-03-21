@@ -300,7 +300,7 @@ class EventQueueManagerTest : BaseTestCase() {
             // Arrange
 
             val captor = ArgumentCaptor.forClass(Runnable::class.java)
-            doNothing().`when`(eventQueueManager).flushQueueSync(ArgumentMatchers.any(), ArgumentMatchers.any(),null)
+            doNothing().`when`(eventQueueManager).flushQueueSync(ArgumentMatchers.any(), ArgumentMatchers.any(),ArgumentMatchers.any())
 
             // Act
             eventQueueManager.scheduleQueueFlush(application)
