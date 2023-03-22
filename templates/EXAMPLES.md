@@ -226,31 +226,28 @@ cleverTapDefaultInstance.dismissAppInbox();
 
 ### App Inbox Item and Button Click Callbacks
  
-Let's understand the types of buttons first that App Inbox supports:
+Lets's understand the types of buttons first that App Inbox supports:
 - URL button (fires the deeplink with the associated URL) 
 - Copy to button (Copies the associated text to the clipboard)
 - KV button (contains the custom kev-value pair for custom handling)
 
 
-The Android SDK v4.6.1 and above supports `onInboxItemClicked` callback on the click of an App Inbox item, such as text or media.
-From the Android SDK v4.6.8 onwards and below v4.7.0, the `onInboxItemClicked` callback supports the button click besides the item click.
+Android SDK v4.6.1 and above supports `onInboxItemClicked` callback on the click on the following App Inbox properties:
+- App Inbox item, such as text or media.
+- App Inbox buttons (URL, Copy to Clipboard and KV).
 
 The callback returns `CTInboxMessage` object, `itemIndex` and `buttonIndex` parameters. To use this callback, check that your activity implements the `InboxMessageListener` and overrides the following method:
 
 ```java
 @Override
-public void onInboxItemClicked(CTInboxMessage message, int contentPageIndex, int buttonIndex){
-    Log.i(TAG, "InboxItemClicked at" + contentPageIndex + " page-index with button-index:" + buttonIndex);
+public void onInboxItemClicked(CTInboxMessage message, int itemIndex, int buttonIndex){
+    Log.i(TAG, "InboxItemClicked at" + itemIndex + " position with button-index:" + buttonIndex);
     //The buttonIndex corresponds to the CTA button clicked (0, 1, or 2). A value of -1 indicates the app inbox body/message clicked.
-        
-    List<CTInboxMessageContent> inboxMessageContentList = message.getInboxMessageContents();
-    //The contentPageIndex corresponds to the page index of the content, which ranges from 0 to the total number of pages for carousel templates. For non-carousel templates, the value is always 0, as they only have one page of content.
-    CTInboxMessageContent messageContentObject = inboxMessageContentList.get(contentPageIndex);
     if (buttonIndex != -1) {
         //button is clicked
         try {
             List<CTInboxMessageContent> inboxMessageContentList = message.getInboxMessageContents();
-            JSONObject buttonObject = (JSONObject) messageContentObject.getLinks().get(buttonIndex);
+            JSONObject buttonObject = (JSONObject) inboxMessageContentList.get(0).getLinks().get(buttonIndex);
             String buttonType = buttonObject.getString("type");
             Log.i(TAG, "type of button clicked: " + buttonType);
         } catch (Throwable t) {
