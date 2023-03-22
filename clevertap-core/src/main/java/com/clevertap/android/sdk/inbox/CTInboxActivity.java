@@ -1,7 +1,5 @@
 package com.clevertap.android.sdk.inbox;
 
-import static com.clevertap.android.sdk.Constants.NOTIFICATION_PERMISSION_REQUEST_CODE;
-
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -14,6 +12,7 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
@@ -23,13 +22,12 @@ import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager.widget.ViewPager;
+
 import com.clevertap.android.sdk.CTInboxListener;
 import com.clevertap.android.sdk.CTInboxStyleConfig;
 import com.clevertap.android.sdk.CTPreferenceCache;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
-import com.clevertap.android.sdk.DidClickForHardPermissionListener;
-import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.DidClickForHardPermissionListener;
 import com.clevertap.android.sdk.InAppNotificationActivity;
@@ -37,6 +35,7 @@ import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.PushPermissionManager;
 import com.clevertap.android.sdk.R;
 import com.google.android.material.tabs.TabLayout;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
