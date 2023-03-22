@@ -1,5 +1,21 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 4.7.6 (March 22, 2023)
+#### Breaking Changes
+
+* **Signature change of `onInboxItemClicked` callback**: 
+It is changed from  `onInboxItemClicked(CTInboxMessage message)` to `onInboxItemClicked(CTInboxMessage message, int itemIndex, int buttonIndex)`. The `itemIndex` corresponds the index of the item clicked in the list whereas  
+the `buttonIndex` for the App Inbox button clicked (0, 1, or 2). A value of -1 indicates the App Inbox item is clicked.
+
+* **Behavioral change of `onInboxItemClicked` callback**: 
+  - Previously, the callback was raised when the App Inbox Item is clicked. 
+  - Now, it is also raised when the App Inbox button and Item is clicked. 
+
+#### Added
+* Adds the new public API `dismissAppInbox()` via `CleverTapAPI` class to dismiss the App Inbox.
+
+
+
 ### Version 4.7.5 (March 6, 2023)
 * Bug fixes and performance improvements.
 
