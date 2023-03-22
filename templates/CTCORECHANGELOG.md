@@ -13,7 +13,6 @@
 #### Added
 * Adds the new public API `dismissAppInbox()` via `CleverTapAPI` class to dismiss the App Inbox.
 
-
 ### Version 4.6.7 (March 14, 2023)
 * Bug fixes and performance improvements.
 * **Note:** This release is being done for Android 12 targeted users, satisfying below points.
