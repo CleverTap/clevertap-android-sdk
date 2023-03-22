@@ -1856,20 +1856,21 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     @Override
-    public void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue, boolean isBodyClick) {
+    public void messageDidClick(CTInboxActivity ctInboxActivity, int itemIndex, CTInboxMessage inboxMessage, Bundle data, HashMap<String, String> keyValue, int buttonIndex) {
 
         coreState.getAnalyticsManager().pushInboxMessageStateEvent(true, inboxMessage, data);
 
+        Logger.v("clicked inbox notification.");
+        //notify the onInboxItemClicked callback if the listener is set.
+        if (inboxMessageListener != null && inboxMessageListener.get() != null) {
+            inboxMessageListener.get().onInboxItemClicked(inboxMessage, itemIndex, buttonIndex);
+        }
+
         if (keyValue != null && !keyValue.isEmpty()) {
             Logger.v("clicked button of an inbox notification.");
+            //notify the onInboxButtonClick callback if the listener is set.
             if (inboxMessageButtonListener != null && inboxMessageButtonListener.get() != null) {
                 inboxMessageButtonListener.get().onInboxButtonClick(keyValue);
-            }
-        }
-        else{
-            Logger.v("clicked inbox notification.");
-            if (isBodyClick && inboxMessageListener != null && inboxMessageListener.get() != null) {
-                inboxMessageListener.get().onInboxItemClicked(inboxMessage);
             }
         }
     }
@@ -2557,6 +2558,25 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
                     " It is not setup to support Notification Inbox yet.", t);
         }
 
+    }
+
+    /**
+     * Dismisses the App Inbox Activity if already opened
+     */
+    public void dismissAppInbox() {
+        try {
+            Activity appInboxActivity = getCoreState().getCoreMetaData().getAppInboxActivity();
+            if (appInboxActivity == null) {
+                throw new IllegalStateException("AppInboxActivity reference not found");
+            }
+            if (!appInboxActivity.isFinishing()) {
+                getConfigLogger().verbose(getAccountId(), "Finishing the App Inbox");
+                appInboxActivity.finish();
+            }
+        } catch (Throwable t) {
+            getConfigLogger().verbose(getAccountId(), "Can't dismiss AppInbox, please ensure to call this method after the usage of " +
+                    "cleverTapApiInstance.showAppInbox(). \n" + t);
+        }
     }
 
     /**

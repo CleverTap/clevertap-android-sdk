@@ -2,7 +2,7 @@ package com.clevertap.android.sdk.inbox;
 
 import androidx.annotation.NonNull;
 
-enum CTInboxMessageType {
+public enum CTInboxMessageType {
 
     SimpleMessage("simple"),
     IconMessage("message-icon"),

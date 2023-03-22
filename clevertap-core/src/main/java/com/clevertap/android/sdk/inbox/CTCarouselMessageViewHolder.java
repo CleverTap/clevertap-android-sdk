@@ -1,5 +1,7 @@
 package com.clevertap.android.sdk.inbox;
 
+import static com.clevertap.android.sdk.Constants.APP_INBOX_ITEM_INDEX;
+
 import android.content.Context;
 import android.graphics.Color;
 import android.view.View;
@@ -136,7 +138,7 @@ class CTCarouselMessageViewHolder extends CTInboxBaseMessageViewHolder {
         this.imageViewPager.addOnPageChangeListener(carouselPageChangeListener);
 
         this.clickLayout.setOnClickListener(
-                new CTInboxButtonClickListener(position, inboxMessage, null, parentWeak, this.imageViewPager,true));
+                new CTInboxButtonClickListener(position, inboxMessage, null, parentWeak, this.imageViewPager,true, APP_INBOX_ITEM_INDEX));
 
         markItemAsRead(inboxMessage, position);
     }

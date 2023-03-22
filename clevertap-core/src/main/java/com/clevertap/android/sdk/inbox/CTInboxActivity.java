@@ -9,6 +9,7 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
 import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import androidx.appcompat.widget.Toolbar;
@@ -17,13 +18,14 @@ import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
 import androidx.viewpager.widget.ViewPager;
 
-import com.clevertap.android.sdk.CTInboxListener;
 import com.clevertap.android.sdk.CTInboxStyleConfig;
 import com.clevertap.android.sdk.CleverTapAPI;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
+import com.clevertap.android.sdk.CoreMetaData;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.R;
 import com.google.android.material.tabs.TabLayout;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,8 +39,8 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
     public interface InboxActivityListener {
 
-        void messageDidClick(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data,
-                HashMap<String, String> keyValue,boolean isBodyClick);
+        void messageDidClick(CTInboxActivity ctInboxActivity, int itemIndex, CTInboxMessage inboxMessage, Bundle data,
+                HashMap<String, String> keyValue, int buttonIndex);
 
         void messageDidShow(CTInboxActivity ctInboxActivity, CTInboxMessage inboxMessage, Bundle data);
     }
@@ -81,6 +83,9 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         }
 
         setContentView(R.layout.inbox_activity);
+
+        CoreMetaData coreMetaData = cleverTapAPI.getCoreState().getCoreMetaData();
+        coreMetaData.setAppInboxActivity(this);
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         toolbar.setTitle(styleConfig.getNavBarTitle());
@@ -196,6 +201,9 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
     @Override
     protected void onDestroy() {
+        CoreMetaData coreMetaData = cleverTapAPI.getCoreState().getCoreMetaData();
+        coreMetaData.setAppInboxActivity(null);
+
         if (styleConfig.isUsingTabs()) {
             List<Fragment> allFragments = getSupportFragmentManager().getFragments();
             for (Fragment fragment : allFragments) {
@@ -210,9 +218,9 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
 
 
     @Override
-    public void messageDidClick(Context baseContext, CTInboxMessage inboxMessage, Bundle data,
-            HashMap<String, String> keyValue, boolean isBodyClick) {
-        didClick(data, inboxMessage, keyValue,isBodyClick);
+    public void messageDidClick(Context baseContext, int position, CTInboxMessage inboxMessage, Bundle data,
+            HashMap<String, String> keyValue, int buttonIndex) {
+        didClick(data, position, inboxMessage, keyValue, buttonIndex);
     }
 
     @Override
@@ -221,10 +229,10 @@ public class CTInboxActivity extends FragmentActivity implements CTInboxListView
         didShow(data, inboxMessage);
     }
 
-    void didClick(Bundle data, CTInboxMessage inboxMessage, HashMap<String, String> keyValue, boolean isBodyClick) {
+    void didClick(Bundle data, int position, CTInboxMessage inboxMessage, HashMap<String, String> keyValue, int buttonIndex) {
         InboxActivityListener listener = getListener();
         if (listener != null) {
-            listener.messageDidClick(this, inboxMessage, data, keyValue,isBodyClick);
+            listener.messageDidClick(this, position, inboxMessage, data, keyValue, buttonIndex);
         }
     }
 
