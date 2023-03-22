@@ -17,10 +17,6 @@ public class VarTest {
     }
 
     @Test
-    public void count() {
-    }
-
-    @Test
     public void warnIfNotStarted() {
     }
 

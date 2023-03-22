@@ -2,7 +2,7 @@ package com.clevertap.android.sdk.variables;
 
 import com.clevertap.android.sdk.variables.annotations.Variable;
 
-public class TestVars {
+public class VariableDefinitions {
     @Variable public static String welcomeMsg = "Hello User";
     @Variable public static boolean isOptedForOffers = true;
     @Variable public static int initialCoins = 45;
@@ -16,5 +16,8 @@ public class TestVars {
         @Variable public  boolean javaIBool = false;
     }
 
+    public static class NullDefaultValue {
+        @Variable public String string_with_null = null;
+    }
 
 }

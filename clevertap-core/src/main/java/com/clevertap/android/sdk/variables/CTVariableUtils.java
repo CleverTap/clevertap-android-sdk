@@ -46,6 +46,14 @@ public final class CTVariableUtils {
             }
             if (valuesPtr instanceof Map) {
                 Map<String, Object> map = CTVariableUtils.uncheckedCast(valuesPtr);
+                Object currentValue = map.get(nameComponents[nameComponents.length - 1]);
+
+                if (currentValue instanceof Map && value instanceof Map) {
+                    ((Map)value).putAll((Map)currentValue);
+                } else if (currentValue != null && currentValue.equals(value)) {
+                    log(String.format("Variable with name %s will override value: %s, with new value: %s.", name, currentValue, value));
+                }
+
                 map.put(nameComponents[nameComponents.length - 1], value);
             }
         }
@@ -107,8 +115,16 @@ public final class CTVariableUtils {
         return result;
     }
 
-
-    // check test for more info
+    /**
+     * Returns the merge of vars and diff, where values in vars are replaced from values
+     * in diff, i.e. calling mergeHelper with vars=[a:10, b:20] and diff=[a:15, c:25] produces a
+     * merge=[a:15, b:20, c:25]. The methods works recursively when nested maps are presented.
+     *
+     * @param vars - Variable values as defined by user.
+     * @param diff - Variable values from server.
+     *
+     * @return Merge of both parameters with priority of diff over vars when overriding values.
+     */
     public static Object mergeHelper(Object vars, Object diff) {
         log("mergeHelper() called with: vars = [" + vars + "], diff = [" + diff + "]");
         if (diff == null) {
@@ -174,7 +190,9 @@ public final class CTVariableUtils {
         return null;
     }
 
-    // check test for more info
+    /**
+     * Resolves the server type of variable by checking the generic type T of the default value.
+     */
     public static <T> String kindFromValue(T defaultValue) {
         String kind = null;
         if (defaultValue instanceof Integer || defaultValue instanceof Long || defaultValue instanceof Short || defaultValue instanceof Character || defaultValue instanceof Byte || defaultValue instanceof BigInteger) {
@@ -192,10 +210,8 @@ public final class CTVariableUtils {
         else if (defaultValue instanceof Boolean) {
             kind = BOOLEAN;
         }
-        //Logger.v("kindFromValue: returns kind='"+kind+"'");
         return kind;
     }
-
 
     /**
      * converts a string of this format : "a.b.c" to  an array of strings, i.e ["a","b","c"]

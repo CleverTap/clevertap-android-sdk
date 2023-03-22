@@ -105,7 +105,7 @@ public class Parser {
    * @param clazz    class instance of a class
    */
   @VisibleForTesting
-  public void parseVariablesHelper(Object instance, Class<?> clazz) {
+  void parseVariablesHelper(Object instance, Class<?> clazz) {
 
     try {
       Field[] fields = clazz.getFields();
@@ -188,7 +188,7 @@ public class Parser {
    * @param field    instance of field itself
    */
   @VisibleForTesting
-  public  <T> void defineVariable(final Object instance, String name, T value, String kind, final Field field) {
+  <T> void defineVariable(final Object instance, String name, T value, String kind, final Field field) {
     // we first call var.define(..) with field name, value and kind
     final Var<T> var = Var.define(name, value, kind, ctVariables);
     if (var == null) {

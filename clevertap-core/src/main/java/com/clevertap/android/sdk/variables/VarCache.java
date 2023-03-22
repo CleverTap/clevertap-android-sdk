@@ -25,6 +25,7 @@ import android.content.Context;
 
 import androidx.annotation.Discouraged;
 import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 import androidx.annotation.WorkerThread;
 
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
@@ -117,28 +118,40 @@ public class VarCache {
 //        }
 //    }
     // a.b.c.d, updates a, a.b, a.b.c, but a.b.c.d is left for the Var.define
-    private void mergeVariable(Var var) {
+    @VisibleForTesting
+    void mergeVariable(@NonNull Var<?> var) {
+        if (merged == null) {
+            log( "mergeVariable() called, but `merged` member is null."
+                + " You should call CTVariables.init() before registering any variables.");
+            return;
+        } else if (!(merged instanceof Map<?, ?>)) {
+            log( "mergeVariable() called, but `merged` member is not of Map type.");
+            return;
+        }
+
         String firstComponent = var.nameComponents()[0];
         Object defaultValue = valuesFromClient.get(firstComponent);
-        Object mergedValue = ((Map<String, Object>)merged).get(firstComponent); // TODO fix cast
+        Map<String, Object> mergedMap = CTVariableUtils.uncheckedCast(merged);
+        Object mergedValue = mergedValue = mergedMap.get(firstComponent);
 
-        Object newValue;
-        if (!defaultValue.equals(mergedValue)) { // TODO check for null
-            newValue = CTVariableUtils.mergeHelper(defaultValue, mergedValue); // TODO
+        boolean shouldMerge =
+            (defaultValue == null && mergedValue != null) ||
+                (defaultValue != null && !defaultValue.equals(mergedValue));
 
-            ((Map<String, Object>) merged).put(firstComponent, newValue);
+        if (shouldMerge) {
+            Object newValue = CTVariableUtils.mergeHelper(defaultValue, mergedValue);
+
+            mergedMap.put(firstComponent, newValue);
 
             StringBuilder name = new StringBuilder(firstComponent);
             for (int i = 1; i < var.nameComponents().length; i++) {
-                Var existing = vars.get(name.toString());
+                Var<?> existing = vars.get(name.toString());
                 if (existing != null) {
                     existing.update();
                 }
                 name.append('.').append(var.nameComponents()[i]);
             }
-
         }
-
     }
 
 
@@ -152,7 +165,7 @@ public class VarCache {
     //     for valuesFromClient, it will changed from mapOf() to mapOf("group1":mapOf('myvariable':12.4))
     //    for every next value added, the internal maps of valuesFromClient will get updated accordingly
 
-    public void registerVariable(Var<?> var) {
+    public void registerVariable(@NonNull Var<?> var) {
         log( "registerVariable() called with: var = [" + var + "]");
         vars.put(var.name(), var);
         synchronized (valuesFromClient) {
@@ -301,6 +314,11 @@ public class VarCache {
 
     public <T> Var<T> getVariable(String name) {
         return CTVariableUtils.uncheckedCast(vars.get(name));
+    }
+
+    @VisibleForTesting
+    int getVariablesCount() {
+        return vars.size();
     }
 
     public void setCacheUpdateBlock(CacheUpdateBlock block) {

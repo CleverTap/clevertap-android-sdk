@@ -7,6 +7,7 @@ import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -14,7 +15,7 @@ import java.util.Map;
  * CleverTap variable.
  *
  * @param <T> Type of the variable. Can be Boolean, Byte, Short, Integer, Long, Float, Double,
- *            Character, String, List, or Map. You may nest lists and maps arbitrarily.
+ *            Character, String, or Map. You may nest maps arbitrarily.
  * @author Ansh Sachdeva
  */
 public class Var<T> {
@@ -84,6 +85,10 @@ public class Var<T> {
         try {
             var.name = name;
             var.nameComponents = CTVariableUtils.getNameComponents(name);
+            if (defaultValue instanceof Map) {
+                // TODO The updateValuesAndKinds method is adding the necessary fields inside the map. It is mandatory to be mutable, otherwise the Kotlin mapOf() produces exception.
+                defaultValue = CTVariableUtils.uncheckedCast(new HashMap<Object, Object>((Map<?, ?>)defaultValue));
+            }
             var.defaultValue = defaultValue;
             var.value = defaultValue;
             var.kind = kind;
@@ -109,7 +114,7 @@ public class Var<T> {
         if (value == null && oldValue == null) {
             return;
         }
-        if (value != null && oldValue != null && value.equals(oldValue) && hadStarted) {
+        if (value != null && value.equals(oldValue) && hadStarted) {
             return;
         }
         cacheComputedValues();
@@ -120,8 +125,6 @@ public class Var<T> {
             log("CleverTap hasn't finished retrieving values from the server. the associated individual valueChangedHandlers won't be triggered");
         }
     }
-
-
 
     private void cacheComputedValues() {
         if (value instanceof String) {
@@ -191,23 +194,6 @@ public class Var<T> {
             }
         }
     }
-
-    // if variable is of type list, then it will return the size of list
-    public int count() {
-        try {
-            warnIfNotStarted();
-            Object result = ctVariables.getVarCache().getMergedValueFromComponentArray(nameComponents);
-            if (result instanceof List) {
-                return ((List<?>) result).size();
-            }
-        } catch (Throwable t) {
-            t.printStackTrace();
-            return 0;
-        }
-        CTVariableUtils.maybeThrowException(new UnsupportedOperationException("This variable is not a list."));
-        return 0;
-    }
-
 
     @Override @NonNull
     public String toString() {

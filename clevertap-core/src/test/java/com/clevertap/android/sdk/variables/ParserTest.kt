@@ -1,6 +1,6 @@
 package com.clevertap.android.sdk.variables
 
-import com.clevertap.android.sdk.variables.TestVars.TestVarsJI
+import com.clevertap.android.sdk.variables.VariableDefinitions.TestVarsJI
 import com.clevertap.android.shared.test.BaseTestCase
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -43,13 +43,16 @@ class ParserTest:BaseTestCase() {
 
     @Test
     fun parseVariablesForClasses() {
-        parserSpy.parseVariablesForClasses(TestVars::class.java,TestVars::class.java)
-        Mockito.verify(parserSpy,Mockito.times(2)).parseVariablesHelper(null,TestVars::class.java)
+        parserSpy.parseVariablesForClasses(
+            VariableDefinitions::class.java,
+            VariableDefinitions::class.java)
+        Mockito.verify(parserSpy,Mockito.times(2)).parseVariablesHelper(null,
+            VariableDefinitions::class.java)
     }
 
     @Test
     fun parseVariablesHelper_case1(){
-        val case1 = Pair(TestVars::class.java , null)
+        val case1 = Pair(VariableDefinitions::class.java , null)
 
         //test
         parserSpy.parseVariablesHelper(case1.second,case1.first)
@@ -64,7 +67,7 @@ class ParserTest:BaseTestCase() {
         Mockito.verify(parserSpy,Mockito.times(1)).defineVariable(case1.second, "isOptedForOffers", true, CTVariableUtils.BOOLEAN, field("isOptedForOffers"))
         Mockito.verify(parserSpy,Mockito.times(1)).defineVariable(case1.second, "initialCoins", 45, CTVariableUtils.NUMBER, field("initialCoins"))
         Mockito.verify(parserSpy,Mockito.times(1)).defineVariable(case1.second, "correctGuessPercentage", 50.0F, CTVariableUtils.NUMBER, field("correctGuessPercentage"))
-        Mockito.verify(ctvSpy,Mockito.times(1)).init()
+        Mockito.verify(ctvSpy,Mockito.times(0)).init() // init is called only once when CleverTapAPI instance is created
     }
 
     @Test
@@ -84,7 +87,7 @@ class ParserTest:BaseTestCase() {
         Mockito.verify(parserSpy,Mockito.times(1)).defineVariable(case2.second, "javaIBool", false, CTVariableUtils.BOOLEAN, field("javaIBool"))
         Mockito.verify(parserSpy,Mockito.times(1)).defineVariable(case2.second, "javaIInt", 1.0, CTVariableUtils.NUMBER, field("javaIInt"))
         Mockito.verify(parserSpy,Mockito.times(1)).defineVariable(case2.second, "javaIDouble", 1.42, CTVariableUtils.NUMBER, field("javaIDouble"))
-        Mockito.verify(ctvSpy,Mockito.times(1)).init()
+        Mockito.verify(ctvSpy,Mockito.times(0)).init() // init is called only once when CleverTapAPI instance is created
 
     }
 

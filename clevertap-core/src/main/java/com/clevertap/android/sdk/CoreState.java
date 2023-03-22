@@ -58,26 +58,26 @@ public class CoreState extends CleverTapState {
 
     private PushProviders pushProviders;
 
-    private VarCache mVarCache;
+    private VarCache varCache;
 
-    private Parser mParser;
+    private Parser parser;
 
     public CTVariables getCTVariables() {
-        return mCTVariables;
+        return ctVariables;
     }
 
     public void setCTVariables(final CTVariables CTVariables) {
-        mCTVariables = CTVariables;
+        ctVariables = CTVariables;
     }
 
-    private CTVariables mCTVariables;
+    private CTVariables ctVariables;
 
     public Parser getParser() {
-        return mParser;
+        return parser;
     }
 
     public void setParser(final Parser parser) {
-        mParser = parser;
+        this.parser = parser;
     }
 
     CoreState(final Context context) {
@@ -256,11 +256,11 @@ public class CoreState extends CleverTapState {
     }
 
     public VarCache getVarCache() {
-        return mVarCache;
+        return varCache;
     }
 
     public void setVarCache(final VarCache varCache) {
-        mVarCache = varCache;
+        this.varCache = varCache;
     }
 
     private void initProductConfig() {

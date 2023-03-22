@@ -3066,6 +3066,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     /**
      * get current value of a particular variable.
      */
+    // TODO remove method. It is not presented in LP interface. It would make errors if you don't have the Var object for some variable from a Map.
     public <T> Var<T> getVariable(String name) {
         return coreState.getVarCache().getVariable(name);
     }
