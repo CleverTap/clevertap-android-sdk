@@ -36,6 +36,18 @@
 * Minimum Android SDK version bumped to API 19 (Android 4.4)
 * Use v4.7.2, this version contains a bug which causes a crash (`ClassCastException`) in header/footer InApp templates.
 
+### Version 4.6.8 (March 22, 2023)
+#### Breaking Changes
+* **Signature change of `onInboxItemClicked` callback**:
+  It is changed from  `onInboxItemClicked(CTInboxMessage message)` to `onInboxItemClicked(CTInboxMessage message, int itemIndex, int buttonIndex)`. The `itemIndex` corresponds the index of the item clicked in the list whereas the `buttonIndex` for the App Inbox button clicked (0, 1, or 2). A value of -1 indicates the App Inbox item is clicked.
+
+* **Behavioral change of `onInboxItemClicked` callback**:
+  - Previously, the callback was raised when the App Inbox Item is clicked.
+  - Now, it is also raised when the App Inbox button and Item is clicked.
+
+#### Added
+* Adds the new public API `dismissAppInbox()` via `CleverTapAPI` class to dismiss the App Inbox.
+
 ### Version 4.6.7 (March 15, 2023)
 * Bug fixes and performance improvements.
 * **Note:** This release is being done for Android 12 targeted users, satisfying below points.
