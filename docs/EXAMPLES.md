@@ -233,7 +233,7 @@ Lets's understand the types of buttons first that App Inbox supports:
 
 
 The Android SDK v4.6.1 and above supports `onInboxItemClicked` callback on the click of an App Inbox item, such as text or media.
-From the Android SDK v4.7.6, the `onInboxItemClicked` callback supports the button click besides the item click.
+From the Android SDK v4.6.8 onwards and below v4.7.0, the `onInboxItemClicked` callback supports the button click besides the item click.
 
 The callback returns `CTInboxMessage` object, `itemIndex` and `buttonIndex` parameters. To use this callback, check that your activity implements the `InboxMessageListener` and overrides the following method:
 
