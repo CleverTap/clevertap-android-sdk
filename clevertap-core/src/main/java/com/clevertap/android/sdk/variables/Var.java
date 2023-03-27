@@ -7,7 +7,6 @@ import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -85,10 +84,6 @@ public class Var<T> {
         try {
             var.name = name;
             var.nameComponents = CTVariableUtils.getNameComponents(name);
-            if (defaultValue instanceof Map) {
-                // TODO The updateValuesAndKinds method is adding the necessary fields inside the map. It is mandatory to be mutable, otherwise the Kotlin mapOf() produces exception.
-                defaultValue = CTVariableUtils.uncheckedCast(new HashMap<Object, Object>((Map<?, ?>)defaultValue));
-            }
             var.defaultValue = defaultValue;
             var.value = defaultValue;
             var.kind = kind;

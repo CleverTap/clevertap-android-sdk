@@ -132,7 +132,7 @@ public class VarCache {
         String firstComponent = var.nameComponents()[0];
         Object defaultValue = valuesFromClient.get(firstComponent);
         Map<String, Object> mergedMap = CTVariableUtils.uncheckedCast(merged);
-        Object mergedValue = mergedValue = mergedMap.get(firstComponent);
+        Object mergedValue = mergedMap.get(firstComponent);
 
         boolean shouldMerge =
             (defaultValue == null && mergedValue != null) ||
@@ -169,11 +169,25 @@ public class VarCache {
         log( "registerVariable() called with: var = [" + var + "]");
         vars.put(var.name(), var);
         synchronized (valuesFromClient) {
-            CTVariableUtils.updateValuesAndKinds(var.name(), var.nameComponents(), var.defaultValue(), var.kind(), valuesFromClient, defaultKinds);
+            Object defaultValue = var.defaultValue();
+            if (defaultValue instanceof Map) {
+                defaultValue = CTVariableUtils.deepCopyMap(CTVariableUtils.uncheckedCast(defaultValue));
+            }
+            CTVariableUtils.updateValuesAndKinds(
+                var.name(),
+                var.nameComponents(),
+                defaultValue,
+                var.kind(),
+                valuesFromClient,
+                defaultKinds);
         }
         mergeVariable(var);
     }
 
+    public <T> T getMergedValue(String variableName) {
+        String[] components = CTVariableUtils.getNameComponents(variableName);
+        return getMergedValueFromComponentArray(components);
+    }
 
     //components:["group1","myVariable"]
     //----
@@ -288,7 +302,7 @@ public class VarCache {
 
 
     public JSONObject getDefineVarsData(){
-        return CTVariableUtils.getFlattenVarsJson(valuesFromClient,defaultKinds);
+        return CTVariableUtils.getFlatVarsJson(valuesFromClient,defaultKinds);
     }
 
 

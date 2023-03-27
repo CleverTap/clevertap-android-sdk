@@ -3037,10 +3037,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     /**
      * Defines a new variable
+     *
+     *  // TODO Defining a variables with null default value causes the type to be null.
      * */
     public <T> Var<T> defineVariable(String name, T defaultValue) {
-        Var<T> var =  Var.define(name, defaultValue,coreState.getCTVariables());
-        return var;
+        return Var.define(name, defaultValue,coreState.getCTVariables());
     }
 
 
@@ -3066,9 +3067,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     /**
      * get current value of a particular variable.
      */
-    // TODO remove method. It is not presented in LP interface. It would make errors if you don't have the Var object for some variable from a Map.
-    public <T> Var<T> getVariable(String name) {
-        return coreState.getVarCache().getVariable(name);
+    public Object getVariable(String name) {
+        if (name == null) {
+            return null;
+        }
+        return coreState.getVarCache().getMergedValue(name);
     }
 
 
@@ -3084,12 +3087,12 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     /**
      * request variable data from server at any time
      */
-    public void wzrkFetchVariables(VariableRequestHandledCallback callback) {
+    public void wzrkFetchVariables(VariableRequestHandledCallback callback) { // TODO rename or add FCU method?
         if (coreState.getConfig().isAnalyticsOnly()) {
             return;
         }
         Logger.v("ctv_CleverTapApi: Fetching  variables");
-        coreState.getCallbackManager().setVariableRequestHandledCallback(callback);
+        coreState.getCallbackManager().setVariableRequestHandledCallback(callback); // TODO callback is overridden after second call if first is not ready yet
 
         JSONObject event = new JSONObject();
         JSONObject notif = new JSONObject();

@@ -4,6 +4,7 @@ import android.text.Editable;
 
 import androidx.annotation.RestrictTo;
 
+import androidx.annotation.VisibleForTesting;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 
@@ -49,7 +50,7 @@ public final class CTVariableUtils {
                 Object currentValue = map.get(nameComponents[nameComponents.length - 1]);
 
                 if (currentValue instanceof Map && value instanceof Map) {
-                    ((Map)value).putAll((Map)currentValue);
+                    value = mergeHelper(value, currentValue);
                 } else if (currentValue != null && currentValue.equals(value)) {
                     log(String.format("Variable with name %s will override value: %s, with new value: %s.", name, currentValue, value));
                 }
@@ -84,7 +85,7 @@ public final class CTVariableUtils {
      * </code>
      * to support legacy parsing implementation <br>
      **/
-    public static Map<String, Object> convertEntriesWithGroupedKeysToNestedMaps(Map<String, Object> map) {
+    public static Map<String, Object> convertFlatMapToNestedMaps(Map<String, Object> map) {
         Map<String, Object> result = new HashMap<>();
 
         for (Map.Entry<String, Object> entry : map.entrySet()) {
@@ -195,10 +196,17 @@ public final class CTVariableUtils {
      */
     public static <T> String kindFromValue(T defaultValue) {
         String kind = null;
-        if (defaultValue instanceof Integer || defaultValue instanceof Long || defaultValue instanceof Short || defaultValue instanceof Character || defaultValue instanceof Byte || defaultValue instanceof BigInteger) {
+        if (defaultValue instanceof Integer ||
+            defaultValue instanceof Long ||
+            defaultValue instanceof Short ||
+            defaultValue instanceof Character ||
+            defaultValue instanceof Byte ||
+            defaultValue instanceof BigInteger) {
             kind = NUMBER;
         }
-        else if (defaultValue instanceof Float || defaultValue instanceof Double || defaultValue instanceof BigDecimal) {
+        else if (defaultValue instanceof Float ||
+                 defaultValue instanceof Double ||
+                 defaultValue instanceof BigDecimal) {
             kind = NUMBER;
         }
         else if (defaultValue instanceof String) {
@@ -253,12 +261,13 @@ public final class CTVariableUtils {
      * -------------------------------------- <br>
      * @author Ansh Sachdeva
      */
-    private static void flattenNestedMaps(String prefix, Map<String, Object> map, Map<String, Object> result) {
+    @VisibleForTesting
+    static void convertNestedMapsToFlatMap(String prefix, Map<String, Object> map, Map<String, Object> result) {
         for (Map.Entry<String, Object> entry : map.entrySet()) {
             String key = entry.getKey();
             Object value = entry.getValue();
             if (value instanceof Map) {
-                flattenNestedMaps(prefix + key + ".", uncheckedCast(value) , result);
+                convertNestedMapsToFlatMap(prefix + key + ".", uncheckedCast(value) , result);
             } else {
                 result.put(prefix + key, value);
             }
@@ -387,9 +396,7 @@ public final class CTVariableUtils {
         }
     }
 
-
-
-    public static JSONObject getFlattenVarsJson(Map<String, Object> values, Map<String, String> kinds) {
+    public static JSONObject getFlatVarsJson(Map<String, Object> values, Map<String, String> kinds) {
        try {
            JSONObject resultJson = new JSONObject();
            resultJson.put("type", Constants.variablePayloadType);
@@ -403,7 +410,7 @@ public final class CTVariableUtils {
                    Map<String,Object> valueMap = new HashMap<>();
                    valueMap.put(valueKey,value);
                    Map<String,Object> flattenedValueMap = new HashMap<>();
-                   flattenNestedMaps("",valueMap,flattenedValueMap);
+                   convertNestedMapsToFlatMap("",valueMap,flattenedValueMap);
                    for (HashMap.Entry<String,Object> entry :flattenedValueMap.entrySet()) {
                        String flattenedKey = entry.getKey();
                        Object flattenedValue = entry.getValue();
@@ -428,5 +435,22 @@ public final class CTVariableUtils {
            t.printStackTrace();
            return new JSONObject();
        }
+    }
+
+    public static Map<Object, Object> deepCopyMap(Map<Object, Object> originalMap) {
+        Map<Object, Object> copiedMap = new HashMap<>();
+
+        for (Map.Entry<Object, Object> entry : originalMap.entrySet()) {
+            Object key = entry.getKey();
+            Object value = entry.getValue();
+
+            if (value instanceof Map) {
+                copiedMap.put(key, deepCopyMap(uncheckedCast(value)));
+            } else {
+                copiedMap.put(key, value);
+            }
+        }
+
+        return copiedMap;
     }
 }

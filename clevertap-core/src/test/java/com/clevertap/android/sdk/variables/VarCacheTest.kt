@@ -32,18 +32,6 @@ class VarCacheTest : BaseTestCase() {
 //  }
 
   @Test
-  fun registerVariable() {
-  }
-
-  @Test
-  fun getMergedValueFromComponentArray() {
-  }
-
-  @Test
-  fun testGetMergedValueFromComponentArray() {
-  }
-
-  @Test
   fun loadDiffsSync() {
   }
 
@@ -73,10 +61,6 @@ class VarCacheTest : BaseTestCase() {
 
   @Test
   fun reset() {
-  }
-
-  @Test
-  fun getVariable() {
   }
 
   @Test
@@ -154,11 +138,102 @@ class VarCacheTest : BaseTestCase() {
     assertEquals(expected, varCache.getVariable<Map<*,*>>("group1.group2").value())
   }
 
-  // TODO test default value of group variable
+  @Test
+  fun `testRegisterVariable with group and default value`() {
+    ctVariables.init()
 
-  // TODO annotated variable
+    Var.define("group.var1", 1, ctVariables)
+    Var.define("group", mapOf("var2" to 2), ctVariables)
 
-  // TODO define group as Map<>
+    assertEquals(2, varCache.variablesCount)
+    assertEquals(1, varCache.getVariable<Int>("group.var1").value())
+    assertEquals(1, varCache.getVariable<Int>("group.var1").defaultValue())
+    assertEquals(mapOf("var1" to 1, "var2" to 2), varCache.getVariable<Map<*,*>>("group").value())
+    assertEquals(mapOf("var2" to 2), varCache.getVariable<Map<*,*>>("group").defaultValue())
+  }
 
-  // TODO getVariable -> should return group, or maybe only if it is defined before that?
+  @Test
+  fun `testRegisterVariable with nested groups and default value`() {
+    /*
+      The setup:
+      {
+        group1.var1: 1,
+        group1.var2: 2,
+        group1.group2.var3: 3,
+        group1.group2.var4: 4
+      }
+     */
+
+    ctVariables.init()
+
+    Var.define("group1.var1", 1, ctVariables)
+    Var.define("group1.group2.var3", 3, ctVariables)
+    Var.define("group1", mapOf("var2" to 2, "group2" to mapOf("var4" to 4)), ctVariables)
+
+    assertEquals(3, varCache.variablesCount)
+    assertEquals(1, varCache.getVariable<Int>("group1.var1").value())
+    assertEquals(3, varCache.getVariable<Int>("group1.group2.var3").value())
+
+    val expectedValue = mapOf(
+      "var1" to 1,
+      "var2" to 2,
+      "group2" to mapOf("var3" to 3, "var4" to 4))
+    assertEquals(expectedValue, varCache.getVariable<Map<*,*>>("group1").value())
+
+    val expectedDefaultValue = mapOf(
+      "var2" to 2,
+      "group2" to mapOf("var4" to 4))
+    assertEquals(expectedDefaultValue, varCache.getVariable<Map<*,*>>("group1").defaultValue())
+  }
+
+  @Test
+  fun `test getMergedValue`() {
+    ctVariables.init()
+    Var.define("var", 100, ctVariables)
+    assertEquals(100, varCache.getMergedValue("var"));
+  }
+
+  @Test
+  fun `test getMergedValue with group`() {
+    ctVariables.init()
+
+    Var.define("group.var1", 1, ctVariables)
+    Var.define("group", mapOf("var2" to 2, "var3" to 3), ctVariables)
+    Var.define("var4", 4, ctVariables)
+
+    assertEquals(1, varCache.getMergedValue("group.var1"));
+    assertEquals(2, varCache.getMergedValue("group.var2"));
+    assertEquals(3, varCache.getMergedValue("group.var3"));
+    assertEquals(4, varCache.getMergedValue("var4"));
+  }
+
+  fun `test getMergedValue with groups`() {
+    ctVariables.init()
+
+    Var.define("group1.group2.var3", 3, ctVariables)
+    Var.define("group1.var1", 1, ctVariables)
+    Var.define("group1", mapOf("var2" to 2), ctVariables)
+    Var.define("group1.group2", mapOf("var4" to 4), ctVariables)
+
+    assertEquals(1, varCache.getMergedValue("group1.var1"));
+    assertEquals(2, varCache.getMergedValue("group1.var2"));
+    assertEquals(3, varCache.getMergedValue("group1.group2.var3"));
+    assertEquals(3, varCache.getMergedValue("group1.group2.var4"));
+  }
+
+  @Test
+  fun `test getMergedValue with annotation and groups`() {
+    ctVariables.init()
+
+    parser.parseVariablesForClasses(VariableDefinitions.Groups::class.java)
+
+    assertEquals(3, varCache.variablesCount)
+    assertEquals(1, varCache.getMergedValue("group1.var_int1"));
+    assertEquals(2, varCache.getMergedValue("group1.group2.var_int2"));
+    assertEquals(3, varCache.getMergedValue("var_int3"));
+    assertEquals("str1", varCache.getMergedValue("group1.var_string1"));
+    assertEquals("str2", varCache.getMergedValue("group1.var_string2"));
+  }
+
+  // TODO add tests for getMergedValue with overridden values from server
 }

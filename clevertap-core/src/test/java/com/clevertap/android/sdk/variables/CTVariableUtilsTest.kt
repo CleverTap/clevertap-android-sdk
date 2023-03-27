@@ -5,6 +5,7 @@ import org.junit.Assert
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
+import kotlin.test.assertEquals
 
 @RunWith(RobolectricTestRunner::class)
 class CTVariableUtilsTest : BaseTestCase() {
@@ -48,8 +49,6 @@ class CTVariableUtilsTest : BaseTestCase() {
   @Test
   fun getVarsJson() {
   }
-
-
 
   @Test
   fun `test mergeHelper with null diff`() {
@@ -145,5 +144,126 @@ class CTVariableUtilsTest : BaseTestCase() {
     )
     val result = CTVariableUtils.mergeHelper(vars, diffs)
     Assert.assertEquals(expected, result)
+  }
+
+  @Test
+  fun `test mergeHelper with array`() { // TODO do not crash on unsupported data
+    val vars = arrayOf(1, 2, 3, 4)
+    val diffs = arrayOf(1, 2, 3, 4)
+    Assert.assertThrows(java.lang.ClassCastException::class.java) {
+      CTVariableUtils.mergeHelper(vars, diffs)
+    }
+  }
+
+  @Test
+  fun `test mergeHelper with map of array`() { // TODO do not crash on unsupported data
+    val vars = mapOf("arr" to arrayOf(1, 2, 3, 4))
+    val diffs = mapOf("arr" to arrayOf(1, 2, 3, 4))
+    Assert.assertThrows(java.lang.ClassCastException::class.java) {
+      CTVariableUtils.mergeHelper(vars, diffs)
+    }
+  }
+
+  @Test
+  fun `test convertNestedMapsToFlatMap`() {
+    val input = mapOf("a" to 1)
+    val output = mutableMapOf<String, Any>()
+
+    val expected: Map<String, Any> = mapOf("a" to 1)
+
+    CTVariableUtils.convertNestedMapsToFlatMap("", input, output)
+    assertEquals(expected, output)
+  }
+
+  @Test
+  fun `test convertNestedMapsToFlatMap with group`() {
+    val input = mapOf("group" to mapOf("a" to 1))
+    val output = mutableMapOf<String, Any>()
+
+    val expected: Map<String, Any> = mapOf("group.a" to 1)
+
+    CTVariableUtils.convertNestedMapsToFlatMap("", input, output)
+    assertEquals(expected, output)
+  }
+
+  @Test
+  fun `test convertNestedMapsToFlatMap with two groups`() {
+    val input = mapOf("group1" to mapOf("group2" to mapOf("a" to 1)))
+
+    val output = mutableMapOf<String, Any>()
+    val expected: Map<String, Any> = mapOf("group1.group2.a" to 1)
+
+    CTVariableUtils.convertNestedMapsToFlatMap("", input, output)
+    assertEquals(expected, output)
+  }
+
+  @Test
+  fun `test convertNestedMapsToFlatMap with several variables`() {
+    val input = mapOf(
+      "group1" to mapOf("group11" to mapOf("v1" to 1, "v2" to "val")),
+      "v3" to "v3",
+      "group2" to mapOf("v4" to 4, "v5" to true))
+
+    val output = mutableMapOf<String, Any>()
+    val expected: Map<String, Any> = mapOf(
+      "group1.group11.v1" to 1,
+      "group1.group11.v2" to "val",
+      "v3" to "v3",
+      "group2.v4" to 4,
+      "group2.v5" to true,
+    )
+
+    CTVariableUtils.convertNestedMapsToFlatMap("", input, output)
+    assertEquals(expected, output)
+  }
+
+  @Test
+  fun `test convertFlatMapToNestedMaps`() {
+    val input = mapOf("a" to 1)
+    val expected = mapOf("a" to 1)
+
+    assertEquals(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
+  }
+
+  @Test
+  fun `test convertFlatMapToNestedMaps with group`() {
+    val input = mapOf("group.a" to 1)
+    val expected = mapOf("group" to mapOf("a" to 1))
+
+    assertEquals(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
+  }
+
+  @Test
+  fun `test convertFlatMapToNestedMaps with two groups`() {
+    val input = mapOf("group1.group2.a" to 1)
+    val expected = mapOf("group1" to mapOf("group2" to mapOf("a" to 1)))
+
+    assertEquals(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
+  }
+
+  @Test
+  fun `test convertFlatMapToNestedMaps with several variables`() {
+    val input = mapOf(
+      "group1.group11.v1" to 1,
+      "group1.group11.v2" to "val",
+      "v3" to "v3",
+      "group2.v4" to 4,
+      "group2.v5" to true,
+    )
+    val expected = mapOf(
+      "group1" to mapOf(
+        "group11" to mapOf(
+          "v1" to 1,
+          "v2" to "val"
+        )
+      ),
+      "v3" to "v3",
+      "group2" to mapOf(
+        "v4" to 4,
+        "v5" to true
+      )
+    )
+
+    assertEquals(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
   }
 }

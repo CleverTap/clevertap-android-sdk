@@ -5,11 +5,9 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.clevertap.android.sdk.BuildConfig;
-import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
-import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.variables.callbacks.CacheUpdateBlock;
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariableRequestHandledCallback;
@@ -19,7 +17,6 @@ import org.json.JSONObject;
 
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.concurrent.Callable;
 
 
 /**
@@ -95,7 +92,7 @@ public class CTVariables {
                 if(callback!=null)callback.onResponseReceived(false);
             } else {
                 Map<String, Object> variableDiffs = CTVariableUtils.mapFromJson(response);
-                variableDiffs = CTVariableUtils.convertEntriesWithGroupedKeysToNestedMaps(variableDiffs);
+                variableDiffs = CTVariableUtils.convertFlatMapToNestedMaps(variableDiffs);
                 varCache.updateDiffsAndTriggerHandlers(variableDiffs);
                 if(callback!=null)callback.onResponseReceived(true);
             }
