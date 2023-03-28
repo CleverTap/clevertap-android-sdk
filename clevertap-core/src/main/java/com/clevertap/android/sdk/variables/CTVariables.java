@@ -91,7 +91,7 @@ public class CTVariables {
                 varCache.loadDiffsAndTriggerHandlers();
                 if(callback!=null)callback.onResponseReceived(false);
             } else {
-                Map<String, Object> variableDiffs = CTVariableUtils.mapFromJson(response);
+                Map<String, Object> variableDiffs = JsonUtil.mapFromJson(response);
                 variableDiffs = CTVariableUtils.convertFlatMapToNestedMaps(variableDiffs);
                 varCache.updateDiffsAndTriggerHandlers(variableDiffs);
                 if(callback!=null)callback.onResponseReceived(true);

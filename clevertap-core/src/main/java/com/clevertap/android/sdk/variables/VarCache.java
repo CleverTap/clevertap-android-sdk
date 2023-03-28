@@ -131,7 +131,7 @@ public class VarCache {
 
         String firstComponent = var.nameComponents()[0];
         Object defaultValue = valuesFromClient.get(firstComponent);
-        Map<String, Object> mergedMap = CTVariableUtils.uncheckedCast(merged);
+        Map<String, Object> mergedMap = JsonUtil.uncheckedCast(merged);
         Object mergedValue = mergedMap.get(firstComponent);
 
         boolean shouldMerge =
@@ -171,7 +171,7 @@ public class VarCache {
         synchronized (valuesFromClient) {
             Object defaultValue = var.defaultValue();
             if (defaultValue instanceof Map) {
-                defaultValue = CTVariableUtils.deepCopyMap(CTVariableUtils.uncheckedCast(defaultValue));
+                defaultValue = CTVariableUtils.deepCopyMap(JsonUtil.uncheckedCast(defaultValue));
             }
             CTVariableUtils.updateValuesAndKinds(
                 var.name(),
@@ -203,7 +203,7 @@ public class VarCache {
         for (Object component : components) {
             mergedPtr = CTVariableUtils.traverse(mergedPtr, component, false);
         }
-        return CTVariableUtils.uncheckedCast(mergedPtr);
+        return JsonUtil.uncheckedCast(mergedPtr);
     }
 
     //will basically call applyVariableDiffs(..) with values stored in pref
@@ -211,7 +211,7 @@ public class VarCache {
         log( "loadDiffs() called");
         try {
             String variablesFromCache = loadDataFromCache();
-            Map<String, Object> variablesAsMap = CTVariableUtils.fromJson(variablesFromCache);
+            Map<String, Object> variablesAsMap = JsonUtil.fromJson(variablesFromCache);
             applyVariableDiffs(variablesAsMap);
 
         } catch (Exception e) {
@@ -260,7 +260,7 @@ public class VarCache {
     @WorkerThread
     public void saveDiffs() {
         log( "saveDiffs() called");
-        String variablesCipher = CTVariableUtils.toJson(diffs);
+        String variablesCipher = JsonUtil.toJson(diffs);
         storeDataInCache(variablesCipher);
     }
 
@@ -327,7 +327,7 @@ public class VarCache {
     }
 
     public <T> Var<T> getVariable(String name) {
-        return CTVariableUtils.uncheckedCast(vars.get(name));
+        return JsonUtil.uncheckedCast(vars.get(name));
     }
 
     @VisibleForTesting

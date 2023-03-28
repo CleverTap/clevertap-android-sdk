@@ -47,10 +47,6 @@ class CTVariableUtilsTest : BaseTestCase() {
   }
 
   @Test
-  fun getVarsJson() {
-  }
-
-  @Test
   fun `test mergeHelper with null diff`() {
     val vars = mapOf("a" to 1, "b" to 2)
     val result = CTVariableUtils.mergeHelper(vars, null)
@@ -265,5 +261,10 @@ class CTVariableUtilsTest : BaseTestCase() {
     )
 
     assertEquals(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
+  }
+
+  @Test
+  fun `test getFlatVarsJson`() {
+
   }
 }
