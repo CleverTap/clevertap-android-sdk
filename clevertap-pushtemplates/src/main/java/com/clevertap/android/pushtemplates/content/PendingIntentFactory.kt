@@ -8,6 +8,7 @@ import android.os.Build.VERSION
 import android.os.Build.VERSION_CODES
 import android.os.Bundle
 import com.clevertap.android.pushtemplates.PTConstants
+import com.clevertap.android.pushtemplates.PTConstants.KEY_CLICKED_STAR
 import com.clevertap.android.pushtemplates.PTLog
 import com.clevertap.android.pushtemplates.PTPushNotificationReceiver
 import com.clevertap.android.pushtemplates.PushTemplateReceiver
@@ -185,7 +186,7 @@ internal object PendingIntentFactory {
             RATING_CLICK1_PENDING_INTENT -> {
                 launchIntent!!.putExtras(extras)
                 launchIntent!!.putExtra("click1", true)
-                launchIntent!!.putExtra("clickedStar", 1)//TODO Change the key to public constants.
+                launchIntent!!.putExtra(KEY_CLICKED_STAR, 1)
                 launchIntent!!.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent!!.putExtra("config", renderer?.config)
                 return PendingIntent.getBroadcast(
@@ -199,7 +200,7 @@ internal object PendingIntentFactory {
             RATING_CLICK2_PENDING_INTENT -> {
                 launchIntent!!.putExtras(extras)
                 launchIntent!!.putExtra("click2", true)
-                launchIntent!!.putExtra("clickedStar", 2)
+                launchIntent!!.putExtra(KEY_CLICKED_STAR, 2)
                 launchIntent!!.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent!!.putExtra("config", renderer?.config)
                 return PendingIntent.getBroadcast(
@@ -213,7 +214,7 @@ internal object PendingIntentFactory {
             RATING_CLICK3_PENDING_INTENT -> {
                 launchIntent!!.putExtras(extras)
                 launchIntent!!.putExtra("click3", true)
-                launchIntent!!.putExtra("clickedStar", 3)
+                launchIntent!!.putExtra(KEY_CLICKED_STAR, 3)
                 launchIntent!!.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent!!.putExtra("config", renderer?.config)
                 return PendingIntent.getBroadcast(
@@ -227,7 +228,7 @@ internal object PendingIntentFactory {
             RATING_CLICK4_PENDING_INTENT -> {
                 launchIntent!!.putExtras(extras)
                 launchIntent!!.putExtra("click4", true)
-                launchIntent!!.putExtra("clickedStar", 4)
+                launchIntent!!.putExtra(KEY_CLICKED_STAR, 4)
                 launchIntent!!.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent!!.putExtra("config", renderer?.config)
                 return PendingIntent.getBroadcast(
@@ -241,7 +242,7 @@ internal object PendingIntentFactory {
             RATING_CLICK5_PENDING_INTENT -> {
                 launchIntent!!.putExtras(extras)
                 launchIntent!!.putExtra("click5", true)
-                launchIntent!!.putExtra("clickedStar", 5)
+                launchIntent!!.putExtra(KEY_CLICKED_STAR, 5)
                 launchIntent!!.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent!!.putExtra("config", renderer?.config)
                 return PendingIntent.getBroadcast(
