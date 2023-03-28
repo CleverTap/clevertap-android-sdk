@@ -97,29 +97,11 @@ public class VarCache {
         return  cache;
     }
 
-//// Use this method to merge default variable value with VarCache.merged value
-//// This is neccessary if variable was registered after VarCache.applyVariableDiffs
-//- (void)mergeVariable:(CTVar * _Nonnull)var {
-//        NSString *firsComponent = var.nameComponents.firstObject;
-//        id defaultValue = [self.valuesFromClient objectForKey:firsComponent];
-//        id mergedValue = [self.merged objectForKey:firsComponent];
-//        if (![defaultValue isEqual:mergedValue]) {
-//            id newValue = [ContentMerger mergeWithVars:defaultValue diff:mergedValue];
-//        [self.merged setObject:newValue forKey:firsComponent];
-//
-//            NSMutableString *name = [[NSMutableString alloc] initWithString:firsComponent];
-//            for (int i = 1; i < var.nameComponents.count; i++)
-//            {
-//                CTVar *existingVar = self.vars[name];
-//                if (existingVar) {
-//                [existingVar update];
-//                    break;
-//                }
-//            [name appendFormat:@".%@", var.nameComponents[i]];
-//            }
-//        }
-//    }
-    // a.b.c.d, updates a, a.b, a.b.c, but a.b.c.d is left for the Var.define
+    /**
+     * If invoked with a.b.c.d, updates a, a.b, a.b.c, but a.b.c.d is left for the Var.define.
+     *
+     * @param var
+     */
     @VisibleForTesting
     void mergeVariable(@NonNull Var<?> var) {
         if (merged == null) {
@@ -302,19 +284,9 @@ public class VarCache {
         }
     }
 
-
     public JSONObject getDefineVarsData(){
         return CTVariableUtils.getFlatVarsJson(valuesFromClient,defaultKinds);
     }
-
-
-    // will reset few global variables
-    // public void clearUserContent() {
-    //    diffs.clear();
-    //    merged = null;
-    //    vars.clear();
-    //}
-
 
     // will reset a lot of global variables
     public void reset() {

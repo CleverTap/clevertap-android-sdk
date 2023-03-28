@@ -37,7 +37,7 @@ class VarActivity1:AppCompatActivity() {
             btNextActivity.setOnClickListener {
                 startActivity(Intent(this@VarActivity1,VarActivity2::class.java))
             }
-            btLogVarCache.setOnClickListener { cleverTapAPI.logVarCacheProperties() }
+            btLogVarCache.setOnClickListener { toast("loggin method removed") }
         }
     }
 
@@ -59,14 +59,14 @@ class VarActivity1:AppCompatActivity() {
 
     private fun syncVariables(){
         toast("calling:syncVariables")
-        cleverTapAPI.pushVariablesToServer()
+        cleverTapAPI.syncVariables()
     }
 
 
     private fun attachGlobalListeners() {
         cleverTapAPI.run {
-            addVariablesChangedHandler(multiCallback)
-            addOneTimeVariablesChangedHandler(oneTimeCallback)
+            addVariablesChangedCallback(multiCallback)
+            addOneTimeVariablesChangedCallback(oneTimeCallback)
         }
     }
     private val multiCallback = object : VariablesChangedCallback() { override fun variablesChanged() { binding.tvTerminalWithGlobalListenerMultiple.flash(getAllVariablesStr(cleverTapAPI)) } }
@@ -75,8 +75,8 @@ class VarActivity1:AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        cleverTapAPI.removeOneTimeVariablesChangedHandler(oneTimeCallback)
-        cleverTapAPI.removeVariablesChangedHandler(multiCallback)
+        cleverTapAPI.removeOneTimeVariablesChangedCallback(oneTimeCallback)
+        cleverTapAPI.removeVariablesChangedCallback(multiCallback)
     }
 
 }

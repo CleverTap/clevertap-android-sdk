@@ -41,7 +41,7 @@ fun TextView.flash(content:String?=null) {
 
 fun getAllVariablesStr(cleverTapAPI:CleverTapAPI):String{
     val str = StringBuilder()
-        .appendLine("isDevelopmentMode:${CTVariables.isInDevelopmentMode()} |checked on : ${Date()} " )
+        .appendLine("isDevelopmentMode:${CTVariables.isDevelopmentMode()} |checked on : ${Date()} " )
         .appendLine("--------------------------------")
         .appendLine("VarActivity1=========================:")
         .appendLine("(Defined----------------)")

@@ -13,6 +13,7 @@ import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
 import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
 
+import java.util.List;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
@@ -27,19 +28,19 @@ import java.util.Map;
 public class CTVariables {
 
     private boolean variableResponseReceived = false;
-    private final ArrayList<VariablesChangedCallback> variablesChangedHandlers = new ArrayList<>();
-    private final ArrayList<VariablesChangedCallback> oneTimeVariablesChangedHandlers = new ArrayList<>();
+    private final List<VariablesChangedCallback> variablesChangedCallbacks = new ArrayList<>();
+    private final List<VariablesChangedCallback> oneTimeVariablesChangedCallbacks = new ArrayList<>();
     private final CacheUpdateBlock triggerVariablesChanged = () -> {
-        synchronized (variablesChangedHandlers) {
-            for (VariablesChangedCallback callback : variablesChangedHandlers) {
+        synchronized (variablesChangedCallbacks) {
+            for (VariablesChangedCallback callback : variablesChangedCallbacks) {
                 Utils.runOnUiThread(callback);
             }
         }
-        synchronized (oneTimeVariablesChangedHandlers) {
-            for (VariablesChangedCallback callback : oneTimeVariablesChangedHandlers) {
+        synchronized (oneTimeVariablesChangedCallbacks) {
+            for (VariablesChangedCallback callback : oneTimeVariablesChangedCallbacks) {
                 Utils.runOnUiThread(callback);
             }
-            oneTimeVariablesChangedHandlers.clear();
+            oneTimeVariablesChangedCallbacks.clear();
         }
     };
 
@@ -110,7 +111,7 @@ public class CTVariables {
     }
 
 
-    public static boolean isInDevelopmentMode() {
+    public static boolean isDevelopmentMode() {
         return BuildConfig.DEBUG;
     }
 
@@ -121,15 +122,15 @@ public class CTVariables {
      * so if client registers the listeners after such events have triggered,
      * they should still be able to get those previously updated values
      */
-    public void addVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
-        log( "addVariablesChangedHandler() called with: handler = [" + handler + "]");
-        synchronized (variablesChangedHandlers) {
-            variablesChangedHandlers.add(handler);
+    public void addVariablesChangedCallback(@NonNull VariablesChangedCallback callback) {
+        log( "addVariablesChangedHandler() called with: handler = [" + callback + "]");
+        synchronized (variablesChangedCallbacks) {
+            variablesChangedCallbacks.add(callback);
         }
 
         if (varCache.hasReceivedDiffs()) {
             log("triggering the newly added VariablesChangedCallback as varCache.hasReceivedDiffs is true");
-            handler.variablesChanged();
+            callback.variablesChanged();
         }
         else {
             log("not triggering the newly added VariablesChangedCallback");
@@ -137,48 +138,45 @@ public class CTVariables {
     }
 
     /**
-     * Note: Following the similar logic as mentioned in the comment on {@link #addVariablesChangedHandler},
+     * Note: Following the similar logic as mentioned in the comment on {@link #addVariablesChangedCallback},
      * if a user adds a OneTimeVariablesChangedHandler using this function AFTER the variable data is received,
      * (and one time handlers already triggered), the user will not have their newly
      * added handlers triggered ever. therefore, it is necessary to trigger the user's handlers
      * immediately once this function is called
      */
-    public void addOneTimeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
+    public void addOneTimeVariablesChangedCallback(@NonNull VariablesChangedCallback callback) {
         if (varCache.hasReceivedDiffs()) {
             log("triggering the newly added OneTimeVariablesChangedCallback as varCache.hasReceivedDiffs is true");
-            handler.variablesChanged();
+            callback.variablesChanged();
         } else {
             log("not triggering the newly added OneTimeVariablesChangedCallback");
-            synchronized (oneTimeVariablesChangedHandlers) {
-                oneTimeVariablesChangedHandlers.add(handler);
+            synchronized (oneTimeVariablesChangedCallbacks) {
+                oneTimeVariablesChangedCallbacks.add(callback);
             }
         }
     }
 
-    public void removeVariablesChangedHandler(@NonNull VariablesChangedCallback handler) {
-        synchronized (variablesChangedHandlers) {
-            variablesChangedHandlers.remove(handler);
+    public void removeVariablesChangedCallback(@NonNull VariablesChangedCallback callback) {
+        synchronized (variablesChangedCallbacks) {
+            variablesChangedCallbacks.remove(callback);
         }
     }
 
-    public void removeOneTimeVariablesChangedHandler(
-            @NonNull VariablesChangedCallback handler) { //removeOnceVariablesChangedAndNoDownloadsPendingHandler
-
-        synchronized (oneTimeVariablesChangedHandlers) {
-            oneTimeVariablesChangedHandlers.remove(handler);
+    public void removeOneTimeVariablesChangedHandler(@NonNull VariablesChangedCallback callback) {
+        synchronized (oneTimeVariablesChangedCallbacks) {
+            oneTimeVariablesChangedCallbacks.remove(callback);
         }
     }
 
-    public void removeAllVariablesChangedHandler() {
-        synchronized (variablesChangedHandlers) {
-            variablesChangedHandlers.clear();
+    public void removeAllVariablesChangedCallbacks() {
+        synchronized (variablesChangedCallbacks) {
+            variablesChangedCallbacks.clear();
         }
     }
 
-    public void removeAllOneTimeVariablesChangedHandler() { //removeOnceVariablesChangedAndNoDownloadsPendingHandler
-
-        synchronized (oneTimeVariablesChangedHandlers) {
-            oneTimeVariablesChangedHandlers.clear();
+    public void removeAllOneTimeVariablesChangedCallbacks() {
+        synchronized (oneTimeVariablesChangedCallbacks) {
+            oneTimeVariablesChangedCallbacks.clear();
         }
     }
 
