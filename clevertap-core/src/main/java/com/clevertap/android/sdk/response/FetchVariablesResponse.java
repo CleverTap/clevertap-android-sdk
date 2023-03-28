@@ -7,11 +7,11 @@ import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.Logger;
-import com.clevertap.android.sdk.variables.callbacks.VariableRequestHandledCallback;
+import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 
 import org.json.JSONObject;
 
-public class RequestVariablesResponse extends CleverTapResponseDecorator {
+public class FetchVariablesResponse extends CleverTapResponseDecorator {
 
     private final CleverTapResponse cleverTapResponse;
 
@@ -21,7 +21,7 @@ public class RequestVariablesResponse extends CleverTapResponseDecorator {
     private final ControllerManager controllerManager;
     private final BaseCallbackManager callbackMgr;
 
-    public RequestVariablesResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config, ControllerManager controllerManager, BaseCallbackManager mgr) {
+    public FetchVariablesResponse(CleverTapResponse cleverTapResponse, CleverTapInstanceConfig config, ControllerManager controllerManager, BaseCallbackManager mgr) {
         this.cleverTapResponse = cleverTapResponse;
         this.config = config;
         this.controllerManager = controllerManager;
@@ -54,7 +54,7 @@ public class RequestVariablesResponse extends CleverTapResponseDecorator {
         String varsKey = Constants.REQUEST_VARIABLES_JSON_RESPONSE_KEY;
         try {
             //todo remove this code block as it replaces server response with fake respnse
-            response.put(varsKey,getJson(callbackMgr.getVariableRequestHandledCallback()!=null));
+            response.put(varsKey,getJson(callbackMgr.getFetchVariablesCallback()!=null));
         }
         catch (Throwable t){t.printStackTrace();}
 
@@ -70,9 +70,9 @@ public class RequestVariablesResponse extends CleverTapResponseDecorator {
             JSONObject kvJson = response.getJSONObject(varsKey);
 
             if (controllerManager.getCtVariables() != null) {
-                VariableRequestHandledCallback callback = callbackMgr.getVariableRequestHandledCallback();
+                FetchVariablesCallback callback = callbackMgr.getFetchVariablesCallback();
                 controllerManager.getCtVariables().handleVariableResponse(kvJson,callback);
-                callbackMgr.setVariableRequestHandledCallback(null);
+                callbackMgr.setFetchVariablesCallback(null);
             }
             else {
                 log("Can't parse Variable Response, CTVariables is null");

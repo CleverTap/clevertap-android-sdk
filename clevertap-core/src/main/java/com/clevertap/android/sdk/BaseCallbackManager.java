@@ -8,7 +8,7 @@ import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
-import com.clevertap.android.sdk.variables.callbacks.VariableRequestHandledCallback;
+import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -90,7 +90,8 @@ public abstract class BaseCallbackManager {
     public abstract NotificationRenderedListener getNotificationRenderedListener();
 
 
-    public abstract VariableRequestHandledCallback getVariableRequestHandledCallback();
+    public abstract FetchVariablesCallback getFetchVariablesCallback();
 
-    public abstract void setVariableRequestHandledCallback(VariableRequestHandledCallback variableRequestHandledCallback) ;
+    public abstract void setFetchVariablesCallback(
+        FetchVariablesCallback fetchVariablesCallback) ;
 }

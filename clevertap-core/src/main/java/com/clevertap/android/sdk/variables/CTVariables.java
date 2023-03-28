@@ -10,7 +10,7 @@ import com.clevertap.android.sdk.Logger;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.variables.callbacks.CacheUpdateBlock;
 import com.clevertap.android.sdk.variables.callbacks.VariableCallback;
-import com.clevertap.android.sdk.variables.callbacks.VariableRequestHandledCallback;
+import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
 
 import org.json.JSONObject;
@@ -81,7 +81,7 @@ public class CTVariables {
      *
      * @param response JSONObject . must pass the the json directly (i.e {key:value} and not {vars:{key:value}})
      */
-    public void handleVariableResponse(@Nullable final JSONObject response, @Nullable VariableRequestHandledCallback callback) {
+    public void handleVariableResponse(@Nullable final JSONObject response, @Nullable FetchVariablesCallback callback) {
         log("handleVariableResponse() called with: response = [" + response + "], callback = [" + callback + "]");
         setVariableResponseReceived(true);
 
@@ -89,12 +89,12 @@ public class CTVariables {
         try {
             if (!jsonHasVariableData) {
                 varCache.loadDiffsAndTriggerHandlers();
-                if(callback!=null)callback.onResponseReceived(false);
+                if(callback!=null)callback.onVariablesFetched(false);
             } else {
                 Map<String, Object> variableDiffs = JsonUtil.mapFromJson(response);
                 variableDiffs = CTVariableUtils.convertFlatMapToNestedMaps(variableDiffs);
                 varCache.updateDiffsAndTriggerHandlers(variableDiffs);
-                if(callback!=null)callback.onResponseReceived(true);
+                if(callback!=null)callback.onVariablesFetched(true);
             }
         } catch (Throwable t) {
             t.printStackTrace();

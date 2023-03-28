@@ -60,7 +60,7 @@ import com.clevertap.android.sdk.validation.ManifestValidator;
 import com.clevertap.android.sdk.validation.ValidationResult;
 import com.clevertap.android.sdk.variables.CTVariables;
 import com.clevertap.android.sdk.variables.Var;
-import com.clevertap.android.sdk.variables.callbacks.VariableRequestHandledCallback;
+import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 import com.clevertap.android.sdk.variables.callbacks.VariablesChangedCallback;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.firebase.messaging.FirebaseMessaging;
@@ -3087,12 +3087,12 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     /**
      * request variable data from server at any time
      */
-    public void wzrkFetchVariables(VariableRequestHandledCallback callback) { // TODO rename or add FCU method?
+    public void fetchVariables(FetchVariablesCallback callback) { // TODO rename or add FCU method?
         if (coreState.getConfig().isAnalyticsOnly()) {
             return;
         }
         Logger.v("ctv_CleverTapApi: Fetching  variables");
-        coreState.getCallbackManager().setVariableRequestHandledCallback(callback); // TODO callback is overridden after second call if first is not ready yet
+        coreState.getCallbackManager().setFetchVariablesCallback(callback); // TODO callback is overridden after second call if first is not ready yet
 
         JSONObject event = new JSONObject();
         JSONObject notif = new JSONObject();

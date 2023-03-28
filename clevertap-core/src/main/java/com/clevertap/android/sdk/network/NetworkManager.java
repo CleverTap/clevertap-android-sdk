@@ -39,16 +39,14 @@ import com.clevertap.android.sdk.response.InboxResponse;
 import com.clevertap.android.sdk.response.MetadataResponse;
 import com.clevertap.android.sdk.response.ProductConfigResponse;
 import com.clevertap.android.sdk.response.PushAmpResponse;
-import com.clevertap.android.sdk.response.RequestVariablesResponse;
+import com.clevertap.android.sdk.response.FetchVariablesResponse;
 import com.clevertap.android.sdk.task.CTExecutorFactory;
 import com.clevertap.android.sdk.task.Task;
 import com.clevertap.android.sdk.validation.ValidationResultStack;
 import com.clevertap.android.sdk.validation.Validator;
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.security.SecureRandom;
@@ -150,7 +148,7 @@ public class NetworkManager extends BaseNetworkManager {
         cleverTapResponse = new FeatureFlagResponse(cleverTapResponse, config, controllerManager);
         cleverTapResponse = new DisplayUnitResponse(cleverTapResponse, config,
                 callbackManager, controllerManager);
-        cleverTapResponse = new RequestVariablesResponse(cleverTapResponse,config,controllerManager,callbackManager);
+        cleverTapResponse = new FetchVariablesResponse(cleverTapResponse,config,controllerManager,callbackManager);
         cleverTapResponse = new PushAmpResponse(cleverTapResponse, context, config,
                 baseDatabaseManager, callbackManager, controllerManager);
         cleverTapResponse = new InboxResponse(cleverTapResponse, config, ctLockManager,

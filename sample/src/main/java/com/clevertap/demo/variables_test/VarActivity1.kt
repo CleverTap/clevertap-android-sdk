@@ -42,7 +42,7 @@ class VarActivity1:AppCompatActivity() {
     }
 
     private fun requestWzrkFetch() {
-        cleverTapAPI.wzrkFetchVariables {
+        cleverTapAPI.fetchVariables {
             log("data received successfully? =$it")
         }
     }

@@ -13,7 +13,7 @@ import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener;
 import com.clevertap.android.sdk.pushnotification.amp.CTPushAmpListener;
-import com.clevertap.android.sdk.variables.callbacks.VariableRequestHandledCallback;
+import com.clevertap.android.sdk.variables.callbacks.FetchVariablesCallback;
 
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
@@ -61,7 +61,7 @@ public class CallbackManager extends BaseCallbackManager {
         this.deviceInfo = deviceInfo;
     }
 
-    private VariableRequestHandledCallback variableRequestHandledCallback;
+    private FetchVariablesCallback fetchVariablesCallback;
 
     @Override
     public void _notifyInboxMessagesDidUpdate() {
@@ -304,12 +304,13 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     @Override @Nullable
-    public VariableRequestHandledCallback getVariableRequestHandledCallback() {
-        return variableRequestHandledCallback;
+    public FetchVariablesCallback getFetchVariablesCallback() {
+        return fetchVariablesCallback;
     }
 
     @Override
-    public void setVariableRequestHandledCallback(VariableRequestHandledCallback variableRequestHandledCallback) {
-        this.variableRequestHandledCallback = variableRequestHandledCallback;
+    public void setFetchVariablesCallback(
+        FetchVariablesCallback fetchVariablesCallback) {
+        this.fetchVariablesCallback = fetchVariablesCallback;
     }
 }
