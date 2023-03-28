@@ -60,10 +60,6 @@ class VarCacheTest : BaseTestCase() {
   }
 
   @Test
-  fun reset() {
-  }
-
-  @Test
   fun setCacheUpdateBlock() {
   }
 

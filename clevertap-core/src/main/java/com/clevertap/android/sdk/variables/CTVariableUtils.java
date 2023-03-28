@@ -92,12 +92,14 @@ public final class CTVariableUtils {
                     if (i == namePosition) {
                         currentMap.put(component, entry.getValue());
                     } else {
-                        if (!currentMap.containsKey(component)) {
+                        Object currentValue = currentMap.get(component);
+                        if (!(currentValue instanceof Map)) { // null or not a map
+                            // If it is not a map it will fix the invalid data.
                             Map<String, Object> nestedMap = new HashMap<>();
                             currentMap.put(component, nestedMap);
                             currentMap = nestedMap;
                         } else {
-                            currentMap = JsonUtil.uncheckedCast(currentMap.get(component)) ;
+                            currentMap = JsonUtil.uncheckedCast(currentMap.get(component));
                         }
                     }
                 }
@@ -264,14 +266,6 @@ public final class CTVariableUtils {
             } else {
                 result.put(prefix + key, value);
             }
-        }
-    }
-
-    public static void maybeThrowException(RuntimeException e) {
-        if (CTVariables.isInDevelopmentMode()) {
-            throw e;
-        } else {
-            Logger.v(e.getMessage() + " This error is only thrown in development mode.", e);
         }
     }
 

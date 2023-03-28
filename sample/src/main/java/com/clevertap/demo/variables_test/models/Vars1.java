@@ -98,16 +98,16 @@ public class Vars1 {
         String result = "";
 
         try {
-            Object valueA = ct.getVariable("dStr1").value();
+            Object valueA = ct.getVariable("dStr1");
             result+= "dStr1:"+valueA+"\t|\t";
 
-            Object valueB = ct.getVariable("dDb1").value();
+            Object valueB = ct.getVariable("dDb1");
             result+= "dDb1:"+valueB+"\t|\t";
 
-            Object valueC =ct.getVariable("dIn1").value();
+            Object valueC =ct.getVariable("dIn1");
             result+= "dIn1:"+valueC+"\t|\t";
 
-            Object valueD = ct.getVariable("dBool1").value();
+            Object valueD = ct.getVariable("dBool1");
             result+= "dBool1:"+valueD+"\t|\t";
         }
         catch (Throwable t){

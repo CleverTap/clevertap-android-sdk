@@ -6,6 +6,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 @RunWith(RobolectricTestRunner::class)
 class CTVariableUtilsTest : BaseTestCase() {
@@ -15,35 +16,9 @@ class CTVariableUtilsTest : BaseTestCase() {
   }
 
   @Test
-  fun traverse() {
-  }
-
-  @Test
-  fun kindFromValue() {
-  }
-
-  @Test
-  fun getNameComponents() {
-  }
-
-  @Test
-  fun uncheckedCast() {
-  }
-
-  @Test
-  fun fromJson() {
-  }
-
-  @Test
-  fun mapFromJson() {
-  }
-
-  @Test
-  fun toJson() {
-  }
-
-  @Test
-  fun maybeThrowException() {
+  fun testGetNameComponents() {
+    assertTrue(arrayOf("a").contentEquals(CTVariableUtils.getNameComponents("a")))
+    assertTrue(arrayOf("a", "b", "c").contentEquals(CTVariableUtils.getNameComponents("a.b.c")))
   }
 
   @Test
@@ -264,7 +239,56 @@ class CTVariableUtilsTest : BaseTestCase() {
   }
 
   @Test
-  fun `test getFlatVarsJson`() {
+  fun `test convertFlatMapToNestedMaps with invalid data`() {
+    val input = mapOf(
+      "a.b.c.d" to "d value",
+      "a.b.c" to "c value",
+      "a.e" to "e value",
+      "a.b" to "b value",
+    )
+    val expected = mapOf("a" to mapOf("b" to "b value", "e" to "e value"))
 
+    assertEquals(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
+  }
+
+  @Test
+  fun `test convertFlatMapToNestedMaps with invalid data2`() {
+    val input = mapOf(
+      "a.b.c" to "c value",
+      "a.b.c.d" to "d value",
+      "a.e" to "e value",
+      "a.b" to "b value",
+    )
+    val expected = mapOf("a" to mapOf("b" to "b value", "e" to "e value"))
+
+    assertEquals(expected, CTVariableUtils.convertFlatMapToNestedMaps(input))
+  }
+
+  @Test
+  fun `test getFlatVarsJson`() {
+    val values = mutableMapOf("var1" to "str", "group" to mutableMapOf("var2" to 1, "var3" to 2.0))
+    val kinds = mutableMapOf("group.var2" to "number", "var1" to "string", "group" to "group")
+
+    val expected = mapOf(
+      "type" to "varsPayload",
+      "vars" to mapOf(
+        "var1" to mapOf(
+          "type" to "string",
+          "defaultValue" to "str"
+        ),
+        "group.var2" to mapOf(
+          "type" to "number",
+          "defaultValue" to 1
+        ),
+        "group.var3" to mapOf(
+          "type" to "number",
+          "defaultValue" to 2.0
+        )
+      )
+    )
+
+    val jsonObject = CTVariableUtils.getFlatVarsJson(values, kinds)
+    val jsonMap = JsonUtil.mapFromJson<Any>(jsonObject)
+    assertEquals(expected, jsonMap)
   }
 }

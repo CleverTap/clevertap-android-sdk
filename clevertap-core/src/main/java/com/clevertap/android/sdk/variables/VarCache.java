@@ -69,6 +69,8 @@ public class VarCache {
 
     public Object merged = null;
 
+    // README: Do not forget reset the value of new fields in the reset() method.
+
     private final Context variablesCtx;
     private final CleverTapInstanceConfig instanceConfig;
 
