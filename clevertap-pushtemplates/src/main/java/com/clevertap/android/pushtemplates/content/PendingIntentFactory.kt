@@ -13,6 +13,7 @@ import com.clevertap.android.pushtemplates.PTPushNotificationReceiver
 import com.clevertap.android.pushtemplates.PushTemplateReceiver
 import com.clevertap.android.pushtemplates.TemplateRenderer
 import com.clevertap.android.sdk.Constants
+import com.clevertap.android.sdk.Logger
 import com.clevertap.android.sdk.Utils
 import com.clevertap.android.sdk.pushnotification.CTNotificationIntentService
 import com.clevertap.android.sdk.pushnotification.LaunchPendingIntentFactory
@@ -184,12 +185,12 @@ internal object PendingIntentFactory {
             RATING_CLICK1_PENDING_INTENT -> {
                 launchIntent!!.putExtras(extras)
                 launchIntent!!.putExtra("click1", true)
-                launchIntent!!.putExtra("clickedStar", 1)
+                launchIntent!!.putExtra("clickedStar", 1)//TODO Change the key to public constants.
                 launchIntent!!.putExtra(PTConstants.PT_NOTIF_ID, notificationId)
                 launchIntent!!.putExtra("config", renderer?.config)
                 return PendingIntent.getBroadcast(
                     context,
-                    Random().nextInt(),
+                    RATING_CLICK1_PENDING_INTENT,
                     launchIntent!!,
                     flagsLaunchPendingIntent
                 )
@@ -203,7 +204,7 @@ internal object PendingIntentFactory {
                 launchIntent!!.putExtra("config", renderer?.config)
                 return PendingIntent.getBroadcast(
                     context,
-                    Random().nextInt(),
+                    RATING_CLICK2_PENDING_INTENT,
                     launchIntent!!,
                     flagsLaunchPendingIntent
                 )
@@ -217,7 +218,7 @@ internal object PendingIntentFactory {
                 launchIntent!!.putExtra("config", renderer?.config)
                 return PendingIntent.getBroadcast(
                     context,
-                    Random().nextInt(),
+                    RATING_CLICK3_PENDING_INTENT,
                     launchIntent!!,
                     flagsLaunchPendingIntent
                 )
@@ -231,7 +232,7 @@ internal object PendingIntentFactory {
                 launchIntent!!.putExtra("config", renderer?.config)
                 return PendingIntent.getBroadcast(
                     context,
-                    Random().nextInt(),
+                    RATING_CLICK4_PENDING_INTENT,
                     launchIntent!!,
                     flagsLaunchPendingIntent
                 )
@@ -245,7 +246,7 @@ internal object PendingIntentFactory {
                 launchIntent!!.putExtra("config", renderer?.config)
                 return PendingIntent.getBroadcast(
                     context,
-                    Random().nextInt(),
+                    RATING_CLICK5_PENDING_INTENT,
                     launchIntent!!,
                     flagsLaunchPendingIntent
                 )
