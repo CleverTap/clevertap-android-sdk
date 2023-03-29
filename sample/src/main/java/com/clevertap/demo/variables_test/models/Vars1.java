@@ -39,17 +39,17 @@ public class Vars1 {
 
        try {
 
-           result+= String.format("pStr1:%s\t|\t%s\n", Vars1.pStr1,  ct.getVariable("pStr1"));
-           result+= String.format("pDb1:%s\t|\t%s\n", Vars1.pDb1,  ct.getVariable("pDb1"));
-           result+= String.format("pIn1:%d\t|\t%s\n", Vars1.pIn1, ct.getVariable("pIn1"));
-           result+= String.format("pBool1:%s\t|\t%s\n", Vars1.pBool1, ct.getVariable("pBool1"));
+           result+= String.format("pStr1:%s\t|\t%s\n", Vars1.pStr1,  ct.getVariableValue("pStr1"));
+           result+= String.format("pDb1:%s\t|\t%s\n", Vars1.pDb1,  ct.getVariableValue("pDb1"));
+           result+= String.format("pIn1:%d\t|\t%s\n", Vars1.pIn1, ct.getVariableValue("pIn1"));
+           result+= String.format("pBool1:%s\t|\t%s\n", Vars1.pBool1, ct.getVariableValue("pBool1"));
 
            result+="-------<instance based>-------\n";
            Vars1Instance varsiI = Vars1Instance.singleton();
-           result+= String.format("pStr1Inst:%s\t|\t%s\n", varsiI.pStr1Inst, ct.getVariable("pStr1Inst"));
-           result+= String.format("pDb1Inst:%s\t|\t%s\n", varsiI.pDb1Inst, ct.getVariable("pDb1Inst"));
-           result+= String.format("pIn1Inst:%s\t|\t%s\n", varsiI.pIn1Inst, ct.getVariable("pIn1Inst"));
-           result+= String.format("pBool1Inst:%s\t|\t%s\n", varsiI.pBool1Inst, ct.getVariable("pBool1Inst"));
+           result+= String.format("pStr1Inst:%s\t|\t%s\n", varsiI.pStr1Inst, ct.getVariableValue("pStr1Inst"));
+           result+= String.format("pDb1Inst:%s\t|\t%s\n", varsiI.pDb1Inst, ct.getVariableValue("pDb1Inst"));
+           result+= String.format("pIn1Inst:%s\t|\t%s\n", varsiI.pIn1Inst, ct.getVariableValue("pIn1Inst"));
+           result+= String.format("pBool1Inst:%s\t|\t%s\n", varsiI.pBool1Inst, ct.getVariableValue("pBool1Inst"));
        }
        catch (Throwable t){
            t.printStackTrace();
@@ -98,16 +98,16 @@ public class Vars1 {
         String result = "";
 
         try {
-            Object valueA = ct.getVariable("dStr1");
+            Object valueA = ct.getVariableValue("dStr1");
             result+= "dStr1:"+valueA+"\t|\t";
 
-            Object valueB = ct.getVariable("dDb1");
+            Object valueB = ct.getVariableValue("dDb1");
             result+= "dDb1:"+valueB+"\t|\t";
 
-            Object valueC =ct.getVariable("dIn1");
+            Object valueC =ct.getVariableValue("dIn1");
             result+= "dIn1:"+valueC+"\t|\t";
 
-            Object valueD = ct.getVariable("dBool1");
+            Object valueD = ct.getVariableValue("dBool1");
             result+= "dBool1:"+valueD+"\t|\t";
         }
         catch (Throwable t){

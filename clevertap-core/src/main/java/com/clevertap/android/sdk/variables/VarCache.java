@@ -169,20 +169,22 @@ public class VarCache {
 
     }
 
-    public synchronized <T> T getMergedValue(String variableName) {
+    public synchronized Object getMergedValue(String variableName) {
         String[] components = CTVariableUtils.getNameComponents(variableName);
-        return getMergedValueFromComponentArray(components);
+        Object mergedValue = getMergedValueFromComponentArray(components);
+        if (mergedValue instanceof Map) {
+            return CTVariableUtils.deepCopyMap(JsonUtil.uncheckedCast(mergedValue));
+        } else {
+            return mergedValue;
+        }
     }
 
     //components:["group1","myVariable"]
-    //----
-    //basically calls getMergedValueFromComponentArray(components,merged[g] or valuesFromClient[g]) and returns its value
     public synchronized <T> T getMergedValueFromComponentArray(Object[] components) {
         return getMergedValueFromComponentArray(components, merged != null ? merged : valuesFromClient);
     }
 
     //components : ["group1","myVariable"]  , values : merged[g] or valuesFromClient[g]
-    // will basically set values(i.e merged[g] or valuesFromClient[g]) to mapOf("group1"to mapOf('myVariable' to 12.4))
     public synchronized <T> T getMergedValueFromComponentArray(Object[] components, Object values) {
         Object mergedPtr = values;
         for (Object component : components) {

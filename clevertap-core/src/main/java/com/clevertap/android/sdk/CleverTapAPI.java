@@ -3060,16 +3060,29 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Get current value of a variable or a group.
+     * Get a copy of the current value of a variable or a group.
      *
      * @param name The name of the variable or the group.
      * @return The value of the variable or the group.
      */
-    public Object getVariable(String name) {
+    public Object getVariableValue(String name) {
         if (name == null) {
             return null;
         }
         return coreState.getVarCache().getMergedValue(name);
+    }
+
+    /**
+     * Get an instance of a variable or a group.
+     *
+     * @param name The name of the variable or the group.
+     * @return The instance of the variable or the group, or null if not created yet.
+     */
+    public <T> Var<T> getVariable(String name) {
+        if (name == null) {
+            return null;
+        }
+        return coreState.getVarCache().getVariable(name);
     }
 
     /**
